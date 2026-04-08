@@ -346,35 +346,65 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             }
             $descript = ($description) ? $description : _NO;
             $subcat = ($ispid) ? $ispid : _NO;
-            $clang = getTplAdminLangHint($language);
-            $delete = (!$pnum && !$ispid)
-                ? getTplDeleteAction(
-                    $afile.'.php?op=cat_del&amp;id='.$id.$modlink.'&amp;refer=1',
-                    _DELETE.' "'.$title.'"?',
-                    _ONDELETE,
-                    _ONDELETE
-                )
-                : '';
+            $tipItems = [
+                ['label' => _DESCRIPTION, 'value' => (string)$descript, 'is_last' => false],
+                ['label' => _CATEGORIES, 'value' => (string)$subcat, 'is_last' => $language === ''],
+            ];
+            if ($language !== '') {
+                $tipItems[] = ['label' => _LANGUAGE, 'value' => getLangName($language), 'is_last' => true];
+            }
             $mup = ($prev) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$prev.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
             $mdn = ($next) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$next.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
-            $rows[] = getTplAdminCategoryRow([
-                'id' => (string) $id,
-                'title_html' => getTplAdminTipLabel(_DESCRIPTION.': '.$descript.getTplAdminTipLine(_CATEGORIES, $subcat).$clang, $title, cutstr($title, 50)),
-                'content_count' => (string) $pnum,
-                'active_html' => $active,
-                'image_html' => $img,
-                'weight_value' => (string) $ordern,
-                'move_html' => getTplAdminMoveControls('ajax_cat', $mup, $mdn),
-                'status_html' => ad_status('', $cstatus),
-                'functions_html' => getTplAdminActionMenu([
-                    getTplLinkAction($afile.'.php?name=categories&amp;op=edit&amp;cid='.$id.$modlink, _FULLEDIT, _FULLEDIT),
-                    $delete,
-                ]),
-            ]);
+            $items = [[
+                'href' => $afile.'.php?name=categories&amp;op=edit&amp;cid='.$id.$modlink,
+                'label' => _FULLEDIT,
+                'title' => _FULLEDIT,
+            ]];
+            if (!$pnum && !$ispid) {
+                $items[] = [
+                    'href' => $afile.'.php?op=cat_del&amp;id='.$id.$modlink.'&amp;refer=1',
+                    'label' => _ONDELETE,
+                    'title' => _ONDELETE,
+                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                ];
+            }
+            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => $tipItems,
+                        'label_text' => cutstr($title, 50),
+                        'title_text' => $title,
+                    ])],
+                    ['content_html' => (string)$pnum],
+                    ['content_html' => $active],
+                    ['content_html' => $img],
+                    ['content_html' => (string)$ordern],
+                    ['content_html' => getTplMoveControls('ajax_cat', $mup, $mdn)],
+                    ['content_html' => ad_status('', $cstatus)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        'trigger_label' => _EDITOR,
+                        'items' => $items,
+                    ])],
+                ],
+            ])]);
         }
-        $cont = getTplAdminCategoryTable(implode('', $rows));
+        $cont = $tpl->getHtmlFrag('new/table', [
+            'head' => [
+            ['content' => _ID],
+            ['content' => _CATEGORY],
+            ['content' => cutstr(_CONTENT, 3, 1)],
+            ['content' => cutstr(_SUBCATEGORY, 3, 1), 'nosort' => true],
+            ['content' => cutstr(_IMG, 2, 1), 'nosort' => true],
+            ['content' => _WEIGHT, 'colspan' => 2],
+            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => implode('', $rows),
+            'disable_sort' => true,
+        ]);
     } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -449,7 +479,7 @@ function scatacess($auth) {
 
 # Render the admin block list as an HTML table with reorder controls, expiry state and action links
 function getAdminBlockList(string $token = ''): string {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $rows = [];
     $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.lang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
     while (list($bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $prev, , , $next) = $db->getSqlRow($result)) {
@@ -464,8 +494,13 @@ function getAdminBlockList(string $token = ''): string {
         $wplus = $weight + 1;
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-        $blang = getTplAdminLangHint($lang);
-        $ttip = getTplAdminTitleTip(_NAME.': '.$title.getTplAdminTipLine(_PURCHASED, $exp).$blang).cutstr(getConst($title), 15);
+        $tipItems = [
+            ['label' => _NAME, 'value' => $title, 'is_last' => $lang === ''],
+        ];
+        if ($lang !== '') {
+            $tipItems[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];
+        }
+        $tipItems[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
         if ($bpos == 'l') {
             $bpos = getTplAdminNoteLabel(_LEFTBLOCK, _LEFT);
         } elseif ($bpos == 'r') {
@@ -496,23 +531,54 @@ function getAdminBlockList(string $token = ''): string {
         }
         $mup = ($prev) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$prev.'&amp;typ='.$wminus.'&amp;ordern='.$weight : '';
         $mdn = ($next) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$next.'&amp;typ='.$wplus.'&amp;ordern='.$weight : '';
-        $rows[] = getTplAdminBlockRow([
-            'id' => (string) $bid,
-            'title_html' => $ttip,
-            'type_label' => $type,
-            'view_label' => $who_view,
-            'position_html' => $bpos,
-            'weight_value' => (string) $weight,
-            'move_html' => getTplAdminMoveControls('ajax_block', $mup, $mdn),
-            'status_html' => ad_status('', $active),
-            'functions_html' => getTplAdminActionMenu([
-                ad_status($afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active, $active),
-                getTplLinkAction($afile.'.php?name=blocks&amp;op=edit&amp;id='.$bid, _FULLEDIT, _FULLEDIT),
-                getTplDeleteAction($afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
-            ]),
-        ]);
+        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => (string) $bid],
+                ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    'items' => $tipItems,
+                    'label_text' => cutstr(getConst($title), 15),
+                    'title_text' => $title,
+                ])],
+                ['content_html' => $type],
+                ['content_html' => $who_view],
+                ['content_html' => $bpos],
+                ['content_html' => (string) $weight],
+                ['content_html' => getTplMoveControls('ajax_block', $mup, $mdn)],
+                ['content_html' => ad_status('', $active)],
+                ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                    'trigger_label' => _EDITOR,
+                    'items' => [[
+                        'href' => $afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active,
+                        'label' => $active ? _DEACTIVATE : _ACTIVATE,
+                        'title' => $active ? _DEACTIVATE : _ACTIVATE,
+                    ], [
+                        'href' => $afile.'.php?name=blocks&amp;op=edit&amp;id='.$bid,
+                        'label' => _FULLEDIT,
+                        'title' => _FULLEDIT,
+                    ], [
+                        'href' => $afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid,
+                        'label' => _ONDELETE,
+                        'title' => _ONDELETE,
+                        'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                    ]],
+                ])],
+            ],
+        ])]);
     }
-    return getTplAdminBlockTable(implode('', $rows));
+    return $tpl->getHtmlFrag('new/table', [
+        'head' => [
+            ['content' => _ID],
+            ['content' => _TITLE],
+            ['content' => _TYPE],
+            ['content' => _VIEW],
+            ['content' => _POSITION],
+            ['content' => _WEIGHT, 'colspan' => 2],
+            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ],
+        'rows_html' => implode('', $rows),
+        'disable_sort' => true,
+    ]);
 }
 
 # Swap the weight values of two adjacent blocks and echo the refreshed list fragment
@@ -593,25 +659,46 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $modul = $val[2];
                 $title = $val[3];
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
-                $rows[] = getTplAdminFavoriteRow([
-                    'id' => (string) $id,
-                    'title_html' => getTplAdminNoteLabel($title, cutstr($title, 60)),
-                    'module_label' => getModuleName($modul),
-                    'posted_by_html' => $uname,
-                    'functions_html' => getTplAdminActionMenu([
-                        getTplLinkAction('index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid, _MVIEW, _MVIEW),
-                        getTplAdminAjaxAction('adminFavoriteList', 'go=5&amp;op=deleteAdminFavorite&amp;id='.$id, _ONDELETE, _ONDELETE),
-                    ]),
-                ]);
+                $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                    'cells' => [
+                        ['content_html' => (string) $id],
+                        ['content_html' => getTplAdminNoteLabel($title, cutstr($title, 60))],
+                        ['content_html' => getModuleName($modul)],
+                        ['content_html' => $uname],
+                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                            'trigger_label' => _EDITOR,
+                            'items' => [[
+                                'href' => 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid,
+                                'label' => _MVIEW,
+                                'title' => _MVIEW,
+                            ], [
+                                'href' => 'index.php?go=5&amp;op=deleteAdminFavorite&amp;id='.$id,
+                                'label' => _ONDELETE,
+                                'title' => _ONDELETE,
+                                'link_attr' => 'hx-get="index.php?go=5&amp;op=deleteAdminFavorite&amp;id='.$id.'" hx-target="#repadminFavoriteList" hx-swap="innerHTML" hx-push-url="false"',
+                            ]],
+                        ])],
+                    ],
+                ])]);
             }
-            $cont = getTplAdminFavoriteTable(implode('', $rows));
+            $cont = $tpl->getHtmlFrag('new/table', [
+                'head' => [
+                    ['content' => _ID],
+                    ['content' => _TITLE],
+                    ['content' => _MODUL],
+                    ['content' => _POSTEDBY],
+                    ['content' => _FUNCTIONS, 'nosort' => true],
+                ],
+                'rows_html' => implode('', $rows),
+                'disable_sort' => true,
+            ]);
             $numpages = ceil($fav_num / $newlistnum);
             $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'getAdminFavoriteList', 'adminFavoriteList', 0, '', '');
         } else {
-            $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+            $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
         }
     } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -642,23 +729,43 @@ function getAdminPrivateList(int $obj = 0): string {
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
             $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
-            $rows[] = getTplAdminPrivateRow([
-                'id' => (string) $id,
-                'title_html' => getTplAdminTitleTip($info).getTplAdminNoteLabel($title, cutstr($title, 30)),
-                'sender_html' => $unse,
-                'receiver_html' => $unre,
-                'date_value' => $date,
-                'status_html' => ad_status('', $status, 1),
-                'functions_html' => getTplAdminActionMenu([
-                    getTplAdminAjaxAction('adminPrivateList', 'go=5&amp;op=deleteAdminPrivate&amp;id='.$id, _ONDELETE, _ONDELETE),
-                ]),
-            ]);
+            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string) $id],
+                    ['content_html' => getTplAdminTitleTip($info).getTplAdminNoteLabel($title, cutstr($title, 30))],
+                    ['content_html' => $unse],
+                    ['content_html' => $unre],
+                    ['content_html' => $date],
+                    ['content_html' => ad_status('', $status, 1)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        'trigger_label' => _EDITOR,
+                        'items' => [[
+                            'href' => 'index.php?go=5&amp;op=deleteAdminPrivate&amp;id='.$id,
+                            'label' => _ONDELETE,
+                            'title' => _ONDELETE,
+                            'link_attr' => 'hx-get="index.php?go=5&amp;op=deleteAdminPrivate&amp;id='.$id.'" hx-target="#repadminPrivateList" hx-swap="innerHTML" hx-push-url="false"',
+                        ]],
+                    ])],
+                ],
+            ])]);
         }
-        $cont = getTplAdminPrivateTable(implode('', $rows));
+        $cont = $tpl->getHtmlFrag('new/table', [
+            'head' => [
+                ['content' => _ID],
+                ['content' => _TITLE],
+                ['content' => _PRSE],
+                ['content' => _PRRE],
+                ['content' => _DATE],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => implode('', $rows),
+            'disable_sort' => true,
+        ]);
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'getAdminPrivateList', 'adminPrivateList', 0, '', '');
     } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -716,17 +823,32 @@ function getAdminUploadFiles(): void {
                 }
                 $show = [];
                 if (in_array(true, checkCompress(), true)) {
-                    $show[] = getTplAdminAjaxAction('f'.$id, 'go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
+                    $show[] = [
+                        'href' => 'index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1],
+                        'label' => _ZIP,
+                        'title' => _ZIP,
+                        'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
+                    ];
                 }
-                $show[] = getTplAdminAjaxAction('f'.$id, 'go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
-                $contents[] = getTplAdminFilesRow([
-                    'preview_html' => $img,
-                    'file_html' => $dirfile,
-                    'date_value' => date(_TIMESTRING, $entry[0]),
-                    'size_value' => filterSize($filesize),
-                    'dimensions_value' => $isize,
-                    'functions_html' => getTplAdminActionMenu($show),
-                ]);
+                $show[] = [
+                    'href' => 'index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1],
+                    'label' => _ONDELETE,
+                    'title' => _ONDELETE,
+                    'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
+                ];
+                $contents[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                    'cells' => [
+                        ['content_html' => $img],
+                        ['content_html' => $dirfile],
+                        ['content_html' => date(_TIMESTRING, $entry[0])],
+                        ['content_html' => filterSize($filesize)],
+                        ['content_html' => $isize],
+                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                            'trigger_label' => _EDITOR,
+                            'items' => $show,
+                        ])],
+                    ],
+                ])]);
                 $a++;
             }
         }
@@ -738,9 +860,20 @@ function getAdminUploadFiles(): void {
             if (!empty($contents[$i])) $cont .= $contents[$i];
         }
         $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'getAdminUploadFiles', 'f'.$id, $id, '', $dir) : '';
-        $content = ($cont) ? getTplAdminFilesTable($cont).$contnum : '';
+        $content = ($cont) ? $tpl->getHtmlFrag('new/table', [
+            'head' => [
+                ['content' => cutstr(_IMG, 4, 1)],
+                ['content' => _FILE],
+                ['content' => _DATE],
+                ['content' => _SIZE],
+                ['content' => _WIDTH.' x '._HEIGHT],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $cont,
+            'disable_sort' => true,
+        ]).$contnum : '';
     } else {
-        $content = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $content = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }
     echo $content;
 }
