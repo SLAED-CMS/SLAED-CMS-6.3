@@ -49,9 +49,9 @@ function getRobotsTemplate(): string {
 
 function getRobotsButton(string $template): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-editor-robots-button', [
+    return $tpl->getHtmlFrag('new/button', [
         'label' => _EROBSTD,
-        'data_value' => htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8'),
+        'button_attr' => 'data-robots-template="'.htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8').'" onclick="var src=this.getAttribute(\'data-robots-template\');var code=document.getElementById(\'code\');if(!code||!src)return;code.value=JSON.parse(src);if(window.editor&&typeof window.editor.setValue===\'function\'){window.editor.setValue(code.value);window.editor.focus();}"',
     ]);
 }
 
@@ -61,21 +61,41 @@ function isHtmxReq(): bool {
 
 function getEditbox(string $file, string $info, string $warn, string $mtype, string $edit, int $tab, bool $trim = false, string $extra = '', string $fallback = '', string $note = '', string $noteType = 'info'): string {
     global $afile, $tpl;
-    $cont = getTplAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => $tab]);
+    $ops = ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
+    $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
     $text = normalizeRawEditorText($file, $text);
     if ($text === '' && $fallback !== '') $text = $fallback;
     $cont .= checkPerms($file);
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
-    if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $warn]);
-    $noteHtml = ($note !== '') ? $tpl->getHtmlFrag('alert', ['type' => $noteType, 'text' => $note]) : '';
-    $cont .= $tpl->getHtmlFrag('admin-editor-note-panel', ['content_html' => $noteHtml]);
-    $hide = getTplHiddenInput('name', 'editor').getTplHiddenInput('op', 'save').getTplHiddenInput('editor', $edit).getTplHiddenInput('file', $file);
-    $rows = getTplAdminFormWide(textarea_code('code', 'template', 'sl_form', $mtype, $text));
-    $buttons = ($extra !== '') ? $extra.' '.getTplAdminSubmitButton(_SAVE) : getTplAdminSubmitButton(_SAVE);
-    $rows .= getTplAdminFormWide($buttons, '', 'sl_center');
+    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => $info]);
+    if ($warn) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $warn]);
+    $noteHtml = ($note !== '') ? $tpl->getHtmlFrag('new/alert', ['is_warn' => $noteType === 'warn', 'text' => $note]) : '';
+    $cont .= $tpl->getHtmlPart('box', ['box_id' => 'repeditornote', 'content_html' => $noteHtml]);
     $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="if (window.editor && typeof window.editor.save === \'function\') { window.editor.save(); }"';
-    return $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit', 'post', 'post', $attr));
+    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'form_attr' => $attr,
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'editor'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'editor', 'valueattr' => $edit],
+            ['nameattr' => 'file', 'valueattr' => $file],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => [[
+            'is_full' => true,
+            'label_html' => _CONTENT,
+            'field_html' => getTplCodeEditor([
+                'id' => 'code',
+                'name' => 'template',
+                'mode' => $mtype,
+                'text' => $text,
+            ]),
+        ]],
+        'content_html' => $extra,
+        'submit_label' => _SAVE,
+    ])]);
 }
 
 function getEditorView(string $edit, string $note = '', string $noteType = 'info'): string {
@@ -88,7 +108,8 @@ function getEditorView(string $edit, string $note = '', string $noteType = 'info
 }
 
 function renderEditorPage(string $edit, string $note = '', string $noteType = 'info'): void {
-    $html = $tpl->getHtmlFrag('admin-editor-root-panel', ['content_html' => getEditorView($edit, $note, $noteType)]);
+    global $tpl;
+    $html = $tpl->getHtmlPart('box', ['box_id' => 'repeditor', 'content_html' => getEditorView($edit, $note, $noteType)]);
     if (isHtmxReq()) {
         echo $html;
         return;
@@ -115,14 +136,23 @@ function robots(): void {
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => 4]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
+        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO],
+    ]);
 }
 
 function save(): void {
     global $afile, $tpl;
     $edit = getVar('post', 'editor', 'var');
     $file = getVar('post', 'file');
+    if (!checkSiteToken()) {
+        if (isHtmxReq()) {
+            echo $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            return;
+        }
+        setRedirect($afile.'.php?name=editor&op='.$edit);
+    }
     $templ = getVar('post', 'template', 'raw');
     $templ = normalizeRawEditorText($file, $templ);
     $templ = isRawEditorFile($file) ? $templ : '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL.$templ.PHP_EOL;
@@ -130,8 +160,7 @@ function save(): void {
     if ($file && $templ) $saved = file_put_contents($file, $templ, LOCK_EX) !== false;
     if (isHtmxReq()) {
         $note = $saved ? _ESAVED.': '.$file : _ERROR.': '.$file;
-        $type = $saved ? 'info' : 'warn';
-        echo $tpl->getHtmlFrag('alert', ['type' => $type, 'text' => $note]);
+        echo $tpl->getHtmlFrag('new/alert', ['is_warn' => !$saved, 'text' => $note]);
         return;
     }
     setRedirect($afile.'.php?name=editor&op='.$edit);
