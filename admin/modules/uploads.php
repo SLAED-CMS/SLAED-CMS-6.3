@@ -26,17 +26,13 @@ function uploads(): void {
     global $afile, $conf, $stop, $tpl;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
-    $sattrs = [
-        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=1&amp;dir='.$dir.''.$token.'" hx-target="#repf1" hx-swap="innerHTML" hx-push-url="false"',
-        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=2&amp;dir='.$dir.''.$token.'" hx-target="#repf2" hx-swap="innerHTML" hx-push-url="false"',
-        '',
-    ];
+    $token = '&amp;token='.getSiteToken();
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [
-        _EUPLOAD,
-        _DGEN,
-        _DTHUMB,
-    ], 'sattrs' => $sattrs, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO],
+        'subtitle_html' => getUploadsSearch(),
+    ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, 'uploads/'.$dir)]);
@@ -64,7 +60,7 @@ function uploads(): void {
     } else {
         $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $tabtwo .= getTplAdminPlaceholder('repf1');
+    $tabtwo .= $tpl->getHtmlPart('box', ['box_id' => 'repf1']);
     $tdir = 'uploads/'.$dir.'/thumb';
     $tabthr = checkPerms(BASE_DIR.'/'.$tdir);
     if (is_dir($tdir)) {
@@ -81,16 +77,31 @@ function uploads(): void {
     } else {
         $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $tabthr .= getTplAdminPlaceholder('repf2');
-    $uplv = $tpl->getHtmlFrag('admin-uploads-tabs-content', [
-        'tab_one_id' => getTplAdminTabName('uploads', 0, true),
-        'tab_two_id' => getTplAdminTabName('uploads', 1, true),
-        'tab_three_id' => getTplAdminTabName('uploads', 2, true),
-        'tab_one_html' => $tabone,
-        'tab_two_html' => $tabtwo,
-        'tab_three_html' => $tabthr,
+    $tabthr .= $tpl->getHtmlPart('box', ['box_id' => 'repf2']);
+    $tabs = [
+        ['label' => _EUPLOAD, 'target' => 'uploads-panel-0', 'active' => true, 'link_attr' => ''],
+        ['label' => _DGEN, 'target' => 'uploads-panel-1', 'active' => false, 'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=1&amp;dir='.$dir.$token.'" hx-target="#repf1" hx-swap="innerHTML" hx-push-url="false"'],
+        ['label' => _DTHUMB, 'target' => 'uploads-panel-2', 'active' => false, 'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=2&amp;dir='.$dir.$token.'" hx-target="#repf2" hx-swap="innerHTML" hx-push-url="false"'],
+    ];
+    $tabsHtml = '';
+    foreach ($tabs as $tab) {
+        $tabsHtml .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => '#',
+            'label' => $tab['label'],
+            'rel' => $tab['target'],
+            'is_active' => $tab['active'],
+            'link_attr' => $tab['link_attr'],
+        ]);
+    }
+    $uplv = $tpl->getHtmlFrag('new/tabs', [
+        'id' => 'uploads-tabs',
+        'is_runtime' => true,
+        'tabs_html' => $tabsHtml,
+        'content_html' =>
+            $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-panel-0', 'content_html' => $tabone])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-panel-1', 'content_html' => $tabtwo])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-panel-2', 'content_html' => $tabthr]),
     ]);
-    $uplv .= getTplAdminTabsSetup('uploadss');
     echo $cont.$uplv;
     setFoot();
 }
@@ -109,7 +120,12 @@ function uploadsave(): void {
 function tplconfig(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 1, 'sub' => getUploadsSearch(), 'id' => 'tplconfig']);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO],
+        'tab' => 1,
+        'subtitle_html' => getUploadsSearch(),
+    ]);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = explode(',', $conf['uploads']['typ']);
@@ -124,7 +140,16 @@ function tplconfig(): void {
             ]),
         ];
     }
-    $tplv = getTplAdminConfSave($tpl->getHtmlFrag('config-div-content', ['rows' => $rows]), 'uploads', 'tplsave');
+    $tplv = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'uploads'],
+            ['nameattr' => 'op', 'valueattr' => 'tplsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'content_html' => $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]),
+        'submit_label' => _SAVECHANGES,
+    ]);
     echo $cont.getTplBox($tplv);
     setFoot();
 }
@@ -142,7 +167,12 @@ function tplsave(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_GENPREF, _MODULES], 'tab' => 2, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'config']);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO],
+        'tab' => 2,
+        'subtitle_html' => getUploadsSearch(),
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $directory = '';
     foreach (scandir('uploads') as $file) {
@@ -200,14 +230,35 @@ function config(): void {
         }
     }
     $tabtwo = $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]);
-    $conts = $tpl->getHtmlFrag('admin-uploads-config-tabs', [
-        'tab_one_id' => getTplAdminTabName('config', 0, true),
-        'tab_two_id' => getTplAdminTabName('config', 1, true),
-        'tab_one_html' => $tabone,
-        'tab_two_html' => $tabtwo,
+    $tabsHtml = $tpl->getHtmlFrag('new/tabs-link', [
+        'href' => '#',
+        'label' => _GENPREF,
+        'rel' => 'uploads-config-panel-0',
+        'is_active' => true,
+    ]).$tpl->getHtmlFrag('new/tabs-link', [
+        'href' => '#',
+        'label' => _MODULES,
+        'rel' => 'uploads-config-panel-1',
+        'is_active' => false,
     ]);
-    $conts .= getTplAdminTabsSetup('configs');
-    $confv = getTplAdminConfSave($conts, 'uploads', 'configsave');
+    $conts = $tpl->getHtmlFrag('new/tabs', [
+        'id' => 'uploads-config-tabs',
+        'is_runtime' => true,
+        'tabs_html' => $tabsHtml,
+        'content_html' =>
+            $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-config-panel-0', 'content_html' => $tabone])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-config-panel-1', 'content_html' => $tabtwo]),
+    ]);
+    $confv = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'uploads'],
+            ['nameattr' => 'op', 'valueattr' => 'configsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'content_html' => $conts,
+        'submit_label' => _SAVECHANGES,
+    ]);
     echo $cont.getTplBox($confv);
     setFoot();
 }
@@ -262,8 +313,11 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 3, 'sub' => getUploadsSearch()]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO],
+        'subtitle_html' => getUploadsSearch(),
+    ]);
 }
 
 switch ($op) {
