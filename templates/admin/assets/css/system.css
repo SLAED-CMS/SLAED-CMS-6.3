@@ -633,24 +633,6 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 }
 .sl_preview_mini:hover { width: 48px; height: 48px; border-radius: 30px; }
 
-/* Стили панели администратора */
-/* Переместить вверх/вниз */
-.sl_bl_up, .sl_bl_down {
-	cursor: pointer;
-	display: inline-block;
-	vertical-align: middle;
-	background-image: url(../../images/misc/sprite.png);
-	width: 16px;
-	height: 16px;
-	margin: 0 4px;
-}
-
-/* Переместить вверх */
-.sl_bl_up { background-position: -352px -88px; }
-
-/* Переместить вниз */
-.sl_bl_down { background-position: -368px -88px; }
-
 /* Стили для оформления таблиц */
 .sl_bodyline {
 	width: 100%;
