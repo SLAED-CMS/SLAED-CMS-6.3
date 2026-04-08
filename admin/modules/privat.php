@@ -8,16 +8,20 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function privat(): void {
+    global $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getTplAdminPlaceholder('repadminPrivateList', getAdminPrivateList(1));
+    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    echo $cont.$tpl->getHtmlPart('box', [
+        'box_id' => 'repadminPrivateList',
+        'content_html' => getAdminPrivateList(1),
+    ]);
     setFoot();
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => getTplNumberInput((string)$conf['privat']['num'], 'num', 'sl_conf')],
@@ -66,8 +70,10 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

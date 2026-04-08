@@ -8,16 +8,20 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function favorites(): void {
+    global $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getTplAdminPlaceholder('repadminFavoriteList', getAdminFavoriteList(1));
+    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    echo $cont.$tpl->getHtmlPart('box', [
+        'box_id' => 'repadminFavoriteList',
+        'content_html' => getAdminFavoriteList(1),
+    ]);
     setFoot();
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => getTplNumberInput((string)$conf['favorites']['num'], 'num', 'sl_conf')],
@@ -52,8 +56,10 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

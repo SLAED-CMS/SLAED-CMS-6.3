@@ -10,7 +10,10 @@ function blocks(): void {
     global $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
-    echo $cont.getTplAdminPlaceholder('repajax_block', getAdminBlockList(getSiteToken()));
+    echo $cont.$tpl->getHtmlPart('box', [
+        'box_id' => 'repajax_block',
+        'content_html' => getAdminBlockList(getSiteToken()),
+    ]);
     setFoot();
 }
 
