@@ -444,6 +444,12 @@ define('_RULES','Правила регистрации пользователе�
 define('_RUSSIAN','Русский');
 define('_SAVE','Сохранить');
 define('_SAVECHANGES','Сохранить изменения');
+define('_SUCCSAVE','Изменения успешно сохранены.');
+define('_SUCCDELETE','Объект успешно удалён.');
+define('_SUCCCLEAR','Данные успешно очищены.');
+define('_SUCCUPLOAD','Файл успешно загружен.');
+define('_SUCCFILESAVE','Файл успешно сохранён.');
+define('_SUCCSTATUS','Статус успешно изменён.');
 define('_SEARCH','Поиск');
 define('_SEARCHLETMIN','Минимально допустимое количество символов в поисковом запросе');
 define('_SEC','сек');
