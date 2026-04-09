@@ -629,8 +629,12 @@ function getCpuDetails(): array {
 
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
+    global $tpl;
     if ($state === null) return getTplSpan('sl_muted', 'N/A');
-    return getTplAdminFlagBox($state, 'On', 'Off');
+    return $tpl->getHtmlFrag('new/inline-badge', [
+        'class' => $state ? 'sl_green' : 'sl_red',
+        'label' => $state ? 'On' : 'Off',
+    ]);
 }
 
 # Queries database runtime health metrics and returns normalized diagnostics for monitor output
@@ -1118,7 +1122,10 @@ function getMonitorServerStats(): array {
     $srvport = getServerValue('SERVER_PORT', 'N/A');
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
-    $srvhttps = getTplAdminFlagBox($ishttps, 'enabled', 'disabled');
+    $srvhttps = $tpl->getHtmlFrag('new/inline-badge', [
+        'class' => $ishttps ? 'sl_green' : 'sl_red',
+        'label' => $ishttps ? 'enabled' : 'disabled',
+    ]);
     $loaded = get_loaded_extensions();
     $ext_dir = ini_get('extension_dir');
     $off = [];
@@ -1210,7 +1217,10 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     if ($reqtime <= 0) $reqtime = microtime(true);
     $extras = getMonitorRuntimeExtras();
     $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
-    $diskwarn = getTplAdminFlagBox(!$islowdisk, 'Normal', 'Low free space');
+    $diskwarn = $tpl->getHtmlFrag('new/inline-badge', [
+        'class' => $islowdisk ? 'sl_red' : 'sl_green',
+        'label' => $islowdisk ? 'Low free space' : 'Normal',
+    ]);
     return [
         'diskio' => getDiskIoMetrics(),
         'disktotal' => $disktot,
@@ -1375,8 +1385,8 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     global $tpl;
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
-    $navi = getTplAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO]]);
-    echo $navi.getTplBox($tpl->getHtmlFrag('basic-monitor', $vars));
+    $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&amp;op=info'], 'tabs' => [_HOME, _INFO]]);
+    echo $navi.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('basic-monitor', $vars)]);
 }
 
 # Renders the main monitor page including navigation, panels, and full dashboard layout
@@ -1389,8 +1399,10 @@ function monitor(): void {
 
 # Renders monitor information page with standard admin info block and navigation tabs
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=monitor', 'name=monitor&amp;op=info'],
+        'tabs' => [_HOME, _INFO],
+    ]);
 }
 
 # Sets snapshot-backed monitor partial output for HTMX refresh endpoints

@@ -11,22 +11,26 @@ function modules(): void {
     global $conf, $db, $afile, $infos, $tpl;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
-    $token = '&amp;token='.getSiteToken();
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = getTplAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
-        'action_url' => $afile.'.php?name=modules',
-        'select_html' => getTplSelect('type',
-            getTplOption('2', _ALL, $mtype === 2)
-            .getTplOption('1', _USERS, $mtype === 1)
-            .getTplOption('0', _ADMINS, $mtype === 0),
-            '',
-            'OnChange="submit()"'
-        ),
-        'type_label' => _TYPE,
-    ]));
+    $search = $tpl->getHtmlPart('searchbox', [
+        'searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'modules'],
+            ],
+            'content_html' => _TYPE.': '.$tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'type',
+                'options_html' =>
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ALL, 'is_selected' => $mtype === 2]) .
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _USERS, 'is_selected' => $mtype === 1]) .
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _ADMINS, 'is_selected' => $mtype === 0]),
+                'select_attr' => 'OnChange="submit()"',
+            ]),
+        ]),
+    ]);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
-    if (isset($infos)) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $infos]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'subtitle_html' => $search]);
+    if (!empty($infos)) $cont .= $tpl->getHtmlFrag('new/alert', ['text' => $infos]);
     $config = false;
     $modlist = [];
     $new = [];
@@ -74,12 +78,12 @@ function modules(): void {
     }
     $duplicates = array_diff_assoc($modlist, array_unique($modlist));
     if (!empty($duplicates)) {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
     }
     if (!empty($new)) {
         $new = array_values(array_unique($new));
         sort($new, SORT_NATURAL | SORT_FLAG_CASE);
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODULES_NEW.': '.implode(', ', $new)]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _MODULES_NEW.': '.implode(', ', $new)]);
     }
     foreach (array_keys($conf['modules']) as $module) {
         if (!in_array($module, $modlist, true)) {
@@ -91,7 +95,7 @@ function modules(): void {
     if (!empty($removed)) {
         $removed = array_values(array_unique($removed));
         sort($removed, SORT_NATURAL | SORT_FLAG_CASE);
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
     }
     if ($config) setConfigFile('modules.php', $conf['modules']);
     $mods = [];
@@ -107,8 +111,7 @@ function modules(): void {
         if ($ta === $tb) return strnatcasecmp($a, $b);
         return $ta <=> $tb;
     });
-    $head = getTplAdminTableHead([_ID, _NAME, _MODUL, _VIEW, _GROUP, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
-    $rows = '';
+    $rows = [];
     $a = 1;
     foreach ($mods as $title => $mod) {
         $lang = (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']);
@@ -117,22 +120,38 @@ function modules(): void {
         $menu = $mod['menu'];
         $group = $mod['group'];
         $type = $mod['type'];
-        $act = $active ? 0 : 1;
         if ($view == 0) {
             $who_view = _MVALL;
         } elseif ($view == 1) {
             $who_view = _MVUSERS;
-        } elseif ($view == 2) {
+        } else {
             $who_view = _MVADMIN;
         }
         $typel = ($type == 0) ? 'tools' : 'people-fill';
-        $titlel = ($menu == 0) ? getTplAdminTitleTip(_NO_SICHT).$lang : $lang;
+        $titlel = ($menu == 0)
+            ? $tpl->getHtmlFrag('new/title-tip', [
+                'items' => [
+                    ['label' => _INFO, 'value' => _NO_SICHT, 'is_last' => true],
+                ],
+                'label_text' => $lang,
+                'title_text' => $lang,
+            ])
+            : $lang;
         if ($group != 0) {
             $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];
         } else {
             $group_name = _NONE;
         }
+        $items = [[
+            'href' => $afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.($active ? '0' : '1').'&amp;type='.$mtype.'&amp;token='.getSiteToken(),
+            'label' => $active ? _DEACTIVATE : _ACTIVATE,
+            'title' => $active ? _DEACTIVATE : _ACTIVATE,
+        ], [
+            'href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$title.'&amp;type='.$mtype,
+            'label' => _FULLEDIT,
+            'title' => _FULLEDIT,
+        ]];
         if (file_exists('modules/'.$title.'/sql/table.sql')) {
             $filename = file_get_contents('modules/'.$title.'/sql/table.sql');
             $stringdump = explode(';', $filename);
@@ -144,43 +163,46 @@ function modules(): void {
                     $install = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.$table[1]));
                 }
             }
-            if ($install) {
-                $dbc = $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => 'database-fill-dash']);
-                $sqlimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1'.$token, _DB_DELETE.' "'.$title.'"?', _DB_DELETE, _DB_DELETE);
-            } else {
-                $dbc = $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => 'database-fill-add']);
-                $sqlimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2'.$token, _DB_INSTALL.' "'.$title.'"?', _DB_INSTALL, _DB_INSTALL);
-            }
-        } else {
-            $dbc = '';
-            $sqlimg = '';
+            $items[] = [
+                'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id='.($install ? '1' : '2').'&amp;type='.$mtype.'&amp;token='.getSiteToken(),
+                'label' => $install ? _DB_DELETE : _DB_INSTALL,
+                'title' => $install ? _DB_DELETE : _DB_INSTALL,
+                'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(($install ? _DB_DELETE : _DB_INSTALL).' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
+            ];
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
-            $dbu = $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => 'database-fill-gear', 'icon_class' => 'bi-green', 'title' => _DB_UPDATE]);
-            $sqluimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3'.$token, _DB_UPDATE.' "'.$title.'"?', _DB_UPDATE, _DB_UPDATE);
-        } else {
-            $dbu = '';
-            $sqluimg = '';
+            $items[] = [
+                'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3&amp;type='.$mtype.'&amp;token='.getSiteToken(),
+                'label' => _DB_UPDATE,
+                'title' => _DB_UPDATE,
+                'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(_DB_UPDATE.' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
+            ];
         }
-        $acts = getTplAdminActionMenu([
-            ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act.''.$token, $active),
-            getTplLinkAction($afile.'.php?name=modules&amp;op=edit&amp;mod='.$title, _FULLEDIT, _FULLEDIT),
-            $sqlimg,
-            $sqluimg,
-        ]);
-        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-modules-list-row', [
-            'actions_html' => $acts,
-            'db_html' => $dbc.$dbu,
-            'group_label' => $group_name,
-            'id_value' => (string)$a,
-            'module_name' => $title,
-            'title_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel,
-            'view_label' => $who_view,
-        ]));
+        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => (string)$a],
+                ['content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
+                ['content_html' => $title],
+                ['content_html' => $who_view],
+                ['content_html' => $group_name],
+                ['content_html' => ad_status('', $active)],
+                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+            ],
+        ])]);
         $a++;
     }
-
-    $cont .= getTplAdminTable($head, $rows);
+    $cont .= $tpl->getHtmlFrag('new/table', [
+        'head' => [
+            ['content' => _ID],
+            ['content' => _NAME],
+            ['content' => _MODUL],
+            ['content' => _VIEW],
+            ['content' => _GROUP],
+            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ],
+        'rows_html' => implode('', $rows),
+    ]);
     echo $cont;
     setFoot();
 }
@@ -188,7 +210,10 @@ function modules(): void {
 function edit(): void {
     global $conf, $db, $afile, $tpl;
     $mod = getVar('get', 'mod', 'var');
-    if (!isset($conf['modules'][$mod])) setRedirect($afile.'.php?name=modules');
+    if (!isset($conf['modules'][$mod])) {
+        setRedirect($afile.'.php?name=modules', false, 302, _NO_INFO, true);
+        return;
+    }
     $lang = $conf['modules'][$mod]['lang'] ?? '_'.strtoupper($mod);
     $img = $conf['modules'][$mod]['img'] ?? $mod.'.png';
     $active = $conf['modules'][$mod]['active'];
@@ -199,69 +224,87 @@ function edit(): void {
     $top = $conf['modules'][$mod]['top'];
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
-    $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = getTplAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
-        'action_url' => $afile.'.php?name=modules',
-        'select_html' => getTplSelect('type',
-            getTplOption('2', _ALL, $mtype === 2)
-            .getTplOption('1', _USERS, $mtype === 1)
-            .getTplOption('0', _ADMINS, $mtype === 0),
-            '',
-            'OnChange="submit()"'
-        ),
-        'type_label' => _TYPE,
-    ]));
+    $search = $tpl->getHtmlPart('searchbox', [
+        'searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'modules'],
+            ],
+            'content_html' => _TYPE.': '.$tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'type',
+                'options_html' =>
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ALL, 'is_selected' => $mtype === 2]) .
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _USERS, 'is_selected' => $mtype === 1]) .
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _ADMINS, 'is_selected' => $mtype === 0]),
+                'select_attr' => 'OnChange="submit()"',
+            ]),
+        ]),
+    ]);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
-    $hide = getTplHiddenInput('mod', $mod).getTplHiddenInput('name', 'modules').getTplHiddenInput('op', 'save');
-    $rows = '';
-    $rows .= getTplAdminFormRow(_LANGUAGE.':', getTplTextInput('lang', $lang, 'sl_conf', 'maxlength="50" placeholder="'._LANGUAGE.'"'));
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&amp;type='.$mtype : ''), 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'subtitle_html' => $search]);
     $path = 'templates/admin/images/admin/';
     $entries = is_dir($path) ? scandir($path) : [];
     $pickopts = '';
     foreach ($entries as $entry) {
         if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-            $pickopts .= getTplOption($path.$entry, $entry, $img == $entry);
+            $pickopts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $path.$entry, 'label_text' => $entry, 'is_selected' => $img == $entry]);
         }
     }
-    $rows .= getTplAdminFormRow(_LOGO.':', getTplSelect('img', $pickopts, 'sl_conf', 'id="img_replace"'));
-    $rows .= getTplAdminFormRow(_PREVIEW.':', getTplImagePreview($path.$img, _LOGO));
-    $rows .= getTplAdminFormRow(_STATUS.':', radio_form($active, 'active'));
-    $privopts = '';
-    foreach ([_MVALL, _MVUSERS, _MVADMIN] as $key => $value) {
-        $privopts .= getTplOption((string)$key, $value, $view == $key);
-    }
-    $rows .= getTplAdminFormRow(_VIEWPRIV, getTplSelect('view', $privopts, 'sl_conf'));
+    $grpopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NONE, 'is_selected' => (int)$group === 0]);
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
-        $grpopts = '';
         $result2 = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups');
-        $first = true;
         while ([$gid, $gname] = $db->getSqlRow($result2)) {
-            if ($first) {
-                $grpopts .= getTplOption('0', _NONE, $group == 0);
-                $first = false;
-            }
-            $grpopts .= getTplOption((string)$gid, $gname, $gid == $group);
+            $grpopts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => (string)$gid, 'label_text' => $gname, 'is_selected' => (int)$gid === (int)$group]);
         }
-        $rows .= getTplAdminFormRow(_UGROUP.':', getTplSelect('group', $grpopts, 'sl_conf'));
-    } else {
-        $hide .= getTplHiddenInput('group', '0');
     }
-    $sideopts = '';
-    foreach ([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3] as $key => $value) {
-        $sideopts .= getTplOption((string)$key, $value, $side == $key);
-    }
-    $rows .= getTplAdminFormRow(_BLOCKS_MOD.':', getTplSelect('side', $sideopts, 'sl_conf'));
-    $topopts = '';
-    foreach ([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3] as $key => $value) {
-        $topopts .= getTplOption((string)$key, $value, $top == $key);
-    }
-    $rows .= getTplAdminFormRow(_BLOCKS_MOD.':', getTplSelect('top', $topopts, 'sl_conf'));
-    $rows .= getTplAdminFormRow(_SHOWINMENU, radio_form($menu, 'menu'));
-    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
-    echo $cont;
+    $rows = [
+        ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'lang', 'value_attr' => $lang, 'maxlength_num' => 50, 'placeholder_text' => _LANGUAGE, 'is_config' => true])],
+        ['label_html' => _LOGO.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
+        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('new/image-preview', ['src_attr' => $path.$img, 'image_id' => 'picture', 'alt_text' => _LOGO])],
+        ['label_html' => _STATUS.':', 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'view',
+            'is_config' => true,
+            'options_html' =>
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2]),
+        ])],
+        ['label_html' => _UGROUP.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'group', 'options_html' => $grpopts, 'is_config' => true])],
+        ['label_html' => _BLOCKS_MOD.':', 'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'side',
+            'is_config' => true,
+            'options_html' =>
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _BLOCKS_MOD0, 'is_selected' => (int)$side === 0]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _BLOCKS_MOD1, 'is_selected' => (int)$side === 1]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MOD2, 'is_selected' => (int)$side === 2]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$side === 3]),
+        ])],
+        ['label_html' => _BLOCKS_MOD.':', 'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'top',
+            'is_config' => true,
+            'options_html' =>
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _BLOCKS_MODC0, 'is_selected' => (int)$top === 0]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _BLOCKS_MODC1, 'is_selected' => (int)$top === 1]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MODC2, 'is_selected' => (int)$top === 2]) .
+                $tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MODC3, 'is_selected' => (int)$top === 3]),
+        ])],
+        ['label_html' => _SHOWINMENU, 'field_html' => getTplRadioGroup(['name' => 'menu', 'value' => (string)(int)$menu, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+    ];
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'mod', 'valueattr' => $mod],
+            ['nameattr' => 'name', 'valueattr' => 'modules'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'type', 'valueattr' => (string)$mtype],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
 }
 
@@ -269,17 +312,21 @@ function status(): void {
     global $conf, $afile;
     $mod = getVar('get', 'mod', 'var');
     $act = getVar('get', 'act', 'num');
-    if (isset($conf['modules'][$mod])) {
+    $type = getVar('get', 'type', 'num', 2);
+    $warn = !checkSiteToken();
+    if (!$warn && isset($conf['modules'][$mod])) {
         $conf['modules'][$mod]['active'] = $act;
         setConfigFile('modules.php', $conf['modules']);
     }
-    setRedirect($afile.'.php?name=modules');
+    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
 function save(): void {
     global $conf, $afile;
     $mod = getVar('post', 'mod', 'var');
-    if (isset($conf['modules'][$mod])) {
+    $typef = getVar('post', 'type', 'num', 2);
+    $warn = !checkSiteToken();
+    if (!$warn && isset($conf['modules'][$mod])) {
         $view = getVar('post', 'view', 'num');
         $img = str_replace('templates/admin/images/admin/', '', getVar('post', 'img', 'text'));
         $type = $conf['modules'][$mod]['type'] ?? 1;
@@ -296,39 +343,49 @@ function save(): void {
         ];
         setConfigFile('modules.php', $conf['modules']);
     }
-    setRedirect($afile.'.php?name=modules');
+    setRedirect($afile.'.php?name=modules'.($typef !== 2 ? '&type='.$typef : ''), false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function add(): void {
-    global $db, $id, $infos;
+    global $db, $infos, $afile;
     $mod = getVar('get', 'mod', 'var');
+    $id = getVar('get', 'id', 'num');
+    $type = getVar('get', 'type', 'num', 2);
+    $warn = !checkSiteToken();
+    if ($warn) {
+        setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), false, 302, _TOKENMISS, true);
+        return;
+    }
     if ($mod && $id) {
         $filename = ($id == 3) ? file_get_contents('modules/'.$mod.'/sql/update.sql') : file_get_contents('modules/'.$mod.'/sql/table.sql');
         if ($id == 1) {
             $ttitle = _DB_DELETE;
         } elseif ($id == 2) {
             $ttitle = _DB_INSTALL;
-        } elseif ($id == 3) {
+        } else {
             $ttitle = _DB_UPDATE;
         }
         $stringdump = explode(';', $filename);
+        $lines = [];
         for ($i = 0; $i < count($stringdump); $i++) {
             $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
             if ($id != 1) $ident = $db->getSqlQuery(stripslashes($string));
             if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                 $table = explode('`', $string);
                 if ($id == 1) $ident = $db->getSqlQuery('DROP TABLE '.$table[1]);
-                $info .= getTplAdminInfoLine(_TABLE.': '.$table[1].' - '._STATUS, getTplAdminStatusBadge((bool)$ident, _OK, _ERROR));
+                $lines[] = _TABLE.': '.$table[1].' - '.((bool)$ident ? _OK : _ERROR);
             }
         }
-        $infos = $ttitle.': '.$mod.'<br><br>'.$info;
+        $infos = $ttitle.': '.$mod.PHP_EOL.PHP_EOL.implode(PHP_EOL, $lines);
     }
     modules();
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=modules', 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=modules', 'name=modules&amp;op=info'],
+        'tabs' => [_HOME, _INFO],
+    ]);
 }
 
 switch ($op) {

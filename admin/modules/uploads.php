@@ -36,7 +36,7 @@ function uploads(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, 'uploads/'.$dir)]);
-    $uphide = getTplHiddenInput('name', 'uploads').getTplHiddenInput('op', 'uploadsave').getTplHiddenInput('dir', $dir);
+    $uphide = getTplHiddenInput('name', 'uploads').getTplHiddenInput('op', 'uploadsave').getTplHiddenInput('dir', $dir).getTplHiddenInput('token', getSiteToken());
     $uprows = $tpl->getHtmlFrag('admin-uploads-upload-rows', [
         'execute_label' => _EXECUTE,
         'filesite_label' => _FILE_SITE.':',
@@ -109,11 +109,12 @@ function uploads(): void {
 function uploadsave(): void {
     global $afile, $stop;
     $dir = getVar('post', 'dir', 'var');
-    upload(3, 'uploads/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
-    if ($stop) {
+    $warn = !checkSiteToken();
+    if (!$warn) upload(3, 'uploads/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
+    if (!$warn && $stop) {
         uploads();
     } else {
-        setRedirect($afile.'.php?name=uploads&dir='.$dir);
+        setRedirect($afile.'.php?name=uploads&dir='.$dir, false, 302, $warn ? _TOKENMISS : _SUCCUPLOAD, $warn);
     }
 }
 
@@ -156,12 +157,15 @@ function tplconfig(): void {
 
 function tplsave(): void {
     global $afile, $conf;
-    $cont = [];
-    $typm = explode(',', $conf['uploads']['typ']);
-    $tmp = getVar('post', 'tmp', 'raw');
-    for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
-    setConfigFile('filetype.php', $cont);
-    setRedirect($afile.'.php?name=uploads&op=tplconfig');
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [];
+        $typm = explode(',', $conf['uploads']['typ']);
+        $tmp = getVar('post', 'tmp', 'raw');
+        for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
+        setConfigFile('filetype.php', $cont);
+    }
+    setRedirect($afile.'.php?name=uploads&op=tplconfig', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
@@ -265,6 +269,8 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
+    $warn = !checkSiteToken();
+    if (!$warn) {
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $ttyp = getVar('post', 'ttyp', 'text');
     $xttyp = (!$ttyp) ? 'gif,jpg,jpeg,png,bmp' : strtolower(strtr($ttyp, $protect));
@@ -309,7 +315,8 @@ function configsave(): void {
         }
     }
     setConfigFile('uploads.php', $cont);
-    setRedirect($afile.'.php?name=uploads&op=config');
+    }
+    setRedirect($afile.'.php?name=uploads&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {

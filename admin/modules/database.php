@@ -180,7 +180,7 @@ function getSqltable(array $items): string {
             ['content' => _STATUS, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
-        'disable_sort' => true,
+        'is_wrapless' => true,
     ]);
 }
 
@@ -294,12 +294,12 @@ function database(): void {
             $stattag = $tpl->getHtmlFrag('new/row-actions', [
                 'trigger_label' => _EDITOR,
                 'items' => [[
-                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1',
+                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1&amp;token='.getSiteToken(),
                     'label' => _CLEAN,
                     'title' => _CLEAN,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ], [
-                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2',
+                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2&amp;token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -353,7 +353,7 @@ function database(): void {
             ['content' => $headtag, 'nosort' => true],
         ],
         'rows_html' => implode('', $dbrows),
-        'disable_sort' => true,
+        'is_wrapless' => true,
     ]);
 
     // After OPTIMIZE: Totals to recalculate info box
@@ -413,7 +413,12 @@ function dump(): void {
     $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
-    if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
+    if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump' || $action === _DB_PARSE || $action === _EXECUTE)) {
+        if (!checkSiteToken()) {
+            echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            setFoot();
+            return;
+        }
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $parsed = getSqlbatch(stripslashes($string));
         if ($parsed['error'] !== '') {
@@ -424,7 +429,8 @@ function dump(): void {
                 $items[] = str_replace(array_keys($subst), array_values($subst), $query);
             }
             $reslist = [];
-            if ($action === 'dump') {
+            $isdump = ($action === 'dump' || $action === _EXECUTE);
+            if ($isdump) {
                 if (!checkDblock()) {
                     $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
                 } else {
@@ -453,32 +459,37 @@ function dump(): void {
                     $reslist[] = ['num' => $index + 1, 'type' => $info['type'], 'table' => $info['table'], 'ok' => true, 'error' => '', 'sql' => $sql];
                 }
             }
-            $cont .= getSqlsum($reslist, $action, $conf['db']['name']);
+            $cont .= getSqlsum($reslist, $isdump ? 'dump' : 'parse', $conf['db']['name']);
             $cont .= $tpl->getHtmlPart('box', ['content_html' => getSqltable($reslist)]);
         }
     } else {
         $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
+    $buttons =
+        $tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _DB_PARSE, 'input_attr' => 'class="sl_but_green"'])
+        .' '
+        .$tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _EXECUTE, 'input_attr' => 'class="sl_but_blue"']);
     $form = $tpl->getHtmlFrag('new/form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'database'],
             ['nameattr' => 'op', 'valueattr' => 'dump'],
             ['nameattr' => 'type', 'valueattr' => 'dump'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' =>
-            getTplCodeEditor([
+        'rows' => [[
+            'is_full' => true,
+            'label_html' => '',
+            'field_html' => getTplCodeEditor([
                 'id' => 'code',
                 'name' => 'string',
                 'mode' => 'text/x-mysql',
                 'text' => stripslashes($string),
-            ])
-            .$tpl->getHtmlPart('box', ['content_html' =>
-                $tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'input_attr' => 'class="sl_but_blue"'])
-                .' '
-                .$tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => 'dump', 'input_attr' => 'class="sl_but_blue"'])
             ]),
+        ]],
+        'actions_html' => $buttons,
+        'submit_label' => '',
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
@@ -495,13 +506,18 @@ function delete(): void {
     global $db, $afile;
     $tb = getVar('get', 'tb', 'var');
     $id = getVar('get', 'id', 'num');
+    $warn = !checkSiteToken();
     $tb = preg_match('#^[a-zA-Z0-9_]+$#', (string)$tb) ? $tb : '';
-    if ($tb && $id == 1) {
+    if (!$warn && $tb && $id == 1) {
         $db->getSqlQuery('TRUNCATE TABLE `'.$tb.'`');
-    } elseif ($tb && $id == 2) {
+        $mess = _SUCCCLEAR;
+    } elseif (!$warn && $tb && $id == 2) {
         $db->getSqlQuery('DROP TABLE `'.$tb.'`');
+        $mess = _SUCCDELETE;
+    } else {
+        $mess = $warn ? _TOKENMISS : _SUCCDELETE;
     }
-    setRedirect($afile.'.php?name=database');
+    setRedirect($afile.'.php?name=database', false, 302, $mess, $warn);
 }
 
 switch ($op) {

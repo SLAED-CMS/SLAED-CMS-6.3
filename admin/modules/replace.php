@@ -9,72 +9,126 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function replace(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['', '', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'id' => 'replace']);
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _REPLACEINFO]);
-    $cont .= checkPerms(CONFIG_DIR.'/replace.php');
     $mods = ['content', 'news'];
-    $content = '';
-    $k = 0;
-    foreach ($mods as $val) {
-        if ($val != '') {
-            $rows = [];
-            $fieldc = explode('||', $conf['replace'][$val]);
-            for ($c = 0; $c < 50; $c++) {
-                preg_match('#(.*)\|(.*)#i', $fieldc[$c], $out);
-                $b = $c + 1;
-                $display = (empty($out[1]) && empty($out[1][$c]) != '0' && $c != '0') ? ' class="sl_none"' : '';
-                $rows[] = [
-                    'raw_html' => $tpl->getHtmlFrag('admin-replace-field-block', [
-                        'block_id' => 'fi'.$k.$c,
-                        'content_label' => _CONTENT.':',
-                        'content_placeholder' => _CONTENT,
-                        'content_value' => $out[2] ?? '',
-                        'display_attr' => $display,
-                        'hr_html' => ($c === 0) ? '' : getTplHrLine(),
-                        'info_text' => _REPLACEIN,
-                        'next_block_id' => 'fi'.$k.$b,
-                        'title_attr' => _ADD,
-                        'title_text' => _REPLACE_FIELD.': '.$b,
-                        'word_label' => _WORD.':',
-                        'word_placeholder' => _WORD,
-                        'word_value' => $out[1] ?? '',
-                        'xid' => (string)$k,
-                    ]),
-                ];
-            }
-            $content .= getTplAdminTabContent(getTplAdminTabName('replace', $k), $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]));
-            $k++;
-        }
+    $labs = [_CONTENT, _NEWS];
+    $ctab = getVar('get', 'tab', 'num', 0);
+    if ($ctab < 0 || $ctab >= count($mods)) $ctab = 0;
+    $links = [];
+    $panels = [];
+    foreach ($mods as $k => $val) {
+        $links[] = [
+            'href' => '#',
+            'is_active' => $ctab === $k,
+            'label' => $labs[$k],
+            'rel' => 'replace-panel-'.$k,
+            'title' => $labs[$k],
+        ];
     }
-    $repv = getTplAdminConfSave($content, 'replace', 'save')
-        .getTplAdminTabsSetup('replace');
-    echo $cont.getTplBox($repv);
+    $links[] = [
+        'href' => $afile.'.php?name=replace&amp;op=info&amp;tab='.$ctab,
+        'label' => _INFO,
+        'link_attr' => 'data-sl-tab-info-link="replace-main"',
+        'title' => _INFO,
+    ];
+    $cont = getTplAdminTabs([
+        'is_runtime' => true,
+        'links' => $links,
+        'tabs_id' => 'replace-main',
+        'tabs_index' => $ctab,
+        'tabs_sync_selector' => 'input[name="tab"]',
+    ]);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _REPLACEINFO]);
+    $cont .= checkPerms(CONFIG_DIR.'/replace.php');
+    foreach ($mods as $k => $val) {
+        $fieldc = explode('||', $conf['replace'][$val]);
+        $blok = '';
+        for ($c = 0; $c < 50; $c++) {
+            $out = array_pad(explode('|', (string)($fieldc[$c] ?? ''), 2), 2, '');
+            if ($out[0] === '0') $out[0] = '';
+            if ($out[1] === '0') $out[1] = '';
+            $next = $c + 1;
+            $rows = [
+                [
+                    'label_html' => _WORD.':',
+                    'field_html' => $tpl->getHtmlFrag('new/input', [
+                        'itype' => 'text',
+                        'name_attr' => 'field1'.$k.'[]',
+                        'value_attr' => $out[0],
+                        'placeholder_text' => _WORD,
+                        'is_required' => true,
+                        'is_config' => true,
+                    ]),
+                ],
+                [
+                    'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CONTENT, 'hint' => _REPLACEIN]),
+                    'field_html' => $tpl->getHtmlFrag('new/textarea', [
+                        'name_attr' => 'field2'.$k.'[]',
+                        'value_text' => $out[1],
+                        'rows_num' => '5',
+                        'is_required' => true,
+                        'is_config' => true,
+                    ]),
+                ],
+            ];
+            $blok .= $tpl->getHtmlFrag('new/toggle-form-block', [
+                'block_id' => 'fi'.$k.$c,
+                'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
+                'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
+                'title' => _ADD,
+                'label_html' => _REPLACE_FIELD.': '.$next,
+                'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows]),
+            ]);
+        }
+        $panels[] = $tpl->getHtmlFrag('new/tabs-panel', [
+            'panel_id' => 'replace-panel-'.$k,
+            'active' => $ctab === $k,
+            'content_html' => $blok,
+        ]);
+    }
+    $repv = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'replace'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'content_html' => $tpl->getHtmlFrag('new/tabs', [
+            'content_html' => implode('', $panels),
+        ]),
+        'submit_label' => _SAVECHANGES,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $repv]);
     setFoot();
 }
 
 function save(): void {
     global $afile;
+    $warn = !checkSiteToken();
+    $ctab = getVar('post', 'tab', 'num', 0);
     $cont = [];
     $mods = ['content', 'news'];
-    $a = 0;
-    foreach ($mods as $val) {
-        $fields = '';
-        for ($i = 0; $i < 50; $i++) {
-            $ident = ($i == 0) ? '' : '||';
-            $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'word', '0');
-            $field2 = getVar('post', 'field2'.$a.'['.$i.']', '', '0');
-            $fields .= $ident.$field1.'|'.$field2;
+    if (!$warn) {
+        foreach ($mods as $a => $val) {
+            $fields = '';
+            for ($i = 0; $i < 50; $i++) {
+                $ident = ($i == 0) ? '' : '||';
+                $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'word', '0');
+                $field2 = getVar('post', 'field2'.$a.'['.$i.']', '', '0');
+                $fields .= $ident.$field1.'|'.$field2;
+            }
+            $cont[$val] = $fields;
         }
-        $a++;
-        $cont[$val] = $fields;
+        setConfigFile('replace.php', $cont);
     }
-    setConfigFile('replace.php', $cont);
-    setRedirect($afile.'.php?name=replace');
+    setRedirect($afile.'.php?name=replace&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=replace', 'name=replace', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=replace&amp;tab=0', 'name=replace&amp;tab=1', 'name=replace&amp;op=info'],
+        'tabs' => [_CONTENT, _NEWS, _INFO],
+    ]);
 }
 
 switch ($op) {

@@ -51,8 +51,6 @@ function admins(): void {
     global $db, $afile, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-    if (getVar('get', 'send', 'num')) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
-    if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $msg]);
     $head = [
         ['content' => _NICKNAME],
         ['content' => _URANK],
@@ -302,15 +300,9 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $conf, $stop, $tpl, $admin;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    global $db, $afile, $conf, $stop, $admin;
     $aid = getVar('post', 'aid', 'num', 0);
+    $warn = !checkSiteToken();
     $name = getVar('post', 'aname', 'name', '');
     $title = getVar('post', 'title', 'title', '');
     $url = getVar('post', 'url', 'url', 'https://');
@@ -340,6 +332,9 @@ function save(): void {
     $self = empty($admin[0]) ? 0 : intval(substr((string)$admin[0], 0, 11));
     if ($aid && $aid === $self && !$super) $stop[] = _ADMINSELFSUPER;
     if ($aid && !$super && checkAdminlast($aid)) $stop[] = _ADMINLASTSUPER;
+    if ($warn) {
+        setRedirect($afile.'.php?name=admins&op=add'.($aid ? '&id='.$aid : ''), false, 302, _TOKENMISS, true);
+    }
     if (!$stop) {
         if ($aid) {
             if ($pwd !== '') {
@@ -367,37 +362,34 @@ function save(): void {
             $text = str_replace('[pass]', $pwd, str_replace('[login]', $name, $text));
             $text = filterReplaceText(filterMarkdown($text, 'account', false), 'account');
             addMail($email, $conf['adminmail'], $subj, nl2br($text, false), 0, 3);
-            setRedirect($afile.'.php?name=admins&send=1');
         }
-        setRedirect($afile.'.php?name=admins');
+        setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);
     }
     add();
 }
 
 function delete(): void {
-    global $db, $afile, $tpl, $admin;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    global $db, $afile, $admin;
     $aid = getVar('req', 'aid', 'num', 0);
     if (!$aid) {
         setRedirect($afile.'.php?name=admins');
-        return;
     }
-    if ($aid === (empty($admin[0]) ? 0 : intval(substr((string)$admin[0], 0, 11)))) {
-        setRedirect($afile.'.php?name=admins&msg='.urlencode(_ADMINSELFDEL));
-        return;
+    $warn = !checkSiteToken();
+    $text = _SUCCDELETE;
+    if (!$warn && $aid) {
+        if ($aid === (empty($admin[0]) ? 0 : intval(substr((string)$admin[0], 0, 11)))) {
+            $warn = true;
+            $text = _ADMINSELFDEL;
+        } elseif (checkAdminlast($aid)) {
+            $warn = true;
+            $text = _ADMINLASTSUPER;
+        } else {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]);
+        }
+    } else {
+        $text = _TOKENMISS;
     }
-    if (checkAdminlast($aid)) {
-        setRedirect($afile.'.php?name=admins&msg='.urlencode(_ADMINLASTSUPER));
-        return;
-    }
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]);
-    setRedirect($afile.'.php?name=admins');
+    setRedirect($afile.'.php?name=admins', false, 302, $text, $warn);
 }
 
 function info(): void {

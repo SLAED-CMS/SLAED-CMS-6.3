@@ -31,19 +31,24 @@ function lang(): void {
     }
 
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    $head = getTplAdminTableHead([_ID, _NAME, _MODUL, _VIEW, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
-    $rows = '';
-    $sys_admin = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
-    $sys_modul = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
-    $rows .= getTplAdminTableRow(getTplAdminTableCells([
-        '1',
-        _SYSTEM,
-        _ALL,
-        _MVALL,
-        ad_status('', 1),
-        getTplAdminActionMenu([$sys_admin, $sys_modul]),
-    ]));
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $rows = [];
+    $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        'cells' => [
+            ['content_html' => '1'],
+            ['content_html' => _SYSTEM],
+            ['content_html' => _ALL],
+            ['content_html' => _MVALL],
+            ['content_html' => ad_status('', 1)],
+            ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                'trigger_label' => _FUNCTIONS,
+                'items' => [
+                    ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
+                    ['href' => $afile.'.php?name=lang&amp;op=fileedit', 'label' => _MODUL, 'title' => _FULLEDIT],
+                ],
+            ])],
+        ],
+    ])]);
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
     foreach ($files as $file) {
@@ -56,19 +61,31 @@ function lang(): void {
         $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
         $view = $who_view[$mod[$i]] ?? _MVALL;
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
-        $acts = [];
-        if (is_dir($mod_path.'/admin/lang')) $acts[] = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
-        if (is_dir($mod_path.'/lang')) $acts[] = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
-        $rows .= getTplAdminTableRow(getTplAdminTableCells([
-            (string)$a,
-            getModuleName($mod[$i]),
-            $mod[$i],
-            $view,
-            ad_status('', $act),
-            getTplAdminActionMenu($acts),
-        ]));
+        $items = [];
+        if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT];
+        if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], 'label' => _MODUL, 'title' => _FULLEDIT];
+        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => (string)$a],
+                ['content_html' => getModuleName($mod[$i])],
+                ['content_html' => $mod[$i]],
+                ['content_html' => $view],
+                ['content_html' => ad_status('', $act)],
+                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+            ],
+        ])]);
     }
-    $cont .= getTplAdminTable($head, $rows);
+    $cont .= $tpl->getHtmlFrag('new/table', [
+        'head' => [
+            ['content' => _ID],
+            ['content' => _NAME],
+            ['content' => _MODUL],
+            ['content' => _VIEW],
+            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ],
+        'rows_html' => implode('', $rows),
+    ]);
     echo $cont;
     setFoot();
 }
@@ -76,7 +93,7 @@ function lang(): void {
 function fileedit(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -85,7 +102,7 @@ function fileedit(): void {
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
     if (!is_dir($lang_path)) {
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _NO_INFO]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _NO_INFO]);
         setFoot();
         return;
     }
@@ -121,18 +138,23 @@ function fileedit(): void {
     $total_pages = max(1, (int)ceil($total / $per_page));
     $page = max(1, min($page, $total_pages));
     $offset = ($page - 1) * $per_page;
-    $hide = '';
-    $cj = count($lng_cn);
-    for ($j = 0; $j < $cj; $j++) $hide .= getTplHiddenInput('lcn[]', $lng_cn[$j]);
-    $hide .= getTplHiddenInput('typ', $typ).getTplHiddenInput('mod', $mod).getTplHiddenInput('page', (string)$page).getTplHiddenInput('name', 'lang').getTplHiddenInput('op', 'save').getTplHiddenInput('refer', '1');
-    $rows = '';
+    $groups = [];
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
         $idx = $offset + $i;
         $n = $idx + 1;
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
-        if ($i !== 0) $rows .= getTplAdminFormWide(getTplHrLine());
-        $rows .= getTplAdminFormRow(_CONST.':', getTplTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' '.getTplAdminTextLink('#'.$n, (string)$n, '', _ID.': '.$n, 'sl_pnum'), 'id="'.$n.'"');
+        $rows = [[
+            'label_html' => _CONST.': #'.$n,
+            'row_class' => 'sl-lang-edit-row',
+            'field_html' => $tpl->getHtmlFrag('new/input', [
+                'itype' => 'text',
+                'name_attr' => 'cnst[]',
+                'value_attr' => $valc,
+                'placeholder_text' => _CONST,
+                'input_attr' => 'class="sl_form"',
+            ]),
+        ]];
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
             $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';
@@ -153,19 +175,74 @@ function fileedit(): void {
                     'to_class' => 'to_'.$i.'-'.$j,
                 ]);
             }
-            $rows .= getTplAdminFormRow(getLangName($lng_cn[$j]).':', getTplTextInput('lng['.$lng_cn[$j].'][]', $val, 'sl_form '.$class, 'placeholder="'.getLangName($lng_cn[$j]).'"').$btn);
+            $rows[] = [
+                'label_html' => getLangName($lng_cn[$j]).':',
+                'row_class' => 'sl-lang-edit-row',
+                'field_html' => $tpl->getHtmlFrag('new/input', [
+                    'itype' => 'text',
+                    'name_attr' => 'lng['.$lng_cn[$j].'][]',
+                    'value_attr' => $val,
+                    'placeholder_text' => getLangName($lng_cn[$j]),
+                    'input_attr' => 'class="sl_form '.$class.'"',
+                ]).$btn,
+            ];
         }
+        $groups[] = $tpl->getHtmlFrag('new/div', ['rows' => $rows]);
     }
-    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
-    $box = getTplAdminForm($afile.'.php', $rows, $hide);
-    $url = 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
-    $box .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
-    echo $cont.getTplBox($box);
+    $pager = '';
+    if ($total_pages > 1) {
+        $prev = ($page > 1)
+            ? $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
+            : $tpl->getHtmlFrag('new/pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
+        $next = ($page < $total_pages)
+            ? $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
+            : $tpl->getHtmlFrag('new/pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
+        $items = '';
+        for ($i = 1; $i <= $total_pages; $i++) {
+            if ($i === $page) {
+                $items .= $tpl->getHtmlFrag('new/pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
+            } else {
+                $items .= $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$i, 'label' => (string)$i, 'title' => (string)$i]);
+            }
+        }
+        $pager = $tpl->getHtmlFrag('new/pager', [
+            'count' => $total,
+            'pages' => $total_pages,
+            'limit' => $per_page,
+            'page' => $per_page,
+            'overall' => _OVERALL,
+            'by' => _BY,
+            'page_s' => _PAGE_S,
+            'perpage' => _PERPAGE,
+            'prev' => $prev,
+            'items' => $items,
+            'next' => $next,
+        ]);
+    }
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => array_merge(
+            array_map(static fn($code) => ['nameattr' => 'lcn[]', 'valueattr' => $code], $lng_cn),
+            [
+                ['nameattr' => 'typ', 'valueattr' => $typ],
+                ['nameattr' => 'mod', 'valueattr' => $mod],
+                ['nameattr' => 'page', 'valueattr' => (string)$page],
+                ['nameattr' => 'name', 'valueattr' => 'lang'],
+                ['nameattr' => 'op', 'valueattr' => 'save'],
+                ['nameattr' => 'refer', 'valueattr' => '1'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ]
+        ),
+        'content_html' => implode('', $groups).$pager,
+        'submit_label' => _SAVECHANGES,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
 }
 
 function save(): void {
     global $afile;
+    $warn = !checkSiteToken();
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
     $lng_cn = getVar('post', 'lcn[]', 'var', []);
@@ -173,80 +250,91 @@ function save(): void {
     $cnst = getVar('post', 'cnst', 'var', []);
     $lng = getVar('post', 'lng', 'var', []);
     $lang_path = getLangPath($mod, $typ);
-    $cj = count($lng_cn);
-    for ($j = 0; $j < $cj; $j++) {
-        $lng_cnj = $lng_cn[$j];
-        $lng_src = $lang_path.'/'.$lng_cnj.'.php';
-        $existing = [];
-        if (file_exists($lng_src)) {
-            $lng = file_get_contents($lng_src);
-            preg_match_all('#define\(["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\);#sU', $lng, $matches);
-            $ck = count($matches[1]);
-            for ($k = 0; $k < $ck; $k++) {
-                $existing[$matches[1][$k]] = $matches[2][$k];
+    if (!$warn) {
+        $cj = count($lng_cn);
+        for ($j = 0; $j < $cj; $j++) {
+            $lng_cnj = $lng_cn[$j];
+            $lng_src = $lang_path.'/'.$lng_cnj.'.php';
+            $existing = [];
+            if (file_exists($lng_src)) {
+                $lng = file_get_contents($lng_src);
+                preg_match_all('#define\(["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\);#sU', $lng, $matches);
+                $ck = count($matches[1]);
+                for ($k = 0; $k < $ck; $k++) {
+                    $existing[$matches[1][$k]] = $matches[2][$k];
+                }
             }
+            $ci = count($cnst);
+            for ($i = 0; $i < $ci; $i++) {
+                if (empty($cnst[$i])) continue;
+                if (empty($lng[$lng_cnj][$i])) continue;
+                $cons = trim($cnst[$i]);
+                $in = ['\\\'', '\\$', '<?php', '?>'];
+                $ou = ['\'', '\$', '&lt;?php', '?&gt;'];
+                $cont = trim(str_replace($in, $ou, $lng[$lng_cnj][$i]));
+                $existing[$cons] = $cont;
+            }
+            $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
+            foreach ($existing as $cons => $cont) {
+                $cons_esc = str_replace("'", "\\'", $cons);
+                $cont_esc = str_replace("'", "\\'", $cont);
+                $lng_str .= 'define(\''.$cons_esc.'\',\''.$cont_esc.'\');'.PHP_EOL;
+            }
+            $handle = fopen($lng_src, 'wb');
+            fwrite($handle, $lng_str);
+            fclose($handle);
         }
-        $ci = count($cnst);
-        for ($i = 0; $i < $ci; $i++) {
-            if (empty($cnst[$i])) continue;
-            if (empty($lng[$lng_cnj][$i])) continue;
-            $cons = trim($cnst[$i]);
-            $in = ['\\\'', '\\$', '<?php', '?>'];
-            $ou = ['\'', '\$', '&lt;?php', '?&gt;'];
-            $cont = trim(str_replace($in, $ou, $lng[$lng_cnj][$i]));
-            $existing[$cons] = $cont;
-        }
-        $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
-        foreach ($existing as $cons => $cont) {
-            $cons_esc = str_replace("'", "\\'", $cons);
-            $cont_esc = str_replace("'", "\\'", $cont);
-            $lng_str .= 'define(\''.$cons_esc.'\',\''.$cont_esc.'\');'.PHP_EOL;
-        }
-        $handle = fopen($lng_src, 'wb');
-        fwrite($handle, $lng_str);
-        fclose($handle);
     }
     $url = $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
-    setRedirect($url);
+    setRedirect($url, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = getTplSelect('lang', language($conf['lang']['lang'], 1), 'sl_conf');
+    $s_lang = $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
-        ['label_html' => _LANGKEY, 'field_html' => getTplTextInput('key', (string)$conf['lang']['key'], 'sl_conf')],
+        ['label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
         ['label_html' => _LANGTR, 'field_html' => $s_lang],
-        ['label_html' => _LANGCOUNT, 'field_html' => getTplNumberInput((string)$conf['lang']['count'], 'count', 'sl_conf')],
-        ['label_html' => 'Per page', 'field_html' => getTplNumberInput((string)($conf['lang']['per_page'] ?? 100), 'per_page', 'sl_conf')],
+        ['label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
+        ['label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'per_page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
     ];
-    $confv = $tpl->getHtmlFrag('config-div', [
+    $confv = $tpl->getHtmlFrag('new/form', [
         'action_url' => $afile.'.php',
-        'hidden_html' => getTplHiddenInput('name', 'lang').getTplHiddenInput('op', 'configsave').getTplHiddenInput('token', getSiteToken()),
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'lang'],
+            ['nameattr' => 'op', 'valueattr' => 'configsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.getTplBox($confv);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();
 }
 
 function configsave(): void {
     global $afile, $conf;
-    $cont = [
-        'key' => getVar('post', 'key', 'text', ''),
-        'lang' => getVar('post', 'lang', 'var', 'russian'),
-        'count' => getVar('post', 'count', 'num', 0),
-        'per_page' => getVar('post', 'per_page', 'num', 100)
-    ];
-    setConfigFile('lang.php', $cont, $conf['lang']);
-    setRedirect($afile.'.php?name=lang&op=config');
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [
+            'key' => getVar('post', 'key', 'text', ''),
+            'lang' => getVar('post', 'lang', 'var', 'russian'),
+            'count' => getVar('post', 'count', 'num', 0),
+            'per_page' => getVar('post', 'per_page', 'num', 100)
+        ];
+        setConfigFile('lang.php', $cont, $conf['lang']);
+    }
+    setRedirect($afile.'.php?name=lang&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

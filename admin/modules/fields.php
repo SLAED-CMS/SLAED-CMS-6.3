@@ -9,86 +9,175 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function fields(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['', '', '', '', '', '', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'id' => 'fields']);
-    $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
-    $content = '';
+    $panels = [];
+    $labs = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER];
+    $links = [];
+    $ctab = getVar('get', 'tab', 'num', 0);
+    if ($ctab < 0 || $ctab >= count($mods)) $ctab = 0;
     $k = 0;
-    foreach ($mods as $val) {
-        $fieldc = explode('||', $conf['fields'][$val]);
-        $rows = [];
+    foreach ($mods as $mod) {
+        $links[] = [
+            'href' => '#',
+            'is_active' => $ctab === $k,
+            'label' => $labs[$k],
+            'rel' => 'fields-panel-'.$k,
+            'title' => $labs[$k],
+        ];
+        $fset = explode('||', $conf['fields'][$mod]);
+        $blok = '';
         for ($c = 0; $c < 10; $c++) {
-            preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
-            $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
-            $fopts = '';
-            foreach ($fieldname as $key => $val2) {
-                $fopts .= getTplOption((string)($key + 1), $val2, $out[3] == ($key + 1));
+            $out = array_pad(explode('|', (string)($fset[$c] ?? ''), 4), 4, '');
+            if ($out[0] === '0') $out[0] = '';
+            if ($out[1] === '0') $out[1] = '';
+            if ($out[2] === '0') $out[2] = '';
+            if ($out[3] === '0') $out[3] = '';
+            $types = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
+            $opta = '';
+            foreach ($types as $key => $txt) {
+                $opta .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => (string)($key + 1),
+                    'label_text' => $txt,
+                    'is_selected' => $out[2] == ($key + 1),
+                ]);
             }
-            $field = getTplSelect('field3'.$k.'[]', $fopts, 'sl_conf');
-            $fieldname2 = [_FIELDIN, _FIELDOUT];
-            $fopts2 = '';
-            foreach ($fieldname2 as $key => $val3) {
-                $fopts2 .= getTplOption((string)($key + 1), $val3, $out[4] == ($key + 1));
+            $uses = [_FIELDIN, _FIELDOUT];
+            $optb = '';
+            foreach ($uses as $key => $txt) {
+                $optb .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => (string)($key + 1),
+                    'label_text' => $txt,
+                    'is_selected' => $out[3] == ($key + 1),
+                ]);
             }
-            $field2 = getTplSelect('field4'.$k.'[]', $fopts2, 'sl_conf');
-            $b = $c + 1;
-            $rows[] = [
-                'raw_html' => $tpl->getHtmlFrag('admin-fields-field-block', [
-                    'block_id' => 'fi'.$k.$c,
-                    'content_value' => $out[2] ?? '',
-                    'display_attr' => (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '',
-                    'field_html' => $field,
-                    'field2_html' => $field2,
-                    'hr_html' => ($c == '0') ? '' : getTplHrLine(),
-                    'next_block_id' => 'fi'.$k.$b,
-                    'content_placeholder' => _CONTENT,
-                    'content_label' => _CONTENT.':',
-                    'field_label' => _FIELD.': '.$b,
-                    'name_label' => _NAME.':',
-                    'name_placeholder' => _NAME,
-                    'name_value' => $out[1] ?? '',
-                    'type_label' => _TYPE.':',
-                    'uses_label' => _USES.':',
-                    'title_attr' => _ADD,
-                    'xid' => (string)$k,
-                ]),
+            $next = $c + 1;
+            $rows = [
+                [
+                    'label_html' => _NAME.':',
+                    'field_html' => $tpl->getHtmlFrag('new/input', [
+                        'itype' => 'text',
+                        'name_attr' => 'field1'.$k.'[]',
+                        'value_attr' => $out[0],
+                        'placeholder_text' => _NAME,
+                        'is_required' => true,
+                        'is_config' => true,
+                    ]),
+                ],
+                [
+                    'label_html' => _CONTENT.':',
+                    'field_html' => $tpl->getHtmlFrag('new/input', [
+                        'itype' => 'text',
+                        'name_attr' => 'field2'.$k.'[]',
+                        'value_attr' => $out[1],
+                        'placeholder_text' => _CONTENT,
+                        'is_required' => true,
+                        'is_config' => true,
+                    ]),
+                ],
+                [
+                    'label_html' => _TYPE.':',
+                    'field_html' => $tpl->getHtmlFrag('new/select', [
+                        'name_attr' => 'field3'.$k.'[]',
+                        'options_html' => $opta,
+                        'is_config' => true,
+                    ]),
+                ],
+                [
+                    'label_html' => _USES.':',
+                    'field_html' => $tpl->getHtmlFrag('new/select', [
+                        'name_attr' => 'field4'.$k.'[]',
+                        'options_html' => $optb,
+                        'is_config' => true,
+                    ]),
+                ],
             ];
+            $blok .= $tpl->getHtmlFrag('new/toggle-form-block', [
+                'block_id' => 'fi'.$k.$c,
+                'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
+                'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
+                'title' => _ADD,
+                'label_html' => _FIELD.': '.$next,
+                'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows]),
+            ]);
         }
-        $content .= getTplAdminTabContent(getTplAdminTabName('fields', $k), $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]));
+        $panels[] = $tpl->getHtmlFrag('new/tabs-panel', [
+            'panel_id' => 'fields-panel-'.$k,
+            'active' => $ctab === $k,
+            'content_html' => $blok,
+        ]);
         $k++;
     }
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);
-    $fieldv = getTplAdminConfSave($content, 'fields', 'save')
-       .getTplAdminTabsSetup('fields');
-    echo $cont.getTplBox($fieldv);
+    $links[] = [
+        'href' => $afile.'.php?name=fields&amp;op=info&amp;tab='.$ctab,
+        'label' => _INFO,
+        'link_attr' => 'data-sl-tab-info-link="fields-main"',
+        'title' => _INFO,
+    ];
+    $cont = getTplAdminTabs([
+        'is_runtime' => true,
+        'links' => $links,
+        'tabs_id' => 'fields-main',
+        'tabs_index' => $ctab,
+        'tabs_sync_selector' => 'input[name="tab"]',
+    ]);
+    $cont .= checkPerms(CONFIG_DIR.'/fields.php');
+    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _FIELDINFO]);
+    $fieldv = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'fields'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'content_html' => $tpl->getHtmlFrag('new/tabs', [
+            'content_html' => implode('', $panels),
+        ]),
+        'submit_label' => _SAVECHANGES,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $fieldv]);
     setFoot();
 }
 
 function save(): void {
     global $afile;
-    $cont = [];
-    $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
-    $a = 0;
-    foreach ($mods as $val) {
-        $fields = '';
-        for ($i = 0; $i < 10; $i++) {
-            $ident = ($i == 0) ? '' : '||';
-            $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'var', 0);
-            $field2 = getVar('post', 'field2'.$a.'['.$i.']', 'var', 0);
-            $field3 = getVar('post', 'field3'.$a.'['.$i.']', 'var', 0);
-            $field4 = getVar('post', 'field4'.$a.'['.$i.']', 'var', 0);
-            $fields .= $ident.$field1.'|'.$field2.'|'.$field3.'|'.$field4;
+    $ctab = getVar('post', 'tab', 'num', 0);
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [];
+        $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
+        $a = 0;
+        foreach ($mods as $val) {
+            $fields = '';
+            for ($i = 0; $i < 10; $i++) {
+                $ident = ($i == 0) ? '' : '||';
+                $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'var', 0);
+                $field2 = getVar('post', 'field2'.$a.'['.$i.']', 'var', 0);
+                $field3 = getVar('post', 'field3'.$a.'['.$i.']', 'var', 0);
+                $field4 = getVar('post', 'field4'.$a.'['.$i.']', 'var', 0);
+                $fields .= $ident.$field1.'|'.$field2.'|'.$field3.'|'.$field4;
+            }
+            $a++;
+            $cont[$val] = $fields;
         }
-        $a++;
-        $cont[$val] = $fields;
+        setConfigFile('fields.php', $cont);
     }
-    setConfigFile('fields.php', $cont);
-    setRedirect($afile.'.php?name=fields');
+    setRedirect($afile.'.php?name=fields&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'tab' => 6]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => [
+            'name=fields&amp;tab=0',
+            'name=fields&amp;tab=1',
+            'name=fields&amp;tab=2',
+            'name=fields&amp;tab=3',
+            'name=fields&amp;tab=4',
+            'name=fields&amp;tab=5',
+            'name=fields&amp;op=info',
+        ],
+        'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO],
+    ]);
 }
 
 switch ($op) {

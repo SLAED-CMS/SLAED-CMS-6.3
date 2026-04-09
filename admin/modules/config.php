@@ -568,38 +568,11 @@ function config(): void {
 }
 
 function save(): void {
-    global $afile, $conf, $tpl;
+    global $afile, $conf;
     $ctab = getVar('post', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab > 6) $ctab = 0;
-    if (!checkSiteToken()) {
-        setHead();
-        $links = [];
-        foreach ([_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT] as $idx => $label) {
-            $links[] = [
-                'href' => '#',
-                'is_active' => $ctab === $idx,
-                'label' => $label,
-                'rel' => 'config-panel-'.$idx,
-                'title' => $label,
-            ];
-        }
-        $links[] = [
-            'href' => $afile.'.php?name=config&amp;op=info&amp;tab='.$ctab,
-            'label' => _INFO,
-            'link_attr' => 'data-sl-tab-info-link="config-main"',
-            'title' => _INFO,
-        ];
-        $cont = getTplAdminTabs([
-            'is_runtime' => true,
-            'links' => $links,
-            'tabs_id' => 'config-main',
-            'tabs_index' => $ctab,
-            'tabs_sync_selector' => 'input[name="tab"]',
-        ]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    $warn = !checkSiteToken();
+    if (!$warn) {
     $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
     $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
 
@@ -709,7 +682,8 @@ function save(): void {
         'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
     ];
     setConfigFile('global.php', $cont);
-    setRedirect($afile.'.php?name=config&amp;tab='.$ctab);
+    }
+    setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {

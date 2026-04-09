@@ -8,46 +8,70 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function messages(): void {
-    global $db, $afile, $tpl, $token;
+    global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_ID, _TITLE, _PURCHASED, _VIEW, _LANGUAGE, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
-        $rows = '';
+        $rows = [];
         while ([$mid, $title, $body, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
-            if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
-            $act = ($active) ? '0' : '1';
+            if (($expire && $expire < time()) || (!$active && $expire)) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
+            }
             if ($view == 1) {
                 $mview = _MVALL;
             } elseif ($view == 2) {
                 $mview = _MVANON;
             } elseif ($view == 3) {
                 $mview = _MVUSERS;
-            } elseif ($view == 4) {
+            } else {
                 $mview = _MVADMIN;
             }
             $lang = (!$lang) ? _ALL : $lang;
             $exp = intval($expire - time());
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-            $acts = getTplAdminActionMenu([
-                ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act.''.$token, $active),
-                getTplLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.''.$token, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow(getTplAdminTableCells([
-                (string)$mid,
-                getTplSpan('sl_note', cutstr($title, 35), $title),
-                $exp,
-                $mview,
-                getLangName($lang),
-                ad_status('', $active),
-                $acts,
-            ]));
+            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$mid],
+                    ['content_html' => getTplAdminNoteLabel($title, cutstr($title, 35))],
+                    ['content_html' => $exp],
+                    ['content_html' => $mview],
+                    ['content_html' => getLangName($lang)],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        'trigger_label' => _FUNCTIONS,
+                        'items' => [[
+                            'href' => $afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.($active ? '0' : '1').'&amp;token='.getSiteToken(),
+                            'label' => $active ? _DEACTIVATE : _ACTIVATE,
+                            'title' => $active ? _DEACTIVATE : _ACTIVATE,
+                        ], [
+                            'href' => $afile.'.php?name=messages&amp;op=add&amp;id='.$mid,
+                            'label' => _FULLEDIT,
+                            'title' => _FULLEDIT,
+                        ], [
+                            'href' => $afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.'&amp;token='.getSiteToken(),
+                            'label' => _ONDELETE,
+                            'title' => _ONDELETE,
+                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                        ]],
+                    ])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
+        $cont .= $tpl->getHtmlFrag('new/table', [
+            'head' => [
+                ['content' => _ID],
+                ['content' => _TITLE],
+                ['content' => _PURCHASED],
+                ['content' => _VIEW],
+                ['content' => _LANGUAGE],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => implode('', $rows),
+        ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -69,44 +93,69 @@ function add(): void {
         $view = getVar('post', 'view', 'num');
         $lang = getVar('post', 'lang', 'var');
     }
+    $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
+    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stoptext]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $hide = getTplHiddenInput('mid', (string)$mid).getTplHiddenInput('name', 'messages').getTplHiddenInput('op', 'save').getTplHiddenInput('posttype', 'save');
     $langsel = '';
-    if ($conf['multilingual'] == 1) $langsel = getTplSelect('lang', language($lang), 'sl_form');
+    if ($conf['multilingual'] == 1) {
+        $langsel = $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($lang, 1)]);
+    }
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = getTplHiddenInput('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = getTplNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
+        $expire_text = $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'expire', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
     }
-    $privs = [_MVALL, _MVANON, _MVUSERS, _MVADMIN];
-    $privopts = '';
-    foreach ($privs as $key => $value) {
-        $privopts .= getTplOption((string)($key + 1), $value, $view == ($key + 1));
-    }
-    $rows = getTplAdminFormRow(_TITLE.':', getTplTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));
-    $rows .= getTplAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'all', '10', _TEXT, '1'));
+    $rows = [
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
+        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', (string)$body, 'all', '10', _TEXT, '1'), 'is_full' => true],
+    ];
     if ($langsel) {
-        $rows .= getTplAdminFormRow(_LANGUAGE.':', $langsel);
+        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $langsel];
     }
-    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_EXPIRATION, _CONFINES), $expire_text);
-    $rows .= getTplAdminFormRow(_VIEWPRIV, getTplSelect('view', $privopts, 'sl_form'));
-    $rows .= getTplAdminFormRow(_ACTIVATE2, radio_form($active, 'status'));
-    $rows .= getTplAdminFormWide(getTplHiddenInput('newexpire', (string)$newexpire).getTplAdminSubmitButton(_SAVE), '', 'sl_center');
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
-    echo $cont;
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EXPIRATION, 'hint' => _CONFINES]), 'field_html' => $expire_text];
+    $rows[] = ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'view',
+        'options_html' =>
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVALL, 'is_selected' => (string)$view === '1']) .
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVANON, 'is_selected' => (string)$view === '2']) .
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _MVUSERS, 'is_selected' => (string)$view === '3']) .
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '4', 'label_text' => _MVADMIN, 'is_selected' => (string)$view === '4']),
+    ])];
+    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup([
+        'name' => 'status',
+        'value' => (string)(int)$active,
+        'options' => [
+            ['value' => '1', 'label' => _YES],
+            ['value' => '0', 'label' => _NO],
+        ],
+    ])];
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'mid', 'valueattr' => (string)$mid],
+            ['nameattr' => 'name', 'valueattr' => 'messages'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'posttype', 'valueattr' => 'save'],
+            ['nameattr' => 'newexpire', 'valueattr' => (string)$newexpire],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVE,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
 }
 
 function save(): void {
     global $db, $afile, $stop;
+    $stop = [];
     $mid = getVar('post', 'mid', 'num');
     $title = getVar('post', 'title', 'title');
     $body = getVar('post', 'body', 'text');
@@ -116,16 +165,19 @@ function save(): void {
     $view = getVar('post', 'view', 'num');
     $lang = getVar('post', 'lang', 'var');
     $posttype = getVar('post', 'posttype', 'var');
+    $warn = !checkSiteToken();
     $expire = ($newexpire == 1 && $expire) ? time() + ($expire * 86400) : $expire;
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
-    if (!$stop && $posttype == 'save') {
+    if (!$warn && !$stop && $posttype == 'save') {
         if ($mid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, body = :body, expire = :expire, status = :active, view = :view, lang = :lang WHERE id = :mid', ['title' => $title, 'body' => $body, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang, 'mid' => $mid]);
         } else {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, body, expire, status, view, lang) VALUES (NULL, :title, :body, :expire, :active, :view, :lang)', ['title' => $title, 'body' => $body, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang]);
         }
-        setRedirect($afile.'.php?name=messages');
+        setRedirect($afile.'.php?name=messages', false, 302, _SUCCSAVE);
+    } elseif ($warn) {
+        setRedirect($afile.'.php?name=messages&amp;op=add'.($mid ? '&amp;id='.$mid : ''), false, 302, _TOKENMISS, true);
     } elseif ($posttype == 'delete') {
         delete($mid);
     } else {
@@ -137,20 +189,24 @@ function status(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
-    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active WHERE id = :mid', ['active' => $act, 'mid' => $id]);
-    setRedirect($afile.'.php?name=messages');
+    $warn = !checkSiteToken();
+    if (!$warn && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active WHERE id = :mid', ['active' => $act, 'mid' => $id]);
+    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
-function delete(): void {
+function delete(int $mid = 0): void {
     global $db, $afile;
-    $id = getVar('get', 'id', 'num');
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]);
-    setRedirect($afile.'.php?name=messages');
+    $id = $mid ?: getVar('get', 'id', 'num');
+    $warn = !checkSiteToken();
+    if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]);
+    setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _INFO],
+    ]);
 }
 
 switch ($op) {

@@ -8,37 +8,81 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function comments(): void {
-    global $conf, $afile, $tpl;
+    global $conf, $db, $afile, $tpl;
     setHead();
     $status = getVar('get', 'status', 'num') ? 1 : 0;
-    $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => $status]);
+    $modul = getVar('get', 'modul', 'var');
+    $modlink = ($modul) ? '&amp;modul='.$modul : '';
+    $options = $tpl->getHtmlFrag('new/select-option', [
+        'value_attr' => '',
+        'label_text' => _ALL,
+        'is_selected' => $modul === '',
+    ]);
+    $result = $db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment ORDER BY modul ASC');
+    while ([$m] = $db->getSqlRow($result)) {
+        if (!$m) continue;
+        $options .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $m,
+            'label_text' => getModuleName($m).' - '.$m,
+            'is_selected' => $modul === $m,
+        ]);
+    }
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => array_values(array_filter([
+            ['nameattr' => 'name', 'valueattr' => 'comments'],
+            $status ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
+        ])),
+        'content_html' => _MODUL.': '.$tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'modul',
+            'select_attr' => ' OnChange="submit()"',
+            'options_html' => $options,
+        ]),
+    ])]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=comments'.$modlink, 'name=comments&amp;status=1'.$modlink, 'name=comments&amp;op=config'.$modlink, 'name=comments&amp;op=info'.$modlink],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO],
+        'tab' => $status,
+        'subtitle_html' => $subtitle,
+    ]);
     $list = ashowcom();
-    $list = preg_replace('~<table class="searchboxtab">.*?</table>~is', '', $list);
     if (trim(strip_tags($list)) === '') {
         $list = $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $bulk = $tpl->getHtmlFrag('comment-bulk-actions', [
-            'label' => _CHECKOP,
-            'activate_value' => 'comm_act',
-            'activate_label' => _ACTIVATE,
-            'delete_value' => 'comm_del',
-            'delete_label' => _DELETE,
-            'refer_value' => '1',
-            'submit_label' => _OK,
+        $bulk = $tpl->getHtmlFrag('new/div', ['rows' => [[
+            'label_html' => _CHECKOP.':',
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'op',
+                'options_html' => $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => 'approve',
+                    'label_text' => $status ? _ACTIVATE : _DEACTIVATE,
+                ]).$tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => 'comm_del',
+                    'label_text' => _DELETE,
+                ]),
+            ]).$tpl->getHtmlFrag('new/hidden', [
+                'nameattr' => 'typ',
+                'valueattr' => $status ? '1' : '0',
+            ]).$tpl->getHtmlFrag('new/hidden', [
+                'nameattr' => 'refer',
+                'valueattr' => '1',
+            ]).$tpl->getHtmlFrag('new/submit', [
+                'submit_label' => _OK,
+            ]),
+        ]]]);
+        $footer = $tpl->getHtmlFrag('new/module-foot', [
+            'pager_html' => getTplPager([
+                'field' => 'cid',
+                'limit' => (int)($conf['comments']['anum'] ?? 25),
+                'maxpg' => (int)($conf['comments']['anump'] ?? 8),
+                'n' => 'com',
+                'table' => '_comment',
+                'url' => 'name=comments&amp;'.($status ? 'status=1&amp;' : '').($modul ? 'modul='.$modul.'&amp;' : ''),
+                'where' => ($status ? 'status = 0' : 'status != 0').($modul ? ' AND modul = \''.$modul.'\'' : ''),
+            ]),
+            'select_html' => $bulk,
         ]);
-        $list = preg_replace('~<div class="searchbox">.*?</div>\s*</form>~is', $bulk.'</form>', $list, 1) ?? $list;
-        if (!str_contains($list, $bulk)) $list = str_replace('</form>', $bulk.'</form>', $list);
-        $list = str_replace('<div class="searchbox">'.$bulk.'</div>', $bulk, $list);
-        $list = preg_replace('~<div class="searchbox">(.*)</div>\s*</form>~is', '$1</form>', $list, 1) ?? $list;
-        $list .= getTplPager([
-            'field' => 'cid',
-            'limit' => (int)($conf['comments']['anum'] ?? 25),
-            'maxpg' => (int)($conf['comments']['anump'] ?? 8),
-            'n' => 'com',
-            'table' => '_comment',
-            'url' => 'name=comments&amp;'.($status ? 'status=1&amp;' : ''),
-            'where' => $status ? 'status = 0' : 'status != 0',
-        ]);
+        $list = $tpl->getHtmlPart('box', ['content_html' => $list.$footer]);
     }
     echo $cont.$list;
     setFoot();
@@ -76,18 +120,14 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    global $db, $afile;
+    $warn = !checkSiteToken();
     $id = getVar('post', 'id', 'num');
     $com_text = getVar('post', 'comment', 'text', '');
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
-    setRedirect($afile.'.php?name=comments');
+    if (!$warn) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=comments', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
@@ -126,66 +166,62 @@ function config(): void {
 }
 
 function save(): void {
-    global $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
+    global $afile;
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [
+            'num' => getVar('post', 'num', 'num', 15),
+            'anum' => getVar('post', 'anum', 'num', 15),
+            'nump' => getVar('post', 'nump', 'num', 5),
+            'anump' => getVar('post', 'anump', 'num', 5),
+            'letter' => getVar('post', 'letter', 'num', 50),
+            'edit' => getVar('post', 'edit', 'num', 600) * 60,
+            'send' => getVar('post', 'send', 'num', 30),
+            'sort' => getVar('post', 'sort', 'num'),
+            'anonpost' => getVar('post', 'anonpost', 'num'),
+            'link' => getVar('post', 'link', 'num'),
+            'alink' => getVar('post', 'alink', 'num'),
+            'addmail' => getVar('post', 'addmail', 'num'),
+            'privat' => getVar('post', 'privat', 'num'),
+            'profil' => getVar('post', 'profil', 'num'),
+            'web' => getVar('post', 'web', 'num'),
+        ];
+        setConfigFile('comments.php', $cont);
     }
-    $cont = [
-        'num' => getVar('post', 'num', 'num', 15),
-        'anum' => getVar('post', 'anum', 'num', 15),
-        'nump' => getVar('post', 'nump', 'num', 5),
-        'anump' => getVar('post', 'anump', 'num', 5),
-        'letter' => getVar('post', 'letter', 'num', 50),
-        'edit' => getVar('post', 'edit', 'num', 600) * 60,
-        'send' => getVar('post', 'send', 'num', 30),
-        'sort' => getVar('post', 'sort', 'num'),
-        'anonpost' => getVar('post', 'anonpost', 'num'),
-        'link' => getVar('post', 'link', 'num'),
-        'alink' => getVar('post', 'alink', 'num'),
-        'addmail' => getVar('post', 'addmail', 'num'),
-        'privat' => getVar('post', 'privat', 'num'),
-        'profil' => getVar('post', 'profil', 'num'),
-        'web' => getVar('post', 'web', 'num'),
-    ];
-    setConfigFile('comments.php', $cont);
-    setRedirect($afile.'.php?name=comments&op=config');
+    setRedirect($afile.'.php?name=comments&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function approve(): void {
     global $db, $afile;
-    if (!checkSiteToken()) {
-        setRedirect($afile.'.php?name=comments', true);
-    }
+    $warn = !checkSiteToken();
+    $typ = getVar('post', 'typ', 'num') ?: getVar('get', 'typ', 'num');
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id', 'num', []);
     if (!$id && $get_id) $id = [$get_id];
-    if (is_array($id)) {
+    if (!$warn && is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
                 [$cid, $mod, $uid, $status] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
-                if (!$status && $cid && $mod) {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = \'1\' WHERE id = :id', ['id' => $val]);
-                    numcom($cid, $mod, 0, $uid);
+                if ($cid && $mod) {
+                    $next = $typ ? 1 : 0;
+                    if ((int)$status !== (int)$next) {
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $next, 'id' => $val]);
+                        numcom($cid, $mod, $typ ? 0 : 1, $uid);
+                    }
                 }
             }
         }
     }
-    setRedirect($afile.'.php?name=comments', true);
+    setRedirect($afile.'.php?name=comments'.($typ ? '' : '&status=1'), true, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
 function delete(): void {
     global $db, $afile;
-    if (!checkSiteToken()) {
-        setRedirect($afile.'.php?name=comments', true);
-    }
+    $warn = !checkSiteToken();
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id', 'num', []);
     if (!$id && $get_id) $id = [$get_id];
-    if (is_array($id)) {
+    if (!$warn && is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
                 [$cid, $mod, $uid, $status] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
@@ -196,7 +232,7 @@ function delete(): void {
             }
         }
     }
-    setRedirect($afile.'.php?name=comments', true);
+    setRedirect($afile.'.php?name=comments', true, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
 
 function info(): void {

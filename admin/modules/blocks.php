@@ -6,10 +6,21 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+function getBlockTabsOps(): array {
+    return [
+        'name=blocks',
+        'name=blocks&amp;op=add',
+        'name=blocks&amp;op=fileadd',
+        'name=blocks&amp;op=fileedit',
+        'name=blocks&amp;op=fix&amp;token='.getSiteToken(),
+        'name=blocks&amp;op=info',
+    ];
+}
+
 function blocks(): void {
     global $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repajax_block',
         'content_html' => getAdminBlockList(getSiteToken()),
@@ -20,7 +31,7 @@ function blocks(): void {
 function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $rows = [
         [
             'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
@@ -196,7 +207,7 @@ function add(): void {
 function fileadd(): void {
     global $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
     $cont .= checkPerms(BASE_DIR.'/blocks/');
     $rows = [
         [
@@ -231,7 +242,7 @@ function fileadd(): void {
 function fileedit(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
     $opts = '';
     $files = scandir('blocks');
     foreach ($files as $file) {
@@ -266,6 +277,8 @@ function fileedit(): void {
 
 function fix(): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
+    if (!$warn) {
     $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
     foreach ($pos as $val) {
         $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE bpos = :val ORDER BY weight ASC', ['val' => $val]);
@@ -275,18 +288,13 @@ function fix(): void {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $bid]);
         }
     }
-    setRedirect($afile.'.php?name=blocks');
+    }
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function addsave(): void {
     global $db, $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    $warn = !checkSiteToken();
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
@@ -314,9 +322,12 @@ function addsave(): void {
         $btime = time();
         $content = rss_read($url, 1);
     }
+    if ($warn) {
+        setRedirect($afile.'.php?name=blocks&op=add', false, 302, _TOKENMISS, true);
+    }
     if (($content == '') && ($bfile == '')) {
         setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
         echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _RSSFAIL]).$tpl->getHtmlPart('box', [
             'content_html' => _GOBACK,
         ]);
@@ -336,7 +347,7 @@ function addsave(): void {
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view, :expire, :action, :which)', [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
         ]);
-        setRedirect($afile.'.php?name=blocks');
+        setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     }
 }
 
@@ -344,7 +355,7 @@ function filecode(): void {
     global $db, $afile, $tpl;
     if (!checkSiteToken()) {
         setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
         echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
         setFoot();
         return;
@@ -375,7 +386,7 @@ function filecode(): void {
             }
         }
         setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
         $cont .= checkPerms(BASE_DIR.'/blocks/');
         $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _BLOCK.': '.$bf]);
         if (file_exists('blocks/'.$bf)) {
@@ -416,13 +427,11 @@ function filecode(): void {
 
 function filecodesave(): void {
     global $afile;
-    if (!checkSiteToken()) {
-        setRedirect($afile.'.php?name=blocks&op=fileedit');
-    }
+    $warn = !checkSiteToken();
     $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
-    if ($blocktext && $bf) {
+    if (!$warn && $blocktext && $bf) {
         if ($handle = fopen('blocks/'.$bf, 'wb')) {
             $html_b = '';
             $html_e = '';
@@ -433,15 +442,16 @@ function filecodesave(): void {
             }
             fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
             fclose($handle);
-            setRedirect($afile.'.php?name=blocks');
+            setRedirect($afile.'.php?name=blocks', false, 302, _SUCCFILESAVE);
         }
     }
+    setRedirect($afile.'.php?name=blocks&op=fileedit', false, 302, $warn ? _TOKENMISS : '', $warn);
 }
 
 function edit(): void {
     global $afile, $conf, $db, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $bid = getVar('get', 'id', 'num');
     [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
     if ($url != '') {
@@ -636,9 +646,7 @@ function edit(): void {
 
 function editsave(): void {
     global $db, $afile;
-    if (!checkSiteToken()) {
-        setRedirect($afile.'.php?name=blocks');
-    }
+    $warn = !checkSiteToken();
     $newexpire = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
     $bkey = getVar('post', 'bkey', 'var', '');
@@ -657,6 +665,9 @@ function editsave(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
+    if ($warn) {
+        setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
+    }
     if (isset($blockwhere)) {
         $which = '';
         if (in_array('all', $blockwhere)) $which = 'all';
@@ -713,7 +724,7 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
             ]);
         }
-        setRedirect($afile.'.php?name=blocks');
+        setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     } else {
         if ($oldposition != $bpos) {
             $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
@@ -746,7 +757,7 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);
         }
-        setRedirect($afile.'.php?name=blocks');
+        setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     }
 }
 
@@ -754,27 +765,33 @@ function change(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num', 0);
-    $active = ($act) ? 0 : 1;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-    setRedirect($afile.'.php?name=blocks');
+    $warn = !checkSiteToken();
+    if (!$warn && $id) {
+        $active = ($act) ? 0 : 1;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
 function delete(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    [$bpos, $weight] = $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]));
-    $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
-    while ([$nbid] = $db->getSqlRow($result)) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
-        $weight++;
+    $warn = !checkSiteToken();
+    if (!$warn && $id) {
+        [$bpos, $weight] = $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]));
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
+        while ([$nbid] = $db->getSqlRow($result)) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
+            $weight++;
+        }
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]);
     }
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=blocks');
+    setRedirect($afile.'.php?name=blocks', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'],
+        'ops' => getBlockTabsOps(),
         'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO],
     ]);
 }
