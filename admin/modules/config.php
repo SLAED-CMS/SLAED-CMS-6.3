@@ -573,115 +573,115 @@ function save(): void {
     if ($ctab < 0 || $ctab > 6) $ctab = 0;
     $warn = !checkSiteToken();
     if (!$warn) {
-    $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
-    $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
+        $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
+        $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
 
-    $homeurl = getVar('post', 'homeurl', 'url');
-    $xhomeurl = ($homeurl !== '' && substr($homeurl, -1) == '/') ? substr($homeurl, 0, -1) : $homeurl;
-    $xsite_logo = str_replace('templates/'.$conf['theme'].'/images/logos/', '', getVar('post', 'site_logo', 'text'));
+        $homeurl = getVar('post', 'homeurl', 'url');
+        $xhomeurl = ($homeurl !== '' && substr($homeurl, -1) == '/') ? substr($homeurl, 0, -1) : $homeurl;
+        $xsite_logo = str_replace('templates/'.$conf['theme'].'/images/logos/', '', getVar('post', 'site_logo', 'text'));
 
-    $xuser_c = getVar('post', 'user_c', 'text');
-    $xadmin_c = getVar('post', 'admin_c', 'text');
-    if ($xuser_c === $xadmin_c) {
-        $xuser_c = 'user-'.$xuser_c;
-        $xadmin_c = 'admin-'.$xadmin_c;
-    }
+        $xuser_c = getVar('post', 'user_c', 'text');
+        $xadmin_c = getVar('post', 'admin_c', 'text');
+        if ($xuser_c === $xadmin_c) {
+            $xuser_c = 'user-'.$xuser_c;
+            $xadmin_c = 'admin-'.$xadmin_c;
+        }
 
-    $module = getVar('post', 'module[]', 'var');
-    $module = is_array($module) ? array_values(array_filter(array_map('strval', $module), static fn(string $val): bool => $val !== '')) : [];
-    $xmodule = $module ? implode(',', $module) : '0';
+        $module = getVar('post', 'module[]', 'var');
+        $module = is_array($module) ? array_values(array_filter(array_map('strval', $module), static fn(string $val): bool => $val !== '')) : [];
+        $xmodule = $module ? implode(',', $module) : '0';
 
-    $variables = getVar('post', 'variables[]', 'var');
-    $variables = $variables ? array_map('strval', (array)$variables) : [];
-    $xvariables = [];
-    for ($i = 0; $i < 9; $i++) $xvariables[] = in_array((string)$i, $variables, true) ? '1' : '0';
-    $xvariables = implode(',', $xvariables);
+        $variables = getVar('post', 'variables[]', 'var');
+        $variables = $variables ? array_map('strval', (array)$variables) : [];
+        $xvariables = [];
+        for ($i = 0; $i < 9; $i++) $xvariables[] = in_array((string)$i, $variables, true) ? '1' : '0';
+        $xvariables = implode(',', $xvariables);
 
-    $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text', ''), $protect));
-    $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text', ''), $protect));
-    $xcensor = (!$xcensor_r || !$xcensor_l) ? 0 : getVar('post', 'censor', 'num');
+        $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text', ''), $protect));
+        $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text', ''), $protect));
+        $xcensor = (!$xcensor_r || !$xcensor_l) ? 0 : getVar('post', 'censor', 'num');
 
-    $cont = [
-        'version' => '6.3.0 Phoenix',
-        'sitename' => getVar('post', 'sitename', 'text'),
-        'homeurl' => $xhomeurl,
-        'site_logo' => $xsite_logo,
-        'slogan' => getVar('post', 'slogan', 'text'),
-        'admininfo' => getVar('post', 'admininfo', 'text'),
-        'startdate' => getVar('post', 'startdate', 'time'),
-        'adminmail' => getVar('post', 'adminmail', 'text'),
-        'user_c' => $xuser_c,
-        'admin_c' => $xadmin_c,
-        'user_c_t' => getVar('post', 'user_c_t', 'num', 30) * 86400,
-        'sess_t' => getVar('post', 'sess_t', 'num', 10) * 60,
-        'ip_link' => getVar('post', 'ip_link', 'url', 'http://whois.domaintools.com/'),
-        'theme' => getVar('post', 'theme', 'var'),
-        'module' => $xmodule,
-        'amod' => getVar('post', 'amod', 'var'),
-        'gfx_chk' => getVar('post', 'gfx_chk', 'num'),
-        'quality' => getVar('post', 'quality', 'num'),
-        'capkey' => getVar('post', 'capkey', 'text'),
-        'capsec' => getVar('post', 'capsec', 'text'),
-        'redaktor' => getVar('post', 'redaktor', 'num'),
-        'gtime' => getVar('post', 'gtime', 'text'),
-        'var_view' => getVar('post', 'var_view', 'num'),
-        'syntax' => getVar('post', 'syntax', 'num'),
-        'variables' => $xvariables,
-        'admcol' => getVar('post', 'admcol', 'num', 5),
-        'dbsync' => getVar('post', 'dbsync', 'num'),
-        'session' => getVar('post', 'session', 'num'),
-        'message' => getVar('post', 'message', 'num'),
-        'db_t' => getVar('post', 'db_t', 'num'),
-        'adminfo' => getVar('post', 'adminfo', 'num'),
-        'close' => getVar('post', 'close', 'num'),
-        'defis' => urlencode(getVar('post', 'defis', 'let', '|')),
-        'dletter' => getVar('post', 'dletter', 'num', 160),
-        'ltitle' => getVar('post', 'ltitle', 'num'),
-        'adesc' => getVar('post', 'adesc', 'num'),
-        'sep' => urlencode(getVar('post', 'sep', 'let', '-')),
-        'tsep' => urlencode(getVar('post', 'tsep', 'let', '-')),
-        'rewrite' => getVar('post', 'rewrite', 'num'),
-        'title' => getVar('post', 'title', 'num'),
-        'ctitle' => getVar('post', 'ctitle', 'num'),
-        'agraph' => getVar('post', 'agraph', 'num'),
-        'graph' => getVar('post', 'graph', 'raw'),
-        'aschema' => getVar('post', 'aschema', 'num'),
-        'schema' => getVar('post', 'schema', 'raw'),
-        'language' => getVar('post', 'language', 'var'),
-        'multilingual' => getVar('post', 'multilingual', 'num'),
-        'flags' => getVar('post', 'flags', 'num'),
-        'geo_ip' => getVar('post', 'geo_ip', 'num'),
-        'alang' => getVar('post', 'alang', 'num'),
-        'censor' => $xcensor,
-        'censor_r' => $xcensor_r,
-        'censor_l' => $xcensor_l,
-        'clickable' => getVar('post', 'clickable', 'num'),
-        'bots' => strtr(getVar('post', 'bots', 'text', ''), $kprotect),
-        'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
-        'botsact' => getVar('post', 'botsact', 'num'),
-        'cache' => getVar('post', 'cache', 'num'),
-        'cache_t' => getVar('post', 'cache_t', 'num', 60),
-        'cache_d' => getVar('post', 'cache_d', 'num', 30),
-        'cache_c' => getVar('post', 'cache_c', 'num'),
-        'cache_b' => getVar('post', 'cache_b', 'num'),
-        'cache_css' => getVar('post', 'cache_css', 'num'),
-        'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/syntaxhighlighter/styles/'), $kprotect),
-        'css_h' => getVar('post', 'css_h', 'num'),
-        'css_c' => getVar('post', 'css_c', 'num'),
-        'css_e' => getVar('post', 'css_e', 'num'),
-        'cache_script' => getVar('post', 'cache_script', 'num'),
-        'script_f' => strtr(getVar('post', 'script_f', 'text', 'plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
-        'script_h' => getVar('post', 'script_h', 'num'),
-        'script_c' => getVar('post', 'script_c', 'num'),
-        'script_a' => getVar('post', 'script_a', 'num'),
-        'script_b' => getVar('post', 'script_b', 'num'),
-        'mtemp' => getVar('post', 'mtemp', 'raw'),
-        'dev_mode' => getVar('post', 'dev_mode', 'num'),
-        'sitekey' => getPass(25),
-        'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
-        'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
-    ];
-    setConfigFile('global.php', $cont);
+        $cont = [
+            'version' => '6.3.0 Phoenix',
+            'sitename' => getVar('post', 'sitename', 'text'),
+            'homeurl' => $xhomeurl,
+            'site_logo' => $xsite_logo,
+            'slogan' => getVar('post', 'slogan', 'text'),
+            'admininfo' => getVar('post', 'admininfo', 'text'),
+            'startdate' => getVar('post', 'startdate', 'time'),
+            'adminmail' => getVar('post', 'adminmail', 'text'),
+            'user_c' => $xuser_c,
+            'admin_c' => $xadmin_c,
+            'user_c_t' => getVar('post', 'user_c_t', 'num', 30) * 86400,
+            'sess_t' => getVar('post', 'sess_t', 'num', 10) * 60,
+            'ip_link' => getVar('post', 'ip_link', 'url', 'http://whois.domaintools.com/'),
+            'theme' => getVar('post', 'theme', 'var'),
+            'module' => $xmodule,
+            'amod' => getVar('post', 'amod', 'var'),
+            'gfx_chk' => getVar('post', 'gfx_chk', 'num'),
+            'quality' => getVar('post', 'quality', 'num'),
+            'capkey' => getVar('post', 'capkey', 'text'),
+            'capsec' => getVar('post', 'capsec', 'text'),
+            'redaktor' => getVar('post', 'redaktor', 'num'),
+            'gtime' => getVar('post', 'gtime', 'text'),
+            'var_view' => getVar('post', 'var_view', 'num'),
+            'syntax' => getVar('post', 'syntax', 'num'),
+            'variables' => $xvariables,
+            'admcol' => getVar('post', 'admcol', 'num', 5),
+            'dbsync' => getVar('post', 'dbsync', 'num'),
+            'session' => getVar('post', 'session', 'num'),
+            'message' => getVar('post', 'message', 'num'),
+            'db_t' => getVar('post', 'db_t', 'num'),
+            'adminfo' => getVar('post', 'adminfo', 'num'),
+            'close' => getVar('post', 'close', 'num'),
+            'defis' => urlencode(getVar('post', 'defis', 'let', '|')),
+            'dletter' => getVar('post', 'dletter', 'num', 160),
+            'ltitle' => getVar('post', 'ltitle', 'num'),
+            'adesc' => getVar('post', 'adesc', 'num'),
+            'sep' => urlencode(getVar('post', 'sep', 'let', '-')),
+            'tsep' => urlencode(getVar('post', 'tsep', 'let', '-')),
+            'rewrite' => getVar('post', 'rewrite', 'num'),
+            'title' => getVar('post', 'title', 'num'),
+            'ctitle' => getVar('post', 'ctitle', 'num'),
+            'agraph' => getVar('post', 'agraph', 'num'),
+            'graph' => getVar('post', 'graph', 'raw'),
+            'aschema' => getVar('post', 'aschema', 'num'),
+            'schema' => getVar('post', 'schema', 'raw'),
+            'language' => getVar('post', 'language', 'var'),
+            'multilingual' => getVar('post', 'multilingual', 'num'),
+            'flags' => getVar('post', 'flags', 'num'),
+            'geo_ip' => getVar('post', 'geo_ip', 'num'),
+            'alang' => getVar('post', 'alang', 'num'),
+            'censor' => $xcensor,
+            'censor_r' => $xcensor_r,
+            'censor_l' => $xcensor_l,
+            'clickable' => getVar('post', 'clickable', 'num'),
+            'bots' => strtr(getVar('post', 'bots', 'text', ''), $kprotect),
+            'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
+            'botsact' => getVar('post', 'botsact', 'num'),
+            'cache' => getVar('post', 'cache', 'num'),
+            'cache_t' => getVar('post', 'cache_t', 'num', 60),
+            'cache_d' => getVar('post', 'cache_d', 'num', 30),
+            'cache_c' => getVar('post', 'cache_c', 'num'),
+            'cache_b' => getVar('post', 'cache_b', 'num'),
+            'cache_css' => getVar('post', 'cache_css', 'num'),
+            'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/syntaxhighlighter/styles/'), $kprotect),
+            'css_h' => getVar('post', 'css_h', 'num'),
+            'css_c' => getVar('post', 'css_c', 'num'),
+            'css_e' => getVar('post', 'css_e', 'num'),
+            'cache_script' => getVar('post', 'cache_script', 'num'),
+            'script_f' => strtr(getVar('post', 'script_f', 'text', 'plugins/system/global-func.js,plugins/system/slaed.js,plugins/tablesort/tablesort.min.js'), $kprotect),
+            'script_h' => getVar('post', 'script_h', 'num'),
+            'script_c' => getVar('post', 'script_c', 'num'),
+            'script_a' => getVar('post', 'script_a', 'num'),
+            'script_b' => getVar('post', 'script_b', 'num'),
+            'mtemp' => getVar('post', 'mtemp', 'raw'),
+            'dev_mode' => getVar('post', 'dev_mode', 'num'),
+            'sitekey' => getPass(25),
+            'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
+            'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
+        ];
+        setConfigFile('global.php', $cont);
     }
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }

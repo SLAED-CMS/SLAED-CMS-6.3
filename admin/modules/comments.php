@@ -144,7 +144,23 @@ function config(): void {
         ['label_html' => _CEDITT, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'edit', 'value_attr' => (string)intval($conf['comments']['edit'] / 60)])],
         ['label_html' => _CSEND, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['comments']['send']])],
         ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'sort', 'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0'])])],
-        ['label_html' => _ALLOWANONPOST, 'field_html' => com_access('anonpost', $conf['comments']['anonpost'], 'sl_conf')],
+        ['label_html' => _ALLOWANONPOST, 'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'anonpost',
+            'is_config' => true,
+            'options_html' => $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => '0',
+                'label_text' => _DEACTIVATE,
+                'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '0',
+            ]).$tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => '1',
+                'label_text' => _APOSTMOD,
+                'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '1',
+            ]).$tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => '2',
+                'label_text' => _APOSTNOMOD,
+                'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '2',
+            ]),
+        ])],
         ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _NOLINKP, 'hint' => _NOAUM]), 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'link', 'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '0']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '1']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2'])])],
         ['label_html' => _NOALINKP, 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'alink', 'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '0']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '1']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '2'])])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)(int)$conf['comments']['addmail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],

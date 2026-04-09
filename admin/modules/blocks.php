@@ -31,7 +31,7 @@ function blocks(): void {
 function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
     $rows = [
         [
             'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
@@ -428,7 +428,7 @@ function filecode(): void {
 function filecodesave(): void {
     global $afile;
     $warn = !checkSiteToken();
-    $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
+    $blocktext = (string)getVar('post', 'blocktext', 'raw', '');
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
     if (!$warn && $blocktext && $bf) {
