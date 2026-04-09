@@ -202,20 +202,26 @@
     }
 
     function animateSlide(element, show, duration) {
-        var startHeight = show ? 0 : element.offsetHeight;
-        var endHeight = show ? element.scrollHeight : 0;
+        var anims = element.getAnimations ? element.getAnimations() : [];
+        for (var i = 0; i < anims.length; i++) anims[i].cancel();
         if (show) {
             element.hidden = false;
             element.style.display = 'block';
+            element.style.height = '0px';
+            element.style.overflow = 'hidden';
+            element.offsetHeight;
+        } else {
+            element.style.overflow = 'hidden';
+            element.style.height = element.offsetHeight + 'px';
         }
-        element.style.overflow = 'hidden';
-        element.style.height = startHeight + 'px';
+        var startHeight = show ? 0 : element.offsetHeight;
+        var endHeight = show ? element.scrollHeight : 0;
         element.animate([
-            { height: startHeight + 'px', opacity: show ? 0 : 1 },
-            { height: endHeight + 'px', opacity: show ? 1 : 0 }
+            { height: startHeight + 'px' },
+            { height: endHeight + 'px' }
         ], {
             duration: duration,
-            easing: 'ease'
+            easing: 'linear'
         }).onfinish = function () {
             element.style.overflow = '';
             element.style.height = '';
