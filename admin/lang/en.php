@@ -82,7 +82,7 @@ define('_BLOCK_VIEW','Display the block in modules');
 define('_BOTSACT','To show search boats in the block of users?');
 define('_BOTSINFO','List recognized system of search bots. For addition of a new bot use a following format of record: "a unique line from user-agent"="a name of a boat for display to a site". An example: googlebot=Google Bot');
 define('_BOTSLIST','List of search bots');
-define('_BOTSOPT','Search bots');
+define('_BOTSOPT','Crawlers');
 define('_BOTSSITE','List of the sites of search engines');
 define('_BOTTOM','Bottom');
 define('_BROCFILES','Inaccessible files');

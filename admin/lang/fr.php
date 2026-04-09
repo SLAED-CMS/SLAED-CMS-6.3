@@ -82,7 +82,7 @@ define('_BLOCK_VIEW','Afficher bloc de modules');
 define('_BOTSACT',"Afficher les robots des moteurs de recherche dans le bloc de l'utilisateur?");
 define('_BOTSINFO',"Liste identifiables système robots des moteurs de recherche. Pour ajouter un nouveau bot, utilisez le format suivant pour un enregistrement unique ligne de l'user-agent\"=\"le nom du bot pour l'affichage sur le site\". Exemple: googlebot=Bot Google");
 define('_BOTSLIST','La liste des robots des moteurs de recherche');
-define('_BOTSOPT','Moteurs de recherche de robots');
+define('_BOTSOPT','Robots d\'exploration');
 define('_BOTSSITE','Liste de sites de moteurs de recherche');
 define('_BOTTOM','Mnt');
 define('_BROCFILES','Les fichiers inaccessibles');

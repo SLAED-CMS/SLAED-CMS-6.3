@@ -82,7 +82,7 @@ define('_BLOCK_VIEW','Display-Block in den Modulen');
 define('_BOTSACT','Zeigen die Suchmaschinen-Bots in der Block-Benutzer?');
 define('_BOTSINFO','Liste von dem System erkannte Suchebots. Für Hinzufügung eines neuen Bot ein folgendes Format der Aufzeichnung verwenden: "Info in der user-agent"="Name eines Bootes für Anzeige". Beispiel: googlebot=Google Bot');
 define('_BOTSLIST','Liste der Suchmaschinen-Bots');
-define('_BOTSOPT','Suchebots');
+define('_BOTSOPT','Crawler');
 define('_BOTSSITE','Liste der Webseiten von Suchmaschinen');
 define('_BOTTOM','Unten');
 define('_BROCFILES','Unzugängliche Dateien');

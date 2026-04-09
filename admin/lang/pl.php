@@ -82,7 +82,7 @@ define('_BLOCK_VIEW','Wyświetl blok w modułach');
 define('_BOTSACT','Pokazuj boty wyszukiwarek w bloku użytkowników?');
 define('_BOTSINFO','Lista опознаваемых systemem boty wyszukiwarek. Aby dodać nowy bot użyj następującego formatu zapisu: "unikalna linia z user-agent"="nazwa bota do wyświetlania na stronie". Przykład: googlebot=Google Bot');
 define('_BOTSLIST','Lista boty wyszukiwarek');
-define('_BOTSOPT','Wyszukiwarek');
+define('_BOTSOPT','Roboty indeksujące');
 define('_BOTSSITE','Lista stron w wyszukiwarkach');
 define('_BOTTOM','Dół');
 define('_BROCFILES','Niedostępne pliki');
