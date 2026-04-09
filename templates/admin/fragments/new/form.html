@@ -8,9 +8,14 @@
     {% if content_html %}
     {{{ content_html }}}
     {% endif %}
-    {% if submit_label %}
+    {% if submit_label or actions_html %}
     <div class="sl-div-actions">
+        {% if actions_html %}
+        {{{ actions_html }}}
+        {% endif %}
+        {% if submit_label %}
         {% include 'fragments/new/submit.html' %}
+        {% endif %}
     </div>
     {% elseif actions %}
     <div class="sl-div-actions">

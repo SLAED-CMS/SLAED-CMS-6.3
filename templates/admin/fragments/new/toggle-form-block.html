@@ -1,0 +1,19 @@
+<div id="{{ block_id }}" class="sl-toggle-form-block{% if is_hidden %} sl-none{% endif %}">
+    <div class="sl-div-grid">
+        {% if toggle_onclick %}
+        <div class="sl-div-item sl-toggle-form-block-item">
+            <div class="sl-div-label">
+                <a OnClick="{{ toggle_onclick }}" title="{{ title }}" class="sl-plus">{{{ label_html }}}</a>
+            </div>
+            <div class="sl-div-field">{{{ content_html }}}</div>
+        </div>
+        {% else %}
+        <div class="sl-div-item sl-toggle-form-block-item">
+            <div class="sl-div-label">
+                <span class="sl-toggle-form-block-title">{{{ label_html }}}</span>
+            </div>
+            <div class="sl-div-field">{{{ content_html }}}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>

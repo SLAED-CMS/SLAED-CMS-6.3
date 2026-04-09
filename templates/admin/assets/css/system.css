@@ -527,6 +527,15 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 
 /* Кнопка синяя */
 .sl_but_blue { color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,0.1); background-color: #72c0f9; background: linear-gradient(to top, #78c6fb 0%, #6dbaf7 100%); }
+input.sl_but_blue[value="OK"],
+input.sl_but_blue[value="ОК"] {
+	width: 44px;
+	flex: 0 0 44px;
+	min-width: 44px;
+	padding-left: 0;
+	padding-right: 0;
+	text-align: center;
+}
 
 /* Кнопка красная */
 .sl_but_red { color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,0.1); background-color: #f97272; background: linear-gradient(to top, #fb7878 0%, #f76d6d 100%); }

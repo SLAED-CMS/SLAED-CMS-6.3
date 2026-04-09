@@ -1,1 +1,7 @@
-{% if href %}<a href="{{ href }}" title="{{ title }}"{% if class %} class="{{ class }}"{% endif %}>{{ label }}</a>{% else %}<span{% if class %} class="{{ class }}"{% endif %} title="{{ title }}">{{ label }}</span>{% endif %}
+{% if href %}
+<a href="{{{ href }}}" title="{{ title }}"{% if class %} class="{{ class }}"{% endif %}>{{ label }}</a>
+{% elseif query %}
+<a href="{{{ query }}}" title="{{ title }}"{% if class %} class="{{ class }}"{% endif %} hx-get="{{{ query }}}" hx-target="#{{ target_id }}" hx-swap="innerHTML" hx-push-url="{{ push_url|default('false') }}">{{ label }}</a>
+{% else %}
+<span{% if class %} class="{{ class }}"{% endif %} title="{{ title }}">{{ label }}</span>
+{% endif %}
