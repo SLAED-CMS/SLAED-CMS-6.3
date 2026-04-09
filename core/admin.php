@@ -362,7 +362,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             ]];
             if (!$pnum && !$ispid) {
                 $items[] = [
-                    'href' => $afile.'.php?op=cat_del&amp;id='.$id.$modlink.'&amp;refer=1',
+                    'href' => $afile.'.php?name=categories&amp;op=delete&amp;id='.$id.$modlink.'&amp;token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -401,7 +401,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             ['content' => _FUNCTIONS, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
-            'disable_sort' => true,
+            'is_wrapless' => true,
         ]);
     } else {
         $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
@@ -548,7 +548,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
-                        'href' => $afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active,
+                        'href' => $afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active.'&amp;token='.getSiteToken(),
                         'label' => $active ? _DEACTIVATE : _ACTIVATE,
                         'title' => $active ? _DEACTIVATE : _ACTIVATE,
                     ], [
@@ -556,7 +556,7 @@ function getAdminBlockList(string $token = ''): string {
                         'label' => _FULLEDIT,
                         'title' => _FULLEDIT,
                     ], [
-                        'href' => $afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid,
+                        'href' => $afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid.'&amp;token='.getSiteToken(),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -577,7 +577,7 @@ function getAdminBlockList(string $token = ''): string {
             ['content' => _FUNCTIONS, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
-        'disable_sort' => true,
+        'is_wrapless' => true,
     ]);
 }
 
@@ -597,8 +597,8 @@ function updateAdminBlockOrder(): void {
 function getAdminFavoriteList(int $obj = 0): string {
     global $db, $conf, $tpl;
     $newlistnum = intval($conf['favorites']['anum']);
-    $cid = getVar('get', 'cid', 'num', 1);
-    $offset = ($cid-1) * $newlistnum;
+    $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
+    $offset = ($cid - 1) * $newlistnum;
     $offset = intval($offset);
     list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
     
@@ -657,8 +657,9 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $id = $val[0];
                 $fid = $val[1];
                 $modul = $val[2];
-                $title = $val[3];
+                $title = html_entity_decode((string)$val[3], ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
+                $delhref = 'admin.php?name=favorites&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
                 $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
                     'cells' => [
                         ['content_html' => (string) $id],
@@ -666,16 +667,17 @@ function getAdminFavoriteList(int $obj = 0): string {
                         ['content_html' => getModuleName($modul)],
                         ['content_html' => $uname],
                         ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
-                            'trigger_label' => _EDITOR,
+                            'trigger_label' => _FUNCTIONS,
                             'items' => [[
                                 'href' => 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid,
                                 'label' => _MVIEW,
                                 'title' => _MVIEW,
                             ], [
-                                'href' => 'index.php?go=5&amp;op=deleteAdminFavorite&amp;id='.$id,
+                                'href' => $delhref,
                                 'label' => _ONDELETE,
                                 'title' => _ONDELETE,
-                                'link_attr' => 'hx-get="index.php?go=5&amp;op=deleteAdminFavorite&amp;id='.$id.'" hx-target="#repadminFavoriteList" hx-swap="innerHTML" hx-push-url="false"',
+                                'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminFavoriteList" hx-swap="innerHTML" hx-push-url="false"',
+                                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                             ]],
                         ])],
                     ],
@@ -690,10 +692,18 @@ function getAdminFavoriteList(int $obj = 0): string {
                     ['content' => _FUNCTIONS, 'nosort' => true],
                 ],
                 'rows_html' => implode('', $rows),
-                'disable_sort' => true,
+                'is_wrapless' => true,
             ]);
-            $numpages = ceil($fav_num / $newlistnum);
-            $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'getAdminFavoriteList', 'adminFavoriteList', 0, '', '');
+            $cont .= getTplPager([
+                'table' => '_favorites',
+                'field' => 'id',
+                'limit' => $newlistnum,
+                'maxpg' => intval($conf['favorites']['anump']),
+                'url' => 'name=favorites&',
+                'n' => 'num',
+                'target_id' => 'repadminFavoriteList',
+                'push_url' => true,
+            ]);
         } else {
             $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
         }
@@ -705,19 +715,11 @@ function getAdminFavoriteList(int $obj = 0): string {
     return '';
 }
 
-# Favorites delete
-function deleteAdminFavorite(): void {
- global $db;
-    $id = getVar('get', 'id', 'num', 0);
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
-    getAdminFavoriteList(0);
-}
-
 # Private messages list view
 function getAdminPrivateList(int $obj = 0): string {
     global $db, $conf, $tpl;
     $newlistnum = intval($conf['privat']['anum']);
-    $cid    = getVar('get', 'cid', 'num', 1);
+    $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
     $offset = intval(($cid - 1) * $newlistnum);
     list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
 
@@ -729,6 +731,8 @@ function getAdminPrivateList(int $obj = 0): string {
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
             $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
+            $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $delhref = 'admin.php?name=privat&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
@@ -738,12 +742,13 @@ function getAdminPrivateList(int $obj = 0): string {
                     ['content_html' => $date],
                     ['content_html' => ad_status('', $status, 1)],
                     ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
-                        'trigger_label' => _EDITOR,
+                        'trigger_label' => _FUNCTIONS,
                         'items' => [[
-                            'href' => 'index.php?go=5&amp;op=deleteAdminPrivate&amp;id='.$id,
+                            'href' => $delhref,
                             'label' => _ONDELETE,
                             'title' => _ONDELETE,
-                            'link_attr' => 'hx-get="index.php?go=5&amp;op=deleteAdminPrivate&amp;id='.$id.'" hx-target="#repadminPrivateList" hx-swap="innerHTML" hx-push-url="false"',
+                            'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminPrivateList" hx-swap="innerHTML" hx-push-url="false"',
+                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                         ]],
                     ])],
                 ],
@@ -760,10 +765,18 @@ function getAdminPrivateList(int $obj = 0): string {
                 ['content' => _FUNCTIONS, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
-            'disable_sort' => true,
+            'is_wrapless' => true,
         ]);
-        $numpages = ceil($fav_num / $newlistnum);
-        $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'getAdminPrivateList', 'adminPrivateList', 0, '', '');
+        $cont .= getTplPager([
+            'table' => '_privat',
+            'field' => 'id',
+            'limit' => $newlistnum,
+            'maxpg' => intval($conf['privat']['anump']),
+            'url' => 'name=privat&',
+            'n' => 'num',
+            'target_id' => 'repadminPrivateList',
+            'push_url' => true,
+        ]);
     } else {
         $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }

@@ -189,7 +189,6 @@ if (empty($go)) {
                 case 'getAdminBlockList': getAdminBlockList(); break;
                 case 'updateAdminBlockOrder': updateAdminBlockOrder(); break;
                 case 'getAdminFavoriteList': getAdminFavoriteList(); break;
-                case 'deleteAdminFavorite': deleteAdminFavorite(); break;
                 case 'getAdminPrivateList': getAdminPrivateList(); break;
                 case 'deleteAdminPrivate': deleteAdminPrivate(); break;
                 case 'getAdminUploadFiles': getAdminUploadFiles(); break;

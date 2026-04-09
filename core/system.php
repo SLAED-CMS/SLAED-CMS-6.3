@@ -2176,7 +2176,7 @@ function setFoot(): void {
     global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
-        $vars['content'] = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
+        $vars['content'] = getFlashHtml().((ob_get_level() > 0) ? (string)ob_get_clean() : '');
         $cvar = explode(',', $conf['variables']);
         $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
         $vars = array_replace($vars, [
@@ -2273,10 +2273,34 @@ function setFoot(): void {
     exit;
 }
 
+# Store one-time flash message in session
+function setFlash(string $text, bool $warn = false): void {
+    if ($text === '' || session_status() !== PHP_SESSION_ACTIVE) return;
+    $_SESSION['slaed_flash'] = ['text' => $text, 'warn' => $warn ? 1 : 0];
+}
+
+# Render and clear one-time flash message
+function getFlashHtml(): string {
+    global $tpl;
+    if (session_status() !== PHP_SESSION_ACTIVE) return '';
+    $data = $_SESSION['slaed_flash'] ?? null;
+    if (!is_array($data)) return '';
+    unset($_SESSION['slaed_flash']);
+    $text = (string)($data['text'] ?? '');
+    if ($text === '') return '';
+    return $tpl->getHtmlFrag('new/alert', [
+        'is_warn' => !empty($data['warn']),
+        'is_flash' => true,
+        'alert_attr' => 'data-sl-autohide="15000"',
+        'text' => $text,
+    ]);
+}
+
 # Safe redirect with optional referer fallback
-function setRedirect(string $url, bool $refer = false, int $code = 302): never {
+function setRedirect(string $url, bool $refer = false, int $code = 302, string $text = '', bool $warn = false): never {
     if (!in_array($code, [301, 302, 303, 307, 308], true)) $code = 302;
     if ($code === 302 && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) === 'POST') $code = 303;
+    if ($text !== '') setFlash($text, $warn);
     $target = trim(str_replace(["\r", "\n"], '', $url));
     if ($refer && (isset($_GET['refer']) || isset($_POST['refer']))) {
         $ref = trim(str_replace(["\r", "\n"], '', (string)($_SERVER['HTTP_REFERER'] ?? getenv('HTTP_REFERER') ?? '')));
@@ -4352,7 +4376,7 @@ function pagerDots(): string {
 
 function getAsyncPagerLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
  global $tpl;
-    $route = $query;
+    $route = $query ? 'index.php?'.$query : '';
     return $tpl->getHtmlFrag('pager-link', [
         'href' => '',
         'load_id' => $loadId,
@@ -4516,12 +4540,13 @@ function ratingLike(string $result, string $title, string $nrate): string {
 
 function ratingLikeHover(string $result, string $title, string $nrate, string $targetId, string $query): string {
  global $tpl;
-    return $tpl->getHtmlFrag('rating-like', [
+    return $tpl->getHtmlFrag('rating-like-live', [
         'result' => $result,
         'title' => $title,
         'nrate' => $nrate,
         'target_id' => $targetId,
-        'hover_query' => $query,
+        'rate1_query' => $query.'&amp;rate=1',
+        'rate5_query' => $query.'&amp;rate=5',
         'rate1_title' => _RATE1,
         'rate5_title' => _RATE5,
     ]);
@@ -6218,12 +6243,17 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
     $mod = filterVar($mod);
     $params = [];
     if (defined('ADMIN_FILE')) {
+        $amod = getVar('get', 'modul', 'var');
         if (getVar('get', 'status', 'num', 0) == 1) {
             $ordern = 'WHERE status = :status';
             $params = ['status' => 0];
         } else {
             $ordern = 'WHERE status != :status';
             $params = ['status' => 0];
+        }
+        if ($amod) {
+            $ordern .= ' AND modul = :modul';
+            $params['modul'] = $amod;
         }
         $ccnum = $conf['comments']['anum'];
         $plnum = $conf['comments']['anump'];
@@ -6349,11 +6379,13 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 
             if (is_moder($com_modul)) {
                 if (defined('ADMIN_FILE')) {
+                    $acttyp = $com_status ? '0' : '1';
+                    $acttxt = $com_status ? _DEACTIVATE : _ACTIVATE;
                     $edit = commentActionMenu([
                         commentActionLink('index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id, _MVIEW, _MVIEW),
-                        commentActionLink($afile.'.php?op=comm_edit&amp;id='.$com_id, _FULLEDIT, _FULLEDIT),
-                        commentActionLink($afile.'.php?op=comm_act&amp;id='.$com_id.'&amp;refer=1', _ACTIVATE, _ACTIVATE),
-                        commentActionDelete($afile.'.php?op=comm_del&amp;id='.$com_id.'&amp;refer=1', _DELETE.' "'.cutstr(filterText(filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
+                        commentActionLink($afile.'.php?name=comments&amp;op=edit&amp;id='.$com_id, _FULLEDIT, _FULLEDIT),
+                        commentActionLink($afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), $acttxt, $acttxt),
+                        commentActionDelete($afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), _DELETE.' "'.cutstr(filterText(filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
                     ]);
                 } else {
                     $edit = commentActionMenu([
@@ -6376,23 +6408,18 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             } else {
                 $checkb = '';
             }
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => commentAvatar($avname, $avatar), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
+            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('new/title-tip', [
+                'items' => [
+                    ['label' => _DATE, 'value' => $date, 'is_last' => false],
+                    ['label' => _IP, 'value' => $ip, 'is_last' => true],
+                ],
+            ]) : '';
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => commentAvatar($avname, $avatar), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {
-            $selms = $tpl->getHtmlFrag('comment-bulk-actions', [
-                'label' => _CHECKOP,
-                'activate_value' => 'comm_act',
-                'activate_label' => _ACTIVATE,
-                'delete_value' => 'comm_del',
-                'delete_label' => _DELETE,
-                'refer_value' => '1',
-                'submit_label' => _OK,
-            ]);
-            $pag = (getVar('get', 'status', 'num', 0) == 1) ? 'op=comm_show&amp;status=1' : 'op=comm_show';
-            $numpt = setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&amp;', $plnum, 0, '', 'com');
-            $cont .= $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
-            $out = getTplBox($cont);
+            $cont .= '</form>';
+            $out = $cont;
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;

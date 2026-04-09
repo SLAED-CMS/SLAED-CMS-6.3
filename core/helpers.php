@@ -416,6 +416,8 @@ function getTplPager(array $opt): string {
     $anchor = $opt['anchor'] ?? '';
     $n      = $opt['n'] ?? 'num';
     $url    = html_entity_decode($opt['url'] ?? '', ENT_QUOTES, 'UTF-8');
+    $targetid = (string)($opt['target_id'] ?? '');
+    $pushurl = !empty($opt['push_url']);
     [$cnt]  = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : '')));
     $cnt    = (int)$cnt;
     if ($cnt <= $limit) return '';
@@ -426,8 +428,17 @@ function getTplPager(array $opt): string {
         if (defined('ADMIN_FILE')) return $afile.'.php?'.$url.$n.'='.$i.$anchor;
         return getSeoUrl($mod ? ['name' => $mod, $url.$n => $i] : [$url.$n => $i]).$anchor;
     };
-    $link   = static fn(string $lh, string $label, bool $cur = false, bool $nav = false): string
-        => $tpl->getHtmlFrag('new/pager-link', ['href' => $lh, 'label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav]);
+    $link   = static function(string $lh, string $label, bool $cur = false, bool $nav = false) use ($tpl, $targetid, $pushurl): string {
+        $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav];
+        if ($targetid && !$cur && $lh !== '') {
+            $opt['query'] = $lh;
+            $opt['target_id'] = $targetid;
+            $opt['push_url'] = $pushurl ? 'true' : 'false';
+        } else {
+            $opt['href'] = $lh;
+        }
+        return $tpl->getHtmlFrag('new/pager-link', $opt);
+    };
     $dots   = $tpl->getHtmlFrag('new/pager-dots', []);
     $prev   = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
     $items  = '';
@@ -546,7 +557,12 @@ function setTplAdminInfoPage(array $data = []): void {
     $alert = '';
     if (!empty($conf['adminfo']) && getVar('post', $save, 'num', 0)) {
         if (!checkSiteToken()) {
-            $alert = $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            $alert = $tpl->getHtmlFrag('new/alert', [
+                'alert_attr' => 'data-sl-autohide="15000"',
+                'is_flash' => true,
+                'is_warn' => true,
+                'text' => _TOKENMISS,
+            ]);
             $text = (string)getVar('post', 'text', 'raw', $text);
         } else {
             $content = filterHtml(trim(getVar('post', 'text', 'raw', '')));
@@ -558,21 +574,26 @@ function setTplAdminInfoPage(array $data = []): void {
                     fwrite($fp, $content);
                     fclose($fp);
                     $text = $content;
+                    $alert = $tpl->getHtmlFrag('new/alert', [
+                        'alert_attr' => 'data-sl-autohide="15000"',
+                        'is_flash' => true,
+                        'text' => _SUCCSAVE,
+                    ]);
                 }
             }
         }
     }
     $info = filterReplaceText(filterMarkdown($text, $mod, false), $mod);
+    $body = ($alert !== '' ? $alert : '').$tpl->getHtmlPart('box', ['content_html' => $info]);
     $head = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '');
     if ($head === 'true') {
-        echo $tpl->getHtmlPart('box', ['content_html' => $info]);
+        echo $body;
         return;
     }
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     if (!empty($conf['adminfo']) && file_exists($path)) $cont .= checkPerms(BASE_DIR.'/'.$path);
-    if ($alert !== '') $cont .= $alert;
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $info]);
+    $cont .= $body;
     if (!empty($conf['adminfo'])) {
         $rows = [[
             'label_html' => '',
