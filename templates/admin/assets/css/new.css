@@ -156,6 +156,12 @@ input.sl-but-blue[value="ОК"] {
     min-width: 0;
     overflow: hidden;
 }
+.sl-div-item-full .sl-div-field .sl_form,
+.sl-div-item-full .sl-div-field .CodeMirror {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
 .sl-toggle-form-block-item {
     grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr);
 }
@@ -461,7 +467,7 @@ input.sl-but-blue[value="ОК"] {
 .sl-table-list-sort td { padding: 4px; border: 1px solid #e8ebee; border-radius: 3px; }
 .sl-table-list-sort td:nth-last-child(-n+3) { text-align: center; }
 .sl-table-list-sort th { font-weight: bold; border: 1px solid #e8ebee; padding: 8px 16px 8px 4px; text-align: left; background-color: #f8f8f8; border-radius: 3px; }
-.sl-table-list-sort th:last-child { text-align: right; padding: 8px 8px 8px 4px; }
+.sl-table-list-sort th:last-child { text-align: left; padding: 8px 16px 8px 4px; }
 
 /* Tabs */
 .sl-module-head {
