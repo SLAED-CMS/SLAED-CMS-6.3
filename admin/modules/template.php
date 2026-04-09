@@ -6,20 +6,123 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+function getTemplateFiles(string $dir, string $ext): array {
+    if (!is_dir($dir)) return [];
+    $list = [];
+    $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+    foreach ($iter as $item) {
+        if (!$item->isFile()) continue;
+        if (strtolower($item->getExtension()) !== $ext) continue;
+        $list[] = str_replace('\\', '/', $item->getPathname());
+    }
+    sort($list, SORT_NATURAL | SORT_FLAG_CASE);
+    return $list;
+}
+
+function getTemplateHtmlFiles(string $templ): array {
+    $dirs = [];
+    $base = 'templates/'.$templ;
+    if ($templ === 'admin') {
+        foreach (['fragments/new', 'partials', 'layouts', 'pages'] as $part) {
+            $path = $base.'/'.$part;
+            if (is_dir($path)) $dirs[] = $path;
+        }
+    } else {
+        foreach (['fragments', 'partials', 'layouts', 'pages'] as $part) {
+            $path = $base.'/'.$part;
+            if (is_dir($path)) $dirs[] = $path;
+        }
+    }
+    $list = [];
+    foreach ($dirs as $dir) {
+        $list = array_merge($list, getTemplateFiles($dir, 'html'));
+    }
+    sort($list, SORT_NATURAL | SORT_FLAG_CASE);
+    return array_values(array_unique($list));
+}
+
+function getTemplateCssFiles(string $templ): array {
+    $dir = 'templates/'.$templ.'/assets/css';
+    return getTemplateFiles($dir, 'css');
+}
+
+function getTemplateTabsOps(string $templ): array {
+    return [
+        'name=template&amp;templ='.$templ,
+        'name=template&amp;op=style&amp;templ='.$templ,
+        'name=template&amp;op=info&amp;templ='.$templ,
+    ];
+}
+
 function getTemplateSearch(string $templ): string {
     global $afile, $tpl;
     $opts = '';
     foreach (scandir('templates') as $file) {
-        if (!preg_match('/\./', $file)) {
-            $opts .= getTplOption($file, $file, $file == $templ);
-        }
+        if ($file === '.' || $file === '..' || !is_dir('templates/'.$file)) continue;
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $file,
+            'label_text' => $file,
+            'is_selected' => $file === $templ,
+        ]);
     }
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-template-search-form', [
-        'ok_label' => _OK,
-        'route' => $afile,
-        'select_html' => getTplSelect('templ', $opts, 'sl_form'),
-        'theme_label' => _THEME.':',
-    ]));
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=template',
+        'content_html' => _THEME.': '.$tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'templ',
+            'options_html' => $opts,
+        ]).' '.$tpl->getHtmlFrag('new/submit', [
+            'submit_label' => _OK,
+        ]),
+    ]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+}
+
+function getTemplateEditorBlock(string $templ, string $filelink, string $mode, string $op): string {
+    global $afile, $tpl;
+    $body = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=template&amp;op='.$op,
+        'hidden' => [
+            ['nameattr' => 'templ', 'valueattr' => $templ],
+            ['nameattr' => 'filelink', 'valueattr' => $filelink],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => [[
+            'label_html' => '',
+            'field_html' => _FILE.': '.$filelink.'<br>'._DATE.': '.date(_TIMESTRING, filemtime($filelink)),
+            'is_full' => true,
+        ], [
+            'label_html' => '',
+            'field_html' => getTplCodeEditor([
+                'height' => '160px',
+                'id' => 'code_'.md5($filelink),
+                'name' => 'template',
+                'mode' => $mode,
+                'text' => (string)file_get_contents($filelink),
+            ]),
+            'is_full' => true,
+        ]],
+        'submit_label' => _SAVECHANGES,
+    ]);
+    return $tpl->getHtmlPart('box', ['content_html' => $body]);
+}
+
+function getTemplateFilePath(string $templ, string $filelink, bool $iscss): string {
+    $templ = basename(trim($templ));
+    if ($templ === '') return '';
+    $base = BASE_DIR.'/templates/'.$templ;
+    $path = str_replace(['\\', '//'], ['/', '/'], trim($filelink));
+    if ($path === '') return '';
+    $realbase = realpath($base);
+    $realpath = realpath(BASE_DIR.'/'.$path);
+    if ($realbase === false || $realpath === false) return '';
+    $realbase = str_replace('\\', '/', $realbase);
+    $realpath = str_replace('\\', '/', $realpath);
+    if (!str_starts_with($realpath, $realbase.'/') && $realpath !== $realbase) return '';
+    $ext = strtolower((string)pathinfo($realpath, PATHINFO_EXTENSION));
+    if ($iscss) {
+        return $ext === 'css' ? $realpath : '';
+    }
+    return $ext === 'html' ? $realpath : '';
 }
 
 function template(): void {
@@ -27,43 +130,24 @@ function template(): void {
     $templ = getVar('post', 'templ', 'var', '');
     if ($templ === '') $templ = getVar('get', 'templ', 'var', $conf['theme']);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'], 'tabs' => [_TEMPLATES, _STYLES, _INFO], 'sub' => getTemplateSearch($templ)]);
+    $cont = getTplAdminTabs([
+        'ops' => getTemplateTabsOps($templ),
+        'tabs' => [_TEMPLATES, _STYLES, _INFO],
+        'subtitle_html' => getTemplateSearch($templ),
+    ]);
     $dir = 'templates/'.$templ;
     if (is_dir($dir)) {
-        $langs = ['.html' => '', 'assoc' => _ASSOTOPIC, 'all' => _ALL, 'admin' => _ADMIN, 'basic' => _CONTENT, 'block' => _BLOCK, 'bottom' => _BOTTOM, 'categories' => _CATEGORIES, 'cat' => _CATEGORIES, 'center' => _CENTER, 'code' => _CODE, 'comment' => _COMMENTS, 'change' => _CHANGE, 'index' => _INDEX, 'img' => _IMG, 'hide' => _HIDE, 'home' => _HOME, 'listing' => _LISTING, 'list' => _LISTING, 'login' => _INPUT, 'logged' => _LOGGED, 'kasse' => _PBASKET, 'messagebox' => _TMESS, 'message' => _MESSAGE, 'modul' => _MODUL, 'navi' => _NAVI, 'pagenum' => _PAGENUM, 'panel' => _ADMINMENU, 'post' => _SEND, 'prcenter' => _CENTERDOWN, 'prints' => _PRINTS, 'privat' => _PRIVAT, 'close' => _TCLOSE, 'open' => _TOPEN, 'title' => _TTITLE, 'warn' => _TWARNING, 'preview' => _PREVIEW, 'view' => _MVIEW, 'left' => _LEFT, 'right' => _RIGHT, 'down' => _CENTERDOWN, 'info' => _INFO, 'spoiler' => _SPOILER, 'quote' => _QUOTE, 'without' => _LOGINL, '-' => ' &raquo; '];
-        $i = 0;
         $conts = '';
-        $handle = opendir($dir);
-        if ($handle !== false) {
-            while (($file = readdir($handle)) !== false) {
-                if (strpos($file, '.html')) {
-                    $filelink = $dir.'/'.$file;
-                    $permtest = checkPerms(BASE_DIR.'/'.$filelink);
-                    if ($permtest) $cont .= $permtest;
-                    $comp = getModuleName(strtr($file, $langs));
-                    $conts .= $tpl->getHtmlFrag('admin-template-editor-block', [
-                        'comp_text' => $comp,
-                        'editor_html' => textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/html', file_get_contents($filelink)),
-                        'edit_label' => _EDIT,
-                        'file_label' => _FILE.':',
-                        'file_text' => $file,
-                        'filelink' => $filelink,
-                        'group_id' => 'sl_open_'.$i,
-                        'mtime_text' => date(_TIMESTRING, filemtime($filelink)),
-                        'op_value' => 'save',
-                        'route' => $afile,
-                        'save_label' => _SAVECHANGES,
-                        'templ' => $templ,
-                        'token' => $token,
-                    ]);
-                    $i++;
-                }
-            }
-            closedir($handle);
+        $files = getTemplateHtmlFiles($templ);
+        foreach ($files as $path) {
+            $rel = str_replace(str_replace('\\', '/', BASE_DIR.'/'), '', $path);
+            $permtest = checkPerms($path);
+            if ($permtest) $cont .= $permtest;
+            $conts .= getTemplateEditorBlock($templ, $rel, 'text/html', 'save');
         }
-        $cont .= getTplBox($conts);
+        $cont .= $conts !== '' ? $conts : $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -73,81 +157,78 @@ function style(): void {
     global $afile, $conf, $tpl;
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'], 'tabs' => [_TEMPLATES, _STYLES, _INFO], 'tab' => 1, 'sub' => getTemplateSearch($templ)]);
-    $dir = is_dir('templates/'.$templ.'/css') ? 'templates/'.$templ.'/css' : 'templates/'.$templ;
+    $cont = getTplAdminTabs([
+        'ops' => getTemplateTabsOps($templ),
+        'tabs' => [_TEMPLATES, _STYLES, _INFO],
+        'tab' => 1,
+        'subtitle_html' => getTemplateSearch($templ),
+    ]);
+    $dir = 'templates/'.$templ.'/assets/css';
     if (is_dir($dir)) {
-        $langs = ['.css' => '', 'all' => _ALL, 'basic' => _CONTENT, 'blocks' => _BLOCKS, 'calendar' => _CALENDAR, 'index' => _INDEX, 'home' => _HOME, 'styles' => _STYLES, 'style' => _STYLE, 'system' => _SYSTEM, 'engine' => _SYSTEM, 'theme' => _THEME, 'main' => _GENPREF, '-' => ' &raquo; '];
-        $i = 0;
         $conts = '';
-        $handle = opendir($dir);
-        if ($handle !== false) {
-            while (($file = readdir($handle)) !== false) {
-                if (strpos($file, '.css')) {
-                    $filelink = $dir.'/'.$file;
-                    $permtest = checkPerms(BASE_DIR.'/'.$filelink);
-                    if ($permtest) $cont .= $permtest;
-                    $comp = getModuleName(strtr($file, $langs));
-                    $conts .= $tpl->getHtmlFrag('admin-template-editor-block', [
-                        'comp_text' => $comp,
-                        'editor_html' => textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/css', file_get_contents($filelink)),
-                        'edit_label' => _EDIT,
-                        'file_label' => _FILE.':',
-                        'file_text' => $file,
-                        'filelink' => $filelink,
-                        'group_id' => 'sl_open_'.$i,
-                        'mtime_text' => date(_TIMESTRING, filemtime($filelink)),
-                        'op_value' => 'stylesave',
-                        'route' => $afile,
-                        'save_label' => _SAVECHANGES,
-                        'templ' => $templ,
-                        'token' => $token,
-                    ]);
-                    $i++;
-                }
-            }
-            closedir($handle);
+        $files = getTemplateCssFiles($templ);
+        foreach ($files as $path) {
+            $rel = str_replace(str_replace('\\', '/', BASE_DIR.'/'), '', $path);
+            $permtest = checkPerms($path);
+            if ($permtest) $cont .= $permtest;
+            $conts .= getTemplateEditorBlock($templ, $rel, 'text/css', 'stylesave');
         }
-        $cont .= getTplBox($conts);
+        $cont .= $conts !== '' ? $conts : $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function save(): void {
-    global $afile;
-    $templ = getVar('post', 'templ', 'var');
-    $filelink = getVar('post', 'filelink', 'text');
-    $template = getVar('post', 'template', 'raw');
-    if ($filelink && $template) {
-        $handle = fopen($filelink, 'wb');
-        fwrite($handle, $template);
-        fclose($handle);
+    global $afile, $conf;
+    $templ = getVar('post', 'templ', 'var', $conf['theme']);
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $filelink = getVar('post', 'filelink', 'text', '');
+        $text = (string)getVar('post', 'template', 'raw', '');
+        $path = getTemplateFilePath($templ, $filelink, false);
+        if ($path !== '' && $text !== '') {
+            $handle = fopen($path, 'wb');
+            if ($handle !== false) {
+                fwrite($handle, $text);
+                fclose($handle);
+            }
+        }
     }
-    $templParam = $templ ? '&templ='.$templ : '';
-    setRedirect($afile.'.php?name=template'.$templParam);
+    $templparam = $templ ? '&templ='.$templ : '';
+    setRedirect($afile.'.php?name=template'.$templparam, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function stylesave(): void {
-    global $afile;
-    $templ = getVar('post', 'templ', 'var');
-    $filelink = getVar('post', 'filelink', 'text');
-    $template = getVar('post', 'template', 'raw');
-    if ($filelink && $template) {
-        $handle = fopen($filelink, 'wb');
-        fwrite($handle, $template);
-        fclose($handle);
+    global $afile, $conf;
+    $templ = getVar('post', 'templ', 'var', $conf['theme']);
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $filelink = getVar('post', 'filelink', 'text', '');
+        $text = (string)getVar('post', 'template', 'raw', '');
+        $path = getTemplateFilePath($templ, $filelink, true);
+        if ($path !== '' && $text !== '') {
+            $handle = fopen($path, 'wb');
+            if ($handle !== false) {
+                fwrite($handle, $text);
+                fclose($handle);
+            }
+        }
     }
-    $templParam = $templ ? '&templ='.$templ : '';
-    setRedirect($afile.'.php?name=template&op=style'.$templParam);
+    $templparam = $templ ? '&templ='.$templ : '';
+    setRedirect($afile.'.php?name=template&op=style'.$templparam, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
     global $conf;
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
-    $cont = getTplAdminNavi(['ops' => ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'], 'tabs' => [_TEMPLATES, _STYLES, _INFO], 'tab' => 2, 'sub' => getTemplateSearch($templ)]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => getTemplateTabsOps($templ),
+        'tabs' => [_TEMPLATES, _STYLES, _INFO],
+        'subtitle_html' => getTemplateSearch($templ),
+    ]);
 }
 
 switch ($op) {

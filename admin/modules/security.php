@@ -341,60 +341,53 @@ function banlist(): void {
 
 function bansave(): void {
     global $db, $conf, $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    $warn = !checkSiteToken();
     $send = '';
-    $id = getVar('req', 'id', 'num');
-    $cidr = getVar('req', 'cidr', 'text');
-    $name = getVar('post', 'uname', 'name', getVar('req', 'name', 'name'));
-    $mail = getVar('post', 'mail', 'bool');
-    $info = trim(getVar('post', 'info', 'text'));
-    $info = ($info) ? $info : _BANN_INFO;
-    $mailtext = trim(getVar('post', 'mailtext', 'text'));
-    $hash = getVar('req', 'hash', 'text', '0');
-    $time = getVar('req', 'time', 'num');
-    $cidr = $cidr ? getIpCidr($cidr) : '';
-    clearstatcache(true, CONFIG_DIR.'/security.php');
-    if (function_exists('opcache_invalidate')) @opcache_invalidate(CONFIG_DIR.'/security.php', true);
-    $fresh = include CONFIG_DIR.'/security.php';
-    $cont = (is_array($fresh) && isset($fresh['security']) && is_array($fresh['security'])) ? $fresh['security'] : $conf['security'];
-    if ($id == 1 && $cidr) {
-        $bip = explode('||', $cont['blocker_ip']);
-        $new = '';
-        foreach ($bip as $val) {
-            if ($val == '') continue;
-            $binfo = explode('|', $val, 4);
-            if (count($binfo) < 4) continue;
-            $tcidr = getIpCidr($binfo[0]);
-            if ($tcidr === false) continue;
-            if ($tcidr === $cidr && $binfo[1] === $hash && (int)$binfo[2] === (int)$time) continue;
-            $new .= $val.'||';
+    if (!$warn) {
+        $id = getVar('req', 'id', 'num');
+        $cidr = getVar('req', 'cidr', 'text');
+        $name = getVar('post', 'uname', 'name', getVar('req', 'name', 'name'));
+        $mail = getVar('post', 'mail', 'bool');
+        $info = trim(getVar('post', 'info', 'text'));
+        $info = ($info) ? $info : _BANN_INFO;
+        $mailtext = trim(getVar('post', 'mailtext', 'text'));
+        $hash = getVar('req', 'hash', 'text', '0');
+        $time = getVar('req', 'time', 'num');
+        $cidr = $cidr ? getIpCidr($cidr) : '';
+        $cont = $conf['security'];
+        if ($id == 1 && $cidr) {
+            $bip = explode('||', $cont['blocker_ip']);
+            $new = '';
+            foreach ($bip as $val) {
+                if ($val == '') continue;
+                $binfo = explode('|', $val, 4);
+                if (count($binfo) < 4) continue;
+                $tcidr = getIpCidr($binfo[0]);
+                if ($tcidr === false) continue;
+                if ($tcidr === $cidr && $binfo[1] === $hash && (int)$binfo[2] === (int)$time) continue;
+                $new .= $val.'||';
+            }
+            $cont['blocker_ip'] = $new;
+        } elseif ($id == 2 && $cidr) {
+            $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
+            $cont['blocker_ip'] .= $cidr.'|'.$hash.'|'.$time.'|'.$info.'||';
+        } elseif ($id == 3 && $name) {
+            $blocker_user = preg_replace('#'.$name.'\|'.$time.'\|(.*)\|\|#iU', '', $cont['blocker_user']);
+            $cont['blocker_user'] = $blocker_user;
+        } elseif ($id == 4 && $name) {
+            $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
+            $cont['blocker_user'] .= $name.'|'.$time.'|'.$info.'||';
+            if ($mail) {
+                [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
+                $subject = $conf['sitename'].' - '._SECURITY;
+                $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), 'all', false), 'all'), false);
+                addMail($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
+                $send = '&send=1';
+            }
         }
-        $cont['blocker_ip'] = $new;
-    } elseif ($id == 2 && $cidr) {
-        $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
-        $cont['blocker_ip'] .= $cidr.'|'.$hash.'|'.$time.'|'.$info.'||';
-    } elseif ($id == 3 && $name) {
-        $blocker_user = preg_replace('#'.$name.'\|'.$time.'\|(.*)\|\|#iU', '', $cont['blocker_user']);
-        $cont['blocker_user'] = $blocker_user;
-    } elseif ($id == 4 && $name) {
-        $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
-        $cont['blocker_user'] .= $name.'|'.$time.'|'.$info.'||';
-        if ($mail) {
-            [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
-            $subject = $conf['sitename'].' - '._SECURITY;
-            $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), 'all', false), 'all'), false);
-            addMail($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
-            $send = '&send=1';
-        }
+        setConfigFile('security.php', $cont);
     }
-    setConfigFile('security.php', $cont);
-    setRedirect($afile.'.php?name=security&op=banlist'.$send);
+    setRedirect($afile.'.php?name=security&op=banlist'.$send, false, 302, $warn ? _TOKENMISS : '', $warn);
 }
 
 function passwd(): void {
@@ -452,34 +445,30 @@ function passwd(): void {
 }
 
 function passsave(): void {
-    global $conf, $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 2]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
+    global $conf, $afile;
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $protect = [PHP_EOL => '', ' ' => ''];
+        $admin_ip = getVar('post', 'admin_ip', 'text');
+        $login = getVar('post', 'login', 'text');
+        $password = getVar('post', 'password', 'text');
+        $xadmin_ip = strtr($admin_ip, $protect);
+        $xlogin = empty($login) ? $conf['security']['login'] : password_hash($login, PASSWORD_DEFAULT);
+        $xpassword = empty($password) ? $conf['security']['password'] : password_hash($password, PASSWORD_DEFAULT);
+        $ips = [];
+        foreach (explode(',', $xadmin_ip) as $val) {
+            $val = trim($val);
+            if ($val === '') continue;
+            $cidr = getIpCidr($val);
+            if ($cidr !== false) $ips[] = $cidr;
+        }
+        $cont = $conf['security'];
+        $cont['admin_ip'] = implode(',', $ips);
+        $cont['login'] = $xlogin;
+        $cont['password'] = $xpassword;
+        setConfigFile('security.php', $cont);
     }
-    $protect = [PHP_EOL => '', ' ' => ''];
-    $admin_ip = getVar('post', 'admin_ip', 'text');
-    $login = getVar('post', 'login', 'text');
-    $password = getVar('post', 'password', 'text');
-    $xadmin_ip = strtr($admin_ip, $protect);
-    $xlogin = empty($login) ? $conf['security']['login'] : password_hash($login, PASSWORD_DEFAULT);
-    $xpassword = empty($password) ? $conf['security']['password'] : password_hash($password, PASSWORD_DEFAULT);
-    $ips = [];
-    foreach (explode(',', $xadmin_ip) as $val) {
-        $val = trim($val);
-        if ($val === '') continue;
-        $cidr = getIpCidr($val);
-        if ($cidr !== false) $ips[] = $cidr;
-    }
-    $cont = $conf['security'];
-    $cont['admin_ip'] = implode(',', $ips);
-    $cont['login'] = $xlogin;
-    $cont['password'] = $xpassword;
-    setConfigFile('security.php', $cont);
-    setRedirect($afile.'.php?name=security&op=passwd');
+    setRedirect($afile.'.php?name=security&op=passwd', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
@@ -546,69 +535,65 @@ function config(): void {
 }
 
 function configsave(): void {
-    global $conf, $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 3]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
+    global $conf, $afile;
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $flood_t = getVar('post', 'flood_t', 'num', '1');
+        $afile = getVar('post', 'afile', 'text');
+        $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
+        if ($afile != $tafile) rename($tafile.'.php', $afile.'.php');
+        $afile = (file_exists($afile.'.php')) ? $afile : $tafile;
+        $log_size = getVar('post', 'log_size', 'num', '1048576');
+        $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
+        $sess_b = getVar('post', 'sess_b', 'num', 1440) * 60;
+        $rawskip = str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'dump_skip', 'raw', ''));
+        $lines = explode("\n", $rawskip);
+        $dskip = [];
+        foreach ($lines as $line) {
+            $line = trim(str_replace('\\', '/', (string)$line));
+            $line = preg_replace('#/+#', '/', $line);
+            $line = preg_replace('#^\./#', '', (string)$line);
+            $line = trim((string)$line, " \t\n\r\0\x0B");
+            if ($line === '' || $line === '.' || $line === './') continue;
+            if (str_contains($line, '..')) continue;
+            if (!str_ends_with($line, '/')) $line .= '/';
+            $dskip[] = $line;
+        }
+        $dskip = array_values(array_unique($dskip));
+        $cont = [
+            'flood' => getVar('post', 'flood', 'num'),
+            'error' => getVar('post', 'error', 'num'),
+            'flood_t' => $flood_t,
+            'blocker_cookie' => getVar('post', 'blocker_cookie', 'text'),
+            'afile' => $afile,
+            'log_size' => $log_size,
+            'sess_d' => $sess_d,
+            'sess_b' => $sess_b,
+            'log_b' => getVar('post', 'log_b', 'num'),
+            'error_log' => getVar('post', 'error_log', 'num'),
+            'url_get' => getVar('post', 'url_get', 'num'),
+            'url_post' => getVar('post', 'url_post', 'num'),
+            'ref_post' => getVar('post', 'ref_post', 'num'),
+            'mail' => getVar('post', 'mail', 'num'),
+            'mail_w' => getVar('post', 'mail_w', 'num'),
+            'mail_d' => getVar('post', 'mail_d', 'num'),
+            'write_h' => getVar('post', 'write_h', 'num'),
+            'write_w' => getVar('post', 'write_w', 'num'),
+            'log' => getVar('post', 'log', 'num'),
+            'log_d' => getVar('post', 'log_d', 'num'),
+            'dump_skip' => implode("\n", $dskip),
+            'log_a' => getVar('post', 'log_a', 'num'),
+            'log_u' => getVar('post', 'log_u', 'num'),
+            'block' => getVar('post', 'block', 'num')
+        ];
+        $cont['blocker_ip'] = $conf['security']['blocker_ip'];
+        $cont['blocker_user'] = $conf['security']['blocker_user'];
+        $cont['admin_ip'] = $conf['security']['admin_ip'];
+        $cont['login'] = $conf['security']['login'];
+        $cont['password'] = $conf['security']['password'];
+        setConfigFile('security.php', $cont);
     }
-    $flood_t = getVar('post', 'flood_t', 'num', '1');
-    $afile = getVar('post', 'afile', 'text');
-    $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
-    if ($afile != $tafile) rename($tafile.'.php', $afile.'.php');
-    $afile = (file_exists($afile.'.php')) ? $afile : $tafile;
-    $log_size = getVar('post', 'log_size', 'num', '1048576');
-    $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
-    $sess_b = getVar('post', 'sess_b', 'num', 1440) * 60;
-    $rawskip = str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'dump_skip', 'raw', ''));
-    $lines = explode("\n", $rawskip);
-    $dskip = [];
-    foreach ($lines as $line) {
-        $line = trim(str_replace('\\', '/', (string)$line));
-        $line = preg_replace('#/+#', '/', $line);
-        $line = preg_replace('#^\./#', '', (string)$line);
-        $line = trim((string)$line, " \t\n\r\0\x0B");
-        if ($line === '' || $line === '.' || $line === './') continue;
-        if (str_contains($line, '..')) continue;
-        if (!str_ends_with($line, '/')) $line .= '/';
-        $dskip[] = $line;
-    }
-    $dskip = array_values(array_unique($dskip));
-    $cont = [
-        'flood' => getVar('post', 'flood', 'num'),
-        'error' => getVar('post', 'error', 'num'),
-        'flood_t' => $flood_t,
-        'blocker_cookie' => getVar('post', 'blocker_cookie', 'text'),
-        'afile' => $afile,
-        'log_size' => $log_size,
-        'sess_d' => $sess_d,
-        'sess_b' => $sess_b,
-        'log_b' => getVar('post', 'log_b', 'num'),
-        'error_log' => getVar('post', 'error_log', 'num'),
-        'url_get' => getVar('post', 'url_get', 'num'),
-        'url_post' => getVar('post', 'url_post', 'num'),
-        'ref_post' => getVar('post', 'ref_post', 'num'),
-        'mail' => getVar('post', 'mail', 'num'),
-        'mail_w' => getVar('post', 'mail_w', 'num'),
-        'mail_d' => getVar('post', 'mail_d', 'num'),
-        'write_h' => getVar('post', 'write_h', 'num'),
-        'write_w' => getVar('post', 'write_w', 'num'),
-        'log' => getVar('post', 'log', 'num'),
-        'log_d' => getVar('post', 'log_d', 'num'),
-        'dump_skip' => implode("\n", $dskip),
-        'log_a' => getVar('post', 'log_a', 'num'),
-        'log_u' => getVar('post', 'log_u', 'num'),
-        'block' => getVar('post', 'block', 'num')
-    ];
-    $cont['blocker_ip'] = $conf['security']['blocker_ip'];
-    $cont['blocker_user'] = $conf['security']['blocker_user'];
-    $cont['admin_ip'] = $conf['security']['admin_ip'];
-    $cont['login'] = $conf['security']['login'];
-    $cont['password'] = $conf['security']['password'];
-    setConfigFile('security.php', $cont);
-    setRedirect($afile.'.php?name=security&op=config');
+    setRedirect($afile.'.php?name=security&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
@@ -634,20 +619,16 @@ function download(): void {
 }
 
 function delete(): void {
-    global $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO]]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
+    global $afile;
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $file = getVar('get', 'file', 'var');
+        if ($file) {
+            $path = LOGS_DIR.'/'.$file.'.log';
+            if (is_file($path)) unlink($path);
+        }
     }
-    $file = getVar('get', 'file', 'var');
-    if ($file) {
-        $path = LOGS_DIR.'/'.$file.'.log';
-        if (is_file($path)) unlink($path);
-    }
-    setRedirect($afile.'.php?name=security');
+    setRedirect($afile.'.php?name=security', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
 
 switch ($op) {

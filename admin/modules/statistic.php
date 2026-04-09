@@ -12,19 +12,34 @@ function getStatisticSearch(): string {
     $files = [];
     foreach (scandir(COUNTER_DIR.'/statistic/') as $filev) $files[] = $filev;
     rsort($files);
-    $sopts = getTplOption('', _NO_INFO, !$file);
+    $sopts = $tpl->getHtmlFrag('new/select-option', [
+        'value_attr' => '',
+        'label_text' => _NO_INFO,
+        'is_selected' => !$file,
+    ]);
     foreach ($files as $val) {
         if ($val != '' && preg_match('/^statistic\_(.+)\.log/', $val, $matches)) {
-            $sopts .= getTplOption($val, $matches[1], $file === $val);
+            $sopts .= $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => $val,
+                'label_text' => $matches[1],
+                'is_selected' => $file === $val,
+            ]);
         }
     }
-    $sel = getTplSelect('file', $sopts);
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-statistic-search-form', [
-        'from_label' => _STATFROM.':',
-        'ok_label' => _OK,
-        'route' => $afile,
-        'select_html' => $sel,
-    ]));
+    $sel = $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'file',
+        'options_html' => $sopts,
+    ]);
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'statistic'],
+        ],
+        'content_html' => _STATFROM.': '.$sel.' '.$tpl->getHtmlFrag('new/submit', [
+            'submit_label' => _OK,
+        ]),
+    ]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
 }
 
 function statistic(): void {
@@ -32,13 +47,17 @@ function statistic(): void {
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'subtitle_html' => getStatisticSearch(),
+    ]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
-    $statv = $tpl->getHtmlFrag('admin-statistic-image', [
+    $statv = $tpl->getHtmlFrag('new/image-preview', [
         'alt_text' => _STATGR,
-        'image_url' => $afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15',
-        'title_text' => _STATGR,
+        'image_id' => 'statistic-chart-main',
+        'src_attr' => $afile.'.php?name=statistic'.($file ? '&file='.$file : '').'&op=add&day=15',
     ]);
     if ($file || date('d') > 15) {
         if ($file) {
@@ -48,23 +67,22 @@ function statistic(): void {
         } else {
             $out = date('d');
         }
-        $statv .= getTplHrLine();
-        $statv .= $tpl->getHtmlFrag('admin-statistic-image', [
+        $statv .= $tpl->getHtmlFrag('new/image-preview', [
             'alt_text' => _STATGR,
-            'image_url' => $afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out,
-            'title_text' => _STATGR,
+            'image_id' => 'statistic-chart-extra',
+            'src_attr' => $afile.'.php?name=statistic'.($file ? '&file='.$file : '').'&op=add&day='.$out,
         ]);
     }
-    $head = $tpl->getHtmlFrag('admin-statistic-table-head', [
-        'audience_label' => _AUDIENCE,
-        'bots_label' => _BOTSOPT,
-        'date_label' => _DATE,
-        'hits_label' => _HITS,
-        'home_label' => _HOME,
-        'referers_label' => _REFERERS,
-        'unique_label' => _UNIQUE,
-        'users_label' => _USERS,
-    ]);
+    $head = [
+        ['content' => _DATE],
+        ['content' => _UNIQUE],
+        ['content' => _HITS],
+        ['content' => _HOME],
+        ['content' => _REFERERS],
+        ['content' => _BOTSOPT],
+        ['content' => _AUDIENCE],
+        ['content' => _USERS],
+    ];
     $rows = '';
     $daysLog = COUNTER_DIR.'/days.log';
     $statLog = COUNTER_DIR.'/statistic.log';
@@ -94,29 +112,40 @@ function statistic(): void {
         $auditory += $out_aud;
         if ($auditory < 0) $auditory = 0;
         $regusers += rtrim($out[7]);
-        $rows .= $tpl->getHtmlFrag('admin-statistic-table-row', [
-            'audience_text' => (string)$out_aud,
-            'bots_text' => $out[4],
-            'date_text' => $out[0],
-            'hits_text' => $out[2],
-            'home_text' => $out[6],
-            'referers_text' => $out[5],
-            'unique_text' => $out[1],
-            'users_text' => rtrim($out[7]),
-        ]);
+        $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => $out[0]],
+                ['content_html' => $out[1]],
+                ['content_html' => $out[2]],
+                ['content_html' => $out[6]],
+                ['content_html' => $out[5]],
+                ['content_html' => $out[4]],
+                ['content_html' => (string)$out_aud],
+                ['content_html' => rtrim($out[7])],
+            ],
+        ])]);
     }
-    $rows .= $tpl->getHtmlFrag('admin-statistic-table-total', [
-        'all_label' => _ALL,
-        'audience_text' => (string)$auditory,
-        'bots_text' => (string)$engines,
-        'hits_text' => (string)$today,
-        'home_text' => (string)$homepage,
-        'referers_text' => (string)$sites,
-        'unique_text' => (string)$unique,
-        'users_text' => (string)$regusers,
+    $rows .= $tpl->getHtmlFrag('new/table-row', [
+        'row_attr' => 'data-sort-method="none"',
+        'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => '<strong>'._ALL.'</strong>'],
+                ['content_html' => '<strong>'.(string)$unique.'</strong>'],
+                ['content_html' => '<strong>'.(string)$today.'</strong>'],
+                ['content_html' => '<strong>'.(string)$homepage.'</strong>'],
+                ['content_html' => '<strong>'.(string)$sites.'</strong>'],
+                ['content_html' => '<strong>'.(string)$engines.'</strong>'],
+                ['content_html' => '<strong>'.(string)$auditory.'</strong>'],
+                ['content_html' => '<strong>'.(string)$regusers.'</strong>'],
+            ],
+        ]),
     ]);
-    $statv .= getTplHrLine().getTplAdminTable($head, $rows, 'sl_table_list_sort');
-    echo $cont.getTplBox($statv);
+    $statv .= $tpl->getHtmlFrag('new/table', [
+        'is_wrapless' => true,
+        'head' => $head,
+        'rows_html' => $rows,
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $statv]);
     setFoot();
 }
 
@@ -127,37 +156,52 @@ function add(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'tab' => 1,
+        'subtitle_html' => getStatisticSearch(),
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $rows = [
-        ['label_html' => _STATBET, 'field_html' => getTplNumberInput((string)$conf['statistic']['bet'], 'bet', 'sl_conf')],
-        ['label_html' => _STATSHI, 'field_html' => getTplNumberInput((string)$conf['statistic']['shi'], 'shi', 'sl_conf')],
-        ['label_html' => _STATACT, 'field_html' => radio_form($conf['statistic']['stat'], 'stat')],
+        ['label_html' => _STATBET, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'bet', 'value_attr' => (string)$conf['statistic']['bet'], 'is_config' => true])],
+        ['label_html' => _STATSHI, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'shi', 'value_attr' => (string)$conf['statistic']['shi'], 'is_config' => true])],
+        ['label_html' => _STATACT, 'field_html' => getTplRadioGroup(['name' => 'stat', 'value' => (string)(int)$conf['statistic']['stat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('config-div', [
+    $confv = $tpl->getHtmlFrag('new/form', [
         'action_url' => $afile.'.php',
-        'hidden_html' => getTplHiddenInput('name', 'statistic').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken()),
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'statistic'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.getTplBox($confv);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();
 }
 
 function save(): void {
     global $afile;
-    $cont = [
-        'bet' => getVar('post', 'bet', 'num', 42),
-        'shi' => getVar('post', 'shi', 'num', 22),
-        'stat' => getVar('post', 'stat', 'num')
-    ];
-    setConfigFile('statistic.php', $cont);
-    setRedirect($afile.'.php?name=statistic&op=config');
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [
+            'bet' => getVar('post', 'bet', 'num', 42),
+            'shi' => getVar('post', 'shi', 'num', 22),
+            'stat' => getVar('post', 'stat', 'num')
+        ];
+        setConfigFile('statistic.php', $cont);
+    }
+    setRedirect($afile.'.php?name=statistic&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'subtitle_html' => getStatisticSearch(),
+    ]);
 }
 
 switch ($op) {

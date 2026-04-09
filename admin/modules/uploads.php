@@ -11,15 +11,22 @@ function getUploadsSearch(): string {
     $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
     $opts = '';
     foreach (scandir('uploads') as $file) {
-        if (!preg_match('/\./', $file)) {
-            $opts .= getTplOption($file, 'uploads/'.$file, $dir == $file);
-        }
+        if (preg_match('/\./', $file)) continue;
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $file,
+            'label_text' => 'uploads/'.$file,
+            'is_selected' => $dir == $file,
+        ]);
     }
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-uploads-search-form', [
-        'dir_label' => _DIR.':',
-        'route' => $afile,
-        'select_html' => getTplSelect('dir', $opts, 'sl_form', 'OnChange="submit()"'),
-    ]));
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=uploads',
+        'content_html' => _DIR.': '.$tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'dir',
+            'options_html' => $opts,
+            'select_attr' => ' onchange="submit()"',
+        ]),
+    ]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
 }
 
 function uploads(): void {
@@ -33,17 +40,45 @@ function uploads(): void {
         'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO],
         'subtitle_html' => getUploadsSearch(),
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
-    $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, 'uploads/'.$dir)]);
-    $uphide = getTplHiddenInput('name', 'uploads').getTplHiddenInput('op', 'uploadsave').getTplHiddenInput('dir', $dir).getTplHiddenInput('token', getSiteToken());
-    $uprows = $tpl->getHtmlFrag('admin-uploads-upload-rows', [
-        'execute_label' => _EXECUTE,
-        'filesite_label' => _FILE_SITE.':',
-        'filesite_placeholder' => _FILE_SITE,
-        'fileuser_label' => _FILE_USER.':',
+    $tabone = $tpl->getHtmlFrag('new/alert', [
+        'is_warn' => false,
+        'lines' => [
+            _MODUL.': '.getModuleName($dir),
+            _DIR.': uploads/'.$dir,
+        ],
     ]);
-    $tabone .= getTplBox(getTplAdminForm($afile.'.php', $uprows, $uphide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"'));
+    $tabone .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'form_attr' => 'enctype="multipart/form-data"',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'uploads'],
+            ['nameattr' => 'op', 'valueattr' => 'uploadsave'],
+            ['nameattr' => 'dir', 'valueattr' => $dir],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => [
+            [
+                'label_html' => _FILE_USER.':',
+                'field_html' => $tpl->getHtmlFrag('new/input', [
+                    'itype' => 'file',
+                    'name_attr' => 'userfile',
+                    'value_attr' => '',
+                ]),
+            ],
+            [
+                'label_html' => _FILE_SITE.':',
+                'field_html' => $tpl->getHtmlFrag('new/input', [
+                    'itype' => 'text',
+                    'name_attr' => 'sitefile',
+                    'placeholder_text' => _FILE_SITE,
+                    'value_attr' => '',
+                ]),
+            ],
+        ],
+        'submit_label' => _EXECUTE,
+    ])]);
     $fdir = 'uploads/'.$dir;
     $tabtwo = checkPerms(BASE_DIR.'/'.$fdir);
     if (is_dir($fdir)) {
@@ -56,9 +91,14 @@ function uploads(): void {
                 $affilesize += $filesize;
             }
         }
-        $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, $fdir).getTplAdminTipLine(_FILE_M, (string)$f).getTplAdminTipLine(_FILE_S, filterSize($affilesize))]);
+        $tabtwo .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'lines' => [
+            _MODUL.': '.getModuleName($dir),
+            _DIR.': '.$fdir,
+            _FILE_M.': '.$f,
+            _FILE_S.': '.filterSize($affilesize),
+        ]]);
     } else {
-        $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $tabtwo .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     $tabtwo .= $tpl->getHtmlPart('box', ['box_id' => 'repf1']);
     $tdir = 'uploads/'.$dir.'/thumb';
@@ -73,9 +113,14 @@ function uploads(): void {
                 $atfilesize += $filesize;
             }
         }
-        $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, $tdir).getTplAdminTipLine(_FILE_M, (string)$t).getTplAdminTipLine(_FILE_S, filterSize($atfilesize))]);
+        $tabthr .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'lines' => [
+            _MODUL.': '.getModuleName($dir),
+            _DIR.': '.$tdir,
+            _FILE_M.': '.$t,
+            _FILE_S.': '.filterSize($atfilesize),
+        ]]);
     } else {
-        $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $tabthr .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     $tabthr .= $tpl->getHtmlPart('box', ['box_id' => 'repf2']);
     $tabs = [
@@ -96,13 +141,14 @@ function uploads(): void {
     $uplv = $tpl->getHtmlFrag('new/tabs', [
         'id' => 'uploads-tabs',
         'is_runtime' => true,
+        'is_subtabs' => true,
         'tabs_html' => $tabsHtml,
         'content_html' =>
             $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-panel-0', 'content_html' => $tabone])
             .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-panel-1', 'content_html' => $tabtwo])
             .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'uploads-panel-2', 'content_html' => $tabthr]),
     ]);
-    echo $cont.$uplv;
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $uplv]);
     setFoot();
 }
 
@@ -127,19 +173,28 @@ function tplconfig(): void {
         'tab' => 1,
         'subtitle_html' => getUploadsSearch(),
     ]);
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _TPINFO]);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = explode(',', $conf['uploads']['typ']);
-    $rows = [];
+    $blocks = '';
     for ($i = 0; $i < count($typm); $i++) {
-        $rows[] = [
-            'raw_html' => $tpl->getHtmlFrag('admin-uploads-tplconfig-block', [
-                'editor_html' => textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conf['filetype'][$typm[$i]] ?? ''),
-                'show_hr' => $i > 0,
-                'module_text' => $typm[$i],
-                'tpfor_label' => _TPFOR.':',
-            ]),
-        ];
+        $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/div', [
+            'rows' => [[
+                'label_html' => '',
+                'field_html' => _TPFOR.': '.$typm[$i],
+                'is_full' => true,
+            ], [
+                'label_html' => '',
+                'field_html' => getTplCodeEditor([
+                    'height' => '160px',
+                    'id' => 'code_'.$i,
+                    'name' => 'tmp[]',
+                    'mode' => 'text/html',
+                    'text' => $conf['filetype'][$typm[$i]] ?? '',
+                ]),
+                'is_full' => true,
+            ]],
+        ])]);
     }
     $tplv = $tpl->getHtmlFrag('new/form', [
         'action_url' => $afile.'.php',
@@ -148,10 +203,10 @@ function tplconfig(): void {
             ['nameattr' => 'op', 'valueattr' => 'tplsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]),
+        'content_html' => $blocks,
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.getTplBox($tplv);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tplv]);
     setFoot();
 }
 
@@ -180,60 +235,46 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $directory = '';
     foreach (scandir('uploads') as $file) {
-        if (!preg_match('/\./', $file)) {
-            $directory .= getTplOption($file, 'uploads/'.$file, $conf['uploads']['dir'] == $file);
-        }
+        if (preg_match('/\./', $file)) continue;
+        $directory .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $file,
+            'label_text' => 'uploads/'.$file,
+            'is_selected' => $conf['uploads']['dir'] == $file,
+        ]);
     }
     $rows = [
-        ['label_html' => _DIRDEF.':', 'field_html' => getTplSelect('dir', $directory, 'sl_conf')],
-        ['label_html' => getTplAdminHintLabel(_TPFORM.':', _TPFORMIN), 'field_html' => getTplTextarea('ttyp', $conf['uploads']['typ'], 'sl_conf', 'placeholder="'._TPFORM.'" required')],
-        ['label_html' => _TPWIDTH.':', 'field_html' => getTplNumberInput('twidth', (string)$conf['uploads']['width'], 'sl_conf', 'placeholder="'._TPWIDTH.'" required')],
-        ['label_html' => _TPHEIGHT.':', 'field_html' => getTplNumberInput('theight', (string)$conf['uploads']['height'], 'sl_conf', 'placeholder="'._TPHEIGHT.'" required')],
+        ['label_html' => _DIRDEF.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'dir', 'is_config' => true, 'options_html' => $directory])],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TPFORM.':', 'hint' => _TPFORMIN]), 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'ttyp', 'is_config' => true, 'is_required' => true, 'value_text' => $conf['uploads']['typ']])],
+        ['label_html' => _TPWIDTH.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'twidth', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['width']])],
+        ['label_html' => _TPHEIGHT.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'theight', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['height']])],
     ];
-    $tabone = $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]);
-    $rows = [];
+    $tabone = $tpl->getHtmlFrag('new/div', ['rows' => $rows]);
+    $blocks = '';
     $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
             $con = explode('|', $conf['uploads'][$val]);
-            $rows[] = [
-                'raw_html' => $tpl->getHtmlFrag('admin-uploads-config-module-block', [
-                    'allsize_label' => _FSIZEALL._FIN.':',
-                    'allsize_value' => $con[1],
-                    'asum_hint' => _CONFINES,
-                    'asum_label' => _EDFILEA.':',
-                    'asum_value' => $con[8],
-                    'five_label' => _F_5.':',
-                    'gdwidth_label' => _GDWIDTH.':',
-                    'gdwidth_value' => $con[6],
-                    'height_label' => _AHEIGHT._AIN.':',
-                    'height_value' => $con[4],
-                    'show_hr' => $i > 0,
-                    'module_label' => _MODUL.':',
-                    'module_text' => getModuleName($val),
-                    'num_value' => $con[7],
-                    'size_label' => _FSIZE._FIN.':',
-                    'size_value' => $con[2],
-                    'type_label' => _FTYPE.':',
-                    'type_value' => $con[0],
-                    'up_label' => _FILEUP.':',
-                    'upload_html' => radio_form($con[10], $i.'upload'),
-                    'upload_label' => _F_8,
-                    'upguest_html' => radio_form($con[11], $i.'upguest'),
-                    'upguest_label' => _F_9,
-                    'up_value' => $con[5],
-                    'usum_hint' => _CONFINES,
-                    'usum_label' => _EDFILEU.':',
-                    'usum_value' => $con[9],
-                    'width_label' => _AWIDTH._AIN.':',
-                    'width_value' => $con[3],
-                ]),
+            $mrows = [
+                ['label_html' => _MODUL.':', 'field_html' => getModuleName($val)],
+                ['label_html' => _FTYPE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'type[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[0]])],
+                ['label_html' => _FSIZEALL._FIN.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'allsize[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[1]])],
+                ['label_html' => _FSIZE._FIN.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'size[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[2]])],
+                ['label_html' => _AWIDTH._AIN.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'width[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[3]])],
+                ['label_html' => _AHEIGHT._AIN.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'height[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[4]])],
+                ['label_html' => _FILEUP.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'up[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[5]])],
+                ['label_html' => _GDWIDTH.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'gdwidth[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[6]])],
+                ['label_html' => _F_5.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[7]])],
+                ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EDFILEA.':', 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[8]])],
+                ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EDFILEU.':', 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[9]])],
+                ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => $i.'upload', 'value' => $con[10], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+                ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => $i.'upguest', 'value' => $con[11], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ];
+            $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $mrows])]);
             $i++;
         }
     }
-    $tabtwo = $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]);
+    $tabtwo = $blocks;
     $tabsHtml = $tpl->getHtmlFrag('new/tabs-link', [
         'href' => '#',
         'label' => _GENPREF,
@@ -263,7 +304,7 @@ function config(): void {
         'content_html' => $conts,
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.getTplBox($confv);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $confv]);
     setFoot();
 }
 
