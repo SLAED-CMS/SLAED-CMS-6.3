@@ -2824,7 +2824,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$exp($data).';'.PHP_EOL;
