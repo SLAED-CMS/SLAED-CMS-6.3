@@ -373,7 +373,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => (string)$id],
                     ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
                         'items' => $tipItems,
-                        'label_text' => cutstr($title, 50),
+                        'label_text' => cutstr($title, 45),
                         'title_text' => $title,
                     ])],
                     ['content_html' => (string)$pnum],

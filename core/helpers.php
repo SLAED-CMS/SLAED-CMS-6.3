@@ -591,7 +591,12 @@ function setTplAdminInfoPage(array $data = []): void {
         return;
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
+    $cont = getTplAdminTabs([
+        'ops' => $ops,
+        'subtitle_html' => (string)($data['subtitle_html'] ?? ''),
+        'tabs' => $tabs,
+        'tab' => $tab,
+    ]);
     if (!empty($conf['adminfo']) && file_exists($path)) $cont .= checkPerms(BASE_DIR.'/'.$path);
     $cont .= $body;
     if (!empty($conf['adminfo'])) {
@@ -668,13 +673,19 @@ function getTplUserSearchInput(array $data = []): string {
 
 # Render one shared CodeMirror-backed code editor field
 function getTplCodeEditor(array $data = []): string {
-    return textarea_code(
+    $code = textarea_code(
         (string)($data['id'] ?? 'code'),
         (string)($data['name'] ?? ''),
         (string)($data['style'] ?? 'sl_form'),
         (string)($data['mode'] ?? 'text/plain'),
         (string)($data['text'] ?? '')
     );
+    $height = trim((string)($data['height'] ?? ''));
+    if ($height !== '') {
+        $id = (string)($data['id'] ?? 'code');
+        $code .= getHtmlScriptInline('if (typeof editor !== "undefined" && editor && editor.getTextArea && editor.getTextArea().id === "'.$id.'") { editor.setSize(null, "'.$height.'"); }');
+    }
+    return $code;
 }
 
 # Render one shared admin move-controls block with HTMX transport
