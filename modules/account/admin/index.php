@@ -1,25 +1,47 @@
 <?php
 # Author: Eduard Laas
-# Copyright ï¿½ 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('account')) die('Illegal file access');
+
+function getAccountSearch(): string {
+    global $afile, $tpl;
+    $search = getVar('req', 'search', 'num', 2);
+    $chng = getVar('req', 'chng');
+    $search = $search > 0 ? $search : 2;
+    $searchopts =
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]) .
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _NICKNAME, 'is_selected' => $search === 2]) .
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _EMAIL, 'is_selected' => $search === 3]) .
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '4', 'label_text' => _IP, 'is_selected' => $search === 4]) .
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '5', 'label_text' => _URL, 'is_selected' => $search === 5]);
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=account',
+        'content_html' =>
+            _SEARCH.': '.
+            $tpl->getHtmlFrag('new/select', ['name_attr' => 'search', 'options_html' => $searchopts]).
+            ' '.
+            $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'chng', 'value_attr' => $chng, 'maxlength_num' => 30]).
+            ' '.
+            $tpl->getHtmlFrag('new/submit', ['submit_label' => _OK]),
+    ]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+}
 
 
 function account(): void {
     global $db, $afile, $conf, $tpl;
     $search = getVar('req', 'search', 'num');
     $chng = getVar('req', 'chng');
+    $search = $search > 0 ? $search : 2;
     setHead();
-    $_search = (int)getVar('post', 'search');
-    $_chng = getVar('post', 'chng');
-    $cont = getTplAdminNavi([
+    $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getTplAdminAccountSearch($_search, $_chng),
+        'subtitle_html' => getAccountSearch(),
     ]);
-    if (getVar('get','send','num')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $where = '1 = 1';
     $wcnt = '1 = 1';
     $order = 'ORDER BY u.id DESC';
@@ -68,33 +90,105 @@ function account(): void {
     $params['limit'] = $conf['users']['anum'];
     $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->getSqlQuery($sql,$params);
+    $body = '';
     if ($db->getSqlRowCount($res) > 0) {
-        $head = getTplAdminTableHead([_ID, _NICKNAME, _IP, _EMAIL, _REG, [_FUNCTIONS, 'nosort']]);
-        $rows = '';
+        $rows = [];
         while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
-            $sgroup = $gname ? getTplAdminColorLabel($gcolor, $gname) : _NO;
+            $sgroup = $gname ?: _NO;
             $web = $site ? domain($site, 40) : _NO;
-            $acts = getTplAdminActionMenu([
-                getTplLinkAction($afile.'.php?name=account&amp;op=add&amp;id='.$uid, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip, _BANIPSENDER.' "'.$ip.'"?', _BANIPSENDER, _BANIPSENDER),
-                getTplAdminDeleteAction($afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-account-list-row', [
-                'actions_html' => $acts,
-                'email_html' => filterTextHighlight($mail, $chng),
-                'id_html' => filterTextHighlight($uid, $chng),
-                'ip_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng),
-                'nickname_html' => getTplAdminTitleTip(_HASH.': '.md5($agent).getTplAdminTipLine(_LAST_VISIT, format_time($last, _TIMESTRING)).getTplAdminTipLine(_SPEC_GROUP, $sgroup).getTplAdminTipLine(_SITE, filterTextHighlight($web,$chng)).getTplAdminTipLine(_GENDER, gender($gender)).getTplAdminTipLine(_POINTS, $point)).filterTextHighlight(user_info($name), $chng),
-                'reg_text' => format_time($reg, _TIMESTRING),
-            ]));
+            $titleitems = [
+                ['label' => _HASH, 'value' => md5($agent)],
+                ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING)],
+                ['label' => _SPEC_GROUP, 'value' => $sgroup],
+                ['label' => _SITE, 'value' => filterTextHighlight($web, $chng)],
+                ['label' => _GENDER, 'value' => gender($gender)],
+                ['label' => _POINTS, 'value' => (string)$point, 'is_last' => true],
+            ];
+            $delhref = $afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;token='.getSiteToken();
+            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => filterTextHighlight((string)$uid, $chng)],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => $titleitems,
+                        'title_text' => $name,
+                    ]).filterTextHighlight($name, $chng)],
+                    ['content_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng)],
+                    ['content_html' => filterTextHighlight($mail, $chng)],
+                    ['content_html' => format_time($reg, _TIMESTRING)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        'trigger_label' => _FUNCTIONS,
+                        'items' => [
+                            [
+                                'href' => $afile.'.php?name=account&amp;op=add&amp;id='.$uid,
+                                'label' => _FULLEDIT,
+                                'title' => _FULLEDIT,
+                            ],
+                            [
+                                'href' => $afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip,
+                                'label' => _BANIPSENDER,
+                                'title' => _BANIPSENDER,
+                                'onclick_attr' => 'OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.htmlspecialchars($ip, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                            ],
+                            [
+                                'href' => $delhref,
+                                'label' => _ONDELETE,
+                                'title' => _ONDELETE,
+                                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                            ],
+                        ],
+                    ])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $lsear = $search ? '&amp;search='.$search : '';
-        $lchg = $chng ? '&amp;chng='.$chng : '';
-        $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $wcnt, $conf['users']['anump'], $pars);
+        $body .= $tpl->getHtmlFrag('new/table', [
+            'head' => [
+                ['content' => _ID],
+                ['content' => _NICKNAME],
+                ['content' => _IP],
+                ['content' => _EMAIL],
+                ['content' => _REG],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => implode('', $rows),
+            'is_wrapless' => true,
+        ]);
+        [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_users WHERE '.$wcnt, $pars));
+        $count = (int)$count;
+        if ($count > (int)$conf['users']['anum']) {
+            $pages = (int)ceil($count / (int)$conf['users']['anum']);
+            $curr = max(1, min($num, $pages));
+            $maxpg = (int)$conf['users']['anump'];
+            $dots = $tpl->getHtmlFrag('new/pager-dots', []);
+            $base = $afile.'.php?name=account'.($search ? '&search='.$search : '').($chng !== '' ? '&chng='.urlencode($chng) : '').'&num=';
+            $link = static function(string $href, string $label, bool $cur = false, bool $nav = false) use ($tpl): string {
+                return $tpl->getHtmlFrag('new/pager-link', $href !== ''
+                    ? ['href' => $href, 'label' => $label, 'title' => $label, 'is_nav' => $nav]
+                    : ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav]
+                );
+            };
+            $items = '';
+            $nnum = $maxpg + 1;
+            for ($i = 1; $i <= $pages; $i++) {
+                if ($i === $curr) {
+                    $items .= $link('', (string)$i, true);
+                } elseif ($i === 1 || $i === $pages || (($i > ($curr - $maxpg)) && ($i < ($curr + $maxpg)))) {
+                    $items .= $link($base.$i, (string)$i).' ';
+                }
+                if ($i < $pages) {
+                    if (($curr > $nnum) && ($i === 1)) $items .= $dots;
+                    if (($curr < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
+                }
+            }
+            $body .= $tpl->getHtmlFrag('new/pager', [
+                'prev' => ($curr > 1) ? $link($base.($curr - 1), _BACK, false, true) : $link('', _BACK, true, true),
+                'items' => $items,
+                'next' => ($curr < $pages) ? $link($base.($curr + 1), _NEXT, false, true) : $link('', _NEXT, true, true),
+            ]);
+        }
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST]);
+        $body .= $tpl->getHtmlFrag('new/alert', ['text' => _USERNOEXIST]);
     }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     echo $cont;
     setFoot();
 }
@@ -153,120 +247,225 @@ function add(): void {
     $field = (string)$field;
     $warn = is_array($warn) ? $warn : [];
     setHead();
-    $_search = (int)getVar('post', 'search');
-    $_chng = getVar('post', 'chng');
-    $cont = getTplAdminNavi([
+    $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getTplAdminAccountSearch($_search, $_chng),
+        'subtitle_html' => getAccountSearch(),
         'tab'  => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $rows = $tpl->getHtmlFrag('admin-account-add-basic-rows', [
-        'allowusers_html' => radio_form($view, 'view'),
-        'allowusers_label' => _ALLOWUSERS,
-        'avatar_html' => $avatar ? getTplAdminFormRow(_AVATAR.':', getTplTextInput('avatar', $avatar, 'sl_form', 'maxlength="255" placeholder="'._AVATAR.'"')) : '',
-        'email_label' => _EMAIL.':',
-        'email_value' => $email,
-        'interests_label' => _INTERESTS.':',
-        'interests_value' => $inter,
-        'location_label' => _LOCATION.':',
-        'location_value' => $from,
-        'nickname_label' => _NICKNAME.':',
-        'nickname_value' => $uname,
-        'occupation_label' => _OCCUPATION.':',
-        'occupation_value' => $occ,
-        'rank_label' => _URANK.':',
-        'rank_value' => $rank,
-        'reg_html' => datetime(1, 'reg', $reg ?? '', 16, 'sl_form'),
-        'reg_label' => _REG.':',
-        'signature_html' => textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, ''),
-        'signature_label_html' => getTplAdminHintLabel(_SIGNATURE, _SIGNATURE_TEXT),
-        'siteurl_label' => _SITEURL.':',
-        'siteurl_value' => $site,
-    ]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stop]);
+    $rows = [
+        [
+            'label_html' => _NICKNAME.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'uname', 'value_attr' => $uname, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
+        ],
+        [
+            'label_html' => _URANK.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'rank', 'value_attr' => $rank, 'maxlength_num' => 25, 'placeholder_text' => _URANK]),
+        ],
+        [
+            'label_html' => _EMAIL.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+        ],
+        [
+            'label_html' => _SITEURL.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255, 'placeholder_text' => _SITEURL]),
+        ],
+    ];
+    if ($avatar !== '') {
+        $rows[] = [
+            'label_html' => _AVATAR.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'avatar', 'value_attr' => $avatar, 'maxlength_num' => 255, 'placeholder_text' => _AVATAR]),
+        ];
+    }
+    $rows[] = [
+        'label_html' => _REG.':',
+        'field_html' => datetime(1, 'reg', $reg ?? '', 16, 'sl-select-config'),
+    ];
+    $rows[] = [
+        'label_html' => _OCCUPATION.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'occ', 'value_attr' => $occ, 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION]),
+    ];
+    $rows[] = [
+        'label_html' => _LOCATION.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'from', 'value_attr' => $from, 'maxlength_num' => 100, 'placeholder_text' => _LOCATION]),
+    ];
+    $rows[] = [
+        'label_html' => _INTERESTS.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'inter', 'value_attr' => $inter, 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS]),
+    ];
+    $rows[] = [
+        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SIGNATURE, 'hint' => _SIGNATURE_TEXT]),
+        'field_html' => textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, ''),
+    ];
+    $rows[] = [
+        'label_html' => _ALLOWUSERS,
+        'field_html' => getTplRadioGroup(['name' => 'view', 'value' => (string)$view, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+    ];
     if ($conf['users']['news'] == 1) {
         $storyopts = '';
         for ($n = 3; $n <= 20; $n++) {
-            $storyopts .= getTplOption((string)$n, (string)$n, $n == $story);
-        }
-        $rows .= getTplAdminFormRow(_C_12.':', getTplSelect('story', $storyopts, 'sl_form'));
-    } else {
-        $rows .= getTplHiddenInput('story', (string)$conf['news']['num']);
-    }
-    $rows .= $tpl->getHtmlFrag('admin-account-add-menu-rows', [
-        'activatepersonal_html' => radio_form($blockon, 'blockon'),
-        'activatepersonal_label' => _ACTIVATEPERSONAL,
-        'menuconf_html' => textarea('2', 'block', $block, 'account', '5', _MENUCONF, ''),
-        'menuconf_label_html' => getTplAdminHintLabel(_MENUCONF, _MENUINFO),
-    ]);
-    if ($conf['users']['theme']) {
-        $tcategory = '';
-        $tcount = 0;
-        foreach (scandir('templates') as $file) {
-            if (!preg_match('/\./', $file) && $file != 'admin') {
-                $tcategory .= getTplOption($file, $file, $file == $theme);
-                $tcount++;
-            }
-        }
-        if ($tcount > 1) {
-            $rows .= $tpl->getHtmlFrag('admin-account-theme-row', [
-                'options_html' => $tcategory,
-                'theme_label' => _THEME.':',
+            $storyopts .= $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => (string)$n,
+                'label_text' => (string)$n,
+                'is_selected' => $n == $story,
             ]);
         }
+        $rows[] = [
+            'label_html' => _C_12.':',
+            'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'story', 'options_html' => $storyopts]),
+        ];
     }
-    $rows .= getTplAdminFormRow(_RNEWSLETTER.':', radio_form($news, 'news'));
+    $rows[] = [
+        'label_html' => _ACTIVATEPERSONAL,
+        'field_html' => getTplRadioGroup(['name' => 'blockon', 'value' => (string)$blockon, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+    ];
+    $rows[] = [
+        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _MENUCONF, 'hint' => _MENUINFO]),
+        'field_html' => textarea('2', 'block', $block, 'account', '5', _MENUCONF, ''),
+    ];
+    if ($conf['users']['theme']) {
+        $themeopts = '';
+        $themecount = 0;
+        foreach (scandir('templates') as $file) {
+            if (!preg_match('/\./', $file) && $file != 'admin') {
+                $themeopts .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $file,
+                    'label_text' => $file,
+                    'is_selected' => $file == $theme,
+                ]);
+                $themecount++;
+            }
+        }
+        if ($themecount > 1) {
+            $rows[] = [
+                'label_html' => _THEME.':',
+                'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'theme', 'options_html' => $themeopts]),
+            ];
+        }
+    }
+    $rows[] = [
+        'label_html' => _RNEWSLETTER.':',
+        'field_html' => getTplRadioGroup(['name' => 'news', 'value' => (string)$news, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+    ];
     if ($conf['multilingual'] == 1) {
-        $rows .= $tpl->getHtmlFrag('admin-account-lang-row', [
-            'lang_html' => language($lang),
-            'language_label' => _LANGUAGE.':',
-        ]);
+        $rows[] = [
+            'label_html' => _LANGUAGE.':',
+            'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($lang)]),
+        ];
     }
-    $rows .= getTplAdminFormRow(_POINTS.':', getTplNumberInput($point, 'point', 'sl_form', 'placeholder="'._POINTS.'"'));
-    $warnhtml = '';
-    $i = 0;
-    while ($i < 5) {
+    $rows[] = [
+        'label_html' => _POINTS.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'point', 'value_attr' => $point, 'placeholder_text' => _POINTS]),
+    ];
+    for ($i = 0; $i < 5; $i++) {
         $a = $i + 1;
-        $warnv = empty($warn[$i]) ? '' : $warn[$i];
-        $warnhtml .= $tpl->getHtmlFrag('admin-account-warn-row', [
-            'add_label' => _ADD,
-            'index_text' => (string)$a,
-            'is_hidden' => empty($warnv) && $i != 0,
-            'next_id' => 'warn'.$a,
-            'row_id' => 'warn'.$i,
-            'warn_label' => _UWARN,
-            'warn_value' => filterText($warnv),
-        ]);
-        $i++;
+        $rows[] = [
+            'label_html' => _UWARN.' - '.$a.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'warn[]', 'value_attr' => empty($warn[$i]) ? '' : filterText((string)$warn[$i]), 'placeholder_text' => _UWARN.' - '.$a]),
+        ];
     }
-    $rows .= getTplAdminFormWide($warnhtml)
-        .getTplAdminFormRow(_UACESS, radio_form($access, 'access'));
-    $grpopts = getTplOption('0', _NO);
+    $rows[] = [
+        'label_html' => _UACESS,
+        'field_html' => getTplRadioGroup(['name' => 'access', 'value' => (string)$access, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+    ];
+    $grpopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO]);
     $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
     while ([$grid, $grname] = $db->getSqlRow($result)) {
-        $grpopts .= getTplOption((string)$grid, $grname, $grid == $group);
+        $grpopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$grid,
+            'label_text' => $grname,
+            'is_selected' => $grid == $group,
+        ]);
     }
     $gender = intval($gender ?? 0);
-    $rows .= getTplAdminFormRow(_SPEC_GROUP.':', getTplSelect('group', $grpopts, 'sl_form'))
-        .getTplAdminFormRow(_BIRTHDAY.':', datetime(2, 'birth', $birth, 10, 'sl_form'))
-        .getTplAdminFormRow(_GENDER.':', get_gender('gender', $gender, 'sl_form'));
-    $check = (getVar('cookie', 'sl_close_9', 'num') == 0) ? '' : ' checked';
-    $mailblock = $tpl->getHtmlFrag('admin-admins-mail-panel', [
-        'mail_info'    => _MAIL_PASS_INFO,
-        'mail_label'   => _MAIL_TEXT,
-        'textarea_html' => textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''),
-    ]);
-    $rows .= $tpl->getHtmlFrag('admin-account-add-tail-rows', [
-        'check_attr' => $check,
-        'fields_html' => fields_in($field, 'account'),
-        'mail_sende_label' => _MAIL_SENDE,
-        'mailblock_html' => $mailblock,
-        'password_label' => _PASSWORD.':',
-        'retypepassword_label' => _RETYPEPASSWORD.':',
-        'save_html' => getTplHiddenInput('uid', (string)$uid).getTplHiddenInput('name', 'account').getTplHiddenInput('op', 'addsave').getTplAdminSubmitButton(_SAVE),
-    ]);
-    $cont .= getTplBox(getTplAdminForm($afile.'.php', $rows, '', 'sl_table_form', 'post', 'post'));
+    $rows[] = [
+        'label_html' => _SPEC_GROUP.':',
+        'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'group', 'options_html' => $grpopts]),
+    ];
+    $rows[] = [
+        'label_html' => _BIRTHDAY.':',
+        'field_html' => datetime(2, 'birth', $birth, 10, 'sl-select-config'),
+    ];
+    $rows[] = [
+        'label_html' => _GENDER.':',
+        'field_html' => get_gender('gender', $gender, 'sl-select-config'),
+    ];
+    $fieldvals = explode('|', $field);
+    $fieldcfgs = explode('||', (string)$conf['fields']['account']);
+    foreach ($fieldcfgs as $idx => $cfg) {
+        if ($cfg === '') {
+            continue;
+        }
+        preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $cfg, $out);
+        if (($out[1] ?? '0') === '0') {
+            continue;
+        }
+        $fieldvalue = $fieldvals[$idx] ?? ($out[2] ?? '');
+        $required = (($out[4] ?? '0') == 1);
+        $fieldhtml = '';
+        if (($out[3] ?? '0') == 1) {
+            $fieldhtml = $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'field[]', 'value_attr' => $fieldvalue ? getConst($fieldvalue) : '', 'placeholder_text' => $fieldvalue ? getConst($fieldvalue) : '', 'is_required' => $required]);
+        } elseif (($out[3] ?? '0') == 2) {
+            $fieldhtml = $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'field[]', 'value_text' => $fieldvalue, 'rows_num' => 5, 'is_required' => $required]);
+        } elseif (($out[3] ?? '0') == 3) {
+            $fieldopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO]);
+            foreach (explode(',', (string)($out[2] ?? '')) as $value) {
+                if ($value !== '') {
+                    $fieldopts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $value, 'label_text' => $value, 'is_selected' => $value == $fieldvalue]);
+                }
+            }
+            $fieldhtml = $tpl->getHtmlFrag('new/select', ['name_attr' => 'field[]', 'options_html' => $fieldopts, 'select_attr' => $required ? 'required' : '']);
+        } elseif (($out[3] ?? '0') == 4) {
+            $fieldhtml = datetime(1, 'field[]', $fieldvalue, 16, 'sl-select-config');
+        } elseif (($out[3] ?? '0') == 5) {
+            $fieldhtml = datetime(2, 'field[]', $fieldvalue, 10, 'sl-select-config');
+        }
+        if ($fieldhtml !== '') {
+            $rows[] = [
+                'label_html' => getConst((string)$out[1]).':',
+                'field_html' => $fieldhtml,
+            ];
+        }
+    }
+    $rows[] = [
+        'label_html' => _PASSWORD.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'password', 'name_attr' => 'pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
+    ];
+    $rows[] = [
+        'label_html' => _RETYPEPASSWORD.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'password', 'name_attr' => 'pass2', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
+    ];
+    $rows[] = [
+        'label_html' => _MAIL_SENDE,
+        'field_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'mail', 'value_attr' => '1', 'is_checked' => getVar('cookie', 'sl_close_9', 'num') != 0, 'input_attr' => 'OnClick="CloseOpen(\'sl_close_9\', 0);"']),
+    ];
+    $rows[] = [
+        'label_html' => '',
+        'field_html' => $tpl->getHtmlFrag('new/div-collapse', [
+            'target_id' => 'sl_close_9',
+            'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => [[
+                'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
+                'field_html' => textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''),
+            ]]]),
+        ]),
+        'is_full' => true,
+    ];
+    $hidden = [
+        ['nameattr' => 'uid', 'valueattr' => (string)$uid],
+        ['nameattr' => 'name', 'valueattr' => 'account'],
+        ['nameattr' => 'op', 'valueattr' => 'addsave'],
+        ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+    ];
+    if ($conf['users']['news'] != 1) {
+        $hidden[] = ['nameattr' => 'story', 'valueattr' => (string)$conf['news']['num']];
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => $hidden,
+        'rows' => $rows,
+        'submit_label' => _SAVE,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -274,124 +473,151 @@ function add(): void {
 function addsave(): void {
     global $db, $afile, $conf, $stop;
     $stop = [];
-    $send = '';
-    $uid = getVar('post', 'uid', 'num');
-    $uname = getVar('post', 'uname', 'name');
-    $rank = getVar('post', 'rank');
-    $email = getVar('post', 'email');
-    $site = getVar('post', 'site', 'url');
-    $avatar = getVar('post', 'avatar', '', 'default/00.gif');
-    $reg = getVar('req', 'reg', 'time');
-    $occ = getVar('post', 'occ');
-    $from = getVar('post', 'from');
-    $inter = getVar('post', 'inter');
-    $sig = getVar('post', 'sig', 'text');
-    $view = getVar('post', 'view', 'num');
-    $pass = getVar('post', 'pass');
-    $pass2 = getVar('post', 'pass2');
-    $story = getVar('post', 'story', 'num');
-    $blockon = getVar('post', 'blockon', 'num');
-    $block = getVar('post', 'block', 'text');
-    $theme = getVar('post', 'theme');
-    $news = getVar('post', 'news', 'num');
-    $lang = getVar('post', 'lang');
-    $point = getVar('post', 'point', 'num');
-    $warn = isArray(getVar('post', 'warn[]', 'num')) ? filterText(implode('|', str_replace('|', '', getVar('post', 'warn[]', 'num')))) : 0;
-    $access = getVar('post', 'access', 'num');
-    $group = getVar('post', 'group');
-    $birth = getVar('req', 'birth', 'date');
-    $gender = getVar('post', 'gender');
-    $field = getVar('post', 'field', 'field');
-    $mail = getVar('post', 'mail', 'num');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $uid = getVar('post', 'uid', 'num');
+        $uname = getVar('post', 'uname', 'name');
+        $rank = getVar('post', 'rank');
+        $email = getVar('post', 'email');
+        $site = getVar('post', 'site', 'url');
+        $avatar = getVar('post', 'avatar', '', 'default/00.gif');
+        $reg = getVar('req', 'reg', 'time');
+        $occ = getVar('post', 'occ');
+        $from = getVar('post', 'from');
+        $inter = getVar('post', 'inter');
+        $sig = getVar('post', 'sig', 'text');
+        $view = getVar('post', 'view', 'num');
+        $pass = getVar('post', 'pass');
+        $pass2 = getVar('post', 'pass2');
+        $story = getVar('post', 'story', 'num');
+        $blockon = getVar('post', 'blockon', 'num');
+        $block = getVar('post', 'block', 'text');
+        $theme = getVar('post', 'theme');
+        $news = getVar('post', 'news', 'num');
+        $lang = getVar('post', 'lang');
+        $point = getVar('post', 'point', 'num');
+        $warnvals = getVar('post', 'warn[]', 'num');
+        $warnings = is_array($warnvals) ? filterText(implode('|', str_replace('|', '', $warnvals))) : 0;
+        $access = getVar('post', 'access', 'num');
+        $group = getVar('post', 'group');
+        $birth = getVar('req', 'birth', 'date');
+        $gender = getVar('post', 'gender');
+        $field = getVar('post', 'field', 'field');
+        $mail = getVar('post', 'mail', 'num');
 
-    if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
-    if ($uname) {
-        [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
-        [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname]));
-        if (($uid != $existId && $uname == $existName) || ($uid != $tempId && $uname == $tempName)) $stop[] = _USEREXIST;
-        [$emailId, $existEmail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email]));
-        [$tempEmailId, $tempEmail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $email]));
-        if (($uid != $emailId && $email == $existEmail) || ($uid != $tempEmailId && $email == $tempEmail)) $stop[] = _ERROR_EMAIL;
-    } else {
-        $stop[] = _ERROR_ALL;
-    }
-    if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
-    checkemail($email);
-    if ($pass != $pass2) $stop[] = _ERROR_PASS;
-    if (!$stop) {
-        if ($uid) {
-            if ($pass && $pass == $pass2) {
-                $saltpass = getPassHash($pass);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, points = :points, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warn, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
-                ]);
+        if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
+        if ($uname) {
+            [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]));
+            [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname]));
+            if (($uid != $existId && $uname == $existName) || ($uid != $tempId && $uname == $tempName)) $stop[] = _USEREXIST;
+            [$emailId, $existEmail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email]));
+            [$tempEmailId, $tempEmail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $email]));
+            if (($uid != $emailId && $email == $existEmail) || ($uid != $tempEmailId && $email == $tempEmail)) $stop[] = _ERROR_EMAIL;
+        } else {
+            $stop[] = _ERROR_ALL;
+        }
+        if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
+        checkemail($email);
+        if ($pass != $pass2) $stop[] = _ERROR_PASS;
+        if (!$stop) {
+            $text = _SUCCSAVE;
+            if ($uid) {
+                if ($pass && $pass == $pass2) {
+                    $saltpass = getPassHash($pass);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, password = :password, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, points = :points, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                    ]);
+                } else {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, points = :points, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
+                        'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                    ]);
+                }
             } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET name = :name, rank = :rank, email = :email, website = :website, avatar = :avatar, regdate = :regdate, occ = :occ, origin = :from, interest = :interests, sig = :sig, viewmail = :viewemail, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newsletter, lang = :lang, points = :points, warnings = :warnings, access = :access, grp = :group, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', [
-                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warn, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
+                $saltpass = getPassHash($pass);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, rank, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, points, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :access, :group, :birthday, :gender, :field)', [
+                    'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warnings, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field
                 ]);
             }
+            if ($mail) {
+                $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
+                $mailtext = getVar('post', 'mailtext', 'text');
+                $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), 'account', false), 'account'), false);
+                addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
+                $text = _MAIL_SEND;
+            }
+            setRedirect($afile.'.php?name=account', false, 302, $text);
         } else {
-            $saltpass = getPassHash($pass);
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (name, rank, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, points, warnings, access, grp, birthday, gender, field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :access, :group, :birthday, :gender, :field)', [
-                'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warn, 'access' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field
-            ]);
+            add();
         }
-        if ($mail) {
-            $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
-            $mailtext = getVar('post', 'mailtext', 'text');
-            $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), 'account', false), 'account'), false);
-            addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
-            $send = '&send=1';
-        }
-        setRedirect($afile.'.php?name=account'.$send);
-    } else {
-        add();
     }
 }
 
 function newuser(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $_search = (int)getVar('post', 'search');
-    $_chng = getVar('post', 'chng');
-    $cont = getTplAdminNavi([
+    $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getTplAdminAccountSearch($_search, $_chng),
+        'subtitle_html' => getAccountSearch(),
         'tab'  => 2,
     ]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $conf['users']['anum'];
     $result = $db->getSqlQuery('SELECT id, name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
+    $body = '';
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-account-newuser-head', [
-            'email_label' => _EMAIL,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'nickname_label' => _NICKNAME,
-            'password_label' => _PASSWORD,
-            'reg_label' => _REG,
-        ]);
-        $rows = '';
+        $rows = [];
         while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
-            $acts = getTplAdminActionMenu([
-                ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0),
-                getTplAdminDeleteAction($afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-account-newuser-row', [
-                'actions_html' => $acts,
-                'email_text' => $mail,
-                'id_text' => (string)$uid,
-                'nickname_text' => $name,
-                'password_text' => $pass,
-                'reg_text' => $reg,
-            ]));
+            $delhref = $afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;token='.getSiteToken();
+            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$uid],
+                    ['content_html' => $name],
+                    ['content_html' => $mail],
+                    ['content_html' => $pass],
+                    ['content_html' => $reg],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        'trigger_label' => _FUNCTIONS,
+                        'items' => [
+                            [
+                                'href' => $conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check,
+                                'label' => _ACTIVATE,
+                                'title' => _ACTIVATE,
+                            ],
+                            [
+                                'href' => $delhref,
+                                'label' => _ONDELETE,
+                                'title' => _ONDELETE,
+                                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                            ],
+                        ],
+                    ])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $cont .= setArticleNumbers('pagenum', '', (int)$conf['users']['anum'], 'name=account&amp;op=newuser&amp;', 'id', '_users_temp', '', '', (int)$conf['users']['anump'], []);
+        $body .= $tpl->getHtmlFrag('new/table', [
+            'head' => [
+                ['content' => _ID],
+                ['content' => _NICKNAME],
+                ['content' => _EMAIL],
+                ['content' => _PASSWORD],
+                ['content' => _REG],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => implode('', $rows),
+            'is_wrapless' => true,
+        ]);
+        $cont .= getTplPager([
+            'table' => '_users_temp',
+            'field' => 'id',
+            'limit' => (int)$conf['users']['anum'],
+            'maxpg' => (int)$conf['users']['anump'],
+            'url' => 'name=account&op=newuser&',
+        ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $body .= $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
     }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     echo $cont;
     setFoot();
 }
@@ -399,190 +625,293 @@ function newuser(): void {
 function pointreset(): void {
     global $afile, $tpl;
     setHead();
-    $_search = (int)getVar('post', 'search');
-    $_chng = getVar('post', 'chng');
-    $cont = getTplAdminNavi([
+    $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getTplAdminAccountSearch($_search, $_chng),
+        'subtitle_html' => getAccountSearch(),
         'tab'  => 3,
     ]);
-    $rows = $tpl->getHtmlFrag('admin-account-pointreset-rows', [
-        'points_html' => radio_form(0, 'points'),
-        'points_label' => _POINTS.':',
-        'ratings_html' => radio_form(0, 'votes'),
-        'ratings_label' => _RATINGS.':',
-        'savechanges_label' => _SAVECHANGES,
-        'signature_html' => radio_form(0, 'sig'),
-        'signature_label' => _SIGNATURE.':',
-        'uwarns_html' => radio_form(0, 'warnings'),
-        'uwarns_label' => _UWARNS.':',
-    ]);
-    $hide = getTplHiddenInput('name', 'account').getTplHiddenInput('op', 'resave');
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
+    $rows = [
+        [
+            'label_html' => _POINTS.':',
+            'field_html' => getTplRadioGroup([
+                'name' => 'points',
+                'value' => '0',
+                'options' => [
+                    ['value' => '1', 'label' => _YES],
+                    ['value' => '0', 'label' => _NO],
+                ],
+            ]),
+        ],
+        [
+            'label_html' => _RATINGS.':',
+            'field_html' => getTplRadioGroup([
+                'name' => 'votes',
+                'value' => '0',
+                'options' => [
+                    ['value' => '1', 'label' => _YES],
+                    ['value' => '0', 'label' => _NO],
+                ],
+            ]),
+        ],
+        [
+            'label_html' => _SIGNATURE.':',
+            'field_html' => getTplRadioGroup([
+                'name' => 'sig',
+                'value' => '0',
+                'options' => [
+                    ['value' => '1', 'label' => _YES],
+                    ['value' => '0', 'label' => _NO],
+                ],
+            ]),
+        ],
+        [
+            'label_html' => _UWARNS.':',
+            'field_html' => getTplRadioGroup([
+                'name' => 'warnings',
+                'value' => '0',
+                'options' => [
+                    ['value' => '1', 'label' => _YES],
+                    ['value' => '0', 'label' => _NO],
+                ],
+            ]),
+        ],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'account'],
+            ['nameattr' => 'op', 'valueattr' => 'resave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function resave(): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $points = getVar('post', 'points', 'num');
     $votes = getVar('post', 'votes', 'num');
     $warnings = getVar('post', 'warnings', 'num');
     $sig = getVar('post', 'sig', 'num');
-    if ($points == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET points = :zero', ['zero' => '0']);
-    if ($votes == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = :zero, tvotes = :zero', ['zero' => '0']);
-    if ($warnings == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET warnings = :zero', ['zero' => '0']);
-    if ($sig == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET sig = :empty', ['empty' => '']);
-    setRedirect($afile.'.php?name=account');
+    if (!$warn) {
+        if ($points == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET points = :zero', ['zero' => '0']);
+        if ($votes == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = :zero, tvotes = :zero', ['zero' => '0']);
+        if ($warnings == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET warnings = :zero', ['zero' => '0']);
+        if ($sig == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET sig = :empty', ['empty' => '']);
+    }
+    setRedirect($afile.'.php?name=account', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $_search = (int)getVar('post', 'search');
-    $_chng = getVar('post', 'chng');
-    $cont = getTplAdminNavi([
+    $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getTplAdminAccountSearch($_search, $_chng),
+        'subtitle_html' => getAccountSearch(),
         'tab'  => 4,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
-    $minpass_opts = '';
+    $minpassopts = '';
     for ($n = 3; $n <= 10; $n++) {
-        $minpass_opts .= getTplOption((string)$n, (string)$n, $n == $conf['users']['minpass']);
+        $minpassopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$n,
+            'label_text' => (string)$n,
+            'is_selected' => $n == $conf['users']['minpass'],
+        ]);
     }
-    $minpass_sel = getTplSelect('minpass', $minpass_opts, 'sl_conf');
-    $enter_sel = getTplSelect('enter',
-        getTplOption('0', _LOGINL, $conf['users']['enter'] == '0')
-        .getTplOption('1', _LOGINF, $conf['users']['enter'] == '1'),
-        'sl_conf'
-    );
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'account',
-        'op' => 'save',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_adir' => _ADIR,
-        'adirectory' => $conf['users']['adirectory'],
-        '_atype' => _ATYPE,
-        'atypefile' => $conf['users']['atypefile'],
-        '_asize' => _ASIZE,
-        'amaxsize' => $conf['users']['amaxsize'],
-        '_awidthin' => _AWIDTH._AIN,
-        'awidth' => $conf['users']['awidth'],
-        '_aheightin' => _AHEIGHT._AIN,
-        'aheight' => $conf['users']['aheight'],
-        '_voting_time' => _VOTING_TIME,
-        'user' => intval($conf['users']['user_t'] / 86400),
-        '_c34' => _C_34,
-        'anum' => $conf['users']['anum'],
-        '_c36' => _C_36,
-        'anump' => $conf['users']['anump'],
-        '_passwdlen' => _PASSWDLEN,
-        's_minpass' => $minpass_sel,
-        '_loginfl' => _LOGINFL,
-        's_enter' => $enter_sel,
-        '_update_points' => _UPDATE_POINTS,
-        'r_point' => radio_form($conf['users']['point'], 'point'),
-        '_aupload' => _AUPLOAD,
-        'r_aupload' => radio_form($conf['users']['aupload'], 'aupload'),
-        '_no_mail_reg' => _NO_MAIL_REG,
-        'r_nomail' => radio_form($conf['users']['nomail'], 'nomail'),
-        '_usershomenum' => _USERSHOMENUM,
-        'r_news' => radio_form($conf['users']['news'], 'news'),
-        '_useripcheck' => _USERIPCHECK,
-        'r_check' => radio_form($conf['users']['check'], 'check'),
-        '_regact' => _REGACT,
-        'r_reg' => radio_form($conf['users']['reg'], 'reg'),
-        '_seltheme' => _SELTHEME,
-        'r_theme' => radio_form($conf['users']['theme'], 'theme'),
-        '_profact' => _PROFACT,
-        'r_prof' => radio_form($conf['users']['prof'], 'prof'),
-        '_networkactive' => _NETWORKACTIVE,
-        'r_network' => radio_form($conf['users']['network'], 'network'),
-        '_rulact' => _RULACT,
-        'r_rule' => radio_form($conf['users']['rule'], 'rule'),
-        '_rules' => _RULES,
-        'rules' => $conf['users']['rules'],
-        '_networkcode' => _NETWORKCODE,
-        't_code' => textarea_code('code', 'network', 'sl_conf', 'text/html', $conf['users']['network_c']),
-        '_name_block' => _NAME_BLOCK,
-        '_nokoma' => _NOKOMA,
-        'name_b' => $conf['users']['name_b'],
-        '_mail_block' => _MAIL_BLOCK,
-        'mail_b' => $conf['users']['mail_b'],
-        'account' => true,
-    ]));
+    $rows = [
+        [
+            'label_html' => _ADIR,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'adirectory', 'value_attr' => (string)$conf['users']['adirectory'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _ATYPE,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'atypefile', 'value_attr' => (string)$conf['users']['atypefile'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _ASIZE,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'amaxsize', 'value_attr' => (string)$conf['users']['amaxsize'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _AWIDTH._AIN,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'awidth', 'value_attr' => (string)$conf['users']['awidth'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _AHEIGHT._AIN,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'aheight', 'value_attr' => (string)$conf['users']['aheight'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _VOTING_TIME,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'user', 'value_attr' => (string)intval($conf['users']['user_t'] / 86400), 'is_config' => true]),
+        ],
+        [
+            'label_html' => _C_34,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['users']['anum'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _C_36,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['users']['anump'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _PASSWDLEN,
+            'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'minpass', 'options_html' => $minpassopts, 'is_config' => true]),
+        ],
+        [
+            'label_html' => _LOGINFL,
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'enter',
+                'options_html' =>
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0']) .
+                    $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']),
+                'is_config' => true,
+            ]),
+        ],
+        [
+            'label_html' => _UPDATE_POINTS,
+            'field_html' => getTplRadioGroup(['name' => 'point', 'value' => (string)$conf['users']['point'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _AUPLOAD,
+            'field_html' => getTplRadioGroup(['name' => 'aupload', 'value' => (string)$conf['users']['aupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _NO_MAIL_REG,
+            'field_html' => getTplRadioGroup(['name' => 'nomail', 'value' => (string)$conf['users']['nomail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _USERSHOMENUM,
+            'field_html' => getTplRadioGroup(['name' => 'news', 'value' => (string)$conf['users']['news'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _USERIPCHECK,
+            'field_html' => getTplRadioGroup(['name' => 'check', 'value' => (string)$conf['users']['check'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _REGACT,
+            'field_html' => getTplRadioGroup(['name' => 'reg', 'value' => (string)$conf['users']['reg'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _SELTHEME,
+            'field_html' => getTplRadioGroup(['name' => 'theme', 'value' => (string)$conf['users']['theme'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _PROFACT,
+            'field_html' => getTplRadioGroup(['name' => 'prof', 'value' => (string)$conf['users']['prof'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _NETWORKACTIVE,
+            'field_html' => getTplRadioGroup(['name' => 'network', 'value' => (string)$conf['users']['network'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _RULACT,
+            'field_html' => getTplRadioGroup(['name' => 'rule', 'value' => (string)$conf['users']['rule'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _RULES,
+            'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'rules', 'value_text' => (string)$conf['users']['rules'], 'rows_num' => 6, 'is_config' => true]),
+        ],
+        [
+            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _NETWORKCODE, 'hint' => _NOKOMA]),
+            'field_html' => getTplCodeEditor(['id' => 'code', 'name' => 'code', 'style' => 'sl-select-config', 'mode' => 'text/html', 'text' => (string)$conf['users']['network_c']]),
+            'is_full' => true,
+        ],
+        [
+            'label_html' => _NAME_BLOCK,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => (string)$conf['users']['name_b'], 'is_config' => true]),
+        ],
+        [
+            'label_html' => _MAIL_BLOCK,
+            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)$conf['users']['mail_b'], 'is_config' => true]),
+        ],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'account'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
     global $afile, $conf;
-    $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
-    $cont = [
-        'adirectory' => getVar('post', 'adirectory', 'title'),
-        'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title', 'gif,jpg,jpeg,png'), $protect)),
-        'amaxsize' => getVar('post', 'amaxsize', 'num', 51200),
-        'awidth' => getVar('post', 'awidth', 'num', 100),
-        'aheight' => getVar('post', 'aheight', 'num', 100),
-        'user_t' => getVar('post', 'user', 'num', 30) * 86400,
-        'anum' => getVar('post', 'anum', 'num', 50),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'minpass' => getVar('post', 'minpass', 'num'),
-        'enter' => getVar('post', 'enter', 'num'),
-        'point' => getVar('post', 'point', 'num'),
-        'aupload' => getVar('post', 'aupload', 'num'),
-        'nomail' => getVar('post', 'nomail', 'num'),
-        'news' => getVar('post', 'news', 'num'),
-        'check' => getVar('post', 'check', 'num'),
-        'reg' => getVar('post', 'reg', 'num'),
-        'theme' => getVar('post', 'theme', 'num'),
-        'prof' => getVar('post', 'prof', 'num'),
-        'network' => getVar('post', 'network', 'num'),
-        'rule' => getVar('post', 'rule', 'num'),
-        'rules' => getVar('post', 'rules', 'text'),
-        'network_c' => "<<<HTML\n".getVar('post', 'network', 'text')."\nHTML",
-        'name_b' => strtolower(strtr(getVar('post', 'name', 'text'), $protect)),
-        'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
-        'points' => $conf['users']['points']
-    ];
-    setConfigFile('users.php', $cont);
-    setRedirect($afile.'.php?name=account&op=config');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
+        $cont = [
+            'adirectory' => getVar('post', 'adirectory', 'title'),
+            'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title', 'gif,jpg,jpeg,png'), $protect)),
+            'amaxsize' => getVar('post', 'amaxsize', 'num', 51200),
+            'awidth' => getVar('post', 'awidth', 'num', 100),
+            'aheight' => getVar('post', 'aheight', 'num', 100),
+            'user_t' => getVar('post', 'user', 'num', 30) * 86400,
+            'anum' => getVar('post', 'anum', 'num', 50),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'minpass' => getVar('post', 'minpass', 'num'),
+            'enter' => getVar('post', 'enter', 'num'),
+            'point' => getVar('post', 'point', 'num'),
+            'aupload' => getVar('post', 'aupload', 'num'),
+            'nomail' => getVar('post', 'nomail', 'num'),
+            'news' => getVar('post', 'news', 'num'),
+            'check' => getVar('post', 'check', 'num'),
+            'reg' => getVar('post', 'reg', 'num'),
+            'theme' => getVar('post', 'theme', 'num'),
+            'prof' => getVar('post', 'prof', 'num'),
+            'network' => getVar('post', 'network', 'num'),
+            'rule' => getVar('post', 'rule', 'num'),
+            'rules' => getVar('post', 'rules', 'text'),
+            'network_c' => "<<<HTML\n".getVar('post', 'code', 'text')."\nHTML",
+            'name_b' => strtolower(strtr(getVar('post', 'name', 'text'), $protect)),
+            'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
+            'points' => $conf['users']['points']
+        ];
+        setConfigFile('users.php', $cont);
+    }
+    setRedirect($afile.'.php?name=account&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function newdrop(): void {
     global $db, $afile;
-    $id = getVar('get', 'id', 'num');
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=account', true);
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $id = getVar('get', 'id', 'num');
+        if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]);
+    }
+    setRedirect($afile.'.php?name=account&op=newuser', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function delete(): void {
     global $db, $afile;
-    $id = getVar('get', 'id', 'num');
-    if ($id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
-        # $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $id = getVar('get', 'id', 'num');
+        if ($id) {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
+            # $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
+        }
     }
-    setRedirect($afile.'.php?name=account', true);
+    setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function info(): void {
-    global $afile, $tpl;
-    $_search = (int)getVar('post', 'search');
-    $_chng = getVar('post', 'chng');
-    $cont = getTplAdminNavi([
+    setTplAdminInfoPage([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getTplAdminAccountSearch($_search, $_chng),
         'tab'  => 5,
+        'subtitle_html' => getAccountSearch(),
     ]);
-    setAdminInfoPage($cont);
 }
 
 switch ($op) {
