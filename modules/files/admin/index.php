@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('files')) die('Illegal file access
 
 function files(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
+    setHead();
     $num = getVar('get', 'num', 'num', 1);
     $status = getVar('get', 'status', 'num', 0);
     $anum = $conf['files']['anum'] ?? 25;
@@ -18,53 +18,75 @@ function files(): void {
         $st = '0';
         $field = 'name=files&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 2]);
     } elseif ($status == 2) {
         $st = '2';
         $field = 'name=files&amp;status=2&amp;';
         $refer = '';
-        $cont = getTplAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 3]);
     } else {
         $st = '1';
         $field = 'name=files&amp;';
         $refer = '';
-        $cont = getTplAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
-            $ctitle = ($cid) ? $ctitle : _NO;
-            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
-            $broc = ($st == '2') ? getTplLinkAction($afile.'.php?name=files&amp;op=approve&amp;id='.$id, _IGNORE, _IGNORE) : '';
+            $ctitle = $cid ? $ctitle : _NO;
+            $ip = $ip ? user_geo_ip($ip, 4) : _NO;
+            $items = [];
             if ($st == '1' && time() >= strtotime($date)) {
-                $view = getTplLinkAction('index.php?name=files&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
+                $items[] = ['href' => 'index.php?name=files&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
-                $view = '';
                 $active = '0';
             }
-            $acts = getTplAdminActionMenu([
-                $view,
-                $broc,
-                getTplLinkAction($afile.'.php?name=files&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
-                'actions_html' => $acts,
-                'checkbox_html' => '',
-                'id_text' => (string)$id,
-                'post_html' => $post,
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($date, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
-            ]));
+            if ($st == '2') {
+                $items[] = ['href' => $afile.'.php?name=files&amp;op=approve&amp;id='.$id.'&amp;token='.getSiteToken(), 'label' => _IGNORE, 'title' => _IGNORE];
+            }
+            $items[] = ['href' => $afile.'.php?name=files&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = [
+                'href' => $afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'label' => _ONDELETE,
+                'title' => _ONDELETE,
+                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+            ];
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => [
+                            ['label' => _CATEGORY, 'value' => $ctitle],
+                            ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
+                            ['label' => _IP, 'value' => $ip, 'is_last' => true],
+                        ],
+                        'label_text' => cutstr($title, 60),
+                        'title_text' => $title,
+                    ])],
+                    ['content_html' => $post],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_files', '', 'status = \''.$st.'\'', $anump);
+        $body = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _ID],
+                ['content' => _TITLE],
+                ['content' => _POSTEDBY],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_files', 'field' => 'id', 'where' => 'status = \''.$st.'\'']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -72,13 +94,13 @@ function files(): void {
 
 function add(): void {
     global $db, $afile, $conf, $stop, $tpl;
-        $id = getVar('req', 'id', 'num', 0);
-    $fid = $id;
+    $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
         $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.intro, f.body, f.url, f.time, f.filesize, f.version, f.email, f.website, f.ihome, f.acomm, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE id = :id', ['id' => $fid]);
         [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $website, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
+        $pathsel = '';
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
         $cid = getVar('post', 'cid', 'num', 0);
@@ -86,7 +108,7 @@ function add(): void {
         $description = getVar('post', 'description', 'text', '');
         $bodytext = getVar('post', 'bodytext', 'text', '');
         $url = getVar('post', 'url', 'text', '');
-        $path = getVar('post', 'path', 'name', '');
+        $pathsel = getVar('post', 'path', 'name', '');
         $date = getVar('req', 'date', 'time');
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
@@ -97,69 +119,92 @@ function add(): void {
         $website = getVar('post', 'website', 'url', 'http://');
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= preview($title, $description, $bodytext, '', 'files');
-    $link = ($url) ? getTplAdminTextLink($url, _URL, '_blank', _DOWNLLINK) : _URL;
-    $directory = '';
+    $link = $url ? getTplAdminTextLink($url, _URL, '_blank', _DOWNLLINK) : _URL;
     $path = $conf['files']['path'] ?? 'uploads/files';
+    $pathopts = $tpl->getHtmlFrag('new/select-option', [
+        'value_attr' => '',
+        'label_text' => _NO,
+        'is_selected' => !$pathsel,
+    ]);
     if (file_exists($url)) {
+        $pathopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $path,
+            'label_text' => $path,
+            'is_selected' => $pathsel === $path,
+        ]);
         $entries = is_dir($path) ? scandir($path) : [];
         foreach ($entries as $entry) {
             if ($entry === '.' || $entry === '..') continue;
             if (!preg_match('/\./', $entry)) {
-                $directory .= getTplOption($path.'/'.$entry, $path.'/'.$entry);
+                $dir = $path.'/'.$entry;
+                $pathopts .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $dir,
+                    'label_text' => $dir,
+                    'is_selected' => $pathsel === $dir,
+                ]);
             }
         }
     }
-    $hide = getTplHiddenInput('name', 'files');
-    $path_html = '';
-    if (file_exists($url)) {
-        $path_html = getTplSelect('path', getTplOption('', _NO).getTplOption($path, $path, true).$directory, 'sl_form');
-    }
-    $rows = $tpl->getHtmlFrag('admin-files-add-rows', [
-        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
-        'acomm_label' => _COMMENTS.':',
-        'bodytext_html' => textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0'),
-        'bodytext_label' => _ENDTEXT.':',
-        'cat_html' => getcat('files', $cid, 'cid', 'sl_form', getTplOption('', _HOMECAT)),
-        'cat_label' => _CATEGORY.':',
-        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
-        'date_label' => _CHNGSTORY.':',
-        'description_html' => textarea('1', 'description', $description, 'files', '5', _TEXT, '1'),
-        'description_label' => _TEXT.':',
-        'email_label' => _AUEMAIL.':',
-        'email_value' => $email,
-        'filesize_label' => _SIZENOTE.':',
-        'filesize_value' => (string)$filesize,
-        'filesite_label' => _FILE_SITE.':',
-        'filesite_placeholder' => _FILE_SITE,
-        'fileuser_label' => _FILE_USER.':',
-        'ihome_html' => radio_form($ihome, 'ihome'),
-        'ihome_label' => _PUBHOME,
-        'link_label' => $link.':',
-        'path_html' => $path_html,
-        'path_label' => _FILE_DIR.':',
-        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
-        'postname_label' => _POSTEDBY.':',
-        'save_html' => ad_save('fid', $fid, 'save'),
-        'title_label' => _TITLE.':',
-        'title_value' => $title,
-        'url_placeholder' => _URL,
-        'url_value' => $url,
-        'version_label' => _VERSION.':',
-        'version_value' => $version,
-        'website_label' => _SITE.':',
-        'website_value' => $website,
+    $catopts = $tpl->getHtmlFrag('new/select-option', [
+        'value_attr' => '',
+        'label_text' => _HOMECAT,
+        'is_selected' => !$cid,
     ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"');
+    $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'files\' ORDER BY ordern ASC');
+    while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
+        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$catid,
+            'label_text' => $cattitle,
+            'is_selected' => (int)$cid === (int)$catid,
+        ]);
+    }
+    $rows = [
+        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1')],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cid', 'options_html' => $catopts])],
+        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'description', $description, 'files', '5', _TEXT, '1'), 'is_full' => true],
+        ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0'), 'is_full' => true],
+        ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl_form')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl_form')],
+        ['label_html' => $link.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'placeholder_text' => _URL])],
+        ['label_html' => _FILE_DIR.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'path', 'options_html' => $pathopts])],
+        ['label_html' => _SIZENOTE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'filesize', 'value_attr' => (string)$filesize])],
+        ['label_html' => _VERSION.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'version', 'value_attr' => $version])],
+        ['label_html' => _AUEMAIL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email])],
+        ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'website', 'value_attr' => $website])],
+        ['label_html' => _FILE_SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'file', 'name_attr' => 'filesite'])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=files&amp;op=save',
+        'form_attr' => 'enctype="multipart/form-data"',
+        'hidden' => [
+            ['nameattr' => 'fid', 'valueattr' => (string)$fid],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'actions' => [
+            'hasname' => (bool)$fid,
+            'nameattr' => 'fid',
+            'opattr' => 'save',
+            'options' => array_merge(
+                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
+                $fid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
+            ),
+            'submit_label' => _OK,
+            'valueattr' => $fid,
+        ],
+        'rows' => $rows,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
     global $db, $afile, $stop, $conf;
-        $fid = getVar('post', 'fid', 'num', 0);
+    $fid = getVar('post', 'fid', 'num', 0);
     $cid = getVar('post', 'cid', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
     $title = getVar('post', 'title', 'title', '');
@@ -174,47 +219,59 @@ function save(): void {
     $version = getVar('post', 'version', 'name', '');
     $email = getVar('post', 'email', 'name', '');
     $website = getVar('post', 'website', 'url', '');
-    $stop = [];
-    if (!$title) $stop[] = _CERROR;
-    if (!$description) $stop[] = _CERROR1;
-    if (!$postname) $stop[] = _CERROR3;
-    if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
-    $filename = upload(1, $conf['files']['path'] ?? 'uploads/files', $conf['files']['typefile'] ?? 'zip,rar', $conf['files']['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
-    $url = ($filename) ? ($conf['files']['path'] ?? 'uploads/files').'/'.$filename : $url;
-    $filesize = ($filename) ? filesize($url) : $filesize;
     $posttype = getVar('post', 'posttype', 'text', '');
-    if (!$stop && !$url && $posttype === 'save') {
-        $stop[] = _UPLOADEROR2;
-    }
-    if (!$stop && $posttype === 'save') {
-        $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
-        if ($fid) {
-            if ($path) {
-                $filel = array_reverse(explode('/', $url));
-                if (file_exists($url)) {
-                    $newfile = $path.'/'.$filel[0];
-                    rename($url, $newfile);
-                    $url = $path.'/'.$filel[0];
-                }
-            }
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm, status = :status WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
-        } else {
-            $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :filesize, :version, :email, :website, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
+    $iswarn = !checkSiteToken();
+    $stop = [];
+    if (!$iswarn) {
+        if (!$title) $stop[] = _CERROR;
+        if (!$description) $stop[] = _CERROR1;
+        if (!$postname) $stop[] = _CERROR3;
+        if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
+        $filename = upload(1, $conf['files']['path'] ?? 'uploads/files', $conf['files']['typefile'] ?? 'zip,rar', $conf['files']['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
+        $url = $filename ? ($conf['files']['path'] ?? 'uploads/files').'/'.$filename : $url;
+        $filesize = $filename ? filesize($url) : $filesize;
+        if (!$stop && !$url && $posttype === 'save') {
+            $stop[] = _UPLOADEROR2;
         }
-        setRedirect($afile.'.php?name=files');
-    } elseif ($posttype === 'delete') {
-        delete($fid);
-    } else {
-        add();
+        if (!$stop && $posttype === 'save') {
+            $postid = is_user_id($postname) ?: 0;
+            $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
+            if ($fid) {
+                if ($path) {
+                    $filel = array_reverse(explode('/', $url));
+                    if (file_exists($url)) {
+                        $newfile = $path.'/'.$filel[0];
+                        rename($url, $newfile);
+                        $url = $newfile;
+                    }
+                }
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm, status = :status WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
+            } else {
+                $ip = getip();
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :filesize, :version, :email, :website, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
+            }
+        }
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    if ($posttype === 'delete') {
+        delete($fid);
+        return;
+    }
+    if ($posttype === 'preview') {
+        add();
+        return;
+    }
+    setRedirect($afile.'.php?name=files', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function delete(int $fid = 0): void {
     global $db, $afile;
-    $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
-    if ($id) {
+    $id = $fid ?: getVar('req', 'id', 'num', 0);
+    $iswarn = !$fid && !checkSiteToken();
+    if (!$iswarn && $id) {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]));
         if (file_exists($url)) unlink($url);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
@@ -222,95 +279,66 @@ function delete(int $fid = 0): void {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]);
     }
     $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
-    setRedirect($afile.'.php?name=files'.$refer);
+    setRedirect($afile.'.php?name=files'.$refer, false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function approve(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
-    if ($id) {
+    $iswarn = !checkSiteToken();
+    if (!$iswarn && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET status = :status WHERE id = :id', ['status' => '1', 'id' => $id]);
     }
-    setRedirect($afile.'.php?name=files&status=2');
+    setRedirect($afile.'.php?name=files&status=2', false, 302, $iswarn ? _TOKENMISS : _SUCCSTATUS, $iswarn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
-    $stream_sel = getTplSelect('stream',
-        getTplOption('0', _STREAM_NO, ($conf['files']['stream'] ?? null) == '0')
-        .getTplOption('1', _STREAM_1, ($conf['files']['stream'] ?? null) == '1')
-        .getTplOption('2', _STREAM_2, ($conf['files']['stream'] ?? null) == '2'),
-    'sl_conf');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'files',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_cdefis' => _CDEFIS,
-        'defis' => urldecode($conf['files']['defis'] ?? ''),
-        '_f0' => _F_0,
-        'temp' => $conf['files']['temp'] ?? '',
-        '_f1' => _F_1,
-        'path' => $conf['files']['path'] ?? '',
-        '_fsize_fin' => _FSIZE._FIN,
-        'maxsize' => $conf['files']['max_size'] ?? 0,
-        '_nokoma' => _NOKOMA,
-        '_ftype' => _FTYPE,
-        'typefile' => $conf['files']['typefile'] ?? '',
-        '_pagelinknum' => _PAGELINKNUM,
-        'linknum' => $conf['files']['linknum'] ?? 0,
-        '_c13' => _C_13,
-        'listnum' => $conf['files']['listnum'] ?? 0,
-        '_c33' => _C_33,
-        'num' => $conf['files']['num'] ?? 0,
-        '_c34' => _C_34,
-        'anum' => $conf['files']['anum'] ?? 0,
-        '_c35' => _C_35,
-        'nump' => $conf['files']['nump'] ?? 0,
-        '_c36' => _C_36,
-        'anump' => $conf['files']['anump'] ?? 0,
-        '_stream' => _STREAM,
-        's_stream' => $stream_sel,
-        '_homcat' => _HOMCAT,
-        'r_homcat' => radio_form($conf['files']['homcat'] ?? 0, 'homcat'),
-        '_viewcat' => _VIEWCAT,
-        'r_viewcat' => radio_form($conf['files']['viewcat'] ?? 0, 'viewcat'),
-        '_c32' => _C_32,
-        'r_catdesc' => radio_form($conf['files']['catdesc'] ?? 0, 'catdesc'),
-        '_c15' => _C_15,
-        'r_subcat' => radio_form($conf['files']['subcat'] ?? 0, 'subcat'),
-        '_addamail' => _ADDAMAIL,
-        'r_addmail' => radio_form($conf['files']['addmail'] ?? 0, 'addmail'),
-        '_f8' => _F_8,
-        'r_add' => radio_form($conf['files']['add'] ?? 0, 'add'),
-        '_f9' => _F_9,
-        'r_addquest' => radio_form($conf['files']['addquest'] ?? 0, 'addquest'),
-        '_f11' => _F_11,
-        'r_broc' => radio_form($conf['files']['broc'] ?? 0, 'broc'),
-        '_f12' => _F_12,
-        'r_down' => radio_form($conf['files']['down'] ?? 0, 'down'),
-        '_upfile' => _UPFILE,
-        'r_upload' => radio_form($conf['files']['upload'] ?? 0, 'upload'),
-        '_c37' => _C_37,
-        'r_autor' => radio_form($conf['files']['autor'] ?? 0, 'autor'),
-        '_c17' => _C_17,
-        'r_date' => radio_form($conf['files']['date'] ?? 0, 'date'),
-        '_c18' => _C_18,
-        'r_read' => radio_form($conf['files']['read'] ?? 0, 'read'),
-        '_f2' => _F_2,
-        'r_hits' => radio_form($conf['files']['hits'] ?? 0, 'hits'),
-        '_c19' => _C_19,
-        'r_rate' => radio_form($conf['files']['rate'] ?? 0, 'rate'),
-        '_c20' => _C_20,
-        'r_letter' => radio_form($conf['files']['letter'] ?? 0, 'letter'),
-        '_pagelink' => _PAGELINK,
-        'r_link' => radio_form($conf['files']['link'] ?? 0, 'link'),
-        'files' => true,
-    ]));
+    $streamopts =
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']) .
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _STREAM_1, 'is_selected' => ($conf['files']['stream'] ?? null) == '1']) .
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _STREAM_2, 'is_selected' => ($conf['files']['stream'] ?? null) == '2']);
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $rows = [
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['files']['defis'] ?? ''), 'is_config' => true])],
+        ['label_html' => _F_0, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'temp', 'value_attr' => $conf['files']['temp'] ?? '', 'is_config' => true])],
+        ['label_html' => _F_1, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'path', 'value_attr' => $conf['files']['path'] ?? '', 'is_config' => true])],
+        ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'maxsize', 'value_attr' => (string)($conf['files']['max_size'] ?? 0), 'is_config' => true])],
+        ['label_html' => _NOKOMA, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'typefile', 'value_attr' => $conf['files']['typefile'] ?? '', 'is_config' => true])],
+        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['files']['linknum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['files']['listnum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['files']['num'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['files']['anum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['files']['nump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['files']['anump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _STREAM, 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'stream', 'is_config' => true, 'options_html' => $streamopts])],
+        ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['files']['homcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['files']['viewcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['files']['catdesc'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_15, 'field_html' => getTplRadioGroup(['name' => 'subcat', 'value' => (string)($conf['files']['subcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)($conf['files']['addmail'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => (string)($conf['files']['add'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => (string)($conf['files']['addquest'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _F_11, 'field_html' => getTplRadioGroup(['name' => 'broc', 'value' => (string)($conf['files']['broc'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _F_12, 'field_html' => getTplRadioGroup(['name' => 'down', 'value' => (string)($conf['files']['down'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _UPFILE, 'field_html' => getTplRadioGroup(['name' => 'upload', 'value' => (string)($conf['files']['upload'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_37, 'field_html' => getTplRadioGroup(['name' => 'autor', 'value' => (string)($conf['files']['autor'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_17, 'field_html' => getTplRadioGroup(['name' => 'date', 'value' => (string)($conf['files']['date'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['files']['read'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _F_2, 'field_html' => getTplRadioGroup(['name' => 'hits', 'value' => (string)($conf['files']['hits'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['files']['rate'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['files']['letter'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['files']['link'] ?? 0), 'options' => $yesno])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=files&amp;op=configsave',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -319,44 +347,46 @@ function configsave(): void {
     global $afile;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $typefile = getVar('post', 'typefile', 'text', '');
-    $cont = [
-        'defis' => getVar('post', 'defis', 'defis', '%3E'),
-        'temp' => getVar('post', 'temp', 'text', ''),
-        'path' => getVar('post', 'path', 'text', ''),
-        'max_size' => getVar('post', 'maxsize', 'num', 1048576),
-        'typefile' => $typefile ? strtolower(strtr($typefile, $protect)) : 'zip,gzip,7z,rar,tar',
-        'linknum' => getVar('post', 'linknum', 'num', 10),
-        'listnum' => getVar('post', 'listnum', 'num', 10),
-        'num' => getVar('post', 'num', 'num', 25),
-        'anum' => getVar('post', 'anum', 'num', 25),
-        'nump' => getVar('post', 'nump', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'stream' => getVar('post', 'stream', 'num', 0),
-        'homcat' => getVar('post', 'homcat', 'num', 0),
-        'viewcat' => getVar('post', 'viewcat', 'num', 0),
-        'catdesc' => getVar('post', 'catdesc', 'num', 0),
-        'subcat' => getVar('post', 'subcat', 'num', 0),
-        'addmail' => getVar('post', 'addmail', 'num', 0),
-        'add' => getVar('post', 'add', 'num', 0),
-        'addquest' => getVar('post', 'addquest', 'num', 0),
-        'broc' => getVar('post', 'broc', 'num', 0),
-        'down' => getVar('post', 'down', 'num', 0),
-        'upload' => getVar('post', 'upload', 'num', 0),
-        'autor' => getVar('post', 'autor', 'num', 0),
-        'date' => getVar('post', 'date', 'num', 0),
-        'read' => getVar('post', 'read', 'num', 0),
-        'hits' => getVar('post', 'hits', 'num', 0),
-        'rate' => getVar('post', 'rate', 'num', 0),
-        'letter' => getVar('post', 'letter', 'num', 0),
-        'link' => getVar('post', 'link', 'num', 0),
-    ];
-    setConfigFile('files.php', $cont);
-    setRedirect($afile.'.php?name=files&op=config');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'defis' => getVar('post', 'defis', 'defis', '%3E'),
+            'temp' => getVar('post', 'temp', 'text', ''),
+            'path' => getVar('post', 'path', 'text', ''),
+            'max_size' => getVar('post', 'maxsize', 'num', 1048576),
+            'typefile' => $typefile ? strtolower(strtr($typefile, $protect)) : 'zip,gzip,7z,rar,tar',
+            'linknum' => getVar('post', 'linknum', 'num', 10),
+            'listnum' => getVar('post', 'listnum', 'num', 10),
+            'num' => getVar('post', 'num', 'num', 25),
+            'anum' => getVar('post', 'anum', 'num', 25),
+            'nump' => getVar('post', 'nump', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'stream' => getVar('post', 'stream', 'num', 0),
+            'homcat' => getVar('post', 'homcat', 'num', 0),
+            'viewcat' => getVar('post', 'viewcat', 'num', 0),
+            'catdesc' => getVar('post', 'catdesc', 'num', 0),
+            'subcat' => getVar('post', 'subcat', 'num', 0),
+            'addmail' => getVar('post', 'addmail', 'num', 0),
+            'add' => getVar('post', 'add', 'num', 0),
+            'addquest' => getVar('post', 'addquest', 'num', 0),
+            'broc' => getVar('post', 'broc', 'num', 0),
+            'down' => getVar('post', 'down', 'num', 0),
+            'upload' => getVar('post', 'upload', 'num', 0),
+            'autor' => getVar('post', 'autor', 'num', 0),
+            'date' => getVar('post', 'date', 'num', 0),
+            'read' => getVar('post', 'read', 'num', 0),
+            'hits' => getVar('post', 'hits', 'num', 0),
+            'rate' => getVar('post', 'rate', 'num', 0),
+            'letter' => getVar('post', 'letter', 'num', 0),
+            'link' => getVar('post', 'link', 'num', 0),
+        ];
+        setConfigFile('files.php', $cont);
+    }
+    setRedirect($afile.'.php?name=files&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 5]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 5]);
 }
 
 switch ($op) {
