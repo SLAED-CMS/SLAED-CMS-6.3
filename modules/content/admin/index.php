@@ -17,14 +17,6 @@ function content(): void {
     $offset = ($num - 1) * $anum;
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = [
-            ['content' => _ID],
-            ['content' => _TITLE],
-            ['content' => _DATE],
-            ['content' => cutstr(_READS, 4, 1)],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
-        ];
         $rows = '';
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             $view = (time() >= strtotime($time)) ? 'index.php?name=content&amp;op=view&amp;id='.$id : '';
@@ -57,10 +49,24 @@ function content(): void {
                 'title_html' => $tip.cutstr($title, 50),
             ])]);
         }
-        $cont .= $tpl->getHtmlFrag('new/table', ['head' => $head, 'rows_html' => $rows]);
-        $cont .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=content&amp;', 'table' => '_content', 'field' => 'id']);
+        $body = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _ID],
+                ['content' => _TITLE],
+                ['content' => _DATE],
+                ['content' => cutstr(_READS, 4, 1)],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=content&amp;', 'table' => '_content', 'field' => 'id']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', [
+            'content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]),
+        ]);
     }
     echo $cont;
     setFoot();
@@ -85,7 +91,7 @@ function add(): void {
     setHead();
     $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $prev = [
         'title' => $title,
         'texta' => $body,
@@ -150,58 +156,50 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $stop, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    global $db, $afile, $stop;
     $cid = getVar('post', 'cid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
     $url = getVar('post', 'url', 'text', '');
     $body = getVar('post', 'body', 'text', '');
-    $body = ($url) ? rss_read($url, 1) : $body;
     $fieldp = getVar('post', 'field[]', 'raw', []);
     $field = is_array($fieldp) ? filterFields($fieldp) : '';
     $time = getVar('req', 'time', 'time');
     $refresh = getVar('post', 'refresh', 'num', 0);
-    if (!$title) $stop[] = _CERROR;
-    if (!$body && !$url) $stop[] = _CERROR1;
-    if (!$body && $url) $stop[] = _RSSFAIL;
     $posttype = getVar('post', 'posttype', 'text', '');
-    if (!$stop && $posttype == 'save') {
-        $data = ['title' => $title, 'body' => $body, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh];
-        if ($cid) {
-            $sql = 'UPDATE '.PREFIX_DB.'_content SET title = :title, body = :body, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid';
-            $db->getSqlQuery($sql, $data + ['cid' => $cid]);
-        } else {
-            $sql = 'INSERT INTO '.PREFIX_DB.'_content (title, body, field, url, time, refresh, counter) VALUES (:title, :body, :field, :url, :time, :refresh, \'0\')';
-            $db->getSqlQuery($sql, $data);
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $body = ($url) ? rss_read($url, 1) : $body;
+        if (!$title) $stop[] = _CERROR;
+        if (!$body && !$url) $stop[] = _CERROR1;
+        if (!$body && $url) $stop[] = _RSSFAIL;
+        if (!$stop && $posttype == 'save') {
+            $data = ['title' => $title, 'body' => $body, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh];
+            if ($cid) {
+                $sql = 'UPDATE '.PREFIX_DB.'_content SET title = :title, body = :body, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid';
+                $db->getSqlQuery($sql, $data + ['cid' => $cid]);
+            } else {
+                $sql = 'INSERT INTO '.PREFIX_DB.'_content (title, body, field, url, time, refresh, counter) VALUES (:title, :body, :field, :url, :time, :refresh, \'0\')';
+                $db->getSqlQuery($sql, $data);
+            }
         }
-        setRedirect($afile.'.php?name=content');
-    } elseif ($posttype == 'delete') {
-        delete($cid);
-    } else {
-        add();
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    if ($posttype == 'delete') {
+        delete($cid);
+        return;
+    }
+    setRedirect($afile.'.php?name=content', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function delete(int $cid = 0): void {
-    global $db, $afile, $tpl;
-    if (!$cid && !checkSiteToken()) {
-        setHead();
-        $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
+    global $db, $afile;
     $id = $cid ?: getVar('req', 'id', 'num', 0);
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=content');
+    $iswarn = !$cid && !checkSiteToken();
+    if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=content', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function config(): void {
@@ -217,12 +215,8 @@ function config(): void {
         ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['content']['anump']])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
-        'action_url' => $afile.'.php',
-        'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'content'],
-            ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
-        ],
+        'action_url' => $afile.'.php?name=content&amp;op=configsave',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -231,23 +225,18 @@ function config(): void {
 }
 
 function configsave(): void {
-    global $afile, $tpl;
-    if (!checkSiteToken()) {
-        setHead();
-        $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
-        setFoot();
-        return;
+    global $afile;
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'num' => getVar('post', 'num', 'num', 25),
+            'anum' => getVar('post', 'anum', 'num', 25),
+            'nump' => getVar('post', 'nump', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+        ];
+        setConfigFile('content.php', $cont);
     }
-    $cont = [
-        'num' => getVar('post', 'num', 'num', 25),
-        'anum' => getVar('post', 'anum', 'num', 25),
-        'nump' => getVar('post', 'nump', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-    ];
-    setConfigFile('content.php', $cont);
-    setRedirect($afile.'.php?name=content&op=config');
+    setRedirect($afile.'.php?name=content&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {

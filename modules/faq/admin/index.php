@@ -17,16 +17,15 @@ function faq(): void {
         $status = '0';
         $field = 'name=faq&amp;status=1&amp;';
         $refer = '&op=faq&status=1';
-        $cont = getTplAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=faq&amp;';
         $refer = '';
-        $cont = getTplAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, t.title, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_ID, _QUESTION, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -39,24 +38,50 @@ function faq(): void {
                 $view = '';
                 $active = '0';
             }
-            $acts = getTplAdminActionMenu([
-                $view,
-                getTplLinkAction($afile.'.php?name=faq&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=faq&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
-                'actions_html' => $acts,
-                'checkbox_html' => '',
-                'id_text' => (string)$id,
-                'post_html' => $post,
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
-            ]));
+            $items = [];
+            if ($view) {
+                $items[] = ['href' => $view, 'label' => _MVIEW, 'title' => _MVIEW];
+            }
+            $items[] = ['href' => $afile.'.php?name=faq&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = [
+                'href' => $afile.'.php?name=faq&amp;op=delete&amp;id='.$id.($refer ? '&amp;refer=1' : '').'&amp;token='.getSiteToken(),
+                'label' => _ONDELETE,
+                'title' => _ONDELETE,
+                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+            ];
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => [
+                            ['label' => _CATEGORY, 'value' => $ctitle],
+                            ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
+                            ['label' => _IP, 'value' => $ip, 'is_last' => true],
+                        ],
+                        'label_text' => cutstr($title, 60),
+                        'title_text' => $title,
+                    ])],
+                    ['content_html' => $post],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_faq', '', 'status = \''.$status.'\'', $anump);
+        $body = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _ID],
+                ['content' => _QUESTION],
+                ['content' => _POSTEDBY],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_faq', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -81,29 +106,51 @@ function add(): void {
         $acomm = getVar('post', 'acomm', 'num', 0);
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
+    $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
-    $hide = getTplHiddenInput('name', 'faq');
-    $rows = $tpl->getHtmlFrag('admin-faq-add-rows', [
-        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
-        'acomm_label' => _COMMENTS.':',
-        'answer_html' => textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'),
-        'answer_label' => _ANSWER.':',
-        'cat_html' => getcat('faq', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
-        'cat_label' => _CATEGORY.':',
-        'ihome_html' => radio_form($ihome, 'ihome'),
-        'ihome_label' => _PUBHOME,
-        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
-        'postname_label' => _POSTEDBY.':',
-        'save_html' => ad_save('fid', $fid, 'save'),
-        'subject_label' => _TITLE.' / '._QUESTION.':',
-        'subject_value' => $subject,
-        'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
-        'time_label' => _CHNGSTORY.':',
+    $catopts = $tpl->getHtmlFrag('new/select-option', [
+        'value_attr' => '',
+        'label_text' => _HOMECAT,
+        'is_selected' => !$cat,
     ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'faq\' ORDER BY ordern ASC');
+    while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
+        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$catid,
+            'label_text' => $cattitle,
+            'is_selected' => (int)$cat === (int)$catid,
+        ]);
+    }
+    $rows = [
+        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1')],
+        ['label_html' => _TITLE.' / '._QUESTION.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl_form')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'time', $time, 16, 'sl_form')],
+        ['label_html' => _ANSWER.':', 'field_html' => textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'), 'is_full' => true],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=faq&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'fid', 'valueattr' => (string)$fid],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'actions' => [
+            'hasname' => (bool)$fid,
+            'nameattr' => 'fid',
+            'opattr' => 'save',
+            'options' => array_merge(
+                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
+                $fid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
+            ),
+            'submit_label' => _OK,
+            'valueattr' => $fid,
+        ],
+        'rows' => $rows,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -118,128 +165,123 @@ function save(): void {
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $time = getVar('req', 'time', 'time');
-    $stop = [];
-    if (!$subject) $stop[] = _CERROR;
-    if (!$hometext) $stop[] = _CERROR1;
-    if (!$postname) $stop[] = _CERROR3;
     $posttype = getVar('post', 'posttype', 'text', '');
-    if (!$stop && $posttype == 'save') {
-        $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
-        $postname = (!is_user_id($postname)) ? filterText(substr($postname, 0, 25)) : '';
-        if ($fid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET cid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
-        } else {
-            $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (cid, uid, name, title, time, body, ihome, acomm, ip, status) VALUES (:cat, :postid, :postname, :subject, :time, :body, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+    $iswarn = !checkSiteToken();
+    $stop = [];
+    if (!$iswarn) {
+        if (!$subject) $stop[] = _CERROR;
+        if (!$hometext) $stop[] = _CERROR1;
+        if (!$postname) $stop[] = _CERROR3;
+        if (!$stop && $posttype == 'save') {
+            $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
+            $postname = (!is_user_id($postname)) ? filterText(substr($postname, 0, 25)) : '';
+            if ($fid) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET cid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+            } else {
+                $ip = getip();
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (cid, uid, name, title, time, body, ihome, acomm, ip, status) VALUES (:cat, :postid, :postname, :subject, :time, :body, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            }
         }
-        setRedirect($afile.'.php?name=faq');
-    } elseif ($posttype == 'delete') {
-        delete($fid);
-    } else {
-        add();
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    if ($posttype == 'delete') {
+        delete($fid);
+        return;
+    }
+    setRedirect($afile.'.php?name=faq', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function delete(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
-    if ($id) {
+    $iswarn = !$fid && !checkSiteToken();
+    if (!$iswarn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'faq\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'faq\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_faq WHERE id = :id', ['id' => $id]);
     }
     $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
-    setRedirect($afile.'.php?name=faq'.$refer);
+    setRedirect($afile.'.php?name=faq'.$refer, false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/faq.php');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'faq',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_cdefis' => _CDEFIS,
-        'defis' => urldecode($conf['faq']['defis'] ?? ''),
-        '_pagelinknum' => _PAGELINKNUM,
-        'linknum' => $conf['faq']['linknum'] ?? 0,
-        '_c13' => _C_13,
-        'listnum' => $conf['faq']['listnum'] ?? 0,
-        '_c33' => _C_33,
-        'num' => $conf['faq']['num'] ?? 0,
-        '_c34' => _C_34,
-        'anum' => $conf['faq']['anum'] ?? 0,
-        '_c35' => _C_35,
-        'nump' => $conf['faq']['nump'] ?? 0,
-        '_c36' => _C_36,
-        'anump' => $conf['faq']['anump'] ?? 0,
-        '_homcat' => _HOMCAT,
-        'r_homcat' => radio_form($conf['faq']['homcat'] ?? 0, 'homcat'),
-        '_viewcat' => _VIEWCAT,
-        'r_viewcat' => radio_form($conf['faq']['viewcat'] ?? 0, 'viewcat'),
-        '_c32' => _C_32,
-        'r_catdesc' => radio_form($conf['faq']['catdesc'] ?? 0, 'catdesc'),
-        '_c15' => _C_15,
-        'r_subcat' => radio_form($conf['faq']['subcat'] ?? 0, 'subcat'),
-        '_addamail' => _ADDAMAIL,
-        'r_addmail' => radio_form($conf['faq']['addmail'] ?? 0, 'addmail'),
-        '_c39' => _C_39,
-        'r_add' => radio_form($conf['faq']['add'] ?? 0, 'add'),
-        '_c40' => _C_40,
-        'r_addquest' => radio_form($conf['faq']['addquest'] ?? 0, 'addquest'),
-        '_c37' => _C_37,
-        'r_autor' => radio_form($conf['faq']['autor'] ?? 0, 'autor'),
-        '_c17' => _C_17,
-        'r_date' => radio_form($conf['faq']['date'] ?? 0, 'date'),
-        '_c18' => _C_18,
-        'r_read' => radio_form($conf['faq']['read'] ?? 0, 'read'),
-        '_c19' => _C_19,
-        'r_rate' => radio_form($conf['faq']['rate'] ?? 0, 'rate'),
-        '_c20' => _C_20,
-        'r_letter' => radio_form($conf['faq']['letter'] ?? 0, 'letter'),
-        '_pagelink' => _PAGELINK,
-        'r_link' => radio_form($conf['faq']['link'] ?? 0, 'link'),
-        'faq' => true,
-    ]));
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $rows = [
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['faq']['defis'] ?? ''), 'is_config' => true])],
+        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['faq']['linknum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['faq']['listnum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['faq']['num'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['faq']['anum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['faq']['nump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['faq']['anump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['faq']['homcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['faq']['viewcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['faq']['catdesc'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_15, 'field_html' => getTplRadioGroup(['name' => 'subcat', 'value' => (string)($conf['faq']['subcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)($conf['faq']['addmail'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_39, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => (string)($conf['faq']['add'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_40, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => (string)($conf['faq']['addquest'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_37, 'field_html' => getTplRadioGroup(['name' => 'autor', 'value' => (string)($conf['faq']['autor'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_17, 'field_html' => getTplRadioGroup(['name' => 'date', 'value' => (string)($conf['faq']['date'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['faq']['read'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['faq']['rate'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['faq']['letter'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['faq']['link'] ?? 0), 'options' => $yesno])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=faq&amp;op=configsave',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function configsave(): void {
     global $afile;
-    $cont = [
-        'defis' => getVar('post', 'defis', 'defis', '%3E'),
-        'linknum' => getVar('post', 'linknum', 'num', 10),
-        'listnum' => getVar('post', 'listnum', 'num', 10),
-        'num' => getVar('post', 'num', 'num', 25),
-        'anum' => getVar('post', 'anum', 'num', 25),
-        'nump' => getVar('post', 'nump', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'homcat' => getVar('post', 'homcat', 'num', 0),
-        'viewcat' => getVar('post', 'viewcat', 'num', 0),
-        'catdesc' => getVar('post', 'catdesc', 'num', 0),
-        'subcat' => getVar('post', 'subcat', 'num', 0),
-        'addmail' => getVar('post', 'addmail', 'num', 0),
-        'add' => getVar('post', 'add', 'num', 0),
-        'addquest' => getVar('post', 'addquest', 'num', 0),
-        'autor' => getVar('post', 'autor', 'num', 0),
-        'date' => getVar('post', 'date', 'num', 0),
-        'read' => getVar('post', 'read', 'num', 0),
-        'rate' => getVar('post', 'rate', 'num', 0),
-        'letter' => getVar('post', 'letter', 'num', 0),
-        'link' => getVar('post', 'link', 'num', 0),
-    ];
-    setConfigFile('faq.php', $cont);
-    setRedirect($afile.'.php?name=faq&op=config');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'defis' => getVar('post', 'defis', 'defis', '%3E'),
+            'linknum' => getVar('post', 'linknum', 'num', 10),
+            'listnum' => getVar('post', 'listnum', 'num', 10),
+            'num' => getVar('post', 'num', 'num', 25),
+            'anum' => getVar('post', 'anum', 'num', 25),
+            'nump' => getVar('post', 'nump', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'homcat' => getVar('post', 'homcat', 'num', 0),
+            'viewcat' => getVar('post', 'viewcat', 'num', 0),
+            'catdesc' => getVar('post', 'catdesc', 'num', 0),
+            'subcat' => getVar('post', 'subcat', 'num', 0),
+            'addmail' => getVar('post', 'addmail', 'num', 0),
+            'add' => getVar('post', 'add', 'num', 0),
+            'addquest' => getVar('post', 'addquest', 'num', 0),
+            'autor' => getVar('post', 'autor', 'num', 0),
+            'date' => getVar('post', 'date', 'num', 0),
+            'read' => getVar('post', 'read', 'num', 0),
+            'rate' => getVar('post', 'rate', 'num', 0),
+            'letter' => getVar('post', 'letter', 'num', 0),
+            'link' => getVar('post', 'link', 'num', 0),
+        ];
+        setConfigFile('faq.php', $cont);
+    }
+    setRedirect($afile.'.php?name=faq&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tab' => 4,
+    ]);
 }
 
 switch ($op) {
