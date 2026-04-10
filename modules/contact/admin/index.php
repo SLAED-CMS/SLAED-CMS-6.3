@@ -9,34 +9,64 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('contact')) die('Illegal file acce
 function contact(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO]]);
-    $cont .= checkPerms(CONFIG_DIR.'/contact.php');
-    $rows = $tpl->getHtmlFrag('admin-contact-config-rows', [
-        'admins_html' => radio_form($conf['contact']['admins'], 'admins'),
-        'admins_label' => _CONTACTALL,
-        'info_html' => textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0'),
-        'info_label' => _CONTACTINFO.':',
-        'save_label' => _SAVECHANGES,
+    $cont = getTplAdminTabs([
+        'ops' => ['name=contact', 'name=contact&amp;op=info'],
+        'tabs' => [_PREFERENCES, _INFO],
     ]);
-    $hide = getTplHiddenInput('name', 'contact').getTplHiddenInput('op', 'save');
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    $rows = [
+        [
+            'label_html' => _CONTACTALL,
+            'field_html' => getTplRadioGroup([
+                'name' => 'admins',
+                'value' => (string)$conf['contact']['admins'],
+                'options' => [
+                    ['value' => '1', 'label' => _YES],
+                    ['value' => '0', 'label' => _NO],
+                ],
+            ]),
+        ],
+        [
+            'label_html' => _CONTACTINFO.':',
+            'field_html' => $tpl->getHtmlFrag('new/textarea', [
+                'name_attr' => 'info',
+                'value_text' => $conf['contact']['info'],
+                'rows_num' => 10,
+            ]),
+        ],
+    ];
+    $body = checkPerms(CONFIG_DIR.'/contact.php');
+    $body .= $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=contact&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
     global $afile;
-    $cont = [
-        'info' => getVar('post', 'info', 'text', ''),
-        'admins' => getVar('post', 'admins', 'num', 0),
-    ];
-    setConfigFile('contact.php', $cont);
-    setRedirect($afile.'.php?name=contact');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'info' => getVar('post', 'info', 'text', ''),
+            'admins' => getVar('post', 'admins', 'num', 0),
+        ];
+        setConfigFile('contact.php', $cont);
+    }
+    setRedirect($afile.'.php?name=contact', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO], 'tab' => 1]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=contact', 'name=contact&amp;op=info'],
+        'tabs' => [_PREFERENCES, _INFO],
+        'tab' => 1,
+    ]);
 }
 
 switch ($op) {

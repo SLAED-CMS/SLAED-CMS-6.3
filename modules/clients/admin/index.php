@@ -9,34 +9,77 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('clients')) die('Illegal file acce
 function clients(): void {
     global $db, $afile, $stop, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _INFO],
+    ]);
+    if ($stop) {
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _CERROR]);
+    }
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_ID, _CTITLE, _CVERSION, _CDATE, _ID, _CLOADS, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
-            $act = ($status) ? 0 : 1;
-            $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $acts = getTplAdminActionMenu([
-                ad_status($afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act, $status),
-                getTplLinkAction($afile.'.php?name=clients&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=clients&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            $act = $status ? 0 : 1;
+            $time = file_exists('uploads/clients/'.$url) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
+            $rows .= $tpl->getHtmlFrag('new/table-row', [
+                'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                    'cells' => [
+                        ['content_html' => (string)$id],
+                        ['content_html' => $title],
+                        ['content_html' => $num],
+                        ['content_html' => $time],
+                        ['content_html' => (string)$prod],
+                        ['content_html' => (string)$hits],
+                        ['content_html' => $tpl->getHtmlFrag('new/inline-badge', [
+                            'class' => $status ? 'sl-green' : 'sl-red',
+                            'label' => $status ? _YES : _NO,
+                            'title' => _STATUS,
+                        ])],
+                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                            'trigger_label' => _FUNCTIONS,
+                            'items' => [
+                                [
+                                    'href' => $afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(),
+                                    'label' => $status ? _DEACTIVATE : _ACTIVATE,
+                                    'title' => $status ? _DEACTIVATE : _ACTIVATE,
+                                ],
+                                [
+                                    'href' => $afile.'.php?name=clients&amp;op=add&amp;id='.$id,
+                                    'label' => _FULLEDIT,
+                                    'title' => _FULLEDIT,
+                                ],
+                                [
+                                    'href' => $afile.'.php?name=clients&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                                    'label' => _DELETE,
+                                    'title' => _DELETE,
+                                    'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+                                ],
+                            ],
+                        ])],
+                    ],
+                ]),
             ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-clients-list-row', [
-                'actions_html' => $acts,
-                'date_text' => $time,
-                'hits_text' => (string)$hits,
-                'id_text' => (string)$id,
-                'prod_text' => (string)$prod,
-                'status_html' => ad_status('', $status),
-                'title_text' => $title,
-                'version_text' => $num,
-            ]));
         }
-        $cont .= getTplAdminTable($head, $rows);
+        $body = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _ID],
+                ['content' => _CTITLE],
+                ['content' => _CVERSION],
+                ['content' => _CDATE],
+                ['content' => _ID],
+                ['content' => _CLOADS],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', [
+            'content_html' => $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]),
+        ]);
     }
     echo $cont;
     setFoot();
@@ -59,28 +102,35 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 0);
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-    if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $hide = getTplHiddenInput('name', 'clients');
-    $rows = $tpl->getHtmlFrag('admin-clients-add-rows', [
-        'body_html' => textarea('1', 'body', $body, 'clients', '15', _TEXT, '1'),
-        'body_label' => _TEXT.':',
-        'code_label' => _CODE.':',
-        'code_value' => $code,
-        'prod_label' => _ID.':',
-        'prod_value' => (string)$prod,
-        'save_html' => ad_save('cid', $cid, 'save'),
-        'status_html' => radio_form($status, 'status'),
-        'status_label' => _CADOWN,
-        'title_label' => _CTITLE.':',
-        'title_value' => $title,
-        'url_label' => _CURL.':',
-        'url_value' => $url,
-        'version_label' => _CVERSION.':',
-        'version_value' => $num,
+    $cont = getTplAdminTabs([
+        'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _INFO],
+        'tab' => 1,
     ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    if ($stop) {
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    }
+    if ($body) {
+        $cont .= preview($title, $body, '', '', 'all');
+    }
+    $rows = [
+        ['label_html' => _CTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _CVERSION.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'num', 'value_attr' => $num, 'maxlength_num' => 255])],
+        ['label_html' => _CURL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => 255])],
+        ['label_html' => _CODE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code, 'maxlength_num' => 255])],
+        ['label_html' => _ID.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'prod', 'value_attr' => (string)$prod])],
+        ['label_html' => _CADOWN, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _TEXT.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'body', 'value_text' => $body, 'rows_num' => 15])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=clients&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'cid', 'valueattr' => (string)$cid],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -95,42 +145,53 @@ function save(): void {
     $code = getVar('post', 'code', 'text', '');
     $prod = getVar('post', 'prod', 'num', 0);
     $status = getVar('post', 'status', 'num', 0);
+    $iswarn = !checkSiteToken();
     $stop = [];
-    if (!$title) $stop[] = _CERROR;
-    if (!$body) $stop[] = _CERROR1;
-    $posttype = getVar('post', 'posttype', 'var', '');
-    if (!$stop && $posttype === 'save') {
-        if ($cid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, body = :body, url = :url, num = :num, code = :code, pid = :pid, status = :status WHERE id = :id', ['title' => $title, 'body' => $body, 'url' => $url, 'num' => $num, 'code' => $code, 'pid' => $prod, 'status' => $status, 'id' => $cid]);
-        } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients_down (title, body, url, num, code, hits, pid, status) VALUES (:title, :body, :url, :num, :code, :hits, :pid, :status)', ['title' => $title, 'body' => $body, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'pid' => $prod, 'status' => $status]);
+    if (!$iswarn) {
+        if (!$title) $stop[] = _CERROR;
+        if (!$body) $stop[] = _CERROR1;
+        if (!$stop) {
+            if ($cid) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, body = :body, url = :url, num = :num, code = :code, pid = :pid, status = :status WHERE id = :id', ['title' => $title, 'body' => $body, 'url' => $url, 'num' => $num, 'code' => $code, 'pid' => $prod, 'status' => $status, 'id' => $cid]);
+            } else {
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients_down (title, body, url, num, code, hits, pid, status) VALUES (:title, :body, :url, :num, :code, :hits, :pid, :status)', ['title' => $title, 'body' => $body, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'pid' => $prod, 'status' => $status]);
+            }
         }
-        setRedirect($afile.'.php?name=clients');
-    } elseif ($posttype === 'delete') {
-        delete($cid);
-    } else {
-        add();
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    setRedirect($afile.'.php?name=clients', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function delete(int $id = 0): void {
     global $db, $afile;
     if (!$id) $id = getVar('req', 'id', 'num');
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=clients');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn && $id) {
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
+    }
+    setRedirect($afile.'.php?name=clients', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function status(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
-    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET status = :status WHERE id = :id', ['status' => $act, 'id' => $id]);
-    setRedirect($afile.'.php?name=clients');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn && $id) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET status = :status WHERE id = :id', ['status' => $act, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=clients', false, 302, $iswarn ? _TOKENMISS : _SUCCSTATUS, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _INFO],
+        'tab' => 2,
+    ]);
 }
 
 switch ($op) {
