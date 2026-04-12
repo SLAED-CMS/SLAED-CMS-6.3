@@ -8,33 +8,38 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('whois')) die('Illegal file access
 
 function whois(): void {
     global $db, $afile, $conf, $tpl;
-        $anum = $conf['whois']['anum'] ?? 10;
+    $anum = $conf['whois']['anum'] ?? 10;
     $anump = $conf['whois']['anump'] ?? 10;
-
     setHead();
-        $num = getVar('get', 'num', 'num', 1);
-    $offset = intval(($num - 1) * $anum);
+    $num = getVar('get', 'num', 'num', 1);
+    $offset = (int)(($num - 1) * $anum);
     $status = getVar('get', 'status', 'num');
     if ($status == 1) {
         $status = 0;
         $field = 'name=whois&amp;status=1&amp;';
-        $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs([
+            'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+            'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+            'tab' => 2,
+        ]);
     } else {
         $status = 1;
         $field = 'name=whois&amp;';
-        $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs([
+            'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+            'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        ]);
     }
-
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-whois-list-head', [
-            'dc_label' => _DC,
-            'functions_label' => _FUNCTIONS,
-            'host_label' => _HOST,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'site_label' => _SITE,
-        ]);
+        $head = [
+            ['content' => _ID],
+            ['content' => _SITE],
+            ['content' => _HOST],
+            ['content' => _DC],
+            ['content' => _POSTEDBY],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ];
         $rows = '';
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
             $post = $userName ? user_info($userName) : ($uname ?: _ANONYM);
@@ -42,29 +47,31 @@ function whois(): void {
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
             $dc = $dc ? domain($dc) : _NO_INFO;
-            $acts = getTplAdminActionMenu([
-                ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1', $statusDomain, '', _SITE),
-                ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1', $statusHost, '', _HOST),
-                ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC),
-                getTplLinkAction($afile.'.php?name=whois&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$domain.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-whois-list-row', [
-                'actions_html' => $acts,
-                'dc_html' => $dc,
-                'dc_status_html' => ad_status('', $statusDc),
-                'domain_html' => domain($domain),
-                'domain_status_html' => ad_status('', $statusDomain),
-                'host_html' => $host,
-                'host_status_html' => ad_status('', $statusHost),
-                'id_text' => (string)$id,
-                'postedby_html' => getTplAdminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_IP, $ipSender).getTplAdminTipLine(_COMMENT, $hometext)).$post,
-            ]));
+            $items = [
+                ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1&amp;token='.getSiteToken(), 'label' => _SITE, 'title' => _SITE],
+                ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1&amp;token='.getSiteToken(), 'label' => _HOST, 'title' => _HOST],
+                ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1&amp;token='.getSiteToken(), 'label' => _DC, 'title' => _DC],
+                ['href' => $afile.'.php?name=whois&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+            ];
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+                ['content_html' => (string)$id],
+                ['content_html' => domain($domain).' '.ad_status('', $statusDomain)],
+                ['content_html' => $host.' '.ad_status('', $statusHost)],
+                ['content_html' => $dc.' '.ad_status('', $statusDc)],
+                ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => [
+                    ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
+                    ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
+                    ['label' => _COMMENT, 'value' => htmlspecialchars((string)$hometext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+                ]]).$post],
+                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+            ]])]);
         }
-        $cont .= getTplAdminTable($head, $rows, 'sl_table_list');
-        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
+        $body = $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_whois', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -72,6 +79,7 @@ function whois(): void {
 
 function toggle(): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $id = getVar('get', 'id', 'num');
     $fid = getVar('get', 'fid', 'num');
     $field = match ($fid) {
@@ -80,25 +88,25 @@ function toggle(): void {
         3 => 'sdc',
         default => '',
     };
-    if ($id && $field) {
+    if (!$warn && $id && $field) {
         [$active] = $db->getSqlRow($db->getSqlQuery('SELECT '.$field.' FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]));
         $active = $active ? 0 : 1;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_whois SET '.$field.' = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
     }
-    setRedirect($afile.'.php?name=whois', true);
+    setRedirect($afile.'.php?name=whois', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function add(): void {
     global $db, $afile, $stop, $tpl;
     $stop = $stop ?? [];
-    $wid = 0;
+    $wid = getVar('post', 'wid', 'num', 0);
     $id = getVar('req', 'id', 'num');
-    if ($wid) {
+    if ($id) {
+        $wid = $id;
         $result = $db->getSqlQuery('SELECT w.id, w.name, w.domain, w.host, w.dc, w.body, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE w.id = :id', ['id' => $id]);
         [$id, $uname, $domain, $host, $dc, $hometext, $userName] = $db->getSqlRow($result);
         $postname = $userName ?: ($uname ?: _ANONYM);
     } else {
-        $wid = getVar('post', 'wid', 'num');
         $postname = getVar('post', 'postname', 'name', '');
         $domain = getVar('post', 'domain', 'url', 'http://');
         $host = getVar('post', 'host', 'url', 'http://');
@@ -106,23 +114,42 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'text', '');
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-    $rows = $tpl->getHtmlFrag('admin-whois-add-rows', [
-        'comment_value' => $hometext,
-        'dc_value' => $dc,
-        'domain_value' => $domain,
-        'host_value' => $host,
-        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
-        'save_html' => getTplHiddenInput('name', 'whois').ad_save('wid', $wid, 'save', 1),
+    $cont = getTplAdminTabs([
+        'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tab' => 1,
     ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $rows = [
+        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput(['name' => 'postname', 'input_id' => 'postname', 'list_id' => 'postname_list', 'value' => $postname])],
+        ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'is_required' => true])],
+        ['label_html' => _HOST.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host])],
+        ['label_html' => _DC.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc])],
+        ['label_html' => _COMMENT.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true],
+    ];
+    $actions = $tpl->getHtmlFrag('new/button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
+    if ($wid) {
+        $actions .= $tpl->getHtmlFrag('new/button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'whois'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'wid', 'valueattr' => (string)$wid],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'posttype', 'valueattr' => 'save'],
+        ],
+        'rows' => $rows,
+        'actions_html' => $actions,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
     global $db, $afile, $stop;
+    $warn = !checkSiteToken();
     $wid = getVar('post', 'wid', 'num');
     $postname = getVar('post', 'postname', 'name', '');
     $domain = getVar('post', 'domain', 'url', '');
@@ -133,8 +160,9 @@ function save(): void {
     $stop = [];
     if (!$postname) $stop[] = _CERROR3;
     if (!$domain) $stop[] = _CERROR4;
-
-    if (!$stop && $posttype == 'save') {
+    if ($warn) {
+        setRedirect($afile.'.php?name=whois', false, 302, _TOKENMISS, true);
+    } elseif (!$stop && $posttype == 'save') {
         $postid = is_user_id($postname);
         $uid = $postid ? $postid : '';
         $name = $postid ? '' : filterText(substr($postname, 0, 25));
@@ -144,7 +172,7 @@ function save(): void {
             $ip = getIp();
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status) VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :body, '0', '0', '0', '1')", ['uid' => $uid, 'name' => $name, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]);
         }
-        setRedirect($afile.'.php?name=whois');
+        setRedirect($afile.'.php?name=whois', false, 302, _SUCCSAVE, false);
     } elseif ($posttype == 'delete') {
         delete($wid);
     } else {
@@ -154,54 +182,63 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num');
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=whois', true);
+    if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=whois', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tab' => 3,
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'whois',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_c34' => _C_34,
-        'anum' => $conf['whois']['anum'] ?? 10,
-        '_c36' => _C_36,
-        'anump' => $conf['whois']['anump'] ?? 10,
-        '_addamail' => _ADDAMAIL,
-        'r_addmail' => radio_form($conf['whois']['addmail'] ?? 0, 'addmail'),
-        '_whoisadd' => _WHOISADD,
-        'r_add' => radio_form($conf['whois']['add'] ?? 0, 'add'),
-        '_whoisaddg' => _WHOISADDG,
-        'r_addquest' => radio_form($conf['whois']['addquest'] ?? 0, 'addquest'),
-        'whois' => true,
-    ]));
+    $rows = [
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true])],
+        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => $conf['whois']['addmail'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _WHOISADD, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => $conf['whois']['add'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _WHOISADDG, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => $conf['whois']['addquest'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'whois'],
+            ['nameattr' => 'op', 'valueattr' => 'configsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function configsave(): void {
     global $afile;
-    $cont = [
-        'anum' => getVar('post', 'anum', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'addmail' => getVar('post', 'addmail', 'num', 0),
-        'add' => getVar('post', 'add', 'num', 0),
-        'addquest' => getVar('post', 'addquest', 'num', 0),
-    ];
-    setConfigFile('whois.php', $cont);
-    setRedirect($afile.'.php?name=whois&op=config');
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [
+            'anum' => getVar('post', 'anum', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'addmail' => getVar('post', 'addmail', 'num', 0),
+            'add' => getVar('post', 'add', 'num', 0),
+            'addquest' => getVar('post', 'addquest', 'num', 0),
+        ];
+        setConfigFile('whois.php', $cont);
+    }
+    setRedirect($afile.'.php?name=whois&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

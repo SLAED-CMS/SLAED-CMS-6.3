@@ -6,53 +6,131 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file access');
 
+function getVotingCommentSelect(int $selected): string {
+    global $tpl;
+    $opts = '';
+    foreach ([_DEACTIVATE, _APOSTMOD, _APOSTNOMOD] as $idx => $label) {
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$idx,
+            'label_text' => $label,
+            'is_selected' => $selected === $idx,
+        ]);
+    }
+    return $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'acomm',
+        'options_html' => $opts,
+    ]);
+}
+
+function getVotingModuleSelect(string $modul = ''): string {
+    global $tpl;
+    $opts = $tpl->getHtmlFrag('new/select-option', [
+        'value_attr' => '',
+        'label_text' => _NO,
+        'is_selected' => $modul === '',
+    ]);
+    foreach (['news', 'shop'] as $val) {
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $val,
+            'label_text' => getModuleName($val),
+            'is_selected' => $modul === $val,
+        ]);
+    }
+    return $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'modul',
+        'options_html' => $opts,
+    ]);
+}
+
+function getVotingStatusSelect(int|string $status): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'status',
+        'options_html' =>
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _VCLOSED, 'is_selected' => (string)$status === '1'])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _VDEACT, 'is_selected' => (string)$status === '0']),
+    ]);
+}
+
+function getVotingTypeSelect(int|string $typ): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'typ',
+        'options_html' =>
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _VOPEN, 'is_selected' => (string)$typ === '1'])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _VCLOSE, 'is_selected' => (string)$typ === '0']),
+    ]);
+}
+
+function getVotingBlockSelect(string $bval): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('new/select', [
+        'name_attr' => 'block',
+        'is_config' => true,
+        'options_html' =>
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _VLASTACT, 'is_selected' => $bval === '0'])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _VLASTCLO, 'is_selected' => $bval === '1'])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _VRANACT, 'is_selected' => $bval === '2'])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _VRANCLO, 'is_selected' => $bval === '3']),
+    ]);
+}
+
 function voting(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+    ]);
     $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num - 1) * $conf['voting']['anum'];
-    $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
+    $anum = (int)$conf['voting']['anum'];
+    $anump = (int)$conf['voting']['anump'];
+    $offset = (int)(($num - 1) * $anum);
+    $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $cols = [_ID, _TITLE];
-        if ($conf['multilingual'] == 1) $cols[] = _LANGUAGE;
-        $cols[] = _MODUL;
-        $cols[] = [_STATUS, 'nosort'];
-        $cols[] = [_FUNCTIONS, 'nosort'];
-        $head = getTplAdminTableHead($cols);
+        $head = [
+            ['content' => _ID],
+            ['content' => _TITLE],
+        ];
+        if ($conf['multilingual'] == 1) $head[] = ['content' => _LANGUAGE];
+        $head[] = ['content' => _MODUL];
+        $head[] = ['content' => _STATUS, 'nosort' => true];
+        $head[] = ['content' => _FUNCTIONS, 'nosort' => true];
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $view = (!$modul) ? getTplLinkAction('index.php?name=voting&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW) : '';
+                $view = (!$modul) ? [['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW]] : [];
                 $active = '1';
             } else {
-                $view = '';
+                $view = [];
                 $active = '0';
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
-            $acts = getTplAdminActionMenu([
-                $view,
-                getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            $items = array_merge($view, [
+                ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ]);
-            $langtext = '';
-            if ($conf['multilingual'] == 1) $langtext = getLangName((!$lang) ? _ALL : $lang);
-            $mod = ($modul) ? getModuleName($modul) : _NONE;
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-voting-list-row', [
-                'actions_html' => $acts,
-                'id_text' => (string)$id,
-                'lang_text' => $langtext,
-                'modul_text' => $mod,
-                'show_lang' => $conf['multilingual'] == 1,
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTipLabel(_CHNGSTORY.': '.format_time($date, _TIMESTRING).getTplAdminTipLine(_ENDDATE, format_time($enddate, _TIMESTRING)).getTplAdminTipLine(_TYPE, $type), $title, cutstr($title, 60)),
-            ]));
+            $cells = [
+                ['content_html' => (string)$id],
+                ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => [
+                    ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
+                    ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
+                    ['label' => _TYPE, 'value' => $type, 'is_last' => true],
+                ]]).htmlspecialchars(cutstr((string)$title, 60), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ];
+            if ($conf['multilingual'] == 1) {
+                $cells[] = ['content_html' => getLangName((!$lang) ? _ALL : $lang)];
+            }
+            $cells[] = ['content_html' => $modul ? getModuleName($modul) : _NONE];
+            $cells[] = ['content_html' => ad_status('', $active)];
+            $cells[] = ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => $cells])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
+        $body = $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=voting&amp;', 'table' => '_voting', 'field' => 'id']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -81,73 +159,60 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 0);
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    if ($id) $cont .= $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($id, 'voting')]);
-    $hide = getTplHiddenInput('name', 'voting');
-    $mname = ['news', 'shop'];
-    $content = getTplOption('', _NO);
-    foreach ($mname as $val) {
-        if ($val != '') {
-            $content .= getTplOption($val, getModuleName($val), $modul == $val);
-        }
-    }
-    $quest = '';
-    $i = 0;
-    while ($i < $conf['voting']['answ']) {
-        $a = $i + 1;
-        $question = $body[$i] ?? '';
-        $ansval = $answer[$i] ?? '';
-        $quest .= $tpl->getHtmlFrag('admin-voting-answer-row', [
-            'add_label' => _ADD,
-            'answer_value' => filterText($ansval),
-            'block_id' => 'vot'.$i,
-            'hidden' => $i != 0 && $question == '',
-            'index_text' => (string)$a,
-            'next_id' => 'vot'.$a,
-            'poll_each_label' => _POLLEACH.' - '.$a.':',
-            'question_placeholder' => _POLLEACH.' - '.$a,
-            'question_value' => filterText($question),
-            'votes_label' => _VOTES.':',
-        ]);
-        $i++;
-    }
-    $stat = getTplSelect('status',
-        getTplOption('1', _VCLOSED, $status == '1') .
-        getTplOption('0', _VDEACT, $status == '0'));
-    $type = getTplSelect('typ',
-        getTplOption('1', _VOPEN, $typ == '1') .
-        getTplOption('0', _VCLOSE, $typ == '0'));
-    $rows = $tpl->getHtmlFrag('admin-voting-add-rows', [
-        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
-        'acomm_label' => _COMMENTS.':',
-        'answers_html' => $quest,
-        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
-        'date_label' => _CHNGSTORY.':',
-        'enddate_html' => datetime(1, 'enddate', $enddate, 16, 'sl_form'),
-        'enddate_label' => _ENDDATE.':',
-        'lang_html' => $conf['multilingual'] == 1 ? getTplSelect('lang', language($lang), 'sl_form') : '',
-        'lang_label' => _LANGUAGE.':',
-        'modul_html' => getTplSelect('modul', $content, 'sl_form'),
-        'modul_label' => _MODUL.':',
-        'multi_html' => radio_form($multi, 'multi'),
-        'multi_label' => _MULTI,
-        'save_html' => ad_save('id', $id, 'save', 1),
-        'show_lang' => $conf['multilingual'] == 1,
-        'status_html' => $stat,
-        'status_label' => _AFTEREXPIRATION.':',
-        'title_label' => _TITLE.' / '._POLLTITLE.':',
-        'title_value' => $title,
-        'type_html' => $type,
-        'type_label' => _TYPE.':',
+    $cont = getTplAdminTabs([
+        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tab' => 1,
     ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stop]);
+    if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting')]);
+    $rows = [
+        ['label_html' => _TITLE.' / '._POLLTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
+        ['label_html' => _MODUL.':', 'field_html' => getVotingModuleSelect($modul)],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl_form')],
+        ['label_html' => _ENDDATE.':', 'field_html' => datetime(1, 'enddate', $enddate, 16, 'sl_form')],
+    ];
+    if ($conf['multilingual'] == 1) {
+        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($lang)])];
+    }
+    $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => getVotingCommentSelect((int)$acomm)];
+    $rows[] = ['label_html' => _MULTI, 'field_html' => getTplRadioGroup(['name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _TYPE.':', 'field_html' => getVotingTypeSelect($typ)];
+    $rows[] = ['label_html' => _AFTEREXPIRATION.':', 'field_html' => getVotingStatusSelect($status)];
+    $answ = '';
+    for ($i = 0; $i < $conf['voting']['answ']; $i++) {
+        $a = $i + 1;
+        $qval = filterText((string)($body[$i] ?? ''));
+        $aval = filterText((string)($answer[$i] ?? '0'));
+        $answ .= '<div style="display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;margin-bottom:8px">'
+            .$tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
+            .$tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES])
+            .'</div>';
+    }
+    $rows[] = ['label_html' => _ADD.':', 'field_html' => $answ, 'is_full' => true];
+    $actions = $tpl->getHtmlFrag('new/button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
+    if ($id) {
+        $actions .= $tpl->getHtmlFrag('new/button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'voting'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'id', 'valueattr' => (string)$id],
+            ['nameattr' => 'posttype', 'valueattr' => 'save'],
+        ],
+        'rows' => $rows,
+        'actions_html' => $actions,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
     global $db, $afile, $stop;
+    $warn = !checkSiteToken();
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
     $title = getVar('post', 'title', 'text', '');
@@ -156,7 +221,7 @@ function save(): void {
     $quest = [];
     $answ = [];
     for ($q = 0; $q < count($body); $q++) {
-        if ($body[$q] != '') {
+        if (($body[$q] ?? '') != '') {
             $quest[] = $body[$q];
             $answ[] = (is_numeric($answer[$q] ?? '')) ? (string)$answer[$q] : '0';
         }
@@ -173,14 +238,16 @@ function save(): void {
     $stop = [];
     if (!$title) $stop[] = _CERROR;
     $posttype = getVar('post', 'posttype', 'var', '');
-    if (!$stop && $posttype == 'save') {
+    if ($warn) {
+        setRedirect($afile.'.php?name=voting', false, 302, _TOKENMISS, true);
+    } elseif (!$stop && $posttype == 'save') {
         if ($id) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, body = :quest, answer = :answ, time = :time, enddate = :enddate, multi = :multi, lang = :lang, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
         } else {
             $ip = getIp();
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, body, answer, time, enddate, multi, lang, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :lang, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
         }
-        setRedirect($afile.'.php?name=voting');
+        setRedirect($afile.'.php?name=voting', false, 302, _SUCCSAVE, false);
     } elseif ($posttype == 'delete') {
         delete($id);
     } else {
@@ -190,70 +257,71 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num', 0);
-    if ($id) {
+    if (!$warn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'voting\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
     }
-    setRedirect($afile.'.php?name=voting', true);
+    setRedirect($afile.'.php?name=voting', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tab' => 2,
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
-    $block_sel = getTplSelect('block',
-        getTplOption('0', _VLASTACT, $bval === '0') .
-        getTplOption('1', _VLASTCLO, $bval === '1') .
-        getTplOption('2', _VRANACT, $bval === '2') .
-        getTplOption('3', _VRANCLO, $bval === '3'),
-        'sl_conf');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'voting',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_voting_time' => _VOTING_TIME,
-        'time' => intval($conf['voting']['voting_t'] / 86400),
-        '_c33' => _C_33,
-        'num' => $conf['voting']['num'],
-        '_c34' => _C_34,
-        'anum' => $conf['voting']['anum'],
-        '_c35' => _C_35,
-        'nump' => $conf['voting']['nump'],
-        '_c36' => _C_36,
-        'anump' => $conf['voting']['anump'],
-        '_vansw' => _VANSW,
-        'answ' => $conf['voting']['answ'],
-        '_vblock' => _VBLOCK,
-        's_block' => $block_sel,
-        'voting' => true,
-    ]));
+    $rows = [
+        ['label_html' => _VOTING_TIME, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true])],
+        ['label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
+        ['label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'voting'],
+            ['nameattr' => 'op', 'valueattr' => 'configsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function configsave(): void {
     global $afile;
-    $cont = [
-        'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
-        'num' => getVar('post', 'num', 'num', 10),
-        'anum' => getVar('post', 'anum', 'num', 10),
-        'nump' => getVar('post', 'nump', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'answ' => getVar('post', 'answ', 'num', 10),
-        'block' => getVar('post', 'block', 'num', 0),
-    ];
-    setConfigFile('voting.php', $cont);
-    setRedirect($afile.'.php?name=voting&op=config');
+    $warn = !checkSiteToken();
+    if (!$warn) {
+        $cont = [
+            'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
+            'num' => getVar('post', 'num', 'num', 10),
+            'anum' => getVar('post', 'anum', 'num', 10),
+            'nump' => getVar('post', 'nump', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'answ' => getVar('post', 'answ', 'num', 10),
+            'block' => getVar('post', 'block', 'num', 0),
+        ];
+        setConfigFile('voting.php', $cont);
+    }
+    setRedirect($afile.'.php?name=voting&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

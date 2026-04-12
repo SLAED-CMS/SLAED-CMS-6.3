@@ -8,62 +8,85 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('pages')) die('Illegal file access
 
 function pages(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
+    setHead();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['pages']['anum'] ?? 25;
     $anump = $conf['pages']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
+    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
     if (getVar('get', 'status', 'num', 0) == 1) {
         $status = '0';
         $field = 'name=pages&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=pages&amp;';
         $refer = '';
-        $cont = getTplAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
     }
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $ctitle = ($cid) ? $ctitle : _NO;
-            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
+            $ctitle = $cid ? $ctitle : _NO;
+            $ip = $ip ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
+            $items = [];
             if ($status && time() >= strtotime($time)) {
-                $view = getTplLinkAction('index.php?name=pages&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
+                $items[] = ['href' => 'index.php?name=pages&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
-                $view = '';
                 $active = '0';
             }
-            $acts = getTplAdminActionMenu([
-                $view,
-                getTplLinkAction($afile.'.php?name=pages&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
-                'actions_html' => $acts,
-                'checkbox_html' => '',
-                'id_text' => (string)$id,
-                'post_html' => $post,
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
-            ]));
+            $items[] = ['href' => $afile.'.php?name=pages&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = [
+                'href' => $afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'label' => _ONDELETE,
+                'title' => _ONDELETE,
+                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+            ];
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => [
+                            ['label' => _CATEGORY, 'value' => $ctitle],
+                            ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
+                            ['label' => _IP, 'value' => $ip, 'is_last' => true],
+                        ],
+                        'label_text' => cutstr($title, 60),
+                        'title_text' => $title,
+                    ])],
+                    ['content_html' => $post],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_pages', '', 'status = \''.$status.'\'', $anump);
+        $body = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _ID],
+                ['content' => _TITLE],
+                ['content' => _POSTEDBY],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_pages', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop, $tpl;
+    global $db, $afile, $conf, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     $pid = $id;
     if ($pid) {
@@ -82,31 +105,65 @@ function add(): void {
         $ihome = getVar('post', 'ihome', 'num', 0);
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-    if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $hide = getTplHiddenInput('name', 'pages');
-    $rows = $tpl->getHtmlFrag('admin-pages-add-rows', [
-        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
-        'acomm_label' => _COMMENTS.':',
-        'body_html' => textarea('2', 'bodytext', $bodytext, 'pages', '15', _ENDTEXT, '0'),
-        'body_label' => _ENDTEXT.':',
-        'cat_html' => getcat('pages', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
-        'cat_label' => _CATEGORY.':',
-        'hometext_html' => textarea('1', 'hometext', $hometext, 'pages', '5', _TEXT, '1'),
-        'hometext_label' => _TEXT.':',
-        'ihome_html' => radio_form($ihome, 'ihome'),
-        'ihome_label' => _PUBHOME,
-        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
-        'postname_label' => _POSTEDBY.':',
-        'save_html' => ad_save('pid', $pid, 'save'),
-        'subject_label' => _TITLE.':',
-        'subject_value' => $subject,
-        'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
-        'time_label' => _CHNGSTORY.':',
-    ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'textb' => $bodytext, 'mod' => 'pages']);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _PAGENOTE]);
+    $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
+    $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'pages\' ORDER BY ordern ASC');
+    while ([$cid, $ctitle] = $db->getSqlRow($catres)) {
+        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$cid,
+            'label_text' => $ctitle,
+            'is_selected' => (int)$cid === (int)$cat,
+        ]);
+    }
+    $commopts =
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
+    $rows = [
+        [
+            'label_html' => _POSTEDBY.':',
+            'field_html' => getTplUserSearchInput([
+                'input_id' => 'postname',
+                'list_id' => 'postname_list',
+                'maxlength' => 25,
+                'minlength' => (int)$conf['search']['slet'],
+                'name' => 'postname',
+                'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+                'value' => $postname,
+            ]),
+        ],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'pages', 5, _TEXT, '1'), 'is_full' => true],
+        ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'pages', 15, _ENDTEXT, '0'), 'is_full' => true],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=pages&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'pid', 'valueattr' => (string)$pid],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'actions' => [
+            'hasname' => (bool)$pid,
+            'nameattr' => 'pid',
+            'opattr' => 'save',
+            'options' => array_merge(
+                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
+                $pid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
+            ),
+            'submit_label' => _OK,
+            'valueattr' => $pid,
+        ],
+        'rows' => $rows,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -122,128 +179,128 @@ function save(): void {
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $time = getVar('req', 'time', 'time');
-    $stop = [];
-    if (!$subject) $stop[] = _CERROR;
-    if (!$hometext) $stop[] = _CERROR1;
-    if (!$postname) $stop[] = _CERROR3;
     $posttype = getVar('post', 'posttype', 'text', '');
-    if (!$stop && $posttype === 'save') {
-        $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
-        if ($pid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
-        } else {
-            $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, intro, body, comments, counter, ihome, acomm, score, ratings, ip, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+    $iswarn = !checkSiteToken();
+    $stop = [];
+    if (!$iswarn) {
+        if (!$subject) $stop[] = _CERROR;
+        if (!$hometext) $stop[] = _CERROR1;
+        if (!$postname) $stop[] = _CERROR3;
+        if (!$stop && $posttype === 'save') {
+            $postid = is_user_id($postname) ?: 0;
+            $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
+            if ($pid) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
+            } else {
+                $ip = getip();
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, intro, body, comments, counter, ihome, acomm, score, ratings, ip, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            }
         }
-        setRedirect($afile.'.php?name=pages');
-    } elseif ($posttype === 'delete') {
-        delete($pid);
-    } else {
-        add();
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    if ($posttype === 'preview') {
+        add();
+        return;
+    }
+    if ($posttype === 'delete') {
+        delete($pid);
+        return;
+    }
+    setRedirect($afile.'.php?name=pages', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function delete(int $did = 0): void {
     global $db, $afile;
-    $id = $did ? $did : getVar('req', 'id', 'num', 0);
-    if ($id) {
+    $id = $did ?: getVar('req', 'id', 'num', 0);
+    $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
+    $iswarn = !$did && !checkSiteToken();
+    if (!$iswarn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'pages\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'pages\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_pages WHERE id = :id', ['id' => $id]);
     }
-    $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
-    setRedirect($afile.'.php?name=pages'.$refer);
+    setRedirect($afile.'.php?name=pages'.$refer, false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'pages',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_cdefis' => _CDEFIS,
-        'defis' => urldecode($conf['pages']['defis'] ?? ''),
-        '_pagelinknum' => _PAGELINKNUM,
-        'linknum' => $conf['pages']['linknum'] ?? 10,
-        '_c13' => _C_13,
-        'listnum' => $conf['pages']['listnum'] ?? 10,
-        '_c33' => _C_33,
-        'num' => $conf['pages']['num'] ?? 25,
-        '_c34' => _C_34,
-        'anum' => $conf['pages']['anum'] ?? 25,
-        '_c35' => _C_35,
-        'nump' => $conf['pages']['nump'] ?? 10,
-        '_c36' => _C_36,
-        'anump' => $conf['pages']['anump'] ?? 10,
-        '_homcat' => _HOMCAT,
-        'r_homcat' => radio_form($conf['pages']['homcat'] ?? 0, 'homcat'),
-        '_viewcat' => _VIEWCAT,
-        'r_viewcat' => radio_form($conf['pages']['viewcat'] ?? 0, 'viewcat'),
-        '_c32' => _C_32,
-        'r_catdesc' => radio_form($conf['pages']['catdesc'] ?? 0, 'catdesc'),
-        '_c15' => _C_15,
-        'r_subcat' => radio_form($conf['pages']['subcat'] ?? 0, 'subcat'),
-        '_addamail' => _ADDAMAIL,
-        'r_addmail' => radio_form($conf['pages']['addmail'] ?? 0, 'addmail'),
-        '_c39' => _C_39,
-        'r_add' => radio_form($conf['pages']['add'] ?? 0, 'add'),
-        '_c40' => _C_40,
-        'r_addquest' => radio_form($conf['pages']['addquest'] ?? 0, 'addquest'),
-        '_c37' => _C_37,
-        'r_autor' => radio_form($conf['pages']['autor'] ?? 0, 'autor'),
-        '_c17' => _C_17,
-        'r_date' => radio_form($conf['pages']['date'] ?? 0, 'date'),
-        '_c18' => _C_18,
-        'r_read' => radio_form($conf['pages']['read'] ?? 0, 'read'),
-        '_c19' => _C_19,
-        'r_rate' => radio_form($conf['pages']['rate'] ?? 0, 'rate'),
-        '_c20' => _C_20,
-        'r_letter' => radio_form($conf['pages']['letter'] ?? 0, 'letter'),
-        '_pagelink' => _PAGELINK,
-        'r_link' => radio_form($conf['pages']['link'] ?? 0, 'link'),
-        'pages' => true,
-    ]));
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $rows = [
+        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['pages']['defis'] ?? '')])],
+        ['label_html' => _PAGELINKNUM.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => $conf['pages']['linknum'] ?? 10])],
+        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['pages']['listnum'] ?? 10])],
+        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['pages']['num'] ?? 25])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['pages']['anum'] ?? 25])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['pages']['nump'] ?? 10])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['pages']['anump'] ?? 10])],
+        ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['pages']['homcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['pages']['viewcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['pages']['catdesc'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_15, 'field_html' => getTplRadioGroup(['name' => 'subcat', 'value' => (string)($conf['pages']['subcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)($conf['pages']['addmail'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_39, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => (string)($conf['pages']['add'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_40, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => (string)($conf['pages']['addquest'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_37, 'field_html' => getTplRadioGroup(['name' => 'autor', 'value' => (string)($conf['pages']['autor'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_17, 'field_html' => getTplRadioGroup(['name' => 'date', 'value' => (string)($conf['pages']['date'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['pages']['read'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['pages']['rate'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['pages']['letter'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['pages']['link'] ?? 0), 'options' => $yesno])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=pages&amp;op=configsave',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function configsave(): void {
     global $afile;
-    $cont = [
-        'defis' => getVar('post', 'defis', 'defis', '%3E'),
-        'linknum' => getVar('post', 'linknum', 'num', 10),
-        'listnum' => getVar('post', 'listnum', 'num', 10),
-        'num' => getVar('post', 'num', 'num', 25),
-        'anum' => getVar('post', 'anum', 'num', 25),
-        'nump' => getVar('post', 'nump', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'homcat' => getVar('post', 'homcat', 'num', 0),
-        'viewcat' => getVar('post', 'viewcat', 'num', 0),
-        'catdesc' => getVar('post', 'catdesc', 'num', 0),
-        'subcat' => getVar('post', 'subcat', 'num', 0),
-        'addmail' => getVar('post', 'addmail', 'num', 0),
-        'add' => getVar('post', 'add', 'num', 0),
-        'addquest' => getVar('post', 'addquest', 'num', 0),
-        'autor' => getVar('post', 'autor', 'num', 0),
-        'date' => getVar('post', 'date', 'num', 0),
-        'read' => getVar('post', 'read', 'num', 0),
-        'rate' => getVar('post', 'rate', 'num', 0),
-        'letter' => getVar('post', 'letter', 'num', 0),
-        'link' => getVar('post', 'link', 'num', 0),
-    ];
-    setConfigFile('pages.php', $cont);
-    setRedirect($afile.'.php?name=pages&op=config');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'defis' => getVar('post', 'defis', 'defis', '%3E'),
+            'linknum' => getVar('post', 'linknum', 'num', 10),
+            'listnum' => getVar('post', 'listnum', 'num', 10),
+            'num' => getVar('post', 'num', 'num', 25),
+            'anum' => getVar('post', 'anum', 'num', 25),
+            'nump' => getVar('post', 'nump', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'homcat' => getVar('post', 'homcat', 'num', 0),
+            'viewcat' => getVar('post', 'viewcat', 'num', 0),
+            'catdesc' => getVar('post', 'catdesc', 'num', 0),
+            'subcat' => getVar('post', 'subcat', 'num', 0),
+            'addmail' => getVar('post', 'addmail', 'num', 0),
+            'add' => getVar('post', 'add', 'num', 0),
+            'addquest' => getVar('post', 'addquest', 'num', 0),
+            'autor' => getVar('post', 'autor', 'num', 0),
+            'date' => getVar('post', 'date', 'num', 0),
+            'read' => getVar('post', 'read', 'num', 0),
+            'rate' => getVar('post', 'rate', 'num', 0),
+            'letter' => getVar('post', 'letter', 'num', 0),
+            'link' => getVar('post', 'link', 'num', 0),
+        ];
+        setConfigFile('pages.php', $cont);
+    }
+    setRedirect($afile.'.php?name=pages&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

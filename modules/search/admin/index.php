@@ -6,14 +6,18 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file access');
 
-function getSearchmods(string $cmod = ''): string {
-    global $conf;
-    $mods = explode(',', $conf['search']['mods']);
-    $opts = getTplOption('', _ALL);
+function getSearchmodsOpts(string $cmod = ''): string {
+    global $conf, $tpl;
+    $mods = explode(',', (string)$conf['search']['mods']);
+    $opts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']);
     foreach ($mods as $mod) {
         $mod = trim($mod);
         if ($mod === '') continue;
-        $opts .= getTplOption($mod, getModuleName($mod), $cmod === $mod);
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $mod,
+            'label_text' => getModuleName($mod),
+            'is_selected' => $cmod === $mod,
+        ]);
     }
     return $opts;
 }
@@ -134,41 +138,45 @@ function getSearchinvalid(array $list): array {
     return array_values(array_filter($list, fn(array $row) => (int)$row['enabled'] === 0 && $row['type'] === _SEARCHINVALID));
 }
 
+function getSearchsection(string $title, string $html): string {
+    return '<h2>'.$title.'</h2>'.$html;
+}
+
 function getSearchauditTable(array $list, string $view = 'enabled'): string {
     global $tpl;
-    if (!$list) return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    $head = $tpl->getHtmlFrag('admin-search-audit-head', [
-        'add_label' => _ADD,
-        'is_ready' => $view === 'ready',
-        'modul_label' => _MODUL,
-        'reason_label' => _SEARCHREASON,
-        'searchedit_label' => _SEARCHEDIT,
-        'searchfields_label' => _SEARCHFIELDS,
-        'searchtype_label' => _SEARCHTYPE,
-        'table_label' => _TABLE,
-    ]);
+    if (!$list) return $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+    $head = [
+        ['content' => _MODUL],
+        ['content' => 'ID'],
+        ['content' => _SEARCHTYPE],
+        ['content' => _TABLE],
+        ['content' => _SEARCHFIELDS],
+        ['content' => _SEARCHEDIT],
+        ['content' => _SEARCHREASON],
+    ];
+    if ($view === 'ready') $head[] = ['content' => _ADD, 'nosort' => true];
     $rows = '';
     foreach ($list as $row) {
-        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-audit-row', [
-            'edit_text' => $row['edit'] ?: _NO,
-            'fields_text' => $row['fields'] ?: _NO,
-            'is_ready' => $view === 'ready',
-            'mod_text' => $row['mod'],
-            'mod_value' => $row['mod'],
-            'name_text' => $row['name'],
-            'reason_text' => $row['reason'] ?: _NO,
-            'table_text' => $row['table'],
-            'type_text' => $row['type'],
-        ]));
+        $cells = [
+            ['content_html' => htmlspecialchars((string)$row['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['content_html' => htmlspecialchars((string)$row['mod'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['content_html' => htmlspecialchars((string)$row['type'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['content_html' => htmlspecialchars((string)$row['table'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['content_html' => htmlspecialchars((string)($row['fields'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['content_html' => htmlspecialchars((string)($row['edit'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['content_html' => htmlspecialchars((string)($row['reason'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        ];
+        if ($view === 'ready') $cells[] = ['content_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
+        $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => $cells])]);
     }
-    return getTplAdminTable($head, $rows);
+    return $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
 }
 
 function getSearchwhere(): array {
     global $conf;
     $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
-    $mods = array_map('trim', explode(',', $conf['search']['mods']));
+    $mods = array_map('trim', explode(',', (string)$conf['search']['mods']));
     if ($fmod !== '' && !in_array($fmod, $mods, true)) $fmod = '';
     $cond = [];
     $pars = [];
@@ -197,12 +205,11 @@ function getSearchlink(int $sort = 3, int $order = 2, int $num = 1, string $find
 }
 
 function getSearchnavi(string $sub = '', int $tab = 0): string {
-    return getTplAdminNavi([
+    return getTplAdminTabs([
         'ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'],
         'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO],
-        'sub' => $sub,
         'tab' => $tab,
-        'id' => 'search',
+        'subtitle_html' => $sub,
     ]);
 }
 
@@ -213,25 +220,28 @@ function getSearchbox(string $type = 'search'): string {
     $order = getVar('req', 'order', 'num', 2);
     $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
-    $sortOpts = '';
+    $sortopts = '';
     foreach ([1 => _SWORD, 2 => _MODUL, 3 => _DATE, 4 => _HITS] as $key => $val) {
-        $sortOpts .= getTplOption((string)$key, $val, $sort == $key);
+        $sortopts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $sort == $key]);
     }
-    $orderOpts = getTplOption('1', _ASC, $order == 1).getTplOption('2', _DESC, $order == 2);
-    $ophide = ($type === 'toplist') ? getTplHiddenInput('op', 'toplist') : '';
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-search-box', [
-        'action_url' => $afile.'.php',
-        'find_placeholder' => _SWORD,
-        'find_value' => $find,
-        'hidden_html' => getTplHiddenInput('name', 'search').$ophide,
-        'modul_html' => getTplSelect('fmod', getSearchmods($fmod), '', 'style="width: 140px;"'),
-        'modul_label' => _MODUL,
-        'ok_label' => _OK,
-        'order_html' => getTplSelect('order', $orderOpts, '', 'style="width: 165px;"'),
-        'search_label' => _SEARCH,
-        'sort_html' => getTplSelect('sort', $sortOpts, '', 'style="width: 110px;"'),
-        'sort_label' => _SORTE,
-    ]));
+    $orderopts =
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => $order == 1])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _DESC, 'is_selected' => $order == 2]);
+    $hidden = $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'name', 'valueattr' => 'search']);
+    if ($type === 'toplist') $hidden .= $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'op', 'valueattr' => 'toplist']);
+    $content = '<div class="sl-search-line">'
+        ._SORTE.': '
+        .$tpl->getHtmlFrag('new/select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'select_attr' => ' style="width:110px;"'])
+        .' '
+        .$tpl->getHtmlFrag('new/select', ['name_attr' => 'order', 'options_html' => $orderopts, 'select_attr' => ' style="width:165px;"'])
+        .' '._SEARCH.': '
+        .$tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'input_attr' => ' style="width:140px;"'])
+        .' '._MODUL.': '
+        .$tpl->getHtmlFrag('new/select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_attr' => ' style="width:140px;"'])
+        .$hidden
+        .' <input type="submit" value="'._OK.'" class="sl_but_blue">'
+        .'</div>';
+    return '<form method="get" action="'.$afile.'.php">'.$content.'</form>';
 }
 
 function getSearchsum(string $where, array $pars): string {
@@ -240,30 +250,23 @@ function getSearchsum(string $where, array $pars): string {
     [$uniq] = $db->getSqlRow($db->getSqlQuery('SELECT Count(DISTINCT word) FROM '.PREFIX_DB.'_search'.$where, $pars));
     [$last] = $db->getSqlRow($db->getSqlQuery('SELECT Max(time) FROM '.PREFIX_DB.'_search'.$where, $pars));
     [$word, $best] = $db->getSqlRow($db->getSqlQuery(
-        'SELECT word, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where
-        .' GROUP BY word ORDER BY hits DESC, word ASC LIMIT 1',
+        'SELECT word, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where.' GROUP BY word ORDER BY hits DESC, word ASC LIMIT 1',
         $pars
     )) ?? ['', 0];
     [$mod, $mhit] = $db->getSqlRow($db->getSqlQuery(
-        'SELECT modul, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where
-        .' GROUP BY modul ORDER BY hits DESC, modul ASC LIMIT 1',
+        'SELECT modul, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where.' GROUP BY modul ORDER BY hits DESC, modul ASC LIMIT 1',
         $pars
     )) ?? ['', 0];
     $mlab = $mod ? getModuleName($mod) : _ALL;
-    return $tpl->getHtmlFrag('admin-search-summary', [
-        'last_label' => _SEARCHLAST,
-        'last_text' => $last ? format_time((string)$last, _TIMESTRING) : _NO_INFO,
-        'mod_hits' => (string)intval($mhit),
-        'mod_label' => _SEARCHTOPMOD,
-        'mod_text' => $mlab ?: _NO_INFO,
-        'top_hits' => (string)intval($best),
-        'top_label' => _SEARCHTOP,
-        'top_text' => $word ?: _NO_INFO,
-        'total_hits' => (string)intval($hits),
-        'total_label' => _SEARCHTOTAL,
-        'uniq_hits' => (string)intval($uniq),
-        'uniq_label' => _SEARCHUNIQUE,
-    ]);
+    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', [
+        'lines' => [
+            _SEARCHTOTAL.': '.intval($hits),
+            _SEARCHUNIQUE.': '.intval($uniq),
+            _SEARCHLAST.': '.($last ? format_time((string)$last, _TIMESTRING) : _NO_INFO),
+            _SEARCHTOP.': '.($word ?: _NO_INFO).' ('.intval($best).')',
+            _SEARCHTOPMOD.': '.($mlab ?: _NO_INFO).' ('.intval($mhit).')',
+        ],
+    ])]);
 }
 
 function search(): void {
@@ -272,23 +275,18 @@ function search(): void {
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
     [$where, $pars, $clink, $find, $fmod] = getSearchwhere();
-    $anum = intval($conf['search']['anum'] ?? 50);
-    $anum = ($anum > 0) ? $anum : 50;
-    $anump = intval($conf['search']['anump'] ?? 10);
-    $anump = ($anump > 0) ? $anump : 10;
+    $anum = max(intval($conf['search']['anum'] ?? 50), 1);
+    $anump = max(intval($conf['search']['anump'] ?? 10), 1);
     $sets = [1 => 'word', 2 => 'modul', 3 => 'time', 4 => 'hits'];
     $ordby = $sets[$sort] ?? 'time';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $page = ($num - 1) * $anum;
-    $query = 'SELECT id, word, modul, time, IF(score > 0, score, 1) AS hits FROM '.PREFIX_DB.'_search'.$where
-        .' ORDER BY '.$ordby.' '.$ordsc.' LIMIT '.$page.', '.$anum;
+    $query = 'SELECT id, word, modul, time, IF(score > 0, score, 1) AS hits FROM '.PREFIX_DB.'_search'.$where.' ORDER BY '.$ordby.' '.$ordsc.' LIMIT '.$page.', '.$anum;
     $result = $db->getSqlQuery($query, $pars);
-    [$all] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_search'.$where, $pars));
     setHead();
     $cont = getSearchnavi(getSearchbox('search'));
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_SWORD, _MODUL, _HITS, _DATE, [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
             $show = htmlspecialchars((string)$word, ENT_QUOTES, 'UTF-8');
@@ -298,23 +296,44 @@ function search(): void {
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
-            $drop = getTplAdminSearchDrop($id, $afile.'.php?name=search', $sort, $order, $num, $find, $fmod, $show);
-            $edit = getTplLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
-                'actions_html' => getTplAdminActionMenu([$edit, $drop]),
-                'date_text' => format_time((string)$time, _TIMESTRING),
-                'hits_text' => (string)intval($hits),
-                'modul_html' => $hmod,
-                'word_html' => getTplAdminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').getTplAdminTipLine(_DATE, format_time((string)$time, _TIMESTRING))).$hword,
-            ]));
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+                ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    'items' => [
+                        ['label' => _MODUL, 'value' => htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8')],
+                        ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING), 'is_last' => true],
+                    ],
+                    'label_html' => $hword,
+                    'title_text' => (string)$word,
+                ])],
+                ['content_html' => $hmod],
+                ['content_html' => (string)intval($hits)],
+                ['content_html' => format_time((string)$time, _TIMESTRING)],
+                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                    ['href' => $afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                    [
+                        'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
+                        'label' => _ONDELETE,
+                        'title' => _ONDELETE,
+                        'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
+                    ],
+                ]])],
+            ]])]);
         }
-        $html = getTplAdminTable($head, $rows);
-        $pages = ceil($all / $anum);
-        $html .= setPageNumbers('pagenum', '', intval($all), intval($pages), $anum, 'name=search&amp;sort='.$sort
-            .'&amp;order='.$order.$clink.'&amp;', $anump);
-        $cont .= getTplBox($html);
+        $html = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _SWORD],
+                ['content' => _MODUL],
+                ['content' => _HITS],
+                ['content' => _DATE],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&amp;sort='.$sort.'&amp;order='.$order.$clink.'&amp;', 'table' => '_search', 'field' => 'id']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -326,25 +345,18 @@ function toplist(): void {
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
     [$where, $pars, $clink, $find, $fmod] = getSearchwhere();
-    $anum = intval($conf['search']['anum'] ?? 50);
-    $anum = ($anum > 0) ? $anum : 50;
-    $anump = intval($conf['search']['anump'] ?? 10);
-    $anump = ($anump > 0) ? $anump : 10;
+    $anum = max(intval($conf['search']['anum'] ?? 50), 1);
+    $anump = max(intval($conf['search']['anump'] ?? 10), 1);
     $sets = [1 => 'word', 2 => 'modul', 3 => 'time', 4 => 'hits'];
     $ordby = $sets[$sort] ?? 'hits';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $page = ($num - 1) * $anum;
-    $query = 'SELECT SUBSTRING_INDEX(GROUP_CONCAT(id ORDER BY time DESC SEPARATOR \',\'), \',\', 1) AS id, word,'
-        .' SUBSTRING_INDEX(GROUP_CONCAT(modul ORDER BY time DESC SEPARATOR \',\'), \',\', 1) AS modul,'
-        .' MAX(time) AS time, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where
-        .' GROUP BY word ORDER BY '.$ordby.' '.$ordsc.' LIMIT '.$page.', '.$anum;
+    $query = 'SELECT SUBSTRING_INDEX(GROUP_CONCAT(id ORDER BY time DESC SEPARATOR \',\'), \',\', 1) AS id, word, SUBSTRING_INDEX(GROUP_CONCAT(modul ORDER BY time DESC SEPARATOR \',\'), \',\', 1) AS modul, MAX(time) AS time, SUM(IF(score > 0, score, 1)) AS hits FROM '.PREFIX_DB.'_search'.$where.' GROUP BY word ORDER BY '.$ordby.' '.$ordsc.' LIMIT '.$page.', '.$anum;
     $result = $db->getSqlQuery($query, $pars);
-    [$all] = $db->getSqlRow($db->getSqlQuery('SELECT Count(DISTINCT word) FROM '.PREFIX_DB.'_search'.$where, $pars));
     setHead();
     $cont = getSearchnavi(getSearchbox('toplist'), 1);
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = getTplAdminTableHead([_SWORD, _MODUL, _HITS, _DATE, [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
             $show = htmlspecialchars((string)$word, ENT_QUOTES, 'UTF-8');
@@ -353,27 +365,37 @@ function toplist(): void {
             $mlab = $mlab ?: $mod;
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
-            $link = getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist');
-            $drop = getTplAdminSearchDrop($id, $afile.'.php?name=search', $sort, $order, $num, $find ?? '', $fmod ?? '', $show);
-            $edit = getTplLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
-                'actions_html' => getTplAdminActionMenu([$edit, $drop]),
-                'date_text' => format_time((string)$time, _TIMESTRING),
-                'hits_text' => (string)intval($hits),
-                'modul_html' => $hmod,
-                'word_html' => $tpl->getHtmlFrag('admin-search-word-link', [
-                    'href' => 'admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', ''),
-                    'label_html' => $hword,
-                ]),
-            ]));
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+                ['content_html' => '<a href="admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', '').'">'.$hword.'</a>'],
+                ['content_html' => $hmod],
+                ['content_html' => (string)intval($hits)],
+                ['content_html' => format_time((string)$time, _TIMESTRING)],
+                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                    ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                    [
+                        'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
+                        'label' => _ONDELETE,
+                        'title' => _ONDELETE,
+                        'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
+                    ],
+                ]])],
+            ]])]);
         }
-        $html = getTplAdminTable($head, $rows);
-        $pages = ceil($all / $anum);
-        $html .= setPageNumbers('pagenum', '', intval($all), intval($pages), $anum, 'name=search&amp;op=toplist&amp;sort='
-            .$sort.'&amp;order='.$order.$clink.'&amp;', $anump);
-        $cont .= getTplBox($html);
+        $html = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _SWORD],
+                ['content' => _MODUL],
+                ['content' => _HITS],
+                ['content' => _DATE],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&amp;op=toplist&amp;sort='.$sort.'&amp;order='.$order.$clink.'&amp;', 'table' => '_search', 'field' => 'id']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -389,129 +411,137 @@ function config(): void {
     $rlist = getSearchready($audit);
     $ilist = getSearchinvalid($audit);
     setHead();
-    $cont = getSearchnavi(getSearchbox('config'), 2);
-    if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))]);
-    if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]);
+    $cont = getSearchnavi('', 2);
+    if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))])]);
+    if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))])]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
-    $cfgrows = $tpl->getHtmlFrag('admin-search-config-rows', [
-        'anum' => (string)$anum,
-        'anump' => (string)$anump,
-        'asearch_label' => _ASEARCH,
-        'modules_html' => modul('search', 'sl_conf', $conf['search']['mods'], 1, $allow),
-        'modules_label_html' => getTplAdminHintLabel(_SMODULE, _CTRLINFO),
-        'radio_html' => radio_form($conf['search']['asearch'], 'asearch'),
-        'savechanges_label' => _SAVECHANGES,
-        'searchletinfo_label_html' => getTplAdminHintLabel(_SEARCHLETMIN, _SEARCHLETINFO),
-        'searchletmin_label' => _SEARCHLETMIN,
-        'searchlimit_label' => _SEARCHLIMIT,
-        'searchlimitinfo_label_html' => getTplAdminHintLabel(_SEARCHLIMIT, _SEARCHLIMITINFO),
-        'slimit' => (string)$conf['search']['slimit'],
-        'slet' => (string)$conf['search']['slet'],
-        'snum' => (string)$conf['search']['snum'],
-        'snump' => (string)$conf['search']['snump'],
-        'value_anum_label' => _C_34,
-        'value_anump_label' => _C_36,
-        'value_snum_label' => _SEARCHNUM,
-        'value_snump_label' => _C_35,
+    $modshtml = '';
+    $curr = getSearchcurr();
+    foreach (scandir('modules') as $file) {
+        if (str_contains($file, '.')) continue;
+        if ($allow && !in_array($file, $allow, true)) continue;
+        $modshtml .= $tpl->getHtmlFrag('new/label-item', [
+            'item_class' => 'sl-right',
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+                'name_attr' => 'search[]',
+                'value_attr' => $file,
+                'is_checked' => in_array($file, $curr, true),
+            ]),
+            'label_html' => htmlspecialchars(getModuleName($file), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').' <code>'.$file.'</code>',
+        ]);
+    }
+    $cfgrows = [
+        ['label_html' => _ASEARCH, 'field_html' => getTplRadioGroup(['name' => 'asearch', 'value' => (string)$conf['search']['asearch'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SMODULE, 'hint' => _CTRLINFO]), 'field_html' => $modshtml, 'is_full' => true],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SEARCHLETMIN, 'hint' => _SEARCHLETINFO]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'slet', 'value_attr' => (string)$conf['search']['slet']])],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SEARCHLIMIT, 'hint' => _SEARCHLIMITINFO]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'slimit', 'value_attr' => (string)$conf['search']['slimit']])],
+        ['label_html' => _SEARCHNUM.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'snum', 'value_attr' => (string)$conf['search']['snum']])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'snump', 'value_attr' => (string)$conf['search']['snump']])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
+    ];
+    $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=search&amp;op=save',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
+        'rows' => $cfgrows,
+        'submit_label' => _SAVECHANGES,
+    ]))]);
+    $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHENABLED, getSearchauditTable($elist, 'enabled'))]);
+    $readyform = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=search&amp;op=modadd',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
+        'content_html' => getSearchauditTable($rlist, 'ready'),
+        'actions_html' => $tpl->getHtmlFrag('new/label-item', [
+            'item_class' => 'sl-right',
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'all', 'value_attr' => '1']),
+            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SEARCHADDALL, 'hint' => _SEARCHAUTOINFO]),
+        ]),
+        'submit_label' => _SEARCHADDSEL,
     ]);
-    $cfghide = getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken('search'));
-    $html = getTplAdminForm($afile.'.php?name=search', $cfgrows, $cfghide, 'sl_table_conf');
-    $html .= getTplAdminSection(_SEARCHENABLED).getSearchauditTable($elist, 'enabled');
-    $rdyrows = $tpl->getHtmlFrag('admin-search-ready-rows', [
-        'searchaddall_label' => _SEARCHADDALL,
-        'searchaddsel_label' => _SEARCHADDSEL,
-        'searchauto_label_html' => getTplAdminHintLabel(_SEARCHAUTO, _SEARCHAUTOINFO),
+    $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHREADY, $readyform)]);
+    $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHINVALID, getSearchauditTable($ilist, 'invalid'))]);
+    $reform = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=search&amp;op=reindex',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
+        'submit_label' => _SEARCHAUTO,
     ]);
-    $rdyhide = getTplHiddenInput('op', 'modadd').getTplHiddenInput('token', getSiteToken('search'));
-    $html .= getTplAdminSection(_SEARCHREADY).getSearchauditTable($rlist, 'ready').getTplAdminForm($afile.'.php?name=search', $rdyrows, $rdyhide, 'sl_table_conf');
-    $html .= getTplAdminSection(_SEARCHINVALID).getSearchauditTable($ilist, 'invalid');
-    $cont .= getTplBox($html);
+    $html .= $tpl->getHtmlPart('box', ['content_html' => $reform]);
+    $cont .= $html;
     echo $cont;
     setFoot();
 }
 
 function save(): void {
-    global $afile, $tpl;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
-        setHead();
-        $cont = getSearchnavi(getSearchbox('config'), 2);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
-        setFoot();
-        return;
+    global $afile;
+    $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'search');
+    if (!$iswarn) {
+        $mods = getVar('post', 'search[]', 'var', []);
+        setConfigFile('search.php', [
+            'asearch' => getVar('post', 'asearch', 'num'),
+            'mods' => $mods ? implode(',', $mods) : '0',
+            'slet' => getVar('post', 'slet', 'num', 3),
+            'slimit' => getVar('post', 'slimit', 'num', 500),
+            'snum' => getVar('post', 'snum', 'num', 25),
+            'snump' => getVar('post', 'snump', 'num', 5),
+            'anum' => getVar('post', 'anum', 'num', 50),
+            'anump' => getVar('post', 'anump', 'num', 10),
+        ]);
     }
-    $mods = getVar('post', 'search[]', 'var', []);
-    setConfigFile('search.php', [
-        'asearch' => getVar('post', 'asearch', 'num'),
-        'mods' => $mods ? implode(',', $mods) : '0',
-        'slet' => getVar('post', 'slet', 'num', 3),
-        'slimit' => getVar('post', 'slimit', 'num', 500),
-        'snum' => getVar('post', 'snum', 'num', 25),
-        'snump' => getVar('post', 'snump', 'num', 5),
-        'anum' => getVar('post', 'anum', 'num', 50),
-        'anump' => getVar('post', 'anump', 'num', 10),
-    ]);
-    setRedirect($afile.'.php?name=search&op=config');
+    setRedirect($afile.'.php?name=search&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function reindex(): void {
-    global $afile, $conf, $tpl;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
-        setHead();
-        $cont = getSearchnavi(getSearchbox('config'), 2);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
-        setFoot();
-        return;
+    global $afile, $conf;
+    $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'search');
+    $count = 0;
+    if (!$iswarn) {
+        $curr = array_filter(array_map('trim', explode(',', (string)$conf['search']['mods'])));
+        $have = count($curr);
+        $mods = array_values(array_unique(array_merge($curr, getSearchcompat())));
+        sort($mods);
+        setConfigFile('search.php', [
+            'asearch' => $conf['search']['asearch'],
+            'mods' => $mods ? implode(',', $mods) : '0',
+            'slet' => $conf['search']['slet'],
+            'slimit' => $conf['search']['slimit'],
+            'snum' => $conf['search']['snum'],
+            'snump' => $conf['search']['snump'],
+            'anum' => $conf['search']['anum'] ?? 50,
+            'anump' => $conf['search']['anump'] ?? 10,
+        ]);
+        $count = count($mods) - $have;
     }
-    $curr = array_filter(array_map('trim', explode(',', (string)$conf['search']['mods'])));
-    $have = count($curr);
-    $mods = array_values(array_unique(array_merge($curr, getSearchcompat())));
-    sort($mods);
-    setConfigFile('search.php', [
-        'asearch' => $conf['search']['asearch'],
-        'mods' => $mods ? implode(',', $mods) : '0',
-        'slet' => $conf['search']['slet'],
-        'slimit' => $conf['search']['slimit'],
-        'snum' => $conf['search']['snum'],
-        'snump' => $conf['search']['snump'],
-        'anum' => $conf['search']['anum'] ?? 50,
-        'anump' => $conf['search']['anump'] ?? 10,
-    ]);
-    setRedirect($afile.'.php?name=search&op=config&reindex='.(count($mods) - $have));
+    setRedirect($afile.'.php?name=search&op=config'.(!$iswarn ? '&reindex='.$count : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function modadd(): void {
-    global $afile, $conf, $tpl;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
-        setHead();
-        $cont = getSearchnavi(getSearchbox('config'), 2);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
-        setFoot();
-        return;
+    global $afile, $conf;
+    $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'search');
+    $count = 0;
+    if (!$iswarn) {
+        $pick = getVar('post', 'mods', 'raw', []);
+        if (!$pick) $pick = getVar('post', 'mods[]', 'raw', []);
+        if (is_array($pick)) $pick = array_values(array_filter(array_map('filterVar', $pick), 'strlen'));
+        else $pick = ((string)$pick !== '') ? [filterVar((string)$pick)] : [];
+        $all = getVar('post', 'all', 'num', 0);
+        $curr = getSearchcurr();
+        $ready = array_map(fn(array $row) => $row['mod'], getSearchready(getSearchaudit()));
+        $pick = $all ? $ready : array_values(array_intersect($ready, $pick));
+        $mods = array_values(array_unique(array_merge($curr, $pick)));
+        sort($mods);
+        setConfigFile('search.php', [
+            'asearch' => $conf['search']['asearch'],
+            'mods' => $mods ? implode(',', $mods) : '0',
+            'slet' => $conf['search']['slet'],
+            'slimit' => $conf['search']['slimit'],
+            'snum' => $conf['search']['snum'],
+            'snump' => $conf['search']['snump'],
+            'anum' => $conf['search']['anum'] ?? 50,
+            'anump' => $conf['search']['anump'] ?? 10,
+        ]);
+        $count = count($pick);
     }
-    $pick = getVar('post', 'mods', 'raw', []);
-    if (!$pick) $pick = getVar('post', 'mods[]', 'raw', []);
-    if (is_array($pick)) {
-        $pick = array_values(array_filter(array_map('filterVar', $pick), 'strlen'));
-    } else {
-        $pick = ((string)$pick !== '') ? [filterVar((string)$pick)] : [];
-    }
-    $all = getVar('post', 'all', 'num', 0);
-    $curr = getSearchcurr();
-    $ready = array_map(fn(array $row) => $row['mod'], getSearchready(getSearchaudit()));
-    $pick = $all ? $ready : array_values(array_intersect($ready, $pick));
-    $mods = array_values(array_unique(array_merge($curr, $pick)));
-    sort($mods);
-    setConfigFile('search.php', [
-        'asearch' => $conf['search']['asearch'],
-        'mods' => $mods ? implode(',', $mods) : '0',
-        'slet' => $conf['search']['slet'],
-        'slimit' => $conf['search']['slimit'],
-        'snum' => $conf['search']['snum'],
-        'snump' => $conf['search']['snump'],
-        'anum' => $conf['search']['anum'] ?? 50,
-        'anump' => $conf['search']['anump'] ?? 10,
-    ]);
-    setRedirect($afile.'.php?name=search&op=config&pick='.count($pick));
+    setRedirect($afile.'.php?name=search&op=config'.(!$iswarn ? '&pick='.$count : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function edit(): void {
@@ -528,110 +558,34 @@ function edit(): void {
     if ($db->getSqlRowCount($result) > 0) {
         [$word, $mod, $time, $score] = $db->getSqlRow($result);
         $hits = max(intval($score), 1);
-        $rows = $tpl->getHtmlFrag('admin-search-edit-rows', [
-            'date_label' => _DATE.':',
-            'hits_label' => _HITS.':',
-            'hits_placeholder' => _HITS,
-            'hits_value' => (string)$hits,
-            'modul_html' => getTplSelect('modul', getSearchmods((string)$mod), 'sl_form'),
-            'modul_label' => _MODUL.':',
-            'savechanges_label' => _SAVECHANGES,
-            'time_html' => datetime(1, 'time', (string)$time, 16, 'sl_form'),
-            'word_label' => _SWORD.':',
-            'word_placeholder' => _SWORD,
-            'word_value' => (string)$word,
-        ]);
-        $hide = getTplHiddenInput('op', 'editsave').getTplHiddenInput('id', (string)$id).getTplHiddenInput('sort', (string)$sort).getTplHiddenInput('order', (string)$order).getTplHiddenInput('num', (string)$num).getTplHiddenInput('find', $find).getTplHiddenInput('fmod', $fmod).getTplHiddenInput('token', getSiteToken('search'));
-        $cont .= getTplAdminForm($afile.'.php?name=search', $rows, $hide);
+        $rows = [
+            ['label_html' => _SWORD.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD])],
+            ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'modul', 'options_html' => getSearchmodsOpts((string)$mod)])],
+            ['label_html' => _DATE.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => (string)$time, 'with' => true, 'max' => 16])],
+            ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
+        ];
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php?name=search&amp;op=editsave',
+            'hidden' => [
+                ['nameattr' => 'id', 'valueattr' => (string)$id],
+                ['nameattr' => 'sort', 'valueattr' => (string)$sort],
+                ['nameattr' => 'order', 'valueattr' => (string)$order],
+                ['nameattr' => 'num', 'valueattr' => (string)$num],
+                ['nameattr' => 'find', 'valueattr' => $find],
+                ['nameattr' => 'fmod', 'valueattr' => $fmod],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken('search')],
+            ],
+            'rows' => $rows,
+            'submit_label' => _SAVECHANGES,
+        ])]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
 }
 
 function editsave(): void {
-    global $db, $afile, $tpl;
-    $id = getVar('post', 'id', 'num', 0);
-    $sort = getVar('post', 'sort', 'num', 3);
-    $order = getVar('post', 'order', 'num', 2);
-    $num = getVar('post', 'num', 'num', 1);
-    $find = trim(getVar('post', 'find', 'text', ''));
-    $fmod = getVar('post', 'fmod', 'var', '');
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
-        setHead();
-        $cont = getSearchnavi(getSearchbox('search'));
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
-        setFoot();
-        return;
-    }
-    $word = trim(getVar('post', 'word', 'text', ''));
-    $mod = getVar('post', 'modul', 'var', '');
-    $time = getVar('post', 'time', 'time');
-    $hits = getVar('post', 'hits', 'num', 1);
-    $hits = ($hits > 0) ? $hits : 1;
-    if ($word === '') {
-        setHead();
-        $cont = getSearchnavi(getSearchbox('search'));
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SWORD]);
-        setFoot();
-        return;
-    }
-    $db->getSqlQuery(
-        'UPDATE '.PREFIX_DB.'_search SET word = :word, modul = :modul, time = :time, score = :score WHERE id = :id',
-        ['word' => $word, 'modul' => $mod, 'time' => $time, 'score' => $hits, 'id' => $id]
-    );
-    setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod));
-}
-
-function delete(): void {
-    global $afile, $tpl;
-    setHead();
-    $cont = getSearchnavi(getSearchbox('delete'), 3);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]);
-    $modeOpts = getTplOption('all', _SEARCHCLEAR)
-        .getTplOption('mod', _SEARCHBYMOD)
-        .getTplOption('days', _SEARCHBYDAY)
-        .getTplOption('empty', _SEARCHEMPTY);
-    $rows = $tpl->getHtmlFrag('admin-search-delete-rows', [
-        'days_label' => _DAYS.':',
-        'days_placeholder' => _DAYS,
-        'delete_label' => _DELETE,
-        'mode_html' => getTplSelect('mode', $modeOpts, 'sl_form'),
-        'modul_html' => getTplSelect('cmod', getSearchmods(''), 'sl_form'),
-        'modul_label' => _MODUL.':',
-    ]);
-    $hide = getTplHiddenInput('op', 'clear').getTplHiddenInput('token', getSiteToken('search'));
-    $cont .= getTplAdminForm($afile.'.php?name=search', $rows, $hide, 'sl_table_conf');
-    echo $cont;
-    setFoot();
-}
-
-function clear(): void {
-    global $db, $afile, $tpl;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
-        setHead();
-        $cont = getSearchnavi(getSearchbox('delete'), 3);
-        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
-        setFoot();
-        return;
-    }
-    $mode = getVar('post', 'mode', 'var', 'all');
-    $cmod = getVar('post', 'cmod', 'var', '');
-    $days = getVar('post', 'days', 'num', 30);
-    if ($mode === 'mod' && $cmod !== '') {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE modul = :modul', ['modul' => $cmod]);
-    } elseif ($mode === 'days' && $days > 0) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE time < DATE_SUB(NOW(), INTERVAL '.intval($days).' DAY)');
-    } elseif ($mode === 'empty') {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE word = \'\' OR word IS NULL');
-    } else {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id > :id', ['id' => 0]);
-    }
-    setRedirect($afile.'.php?name=search&op=delete');
-}
-
-function drop(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num', 0);
     $sort = getVar('post', 'sort', 'num', 3);
@@ -639,13 +593,83 @@ function drop(): void {
     $num = getVar('post', 'num', 'num', 1);
     $find = trim(getVar('post', 'find', 'text', ''));
     $fmod = getVar('post', 'fmod', 'var', '');
-    if (checkSiteToken(getVar('post', 'token', 'raw', ''), 'search') && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod));
+    $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'search');
+    $word = trim(getVar('post', 'word', 'text', ''));
+    if (!$iswarn && $word !== '') {
+        $mod = getVar('post', 'modul', 'var', '');
+        $time = getVar('post', 'time', 'time');
+        $hits = getVar('post', 'hits', 'num', 1);
+        $hits = ($hits > 0) ? $hits : 1;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_search SET word = :word, modul = :modul, time = :time, score = :score WHERE id = :id', ['word' => $word, 'modul' => $mod, 'time' => $time, 'score' => $hits, 'id' => $id]);
+        setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod), false, 302, _SUCCSAVE, false);
+        return;
+    }
+    $msg = $iswarn ? _TOKENMISS : _SWORD;
+    setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod, 'edit').'&id='.$id, false, 302, $msg, true);
+}
+
+function delete(): void {
+    global $afile, $tpl;
+    setHead();
+    $cont = getSearchnavi('', 3);
+    $modeopts =
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'all', 'label_text' => _SEARCHCLEAR, 'is_selected' => true])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'mod', 'label_text' => _SEARCHBYMOD])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'days', 'label_text' => _SEARCHBYDAY])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'empty', 'label_text' => _SEARCHEMPTY]);
+    $rows = [
+        ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cmod', 'options_html' => getSearchmodsOpts('')])],
+        ['label_html' => _DAYS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => '30', 'placeholder_text' => _DAYS])],
+        ['label_html' => _DELETE.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=search&amp;op=clear',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
+        'rows' => $rows,
+        'submit_label' => _DELETE,
+    ])]);
+    echo $cont;
+    setFoot();
+}
+
+function clear(): void {
+    global $db, $afile;
+    $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'search');
+    if (!$iswarn) {
+        $mode = getVar('post', 'mode', 'var', 'all');
+        $cmod = getVar('post', 'cmod', 'var', '');
+        $days = getVar('post', 'days', 'num', 30);
+        if ($mode === 'mod' && $cmod !== '') {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE modul = :modul', ['modul' => $cmod]);
+        } elseif ($mode === 'days' && $days > 0) {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE time < DATE_SUB(NOW(), INTERVAL '.intval($days).' DAY)');
+        } elseif ($mode === 'empty') {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE word = \'\' OR word IS NULL');
+        } else {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id > :id', ['id' => 0]);
+        }
+    }
+    setRedirect($afile.'.php?name=search&op=delete', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+}
+
+function drop(): void {
+    global $db, $afile;
+    $id = getVar('req', 'id', 'num', 0);
+    $sort = getVar('req', 'sort', 'num', 3);
+    $order = getVar('req', 'order', 'num', 2);
+    $num = getVar('req', 'num', 'num', 1);
+    $find = trim(getVar('req', 'find', 'text', ''));
+    $fmod = getVar('req', 'fmod', 'var', '');
+    $iswarn = !checkSiteToken(getVar('req', 'token', 'raw', ''), 'search');
+    if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod), false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function info(): void {
-    $cont = getSearchnavi('', 4);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'],
+        'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO],
+    ]);
 }
 
 switch ($op) {

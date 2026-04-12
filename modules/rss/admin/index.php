@@ -9,85 +9,101 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('rss')) die('Illegal file access')
 function rss(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['', '', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'id' => 'rss']);
+    $tab = getVar('get', 'tab', 'num', 0);
+    if ($tab < 0 || $tab > 1) $tab = 0;
+    $ops = ['name=rss&amp;tab=0', 'name=rss&amp;tab=1', 'name=rss&amp;op=info'];
+    $tabs = [_RSS, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
-    $content = '';
-    $fieldc = explode('||', $conf['rss']['rss']);
+    $rows = [];
+    $fieldc = explode('||', (string)($conf['rss']['rss'] ?? ''));
     for ($c = 0; $c < 50; $c++) {
-        preg_match('#(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
-        $field = '';
-        for ($i = 0; $i < 2; $i++) {
-            $fieldname = ($i == 0) ? _RSSSITE : _RSSHOME;
-            $field .= getTplOption((string)$i, $fieldname, isset($out[3]) && $out[3] == $i);
-        }
-        $field = getTplSelect('field3[]', $field, 'sl_conf');
-        $b = $c + 1;
-        $out1 = $out[1] ?? '';
-        $out2 = $out[2] ?? '';
-        $content .= $tpl->getHtmlFrag('admin-rss-source-block', [
-            'add_label' => _ADD,
-            'address_label' => _ADDRESS.':',
-            'address_value' => $out2,
-            'block_id' => 'rss'.$c,
-            'hidden' => empty($out1) && $c != 0,
-            'index_text' => (string)$b,
-            'is_first' => $c == 0,
-            'name_label' => _NAME.':',
-            'name_value' => $out1,
-            'next_id' => 'rss'.$b,
-            'rssc_label' => _RSSC.':',
-            'uses_html' => $field,
-            'uses_label' => _USES.':',
-        ]);
+        preg_match('#(.*)\|(.*)\|(.*)#i', $fieldc[$c] ?? '', $out);
+        $name = $out[1] ?? '';
+        $addr = $out[2] ?? '';
+        $uses = (int)($out[3] ?? 0);
+        $indx = $c + 1;
+        $opts =
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
+        $block = $tpl->getHtmlFrag('new/div', ['rows' => [
+            ['label_html' => _NAME.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME, 'is_required' => true])],
+            ['label_html' => _ADDRESS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
+            ['label_html' => _USES.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
+        ]]);
+        $title = '<a OnClick="HideShow(\'rss'.($c + 1).'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._RSSC.' '.$indx.'</a>';
+        $pane = '<div id="rss'.$c.'"'.(($name === '' && $c !== 0) ? ' class="sl_none"' : '').'>'
+            .($c === 0 ? '' : '<hr>')
+            .'<div class="sl-div-grid"><div class="sl-div-item sl-div-item-full"><div class="sl-div-label">'.$title.'</div><div class="sl-div-field">'.$block.'</div></div></div></div>';
+        $rows[] = $pane;
     }
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]);
-    $cont .= $tpl->getHtmlFrag('admin-rss-config-form', [
-        'act_html' => radio_form($conf['rss']['act'], 'act'),
-        'act_label' => _RSSACT.':',
-        'max_label' => _RSSMAX.':',
-        'max_value' => (string)$conf['rss']['max'],
-        'min_label' => _RSSMIN.':',
-        'min_value' => (string)$conf['rss']['min'],
-        'route' => $afile,
-        'rss_sources_html' => $content,
-        'tab_one_id' => getTplAdminTabName('rss', 0),
-        'tab_two_id' => getTplAdminTabName('rss', 1),
-        'save_label' => _SAVECHANGES,
-        'temp_hint' => _RSSTEMPINFO,
-        'temp_label' => _RSSTEMP.':',
-        'temp_placeholder' => _RSSTEMP,
-        'temp_value' => $conf['rss']['temp'],
-        'use_html' => radio_form($conf['rss']['use'], 'use'),
-        'use_label' => _RSSUSE,
+    $sourcehtml = implode('', $rows);
+    $prefs = [
+        ['label_html' => _RSSMIN.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true])],
+        ['label_html' => _RSSMAX.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true])],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _RSSTEMP.':', 'hint' => _RSSTEMPINFO]), 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'temp', 'value_text' => (string)($conf['rss']['temp'] ?? ''), 'rows_num' => 5, 'is_required' => true]), 'is_full' => true],
+        ['label_html' => _RSSACT.':', 'field_html' => getTplRadioGroup(['name' => 'act', 'value' => (string)($conf['rss']['act'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _RSSUSE, 'field_html' => getTplRadioGroup(['name' => 'use', 'value' => (string)($conf['rss']['use'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+    ];
+    $tabshml =
+        $tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _RSS, 'title' => _RSS, 'is_active' => $tab === 0, 'rel' => 'rss-panel-0'])
+        .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _PREFERENCES, 'title' => _PREFERENCES, 'is_active' => $tab === 1, 'rel' => 'rss-panel-1']);
+    $panels =
+        $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'rss-panel-0', 'content_html' => $sourcehtml])
+        .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'rss-panel-1', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $prefs])]);
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=rss&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'tab', 'valueattr' => (string)$tab],
+        ],
+        'content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _RSSDESC])
+            .$tpl->getHtmlFrag('new/tabs', [
+                'id' => 'rss',
+                'is_runtime' => true,
+                'init_attr' => 'data-sl-tabs-index="'.$tab.'"',
+                'tabs_html' => $tabshml,
+                'content_html' => $panels,
+            ]),
+        'submit_label' => _SAVECHANGES,
     ]);
-    echo getTplBox($cont);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $form]);
+    echo $cont;
     setFoot();
 }
 
 function save(): void {
-    global $afile, $conf;
-    $cont = [
-        'min' => getVar('post', 'min', 'num', 10),
-        'max' => getVar('post', 'max', 'num', 100),
-        'temp' => getVar('post', 'temp', '', ''),
-        'act' => getVar('post', 'act', 'bool', 0),
-        'use' => getVar('post', 'use', 'bool', 0),
-    ];
-    $rss = '';
-    $field1 = getVar('post', 'field1', 'raw', []);
-    $field2 = getVar('post', 'field2', 'raw', []);
-    $field3 = getVar('post', 'field3', 'raw', []);
-    for ($i = 0; $i < 50; $i++) {
-        $ident = ($i == 0) ? '' : '||';
-        $rss .= $ident.($field1[$i] ?? '0').'|'.($field2[$i] ?? '0').'|'.intval($field3[$i] ?? 0);
+    global $afile;
+    $tab = getVar('post', 'tab', 'num', 0);
+    if ($tab < 0 || $tab > 1) $tab = 0;
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'min' => getVar('post', 'min', 'num', 10),
+            'max' => getVar('post', 'max', 'num', 100),
+            'temp' => getVar('post', 'temp', 'text', ''),
+            'act' => getVar('post', 'act', 'bool', 0),
+            'use' => getVar('post', 'use', 'bool', 0),
+        ];
+        $rss = '';
+        $field1 = getVar('post', 'field1', 'raw', []);
+        $field2 = getVar('post', 'field2', 'raw', []);
+        $field3 = getVar('post', 'field3', 'raw', []);
+        for ($i = 0; $i < 50; $i++) {
+            $part = $i == 0 ? '' : '||';
+            $rss .= $part.($field1[$i] ?? '0').'|'.($field2[$i] ?? '0').'|'.(int)($field3[$i] ?? 0);
+        }
+        $cont['rss'] = $rss;
+        setConfigFile('rss.php', $cont);
     }
-    $cont['rss'] = $rss;
-    setConfigFile('rss.php', $cont);
-    setRedirect($afile.'.php?name=rss');
+    setRedirect($afile.'.php?name=rss&tab='.$tab, false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
+
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=rss', 'name=rss', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'tab' => 2]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=rss&amp;tab=0', 'name=rss&amp;tab=1', 'name=rss&amp;op=info'],
+        'tabs' => [_RSS, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

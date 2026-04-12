@@ -15,22 +15,41 @@ function buildShopSearchBox(): string {
     $opts = '';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $k => $v) {
         $sort = $k + 1;
-        $opts .= getTplOption((string)$sort, $v, $sel == $sort || (!$sel && $sort == 2));
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$sort,
+            'label_text' => $v,
+            'is_selected' => $sel == $sort || (!$sel && $sort == 2),
+        ]);
     }
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-shop-search-box', [
-        'action_url' => $afile.'.php',
-        'hidden_html' => getTplHiddenInput('name', 'shop').getTplHiddenInput('op', 'clients'),
-        'input_html' => getUserSearch('csearch', $txt, '30'),
-        'ok_label' => _OK,
-        'search_label' => _SEARCH,
-        'select_html' => getTplSelect('search', $opts),
-    ]));
+    return $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=shop&op=clients',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'shop'],
+            ['nameattr' => 'op', 'valueattr' => 'clients'],
+        ],
+        'content_html' =>
+            $tpl->getHtmlFrag('new/input', [
+                'itype' => 'text',
+                'name_attr' => 'csearch',
+                'value_attr' => $txt,
+                'maxlength_num' => 100,
+                'placeholder_text' => _SEARCH,
+                'input_attr' => ' style="margin-right:8px"',
+            ])
+            .$tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'search',
+                'options_html' => $opts,
+                'select_attr' => ' style="margin-right:8px"',
+            ]),
+        'actions_html' => $tpl->getHtmlFrag('new/submit', ['submit_label' => _OK]),
+        'form_attr' => ' style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"',
+    ]);
 }
 
 
 function clients(): void {
     global $db, $afile, $conf, $tpl;
-        $csearch = getVar('post', 'csearch', 'text');
+    $csearch = getVar('post', 'csearch', 'text');
     $search = getVar('post', 'search', 'num');
     setHead();
     $searchCols = [
@@ -52,77 +71,68 @@ function clients(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $a = ($num) ? $offset+1 : 1;
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $_sops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'];
-    $_stabs = [_NEW, _AKTIVE, _DEAKTIVE, _ADD];
+    $subtabs = [
+        ['href' => $afile.'.php?name=shop&amp;op=clients', 'label' => _NEW, 'title' => _NEW],
+        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=1', 'label' => _AKTIVE, 'title' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=2', 'label' => _DEAKTIVE, 'title' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=clientadd', 'label' => _ADD, 'title' => _ADD],
+    ];
     if ($csearch) {
         $sqlstatus = 'status != \'2\'';
         $field = 'name=shop&amp;op=clients&amp;';
         $refer = '';
-        $navi = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => $_sops,
-            'stabs'  => $_stabs,
-            'subtab' => 1,
-            'legacy' => 1,
-        ]);
+        $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status = \'1\'';
         $field = 'name=shop&amp;op=clients&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => $_sops,
-            'stabs'  => $_stabs,
-            'subtab' => 1,
-            'legacy' => 1,
-        ]);
+        $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 2) {
         $sqlstatus = 'status = \'0\'';
         $field = 'name=shop&amp;op=clients&amp;status=2&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => $_sops,
-            'stabs'  => $_stabs,
-            'subtab' => 1,
-            'legacy' => 2,
-        ]);
+        $subtab = 2;
     } else {
         $sqlstatus = 'status = \'2\'';
         $field = 'name=shop&amp;op=clients&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'   => $_ops,
-            'tabs'  => $_lang,
-            'sub'   => $box,
-            'sops'  => $_sops,
-            'stabs' => $_stabs,
-            'subtab' => 1,
+        $subtab = 0;
+    }
+    $tabs = '';
+    foreach ($subtabs as $idx => $link) {
+        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => $link['href'],
+            'is_active' => $idx === $subtab,
+            'label' => $link['label'],
+            'title' => $link['title'],
         ]);
     }
-    $cont = $navi;
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
+        'tabs' => $_lang,
+        'subtitle_html' => buildShopSearchBox(),
+    ]);
+    $cont .= $tpl->getHtmlPart('box', [
+        'content_html' => $tpl->getHtmlFrag('new/tabs', [
+            'tabs_html' => $tabs,
+            'is_subtabs' => true,
+        ]),
+    ]);
     $result = $db->getSqlQuery('SELECT c.id, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.name, p.title FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.'.$sqlstatus.$searchWhere.' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$conf['shop']['anum'], $searchParams);
     [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
     $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-shop-clients-head', [
-            'date_label' => _DATE,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'nickname_label' => _NICKNAME,
-            'product_label' => _PRODUCT,
-            'site_label' => _SITE,
-            'status_label' => _STATUS,
-        ]);
+        $head = [
+            ['content' => _ID],
+            ['content' => _NICKNAME],
+            ['content' => _PRODUCT],
+            ['content' => _SITE],
+            ['content' => _DATE],
+            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ];
         $trows = '';
         while([$cid, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
             $cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _UNLIMITED;
@@ -134,26 +144,57 @@ function clients(): void {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
-            $trows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-clients-row', [
-                'actions_html' => getTplAdminActionMenu([
-                    ad_status($afile.'.php?name=shop&op=clientset&amp;id='.$cid.$refer, $cactive),
-                    getTplLinkAction($afile.'.php?name=shop&op=clientadd&amp;cid='.$cid, _FULLEDIT, _FULLEDIT),
-                    getTplAdminDeleteAction($afile.'.php?name=shop&op=clientdel&amp;id='.$cid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
-                ]),
-                'date_text' => $cenddate,
-                'id_text' => (string)$cid,
-                'nickname_html' => $nick,
-                'product_html' => getTplAdminTipLabel(_ID.': '.$a.getTplAdminTipLine(_DATE, date(_TIMESTRING, $cregdate)).getTplAdminTipLine(_CLIENTNAME, filterTextHighlight($cname, $csearch)).getTplAdminTipLine(_CLIENTADRES, $caddr).getTplAdminTipLine(_CLIENTPHONE, $cphone).getTplAdminTipLine(_EMAIL, $cemail).getTplAdminTipLine(_NOTE, $cinfo), $ptitle, cutstr($ptitle, 40)),
-                'site_html' => filterTextHighlight(domain($cwebsite), $csearch),
-                'status_html' => ad_status('', $cactive),
-            ]));
+            $tips = [
+                ['label' => _ID, 'value' => (string)$a, 'is_last' => false],
+                ['label' => _DATE, 'value' => date(_TIMESTRING, $cregdate), 'is_last' => false],
+                ['label' => _CLIENTNAME, 'value' => filterTextHighlight($cname, $csearch), 'is_last' => false],
+                ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$caddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                ['label' => _CLIENTPHONE, 'value' => htmlspecialchars((string)$cphone, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                ['label' => _EMAIL, 'value' => htmlspecialchars((string)$cemail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                ['label' => _NOTE, 'value' => htmlspecialchars((string)$cinfo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+            ];
+            $items = [
+                [
+                    'href' => $afile.'.php?name=shop&amp;op=clientset&amp;id='.$cid.$refer.'&amp;token='.getSiteToken(),
+                    'label' => $cactive ? _DEACTIVATE : _ACTIVATE,
+                    'title' => $cactive ? _DEACTIVATE : _ACTIVATE,
+                ],
+                [
+                    'href' => $afile.'.php?name=shop&amp;op=clientadd&amp;cid='.$cid,
+                    'label' => _FULLEDIT,
+                    'title' => _FULLEDIT,
+                ],
+                [
+                    'href' => $afile.'.php?name=shop&amp;op=clientdel&amp;id='.$cid.$refer.'&amp;token='.getSiteToken(),
+                    'label' => _ONDELETE,
+                    'title' => _ONDELETE,
+                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                ],
+            ];
+            $trows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$cid],
+                    ['content_html' => $nick],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => $tips]).htmlspecialchars(cutstr((string)$ptitle, 40), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ['content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
+                    ['content_html' => $cenddate],
+                    ['content_html' => ad_status('', $cactive)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ],
+            ])]);
             $a++;
         }
-        $html = getTplAdminTable($head, $trows);
-        $html .= setPageNumbers('pagenum', '', $numstories, $numpages, $conf['shop']['anum'], $field, $conf['shop']['anump']);
-        $cont .= getTplBox($html);
+        $html = $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $trows]);
+        $html .= getTplPager([
+            'count' => (int)$numstories,
+            'pages' => $numpages,
+            'limit' => (int)$conf['shop']['anum'],
+            'maxpg' => (int)$conf['shop']['anump'],
+            'url' => $field,
+        ]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -161,16 +202,19 @@ function clients(): void {
 
 function clientset(): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $id = getVar('get', 'id', 'num');
-    [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
-    $active = ($active) ? 0 : 1;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-    setRedirect($afile.'.php?name=shop&op=clients');
+    if (!$warn && $id) {
+        [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
+        $active = ($active) ? 0 : 1;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=shop&op=clients', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function clientadd(): void {
     global $db, $afile, $conf, $stop, $tpl;
-        if (getVar('req', 'cid', 'num', 0)) {
+    if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
         $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.part) WHERE c.id = :cid', ['cid' => $cid]);
         [$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick] = $db->getSqlRow($result);
@@ -194,19 +238,29 @@ function clientadd(): void {
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $cont = getTplAdminNavi([
-        'ops'    => $_ops,
-        'tabs'   => $_lang,
-        'sub'    => $box,
-        'sops'   => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
-        'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
-        'subtab' => 1,
-        'legacy' => 3,
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
+        'tabs' => $_lang,
+        'subtitle_html' => buildShopSearchBox(),
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $tabs = '';
+    foreach ([
+        ['href' => $afile.'.php?name=shop&amp;op=clients', 'label' => _NEW],
+        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=1', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=2', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=clientadd', 'label' => _ADD],
+    ] as $idx => $link) {
+        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => $link['href'],
+            'is_active' => $idx === 3,
+            'label' => $link['label'],
+            'title' => $link['label'],
+        ]);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $cppi = 0;
-    $frows = '';
+    $rows = [];
     if ($partner) {
         if (!$proz) {
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT part FROM '.PREFIX_DB.'_clients WHERE part = :partner AND status != 2', ['partner' => $partner]));
@@ -224,53 +278,74 @@ function clientadd(): void {
             $cppi = 0;
         }
         $nick = ($nick) ? user_info($nick) : _ANONYM;
-        $frows .= $tpl->getHtmlFrag('admin-shop-client-partner-rows', [
-            'nickname_html' => $nick,
-            'partner_id' => (string)$partner,
-            'partnerid_label' => _PARTNER_ID.':',
-            'partnername_label' => _PARTNER_NAME.':',
-            'percent_label' => _PERCENT.':',
-            'percent_text' => $proz.' %',
+        $cont .= $tpl->getHtmlFrag('new/alert', [
+            'is_warn' => false,
+            'lines' => [
+                _PARTNER_ID.': '.$partner,
+                _PARTNER_NAME.': '.strip_tags((string)$nick),
+                _PERCENT.': '.$proz.' %',
+            ],
         ]);
     }
-    $frows .= getTplAdminFormRow(_USER_ID.':', getTplNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'"'));
+    $rows[] = [
+        'label_html' => _USER_ID.':',
+        'field_html' => $tpl->getHtmlFrag('new/input', [
+            'itype' => 'number',
+            'name_attr' => 'uid',
+            'value_attr' => (string)$uid,
+            'placeholder_text' => _USER_ID,
+        ]),
+    ];
     $productslist = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_products ORDER BY title');
     $prodopts = '';
     while([$pid, $ptitle] = $db->getSqlRow($productslist)) {
-        $prodopts .= getTplOption((string)$pid, $ptitle, $product == $pid);
+        $prodopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$pid,
+            'label_text' => $ptitle,
+            'is_selected' => $product == $pid,
+        ]);
     }
-    $frows .= $tpl->getHtmlFrag('admin-shop-clientadd-rows', [
-        'activate_html' => radio_form($cactive, 'cactive'),
-        'activate_label' => _ACTIVATE2,
-        'caddr' => $caddr,
-        'cemail' => $cemail,
-        'cenddate_html' => datetime(1, 'cenddate', $cenddate, 16, 'sl_form'),
-        'cinfo' => $cinfo,
-        'clientadres_label' => _CLIENTADRES.':',
-        'clientend_label' => _CLIENTEND.':',
-        'clientname_label' => _CLIENTNAME.':',
-        'clientphone_label' => _CLIENTPHONE.':',
-        'clientstr_label' => _CLIENTSTR.':',
-        'cname' => $cname,
-        'cphone' => $cphone,
-        'cregdate_html' => datetime(1, 'cregdate', $cregdate, 16, 'sl_form'),
-        'cwebsite' => $cwebsite,
-        'email_label' => _EMAIL.':',
-        'note_label' => _NOTE.':',
-        'product_html' => getTplSelect('product', $prodopts, 'sl_form'),
-        'product_label' => _PRODUCT.':',
-        'save_html' => getTplHiddenInput('cppi', (string)$cppi).ad_save('cid', $cid, 'clientsave', 1),
-        'site_label' => _SITE.':',
-        'userid_label' => _USER_ID.':',
-        'uid' => (string)$uid,
+    $rows[] = ['label_html' => _CLIENTNAME.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'cname', 'value_attr' => $cname, 'is_required' => true, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _CLIENTADRES.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'caddr', 'value_attr' => $caddr, 'is_required' => true, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _CLIENTPHONE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'cphone', 'value_attr' => $cphone, 'is_required' => true, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _EMAIL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _CLIENTSTR.':', 'field_html' => datetime(1, 'cregdate', $cregdate, 16, 'sl_form')];
+    $rows[] = ['label_html' => _CLIENTEND.':', 'field_html' => datetime(1, 'cenddate', $cenddate, 16, 'sl_form')];
+    $rows[] = ['label_html' => _PRODUCT.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'product', 'options_html' => $prodopts])];
+    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'cactive', 'value' => $cactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _NOTE.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
+    $actions = $tpl->getHtmlFrag('new/button', [
+        'label' => _SAVECHANGES,
+        'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"'
     ]);
-    $cont .= getTplBox(getTplAdminForm($afile.'.php', $frows));
+    if ($cid) {
+        $actions .= $tpl->getHtmlFrag('new/button', [
+            'label' => _DELETE,
+            'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"'
+        ]);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'shop'],
+            ['nameattr' => 'op', 'valueattr' => 'clientsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'cid', 'valueattr' => (string)$cid],
+            ['nameattr' => 'partner', 'valueattr' => (string)$partner],
+            ['nameattr' => 'cppi', 'valueattr' => (string)$cppi],
+            ['nameattr' => 'posttype', 'valueattr' => 'save'],
+        ],
+        'rows' => $rows,
+        'actions_html' => $actions,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function clientsave(): void {
     global $db, $afile, $conf, $stop;
+    $warn = !checkSiteToken();
     $partner = getVar('post', 'partner', 'num');
     $uid = getVar('post', 'uid', 'num');
     $product = getVar('post', 'product', 'num');
@@ -290,7 +365,10 @@ function clientsave(): void {
     $stop = [];
     checkemail($cemail);
     if (!$cname || !$caddr || !$cphone) $stop[] = _ERROR_ALL;
-    if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
+    $posttype = getVar('post', 'posttype', 'text');
+    if ($warn) {
+        setRedirect($afile.'.php?name=shop&op=clients', false, 302, _TOKENMISS, true);
+    } elseif (!$stop && $posttype == 'save') {
         if ($cid) {
             if ($partner && $cppi) {
                 [$pprice] = $db->getSqlRow($db->getSqlQuery('SELECT price FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
@@ -317,7 +395,7 @@ function clientsave(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :caddr, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
         }
         setRedirect($afile.'.php?name=shop&op=clients');
-    } elseif (getVar('post', 'posttype', 'text') == 'delete') {
+    } elseif ($posttype == 'delete') {
         clientdel($cid);
     } else {
         clientadd();
@@ -326,95 +404,123 @@ function clientsave(): void {
 
 function clientdel(int $id = 0): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=shop&op=clients');
+    if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=shop&op=clients', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function products(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
+    setHead();
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $_sops  = ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productadd'];
-    $_stabs = [_AKTIVE, _DEAKTIVE, _ADD];
+    $subtabs = [
+        ['href' => $afile.'.php?name=shop&amp;op=products', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=products&amp;status=1', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=productadd', 'label' => _ADD],
+    ];
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=0';
         $field = 'name=shop&amp;op=products&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => $_sops,
-            'stabs'  => $_stabs,
-            'tab'    => 1,
-            'subtab' => 1,
-            'legacy' => 1,
-        ]);
+        $subtab = 1;
     } else {
         $sqlstatus = 'status=1';
         $field = 'name=shop&amp;op=products&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'   => $_ops,
-            'tabs'  => $_lang,
-            'sub'   => $box,
-            'sops'  => $_sops,
-            'stabs' => $_stabs,
-            'tab'   => 1,
-            'subtab' => 1,
+        $subtab = 0;
+    }
+    $tabs = '';
+    foreach ($subtabs as $idx => $link) {
+        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => $link['href'],
+            'is_active' => $idx === $subtab,
+            'label' => $link['label'],
+            'title' => $link['label'],
         ]);
     }
-    $cont = $navi;
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
+        'tabs' => $_lang,
+        'tab' => 1,
+        'subtitle_html' => buildShopSearchBox(),
+    ]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $phead = $tpl->getHtmlFrag('admin-shop-products-head', [
-            'checkall_label' => _CHECKALL,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'price_label' => _PREIS,
-            'product_label' => _PRODUCT,
-            'status_label' => _STATUS,
-        ]);
+        $phead = [
+            ['content' => ''],
+            ['content' => _ID],
+            ['content' => _PRODUCT],
+            ['content' => _PREIS],
+            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ];
         $prows = '';
         while([$pid, $pcid, $ptime, $ptitle, $pprice, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
             $ctitle = ($pcid) ? $ctitle : _NO;
-            if ($pactive && time() >= strtotime($ptime)) {
-                $view = getTplLinkAction('index.php?name=shop&amp;op=view&amp;id='.$pid, _MVIEW, _MVIEW);
-                $active = '1';
-            } else {
-                $view = '';
-                $active = '0';
-            }
-            $vote = ($pvote) ? getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, _EDITVOTE, _EDITVOTE) : '';
+            $active = ($pactive && time() >= strtotime($ptime)) ? '1' : '0';
             $typ = ($pactive) ? '0' : '1';
-            $prows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-products-row', [
-                'actions_html' => getTplAdminActionMenu([
-                    $view,
-                    $vote,
-                    ad_status($afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive),
-                    getTplLinkAction($afile.'.php?name=shop&op=productadd&amp;id='.$pid, _FULLEDIT, _FULLEDIT),
-                    getTplAdminDeleteAction($afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer, _DELETE.' "'.$ptitle.'"?', _ONDELETE, _ONDELETE),
-                ]),
-                'id_text' => (string)$pid,
-                'is_checked' => false,
-                'price_text' => $pprice.' '.$conf['shop']['valute'],
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($ptime ?? '', _TIMESTRING)), $ptitle, cutstr($ptitle, 60)),
-                'value_attr' => (string)$pid,
-            ]));
+            $items = [];
+            if ($pactive && time() >= strtotime($ptime)) {
+                $items[] = ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$pid, 'label' => _MVIEW, 'title' => _MVIEW];
+            }
+            if ($pvote) {
+                $items[] = ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
+            }
+            $items[] = ['href' => $afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer.'&amp;token='.getSiteToken(), 'label' => $pactive ? _DEACTIVATE : _ACTIVATE, 'title' => $pactive ? _DEACTIVATE : _ACTIVATE];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productadd&amp;id='.$pid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer.'&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'];
+            $prows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
+                    ['content_html' => (string)$pid],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => [
+                        ['label' => _CATEGORY, 'value' => htmlspecialchars((string)$ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                        ['label' => _DATE, 'value' => format_time($ptime ?? '', _TIMESTRING), 'is_last' => true],
+                    ]]).htmlspecialchars(cutstr((string)$ptitle, 60), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ['content_html' => $pprice.' '.$conf['shop']['valute']],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ],
+            ])]);
         }
-        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' '.getTplHiddenInput('name', 'shop').getTplHiddenInput('op', 'productops').getTplHiddenInput('refer', '1').' '.getTplAdminSubmitButton(_OK);
-        $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
-        $html = getTplAdminListForm(getTplAdminTable($phead, $prows), $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]), '');
-        $cont .= getTplBox($html);
+        $actionopts = '';
+        foreach ([
+            'a1' => _ACTIVATE,
+            'a0' => _DEACTIVATE,
+            'f1' => _FIXED,
+            'f0' => _LNFIX,
+            'h1' => _LHOME,
+            'h0' => _LNHOME,
+            'c1' => _APOSTMOD,
+            'c0' => _APOSTNOMOD,
+            't1' => _LADATE,
+            'd1' => _DELETE,
+        ] as $val => $lab) {
+            $actionopts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $val, 'label_text' => $lab]);
+        }
+        $catopts = getcat('shop', 0, '', '', '', '1');
+        $actionopts .= $catopts;
+        $html = $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'shop'],
+                ['nameattr' => 'op', 'valueattr' => 'productops'],
+                ['nameattr' => 'refer', 'valueattr' => '1'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ],
+            'content_html' => $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $phead, 'rows_html' => $prows]),
+            'actions_html' => _CHECKOP.': '.$tpl->getHtmlFrag('new/select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_attr' => ' style="margin-right:8px"']).$tpl->getHtmlFrag('new/submit', ['submit_label' => _OK]),
+        ]);
+        $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_products', 'field' => 'id', 'where' => $sqlstatus]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -445,62 +551,87 @@ function productadd(): void {
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $cont = getTplAdminNavi([
-        'ops'    => $_ops,
-        'tabs'   => $_lang,
-        'sub'    => $box,
-        'sops'   => ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productadd'],
-        'stabs'  => [_AKTIVE, _DEAKTIVE, _ADD],
-        'tab'    => 1,
-        'subtab' => 1,
-        'legacy' => 2,
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
+        'tabs' => $_lang,
+        'tab' => 1,
+        'subtitle_html' => buildShopSearchBox(),
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $tabs = '';
+    foreach ([
+        ['href' => $afile.'.php?name=shop&amp;op=products', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=products&amp;status=1', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=productadd', 'label' => _ADD],
+    ] as $idx => $link) {
+        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => $link['href'],
+            'is_active' => $idx === 2,
+            'label' => $link['label'],
+            'title' => $link['label'],
+        ]);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $ptextpre = ($vote)
         ? $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($vote, 'shop')]).getTplHrLine().$ptext
         : $ptext;
-    if ($ptextpre) $cont .= preview($ptitle, $ptextpre, $pbodytext, '', 'shop');
-    $parows = getTplAdminFormRow(_TITLE.' / '._PRODUCT.':', getTplTextInput('ptitle', $ptitle, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'))
-        .getTplAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', getTplOption('', _HOMECAT)));
+    if ($ptextpre) $cont .= getTplPreviewContent(['title' => $ptitle, 'texta' => $ptextpre, 'textb' => $pbodytext, 'mod' => 'shop']);
+    $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$pcid]);
+    $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
+    while ([$cid, $ctitle] = $db->getSqlRow($catres)) {
+        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$cid,
+            'label_text' => $ctitle,
+            'is_selected' => (int)$pcid === (int)$cid,
+        ]);
+    }
+    $rows = [
+        ['label_html' => _TITLE.' / '._PRODUCT.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'ptitle', 'value_attr' => $ptitle, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'pcid', 'options_html' => $catopts])],
+    ];
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
-        $assocrows = '';
+        $assoc = '';
         while ([$id, $title] = $db->getSqlRow($result2)) {
-            if ($a == 2) {
-                $assocrows .= '</tr>'.'<tr>';
-                $a = 0;
-            }
             $isch = false;
-            if ($associated) foreach ($associated as $val) if ($val == $id) $isch = true;
-            $assocrows .= $tpl->getHtmlFrag('admin-shop-assoc-cell', [
-                'checked'    => $isch,
-                'label_text' => $title,
-                'value_attr' => (string)$id,
-            ]);
-            $a++;
+            if ($associated) foreach ((array)$associated as $val) if ($val == $id) $isch = true;
+            $assoc .= '<label style="display:inline-flex;align-items:center;gap:6px;margin:0 12px 8px 0">'.$tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</label>';
         }
-        $assocrows = '<tr>'.$assocrows.'</tr>';
-        $associnner = $tpl->getHtmlFrag('admin-shop-assoc-table', ['rows_html' => $assocrows]);
-        $parows .= getTplAdminFormRow(getTplAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI), $associnner);
+        $rows[] = ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
     }
-    $parows .= getTplAdminFormRow(_TEXT.':', textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'))
-        .getTplAdminFormRow(_ENDTEXT.':', textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'))
-        .getTplAdminFormRow(_PREIS.':', getTplTextInput('pprice', $pprice, 'sl_form', 'maxlength="10" placeholder="'._PREIS.'" required'))
-        .getTplAdminFormRow(_CHNGSTORY.':', datetime(1, 'ptime', $ptime, 16, 'sl_form'))
-        .getTplAdminFormRow(_VOTING.':', add_voting('shop', 'vote', $vote, 'sl_form'))
-        .getTplAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'))
-        .getTplAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'))
-        .getTplAdminFormRow(_FIXED.'?', radio_form($fix, 'fix'))
-        .getTplAdminFormRow(_ACTIVATEP, radio_form($pactive, 'pactive'))
-        .getTplAdminFormWide(ad_save('pid', $pid, 'productsave'), '', 'sl_center');
-    $cont .= getTplBox(getTplAdminForm($afile.'.php', $parows, '', 'sl_table_form', 'post', 'post'));
+    $rows[] = ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'), 'is_full' => true];
+    $rows[] = ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'), 'is_full' => true];
+    $rows[] = ['label_html' => _PREIS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
+    $rows[] = ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'ptime', $ptime, 16, 'sl_form')];
+    $rows[] = ['label_html' => _VOTING.':', 'field_html' => add_voting('shop', 'vote', $vote, 'sl_form')];
+    $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl_form')];
+    $rows[] = ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $rows[] = ['label_html' => _ACTIVATEP, 'field_html' => getTplRadioGroup(['name' => 'pactive', 'value' => $pactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $actions = $tpl->getHtmlFrag('new/button', ['label' => _PREVIEW, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'preview\'; this.form.submit();"'])
+        .$tpl->getHtmlFrag('new/button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
+    if ($pid) {
+        $actions .= $tpl->getHtmlFrag('new/button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'shop'],
+            ['nameattr' => 'op', 'valueattr' => 'productsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'pid', 'valueattr' => (string)$pid],
+            ['nameattr' => 'posttype', 'valueattr' => 'save'],
+        ],
+        'rows' => $rows,
+        'actions_html' => $actions,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function productsave(): void {
     global $db, $afile, $stop;
+    $warn = !checkSiteToken();
     $pid = getVar('post', 'pid', 'num');
     $pcid = getVar('post', 'pcid', 'num');
     $ptitle = getVar('post', 'ptitle', 'title');
@@ -516,14 +647,17 @@ function productsave(): void {
     $ptime = getVar('req', 'ptime', 'time');
     $stop = [];
     if (!$ptitle || !$ptext || !$pprice) $stop[] = _ERROR_ALL;
-    if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
+    $posttype = getVar('post', 'posttype', 'text');
+    if ($warn) {
+        setRedirect($afile.'.php?name=shop&op=products', false, 302, _TOKENMISS, true);
+    } elseif (!$stop && $posttype == 'save') {
         if ($pid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :pcid, time = :ptime, title = :ptitle, intro = :ptext, body = :pbodytext, price = :pprice, vote = :vote, assoc = :assoc, ihome = :ihome, acomm = :acomm, fix = :fix, status = :pactive WHERE id = :pid', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'assoc' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive, 'pid' => $pid]);
         } else {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :pprice, :vote, :assoc, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'assoc' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
         }
         setRedirect($afile.'.php?name=shop&op=products');
-    } elseif (getVar('post', 'posttype', 'text') == 'delete') {
+    } elseif ($posttype == 'delete') {
         productops($pid, 'd');
     } else {
         productadd();
@@ -532,6 +666,7 @@ function productsave(): void {
 
 function productops(int|array $id = 0, string $vtyp = ''): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $id = getVar('req', 'id', 'array', []);
     $arg = $id;
     if (!is_array($arg) || $arg === []) {
@@ -546,7 +681,7 @@ function productops(int|array $id = 0, string $vtyp = ''): void {
     if (!$typ) $typ = getVar('get', 'typ', 'text');
     $vtyp = ($typ) ? filterVar($typ) : $vtyp;
     $typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
-    if ($id) {
+    if (!$warn && $id) {
         if ($vtyp[0] == 'a') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET status = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
         } elseif ($vtyp[0] == 'f') {
@@ -565,74 +700,66 @@ function productops(int|array $id = 0, string $vtyp = ''): void {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
         }
     }
-    setRedirect($afile.'.php?name=shop&op=products');
+    setRedirect($afile.'.php?name=shop&op=products', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function partners(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
+    setHead();
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $_sops  = ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'];
-    $_stabs = [_NEW, _AKTIVE, _DEAKTIVE, _ADD];
+    $subtabs = [
+        ['href' => $afile.'.php?name=shop&amp;op=partners', 'label' => _NEW],
+        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=1', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=2', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=partneradd', 'label' => _ADD],
+    ];
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=1';
         $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => $_sops,
-            'stabs'  => $_stabs,
-            'tab'    => 2,
-            'subtab' => 1,
-            'legacy' => 1,
-        ]);
+        $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 2) {
         $sqlstatus = 'status=0';
         $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => $_sops,
-            'stabs'  => $_stabs,
-            'tab'    => 2,
-            'subtab' => 1,
-            'legacy' => 2,
-        ]);
+        $subtab = 2;
     } else {
         $sqlstatus = 'status=2';
         $field = 'name=shop&amp;op=partners&amp;';
         $refer = '&amp;refer=1';
-        $navi = getTplAdminNavi([
-            'ops'   => $_ops,
-            'tabs'  => $_lang,
-            'sub'   => $box,
-            'sops'  => $_sops,
-            'stabs' => $_stabs,
-            'tab'   => 2,
-            'subtab' => 1,
+        $subtab = 0;
+    }
+    $tabs = '';
+    foreach ($subtabs as $idx => $link) {
+        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => $link['href'],
+            'is_active' => $idx === $subtab,
+            'label' => $link['label'],
+            'title' => $link['label'],
         ]);
     }
-    $cont = $navi;
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
+        'tabs' => $_lang,
+        'tab' => 2,
+        'subtitle_html' => buildShopSearchBox(),
+    ]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $pahead = $tpl->getHtmlFrag('admin-shop-partners-head', [
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'nickname_label' => _NICKNAME,
-            'partnerbek_label' => _PARTNERBEK,
-            'partnerrest_label' => _PARTNERREST,
-            'reg_label' => _REG,
-            'site_label' => _SITE,
-        ]);
+        $pahead = [
+            ['content' => _ID],
+            ['content' => _NICKNAME],
+            ['content' => _SITE],
+            ['content' => _REG],
+            ['content' => _PARTNERREST],
+            ['content' => _PARTNERBEK],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ];
         $parows = '';
         while([$paid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
             if ($nick) {
@@ -642,26 +769,34 @@ function partners(): void {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
-            $parows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partners-row', [
-                'actions_html' => getTplAdminActionMenu([
-                    ad_status($afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer, $paactive),
-                    getTplLinkAction($afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, _MVIEW, _MVIEW),
-                    getTplLinkAction($afile.'.php?name=shop&op=partneradd&amp;paid='.$paid, _FULLEDIT, _FULLEDIT),
-                    getTplAdminDeleteAction($afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
-                ]),
-                'id_text' => (string)$paid,
-                'nickname_html' => getTplAdminTitleTip(_CLIENTNAME.': '.$paname.getTplAdminTipLine(_CLIENTADRES, $paaddr).getTplAdminTipLine(_CLIENTPHONE, $paphone).getTplAdminTipLine(_EMAIL, $paemail)).$nick,
-                'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
-                'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
-                'reg_text' => date(_TIMESTRING, $paregdate),
-                'site_text' => domain($pawebsite),
-            ]));
+            $items = [
+                ['href' => $afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer.'&amp;token='.getSiteToken(), 'label' => $paactive ? _DEACTIVATE : _ACTIVATE, 'title' => $paactive ? _DEACTIVATE : _ACTIVATE],
+                ['href' => $afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, 'label' => _MVIEW, 'title' => _MVIEW],
+                ['href' => $afile.'.php?name=shop&op=partneradd&amp;paid='.$paid, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer.'&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+            ];
+            $parows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$paid],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => [
+                        ['label' => _CLIENTNAME, 'value' => htmlspecialchars((string)$paname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                        ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$paaddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                        ['label' => _CLIENTPHONE, 'value' => htmlspecialchars((string)$paphone, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                        ['label' => _EMAIL, 'value' => htmlspecialchars((string)$paemail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+                    ]]).$nick],
+                    ['content_html' => domain($pawebsite)],
+                    ['content_html' => date(_TIMESTRING, $paregdate)],
+                    ['content_html' => $parest.' '.$conf['shop']['valute']],
+                    ['content_html' => $pabek.' '.$conf['shop']['valute']],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ],
+            ])]);
         }
-        $html = getTplAdminTable($pahead, $parows);
-        $html .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
-        $cont .= getTplBox($html);
+        $html = $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $pahead, 'rows_html' => $parows]);
+        $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_partners', 'field' => 'id', 'where' => $sqlstatus]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -669,11 +804,14 @@ function partners(): void {
 
 function partnerset(): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $id = getVar('get', 'id', 'num');
-    [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
-    $active = ($active == 1) ? 0 : 1;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-    setRedirect($afile.'.php?name=shop&op=partners');
+    if (!$warn && $id) {
+        [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
+        $active = ($active == 1) ? 0 : 1;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=shop&op=partners', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function partneradd(): void {
@@ -701,64 +839,73 @@ function partneradd(): void {
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $cont = getTplAdminNavi([
-        'ops'    => $_ops,
-        'tabs'   => $_lang,
-        'sub'    => $box,
-        'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'],
-        'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
-        'tab'    => 2,
-        'subtab' => 1,
-        'legacy' => 3,
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
+        'tabs' => $_lang,
+        'tab' => 2,
+        'subtitle_html' => buildShopSearchBox(),
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-    $parrows = '';
-    if ($paid) {
-        $nick = ($nick) ? user_info($nick) : _ANONYM;
-        $parrows .= getTplAdminFormRow(_NICKNAME.':', $nick);
-    }
-    $uidfield = ($uid == 0) ? getTplNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'" required') : getTplHiddenInput('uid', (string)$uid).$uid;
-    $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-main-rows', [
-        'clientadres_label' => _CLIENTADRES.':',
-        'clientname_label' => _CLIENTNAME.':',
-        'clientphone_label' => _CLIENTPHONE.':',
-        'email_label' => _EMAIL.':',
-        'paaddr' => $paaddr,
-        'paemail' => $paemail,
-        'paname' => $paname,
-        'papaypal' => $papaypal,
-        'paphone' => $paphone,
-        'paregdate_html' => datetime(1, 'paregdate', $paregdate, 16, 'sl_form'),
-        'pawebsite' => $pawebsite,
-        'pawebmoney' => $pawebmoney,
-        'paypal_label' => _PAYPAL.':',
-        'reg_label' => _REG.':',
-        'site_label' => _SITE.':',
-        'uid_html' => $uidfield,
-        'userid_label' => _USER_ID.':',
-        'webmoney_label' => _WEBMONEY.':',
-    ]);
-    if ($paactive != 2) {
-        $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-balance-rows', [
-            'pabek' => $pabek,
-            'parest' => $parest,
-            'partnerbek_label' => _PARTNERBEK.':',
-            'partnerrest_label' => _PARTNERREST.':',
+    $tabs = '';
+    foreach ([
+        ['href' => $afile.'.php?name=shop&amp;op=partners', 'label' => _NEW],
+        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=1', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=2', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&amp;op=partneradd', 'label' => _ADD],
+    ] as $idx => $link) {
+        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+            'href' => $link['href'],
+            'is_active' => $idx === 3,
+            'label' => $link['label'],
+            'title' => $link['label'],
         ]);
     }
-    $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-submit', [
-        'activate_html' => radio_form($paactive, 'paactive'),
-        'activate_label' => _ACTIVATE2,
-        'save_html' => ad_save('paid', $paid, 'partnersave', 1),
-    ]);
-    $cont .= getTplBox(getTplAdminForm($afile.'.php', $parrows));
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $rows = [];
+    if ($paid) {
+        $nick = ($nick) ? user_info($nick) : _ANONYM;
+        $rows[] = ['label_html' => _NICKNAME.':', 'field_html' => $nick];
+    }
+    $uidfield = ($uid == 0)
+        ? $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => (string)$uid, 'placeholder_text' => _USER_ID, 'is_required' => true])
+        : $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'uid', 'valueattr' => (string)$uid]).$uid;
+    $rows[] = ['label_html' => _USER_ID.':', 'field_html' => $uidfield];
+    $rows[] = ['label_html' => _CLIENTNAME.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'paname', 'value_attr' => $paname, 'is_required' => true])];
+    $rows[] = ['label_html' => _CLIENTADRES.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'paaddr', 'value_attr' => $paaddr, 'is_required' => true])];
+    $rows[] = ['label_html' => _CLIENTPHONE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'paphone', 'value_attr' => $paphone, 'is_required' => true])];
+    $rows[] = ['label_html' => _EMAIL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'paemail', 'value_attr' => $paemail])];
+    $rows[] = ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'pawebsite', 'value_attr' => $pawebsite])];
+    $rows[] = ['label_html' => _WEBMONEY.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'value_attr' => $pawebmoney])];
+    $rows[] = ['label_html' => _PAYPAL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'papaypal', 'value_attr' => $papaypal])];
+    $rows[] = ['label_html' => _REG.':', 'field_html' => datetime(1, 'paregdate', $paregdate, 16, 'sl_form')];
+    if ($paactive != 2) {
+        $rows[] = ['label_html' => _PARTNERREST.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'parest', 'value_attr' => $parest])];
+        $rows[] = ['label_html' => _PARTNERBEK.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'pabek', 'value_attr' => $pabek])];
+    }
+    $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
+    $actions = $tpl->getHtmlFrag('new/button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
+    if ($paid) {
+        $actions .= $tpl->getHtmlFrag('new/button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'shop'],
+            ['nameattr' => 'op', 'valueattr' => 'partnersave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'paid', 'valueattr' => (string)$paid],
+            ['nameattr' => 'posttype', 'valueattr' => 'save'],
+        ],
+        'rows' => $rows,
+        'actions_html' => $actions,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function partnersave(): void {
     global $db, $afile, $stop;
+    $warn = !checkSiteToken();
     $uid = getVar('post', 'uid', 'num');
     $paname = getVar('post', 'paname', 'text');
     $paaddr = getVar('post', 'paaddr', 'text');
@@ -773,16 +920,20 @@ function partnersave(): void {
     $paactive = getVar('post', 'paactive', 'num');
     $paid = getVar('post', 'paid', 'num');
     $paregdate = ($paregdate) ? strtotime($paregdate) : 0;
+    $stop = [];
     checkemail($paemail);
     if (!$paname || !$paaddr || !$paphone) $stop[] = _ERROR_ALL;
-    if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
+    $posttype = getVar('post', 'posttype', 'text');
+    if ($warn) {
+        setRedirect($afile.'.php?name=shop&op=partners', false, 302, _TOKENMISS, true);
+    } elseif (!$stop && $posttype == 'save') {
         if ($paid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET uid = \''.$uid.'\', name = \''.$paname.'\', addr = \''.$paaddr.'\', phone = \''.$paphone.'\', email = \''.$paemail.'\', website = \''.$pawebsite.'\', webmoney = \''.$pawebmoney.'\', paypal = \''.$papaypal.'\', regdate = \''.$paregdate.'\', rest = \''.$parest.'\', bek = \''.$pabek.'\', status = \''.$paactive.'" WHERE id = \''.$paid.'\'');
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET uid = :uid, name = :paname, addr = :paaddr, phone = :paphone, email = :paemail, website = :pawebsite, webmoney = :pawebmoney, paypal = :papaypal, regdate = :paregdate, rest = :parest, bek = :pabek, status = :paactive WHERE id = :paid', ['uid' => $uid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal, 'paregdate' => $paregdate, 'parest' => $parest, 'pabek' => $pabek, 'paactive' => $paactive, 'paid' => $paid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, \''.$uid.'\', \''.$paname.'\', \''.$paaddr.'\', \''.$paphone.'\', \''.$paemail.'\', \''.$pawebsite.'\', \''.$pawebmoney.'\', \''.$papaypal.'\', \''.$paregdate.'\', \''.$parest.'\', \''.$pabek.'\', \''.$paactive.'\')');
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :uid, :paname, :paaddr, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, :paregdate, :parest, :pabek, :paactive)', ['uid' => $uid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal, 'paregdate' => $paregdate, 'parest' => $parest, 'pabek' => $pabek, 'paactive' => $paactive]);
         }
         setRedirect($afile.'.php?name=shop&op=partners');
-    } elseif (getVar('post', 'posttype', 'text') == 'delete') {
+    } elseif ($posttype == 'delete') {
         partnerdel($paid);
     } else {
         partneradd();
@@ -791,9 +942,10 @@ function partnersave(): void {
 
 function partnerdel(int $id = 0): void {
     global $db, $afile;
+    $warn = !checkSiteToken();
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=shop&op=partners');
+    if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=shop&op=partners', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function partnerinfo(): void {
@@ -804,30 +956,20 @@ function partnerinfo(): void {
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $cont = getTplAdminNavi([
-        'ops'    => $_ops,
-        'tabs'   => $_lang,
-        'sub'    => $box,
-        'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'],
-        'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
-        'tab'    => 2,
-        'subtab' => 1,
-        'legacy' => 1,
-    ]);
+    $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 2, 'subtitle_html' => buildShopSearchBox()]);
     $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
     [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
     $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid AND c.status != 2 ORDER BY c.id ASC', ['uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
-        $pihead = $tpl->getHtmlFrag('admin-shop-partnerinfo-head', [
-            'date_label' => _DATE,
-            'id_label' => _ID,
-            'nickname_label' => _NICKNAME,
-            'percent_label' => _PERCENT,
-            'price_label' => _PREIS,
-            'product_label' => _PRODUCT,
-            'sum_label' => _SUM,
-        ]);
+        $pihead = [
+            ['content' => _ID],
+            ['content' => _NICKNAME],
+            ['content' => _PRODUCT],
+            ['content' => _PREIS],
+            ['content' => _PERCENT],
+            ['content' => _SUM],
+            ['content' => _DATE],
+        ];
         $pirows = '';
         $partsum = 0;
         $partsumges = 0;
@@ -835,36 +977,35 @@ function partnerinfo(): void {
         while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $ptitle, $pprice] = $db->getSqlRow($result)) {
             $partsum = $pprice / 100 * $proz;
             $partsumges += $partsum;
-            $pirows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partnerinfo-row', [
-                'date_text' => date(_TIMESTRING, $cregdate),
-                'id_text' => (string)$cid,
-                'nickname_html' => user_info($nick),
-                'percent_text' => $proz.' %',
-                'price_text' => $pprice.' '.$conf['shop']['valute'],
-                'product_text' => $ptitle,
-                'sum_text' => $partsum.' '.$conf['shop']['valute'],
-            ]));
+            $pirows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+                ['content_html' => (string)$cid],
+                ['content_html' => user_info($nick)],
+                ['content_html' => htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                ['content_html' => $pprice.' '.$conf['shop']['valute']],
+                ['content_html' => $proz.' %'],
+                ['content_html' => $partsum.' '.$conf['shop']['valute']],
+                ['content_html' => date(_TIMESTRING, $cregdate)],
+            ]])]);
             $a++;
         }
-        $cont .= getTplBox(getTplAdminTable($pihead, $pirows));
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $pihead, 'rows_html' => $pirows])]);
     }
-    $shead = $tpl->getHtmlFrag('admin-shop-partnersum-head', [
-        'clients_label' => _CLIENTEN,
-        'partnerbek_label' => _PARTNERBEK,
-        'partnerges_label' => _PARTNERGES,
-        'partnerrest_label' => _PARTNERREST,
-        'paypal_label' => _PAYPAL,
-        'webmoney_label' => _WEBMONEY,
-    ]);
-    $srow = getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partnersum-row', [
-        'clients_text' => (string)$a,
-        'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
-        'partnerges_text' => $partsumges.' '.$conf['shop']['valute'],
-        'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
-        'paypal_text' => $papaypal,
-        'webmoney_text' => $pawebmoney,
-    ]));
-    $cont .= getTplBox(getTplAdminTable($shead, $srow));
+    $srow = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+        ['content_html' => (string)$a],
+        ['content_html' => $pabek.' '.$conf['shop']['valute']],
+        ['content_html' => $partsumges.' '.$conf['shop']['valute']],
+        ['content_html' => $parest.' '.$conf['shop']['valute']],
+        ['content_html' => htmlspecialchars((string)$papaypal, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        ['content_html' => htmlspecialchars((string)$pawebmoney, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+    ]])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => [
+        ['content' => _CLIENTEN],
+        ['content' => _PARTNERBEK],
+        ['content' => _PARTNERGES],
+        ['content' => _PARTNERREST],
+        ['content' => _PAYPAL],
+        ['content' => _WEBMONEY],
+    ], 'rows_html' => $srow])]);
     echo $cont;
     setFoot();
 }
@@ -873,7 +1014,8 @@ function export(): void {
     global $db, $afile, $tpl;
     $id = getVar('post', 'id', 'num');
     $bd = getVar('post', 'bd', 'text');
-    if ($id == 1 && $bd) {
+    $warn = !checkSiteToken();
+    if (!$warn && $id == 1 && $bd) {
         $list = [];
         if ($bd == 'products') {
             $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, comments, counter, votes, tvotes, fix, status FROM '.PREFIX_DB.'_products ORDER BY id');
@@ -901,7 +1043,7 @@ function export(): void {
         } else {
             setRedirect($afile.'.php?name=shop&op=export');
         }
-    } elseif ($id == 2 && $bd) {
+    } elseif (!$warn && $id == 2 && $bd) {
         $handle = fopen ('uploads/shop/temp/'.$bd,'rb');
         while (($data = fgetcsv($handle, 1000, ','))) {
             if (preg_match('#(.*?)products\\.csv#', $bd)) {
@@ -937,35 +1079,33 @@ function export(): void {
         setHead();
         $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
         $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-        $box = buildShopSearchBox();
-        $cont = getTplAdminNavi([
-            'ops'    => $_ops,
-            'tabs'   => $_lang,
-            'sub'    => $box,
-            'sops'   => ['', ''],
-            'stabs'  => [_EXPORT, _IMPORT],
-            'tab'    => 3,
-            'subtab' => 1,
-            'id'     => 'export',
-        ]);
+        $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 3, 'subtitle_html' => buildShopSearchBox()]);
         $cont .= checkPerms(BASE_DIR.'/uploads/shop/temp');
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _S_NOTE]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _S_NOTE]);
         [$pr] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_products'));
         [$cl] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_clients'));
         [$pa] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_partners'));
         $export = '';
         if ($pr || $cl || $pa) {
-            $bdopts = ($pr ? getTplOption('products', _PRODUCTS) : '')
-                .($cl ? getTplOption('clients', _CLIENTS) : '')
-                .($pa ? getTplOption('partners', _PARTNERS) : '');
-            $export = getTplAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-export-rows', [
-                'database_html' => getTplSelect('bd', $bdopts, 'sl_form'),
-                'database_label' => _DATABASE.':',
-                'hidden_html' => getTplHiddenInput('name', 'shop').getTplHiddenInput('id', '1').getTplHiddenInput('op', 'export'),
+            $bdopts = ($pr ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'products', 'label_text' => _PRODUCTS]) : '')
+                .($cl ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'clients', 'label_text' => _CLIENTS]) : '')
+                .($pa ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'partners', 'label_text' => _PARTNERS]) : '');
+            $export = $tpl->getHtmlFrag('new/form', [
+                'action_url' => $afile.'.php',
+                'hidden' => [
+                    ['nameattr' => 'name', 'valueattr' => 'shop'],
+                    ['nameattr' => 'op', 'valueattr' => 'export'],
+                    ['nameattr' => 'id', 'valueattr' => '1'],
+                    ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                ],
+                'rows' => [[
+                    'label_html' => _DATABASE.':',
+                    'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'bd', 'options_html' => $bdopts]),
+                ]],
                 'submit_label' => _SAVE,
-            ]));
+            ]);
         } else {
-            $export = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+            $export = $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $ocont = '';
         $entries = scandir('uploads/shop/temp');
@@ -975,28 +1115,41 @@ function export(): void {
                     $in = ['#(.*?)products\\.csv#', '#(.*?)clients\\.csv#', '#(.*?)partners\\.csv#'];
                     $out = [_PRODUCTS, _CLIENTS, _PARTNERS];
                     $name = preg_replace($in, $out, $entry);
-                    $ocont .= getTplOption($entry, $name.' - '.$entry);
+                    $ocont .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $entry, 'label_text' => $name.' - '.$entry]);
                 }
             }
         }
         $import = '';
         if ($ocont) {
-            $import = getTplAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-import-rows', [
-                'file_html' => getTplSelect('bd', $ocont, 'sl_form'),
-                'file_label' => _FILE.':',
-                'hidden_html' => getTplHiddenInput('name', 'shop').getTplHiddenInput('id', '2').getTplHiddenInput('op', 'export'),
+            $import = $tpl->getHtmlFrag('new/form', [
+                'action_url' => $afile.'.php',
+                'hidden' => [
+                    ['nameattr' => 'name', 'valueattr' => 'shop'],
+                    ['nameattr' => 'op', 'valueattr' => 'export'],
+                    ['nameattr' => 'id', 'valueattr' => '2'],
+                    ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                ],
+                'rows' => [[
+                    'label_html' => _FILE.':',
+                    'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'bd', 'options_html' => $ocont]),
+                ]],
                 'submit_label' => _SEND,
-            ]));
+            ]);
         } else {
-            $import = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+            $import = $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
-        $content = $tpl->getHtmlFrag('admin-shop-export-tabs', [
-            'export_id' => getTplAdminTabName('exports', 0, true),
-            'import_id' => getTplAdminTabName('exports', 1, true),
-            'export_html' => $export,
-            'import_html' => $import,
-        ]).$tpl->getHtmlFrag('admin-shop-export-script', []);
-        $cont .= getTplBox($content);
+        $tabs = $tpl->getHtmlFrag('new/tabs', [
+            'id' => 'shop-export-tabs',
+            'is_runtime' => true,
+            'is_subtabs' => true,
+            'tabs_html' =>
+                $tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'is_active' => true, 'label' => _EXPORT, 'rel' => 'shop-export-panel-0', 'title' => _EXPORT])
+                .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _IMPORT, 'rel' => 'shop-export-panel-1', 'title' => _IMPORT]),
+            'content_html' =>
+                $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'shop-export-panel-0', 'content_html' => $export])
+                .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'shop-export-panel-1', 'content_html' => $import]),
+        ]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tabs]);
         echo $cont;
         setFoot();
     }
@@ -1004,170 +1157,137 @@ function export(): void {
 
 function config(): void {
     global $afile, $conf, $tpl;
-        setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    setHead();
+    $_ops = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $cont = getTplAdminNavi([
-        'ops'  => $_ops,
+    $cont = getTplAdminTabs([
+        'ops' => $_ops,
         'tabs' => $_lang,
-        'sub'  => $box,
-        'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
-        'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
-        'tab'  => 4,
+        'tab' => 4,
+        'subtitle_html' => buildShopSearchBox(),
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
-    $cfgrows = $tpl->getHtmlFrag('admin-shop-config-rows', [
-        'assoc_html' => radio_form($conf['shop']['assoc'], 'assoc'),
-        'assoc_label' => _C_23,
-        'assocnum_label' => _C_11.':',
-        'assocnum_value' => (string)$conf['shop']['assocnum'],
-        'anump_label' => _C_36.':',
-        'anump_value' => (string)$conf['shop']['anump'],
-        'anum_label' => _C_34.':',
-        'anum_value' => (string)$conf['shop']['anum'],
-        'bascol_label' => _BASCOL.':',
-        'bascol_value' => (string)$conf['shop']['bascol'],
-        'catdesc_html' => radio_form($conf['shop']['catdesc'], 'catdesc'),
-        'catdesc_label' => _C_32,
-        'cdefis_label' => _CDEFIS.':',
-        'cdefis_value' => urldecode($conf['shop']['defis'] ?? ''),
-        'clients_label' => _C_0.':',
-        'clients_value' => (string)$conf['shop']['clients'],
-        'clientsone_label' => _C_2.':',
-        'clientsone_value' => (string)$conf['shop']['clients1'],
-        'clientstwo_label' => _C_4.':',
-        'clientstwo_value' => (string)$conf['shop']['clients2'],
-        'date_html' => radio_form($conf['shop']['date'], 'date'),
-        'date_label' => _C_17,
-        'homcat_html' => radio_form($conf['shop']['homcat'], 'homcat'),
-        'homcat_label' => _HOMCAT,
-        'letter_html' => radio_form($conf['shop']['letter'], 'letter'),
-        'letter_label' => _C_20,
-        'listnum_label' => _C_13.':',
-        'listnum_value' => (string)$conf['shop']['listnum'],
-        'mail_label' => _C_7.':',
-        'mail_value' => (string)$conf['shop']['mail'],
-        'mailsend_html' => radio_form($conf['shop']['mailsend'], 'mailsend'),
-        'mailsend_label' => _C_24,
-        'mailuser_html' => radio_form($conf['shop']['mailuser'], 'mailuser'),
-        'mailuser_label' => _C_14,
-        'num_label' => _C_33.':',
-        'num_value' => (string)$conf['shop']['num'],
-        'nump_label' => _C_35.':',
-        'nump_value' => (string)$conf['shop']['nump'],
-        'part_html' => radio_form($conf['shop']['part'], 'part'),
-        'part_label' => _C_25,
-        'partdays_label' => _C_9.':',
-        'partdays_value' => (string)intval($conf['shop']['part_t'] / 86400),
-        'partinfo_html' => textarea('3', 'partinfo', $conf['shop']['partinfo'], 'shop', '5', _C_29, '1'),
-        'partinfo_label' => _C_29.':',
-        'partinfoextra_html' => textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1'),
-        'partinfoextra_label' => _C_30.':',
-        'partlink_label_html' => getTplAdminHintLabel(_C_26, _PART_ID),
-        'partlink_value' => (string)$conf['shop']['partlink'],
-        'proz_label' => _C_1.':',
-        'proz_value' => (string)$conf['shop']['proz'],
-        'prozone_label' => _C_3.':',
-        'prozone_value' => (string)$conf['shop']['proz1'],
-        'proztwo_label' => _C_5.':',
-        'proztwo_value' => (string)$conf['shop']['proz2'],
-        'rate_html' => radio_form($conf['shop']['rate'], 'rate'),
-        'rate_label' => _C_19,
-        'read_html' => radio_form($conf['shop']['read'], 'read'),
-        'read_label' => _C_18,
-        'savechanges_label' => _SAVECHANGES,
-        'sende_html' => textarea('1', 'sende', $conf['shop']['sende'], 'shop', '5', _C_27, '1'),
-        'sende_label' => _C_27.':',
-        'shopdays_label' => _C_8.':',
-        'shopdays_value' => (string)intval($conf['shop']['shop_t'] / 86400),
-        'shopinfo_html' => textarea('5', 'shopinfo', $conf['shop']['shopinfo'], 'shop', '5', _C_31, '1'),
-        'shopinfo_label' => _C_31.':',
-        'subcat_html' => radio_form($conf['shop']['subcat'], 'subcat'),
-        'subcat_label' => _C_15,
-        'userinfo_html' => textarea('2', 'userinfo', $conf['shop']['userinfo'], 'shop', '5', _C_28, '1'),
-        'userinfo_label' => _C_28.':',
-        'valute_label' => _C_6.':',
-        'valute_value' => (string)$conf['shop']['valute'],
-        'viewcat_html' => radio_form($conf['shop']['viewcat'], 'viewcat'),
-        'viewcat_label' => _VIEWCAT,
+    $yesno = static fn(string $name, int|string $value): string => getTplRadioGroup([
+        'name' => $name,
+        'value' => $value,
+        'options' => [
+            ['value' => '1', 'label' => _YES],
+            ['value' => '0', 'label' => _NO],
+        ],
     ]);
-    $cont .= getTplBox(getTplAdminForm($afile.'.php', $cfgrows, '', 'sl_table_conf', 'post', 'post'));
+    $rows = [
+        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['shop']['defis'] ?? '')])],
+        ['label_html' => _C_0.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'clients', 'value_attr' => (string)$conf['shop']['clients']])],
+        ['label_html' => _C_2.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'clients1', 'value_attr' => (string)$conf['shop']['clients1']])],
+        ['label_html' => _C_4.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'clients2', 'value_attr' => (string)$conf['shop']['clients2']])],
+        ['label_html' => _C_1.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'proz', 'value_attr' => (string)$conf['shop']['proz']])],
+        ['label_html' => _C_3.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'proz1', 'value_attr' => (string)$conf['shop']['proz1']])],
+        ['label_html' => _C_5.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'proz2', 'value_attr' => (string)$conf['shop']['proz2']])],
+        ['label_html' => _C_6.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'valute', 'value_attr' => (string)$conf['shop']['valute']])],
+        ['label_html' => _C_7.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)$conf['shop']['mail']])],
+        ['label_html' => _C_8.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'shop', 'value_attr' => (string)intval($conf['shop']['shop_t'] / 86400)])],
+        ['label_html' => _C_9.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'partdays', 'value_attr' => (string)intval($conf['shop']['part_t'] / 86400)])],
+        ['label_html' => _BASCOL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => (string)$conf['shop']['bascol']])],
+        ['label_html' => _C_11.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'assocnum', 'value_attr' => (string)$conf['shop']['assocnum']])],
+        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)$conf['shop']['listnum']])],
+        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['shop']['num']])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['shop']['anum']])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['shop']['nump']])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['shop']['anump']])],
+        ['label_html' => _HOMCAT, 'field_html' => $yesno('homcat', $conf['shop']['homcat'])],
+        ['label_html' => _VIEWCAT, 'field_html' => $yesno('viewcat', $conf['shop']['viewcat'])],
+        ['label_html' => _C_32, 'field_html' => $yesno('catdesc', $conf['shop']['catdesc'])],
+        ['label_html' => _C_15, 'field_html' => $yesno('subcat', $conf['shop']['subcat'])],
+        ['label_html' => _C_14, 'field_html' => $yesno('mailuser', $conf['shop']['mailuser'])],
+        ['label_html' => _C_17, 'field_html' => $yesno('date', $conf['shop']['date'])],
+        ['label_html' => _C_18, 'field_html' => $yesno('read', $conf['shop']['read'])],
+        ['label_html' => _C_19, 'field_html' => $yesno('rate', $conf['shop']['rate'])],
+        ['label_html' => _C_20, 'field_html' => $yesno('letter', $conf['shop']['letter'])],
+        ['label_html' => _C_23, 'field_html' => $yesno('assoc', $conf['shop']['assoc'])],
+        ['label_html' => _C_24, 'field_html' => $yesno('mailsend', $conf['shop']['mailsend'])],
+        ['label_html' => _C_25, 'field_html' => $yesno('part', $conf['shop']['part'])],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _C_26, 'hint' => _PART_ID]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'partlink_view', 'value_attr' => (string)$conf['shop']['partlink'], 'input_attr' => ' readonly']), 'is_full' => true],
+        ['label_html' => _C_27.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'sende', 'value_text' => (string)$conf['shop']['sende'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_28.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'userinfo', 'value_text' => (string)$conf['shop']['userinfo'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_29.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'partinfo', 'value_text' => (string)$conf['shop']['partinfo'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_30.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_31.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'shopinfo', 'value_text' => (string)$conf['shop']['shopinfo'], 'rows_num' => 5]), 'is_full' => true],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'shop'],
+            ['nameattr' => 'op', 'valueattr' => 'save'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function save(): void {
     global $afile, $conf;
+    $warn = !checkSiteToken();
+    if (!$warn) {
         $defis = getVar('post', 'defis', 'text', urldecode($conf['shop']['defis'] ?? '%3E'));
-    $xdefis = ($defis) ? urlencode($defis) : '%3E';
-    $shop = getVar('post', 'shop', 'num', (int)(($conf['shop']['shop_t'] ?? 2592000) / 86400));
-    $xtshop = (!$shop) ? 2592000 : intval($shop * 86400);
-    $part = getVar('post', 'part', 'num', (int)(($conf['shop']['part_t'] ?? 2592000) / 86400));
-    $xtpart = (!$part) ? 2592000 : intval($part * 86400);
-    $bascol = getVar('post', 'bascol', 'num', (int)($conf['shop']['bascol'] ?? 1));
-    $xcol = (!$bascol) ? '1' : $bascol;
-    $sende = getVar('post', 'sende', 'text', $conf['shop']['sende'] ?? '');
-    $userinfo = getVar('post', 'userinfo', 'text', $conf['shop']['userinfo'] ?? '');
-    $partinfo = getVar('post', 'partinfo', 'text', $conf['shop']['partinfo'] ?? '');
-    $partinfo2 = getVar('post', 'partinfo2', 'text', $conf['shop']['partinfo2'] ?? '');
-    $shopinfo = getVar('post', 'shopinfo', 'text', $conf['shop']['shopinfo'] ?? '');
-    $cont = [
-        'defis' => $xdefis,
-        'clients' => getVar('post', 'clients', 'num', (int)($conf['shop']['clients'] ?? 1)),
-        'clients1' => getVar('post', 'clients1', 'num', (int)($conf['shop']['clients1'] ?? 1)),
-        'clients2' => getVar('post', 'clients2', 'num', (int)($conf['shop']['clients2'] ?? 1)),
-        'proz' => getVar('post', 'proz', 'num', (int)($conf['shop']['proz'] ?? 1)),
-        'proz1' => getVar('post', 'proz1', 'num', (int)($conf['shop']['proz1'] ?? 1)),
-        'proz2' => getVar('post', 'proz2', 'num', (int)($conf['shop']['proz2'] ?? 1)),
-        'valute' => getVar('post', 'valute', 'text', $conf['shop']['valute'] ?? ''),
-        'mail' => getVar('post', 'mail', 'text', $conf['shop']['mail'] ?? ''),
-        'shop_t' => $xtshop,
-        'part_t' => $xtpart,
-        'bascol' => $xcol,
-        'assocnum' => getVar('post', 'assocnum', 'num', (int)($conf['shop']['assocnum'] ?? 10)),
-        'listnum' => getVar('post', 'listnum', 'num', (int)($conf['shop']['listnum'] ?? 10)),
-        'num' => getVar('post', 'num', 'num', (int)($conf['shop']['num'] ?? 10)),
-        'anum' => getVar('post', 'anum', 'num', (int)($conf['shop']['anum'] ?? 10)),
-        'nump' => getVar('post', 'nump', 'num', (int)($conf['shop']['nump'] ?? 10)),
-        'anump' => getVar('post', 'anump', 'num', (int)($conf['shop']['anump'] ?? 10)),
-        'homcat' => getVar('post', 'homcat', 'num', (int)($conf['shop']['homcat'] ?? 1)),
-        'viewcat' => getVar('post', 'viewcat', 'num', (int)($conf['shop']['viewcat'] ?? 1)),
-        'catdesc' => getVar('post', 'catdesc', 'num', (int)($conf['shop']['catdesc'] ?? 1)),
-        'subcat' => getVar('post', 'subcat', 'num', (int)($conf['shop']['subcat'] ?? 1)),
-        'mailuser' => getVar('post', 'mailuser', 'num', (int)($conf['shop']['mailuser'] ?? 1)),
-        'date' => getVar('post', 'date', 'num', (int)($conf['shop']['date'] ?? 1)),
-        'read' => getVar('post', 'read', 'num', (int)($conf['shop']['read'] ?? 1)),
-        'rate' => getVar('post', 'rate', 'num', (int)($conf['shop']['rate'] ?? 1)),
-        'letter' => getVar('post', 'letter', 'num', (int)($conf['shop']['letter'] ?? 1)),
-        'assoc' => getVar('post', 'assoc', 'num', (int)($conf['shop']['assoc'] ?? 1)),
-        'mailsend' => getVar('post', 'mailsend', 'num', (int)($conf['shop']['mailsend'] ?? 1)),
-        'part' => getVar('post', 'part', 'num', (int)($conf['shop']['part'] ?? 1)),
-        'partlink' => $conf['homeurl'].'/index.php?name=shop&amp;op=part&amp;id=[id]',
-        'sende' => $sende,
-        'userinfo' => $userinfo,
-        'partinfo' => $partinfo,
-        'partinfo2' => $partinfo2,
-        'shopinfo' => $shopinfo,
-    ];
-    setConfigFile('shop.php', $cont);
-    setRedirect($afile.'.php?name=shop&op=config');
+        $xdefis = ($defis) ? urlencode($defis) : '%3E';
+        $shop = getVar('post', 'shop', 'num', (int)(($conf['shop']['shop_t'] ?? 2592000) / 86400));
+        $xtshop = (!$shop) ? 2592000 : intval($shop * 86400);
+        $part = getVar('post', 'partdays', 'num', getVar('post', 'part', 'num', (int)(($conf['shop']['part_t'] ?? 2592000) / 86400)));
+        $xtpart = (!$part) ? 2592000 : intval($part * 86400);
+        $bascol = getVar('post', 'bascol', 'num', (int)($conf['shop']['bascol'] ?? 1));
+        $xcol = (!$bascol) ? '1' : $bascol;
+        $cont = [
+            'defis' => $xdefis,
+            'clients' => getVar('post', 'clients', 'num', (int)($conf['shop']['clients'] ?? 1)),
+            'clients1' => getVar('post', 'clients1', 'num', (int)($conf['shop']['clients1'] ?? 1)),
+            'clients2' => getVar('post', 'clients2', 'num', (int)($conf['shop']['clients2'] ?? 1)),
+            'proz' => getVar('post', 'proz', 'num', (int)($conf['shop']['proz'] ?? 1)),
+            'proz1' => getVar('post', 'proz1', 'num', (int)($conf['shop']['proz1'] ?? 1)),
+            'proz2' => getVar('post', 'proz2', 'num', (int)($conf['shop']['proz2'] ?? 1)),
+            'valute' => getVar('post', 'valute', 'text', $conf['shop']['valute'] ?? ''),
+            'mail' => getVar('post', 'mail', 'text', $conf['shop']['mail'] ?? ''),
+            'shop_t' => $xtshop,
+            'part_t' => $xtpart,
+            'bascol' => $xcol,
+            'assocnum' => getVar('post', 'assocnum', 'num', (int)($conf['shop']['assocnum'] ?? 10)),
+            'listnum' => getVar('post', 'listnum', 'num', (int)($conf['shop']['listnum'] ?? 10)),
+            'num' => getVar('post', 'num', 'num', (int)($conf['shop']['num'] ?? 10)),
+            'anum' => getVar('post', 'anum', 'num', (int)($conf['shop']['anum'] ?? 10)),
+            'nump' => getVar('post', 'nump', 'num', (int)($conf['shop']['nump'] ?? 10)),
+            'anump' => getVar('post', 'anump', 'num', (int)($conf['shop']['anump'] ?? 10)),
+            'homcat' => getVar('post', 'homcat', 'num', (int)($conf['shop']['homcat'] ?? 1)),
+            'viewcat' => getVar('post', 'viewcat', 'num', (int)($conf['shop']['viewcat'] ?? 1)),
+            'catdesc' => getVar('post', 'catdesc', 'num', (int)($conf['shop']['catdesc'] ?? 1)),
+            'subcat' => getVar('post', 'subcat', 'num', (int)($conf['shop']['subcat'] ?? 1)),
+            'mailuser' => getVar('post', 'mailuser', 'num', (int)($conf['shop']['mailuser'] ?? 1)),
+            'date' => getVar('post', 'date', 'num', (int)($conf['shop']['date'] ?? 1)),
+            'read' => getVar('post', 'read', 'num', (int)($conf['shop']['read'] ?? 1)),
+            'rate' => getVar('post', 'rate', 'num', (int)($conf['shop']['rate'] ?? 1)),
+            'letter' => getVar('post', 'letter', 'num', (int)($conf['shop']['letter'] ?? 1)),
+            'assoc' => getVar('post', 'assoc', 'num', (int)($conf['shop']['assoc'] ?? 1)),
+            'mailsend' => getVar('post', 'mailsend', 'num', (int)($conf['shop']['mailsend'] ?? 1)),
+            'part' => getVar('post', 'part', 'num', (int)($conf['shop']['part'] ?? 1)),
+            'partlink' => $conf['homeurl'].'/index.php?name=shop&amp;op=part&amp;id=[id]',
+            'sende' => getVar('post', 'sende', 'text', $conf['shop']['sende'] ?? ''),
+            'userinfo' => getVar('post', 'userinfo', 'text', $conf['shop']['userinfo'] ?? ''),
+            'partinfo' => getVar('post', 'partinfo', 'text', $conf['shop']['partinfo'] ?? ''),
+            'partinfo2' => getVar('post', 'partinfo2', 'text', $conf['shop']['partinfo2'] ?? ''),
+            'shopinfo' => getVar('post', 'shopinfo', 'text', $conf['shop']['shopinfo'] ?? ''),
+        ];
+        setConfigFile('shop.php', $cont);
+    }
+    setRedirect($afile.'.php?name=shop&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
-    global $afile, $tpl;
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
-    $box = buildShopSearchBox();
-    $cont = getTplAdminNavi([
-        'ops'  => $_ops,
-        'tabs' => $_lang,
-        'sub'  => $box,
-        'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
-        'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
-        'tab'  => 5,
+    setTplAdminInfoPage([
+        'ops' => ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'],
+        'tabs' => [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO],
+        'subtitle_html' => buildShopSearchBox(),
     ]);
-    setAdminInfoPage($cont);
 }
 
 switch($op) {

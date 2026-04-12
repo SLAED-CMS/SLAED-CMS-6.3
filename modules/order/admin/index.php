@@ -8,43 +8,64 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access
 
 function order(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
-    if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OR_8]);
+    setHead();
+    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
+    $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
+    if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _OR_8])]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['order']['anum'] ?? 25;
     $anump = $conf['order']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     $result = $db->getSqlQuery('SELECT id, email, info, note, ip, agent, time, status FROM '.PREFIX_DB.'_order ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
-        $r = $numstories;
-        if ($numstories > $offset) $r -= $offset;
-        $numpages = ceil($numstories / $anum);
-        $head = getTplAdminTableHead([_ID, _EMAIL, _IP, _DATE, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
-            $act = ($status) ? 0 : 1;
+            $act = $status ? 0 : 1;
             $infos = fields_out($info, 'order');
-            $acts = getTplAdminActionMenu([
-                ad_status($afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
-                getTplLinkAction($afile.'.php?name=order&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=order&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-order-list-row', [
-                'actions_html' => $acts,
-                'date_text' => format_time($date, _TIMESTRING),
-                'email_html' => getTplAdminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
-                'id_text' => (string)$id,
-                'ip_html' => user_geo_ip($ip, 4),
-                'status_html' => ad_status('', $status),
-            ]));
-            $r--;
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => [
+                            ['label' => _COMMENT, 'value' => (string)$note],
+                            ['label' => _BROWSER, 'value' => (string)$agent, 'is_last' => true],
+                        ],
+                        'label_text' => anti_spam($email),
+                        'title_html' => $infos,
+                    ])],
+                    ['content_html' => user_geo_ip($ip, 4)],
+                    ['content_html' => format_time($date, _TIMESTRING)],
+                    ['content_html' => ad_status('', $status)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                        ['href' => $afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
+                        ['href' => $afile.'.php?name=order&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                        [
+                            'href' => $afile.'.php?name=order&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                            'label' => _ONDELETE,
+                            'title' => _ONDELETE,
+                            'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\')"',
+                        ],
+                    ]])],
+                ],
+            ])]);
         }
-        $cont .= getTplAdminTable($head, $rows);
-        $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=order&amp;', $anump);
+        $body = $tpl->getHtmlFrag('new/table', [
+            'is_wrapless' => true,
+            'head' => [
+                ['content' => _ID],
+                ['content' => _EMAIL],
+                ['content' => _IP],
+                ['content' => _DATE],
+                ['content' => _STATUS, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'nosort' => true],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=order&amp;', 'table' => '_order', 'field' => 'id']);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -54,34 +75,48 @@ function add(): void {
     global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
-    $mid = $id;
     if ($mid) {
         $result = $db->getSqlQuery('SELECT email, info, note, time FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
         [$email, $field, $note, $date] = $db->getSqlRow($result);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
         $email = getVar('post', 'email', 'text', '');
-        $field = getVar('post', 'field', 'field');
+        $fieldp = getVar('post', 'field[]', 'raw', []);
+        $field = is_array($fieldp) ? filterFields($fieldp) : getVar('post', 'field', 'field');
         $note = getVar('post', 'note', 'text', '');
         $date = getVar('req', 'date', 'time');
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-    if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
-    $hide = getTplHiddenInput('name', 'order');
-    $rows = $tpl->getHtmlFrag('admin-order-add-rows', [
-        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
-        'date_label' => _CHNGSTORY.':',
-        'email_label' => _OR_9.':',
-        'email_value' => $email,
-        'fields_html' => fields_in($field, 'order'),
-        'note_label' => _OR_10.':',
-        'note_placeholder' => _OR_10,
-        'note_value' => $note,
-        'save_html' => ad_save('mid', $mid, 'save'),
-    ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
+    $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
+    $rows = [
+        ['label_html' => _OR_9.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
+        ['label_html' => _OR_10.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
+    ];
+    $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order']));
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=order&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'mid', 'valueattr' => (string)$mid],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'actions' => [
+            'hasname' => (bool)$mid,
+            'nameattr' => 'mid',
+            'opattr' => 'save',
+            'options' => array_merge(
+                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
+                $mid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
+            ),
+            'submit_label' => _OK,
+            'valueattr' => $mid,
+        ],
+        'rows' => $rows,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -90,106 +125,123 @@ function save(): void {
     global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num', 0);
     $email = getVar('post', 'email', 'text', '');
-    $field = getVar('post', 'field', 'field');
+    $fieldp = getVar('post', 'field[]', 'raw', []);
+    $field = is_array($fieldp) ? filterFields($fieldp) : getVar('post', 'field', 'field');
     $note = getVar('post', 'note', 'text', '');
     $date = getVar('req', 'date', 'time');
-    checkemail($email);
     $posttype = getVar('post', 'posttype', 'text', '');
-    if (!$stop && $posttype === 'save') {
-        if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $field, 'note' => $note, 'time' => $date, 'mid' => $mid]);
-        } else {
-            $ip = getip();
-            $agent = getagent();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $field, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
+    $iswarn = !checkSiteToken();
+    $stop = [];
+    if (!$iswarn) {
+        checkemail($email);
+        if (!$stop && $posttype === 'save') {
+            if ($mid) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $field, 'note' => $note, 'time' => $date, 'mid' => $mid]);
+            } else {
+                $ip = getip();
+                $agent = getagent();
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $field, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
+            }
         }
-        setRedirect($afile.'.php?name=order');
-    } elseif ($posttype === 'delete') {
-        delete($mid);
-    } else {
-        add();
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    if ($posttype === 'preview') {
+        add();
+        return;
+    }
+    if ($posttype === 'delete') {
+        delete($mid);
+        return;
+    }
+    setRedirect($afile.'.php?name=order', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function delete(int $did = 0): void {
     global $db, $afile;
-    $id = $did ? $did : getVar('req', 'id', 'num', 0);
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=order');
+    $id = $did ?: getVar('req', 'id', 'num', 0);
+    $iswarn = !$did && !checkSiteToken();
+    if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=order', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function activate(): void {
-    global $db, $afile, $conf, $tpl;
-        $act = getVar('get', 'act', 'num', 0);
+    global $db, $afile, $conf;
+    $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
-    if ($act) {
-        [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
-        $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
-        $subject = ($conf['sitename'] ?? '').' - '._ORDER;
-        $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
-        $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
-        addMail($email, $amail, $subject, $msg, 0, 3);
-        setRedirect($afile.'.php?name=order&send=1');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn && $id) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
+        if ($act) {
+            [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
+            $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
+            $subject = ($conf['sitename'] ?? '').' - '._ORDER;
+            $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
+            $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
+            addMail($email, $amail, $subject, $msg, 0, 3);
+        }
     }
-    setRedirect($afile.'.php?name=order');
+    $succ = $act ? _OR_8 : _SUCCSTATUS;
+    $url = $act ? $afile.'.php?name=order&send=1' : $afile.'.php?name=order';
+    setRedirect($url, false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
+    $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'order',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_or1' => _OR_1,
-        'mail' => $conf['order']['mail'] ?? '',
-        '_c34' => _C_34,
-        'anum' => $conf['order']['anum'] ?? 25,
-        '_c36' => _C_36,
-        'anump' => $conf['order']['anump'] ?? 10,
-        '_or2' => _OR_2,
-        'r_an' => radio_form($conf['order']['an'] ?? 0, 'an'),
-        '_or3' => _OR_3,
-        'r_pr' => radio_form($conf['order']['pr'] ?? 0, 'pr'),
-        '_or4' => _OR_4,
-        'r_ad' => radio_form($conf['order']['ad'] ?? 0, 'ad'),
-        '_or5' => _OR_5,
-        't_text' => textarea('1', 'text', $conf['order']['text'] ?? '', 'all', '5', _OR_5, '1'),
-        '_or6' => _OR_6,
-        't_info' => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', '5', _OR_6, '1'),
-        '_or7' => _OR_7,
-        't_sendinfo' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', '5', _OR_7, '1'),
-        'order' => true,
-    ]));
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $rows = [
+        ['label_html' => _OR_1.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
+        ['label_html' => _OR_2, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _OR_3, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _OR_4, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _OR_5.':', 'field_html' => textarea('1', 'text', $conf['order']['text'] ?? '', 'all', 5, _OR_5, '1'), 'is_full' => true],
+        ['label_html' => _OR_6.':', 'field_html' => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', 5, _OR_6, '1'), 'is_full' => true],
+        ['label_html' => _OR_7.':', 'field_html' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', 5, _OR_7, '1'), 'is_full' => true],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=order&amp;op=configsave',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function configsave(): void {
     global $afile;
-    $cont = [
-        'mail' => getVar('post', 'mail', 'text', ''),
-        'anum' => getVar('post', 'anum', 'num', 25),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'an' => getVar('post', 'an', 'num', 0),
-        'pr' => getVar('post', 'pr', 'num', 0),
-        'ad' => getVar('post', 'ad', 'num', 0),
-        'text' => getVar('post', 'text', 'text', ''),
-        'info' => getVar('post', 'info', 'text', ''),
-        'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
-    ];
-    setConfigFile('order.php', $cont);
-    setRedirect($afile.'.php?name=order&op=config');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'mail' => getVar('post', 'mail', 'text', ''),
+            'anum' => getVar('post', 'anum', 'num', 25),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'an' => getVar('post', 'an', 'num', 0),
+            'pr' => getVar('post', 'pr', 'num', 0),
+            'ad' => getVar('post', 'ad', 'num', 0),
+            'text' => getVar('post', 'text', 'text', ''),
+            'info' => getVar('post', 'info', 'text', ''),
+            'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
+        ];
+        setConfigFile('order.php', $cont);
+    }
+    setRedirect($afile.'.php?name=order&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

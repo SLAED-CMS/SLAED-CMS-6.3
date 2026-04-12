@@ -8,7 +8,9 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('news')) die('Illegal file access'
 
 function news(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
+    setHead();
+    $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['news']['anum'] ?? 25;
     $anump = $conf['news']['anump'] ?? 10;
@@ -17,58 +19,104 @@ function news(): void {
         $status = '0';
         $field = 'name=news&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=news&amp;';
         $refer = '';
-        $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $hide = getTplHiddenInput('name', 'news').getTplHiddenInput('op', 'actions').getTplHiddenInput('refer', '1');
-        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]).$tpl->getHtmlFrag('th', ['content' => $tpl->getHtmlFrag('form-checkall', ['title' => _CHECKALL]), 'nosort' => true]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $ctitle = ($cid) ? $ctitle : _NO;
-            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
+            $items = [];
             if ($status && time() >= strtotime($time)) {
-                $view = getTplLinkAction('index.php?name=news&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
+                $items[] = ['href' => 'index.php?name=news&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
-                $view = '';
                 $active = '0';
             }
-            $vote = ($vote) ? getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$vote, _EDITVOTE, _EDITVOTE) : '';
-            $acts = getTplAdminActionMenu([
-                $view,
-                $vote,
-                getTplLinkAction($afile.'.php?name=news&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
-            ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
-                'actions_html' => $acts,
-                'checkbox_html' => $tpl->getHtmlFrag('td-check', ['id' => (string)$id]),
-                'id_text' => (string)$id,
-                'post_html' => $post,
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
-            ]));
+            if ($vote) $items[] = ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$vote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
+            $items[] = ['href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = [
+                'href' => $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'label' => _ONDELETE,
+                'title' => _ONDELETE,
+                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+            ];
+            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        'items' => [
+                            ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
+                            ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
+                            ['label' => _IP, 'value' => $ip ? user_geo_ip($ip, 4) : _NO, 'is_last' => true],
+                        ],
+                        'label_text' => cutstr($title, 60),
+                        'title_text' => $title,
+                    ])],
+                    ['content_html' => $post],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['content_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'input_attr' => ' class="sl_check"'])],
+                ],
+            ])]);
         }
-        $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' '.getTplAdminSubmitButton(_OK);
-        $numpt = setArticleNumbers('pagenum', '', $anum, $field, 'id', '_news', '', 'status = \''.$status.'\'', $anump);
-        $bottom = $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
-        $cont .= getTplAdminListForm(getTplAdminTable($head, $rows), $bottom, $hide);
+        $catopts = '';
+        $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
+        while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
+            $catopts .= $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => (string)$catid,
+                'label_text' => _MOVETO.': '.$cattitle,
+            ]);
+        }
+        $actopts =
+            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _OPMOD, 'is_selected' => true])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'a1', 'label_text' => _ACTIVATE])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'a0', 'label_text' => _DEACTIVATE])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'f1', 'label_text' => _FIXED])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'f0', 'label_text' => _LNFIX])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'h1', 'label_text' => _LHOME])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'h0', 'label_text' => _LNHOME])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 't1', 'label_text' => _LADATE])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'c1', 'label_text' => _APOSTMOD])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'c0', 'label_text' => _APOSTNOMOD])
+            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _DELETE])
+            .$catopts;
+        $body = $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php?name=news&amp;op=actions',
+            'hidden' => array_filter([
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                $status === '0' ? ['nameattr' => 'refer', 'valueattr' => '1'] : null,
+            ]),
+            'content_html' => $tpl->getHtmlFrag('new/table', [
+                'is_wrapless' => true,
+                'head' => [
+                    ['content' => _ID],
+                    ['content' => _TITLE],
+                    ['content' => _POSTEDBY],
+                    ['content' => _STATUS, 'nosort' => true],
+                    ['content' => _FUNCTIONS, 'nosort' => true],
+                    ['content' => '<input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')">', 'nosort' => true],
+                ],
+                'rows_html' => $rows,
+            ]).getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']),
+            'actions_html' => _CHECKOP.': '.$tpl->getHtmlFrag('new/select', ['name_attr' => 'typ', 'options_html' => $actopts]),
+            'submit_label' => _OK,
+        ]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop, $tpl;
+    global $db, $afile, $conf, $locale, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     if ($id) {
         $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.intro, s.body, s.field, s.vote, s.ihome, s.acomm, s.assoc, s.fix, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE id = :id', ['id' => $id]);
@@ -92,6 +140,7 @@ function add(): void {
         $postname = getVar('post', 'postname', 'name', '');
         $subject = getVar('post', 'subject', 'title', '');
         $associated = getVar('post', 'associated', 'array', []);
+        $associated = is_array($associated) ? $associated : [];
         $cat = getVar('post', 'cat', 'num', 0);
         $hometext = getVar('post', 'hometext', 'text', '');
         $bodytext = getVar('post', 'bodytext', 'text', '');
@@ -103,59 +152,96 @@ function add(): void {
         $fix = getVar('post', 'fix', 'num', 0);
     }
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $homepre = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'repnews', 'content' => getVotingView($vote, 'news')]).$hometext : $hometext;
-    if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $hide = getTplHiddenInput('name', 'news');
-    $rows = '';
-    $asso = '';
-    $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
-    if ($db->getSqlRowCount($result2) > 0) {
-        $rows_html = '<tr>';
-        $a = 0;
-        while ([$cid, $ctitle] = $db->getSqlRow($result2)) {
-            if ($a === 2) { $rows_html .= '</tr>'.'<tr>'; $a = 0; }
-            $check = '';
-            if ($associated && is_array($associated)) {
-                foreach ($associated as $val) {
-                    if ((int)$val === (int)$cid) $check = ' checked';
-                }
-            }
-            $rows_html .= $tpl->getHtmlFrag('admin-news-asso-cell', ['cid' => $cid, 'ctitle' => $ctitle, 'checked' => $check]);
-            $a++;
-        }
-        $rows_html .= '</tr>';
-        $asso = $tpl->getHtmlFrag('admin-shop-assoc-table', ['rows_html' => $rows_html]);
+    if ($homepre) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $homepre, 'textb' => $bodytext, 'field' => $field, 'mod' => 'news']);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _PAGENOTE]);
+    $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
+    $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
+    $assohtml = '';
+    while ([$cid, $ctitle] = $db->getSqlRow($catres)) {
+        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$cid,
+            'label_text' => $ctitle,
+            'is_selected' => (int)$cid === (int)$cat,
+        ]);
+        $assohtml .= $tpl->getHtmlFrag('new/label-item', [
+            'item_class' => 'sl-right',
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+                'name_attr' => 'associated[]',
+                'value_attr' => (string)$cid,
+                'is_checked' => in_array((string)$cid, array_map('strval', $associated), true),
+            ]),
+            'label_html' => htmlspecialchars($ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+        ]);
     }
-    $rows .= $tpl->getHtmlFrag('admin-news-add-rows', [
-        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
-        'acomm_label' => _COMMENTS.':',
-        'associated_html' => $asso,
-        'associated_label_html' => getTplAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI),
-        'body_html' => textarea('2', 'bodytext', $bodytext, 'news', '15', _ENDTEXT, '0'),
-        'body_label' => _ENDTEXT.':',
-        'cat_html' => getcat('news', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
-        'cat_label' => _CATEGORY.':',
-        'field_html' => fields_in($field, 'news'),
-        'fix_html' => radio_form($fix, 'fix'),
-        'fix_label' => _FIXED.'?',
-        'hometext_html' => textarea('1', 'hometext', $hometext, 'news', '5', _TEXT, '1'),
-        'hometext_label' => _TEXT.':',
-        'ihome_html' => radio_form($ihome, 'ihome'),
-        'ihome_label' => _PUBHOME,
-        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
-        'postname_label' => _POSTEDBY.':',
-        'save_html' => ad_save('id', $id, 'save'),
-        'subject_label' => _TITLE.':',
-        'subject_value' => $subject,
-        'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
-        'time_label' => _CHNGSTORY.':',
-        'vote_html' => add_voting('news', 'vote', $vote, 'sl_form'),
-        'vote_label' => _VOTING.':',
-    ]);
-    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
+    $voteopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !$vote]);
+    $vpars = ['modul' => 'news'];
+    if ($conf['multilingual'] == 1) {
+        $where = "(lang = :locale OR lang = '') AND modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $vpars['locale'] = $locale;
+    } else {
+        $where = "modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+    }
+    $voting = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $vpars);
+    while ([$vid, $vtitle] = $db->getSqlRow($voting)) {
+        $voteopts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$vid,
+            'label_text' => $vtitle,
+            'is_selected' => (int)$vote === (int)$vid,
+        ]);
+    }
+    $commopts =
+        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
+        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
+    $rows = [
+        [
+            'label_html' => _POSTEDBY.':',
+            'field_html' => getTplUserSearchInput([
+                'input_id' => 'postname',
+                'list_id' => 'postname_list',
+                'maxlength' => 25,
+                'minlength' => (int)$conf['search']['slet'],
+                'name' => 'postname',
+                'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+                'value' => $postname,
+            ]),
+        ],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'news', 5, _TEXT, '1'), 'is_full' => true],
+        ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'news', 15, _ENDTEXT, '0'), 'is_full' => true],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _VOTING.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'vote', 'options_html' => $voteopts])],
+        ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => (string)$fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assohtml, 'is_full' => true],
+    ];
+    $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'news']));
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=news&amp;op=save',
+        'hidden' => [
+            ['nameattr' => 'id', 'valueattr' => (string)$id],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'actions' => [
+            'hasname' => (bool)$id,
+            'nameattr' => 'id',
+            'opattr' => 'save',
+            'options' => array_merge(
+                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
+                $id ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
+            ),
+            'submit_label' => _OK,
+            'valueattr' => $id,
+        ],
+        'rows' => $rows,
+    ])]);
     echo $cont;
     setFoot();
 }
@@ -170,32 +256,44 @@ function save(): void {
     $cat = getVar('post', 'cat', 'num', 0);
     $hometext = getVar('post', 'hometext', 'text', '');
     $bodytext = getVar('post', 'bodytext', 'text', '');
-    $field = getVar('post', 'field', 'field');
+    $fieldp = getVar('post', 'field[]', 'raw', []);
+    $field = is_array($fieldp) ? filterFields($fieldp) : '';
     $vote = getVar('post', 'vote', 'num', 0);
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $time = getVar('req', 'time', 'time');
     $fix = getVar('post', 'fix', 'num', 0);
-    $stop = [];
-    if (!$subject) $stop[] = _CERROR;
-    if (!$hometext) $stop[] = _CERROR1;
-    if (!$postname) $stop[] = _CERROR3;
     $posttype = getVar('post', 'posttype', 'text', '');
-    if (!$stop && $posttype === 'save') {
-        $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
-        if ($id) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, assoc = :assoc, fix = :fix, status = \'1\' WHERE id = :id', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'assoc' => $associated, 'fix' => $fix, 'id' => $id]);
-        } else {
-            $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (id, cid, uid, name, title, time, intro, body, field, vote, comments, counter, ihome, acomm, score, ratings, assoc, ip, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :assoc, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'assoc' => $associated, 'ip' => $ip, 'fix' => $fix]);
+    $iswarn = !checkSiteToken();
+    $stop = [];
+    if (!$iswarn) {
+        if (!$subject) $stop[] = _CERROR;
+        if (!$hometext) $stop[] = _CERROR1;
+        if (!$postname) $stop[] = _CERROR3;
+        if (!$stop && $posttype === 'save') {
+            $postid = is_user_id($postname) ?: 0;
+            $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
+            if ($id) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, assoc = :assoc, fix = :fix, status = \'1\' WHERE id = :id', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'assoc' => $associated, 'fix' => $fix, 'id' => $id]);
+            } else {
+                $ip = getip();
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (id, cid, uid, name, title, time, intro, body, field, vote, comments, counter, ihome, acomm, score, ratings, assoc, ip, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :assoc, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'assoc' => $associated, 'ip' => $ip, 'fix' => $fix]);
+            }
         }
-        setRedirect($afile.'.php?name=news');
-    } elseif ($posttype === 'delete') {
-        actions($id, 'd');
-    } else {
-        add();
     }
+    if ($stop) {
+        add();
+        return;
+    }
+    if ($posttype === 'preview') {
+        add();
+        return;
+    }
+    if ($posttype === 'delete') {
+        actions($id, 'd');
+        return;
+    }
+    setRedirect($afile.'.php?name=news', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function actions(int|array $ids = 0, string $vtyp = ''): void {
@@ -208,14 +306,15 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
         $req = ($single > 0) ? [$single] : [];
     }
     if (!is_array($ids)) $ids = ($ids > 0) ? [$ids] : [];
-    $all = array_unique(array_filter(array_map('intval', array_merge($req, $ids)), static fn($v): bool => $v > 0));
+    $all = array_unique(array_filter(array_map('intval', array_merge($req, $ids)), static fn($val): bool => $val > 0));
     $typ = $vtyp ?: getVar('post', 'typ', 'text', getVar('get', 'typ', 'text', ''));
     $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
-    if ($all && $typ !== '') {
+    $iswarn = !checkSiteToken();
+    if (!$iswarn && $all && $typ !== '') {
         $keys = [];
         $pars = [];
-        foreach (array_values($all) as $i => $val) {
-            $key = 'id'.$i;
+        foreach (array_values($all) as $pos => $val) {
+            $key = 'id'.$pos;
             $keys[] = ':'.$key;
             $pars[$key] = $val;
         }
@@ -238,121 +337,88 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET cid = :typ WHERE id IN ('.$in.')', ['typ' => (int)$typ] + $pars);
         }
     }
-    setRedirect($afile.'.php?name=news'.$refer);
+    $succ = ($typ !== '' && $typ[0] === 'd') ? _SUCCDELETE : _SUCCSTATUS;
+    setRedirect($afile.'.php?name=news'.$refer, false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
 }
 
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
-    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'news',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => '',
-        '_cdefis' => _CDEFIS,
-        'cdefis_label' => _CDEFIS,
-        'defis' => urldecode($conf['news']['defis'] ?? ''),
-        '_bascol' => _BASCOL,
-        'bascol_label' => _BASCOL,
-        'bascol' => $conf['news']['bascol'] ?? 1,
-        '_c11' => _C_11,
-        'c11_label' => _C_11,
-        'asocnum' => $conf['news']['asocnum'] ?? 10,
-        '_c13' => _C_13,
-        'c13_label' => _C_13,
-        'listnum' => $conf['news']['listnum'] ?? 10,
-        '_c33' => _C_33,
-        'c33_label' => _C_33,
-        'num' => $conf['news']['num'] ?? 25,
-        '_c34' => _C_34,
-        'c34_label' => _C_34,
-        'anum' => $conf['news']['anum'] ?? 25,
-        '_c35' => _C_35,
-        'c35_label' => _C_35,
-        'nump' => $conf['news']['nump'] ?? 10,
-        '_c36' => _C_36,
-        'c36_label' => _C_36,
-        'anump' => $conf['news']['anump'] ?? 10,
-        '_homcat' => _HOMCAT,
-        'homcat_label' => _HOMCAT,
-        'r_homcat' => radio_form($conf['news']['homcat'] ?? 0, 'homcat'),
-        '_viewcat' => _VIEWCAT,
-        'viewcat_label' => _VIEWCAT,
-        'r_viewcat' => radio_form($conf['news']['viewcat'] ?? 0, 'viewcat'),
-        '_c32' => _C_32,
-        'c32_label' => _C_32,
-        'r_catdesc' => radio_form($conf['news']['catdesc'] ?? 0, 'catdesc'),
-        '_c15' => _C_15,
-        'c15_label' => _C_15,
-        'r_subcat' => radio_form($conf['news']['subcat'] ?? 0, 'subcat'),
-        '_addamail' => _ADDAMAIL,
-        'addamail_label' => _ADDAMAIL,
-        'r_addmail' => radio_form($conf['news']['addmail'] ?? 0, 'addmail'),
-        '_c39' => _C_39,
-        'c39_label' => _C_39,
-        'r_add' => radio_form($conf['news']['add'] ?? 0, 'add'),
-        '_c40' => _C_40,
-        'c40_label' => _C_40,
-        'r_addquest' => radio_form($conf['news']['addquest'] ?? 0, 'addquest'),
-        '_c37' => _C_37,
-        'c37_label' => _C_37,
-        'r_autor' => radio_form($conf['news']['autor'] ?? 0, 'autor'),
-        '_c17' => _C_17,
-        'c17_label' => _C_17,
-        'r_date' => radio_form($conf['news']['date'] ?? 0, 'date'),
-        '_c18' => _C_18,
-        'c18_label' => _C_18,
-        'r_read' => radio_form($conf['news']['read'] ?? 0, 'read'),
-        '_c19' => _C_19,
-        'c19_label' => _C_19,
-        'r_rate' => radio_form($conf['news']['rate'] ?? 0, 'rate'),
-        '_c20' => _C_20,
-        'c20_label' => _C_20,
-        'r_letter' => radio_form($conf['news']['letter'] ?? 0, 'letter'),
-        '_c23' => _C_23,
-        'c23_label' => _C_23,
-        'r_assoc' => radio_form($conf['news']['assoc'] ?? 0, 'assoc'),
-        'news' => true,
-    ]));
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    $rows = [
+        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['news']['defis'] ?? '')])],
+        ['label_html' => _BASCOL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => $conf['news']['bascol'] ?? 1])],
+        ['label_html' => _C_11.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'asocnum', 'value_attr' => $conf['news']['asocnum'] ?? 10])],
+        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['news']['listnum'] ?? 10])],
+        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['news']['num'] ?? 25])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['news']['anum'] ?? 25])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['news']['nump'] ?? 10])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['news']['anump'] ?? 10])],
+        ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['news']['homcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['news']['viewcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['news']['catdesc'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_15, 'field_html' => getTplRadioGroup(['name' => 'subcat', 'value' => (string)($conf['news']['subcat'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)($conf['news']['addmail'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_39, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => (string)($conf['news']['add'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_40, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => (string)($conf['news']['addquest'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_37, 'field_html' => getTplRadioGroup(['name' => 'autor', 'value' => (string)($conf['news']['autor'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_17, 'field_html' => getTplRadioGroup(['name' => 'date', 'value' => (string)($conf['news']['date'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['news']['read'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['news']['rate'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['news']['letter'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_23, 'field_html' => getTplRadioGroup(['name' => 'assoc', 'value' => (string)($conf['news']['assoc'] ?? 0), 'options' => $yesno])],
+    ];
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=news&amp;op=configsave',
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
+    ])]);
     echo $cont;
     setFoot();
 }
 
 function configsave(): void {
     global $afile;
-    $cont = [
-        'defis' => getVar('post', 'defis', 'defis', '%3E'),
-        'bascol' => getVar('post', 'bascol', 'num', 1),
-        'asocnum' => getVar('post', 'asocnum', 'num', 10),
-        'listnum' => getVar('post', 'listnum', 'num', 10),
-        'num' => getVar('post', 'num', 'num', 25),
-        'anum' => getVar('post', 'anum', 'num', 25),
-        'nump' => getVar('post', 'nump', 'num', 10),
-        'anump' => getVar('post', 'anump', 'num', 10),
-        'homcat' => getVar('post', 'homcat', 'num', 0),
-        'viewcat' => getVar('post', 'viewcat', 'num', 0),
-        'catdesc' => getVar('post', 'catdesc', 'num', 0),
-        'subcat' => getVar('post', 'subcat', 'num', 0),
-        'addmail' => getVar('post', 'addmail', 'num', 0),
-        'add' => getVar('post', 'add', 'num', 0),
-        'addquest' => getVar('post', 'addquest', 'num', 0),
-        'autor' => getVar('post', 'autor', 'num', 0),
-        'date' => getVar('post', 'date', 'num', 0),
-        'read' => getVar('post', 'read', 'num', 0),
-        'rate' => getVar('post', 'rate', 'num', 0),
-        'letter' => getVar('post', 'letter', 'num', 0),
-        'assoc' => getVar('post', 'assoc', 'num', 0),
-    ];
-    setConfigFile('news.php', $cont);
-    setRedirect($afile.'.php?name=news&op=config');
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
+        $cont = [
+            'defis' => getVar('post', 'defis', 'defis', '%3E'),
+            'bascol' => getVar('post', 'bascol', 'num', 1),
+            'asocnum' => getVar('post', 'asocnum', 'num', 10),
+            'listnum' => getVar('post', 'listnum', 'num', 10),
+            'num' => getVar('post', 'num', 'num', 25),
+            'anum' => getVar('post', 'anum', 'num', 25),
+            'nump' => getVar('post', 'nump', 'num', 10),
+            'anump' => getVar('post', 'anump', 'num', 10),
+            'homcat' => getVar('post', 'homcat', 'num', 0),
+            'viewcat' => getVar('post', 'viewcat', 'num', 0),
+            'catdesc' => getVar('post', 'catdesc', 'num', 0),
+            'subcat' => getVar('post', 'subcat', 'num', 0),
+            'addmail' => getVar('post', 'addmail', 'num', 0),
+            'add' => getVar('post', 'add', 'num', 0),
+            'addquest' => getVar('post', 'addquest', 'num', 0),
+            'autor' => getVar('post', 'autor', 'num', 0),
+            'date' => getVar('post', 'date', 'num', 0),
+            'read' => getVar('post', 'read', 'num', 0),
+            'rate' => getVar('post', 'rate', 'num', 0),
+            'letter' => getVar('post', 'letter', 'num', 0),
+            'assoc' => getVar('post', 'assoc', 'num', 0),
+        ];
+        setConfigFile('news.php', $cont);
+    }
+    setRedirect($afile.'.php?name=news&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {
