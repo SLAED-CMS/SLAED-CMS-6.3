@@ -6,14 +6,14 @@
 
 return [
     'rss' => [
-        'act'  => '1',
-        'max'  => '50',
-        'min'  => '10',
-        'rss'  => 'My site name|https://slaed.net/index.php?go=rss|1||SLAED CMS - News|https://slaed.net/index.php?go=rss&name=news|0||SLAED CMS - Links|https://slaed.net/index.php?go=rss&name=links|0||SLAED CMS - Files|https://slaed.net/index.php?go=rss&name=files|0||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1||0|0|1',
-        'temp' => '<table class="sl_table_form">
-<tr><td><span title="[date]" class="sl_date">[date]</span> - <a href="[guid]" target="_blank" title="[title]">[title]</a></td></tr>
-<tr><td style="text-align: justify;">[description]</td></tr>
-</table>',
-        'use'  => '1',
+        'act' => '1',
+        'max' => '50',
+        'min' => '10',
+        'rss' => '0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0||0|0|0',
+        'temp' => '&lt;table class=&quot;sl_table_form&quot;&gt;<br>
+&lt;tr&gt;&lt;td&gt;&lt;span title=&quot;[date]&quot; class=&quot;sl_date&quot;&gt;[date]&lt;/span&gt; - &lt;a href=&quot;[guid]&quot; target=&quot;_blank&quot; title=&quot;[title]&quot;&gt;[title]&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;<br>
+&lt;tr&gt;&lt;td style=&quot;text-align: justify;&quot;&gt;[description]&lt;/td&gt;&lt;/tr&gt;<br>
+&lt;/table&gt;',
+        'use' => '1',
     ],
 ];

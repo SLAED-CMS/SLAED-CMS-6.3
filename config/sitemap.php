@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -20,11 +20,11 @@ return [
         'gen_h' => '1',
         'gen_m' => '1',
         'gen_p' => '1',
-        'mod' => 'faq,files,forum,news',
-        'pr_c' => '0.8',
-        'pr_h' => '1.0',
-        'pr_m' => '0.9',
-        'pr_p' => '0.7',
+        'mod' => '0',
+        'pr_c' => '0',
+        'pr_h' => '0',
+        'pr_m' => '0',
+        'pr_p' => '0',
         'txt' => '1',
         'xsl' => '1',
     ],

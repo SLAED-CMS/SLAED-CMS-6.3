@@ -6,12 +6,12 @@
 
 return [
     'voting' => [
-        'anum'     => '50',
-        'answ'     => '25',
-        'anump'    => '10',
-        'block'    => '2',
-        'num'      => '15',
-        'nump'     => '5',
+        'answ' => '25',
+        'anum' => '50',
+        'anump' => '10',
+        'block' => '2',
+        'num' => '15',
+        'nump' => '5',
         'voting_t' => '2592000',
     ],
 ];
