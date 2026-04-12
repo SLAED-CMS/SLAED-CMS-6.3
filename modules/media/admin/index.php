@@ -129,7 +129,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
-    if ($description) $cont .= preview($mtitle, $description, '', '', 'media');
+    if ($description) $cont .= getTplPreviewContent(['title' => $mtitle, 'texta' => $description, 'mod' => 'media']);
     $yearopts = '';
     $xyear = $date['year'] - 100;
     while ($xyear <= ($date['year'] + 1)) {
@@ -402,7 +402,10 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 5]);
+    setTplAdminInfoPage([
+        'ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

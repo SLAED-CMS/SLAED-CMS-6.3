@@ -97,7 +97,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stoptext]);
-    if ($body) $cont .= preview($title, $body, '', '', 'all');
+    if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
     if ($conf['multilingual'] == 1) {
         $langsel = $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($lang, 1)]);

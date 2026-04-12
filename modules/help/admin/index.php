@@ -173,7 +173,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
-    if ($hometext) $cont .= preview($subject, $hometext, '', $field, 'help');
+    if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'field' => $field, 'mod' => 'help']);
     $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'help\' ORDER BY ordern ASC');
     while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
@@ -340,7 +340,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
+    setTplAdminInfoPage(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
 }
 
 switch ($op) {

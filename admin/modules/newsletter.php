@@ -79,7 +79,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stoptext]);
-    if ($body) $cont .= preview($title, $body, '', '', 'all');
+    if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
     $option = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MASSMAIL.' - '.$num, 'is_selected' => (string)$mails === '1']);
     [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users WHERE newslet = 1'));

@@ -139,7 +139,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 2]);
+    setTplAdminInfoPage(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
 }
 
 switch ($op) {

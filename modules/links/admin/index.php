@@ -116,7 +116,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
-    if ($description) $cont .= preview($title, $description, $bodytext, '', 'links');
+    if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'links']);
     $link = ($site && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
     $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cid]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'links\' ORDER BY ordern ASC');
@@ -307,7 +307,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 5]);
+    setTplAdminInfoPage(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO]]);
 }
 
 switch ($op) {

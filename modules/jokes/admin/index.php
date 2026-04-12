@@ -100,7 +100,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
-    if ($joke) $cont .= preview($title, $joke, '', '', 'all');
+    if ($joke) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $joke, 'mod' => 'all']);
     $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'jokes\' ORDER BY ordern ASC');
     while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
@@ -249,7 +249,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    setTplAdminInfoPage(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
 }
 
 switch ($op) {

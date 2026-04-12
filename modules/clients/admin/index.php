@@ -111,7 +111,7 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     }
     if ($body) {
-        $cont .= preview($title, $body, '', '', 'all');
+        $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     }
     $rows = [
         ['label_html' => _CTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
@@ -190,7 +190,6 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
         'tabs' => [_HOME, _ADD, _INFO],
-        'tab' => 2,
     ]);
 }
 

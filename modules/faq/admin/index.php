@@ -109,7 +109,7 @@ function add(): void {
     $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
+    if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'mod' => 'faq']);
     $catopts = $tpl->getHtmlFrag('new/select-option', [
         'value_attr' => '',
         'label_text' => _HOMECAT,
@@ -280,7 +280,6 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
-        'tab' => 4,
     ]);
 }
 

@@ -65,7 +65,6 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=contact', 'name=contact&amp;op=info'],
         'tabs' => [_PREFERENCES, _INFO],
-        'tab' => 1,
     ]);
 }
 
