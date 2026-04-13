@@ -303,7 +303,7 @@ function forum(): void {
 }
 
 function view(): void {
-    global $db, $user, $conf, $tpl;
+    global $db, $user, $conf, $tpl, $prs;
     $rows = [];
     $where = [];
     $users = [];
@@ -353,7 +353,7 @@ function view(): void {
         $isedit = is_acess($rows[0][22]);
         $isdelete = is_acess($rows[0][23]);
         $ismod = is_acess($rows[0][24]);
-        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($rows[0][7], $conf['name'], false), $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], false, $conf['name']))), 160);
         $seoimg = getImgText($rows[0][7], '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         setHead([
@@ -461,10 +461,10 @@ function view(): void {
                     : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-                $body_html = filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word);
+                $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name']), $word);
                 $text = $tpl->getHtmlFrag('forum-post-div', ['id' => (string)$fid, 'content' => $body_html]);
-                if ($fields) $text .= filterTextHighlight(filterReplaceText(filterMarkdown("\n\n".$fields, $conf['name'], false), $conf['name']), $word);
-                $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'hclass' => $hclass]);
+                if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name']), $word);
+                $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'hclass' => $hclass]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);

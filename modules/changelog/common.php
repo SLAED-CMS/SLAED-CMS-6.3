@@ -219,7 +219,7 @@ function chlogRenderCommitStats(array $commit, bool $showStats, bool $showFiles)
 }
 
 function chlogRenderCommits(array $commits, array $options = []): string {
-    global $tpl;
+    global $tpl, $prs;
     $showStats = !empty($options['showstat']);
     $showFiles = !empty($options['showfile']);
     $html = '';
@@ -238,9 +238,9 @@ function chlogRenderCommits(array $commits, array $options = []): string {
         $bodyHtml = '';
         if (!empty($commit['body']) && $commit['body'] !== CHLOG_COMMIT_END) {
             if (defined('ADMIN_FILE')) {
-                $bodyHtml = '<div class="commit-body">'.filterMarkdown((string)$commit['body'], 'changelog', true).'</div>';
+                $bodyHtml = '<div class="commit-body">'.$prs->filterDoc((string)$commit['body'], true, 'changelog').'</div>';
             } else {
-                $bodyHtml = $tpl->getHtmlFrag('changelog-commit-body', ['content' => filterMarkdown((string)$commit['body'], 'changelog', true)]);
+                $bodyHtml = $tpl->getHtmlFrag('changelog-commit-body', ['content' => $prs->filterDoc((string)$commit['body'], true, 'changelog')]);
             }
         }
 

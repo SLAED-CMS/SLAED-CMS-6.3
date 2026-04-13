@@ -13,7 +13,7 @@ const AUTO_LINKS_NAVI = ['htitle' => _A_LINKS, 'liste_href' => ''];
 
 
 function autolink(): void {
-    global $db, $afile, $user, $conf, $home, $op, $tpl;
+    global $db, $afile, $user, $conf, $home, $op, $tpl, $prs;
     $unum = intval(getUserNews($conf['auto_links']['num']));
     if ($unum < 1) $unum = 1;
     $word = getVar('get', 'word', 'word');
@@ -55,7 +55,7 @@ function autolink(): void {
                 'category_attr' => '',
                 'category_text' => '',
                 'category_img' => '',
-                'text' => filterTextHighlight(filterReplaceText(filterMarkdown($intro, $conf['name'], false), $conf['name']), $word),
+                'text' => filterTextHighlight($prs->filterContent($intro, false, $conf['name']), $word),
                 'read_href' => $thref,
                 'read_text' => _DOWNLLINK,
                 'post_text' => '',

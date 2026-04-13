@@ -284,7 +284,7 @@ function activate(): void {
 }
 
 function view(): void {
-    global $db, $conf, $afile, $tpl;
+    global $db, $conf, $afile, $tpl, $prs;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
@@ -301,7 +301,7 @@ function view(): void {
             $userIpRaw = $ip;
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
-            $seodesc   = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($sig ?? '', $conf['name'], false), $conf['name']))), 160);
+            $seodesc   = cutstr(trim(strip_tags($prs->filterContent($sig ?? '', false, $conf['name']))), 160);
             $seoimg    = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['homeurl'].'/'.$conf['users']['adirectory'].'/'.$avatar : '';
             $seotime   = $last;
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
@@ -334,7 +334,7 @@ function view(): void {
             $occup = ($occ) ? [_OCCUPATION, $occ] : [_OCCUPATION, _NO_INFO];
             $from = ($from) ? [_LOCALITYLANG, $from] : [_LOCALITYLANG, _NO_INFO];
             $inter = ($inter) ? [_INTERESTS, $inter] : [_INTERESTS, _NO_INFO];
-            $sign = ((isAdmin() || is_user()) && $sig) ? filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']) : '';
+            $sign = ((isAdmin() || is_user()) && $sig) ? $prs->filterContent($sig, false, $conf['name']) : '';
             $lang = ($lang) ? [_LANGUAGE, getLangName($lang)] : [_LANGUAGE, getLangName($conf['language'])];
             $points = ($conf['users']['point'] && $point) ? [_POINTS, $point] : [_POINTS, _NO_INFO];
             $warn = [_UWARNS, warnings($warn)];
@@ -560,7 +560,7 @@ function profil(): void {
 }
 
 function last(int|string $uid, string $modul): string {
-    global $db, $conf, $user, $tpl;
+    global $db, $conf, $user, $tpl, $prs;
     $uid = intval($uid);
     $num = getUserNews(25);
     $limit = intval($num);
@@ -570,7 +570,7 @@ function last(int|string $uid, string $modul): string {
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
             while([$id, $cid, $modul, $date, $comment] = $db->getSqlRow($result)) {
-                $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText(filterReplaceText(filterMarkdown($comment, $conf['name'], false), $conf['name']))), 70);
+                $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($comment, false, $conf['name']))), 70);
                 $cont .= $tpl->getHtmlFrag('account-last-row', [
                     'date_iso' => date('c', strtotime($date)),
                     'date_title' => _CHNGSTORY.': '.format_time($date, _TIMESTRING),

@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function clients(): void {
-    global $db, $conf, $afile, $user, $stop, $info, $tpl;
+    global $db, $conf, $afile, $user, $stop, $info, $tpl, $prs;
     getLang('clients');
     setHead(['title' => _PRODUCTSINFO]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _PRODUCTSINFO]);
@@ -47,7 +47,7 @@ function clients(): void {
                 'hits_text' => $hits,
                 'actions' => $acont,
             ]);
-            $conts .= $tpl->getHtmlFrag('clients-list-info', ['panel_id' => 'cl'.$i, 'body' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name'])]);
+            $conts .= $tpl->getHtmlFrag('clients-list-info', ['panel_id' => 'cl'.$i, 'body' => $prs->filterContent($body, false, $conf['name'])]);
             $i++;
             $a++;
         }

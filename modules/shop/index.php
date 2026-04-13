@@ -13,7 +13,7 @@ const SHOP_NAVI = ['htitle' => _SHOP, 'add_href' => ''];
 
 
 function shop(): void {
-	global $db, $conf, $afile, $home, $user, $op, $tpl;
+	global $db, $conf, $afile, $home, $user, $op, $tpl, $prs;
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$unum = getUserNews($conf['shop']['num']);
 	$cat = getVar('get', 'cat', 'num');
@@ -98,7 +98,7 @@ function shop(): void {
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'delete_confirm' => _DELETE.' &quot;'.$stitle.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
 			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
 			$cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-			$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => '', 'title' => $title, 'comm' => $comm, 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => '', 'cimg' => $cimg, 'text' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), 'rating' => $rating, 'goback' => '', 'admin' => $admin, 'read' => $read]);
+			$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => '', 'title' => $title, 'comm' => $comm, 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => '', 'cimg' => $cimg, 'text' => $prs->filterContent($text, false, $conf['name']), 'rating' => $rating, 'goback' => '', 'admin' => $admin, 'read' => $read]);
 			$cont .= $tpl->getHtmlFrag('grid-table-cell', []);
 			if ($i % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
 			$i++;
@@ -155,7 +155,7 @@ function liste(): void {
 }
 
 function view(): void {
-	global $db, $conf, $afile, $tpl;
+	global $db, $conf, $afile, $tpl, $prs;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
@@ -166,7 +166,7 @@ function view(): void {
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
-		$seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']))), 160);
+		$seodesc = cutstr(trim(strip_tags($prs->filterContent($text, false, $conf['name']))), 160);
 		$seoimg = getImgText($text, '', false);
 		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seotime = $time;
@@ -201,7 +201,7 @@ function view(): void {
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
 		$goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'delete_confirm' => _DELETE.' &quot;'.$title.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
-		$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => $favorites, 'title' => filterTextHighlight($title, $word), 'comm' => '', 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => $voting, 'cimg' => $cimg, 'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), 'rating' => $rating, 'goback' => $goback, 'admin' => $admin, 'read' => '']);
+		$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => $favorites, 'title' => filterTextHighlight($title, $word), 'comm' => '', 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => $voting, 'cimg' => $cimg, 'text' => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word), 'rating' => $rating, 'goback' => $goback, 'admin' => $admin, 'read' => '']);
 		if ($conf['shop']['assoc']) {
 			$limit = intval($conf['shop']['assocnum']);
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
@@ -211,7 +211,7 @@ function view(): void {
 				$cont .= $tpl->getHtmlFrag('assoc-wrap', ['open' => true, 'title' => _ASPROD]);
 				while ([$aid, $time, $title, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['shop']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
-					$text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
+					$text = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
 					$cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['shop']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img]);
@@ -228,7 +228,7 @@ function view(): void {
 }
 
 function kasse(): void {
-	global $db, $conf, $stop, $tpl;
+	global $db, $conf, $stop, $tpl, $prs;
 	if (is_user()) {
 		$userinfo = getUserInfo();
 		$sid = $userinfo['id'];
@@ -300,7 +300,7 @@ function kasse(): void {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
 				$msg = $conf['sitename'].' - '._C_TITLE.$brbr;
-				$msg .= filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name']).$brbr;
+				$msg .= $prs->filterContent($conf['shop']['sende'], false, $conf['name']).$brbr;
 				$msg .= $pinfo.$brbr;
 				$msg .= $tpl->getHtmlFrag('bold-text', ['text' => _PERSONALINFO]).$brbr;
 				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _NICKNAME, 'value' => $slogin]);
@@ -322,7 +322,7 @@ function kasse(): void {
 			setcookie('shop', false);
 			setcookie('part', false);
 			update_points(39);
-			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name'])]);
+			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['shop']['sende'], false, $conf['name'])]);
 		} else {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
 			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
@@ -344,7 +344,7 @@ function part(): void {
 }
 
 function clients(): void {
-	global $db, $user, $conf, $tpl;
+	global $db, $user, $conf, $tpl, $prs;
 	if (is_user() && is_active('shop')) {
 		$uid = intval($user[0]);
 		setHead(['title' => _CLIENTINFO]);
@@ -364,7 +364,7 @@ function clients(): void {
 			}
 			$cont .= '</tbody></table>';
 		}
-		$cont .= filterReplaceText(filterMarkdown($conf['shop']['userinfo'], $conf['name'], false), $conf['name']);
+		$cont .= $prs->filterContent($conf['shop']['userinfo'], false, $conf['name']);
 		echo $cont;
 		setFoot();
 	} else {
@@ -373,7 +373,7 @@ function clients(): void {
 }
 
 function rech(): void {
-	global $db, $conf, $theme, $tpl;
+	global $db, $conf, $theme, $tpl, $prs;
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
@@ -388,7 +388,7 @@ function rech(): void {
 				'title' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
 				'logo_src' => img_find('logos/'.$conf['site_logo']),
 				'logo_alt' => $conf['sitename'],
-				'shopinfo' => filterReplaceText(filterMarkdown($conf['shop']['shopinfo'], $conf['name'], false), $conf['name']),
+				'shopinfo' => $prs->filterContent($conf['shop']['shopinfo'], false, $conf['name']),
 				'lbl_name' => _C_PIN,
 				'name' => $cname,
 				'lbl_addr' => _C_PIP,
@@ -409,7 +409,7 @@ function rech(): void {
 				'lbl_license_end' => _LIZENS_END,
 				'license_end' => $cenddate,
 				'product_text_label' => _PRODUCT_TEXT,
-				'product_text' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']),
+				'product_text' => $prs->filterContent($text, false, $conf['name']),
 				'price_label' => _PREIS_TEXT,
 				'price_value' => $pprice.' '.$conf['shop']['valute'],
 			]);
@@ -420,7 +420,7 @@ function rech(): void {
 }
 
 function partners(): void {
-	global $db, $conf, $stop, $tpl;
+	global $db, $conf, $stop, $tpl, $prs;
 	if (is_user() && is_active('shop')) {
 		$userinfo = getUserInfo();
 		$uid = intval($userinfo['id']);
@@ -454,11 +454,11 @@ function partners(): void {
 				}
 				$cont .= $tpl->getHtmlFrag('shop-partners-summary', ['head_clients' => _CLIENTEN, 'head_webmoney' => _WEBMONEY, 'head_paypal' => _PAYPAL, 'head_total' => _PARTNERGES, 'head_rest' => _PARTNERREST, 'head_paid' => _PARTNERBEK, 'clients' => $a, 'webmoney' => $pawebmoney, 'paypal' => $papaypal, 'total' => $partsumges.' '.$conf['shop']['valute'], 'rest' => $parest.' '.$conf['shop']['valute'], 'paid' => $pabek.' '.$conf['shop']['valute']]);
 				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
-				$cont .= filterReplaceText(filterMarkdown(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name'], false), $conf['name']);
+				$cont .= $prs->filterContent(str_replace('[id]', $uid, $conf['shop']['partinfo2']), false, $conf['name']);
 			}
 		} else {
 			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-			$cont .= filterReplaceText(filterMarkdown($conf['shop']['partinfo'], $conf['name'], false), $conf['name']);
+			$cont .= $prs->filterContent($conf['shop']['partinfo'], false, $conf['name']);
 			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
 			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'style' => $conf['style'], 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);
 		}

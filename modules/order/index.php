@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function order(): void {
-    global $conf, $stop, $tpl;
+    global $conf, $stop, $tpl, $prs;
     if (is_user()) {
         $userinfo = getUserInfo();
         $mail = getVar('post', 'mail', 'text', $userinfo['email']);
@@ -20,7 +20,7 @@ function order(): void {
     $field = getVar('post', 'field', 'field');
     setHead(['title' => _ORDER]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _ORDER]);
-    $cont .= filterReplaceText(filterMarkdown($conf['order']['text'], 'all', false), 'all');
+    $cont .= $prs->filterContent($conf['order']['text'], false, 'all');
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
@@ -44,7 +44,7 @@ function order(): void {
 }
 
 function send(): void {
-    global $db, $conf, $stop, $tpl;
+    global $db, $conf, $stop, $tpl, $prs;
     if ($conf['order']['an']) {
         $mail = getVar('post', 'mail', 'text');
         $field = getVar('post', 'field', 'field');
@@ -77,14 +77,14 @@ function send(): void {
                 $msg = $tpl->getHtmlFrag('money-email-confirm', [
                     'sitename'     => $conf['sitename'],
                     'money_label'  => _ORDER,
-                    'content_html' => filterReplaceText(filterMarkdown($conf['order']['sendinfo'], 'all', false), 'all'),
+                    'content_html' => $prs->filterContent($conf['order']['sendinfo'], false, 'all'),
                 ]);
                 addMail($mail, $amail, $subject, $msg, 0, 3);
             }
             update_points(34);
             setHead(['title' => _ORDER]);
             $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 30);
-            echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['order']['info'], 'all', false), 'all'), 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);
             setFoot();
         } else {
             order();

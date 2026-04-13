@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function money(): void {
-    global $conf, $stop, $tpl;
+    global $conf, $stop, $tpl, $prs;
     if (is_user()) {
         $userinfo = getUserInfo();
         $email = getVar('post', 'email', 'text');
@@ -21,7 +21,7 @@ function money(): void {
     setHead(['title' => _MONEY]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY]);
     $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
-    $cont .= filterReplaceText(filterMarkdown(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all', false), 'all');
+    $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), false, 'all');
     $cont .= $tpl->getHtmlFrag('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
     $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_1]);
     $cont .= getTplMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
@@ -65,7 +65,7 @@ function money(): void {
 }
 
 function send(): void {
-    global $db, $conf, $stop, $tpl;
+    global $db, $conf, $stop, $tpl, $prs;
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $email = getVar('post', 'email', 'text');
@@ -131,13 +131,13 @@ function send(): void {
                 $msg = $tpl->getHtmlFrag('money-email-confirm', [
                     'sitename'    => $conf['sitename'],
                     'money_label' => _MONEY,
-                    'content_html' => filterReplaceText(filterMarkdown($conf['money']['sendinfo'], 'all', false), 'all'),
+                    'content_html' => $prs->filterContent($conf['money']['sendinfo'], false, 'all'),
                 ]);
                 addMail($email, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
             $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 30);
-            echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['money']['info'], 'all', false), 'all'), 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['money']['info'], false, 'all'), 'meta' => $meta]);
             setFoot();
         } else {
             money();

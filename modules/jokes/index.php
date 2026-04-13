@@ -13,7 +13,7 @@ const JOKES_NAVI = ['htitle' => _JOKES, 'liste_href' => ''];
 
 
 function jokes(): void {
-    global $db, $afile, $user, $conf, $home, $op, $tpl;
+    global $db, $afile, $user, $conf, $home, $op, $tpl, $prs;
     $cwhere = catmids($conf['name'], 'j.cid');
     $word = getVar('get', 'word', 'word');
     $unum = getUserNews($conf['jokes']['num']);
@@ -89,7 +89,7 @@ function jokes(): void {
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_img' => $cimg,
-                'text' => filterTextHighlight(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word),
+                'text' => filterTextHighlight($prs->filterContent($joke, false, $conf['name']), $word),
                 'read_href' => '',
                 'read_text' => '',
                 'post_text' => $post,

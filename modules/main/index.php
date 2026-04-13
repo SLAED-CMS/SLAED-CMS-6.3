@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function main(): void {
-    global $db, $tpl;
+    global $db, $tpl, $prs;
     setHead([
         'title' => 'Простота Функциональность Эффективность Безопасность',
         'desc' => 'Система управления содержимым сайта, простая в использовании и настройке, имеющая при этом высокий уровень безопасности, высокую скорость работы, а также практически неограниченный потенциал в решении вопроса расширения функциональности.',
@@ -56,7 +56,7 @@ function main(): void {
             $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
         }
         $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-        $ntext = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, 'news', false), 'news'))), ENT_QUOTES), 60);
+        $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'news'))), ENT_QUOTES), 60);
         $news_html .= $tpl->getHtmlFrag('main-content-item', [
             'url'       => 'index.php?name=news&amp;op=view&amp;id='.$id,
             'title'     => $title,
@@ -81,7 +81,7 @@ function main(): void {
             $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
         }
         $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-        $ntext = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, 'files', false), 'files'))), ENT_QUOTES), 60);
+        $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'files'))), ENT_QUOTES), 60);
         $files_html .= $tpl->getHtmlFrag('main-content-item', [
             'url'       => 'index.php?name=files&amp;op=view&amp;id='.$id,
             'title'     => $title,

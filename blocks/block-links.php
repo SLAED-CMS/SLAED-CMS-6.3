@@ -19,7 +19,7 @@ $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_lin
 while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
 	$col1 .= $tpl->getHtmlFrag('block-inner-list-item', [
 		'url'   => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
-		'title' => filterText(cutstr(filterReplaceText(filterMarkdown($l_description, 'links', false), 'links'), 250), 1),
+		'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
 		'label' => cutstr($l_title, $strip),
 	]);
 }
@@ -30,7 +30,7 @@ $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_lin
 while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
 	$col2 .= $tpl->getHtmlFrag('block-inner-list-item', [
 		'url'   => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
-		'title' => filterText(cutstr(filterReplaceText(filterMarkdown($l_description, 'links', false), 'links'), 250), 1),
+		'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
 		'label' => cutstr($l_title, $strip),
 	]);
 }

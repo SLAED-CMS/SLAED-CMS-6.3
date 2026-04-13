@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function contact(): void {
-    global $db, $conf, $locale, $stop, $tpl;
+    global $db, $conf, $locale, $stop, $tpl, $prs;
     if (is_user()) {
         $userinfo = getUserInfo();
         $sname = getVar('post', 'sname', 'name', $userinfo['name']);
@@ -39,7 +39,7 @@ function contact(): void {
     }
     if ($conf['contact']['info']) {
         $title = _CONTACT;
-        $info = filterReplaceText(filterMarkdown($conf['contact']['info'], $conf['name'], false), $conf['name']);
+        $info = $prs->filterContent($conf['contact']['info'], false, $conf['name']);
     } else {
         $title = _FEEDBACK;
         $info = '';

@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function faq(): void {
-	global $db, $afile, $user, $conf, $home, $op, $tpl;
+	global $db, $afile, $user, $conf, $home, $op, $tpl, $prs;
 	$cwhere = catmids($conf['name'], 's.cid');
 	$unum = getUserNews($conf['faq']['num']);
 	$cat = getVar('get', 'cat', 'num');
@@ -87,7 +87,7 @@ function faq(): void {
 			$date = ($conf['faq']['date']) ? format_time($time) : '';
 			$rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
 			$ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-			$cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['faq']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=faq_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=faq_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
+			$cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => $prs->filterContent($hometext, false, $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['faq']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=faq_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=faq_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
 		}
 		if (!$ncat) $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_faq', 'cid', $onum, $conf['faq']['nump']);
 	} else {
@@ -139,7 +139,7 @@ function liste(): void {
 }
 
 function view(): void {
-	global $db, $afile, $conf, $tpl;
+	global $db, $afile, $conf, $tpl, $prs;
 	$id = getVar('get', 'id', 'num');
 	$num = getVar('get', 'num', 'num', '1');
 	$pag = $num;
@@ -152,7 +152,7 @@ function view(): void {
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
-		$seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), 160);
+		$seodesc = cutstr(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), 160);
 		$seoimg = getImgText($hometext, '', false);
 		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seotime = $time;
@@ -180,7 +180,7 @@ function view(): void {
 		$rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
 		$favorites = getFavoriteButton($id, $conf['name']);
 		$ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-		$cont .= getTplContentView(['is_moder' => is_moder($conf['name']), 'id' => $id, 'title_href' => '', 'title_attr' => $title, 'title_text' => filterTextHighlight($title, $word), 'title_new' => '', 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterTextHighlight(filterReplaceText(filterMarkdown($conpag[$arrayelement], $conf['name'], false), $conf['name']), $word), 'read_href' => '', 'read_text' => '', 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['faq']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => '', 'comm_text' => '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => $favorites, 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=faq_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=faq_delete&amp;id='.$id, 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => _BACK, 'back_text' => _BACK]);
+		$cont .= getTplContentView(['is_moder' => is_moder($conf['name']), 'id' => $id, 'title_href' => '', 'title_attr' => $title, 'title_text' => filterTextHighlight($title, $word), 'title_new' => '', 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterTextHighlight($prs->filterContent($conpag[$arrayelement], false, $conf['name']), $word), 'read_href' => '', 'read_text' => '', 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['faq']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => '', 'comm_text' => '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => $favorites, 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=faq_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=faq_delete&amp;id='.$id, 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => _BACK, 'back_text' => _BACK]);
 		$cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['faq']['nump'], (int)$pag, '#'.$id);
 		if ($conf['faq']['link']) {
 			$limit = intval($conf['faq']['linknum']);
@@ -191,7 +191,7 @@ function view(): void {
 				$cont .= $tpl->getHtmlFrag('assoc-wrap', ['open' => true, 'title' => _CATASSOC]);
 				while([$aid, $title, $time, $hometext] = $db->getSqlRow($result)) {
 					$date = ($conf['faq']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
-					$text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
+					$text = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
 					$cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['faq']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img]);

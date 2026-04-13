@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function links(): void {
-    global $db, $afile, $user, $conf, $home, $op, $tpl;
+    global $db, $afile, $user, $conf, $home, $op, $tpl, $prs;
     $cwhere = catmids($conf['name'], 'f.cid');
     $unum = getUserNews($conf['links']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -89,7 +89,7 @@ function links(): void {
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_img' => $cimg,
-                'text' => filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']),
+                'text' => $prs->filterContent($description, false, $conf['name']),
                 'read_href' => $thref,
                 'read_text' => _READMORE,
                 'post_text' => $post,
@@ -167,7 +167,7 @@ function liste(): void {
 }
 
 function view(): void {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $conf, $tpl, $prs;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $cwhere = catmids($conf['name'], 'f.cid');
@@ -178,7 +178,7 @@ function view(): void {
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seotitle = $title;
         $seoctitle = $ctitle;
-        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags($prs->filterContent($description, false, $conf['name']))), 160);
         $seoimg = getImgText($description, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         $seotime = $date;
@@ -227,7 +227,7 @@ function view(): void {
             'date_label' => _CHNGSTORY,
             'ctitle' => $ctitle,
             'cimg' => $cimg,
-            'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+            'text' => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
             'email' => $email,
             'home' => $home,
             'rating' => $rating,
@@ -245,7 +245,7 @@ function view(): void {
                 $cont .= $tpl->getHtmlFrag('assoc-wrap', ['open' => true, 'title' => _CATASSOC]);
                 while([$aid, $title, $hometext, $bodytext, $time] = $db->getSqlRow($result)) {
                     $date = ($conf['links']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
-                    $text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
+                    $text = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
                     $cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['links']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img]);

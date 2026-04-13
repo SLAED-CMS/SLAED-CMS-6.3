@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function news(): void {
-    global $db, $afile, $conf, $home, $op, $tpl;
+    global $db, $afile, $conf, $home, $op, $tpl, $prs;
     $cwhere = catmids($conf['name'], 's.cid');
     $unum = getUserNews($conf['news']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -123,7 +123,7 @@ function news(): void {
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_img' => $cimg,
-                'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']),
+                'text' => $prs->filterContent($hometext, false, $conf['name']),
                 'read_href' => $thref,
                 'read_text' => _READMORE,
                 'post_text' => $post,
@@ -238,7 +238,7 @@ function liste(): void {
 }
 
 function view(): void {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $conf, $tpl, $prs;
     $id = getVar('get', 'id', 'num');
     $num = getVar('get', 'num', 'num', '1');
     $pag = $num;
@@ -261,7 +261,7 @@ function view(): void {
         $seotitle = $title;
         $seoct = $ctitle;
         $seodesc = cutstr(
-            trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))),
+            trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))),
             160
         );
         $seoimg = getImgText($hometext, '', false);
@@ -311,7 +311,7 @@ function view(): void {
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
             'category_img' => $cimg,
             'text' => filterTextHighlight(
-                filterReplaceText(filterMarkdown($conpag[$pagei], $conf['name'], false), $conf['name']),
+                $prs->filterContent($conpag[$pagei], false, $conf['name']),
                 $word
             ),
             'read_href' => '',
@@ -367,7 +367,7 @@ function view(): void {
                     $date = ($conf['news']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $text = cutstr(htmlspecialchars(
                         trim(strip_tags(
-                            filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name'])
+                            $prs->filterContent($hometext, false, $conf['name'])
                         )),
                         ENT_QUOTES
                     ), 80);

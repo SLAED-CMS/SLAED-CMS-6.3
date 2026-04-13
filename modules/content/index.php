@@ -53,7 +53,7 @@ function content(): void {
 }
 
 function view(): void {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $prs;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $result = $db->getSqlQuery('SELECT id, title, body, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
@@ -70,7 +70,7 @@ function view(): void {
         $fields = fields_out($field, $conf['name']);
         $fields = ($fields) ? '<br><br>'.$fields : '';
         $hometext = $body.$fields;
-        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         setHead([
@@ -80,7 +80,7 @@ function view(): void {
             'time' => $time,
             'author' => $conf['sitename'],
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => $title]).filterTextHighlight(filterMarkdown($hometext, $conf['name'], false), $word);
+        echo $tpl->getHtmlFrag('title', ['title' => $title]).filterTextHighlight($prs->filterDoc($hometext, false, $conf['name']), $word);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

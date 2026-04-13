@@ -12,7 +12,7 @@ if (!defined('MODULE_FILE')) {
 const HELP_NAVI = ['htitle' => _HELP, 'bop' => 'closed', 'btitle' => _CLOSED, 'always' => true, 'addquest' => false];
 
 function help(): void {
-    global $db, $user, $conf, $home, $op, $tpl;
+    global $db, $user, $conf, $home, $op, $tpl, $prs;
     $cwhere = catmids($conf['name'], 's.cid');
     $uid = is_user() ? intval($user[0]) : 0;
     $unum = getUserNews($conf['help']['num']);
@@ -86,7 +86,7 @@ function help(): void {
             $cdesc = $cdesc ?: $ctitle;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $date = ($conf['help']['date']) ? format_time($time) : '';
-            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
+            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => $prs->filterContent($hometext, false, $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
@@ -139,7 +139,7 @@ function liste(): void {
 }
 
 function view(): void {
-    global $db, $afile, $user, $conf, $tpl;
+    global $db, $afile, $user, $conf, $tpl, $prs;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $uid = intval($user[0] ?? 0);
@@ -153,7 +153,7 @@ function view(): void {
             'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) '.
             'WHERE s.id = :id AND s.uid = :uid '.$cwhere, ['id' => $id, 'uid' => $uid]
         ));
-        $seodesc   = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($seohometext, $conf['name'], false), $conf['name']))), 160);
+        $seodesc   = cutstr(trim(strip_tags($prs->filterContent($seohometext, false, $conf['name']))), 160);
         $seoimg    = getImgText($seohometext, '', false);
         $seoimg    = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         $seoauthor = $seoname ?: $conf['sitename'];
@@ -200,7 +200,7 @@ function view(): void {
                     'category_attr' => $cdesc,
                     'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                     'category_img' => $cimg,
-                    'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+                    'text' => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
                     'voting' => '',
                     'rating' => $rating,
                     'back_title' => _BACK,
@@ -229,7 +229,7 @@ function view(): void {
                     'category_attr' => '',
                     'category_text' => '',
                     'category_img' => '',
-                    'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+                    'text' => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
                     'read_href' => '',
                     'read_text' => '',
                     'post_text' => $post,
