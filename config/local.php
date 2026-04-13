@@ -2,6 +2,6 @@
 return [
   '_meta' => 
   [
-    'base_fingerprint' => '67064900e0eeafaa41eaa0409f058514b61f3859',
+    'base_fingerprint' => '0609f73e14276519cfd1610ab1e2dfa3c31084d8',
   ],
 ];
