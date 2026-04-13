@@ -25,13 +25,17 @@ function users(): void {
             $sort = $rate ? _RATING : _LOCALITYLANG;
         $cont .= $tpl->getHtmlFrag('users-top-open', ['id' => _ID, 'nickname' => _NICKNAME, 'info_head' => $head, 'gender_head' => _GENDER, 'sort_head' => $sort, 'points_head' => _POINTS]);
         while ([$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $db->getSqlRow($result)) {
-            $site = ($site) ? getTplAdminTipLine(_SITE, $site) : '';
-                $info = (is_moder($conf['name'])) ? user_geo_ip($ip, 4) : format_time($reg);
-                $rating = $rate ? $tpl->getHtmlFrag('rating-box', ['content' => getRatingAsync(1, $id, 'account', $votes, $total, '', 1)]) : cutstr((string)$from, 30);
-            $cont .= $tpl->getHtmlFrag('users-top-basic', [
-                'row_id' => $count,
-                'tip' => title_tip(getTplAdminTipLine(_REG, format_time($reg, _TIMESTRING)).getTplAdminTipLine(_LAST_VISIT, format_time($last, _TIMESTRING)).$site),
-                'user_link' => user_info($name),
+	            $tipItems = [
+	                ['label' => _REG, 'value' => format_time($reg, _TIMESTRING), 'is_last' => false],
+	                ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING), 'is_last' => !$site],
+	            ];
+	            if ($site) $tipItems[] = ['label' => _SITE, 'value' => $site, 'is_last' => true];
+	                $info = (is_moder($conf['name'])) ? user_geo_ip($ip, 4) : format_time($reg);
+	                $rating = $rate ? $tpl->getHtmlFrag('rating-box', ['content' => getRatingAsync(1, $id, 'account', $votes, $total, '', 1)]) : cutstr((string)$from, 30);
+	            $cont .= $tpl->getHtmlFrag('users-top-basic', [
+	                'row_id' => $count,
+	                'tip' => title_tip($tipItems),
+	                'user_link' => user_info($name),
                 'info_text' => $info,
                 'gender_text' => gender($gender),
                 'sort_text' => $rating,

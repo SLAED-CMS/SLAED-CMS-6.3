@@ -32,7 +32,10 @@ function content(): void {
             $actions = getTplMenuItems($citems);
             $cont .= $tpl->getHtmlFrag('content-list-basic', [
                 'id' => $id,
-                'tip' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_READS, (string)$counter)),
+                'tip' => title_tip([
+                    ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
+                    ['label' => _READS, 'value' => (string)$counter, 'is_last' => true],
+                ]),
                 'href' => $href,
                 'title_attr' => $title,
                 'title_text' => $title,

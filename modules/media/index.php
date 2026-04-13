@@ -167,10 +167,10 @@ function view(): void {
         $date = ($conf['media']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($date)), 'title' => _CHNGSTORY, 'text' => format_time($date)]) : '';
         $reads = ($conf['media']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $hits]) : '';
         $rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
-        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id, 'delete_ask' => _DELETE.' &quot;'.$ptitle.'&quot;?', 'delete_text' => _ONDELETE]) : '';
+        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id, 'delete_confirm' => _DELETE.' &quot;'.$ptitle.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
         $favorites = getFavoriteButton($id, $conf['name']);
         $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
-        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
+        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
         
         $year = ($year) ? _MYEAR.': '.$year : '';
         $director = ($director) ? _MDIRECTOR.': '.$director : '';

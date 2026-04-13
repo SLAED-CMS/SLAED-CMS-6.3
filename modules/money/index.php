@@ -33,7 +33,13 @@ function money(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $rows = '';
-        $rows .= getTplFormAddRow(_MO_7.':', getTplNumberInput($sum, 'sum', 'sl_field '.$conf['style'], 'placeholder="'._MO_7.'" required'));
+        $rows .= getTplFormAddRow(_MO_7.':', $tpl->getHtmlFrag('input', [
+            'itype' => 'number',
+            'name_attr' => 'sum',
+            'value_attr' => (string)$sum,
+            'input_class' => 'sl_field '.$conf['style'],
+            'input_attr' => 'placeholder="'._MO_7.'" required',
+        ]));
         $rows .= getTplFormAddRow(_MO_8.':', getTplEmailInput('email', $email, 'sl_field '.$conf['style'], 'placeholder="'._MO_8.'" required'));
         $form = explode(',', $conf['money']['form']);
         $i = 0;
@@ -95,7 +101,11 @@ function send(): void {
                 $i = 0;
                 foreach ($form as $val) {
                     if ($val != '') {
-                        $sinfo .= getTplAdminInfoLine($val, filterHtml($intro[$i] ?? '', 1));
+                        $sinfo .= $tpl->getHtmlFrag('title-tip-item', [
+                            'label' => $val,
+                            'value' => filterHtml($intro[$i] ?? '', 1),
+                            'is_last' => false,
+                        ]);
                         $i++;
                     }
                 }

@@ -223,10 +223,10 @@ function view(): void {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
             $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
         }
-        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
+        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($awebsite) ? _SITE.': '.domain($awebsite) : '';
-        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=files_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=files_delete&amp;id='.$id, 'delete_ask' => $ask, 'delete_text' => _ONDELETE]) : '';
+        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=files_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=files_delete&amp;id='.$id, 'delete_confirm' => $ask, 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
         $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
         $cont .= $tpl->getHtmlFrag('basic-download-view', [
             'id' => $id,

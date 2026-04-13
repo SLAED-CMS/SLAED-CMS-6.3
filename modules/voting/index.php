@@ -24,7 +24,11 @@ function voting(): void {
 			$comm = ($acomm && $comm) ? $comm : _NO;
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
-			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).getTplAdminTipLine(_ENDDATE, format_time($enddate, _TIMESTRING)).getTplAdminTipLine(_TYPE, $type);
+				$report = title_tip([
+					['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
+					['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
+					['label' => _TYPE, 'value' => $type, 'is_last' => true],
+				]);
 			$admin = (is_moder($conf['name'])) ? getTplMenuItems([
 				getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
 				getTplDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$stitle.'"?', _ONDELETE, _ONDELETE),
@@ -37,7 +41,7 @@ function voting(): void {
 				'title_new' => new_graphic($date),
 				'comm' => $comm,
 				'vote' => $vote,
-				'info' => _INFO,
+					'info' => $report,
 				'report' => $report,
 				'admin' => $admin,
 			]);

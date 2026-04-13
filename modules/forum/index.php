@@ -170,7 +170,7 @@ function forum(): void {
                     $query = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $lpars);
                     $newbt = ($istopic)
                         ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][0], 'title' => _NEWTOPIC, 'class' => 'sl_but', 'label' => _OPEN])
-                        : $tpl->getHtmlFrag('span-btn', ['title' => sprintf(_ACINFOT, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _OPEN]);
+                        : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _OPEN]);
                     $cat_link = $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$rows[0][0], 'title' => $rows[0][1], 'label' => $rows[0][1]]);
                     $cont = $tpl->getHtmlFrag('forum-list-wrap', ['open' => true, 'button' => $newbt, 'cat' => $cat_link]);
                     if ($db->getSqlRowCount($query) > 0) {
@@ -239,7 +239,7 @@ function forum(): void {
                             $selmm = tmoder(1)
                                 .getTplHiddenInput('op', 'move')
                                 .getTplHiddenInput('cat', (string)$cat)
-                                .$tpl->getHtmlFrag('form-submit-btn', ['label' => _OK, 'class' => 'sl_but_blue'])
+                                .$tpl->getHtmlFrag('form-submit-btn', ['label' => _OK, 'class' => 'sl-but-blue'])
                                 .'</form>';
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
@@ -259,16 +259,16 @@ function forum(): void {
                     $infod = ($isdelete) ? sprintf(_ACINFOD, $b_can) : sprintf(_ACINFOD, $b_not);
                     $infom = ($ismod) ? sprintf(_ACINFOM, $b_can) : sprintf(_ACINFOM, $b_not);
                     $cont .= $tpl->getHtmlFrag('forum-list-info', [
-                        'new'         => $tpl->getHtmlFrag('span-btn', ['title' => _ISNEWPOST, 'class' => 'sl_t_new', 'label' => _ISNEWPOST]),
-                        'old'         => $tpl->getHtmlFrag('span-btn', ['title' => _NONEWPOST, 'class' => 'sl_t_old', 'label' => _NONEWPOST]),
-                        'popular_new' => $tpl->getHtmlFrag('span-btn', ['title' => _TPOPN, 'class' => 'sl_t_pop', 'label' => _TPOPN]),
-                        'popular'     => $tpl->getHtmlFrag('span-btn', ['title' => _TPOP, 'class' => 'sl_t_pold', 'label' => _TPOP]),
-                        'announce'    => $tpl->getHtmlFrag('span-btn', ['title' => _TANNOUN, 'class' => 'sl_t_announ', 'label' => _TANNOUN]),
-                        'hot'         => $tpl->getHtmlFrag('span-btn', ['title' => _THOT, 'class' => 'sl_t_hot', 'label' => _THOT]),
-                        'mod'         => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICM, 'class' => 'sl_t_clos_m', 'label' => _TOPICM]),
-                        'admin'       => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICA, 'class' => 'sl_t_clos_a', 'label' => _TOPICA]),
-                        'closed'      => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICN, 'class' => 'sl_t_clos_n', 'label' => _TOPICN]),
-                        'pinned'      => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICP, 'class' => 'sl_t_clos_p', 'label' => _TOPICP]),
+                        'new'         => $tpl->getHtmlFrag('inline-badge', ['title_text' => _ISNEWPOST, 'class' => 'sl_t_new', 'label' => _ISNEWPOST]),
+                        'old'         => $tpl->getHtmlFrag('inline-badge', ['title_text' => _NONEWPOST, 'class' => 'sl_t_old', 'label' => _NONEWPOST]),
+                        'popular_new' => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TPOPN, 'class' => 'sl_t_pop', 'label' => _TPOPN]),
+                        'popular'     => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TPOP, 'class' => 'sl_t_pold', 'label' => _TPOP]),
+                        'announce'    => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TANNOUN, 'class' => 'sl_t_announ', 'label' => _TANNOUN]),
+                        'hot'         => $tpl->getHtmlFrag('inline-badge', ['title_text' => _THOT, 'class' => 'sl_t_hot', 'label' => _THOT]),
+                        'mod'         => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TOPICM, 'class' => 'sl_t_clos_m', 'label' => _TOPICM]),
+                        'admin'       => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TOPICA, 'class' => 'sl_t_clos_a', 'label' => _TOPICA]),
+                        'closed'      => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TOPICN, 'class' => 'sl_t_clos_n', 'label' => _TOPICN]),
+                        'pinned'      => $tpl->getHtmlFrag('inline-badge', ['title_text' => _TOPICP, 'class' => 'sl_t_clos_p', 'label' => _TOPICP]),
                         'perm_view'   => $infov,
                         'perm_read'   => $infor,
                         'perm_topic'  => $infot,
@@ -289,9 +289,9 @@ function forum(): void {
             $cont = '';
         }
         if ($show) $cont .= $tpl->getHtmlFrag('forum-cat-info', [
-            'new'    => $tpl->getHtmlFrag('span-btn', ['title' => _ISNEWPOST, 'class' => 'sl_f_new', 'label' => _ISNEWPOST]),
-            'nonew'  => $tpl->getHtmlFrag('span-btn', ['title' => _NONEWPOST, 'class' => 'sl_f_old', 'label' => _NONEWPOST]),
-            'closed' => $tpl->getHtmlFrag('span-btn', ['title' => _FCLOSED, 'class' => 'sl_f_clos', 'label' => _FCLOSED]),
+            'new'    => $tpl->getHtmlFrag('inline-badge', ['title_text' => _ISNEWPOST, 'class' => 'sl_f_new', 'label' => _ISNEWPOST]),
+            'nonew'  => $tpl->getHtmlFrag('inline-badge', ['title_text' => _NONEWPOST, 'class' => 'sl_f_old', 'label' => _NONEWPOST]),
+            'closed' => $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'class' => 'sl_f_clos', 'label' => _FCLOSED]),
         ]);
         echo $cont;
     } else {
@@ -367,10 +367,10 @@ function view(): void {
         if ($ismod || ($isread && $tstatus > 1)) {
             $atopic = (is_moder($conf['name']) || $istopic)
                 ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2], 'title' => _NEWTOPIC, 'class' => 'sl_but', 'label' => _OPEN])
-                : $tpl->getHtmlFrag('span-btn', ['title' => sprintf(_ACINFOT, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _OPEN]);
+                : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _OPEN]);
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus))
                 ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'&amp;pid='.$topic, 'title' => _TOPICREPLY, 'class' => 'sl_but', 'label' => _REPLY])
-                : $tpl->getHtmlFrag('span-btn', ['title' => sprintf(_ACINFOP, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _REPLY]);
+                : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOP, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _REPLY]);
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $favor = getFavoriteButton($topic, $conf['name']);
             $cont = $tpl->getHtmlFrag('forum-view-wrap', ['open' => true, 'atopic' => $atopic, 'areply' => $areply, 'title' => filterTextHighlight($rows[0][5], $word), 'favor' => $favor]);
@@ -404,9 +404,9 @@ function view(): void {
                 }
                 $avname = (!empty($nick)) ? $nick : $val[4].' ('._ANONYM.')';
                 $avatar = (!empty($nick)) ? (($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
-                $date = $tpl->getHtmlFrag('span-btn', ['title' => _PADD, 'class' => 'sl_t_post', 'label' => format_time($val[6], _TIMESTRING)]);
+                $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'class' => 'sl_t_post', 'label' => format_time($val[6], _TIMESTRING)]);
                 if (($ismod || $conf['forum']['ledit']) && $val[16]) {
-                    $date .= $tpl->getHtmlFrag('span-btn', ['title' => _PEDIT, 'class' => 'sl_t_edit', 'label' => format_time($val[16], _TIMESTRING)]);
+                    $date .= $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'class' => 'sl_t_edit', 'label' => format_time($val[16], _TIMESTRING)]);
                 }
                 $rating = ($pos == 1) ? getRatingAsync(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
                 $ip = ($ismod && $val[13]) ? user_geo_ip($val[13], 4) : '';
@@ -424,7 +424,7 @@ function view(): void {
                 $fields = fields_out($val[8], $conf['name']);
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('forum-sig', ['content' => $sig]) : '';
                 $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
-                    ? $tpl->getHtmlFrag('link-btn', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'class' => 'sl_but_blue', 'label' => _PERS])
+                    ? $tpl->getHtmlFrag('link-btn', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'class' => 'sl-but-blue', 'label' => _PERS])
                     : '';
                 $privat = ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick))
                     ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($nick), 'title' => _SENDMES, 'class' => 'sl_but_green', 'label' => _MESSAGE])
@@ -442,7 +442,7 @@ function view(): void {
                 $thank = '';
 
                 $qreply = (is_moder($conf['name']) || ($isreply && $tstatus))
-                    ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid, 'title' => _QREPLY, 'class' => 'sl_but_blue', 'label' => _REPLY])
+                    ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid, 'title' => _QREPLY, 'class' => 'sl-but-blue', 'label' => _REPLY])
                     : '';
                 $edit_href = 'index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'];
                 $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus))
