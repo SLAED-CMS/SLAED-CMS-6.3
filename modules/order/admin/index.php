@@ -168,7 +168,7 @@ function delete(int $did = 0): void {
 }
 
 function activate(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $prs;
     $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
@@ -179,7 +179,7 @@ function activate(): void {
             $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
             $subject = ($conf['sitename'] ?? '').' - '._ORDER;
             $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
-            $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
+            $msg .= $prs->filterContent($conf['order']['sendinfo'] ?? '', false, 'all');
             addMail($email, $amail, $subject, $msg, 0, 3);
         }
     }

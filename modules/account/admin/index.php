@@ -471,7 +471,7 @@ function add(): void {
 }
 
 function addsave(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $prs;
     $stop = [];
     $iswarn = !checkSiteToken();
     if (!$iswarn) {
@@ -541,7 +541,7 @@ function addsave(): void {
             if ($mail) {
                 $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
                 $mailtext = getVar('post', 'mailtext', 'text');
-                $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), 'account', false), 'account'), false);
+                $msg = nl2br($prs->filterContent(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), false, 'account'), false);
                 addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
                 $text = _MAIL_SEND;
             }

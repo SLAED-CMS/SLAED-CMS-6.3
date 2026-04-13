@@ -305,7 +305,7 @@ function billing(string $title, string $autor, string $infos, string $num, strin
 }
 
 function invoice(): void {
-    global $db, $conf;
+    global $db, $conf, $prs;
     $id = getVar('get', 'id', 'num', 0);
     [$sum, $email, $intro, $note, $ip, $agent, $time] = $db->getSqlRow($db->getSqlQuery('SELECT sum, email, intro, note, ip, agent, time FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
     $defis = urldecode($conf['defis'] ?? '%3E');
@@ -325,11 +325,11 @@ function invoice(): void {
     $proz = (float)($conf['money']['proz'] ?? 0);
     $menge = ($sum / 100) * $kurs * (100 - $proz);
     $kurs = ($menge > 0) ? round($sum / $menge, 2) : 0;
-    billing($title, filterReplaceText(filterMarkdown($conf['money']['autor'] ?? '', 'money', false), 'money'), filterReplaceText(filterMarkdown($infos, 'money', false), 'money'), $rnum, format_time($time), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
+    billing($title, $prs->filterContent($conf['money']['autor'] ?? '', false, 'money'), $prs->filterContent($infos, false, 'money'), $rnum, format_time($time), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
 function activate(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $prs;
     $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
@@ -340,7 +340,7 @@ function activate(): void {
             $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
             $subject = ($conf['sitename'] ?? '').' - '._MONEY;
             $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
-            $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'] ?? '', 'all', false), 'all');
+            $msg .= $prs->filterContent($conf['money']['sendinfo'] ?? '', false, 'all');
             addMail($email, $amail, $subject, $msg, 0, 3);
         }
     }

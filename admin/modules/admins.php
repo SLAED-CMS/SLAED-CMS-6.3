@@ -300,7 +300,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $conf, $stop, $admin;
+    global $db, $afile, $conf, $stop, $admin, $prs;
     $aid = getVar('post', 'aid', 'num', 0);
     $warn = !checkSiteToken();
     $name = getVar('post', 'aname', 'name', '');
@@ -360,7 +360,7 @@ function save(): void {
             $subj = $conf['sitename'].' - '._USERPASSWORD.' '.$name;
             $text = getVar('post', 'mailtext', 'text', '');
             $text = str_replace('[pass]', $pwd, str_replace('[login]', $name, $text));
-            $text = filterReplaceText(filterMarkdown($text, 'account', false), 'account');
+            $text = $prs->filterContent($text, false, 'account');
             addMail($email, $conf['adminmail'], $subj, nl2br($text, false), 0, 3);
         }
         setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);

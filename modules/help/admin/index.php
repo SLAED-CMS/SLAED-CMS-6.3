@@ -79,7 +79,7 @@ function help(): void {
 }
 
 function view(): void {
-    global $db, $afile, $tpl;
+    global $db, $afile, $tpl, $prs;
     $vid = (int)(getVar('get', 'id', 'num', 0) ?? 0);
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $vid, 'id2' => $vid]);
     setHead();
@@ -89,7 +89,7 @@ function view(): void {
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = $title ?: _MESSAGE.': '.$a;
         $fields = fields_out($field, 'help');
-        $text = filterReplaceText(filterMarkdown($hometext.(($fields) ? PHP_EOL.PHP_EOL.$fields : ''), 'help', false), 'help');
+        $text = $prs->filterContent($hometext.(($fields) ? PHP_EOL.PHP_EOL.$fields : ''), false, 'help');
         $meta = [];
         if (!$pid) {
             $meta[] = '<span class="sl_cat">'.($ctitle ?: _NO).'</span>';

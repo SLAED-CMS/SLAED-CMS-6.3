@@ -532,7 +532,7 @@ function products(): void {
 }
 
 function productadd(): void {
-    global $db, $afile, $conf, $stop, $tpl;
+    global $db, $afile, $conf, $stop, $tpl, $prs;
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
         $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, ihome, acomm, counter, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
@@ -582,8 +582,8 @@ function productadd(): void {
             'title' => _PREVIEW,
             'title_html' => $ptitle ? '<b>'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b>' : '',
             'body_a' => $vote ? getVotingView($vote, 'shop') : '',
-            'body_b' => $ptext ? filterReplaceText(filterMarkdown($ptext, 'shop', false), 'shop') : '',
-            'body_c' => $pbodytext ? filterReplaceText(filterMarkdown($pbodytext, 'shop', false), 'shop') : '',
+            'body_b' => $ptext ? $prs->filterContent($ptext, false, 'shop') : '',
+            'body_c' => $pbodytext ? $prs->filterContent($pbodytext, false, 'shop') : '',
         ]);
     }
     $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$pcid]);
