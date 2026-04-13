@@ -1,0 +1,12 @@
+{
+    "id": "ckeditor",
+    "label": "CKEditor 5 (GPL)",
+    "type": "content",
+    "driver": "EditorCkeditor",
+    "entry": "driver.php",
+    "enabled": true,
+    "priority": 80,
+    "roles": ["admin"],
+    "profiles": ["simple", "full"],
+    "formats": ["html"]
+}

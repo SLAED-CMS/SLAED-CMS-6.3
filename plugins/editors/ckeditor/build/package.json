@@ -1,0 +1,5 @@
+{
+    "type": "module",
+    "devDependencies": { "esbuild": "^0.24" },
+    "dependencies": { "ckeditor5": "^44" }
+}

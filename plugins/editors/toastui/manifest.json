@@ -1,0 +1,12 @@
+{
+    "id": "toastui",
+    "label": "TOAST UI Markdown 3",
+    "type": "content",
+    "driver": "EditorToastUi",
+    "entry": "driver.php",
+    "enabled": true,
+    "priority": 50,
+    "roles": ["user", "admin"],
+    "profiles": ["simple", "full"],
+    "formats": ["markdown"]
+}

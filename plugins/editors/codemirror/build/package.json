@@ -1,0 +1,16 @@
+{
+    "type": "module",
+    "devDependencies": { "esbuild": "^0.24" },
+    "dependencies": {
+        "codemirror": "^6",
+        "@codemirror/lang-php": "^6",
+        "@codemirror/lang-html": "^6",
+        "@codemirror/lang-css": "^6",
+        "@codemirror/lang-javascript": "^6",
+        "@codemirror/lang-sql": "^6",
+        "@codemirror/lang-xml": "^6",
+        "@codemirror/lang-json": "^6",
+        "@codemirror/commands": "^6",
+        "@codemirror/theme-one-dark": "^6"
+    }
+}

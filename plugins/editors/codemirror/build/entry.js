@@ -1,0 +1,13 @@
+export { EditorView, keymap } from '@codemirror/view'
+export { EditorState } from '@codemirror/state'
+export { basicSetup } from 'codemirror'
+export { indentWithTab } from '@codemirror/commands'
+export { php } from '@codemirror/lang-php'
+export { html } from '@codemirror/lang-html'
+export { css } from '@codemirror/lang-css'
+export { javascript } from '@codemirror/lang-javascript'
+export { sql } from '@codemirror/lang-sql'
+export { xml } from '@codemirror/lang-xml'
+export { json } from '@codemirror/lang-json'
+export { oneDark } from '@codemirror/theme-one-dark'
+export const editors = {}

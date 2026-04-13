@@ -1,0 +1,13 @@
+{
+    "id": "codemirror",
+    "label": "CodeMirror 6",
+    "type": "code",
+    "driver": "EditorCodemirror",
+    "entry": "driver.php",
+    "enabled": true,
+    "priority": 100,
+    "roles": ["admin"],
+    "profiles": ["simple", "full"],
+    "formats": ["plain"],
+    "lang": ["php", "html", "css", "js", "json", "sql", "xml", "text"]
+}

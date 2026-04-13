@@ -1,0 +1,12 @@
+{
+    "id": "plain",
+    "label": "Plain Textarea",
+    "type": "content",
+    "driver": "EditorPlain",
+    "entry": "driver.php",
+    "enabled": true,
+    "priority": 10,
+    "roles": ["user", "admin"],
+    "profiles": ["simple", "full"],
+    "formats": ["plain", "markdown"]
+}

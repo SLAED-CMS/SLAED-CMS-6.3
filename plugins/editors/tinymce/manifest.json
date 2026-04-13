@@ -1,0 +1,12 @@
+{
+    "id": "tinymce",
+    "label": "TinyMCE 8 Community (GPLv2+)",
+    "type": "content",
+    "driver": "EditorTinymce",
+    "entry": "driver.php",
+    "enabled": true,
+    "priority": 70,
+    "roles": ["admin"],
+    "profiles": ["simple", "full"],
+    "formats": ["html"]
+}
