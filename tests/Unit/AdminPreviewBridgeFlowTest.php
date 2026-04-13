@@ -7,20 +7,6 @@ namespace {
     if (!defined('ADMIN_FILE')) define('ADMIN_FILE', true);
     if (!defined('_PREVIEW')) define('_PREVIEW', 'Preview');
 
-    if (!function_exists('filterMarkdown')) {
-        function filterMarkdown(string $text, string $mod = '', bool $safe = false): string
-        {
-            return $GLOBALS['__test_filter_markdown'][$text] ?? $text;
-        }
-    }
-
-    if (!function_exists('filterReplaceText')) {
-        function filterReplaceText(string $text, string $mod = ''): string
-        {
-            return $GLOBALS['__test_filter_replace'][$text] ?? $text;
-        }
-    }
-
     if (!function_exists('fields_out')) {
         function fields_out(string $text, string $mod = ''): string
         {
@@ -44,7 +30,6 @@ namespace Tests\Unit {
             $GLOBALS['__test_captcha'] = '';
             $GLOBALS['__test_token'] = [];
             $GLOBALS['__test_templates'] = [];
-            $GLOBALS['__test_filter_markdown'] = [];
             $GLOBALS['__test_filter_replace'] = [];
             $GLOBALS['__test_fields_out'] = [];
             $GLOBALS['conf'] = [
@@ -117,8 +102,6 @@ namespace Tests\Unit {
         #[Test]
         public function previewPartialHandlesHtmlContentCorrectly(): void
         {
-            $GLOBALS['__test_filter_markdown']['Html text'] = '<em>Html text</em>';
-
             $html = (new \Template('default'))->getHtmlPart('preview', [
                 'title' => 'Preview',
                 'title_html' => '<b>Title</b>',
