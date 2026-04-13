@@ -114,7 +114,9 @@ if (defined('MODULE_FILE')) {
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
+require_once BASE_DIR.'/core/classes/parser.php';
 $tpl = new Template($theme);
+$prs = new Parser();
 
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
@@ -498,7 +500,7 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
 
 # Format block
 function getBlocks(string $side, string $fly = ''): void {
-    global $db, $conf, $locale, $name, $home, $pos, $b_id, $bfile;
+    global $db, $conf, $locale, $name, $home, $pos, $b_id, $bfile, $prs;
     static $barr;
     if ($conf['multilingual'] == 1) {
         $querylang = "AND (lang = :loc OR lang = '')";
@@ -514,7 +516,7 @@ function getBlocks(string $side, string $fly = ''): void {
         $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
-            $content = filterReplaceText(filterMarkdown($content, 'all', false), 'all');
+            $content = $prs->filterContent($content, false, 'all');
             $view = intval($view);
             $where_mas = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas];
@@ -643,780 +645,6 @@ function getBlocks(string $side, string $fly = ''): void {
             }
         }
     }
-}
-
-# Convert Markdown+BB source to safe HTML.
-# Safe mode (true): escapes HTML, URL allowlist - for user content.
-# Safe mode (false): allows raw HTML blocks + admin BB tags.
-function filterMarkdown(string $src, string $mod = '', bool $safe = true): string {
-    global $conf;
-    static $md = null;
-    $md ??= new class {
-
-        private array  $stash = [];
-        private string $salt  = '';
-        private array  $hids  = [];
-        private string $mod   = 'all';
-
-        public function filterHtml(string $src, bool $safe, string $mod): string {
-            $this->stash = [];
-            $this->hids  = [];
-            $this->salt  = bin2hex(random_bytes(4));
-            $this->mod   = $mod !== '' ? strtolower($mod) : 'all';
-            $out = $this->filterMain($src, $safe);
-            $sentinel = "\x02{$this->salt}:";
-            while (str_contains($out, $sentinel)) {
-                $prev = $out;
-                $out  = strtr($out, $this->stash);
-                if ($out === $prev) break;
-            }
-            return trim($out);
-        }
-
-        // Add a comma before each next VALUES row (except first row and after split markers)
-        private function filterNest(string $src, bool $safe): string {
-            return $this->filterMain($src, $safe);
-        }
-
-        private function filterMain(string $src, bool $safe): string {
-            $src = str_replace(["\r\n", "\r"], "\n", $src);
-            $src = $this->filterBbBlocks($src, $safe);
-            $src = $this->filterFencedCode($src);
-            if ($safe) $src = $this->filterIndentedCode($src);
-            $src = $this->filterInlineCode($src);
-            $src = $this->filterBlocks($src, $safe);
-            return $src;
-        }
-
-        // Helpers
-
-        private function addStash(string $html): string {
-            $key = "\x02{$this->salt}:".count($this->stash)."\x03";
-            $this->stash[$key] = $html;
-            return $key;
-        }
-
-        private function filterEsc(string $s): string {
-            return htmlspecialchars($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        }
-
-        private function filterDec(string $s): string {
-            return html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        }
-
-        private function filterText(string $s): string {
-            $pat   = '/(\x02'.preg_quote($this->salt, '/').':\d+\x03)/';
-            $parts = preg_split($pat, $s, -1, PREG_SPLIT_DELIM_CAPTURE) ?? [$s];
-            return implode('', array_map(fn($p) => preg_match($pat, $p) ? $p : $this->filterEsc($p), $parts));
-        }
-
-        private function filterInline(string $txt, bool $safe): string {
-            return $this->filterInlines($safe ? $this->filterText($txt) : $txt, $safe);
-        }
-
-        private function filterUrl(string $url): string {
-            $url = trim($url);
-            return preg_match('/^(?:https?:\/\/|mailto:|[\/\.#?])/i', $url) ? $url : '#';
-        }
-
-        // BB blocks (stash before Markdown parsing)
-
-        private function filterBbBlocks(string $src, bool $safe): string {
-            // Add a comma before each next VALUES row (except first row and after split markers)
-            $src = preg_replace('/\[hr\]/si', $this->addStash('<hr>'), $src) ?? $src;
-
-            // Add a comma before each next VALUES row (except first row and after split markers)
-            $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
-
-            // *01 smilies
-            if (preg_match('/\*(\d{2})/', $src)) {
-                $src = preg_replace_callback(
-                    '/\*(\d{2})/',
-                    function(array $m): string {
-                        $num = $this->filterEsc($m[1]);
-                        $img = img_find('smilies/'.$num.'.gif');
-                        return $this->addStash('<img src="'.$this->filterEsc($img).'" alt="'._SMILIE.' - '.$num.'" title="'._SMILIE.' - '.$num.'">');
-                    },
-                    $src
-                ) ?? $src;
-            }
-
-            // Add a comma before each next VALUES row (except first row and after split markers)
-            $src = preg_replace_callback(
-                '/\[usehtml\](.*?)\[\/usehtml\]/si',
-                function(array $m) use ($safe): string {
-                    if ($safe) return $m[0];
-                    $html = htmlspecialchars_decode(replace_break($m[1]), ENT_QUOTES);
-                    return $this->addStash($html);
-                },
-                $src
-            ) ?? $src;
-
-            // Add a comma before each next VALUES row (except first row and after split markers)
-            $src = preg_replace_callback(
-                '/\[usephp\](.*?)\[\/usephp\]/si',
-                function(array $m) use ($safe): string {
-                    if ($safe) return $m[0];
-                    $rep = str_replace(['&#036;', '&#092;'], ['$', '\\'], $m[1]);
-                    ob_start();
-                    try {
-                        eval(htmlspecialchars_decode(replace_break($rep), ENT_QUOTES));
-                        $out = ob_get_clean();
-                    } catch (Throwable $ex) {
-                        ob_end_clean();
-                        $out = '';
-                    }
-                    return $this->addStash((string)$out);
-                },
-                $src
-            ) ?? $src;
-
-            // [tabs=n]...[tab=title]...[/tab]...[/tabs]
-            $src = preg_replace_callback(
-                '/\[tabs=(.*?)\](.*?)\[\/tabs\]/si',
-                function(array $m) use ($safe): string {
-                    $num = (int)trim($m[1]);
-                    $rep = (string)$m[2];
-                    $cnt = preg_match_all('/\[tab=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/tab\]/siu', $rep, $mm);
-                    if (!$cnt) return $m[0];
-                    $ttl = [];
-                    $txt = [];
-                    for ($i = 0; $i < $cnt; $i++) {
-                        $ttl[] = $mm[1][$i];
-                        $txt[] = $this->filterNest($mm[2][$i], $safe);
-                    }
-                    return $this->addStash((string)getNaviTabs($num, 'tab', $ttl, $txt));
-                },
-                $src
-            ) ?? $src;
-
-            // [code]...[/code]
-            $src = preg_replace_callback(
-                '/\[code\](.*?)\[\/code\]/si',
-                function(array $m): string {
-                    global $tpl;
-                    $txt  = str_replace('?', '&#063;', (string)$m[1]);
-                    $html = '<div class="code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
-                    return $this->addStash((string)$html);
-                },
-                $src
-            ) ?? $src;
-
-            // [code=lang]...[/code]
-            $src = preg_replace_callback(
-                '/\[code=(.*?)\](.*?)\[\/code\]/si',
-                function(array $m): string {
-                    return $this->addStash((string)encode_php([0 => $m[0], 1 => $m[1], 2 => $m[2]]));
-                },
-                $src
-            ) ?? $src;
-
-            // [php]...[/php]
-            $src = preg_replace_callback(
-                '/\[php\](.*?)\[\/php\]/si',
-                function(array $m): string {
-                    return $this->addStash((string)encode_php([0 => $m[0], 1 => $m[1]]));
-                },
-                $src
-            ) ?? $src;
-
-            // Add a comma before each next VALUES row (except first row and after split markers)
-            while (preg_match('/\[quote\](.*?)\[\/quote\]/si', $src)) {
-                $src = preg_replace_callback(
-                    '/\[quote\](.*?)\[\/quote\]/si',
-                    function(array $m) use ($safe): string {
-                        global $tpl;
-                        $txt  = $this->filterNest($m[1], $safe);
-                        $html = '<blockquote><p title="'.htmlspecialchars(_QUOTE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
-                        return $this->addStash((string)$html);
-                    },
-                    $src
-                ) ?? $src;
-            }
-
-            // Add a comma before each next VALUES row (except first row and after split markers)
-            while (preg_match('/\[hide\](.*?)\[\/hide\]/si', $src)) {
-                $src = preg_replace_callback(
-                    '/\[hide\](.*?)\[\/hide\]/si',
-                    function(array $m) use ($safe): string {
-                        global $tpl;
-                        $show = (defined('ADMIN_FILE') || is_user());
-                        $txt  = $show ? $this->filterNest($m[1], $safe) : (string)_HIDETEXT;
-                        $html = '<blockquote class="hide"><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
-                        return $this->addStash((string)$html);
-                    },
-                    $src
-                ) ?? $src;
-            }
-
-            // [attach=...]
-            if (stripos($src, '[attach=') !== false) {
-                $src = $this->filterAttach($src);
-            }
-
-            return $src;
-        }
-
-        private function filterAttach(string $src): string {
-            global $conf;
-            $mod = $this->mod !== '' ? $this->mod : 'all';
-
-            if (stripos($src, 'rel=') !== false && stripos($src, 'width=') !== false) {
-                $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+) rel=([a-zA-Z0-9_\-]+)\]/siu';
-            } elseif (stripos($src, 'width=') !== false) {
-                $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)\]/siu';
-            } else {
-                $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)\]/siu';
-            }
-
-            if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
-
-            $con = explode('|', (string)($conf['uploads'][$mod] ?? ''));
-            $twd = $con[6] ?? ($conf['uploads']['width'] ?? '250');
-            $img = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
-
-            foreach ($mm as $m) {
-                $fn   = (string)$m[1];
-                $al   = (string)$m[2];
-                $tl   = (string)$m[3];
-                $wd   = $m[4] ?? '';
-                $hg   = $m[5] ?? '';
-                $rl   = $m[6] ?? '';
-                $ext  = strtolower((string)substr((string)strrchr($fn, '.'), 1));
-                $file = 'uploads/'.$mod.'/'.$fn;
-                $timg = $file;
-                if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
-
-                if (in_array($ext, $img, true)) {
-                    $tfile = 'uploads/'.$mod.'/thumb/'.$fn;
-                    $tdir  = 'uploads/'.$mod.'/thumb';
-                    if ($mod !== '' && file_exists($file) && !file_exists($tfile)) {
-                        if (!file_exists($tdir)) mkdir($tdir);
-                        $ok   = create_img_gd($file, $tfile, $twd);
-                        $timg = $ok ? $tfile : $file;
-                    } else {
-                        $timg = $tfile;
-                    }
-                    if (file_exists($file)) {
-                        [$wd, $hg] = getimagesize($file);
-                    } else {
-                        $file = img_find('misc/no-image.png');
-                        $timg = $file;
-                    }
-                }
-
-                $tmp = $conf['filetype'][$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
-                $tmp = str_replace('[src]',    $file, $tmp);
-                $tmp = str_replace('[tsrc]',   (string)$timg, $tmp);
-                $tmp = (!empty($wd) && (int)$wd)
-                     ? str_replace('[width]',  (string)$wd, $tmp)
-                     : str_replace('[width]',  (string)($conf['uploads']['width'] ?? '500'), $tmp);
-                $tmp = str_replace('[twidth]', (string)$twd, $tmp);
-                $tmp = (!empty($hg) && (int)$hg)
-                     ? str_replace('[height]', (string)$hg, $tmp)
-                     : str_replace('[height]', (string)($conf['uploads']['height'] ?? '500'), $tmp);
-                $tmp = str_replace('[align]',  $al, $tmp);
-                $tmp = str_replace('[title]',  $tl, $tmp);
-                $tmp = str_replace('[quot]',   '&quot;', $tmp);
-                $tmp = str_replace('[rel]',    $rl !== '' ? $rl : 'alternate', $tmp);
-
-                $src = str_replace($m[0], $this->addStash($tmp), $src);
-            }
-
-            return $src;
-        }
-
-        // Code protection
-
-        private function filterFencedCode(string $src): string {
-            return preg_replace_callback(
-                '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
-                function($m) {
-                    $cls = $m[3] ? ' class="language-'.$this->filterEsc($m[3]).'"' : '';
-                    return $this->addStash('<pre><code'.$cls.'>'.$this->filterEsc($m[4]).'</code></pre>');
-                },
-                $src
-            ) ?? $src;
-        }
-
-        private function filterIndentedCode(string $src): string {
-            return preg_replace_callback(
-                '/(?:^(?:    |\t).+\n?)+/m',
-                fn($m) => $this->addStash(
-                    '<pre><code>'.$this->filterEsc(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0]))).'</code></pre>'
-                )."\n",
-                $src
-            ) ?? $src;
-        }
-
-        private function filterInlineCode(string $src): string {
-            return preg_replace_callback(
-                '/``(.+?)``|`([^`\n]+)`/s',
-                function($m) {
-                    $txt = ($m[1] ?? '') !== '' ? $m[1] : ($m[2] ?? '');
-                    return $this->addStash('<code>'.$this->filterEsc($txt).'</code>');
-                },
-                $src
-            ) ?? $src;
-        }
-
-        // Blocks
-
-        private function filterBlocks(string $src, bool $safe): string {
-            $lines = explode("\n", $src);
-            $n     = count($lines);
-            $pat   = '/^\x02'.preg_quote($this->salt, '/').':\d+\x03$/';
-            $out   = '';
-            $i     = 0;
-
-            while ($i < $n) {
-                $line = $lines[$i];
-                $trim = ltrim($line);
-
-                if (preg_match($pat, trim($line))) { $out .= $line."\n"; $i++; continue; }
-                if ($trim === '') { $out .= "\n"; $i++; continue; }
-
-                if (preg_match('/^(#{1,6})\s+(.*?)(?:\s+#+)?$/', $trim, $m)) {
-                    $lvl = strlen($m[1]);
-                    $id  = $this->getHeadingId($m[2], $lvl);
-                    $out .= '<h'.$lvl.' id="'.$id.'">'.$this->filterInline($m[2], $safe).'</h'.$lvl.'>'."\n";
-                    $i++; continue;
-                }
-
-                if (preg_match('/^(?:\*{3,}|-{3,}|_{3,})\s*$/', $trim)) {
-                    $out .= "<hr>\n"; $i++; continue;
-                }
-
-                if (str_starts_with($trim, '>')) {
-                    [$bq, $i] = $this->getBlockquote($lines, $i, $n);
-                    $map  = ['note' => 'sl_callout_note', 'tip' => 'sl_callout_tip', 'important' => 'sl_callout_important', 'warning' => 'sl_callout_warning', 'caution' => 'sl_callout_caution'];
-                    $segs = [[]];
-                    foreach ($bq as $ln) {
-                        if ($ln === '' && end($segs) !== []) $segs[] = [];
-                        elseif ($ln !== '') $segs[count($segs) - 1][] = $ln;
-                    }
-                    foreach ($segs as $seg) {
-                        if ($seg === []) continue;
-                        $hd = trim($seg[0]);
-                        if (preg_match('/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i', $hd, $cm)) {
-                            $cls = $map[strtolower($cm[1])];
-                            array_shift($seg);
-                            $out .= '<div class="'.$cls.'">'."\n".$this->filterBlocks(implode("\n", $seg), $safe)."</div>\n";
-                        } else {
-                            $out .= "<blockquote>\n".$this->filterBlocks(implode("\n", $seg), $safe)."</blockquote>\n";
-                        }
-                    }
-                    continue;
-                }
-
-                if (preg_match('/^([ \t]*)([*+\-]|\d+\.)\s+/', $line, $m)) {
-                    [$html, $i] = $this->filterList($lines, $i, strlen($m[1]), $safe);
-                    $out .= $html; continue;
-                }
-
-                if (isset($lines[$i + 1]) && str_contains($trim, '|')
-                    && preg_match('/^\|?[ \t]*:?-{2,}:?[ \t]*(?:\|[ \t]*:?-{2,}:?[ \t]*)+\|?$/', $lines[$i + 1])
-                ) {
-                    [$html, $i] = $this->filterTable($lines, $i, $safe);
-                    $out .= $html; continue;
-                }
-
-                if (isset($lines[$i + 1]) && $trim !== '') {
-                    if (preg_match('/^=+\s*$/', $lines[$i + 1])) {
-                        $id = $this->getHeadingId($trim, 1);
-                        $out .= '<h1 id="'.$id.'">'.$this->filterInline($trim, $safe)."</h1>\n";
-                        $i += 2; continue;
-                    }
-                    if (preg_match('/^-+\s*$/', $lines[$i + 1]) && !preg_match('/^[*+\-]\s/', $trim)) {
-                        $id = $this->getHeadingId($trim, 2);
-                        $out .= '<h2 id="'.$id.'">'.$this->filterInline($trim, $safe)."</h2>\n";
-                        $i += 2; continue;
-                    }
-                }
-
-                if (!$safe && preg_match('/^<\/?[a-zA-Z]/', $trim)) {
-                    $raw = '';
-                    while ($i < $n && trim($lines[$i]) !== '') { $raw .= $lines[$i++]."\n"; }
-                    $raw = strtr($raw, $this->stash);
-                    $out .= $this->addStash(str_replace(['&#034;', '&#039;'], ['"', "'"], $raw));
-                    continue;
-                }
-
-                $para = [];
-                while ($i < $n && trim($lines[$i]) !== ''
-                    && !preg_match('/^#{1,6}\s|^(?:\*{3,}|-{3,}|_{3,})\s*$/', ltrim($lines[$i]))
-                ) {
-                    $para[] = $lines[$i++];
-                }
-                $out .= '<p>'.$this->filterInline(implode("\n", $para), $safe)."</p>\n";
-            }
-
-            return $out;
-        }
-
-        private function getBlockquote(array $lines, int $i, int $n): array {
-            $bq = [];
-            while ($i < $n) {
-                $t = ltrim($lines[$i]);
-                if (str_starts_with($t, '>')) {
-                    $bq[] = preg_replace('/^[ \t]*>[ \t]?/', '', $lines[$i++]);
-                } elseif (trim($lines[$i]) === '') {
-                    $j = $i + 1;
-                    while ($j < $n && trim($lines[$j]) === '') $j++;
-                    if ($j < $n && str_starts_with(ltrim($lines[$j]), '>')) { $bq[] = ''; $i++; }
-                    else break;
-                } else break;
-            }
-            return [$bq, $i];
-        }
-
-        private function getHeadingId(string $raw, int $lvl): string {
-            $txt  = preg_replace('/\x02'.preg_quote($this->salt, '/').':\d+\x03/', '', $raw);
-            $id   = strtolower(trim(preg_replace('/[^a-z0-9]+/', '-', strip_tags($txt)), '-'));
-            if ($id === '') $id = 'h'.$lvl;
-            $base = $id;
-            if (isset($this->hids[$base])) $id = $base.'-'.(++$this->hids[$base]);
-            else $this->hids[$base] = 0;
-            return $id;
-        }
-
-        private function filterList(array $lines, int $i, int $ind, bool $safe): array {
-            $n   = count($lines);
-            $ord = (bool)preg_match('/^\s*\d+\./', $lines[$i]);
-            $tag = $ord ? 'ol' : 'ul';
-            $it  = [];
-            $cur = null;
-
-            while ($i < $n) {
-                $line = $lines[$i];
-                if (trim($line) === '') { if ($cur !== null) $cur .= "\n"; $i++; continue; }
-                $sp = strlen($line) - strlen(ltrim($line));
-                if ($sp === $ind && preg_match('/^[ \t]*(?:[*+\-]|\d+\.)\s+(.*)$/', $line, $m)) {
-                    if ($cur !== null) $it[] = $cur;
-                    $cur = $m[1]; $i++;
-                } elseif ($sp > $ind) {
-                    $cur .= "\n".$line; $i++;
-                } else break;
-            }
-            if ($cur !== null) $it[] = $cur;
-
-            $html = '<'.$tag.">\n";
-            foreach ($it as $item) {
-                $item = trim($item);
-                if (preg_match('/^\[(x| )\]\s+(.*)/si', $item, $tm)) {
-                    $chk = $tm[1] === 'x' ? ' checked' : '';
-                    $lbl = trim($tm[2]);
-                    $lbl = str_contains($lbl, "\n") ? $this->filterBlocks($lbl, $safe) : $this->filterInline($lbl, $safe);
-                    $html .= '<li><input type="checkbox" disabled'.$chk.'> '.$lbl."</li>\n";
-                } elseif (str_contains($item, "\n")) {
-                    $html .= '<li>'.$this->filterBlocks($item, $safe)."</li>\n";
-                } else {
-                    $html .= '<li>'.$this->filterInline($item, $safe)."</li>\n";
-                }
-            }
-            return [$html.'</'.$tag.">\n", $i];
-        }
-
-        private function filterTable(array $lines, int $i, bool $safe): array {
-            $heads = array_map('trim', explode('|', trim($lines[$i],   " |\t")));
-            $seps  = array_map('trim', explode('|', trim($lines[$i+1], " |\t")));
-            $cols  = max(count($heads), count($seps));
-            $al    = array_map(fn($a) =>
-                preg_match('/^:-+:$/', $a) ? ' style="text-align:center"' :
-               (preg_match('/^-+:$/', $a)  ? ' style="text-align:right"'  :
-               (preg_match('/^:-+$/', $a)  ? ' style="text-align:left"'   : '')),
-                $seps
-            );
-            $i += 2;
-            $html = "<table>\n<thead>\n<tr>";
-            foreach (array_pad($heads, $cols, '') as $j => $h) {
-                $html .= '<th'.($al[$j] ?? '').'>'.$this->filterInline($h, $safe).'</th>';
-            }
-            $html .= "</tr>\n</thead>\n<tbody>\n";
-            while (isset($lines[$i]) && str_contains($lines[$i], '|') && trim($lines[$i]) !== '') {
-                $cells = array_map('trim', explode('|', trim($lines[$i], " |\t")));
-                $html .= '<tr>';
-                foreach (array_pad($cells, $cols, '') as $j => $c) {
-                    $html .= '<td'.($al[$j] ?? '').'>'.$this->filterInline($c, $safe).'</td>';
-                }
-                $html .= "</tr>\n"; $i++;
-            }
-            return [$html."</tbody>\n</table>\n", $i];
-        }
-
-        // Inlines: Markdown + BB
-
-        private function filterInlines(string $src, bool $safe): string {
-            // BB inline
-
-            // ed2k links - must come BEFORE generic [url] patterns
-            $src = preg_replace_callback(
-                '/\[url\](ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\[\/url\]/si',
-                function(array $m): string {
-                    $url = $this->filterEsc($this->filterDec($m[1]));
-                    $ttl = $this->filterEsc($this->filterDec($m[2]));
-                    return $this->addStash('eMule/eDonkey: <a href="'.$url.'" target="_blank" title="'.$ttl.'">'.$ttl.'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[url=(ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\](.*?)\[\/url\]/si',
-                function(array $m): string {
-                    $url = $this->filterEsc($this->filterDec($m[1]));
-                    $ttl = $this->filterEsc($this->filterDec($m[2]));
-                    return $this->addStash('<a href="'.$url.'" target="_blank" title="'.$ttl.'">'.(string)$m[4].'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            for ($i = 0; $i < 3; $i++) {
-                $src = preg_replace('/\[b\](.*?)\[\/b\]/si', '<strong>$1</strong>', $src) ?? $src;
-                $src = preg_replace('/\[i\](.*?)\[\/i\]/si', '<em>$1</em>', $src) ?? $src;
-                $src = preg_replace('/\[u\](.*?)\[\/u\]/si', '<u>$1</u>', $src) ?? $src;
-                $src = preg_replace('/\[s\](.*?)\[\/s\]/si', '<del>$1</del>', $src) ?? $src;
-            }
-
-            $src = preg_replace_callback(
-                '/\[color=([^\]]+)\](.*?)\[\/color\]/si',
-                function(array $m): string {
-                    $color = strtolower(trim($m[1]));
-                    if (!preg_match('/^#[0-9a-f]{6}$/', $color) && !preg_match('/^[a-z]+$/', $color)) return $m[2];
-                    return '<span style="color:'.$this->filterEsc($color).'">'.$m[2].'</span>';
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[family=([A-Za-z ]+)\](.*?)\[\/family\]/si',
-                function(array $m): string {
-                    return '<span style="font-family:'.$this->filterEsc(trim($m[1])).'">'.$m[2].'</span>';
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[size=([0-9]{1,2})\](.*?)\[\/size\]/si',
-                function(array $m): string {
-                    $size = max(8, min(48, (int)$m[1]));
-                    return '<span style="font-size:'.$size.'px">'.$m[2].'</span>';
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
-                function(array $m): string {
-                    $align = strtolower(trim($m[1]));
-                    if (!in_array($align, ['left', 'right', 'center', 'justify'], true)) return $m[2];
-                    return '<div style="text-align:'.$align.';">'.$m[2].'</div>';
-                },
-                $src
-            ) ?? $src;
-
-            // [mail] / [mail=]
-            $src = preg_replace_callback(
-                '/\[mail\](.*?)\[\/mail\]/si',
-                function(array $m): string {
-                    $mail = trim($this->filterDec($m[1]));
-                    if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $mail)) return $m[1];
-                    $mail = $this->filterEsc($mail);
-                    return $this->addStash('<a href="mailto:'.$mail.'">'.$mail.'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[mail\s*=\s*([^\]]+)\](.*?)\[\/mail\]/si',
-                function(array $m): string {
-                    $mail = trim($this->filterDec($m[1]));
-                    if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $mail)) return $m[2];
-                    $mail = $this->filterEsc($mail);
-                    return $this->addStash('<a href="mailto:'.$mail.'">'.$m[2].'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            // [url] / [url=]
-            $src = preg_replace_callback(
-                '/\[url\](.*?)\[\/url\]/si',
-                function(array $m) use ($safe): string {
-                    $url = trim($this->filterDec($m[1]));
-                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                    $href = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    return $this->addStash('<a href="'.$href.'">'.$this->filterEsc($url).'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[url=([^\]]+)\](.*?)\[\/url\]/si',
-                function(array $m) use ($safe): string {
-                    $url = trim($this->filterDec($m[1]));
-                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                    $href = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    return $this->addStash('<a href="'.$href.'">'.$m[2].'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            // [img] / [img=align] / [img alt=] / [img=align alt=]
-            $src = preg_replace_callback(
-                '/\[img\](.*?)\[\/img\]/si',
-                function(array $m) use ($safe): string {
-                    $url  = trim($this->filterDec($m[1]));
-                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                    $src2 = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    $path = parse_url($url, PHP_URL_PATH);
-                    $path = is_string($path) && $path !== '' ? $path : $url;
-                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                    $alt  = $file;
-                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
-                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[img=([a-zA-Z]+)\](.*?)\[\/img\]/si',
-                function(array $m) use ($safe): string {
-                    $align = strtolower(trim($m[1]));
-                    if (!in_array($align, ['left', 'right'], true)) $align = 'left';
-                    $url   = trim($this->filterDec($m[2]));
-                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                    $src2  = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    $path = parse_url($url, PHP_URL_PATH);
-                    $path = is_string($path) && $path !== '' ? $path : $url;
-                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                    $alt   = $file;
-                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
-                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[img\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
-                function(array $m) use ($safe): string {
-                    $alt  = trim($this->filterDec($m[1]));
-                    $url  = trim($this->filterDec($m[2]));
-                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                    $src2 = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    $path = parse_url($url, PHP_URL_PATH);
-                    $path = is_string($path) && $path !== '' ? $path : $url;
-                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                    $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
-                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[img=([a-zA-Z]+)\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
-                function(array $m) use ($safe): string {
-                    $align = strtolower(trim($m[1]));
-                    if (!in_array($align, ['left', 'right'], true)) $align = 'left';
-                    $alt   = trim($this->filterDec($m[2]));
-                    $url   = trim($this->filterDec($m[3]));
-                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                    $src2  = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    $path = parse_url($url, PHP_URL_PATH);
-                    $path = is_string($path) && $path !== '' ? $path : $url;
-                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                    $alt   = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
-                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
-                },
-                $src
-            ) ?? $src;
-
-            // Markdown inline
-
-            $src = preg_replace_callback(
-                '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
-                function($m) use ($safe) {
-                    $raw = $this->filterDec($m[2]);
-                    $url = $this->filterEsc($safe ? $this->filterUrl($raw) : $raw);
-                    $path = parse_url($raw, PHP_URL_PATH);
-                    $path = is_string($path) && $path !== '' ? $path : $raw;
-                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                    $alt = trim($this->filterDec($m[1]));
-                    $alt = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                    $ttl = isset($m[3]) ? trim($this->filterDec($m[3])) : '';
-                    $ttl = ($ttl === '' || strtolower($ttl) === 'title' || strtolower($ttl) === 'alt') ? ' title="'.$file.'"' : ' title="'.$this->filterEsc($ttl).'"';
-                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
-                    return $this->addStash('<img src="'.$url.'" alt="'.$alt.'"'.$ttl.$err.'>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/\[([^\]]+)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
-                function($m) use ($safe) {
-                    $href = $this->filterEsc($safe ? $this->filterUrl($this->filterDec($m[2])) : $this->filterDec($m[2]));
-                    $ttl  = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
-                    return $this->addStash('<a href="'.$href.'"'.$ttl.'>'.$m[1].'</a>');
-                },
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/<(https?:\/\/[^\s>]+)>/',
-                fn($m) => $this->addStash('<a href="'.$this->filterEsc($m[1]).'">'.$this->filterEsc($m[1]).'</a>'),
-                $src
-            ) ?? $src;
-
-            $src = preg_replace_callback(
-                '/<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>/',
-                fn($m) => $this->addStash('<a href="mailto:'.$this->filterEsc($m[1]).'">'.$this->filterEsc($m[1]).'</a>'),
-                $src
-            ) ?? $src;
-
-            if ($safe) {
-                $src = preg_replace_callback('/<[^>]+>/', fn($m) => $this->filterEsc($m[0]), $src) ?? $src;
-            }
-
-            $src = preg_replace(['/\*{3}(.+?)\*{3}/s', '/_{3}(.+?)_{3}/s'], '<strong><em>$1</em></strong>', $src);
-            $src = preg_replace(['/\*{2}(.+?)\*{2}/s', '/_{2}(.+?)_{2}/s'], '<strong>$1</strong>', $src);
-            $src = preg_replace(['/\*([^*\n]+)\*/', '/(?<![_\w])_([^_\n]+)_(?![_\w])/'], '<em>$1</em>', $src);
-            $src = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $src);
-            $src = preg_replace('/==(.+?)==/s', '<mark>$1</mark>', $src);
-            $src = preg_replace(['/  \n/', '/\\\\\n/'], "<br>\n", $src);
-
-            return $src;
-        }
-    };
-
-    return $md->filterHtml($src, $safe, $mod);
-}
-
-# Search and replace
-function filterReplaceText(string $sourse, string $mod): string {
-    global $conf;
-    $mod = ($mod && isset($conf['replace'][$mod])) ? $conf['replace'][$mod] : '';
-    if ($mod) {
-        $mod = explode('||', $mod);
-        foreach ($mod as $word) {
-            if ($word != '') {
-                $warray = explode('|', $word);
-                if ($warray[0]) {
-                    preg_match_all('#<[^>]*>#', $sourse, $tags);
-                    array_unique($tags);
-                    $taglist = [];
-                    $k = 0;
-                    foreach($tags[0] as $i) {
-                        $k++;
-                        $taglist[$k] = $i;
-                        $sourse = str_replace($i, '<'.$k.'>', $sourse);
-                    }
-                    $sourse = preg_replace('#'.$warray[0].'#i', $warray[1], $sourse);
-                    foreach($taglist as $k => $i) $sourse = str_replace('<'.$k.'>', $i, $sourse);
-                }
-            }
-        }
-    }
-    return $sourse;
 }
 
 # Executes a database backup task and returns scheduler metadata
@@ -3619,7 +2847,7 @@ function filterSize(mixed $size): string {
 
 # Newsletter send
 function updateNewsletter(bool $force = false): array {
- global $db, $conf;
+ global $db, $conf, $prs;
     if ($force || $conf['newsletter']['active']) {
         $result = $db->getSqlQuery('SELECT id, title, body, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
         if ($db->getSqlRowCount($result) > 0) {
@@ -3630,7 +2858,7 @@ function updateNewsletter(bool $force = false): array {
             $outmail = array_values(array_filter(array_slice($mails, 0, $ncount), 'strlen'));
             $inmail = implode(',', array_slice($mails, $ncount));
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
-            foreach ($outmail as $val) addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($body, 'all', false), 'all'), 0, 3);
+            foreach ($outmail as $val) addMail($val, $conf['adminmail'], $title, $prs->filterContent($body, false, 'all'), 0, 3);
             if (!$inmail) {
                 $cont = ['active' => '0'];
                 setConfigFile('newsletter.php', $cont, $conf['newsletter']);
@@ -6251,7 +5479,7 @@ function redaktor(int $id, string $name, string $class, int $editor, mixed $subm
 
 # Show comments
 function ashowcom(int $cid = 0, string $mod = ''): string {
- global $db, $conf, $afile, $user, $tpl;
+ global $db, $conf, $afile, $user, $tpl, $prs;
     $mod = filterVar($mod);
     $params = [];
     if (defined('ADMIN_FILE')) {
@@ -6397,7 +5625,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                         commentActionLink('index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id, _MVIEW, _MVIEW),
                         commentActionLink($afile.'.php?name=comments&amp;op=edit&amp;id='.$com_id, _FULLEDIT, _FULLEDIT),
                         commentActionLink($afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), $acttxt, $acttxt),
-                        commentActionDelete($afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), _DELETE.' "'.cutstr(filterText(filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
+                        commentActionDelete($afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), _DELETE.' "'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
                     ]);
                 } else {
                     $edit = commentActionMenu([
@@ -6413,7 +5641,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 ]) : '';
             }
             $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-            $text = '<div id="repcom'.$com_id.'">'.filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul).'</div>';
+            $text = '<div id="repcom'.$com_id.'">'.$prs->filterContent($com_text, false, $com_modul).'</div>';
             if (defined('ADMIN_FILE')) {
                 $checkb = (!$b) ? ' '._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$com_id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$com_id.'">';
                 $b++;
@@ -6447,7 +5675,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 
 # Save edit comments
 function updateComment(): string {
- global $db, $conf, $user, $tpl;
+ global $db, $conf, $user, $tpl, $prs;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
     $mod  = filterVar(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
@@ -6456,7 +5684,7 @@ function updateComment(): string {
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
-            $content = ($typ) ? getAjaxTextarea('com'.$id, '1', 'updateComment', $id, '0', '0', $mod, $comment, '10') : filterReplaceText(filterMarkdown($comment, $mod, false), $mod);
+            $content = ($typ) ? getAjaxTextarea('com'.$id, '1', 'updateComment', $id, '0', '0', $mod, $comment, '10') : $prs->filterContent($comment, false, $mod);
             echo $content;
         } elseif ($id && $mod && $text) {
             $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
@@ -6470,7 +5698,7 @@ function updateComment(): string {
             if (!$stop) {
                 $comm = filterHtml($text, $urlclick);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $comm, 'id' => $id]);
-                echo filterReplaceText(filterMarkdown($comm, $mod, false), $mod);
+                echo $prs->filterContent($comm, false, $mod);
             } else {
                 return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
             }
