@@ -97,9 +97,9 @@ function logview(): void {
             return;
         }
         $cont .= checkPerms($path);
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => getTplCodeEditor([
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => Editor::getCode([
             'id' => 'code',
-            'mode' => 'message/http',
+            'lang' => 'text',
             'text' => $content,
         ])]);
     } else {

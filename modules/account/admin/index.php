@@ -818,7 +818,7 @@ function config(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _NETWORKCODE, 'hint' => _NOKOMA]),
-            'field_html' => getTplCodeEditor(['id' => 'code', 'name' => 'code', 'style' => 'sl-select-config', 'mode' => 'text/html', 'text' => (string)$conf['users']['network_c']]),
+            'field_html' => Editor::getCode(['id' => 'code', 'name' => 'code', 'lang' => 'html', 'text' => (string)$conf['users']['network_c']]),
             'is_full' => true,
         ],
         [

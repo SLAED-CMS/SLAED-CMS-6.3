@@ -82,9 +82,9 @@ function sitemap(): void {
             ['nameattr' => 'op', 'valueattr' => 'add'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => getTplCodeEditor([
+        'content_html' => Editor::getCode([
             'id' => 'code',
-            'mode' => 'application/xml',
+            'lang' => 'xml',
             'text' => str_replace('&', '&amp;', $conts),
         ]),
         'submit_label' => _UPDATE,
@@ -119,10 +119,10 @@ function xsledit(): void {
             ['nameattr' => 'op', 'valueattr' => 'xslsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => getTplCodeEditor([
+        'content_html' => Editor::getCode([
             'id' => 'code',
             'name' => 'template',
-            'mode' => 'application/xml',
+            'lang' => 'xml',
             'text' => $conts,
         ]),
         'submit_label' => _SAVE,

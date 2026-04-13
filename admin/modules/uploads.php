@@ -185,11 +185,10 @@ function tplconfig(): void {
                 'is_full' => true,
             ], [
                 'label_html' => '',
-                'field_html' => getTplCodeEditor([
-                    'height' => '160px',
+                'field_html' => Editor::getCode([
                     'id' => 'code_'.$i,
                     'name' => 'tmp[]',
-                    'mode' => 'text/html',
+                    'lang' => 'html',
                     'text' => $conf['filetype'][$typm[$i]] ?? '',
                 ]),
                 'is_full' => true,

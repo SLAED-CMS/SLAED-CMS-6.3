@@ -86,11 +86,10 @@ function getTemplateEditorBlock(string $templ, string $filelink, string $mode, s
             'is_full' => true,
         ], [
             'label_html' => '',
-            'field_html' => getTplCodeEditor([
-                'height' => '160px',
+            'field_html' => Editor::getCode([
                 'id' => 'code_'.md5($filelink),
                 'name' => 'template',
-                'mode' => $mode,
+                'lang' => str_ends_with($filelink, '.css') ? 'css' : 'html',
                 'text' => (string)file_get_contents($filelink),
             ]),
             'is_full' => true,

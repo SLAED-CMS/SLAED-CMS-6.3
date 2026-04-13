@@ -89,10 +89,10 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
         'rows' => [[
             'is_full' => true,
             'label_html' => '',
-            'field_html' => getTplCodeEditor([
+            'field_html' => Editor::getCode([
                 'id' => 'code',
                 'name' => 'template',
-                'mode' => $mtype,
+                'lang' => 'php',
                 'text' => $text,
             ]),
         ]],

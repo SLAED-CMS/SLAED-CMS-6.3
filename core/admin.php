@@ -319,12 +319,12 @@ function admininfo() {
             $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
             
         }
-        $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-        $e_cont = $tpl->getHtmlFrag('form', [
+        $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
+        $econt = $tpl->getHtmlFrag('admin-editor-form', [
             'action_url' => $afile.'.php',
-            'content_html' => redaktor('1', 'editor', '', $editor, 1),
+            'editor_html' => Editor::getSelect('editor', $key, 'content', 'admin'),
         ]);
-        $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _EDITOR, 'content_html' => $e_cont, 'id' => '6', 'close' => _OPCL]);
+        $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _EDITOR, 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
 }

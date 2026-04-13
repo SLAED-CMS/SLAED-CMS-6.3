@@ -242,15 +242,42 @@ function login() {
     setFoot();
 }
 
-function changeeditor() {
+function isValidEditor(string $key, string $role): bool {
+    if ($key === '') return false;
+    $path = BASE_DIR.'/plugins/editors/'.$key.'/manifest.json';
+    if (!is_file($path)) return false;
+    $json = file_get_contents($path);
+    if ($json === false || $json === '') return false;
+    $data = json_decode($json, true);
+    if (!is_array($data)) return false;
+    if (($data['id'] ?? '') !== $key) return false;
+    if (($data['enabled'] ?? false) !== true) return false;
+    if (($data['type'] ?? '') !== 'content') return false;
+    $roles = $data['roles'] ?? [];
+    if (!is_array($roles)) return false;
+    return in_array($role, $roles, true);
+}
+
+function changeeditor(): void {
     global $db, $admin, $afile, $conf;
-    $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
-    $aid = intval(substr($admin[0], 0, 11));
-    $info = base64_decode($_SESSION[$conf['admin_c']]);
-    $sinfo = base64_encode(substr($info, 0, -1).$editor);
+    $key = getVar('post', 'editor', 'var', $conf['editor']['admin'] ?? 'plain');
+    $aid = (int)($admin[0] ?? 0);
+    $raw = base64_decode($_SESSION[$conf['admin_c']] ?? '', true);
+    if ($raw === false) {
+        setRedirect($afile.'.php', true);
+    }
+    $part = explode(':', $raw, 4);
+    if (count($part) !== 4) {
+        setRedirect($afile.'.php', true);
+    }
+    if (!isValidEditor($key, 'admin')) {
+        $key = $conf['editor']['admin'] ?? 'plain';
+        if (!isValidEditor($key, 'admin')) $key = 'plain';
+    }
+    $part[3] = $key;
     unset($_SESSION[$conf['admin_c']]);
-    $_SESSION[$conf['admin_c']] = $sinfo;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET editor = :editor WHERE id = :id', ['editor' => $editor, 'id' => $aid]);
+    $_SESSION[$conf['admin_c']] = base64_encode(implode(':', $part));
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET editor = :editor WHERE id = :id', ['editor' => $key, 'id' => $aid]);
     setRedirect($afile.'.php', true);
 }
 

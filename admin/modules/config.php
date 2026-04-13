@@ -243,7 +243,8 @@ function config(): void {
         'placeholder_text' => _CAPSECKEY,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _EDITOR.':', 'field_html' => redaktor('2', 'redaktor', 'sl_conf', $conf['redaktor'], 0)];
+    $rows[] = ['label_html' => _EDITOR.' user:', 'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user')];
+    $rows[] = ['label_html' => _EDITOR.' admin:', 'field_html' => Editor::getSelect('editor_admin', (string)($conf['editor']['admin'] ?? 'plain'), 'content', 'admin')];
     $list = timezone_identifiers_list();
     $name = $conf['gtime'] ?? '';
     $opts = '';
@@ -605,6 +606,8 @@ function save(): void {
         $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text', ''), $protect));
         $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text', ''), $protect));
         $xcensor = (!$xcensor_r || !$xcensor_l) ? 0 : getVar('post', 'censor', 'num');
+        $eduser = getVar('post', 'editor_user', 'var', 'plain');
+        $edadmin = getVar('post', 'editor_admin', 'var', 'plain');
 
         $cont = [
             'version' => '6.3.0 Phoenix',
@@ -628,6 +631,11 @@ function save(): void {
             'capkey' => getVar('post', 'capkey', 'text'),
             'capsec' => getVar('post', 'capsec', 'text'),
             'redaktor' => getVar('post', 'redaktor', 'num'),
+            'editor' => [
+                'user' => $eduser,
+                'admin' => $edadmin,
+                'code' => (string)($conf['editor']['code'] ?? 'codemirror'),
+            ],
             'gtime' => getVar('post', 'gtime', 'text'),
             'var_view' => getVar('post', 'var_view', 'num'),
             'syntax' => getVar('post', 'syntax', 'num'),

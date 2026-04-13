@@ -399,10 +399,10 @@ function filecode(): void {
             'field_html' => htmlspecialchars($bf, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
         ], [
             'label_html' => _CONTENT.':',
-            'field_html' => getTplCodeEditor([
+            'field_html' => Editor::getCode([
                 'id' => 'code',
                 'name' => 'blocktext',
-                'mode' => 'text/x-php',
+                'lang' => 'php',
                 'text' => trim($out[1] ?? ''),
             ]),
             'is_full' => true,

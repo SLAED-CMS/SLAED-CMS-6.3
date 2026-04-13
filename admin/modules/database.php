@@ -481,10 +481,10 @@ function dump(): void {
         'rows' => [[
             'is_full' => true,
             'label_html' => '',
-            'field_html' => getTplCodeEditor([
+            'field_html' => Editor::getCode([
                 'id' => 'code',
                 'name' => 'string',
-                'mode' => 'text/x-mysql',
+                'lang' => 'sql',
                 'text' => stripslashes($string),
             ]),
         ]],
