@@ -1,0 +1,123 @@
+/**
+ * SLAED Theme for highlight.js
+ * Matches SyntaxHighlighter Default visual style
+ * highlight.js 11.x + highlightjs-line-numbers.js 2.9
+ */
+
+/* ── Container ──────────────────────────────────────────── */
+
+pre code.hljs {
+    display: block;
+    background: #fff;
+    color: #000;
+    font-family: Verdana, Tahoma, Arial, monospace;
+    font-size: 1em;
+    line-height: 1.4em;
+    padding: 0;
+    overflow-x: auto;
+    tab-size: 4;
+}
+
+/* ── Line-numbers table ─────────────────────────────────── */
+
+.hljs-ln {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0;
+}
+
+/* Alternating rows */
+.hljs-ln tr:nth-child(odd) { background-color: #fff; }
+.hljs-ln tr:nth-child(even) { background-color: #f8f8f8; }
+
+/* Number column */
+td.hljs-ln-numbers {
+    vertical-align: top;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.hljs-ln-n::before {
+    content: attr(data-line-number);
+    display: block;
+    text-align: right;
+    padding-right: 0.5em;
+    color: #afafaf;
+    min-width: 2em;
+}
+
+/* Code column */
+td.hljs-ln-code {
+    padding-left: 0.5em !important;
+    border-left: 3px solid #6ce26c;
+    width: 100%;
+    white-space: pre;
+}
+
+/* ── Token colours (SyntaxHighlighter Default palette) ──── */
+
+.hljs-comment,
+.hljs-quote {
+    color: #008200;
+}
+
+.hljs-string,
+.hljs-doctag,
+.hljs-template-variable,
+.hljs-regexp {
+    color: blue;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-title.class_,
+.hljs-class .hljs-title {
+    color: #069;
+    font-weight: bold;
+}
+
+.hljs-meta,
+.hljs-meta .hljs-keyword,
+.hljs-meta-string {
+    color: gray;
+}
+
+.hljs-variable,
+.hljs-attr {
+    color: #a70;
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-boolean {
+    color: #090;
+}
+
+.hljs-built_in,
+.hljs-type {
+    color: #0066cc;
+}
+
+.hljs-title.function_,
+.hljs-function .hljs-title {
+    color: #ff1493;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+    color: #808080;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+    color: red;
+}
+
+.hljs-deletion {
+    color: #a70;
+}
+
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }
