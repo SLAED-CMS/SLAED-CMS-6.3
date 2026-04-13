@@ -285,9 +285,9 @@ class Template {
         $text = defined('_TPLMISS')
             ? sprintf(_TPLMISS, $path, basename($name))
             : 'Template file not found: '.$path.'/'.$file;
-        $file = $this->getFile('fragments', 'new/alert');
+        $file = $this->getFile('fragments', 'alert');
         if ($file && $this->checkFile($file)) {
-            $code = $this->getCode('fragments', 'new/alert');
+            $code = $this->getCode('fragments', 'alert');
             if ($code !== '') return $this->getView($this->filterCode($code), ['is_warn' => true, 'text' => $this->getSafe($text)], true);
         }
         return $this->getSafe($text);

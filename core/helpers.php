@@ -396,7 +396,7 @@ function getTplBbEditor(array $opt = []): string {
         $upload = '<div id="af-form-'.$ei.'" class="sl_bbup-panel sl_none">'.$inner.'</div>';
     }
 
-    return '<table class="sl_table_form"><tr><td><div class="sl_bb-editor">'
+    return '<table class="sl-table-form"><tr><td><div class="sl_bb-editor">'
         .'<div class="sl_bb-panel">'.$top.'</div>'
         .$ta
         .'<div class="sl_bb-panel">'.$bottom.'</div>'
@@ -437,9 +437,9 @@ function getTplPager(array $opt): string {
         } else {
             $opt['href'] = $lh;
         }
-        return $tpl->getHtmlFrag('new/pager-link', $opt);
+        return $tpl->getHtmlFrag('pager-link', $opt);
     };
-    $dots   = $tpl->getHtmlFrag('new/pager-dots', []);
+    $dots   = $tpl->getHtmlFrag('pager-dots', []);
     $prev   = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
     $items  = '';
     for ($i = 1; $i <= $pages; $i++) {
@@ -454,7 +454,7 @@ function getTplPager(array $opt): string {
         }
     }
     $next   = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true) : $link('', _NEXT, true, true);
-    return $tpl->getHtmlFrag('new/pager', [
+    return $tpl->getHtmlFrag('pager', [
         'count'   => $cnt,
         'pages'   => $pages,
         'limit'   => $limit,
@@ -498,7 +498,7 @@ function getTplAdminTabs(array $data = []): string {
     }
     $tabs = '';
     foreach ($links as $link) {
-        $tabs .= $tpl->getHtmlFrag('new/tabs-link', [
+        $tabs .= $tpl->getHtmlFrag('tabs-link', [
             'href' => (string)($link['href'] ?? '#'),
             'is_active' => !empty($link['is_active']),
             'label' => (string)($link['label'] ?? ''),
@@ -507,7 +507,7 @@ function getTplAdminTabs(array $data = []): string {
             'title' => (string)($link['title'] ?? ($link['label'] ?? '')),
         ]);
     }
-    return $tpl->getHtmlFrag('new/module-head', [
+    return $tpl->getHtmlFrag('module-head', [
         'icon' => $icon,
         'is_runtime' => !empty($data['is_runtime']),
         'subtitle_html' => $subtitle,
@@ -557,7 +557,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $alert = '';
     if (!empty($conf['adminfo']) && getVar('post', $save, 'num', 0)) {
         if (!checkSiteToken()) {
-            $alert = $tpl->getHtmlFrag('new/alert', [
+            $alert = $tpl->getHtmlFrag('alert', [
                 'alert_attr' => 'data-sl-autohide="15000"',
                 'is_flash' => true,
                 'is_warn' => true,
@@ -574,7 +574,7 @@ function setTplAdminInfoPage(array $data = []): void {
                     fwrite($fp, $content);
                     fclose($fp);
                     $text = $content;
-                    $alert = $tpl->getHtmlFrag('new/alert', [
+                    $alert = $tpl->getHtmlFrag('alert', [
                         'alert_attr' => 'data-sl-autohide="15000"',
                         'is_flash' => true,
                         'text' => _SUCCSAVE,
@@ -605,7 +605,7 @@ function setTplAdminInfoPage(array $data = []): void {
             'field_html' => textarea('1', 'text', $text, $mod, '25'),
             'is_full' => true,
         ]];
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
             'action_url' => $action,
             'hidden' => [
                 ['nameattr' => $save, 'valueattr' => '1'],
@@ -628,7 +628,7 @@ function getTplRadioGroup(array $data = []): string {
     $items = '';
     foreach ($options as $option) {
         $valu = (string)($option['value'] ?? '');
-        $items .= $tpl->getHtmlFrag('new/radio', [
+        $items .= $tpl->getHtmlFrag('radio', [
             'input_attr' => (string)($option['input_attr'] ?? ''),
             'is_checked' => (string)$value === $valu,
             'label_text' => (string)($option['label'] ?? ''),
@@ -636,7 +636,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('new/radio-group', [
+    return $tpl->getHtmlFrag('radio-group', [
         'items_html' => $items,
     ]);
 }
@@ -652,13 +652,13 @@ function getTplUserSearchInput(array $data = []): string {
     $tip = (string)($data['tip'] ?? '');
     $tiphtml = '';
     if ($tip !== '') {
-        $tiphtml = $tpl->getHtmlFrag('new/title-tip', [
+        $tiphtml = $tpl->getHtmlFrag('title-tip', [
             'items' => [
                 ['label' => _INFO, 'value' => $tip],
             ],
         ]);
     }
-    return $tpl->getHtmlFrag('new/user-search', [
+    return $tpl->getHtmlFrag('user-search', [
         'endpoint_attr' => $endpoint,
         'input_id' => $inpid,
         'list_id' => $list,
@@ -676,7 +676,7 @@ function getTplCodeEditor(array $data = []): string {
     $code = textarea_code(
         (string)($data['id'] ?? 'code'),
         (string)($data['name'] ?? ''),
-        (string)($data['style'] ?? 'sl_form'),
+        (string)($data['style'] ?? 'sl-form-control'),
         (string)($data['mode'] ?? 'text/plain'),
         (string)($data['text'] ?? '')
     );
@@ -693,7 +693,7 @@ function getTplMoveControls(string $target, string $up = '', string $down = ''):
     global $tpl;
     $up = ($up && !str_contains($up, 'token=')) ? $up.'&amp;token='.getSiteToken() : $up;
     $down = ($down && !str_contains($down, 'token=')) ? $down.'&amp;token='.getSiteToken() : $down;
-    return $tpl->getHtmlFrag('new/move-controls', [
+    return $tpl->getHtmlFrag('move-controls', [
         'down_query' => $down,
         'down_title' => _BLOCKDOWN,
         'target' => $target,

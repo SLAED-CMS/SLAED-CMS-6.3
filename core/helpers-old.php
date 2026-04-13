@@ -6,6 +6,16 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
+# Resolve admin-only generic fragments from the shared fragments directory when available
+function getTplFragmentName(string $name): string {
+    if ($name === '') return $name;
+    if (!defined('BASE_DIR')) return $name;
+    $base = rtrim(str_replace('\\', '/', BASE_DIR), '/');
+    $file = $base.'/templates/admin/fragments/'.$name.'.html';
+    if (defined('ADMIN_FILE') && is_file($file)) return $name;
+    return $name;
+}
+
 # DELETE Old
 # Build one ajax query string from named params and skip empty values
 function getAjaxQuery(array $data): string {
@@ -15,126 +25,6 @@ function getAjaxQuery(array $data): string {
         $list[] = $name.'='.rawurlencode((string)$valu);
     }
     return implode('&amp;', $list);
-}
-
-# Render one shared admin table wrapper from prepared header and row markup
-function getTplAdminTable(string $head, string $rows, string $type = 'sl_table_list_sort'): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('table', [
-        'head_html' => $head,
-        'rows_html' => $rows,
-        'table_class' => $type,
-    ]);
-}
-
-# Render one admin table row from prepared cell markup
-function getTplAdminTableRow(string $cells, string $type = '', string $attr = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('table-row', [
-        'cells_html' => $cells,
-        'row_attr' => $attr,
-        'row_class' => $type,
-    ]);
-}
-
-# Render one shared admin form wrapper from prepared hidden fields and row markup
-function getTplAdminForm(string $action, string $rows, string $hide = '', string $type = 'sl_table_form', string $meth = 'post', string $name = 'post', string $attr = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-form', [
-        'action_url' => $action,
-        'form_attr' => $attr,
-        'form_method' => $meth,
-        'form_name' => $name,
-        'hidden_html' => $hide,
-        'rows_html' => $rows,
-        'table_class' => $type,
-    ]);
-}
-
-# Render one admin form row from prepared label and field markup
-function getTplAdminFormRow(string $label, string $field, string $type = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-form-row', [
-        'field_html' => $field,
-        'label_html' => $label,
-        'row_class' => $type,
-    ]);
-}
-
-# Render one full-width admin form row from prepared content markup
-function getTplAdminFormWide(string $cont, string $type = '', string $cell = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-form-wide', [
-        'cell_class' => $cell,
-        'content_html' => $cont,
-        'row_class' => $type,
-    ]);
-}
-
-# Render one shared admin content box from prepared inner markup
-function getTplBox(string $cont): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-box', [
-        'content_html' => $cont,
-    ]);
-}
-
-# Render one shared admin rows-only table wrapper with a configurable table class
-function getTplAdminRowsTable(array|string $rows, string $type = 'sl_table_conf'): string {
-    global $tpl;
-    if (is_array($rows)) {
-        $html = '';
-        foreach ($rows as $row) {
-            if (!is_array($row) || $row === []) continue;
-            if (!empty($row['raw_html'])) {
-                $html .= (string)$row['raw_html'];
-                continue;
-            }
-            if (array_key_exists('content_html', $row)) {
-                $html .= $tpl->getHtmlFrag('admin-form-wide', [
-                    'cell_class' => $row['cell_class'] ?? '',
-                    'content_html' => $row['content_html'] ?? '',
-                    'row_class' => $row['row_class'] ?? '',
-                ]);
-                continue;
-            }
-            $html .= $tpl->getHtmlFrag('admin-form-row', [
-                'field_html' => $row['field_html'] ?? '',
-                'label_html' => $row['label_html'] ?? '',
-                'row_class' => $row['row_class'] ?? '',
-            ]);
-        }
-        $rows = $html;
-    }
-    return $tpl->getHtmlFrag('admin-rows-table', [
-        'rows_html' => $rows,
-        'table_class' => $type,
-    ]);
-}
-
-# Render one shared admin info wrapper from prepared legacy info markup
-function getTplAdminInfoBox(string $info): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-info-box', [
-        'info_html' => $info,
-    ]);
-}
-
-# Render one shared admin searchbox wrapper from prepared search form markup
-function getTplAdminSearchBox(string $search): string {
-    global $tpl;
-    return $tpl->getHtmlPart('searchbox', [
-        'searchbox' => $search,
-    ]);
-}
-
-# Render one shared admin placeholder box from stable id and optional inner markup
-function getTplAdminPlaceholder(string $id, string $cont = ''): string {
-    global $tpl;
-    return getTplBox($tpl->getHtmlFrag('admin-placeholder-box', [
-        'box_id' => $id,
-        'content_html' => $cont,
-    ]));
 }
 
 # Render one shared admin select shell from prepared option markup
@@ -155,50 +45,6 @@ function getTplOption(string $valu, string $text, bool $isel = false): string {
         'is_selected' => $isel,
         'label_text' => $text,
         'value_attr' => $valu,
-    ]);
-}
-
-# Render one shared admin state flag label from a boolean state and yes/no labels
-function getTplAdminFlagBox(bool $state, string $yes, string $no): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('new/inline-badge', [
-        'class' => $state ? 'sl_green' : 'sl_red',
-        'label' => $state ? $yes : $no,
-    ]);
-}
-
-# Render one shared admin note label with a plain-text title attribute
-function getTplAdminNoteLabel(string $title, string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('span-btn', [
-        'class' => 'sl_note',
-        'label' => $label,
-        'title' => $title,
-    ]);
-}
-
-# Render one shared admin danger text span for suspicious filenames
-function getTplAdminDangerText(string $text): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-danger-text', [
-        'text' => $text,
-    ]);
-}
-
-# Render one shared admin title-tip popup from prepared inner markup
-function getTplAdminTitleTip(string $cont): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('title-tip', [
-        'content_html' => $cont,
-    ]);
-}
-
-# Render one shared admin colored label from a CSS color value and label text
-function getTplAdminColorLabel(string $color, string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-color-label', [
-        'color_val' => $color,
-        'label_text' => $label,
     ]);
 }
 
@@ -228,40 +74,6 @@ function getTplAjaxAction(string $target, string $query, string $title, string $
     ]);
 }
 
-# Render one shared admin delete action item with JS confirm text
-function getTplAdminDeleteAction(string $href, string $text, string $title, string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('action-delete', [
-        'confirm_text' => $text,
-        'href' => $href,
-        'label' => $label,
-        'title' => $title,
-    ]);
-}
-
-# Render one shared admin action-menu wrapper from prepared action item markup
-function getTplAdminActionMenu(array $items): string {
-    global $tpl;
-    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-    if (!$items) return '';
-    return $tpl->getHtmlFrag('action-menu', [
-        'editor_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => getTplMenuItem($item), $items)),
-    ]);
-}
-
-# Render one admin info page or HTMX fragment from prepared navigation markup
-function setAdminInfoPage(string $cont): void {
-    $head = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '');
-    if ($head === 'true') {
-        echo getTplAdminInfoBox(getAdminInfo());
-        return;
-    }
-    setHead();
-    echo $cont.getTplAdminInfoBox(getAdminInfo());
-    setFoot();
-}
-
 # Render one shared admin hidden input from a field name and value
 function getTplHiddenInput(string $name, string $valu): string {
     global $tpl;
@@ -283,30 +95,6 @@ function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', s
     ]);
 }
 
-# Render one shared admin number input with optional class and extra attributes
-function getTplNumberInput(int|string $valu, string $name, string $clas = 'sl_form', string $attr = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('input', [
-        'input_attr' => $attr,
-        'input_class' => $clas,
-        'itype' => 'number',
-        'name_attr' => $name,
-        'value_attr' => (string)$valu,
-    ]);
-}
-
-# Render one shared admin url input with optional class and extra attributes
-function getTplUrlInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('input', [
-        'input_attr' => $attr,
-        'input_class' => $clas,
-        'itype' => 'url',
-        'name_attr' => $name,
-        'value_attr' => $valu,
-    ]);
-}
-
 # Render one shared admin email input with optional class and extra attributes
 function getTplEmailInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
@@ -316,56 +104,6 @@ function getTplEmailInput(string $name, string $valu, string $clas = 'sl_form', 
         'itype' => 'email',
         'name_attr' => $name,
         'value_attr' => $valu,
-    ]);
-}
-
-# Render one shared admin textarea with optional class and extra attributes
-function getTplTextarea(string $name, string $valu, string $clas = 'sl_form', string $attr = '', int $cols = 65, int $rows = 5): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-textarea', [
-        'cols_num' => $cols,
-        'input_attr' => $attr,
-        'input_class' => $clas,
-        'name_attr' => $name,
-        'rows_num' => $rows,
-        'value_text' => $valu,
-    ]);
-}
-
-# Render one shared admin preview image tag from src, alt text and optional id
-function getTplImagePreview(string $src, string $alt, string $id = 'picture'): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-image-preview', [
-        'alt_text' => $alt,
-        'image_id' => $id,
-        'src_attr' => $src,
-    ]);
-}
-
-# Render one shared admin horizontal separator line
-function getTplHrLine(): string {
-    return '<hr>';
-}
-
-# Render one shared admin tab-content wrapper from a tab id and prepared inner markup
-function getTplAdminTabContent(string $tabid, string $cont): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-content', [
-        'items_html' => $cont,
-        'tab_id' => $tabid,
-    ]);
-}
-
-# Render one shared admin tab-panel id from a group id, index and submenu flag
-function getTplAdminTabName(string $group, int $index, bool $sub = false): string {
-    return $sub ? $group.'-sub-panel-'.$index : $group.'-panel-'.$index;
-}
-
-# Render one shared modern admin tabs init block for a given admin tab group id
-function getTplAdminTabsSetup(string $group): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-tabs-setup', [
-        'group_id' => $group,
     ]);
 }
 
@@ -460,11 +198,7 @@ function getTplForumReplyForm(string $mod, string $rows): string {
 
 # Render one meta-refresh tag from a URL and optional delay in seconds
 function getTplMetaRefresh(string $url, int $secs = 10): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('meta-refresh', [
-        'secs' => (string)$secs,
-        'url' => $url,
-    ]);
+    return '<meta http-equiv="refresh" content="'.(int)$secs.'; url='.htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
 }
 
 # Render one categories permission row with label, hint and pre-built field markup
@@ -769,10 +503,10 @@ function getTplSpan(string $class, string $raw_content, string $title = ''): str
 # Return an inline status badge span (sl_green / sl_red) for use inside raw HTML slots
 function getTplAdminStatusBadge(bool $state, string $yes, string $no): string {
     global $tpl;
-    return $tpl->getHtmlFrag('span-btn', [
+    return $tpl->getHtmlFrag('inline-badge', [
         'class' => $state ? 'sl_green' : 'sl_red',
         'label' => $state ? $yes : $no,
-        'title' => '',
+        'title_text' => '',
     ]);
 }
 
@@ -825,32 +559,31 @@ function getTplAdminSection(string $label): string {
 
 # Render a <link rel="stylesheet"> tag for an external CSS file
 function getHtmlCssLink(string $href): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('head-link-css', ['href' => $href]);
+    return '<link rel="stylesheet" href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
 }
 
 # Render an inline <style> block
 function getHtmlCssInline(string $css): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('style-inline', ['css' => $css]);
+    return '<style type="text/css">'.$css.'</style>';
 }
 
 # Render a <script src="..."> tag, optionally with async attribute string ('async ' or '')
 function getHtmlScriptSrc(string $src, string $async = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('script-src', ['src' => $src, 'async' => $async]);
+    $attr = trim($async) !== '' ? ' '.trim($async) : '';
+    return '<script'.$attr.' src="'.htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></script>';
 }
 
 # Render an inline <script> block
 function getHtmlScriptInline(string $js): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('script-inline', ['js' => $js]);
+    return '<script>'.$js.'</script>';
 }
 
 # Render a generic <link> head tag with optional type and title attributes
 function getHtmlHeadLink(string $rel, string $href, string $type = '', string $title = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('head-link-generic', ['rel' => $rel, 'href' => $href, 'type' => $type, 'title' => $title]);
+    $html = '<link rel="'.htmlspecialchars($rel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"';
+    if ($type !== '') $html .= ' type="'.htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"';
+    if ($title !== '') $html .= ' title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"';
+    return $html.' href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
 }
 
 # Render a safe link action item for getTplMenuItems()
@@ -922,7 +655,7 @@ function getTplAdminInfoForm(array $data): string {
 # Render one admin file upload preview tile from an index, file path and image-presence flag
 function getTplAdminFilePreview(int $index, string $path, bool $hasImage): string {
     global $tpl;
-    return $tpl->getHtmlFrag('editor-file-preview', [
+    return $tpl->getHtmlFrag('image-preview', [
         'preview_id' => 'sf-form-'.$index,
         'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
         'image_url' => $path,

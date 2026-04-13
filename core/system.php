@@ -2288,7 +2288,7 @@ function getFlashHtml(): string {
     unset($_SESSION['slaed_flash']);
     $text = (string)($data['text'] ?? '');
     if ($text === '') return '';
-    return $tpl->getHtmlFrag('new/alert', [
+    return $tpl->getHtmlFrag('alert', [
         'is_warn' => !empty($data['warn']),
         'is_flash' => true,
         'alert_attr' => 'data-sl-autohide="15000"',
@@ -3314,7 +3314,7 @@ function getVotingView(int $id = 0, string $votid = ''): string {
                 votingActionLink($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 votingActionDelete($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]) : '';
-            $post = (!$rate) ? getVotingAsyncAction($votid, 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl_but_blue', _SEROR1) : '';
+            $post = (!$rate) ? getVotingAsyncAction($votid, 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl-but-blue', _SEROR1) : '';
             $polls = ($vnum > 1) ? votingActionLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
             $votes = (!$modul && $votid != 'voting') ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : '<span class="sl_votes">'.htmlspecialchars(_VOTES.': '.$vote, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
             $comm = (!$modul && $acomm) ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
@@ -3806,7 +3806,7 @@ function getUserSessionInfo(string $id = ''): string {
             $module = getModuleName($module);
             $linkstrip = cutstr($module, 15);
             if ($guest == 2) {
-                $who_online .= $tpl->getHtmlFrag('session-row', [
+                $who_online .= $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                     'geo_html' => user_geo_ip($host, 3),
                     'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                     'name_title' => getDuration($time),
@@ -3816,7 +3816,7 @@ function getUserSessionInfo(string $id = ''): string {
                 ]);
                 $m++;
             } elseif ($guest == 1 && $conf['botsact']) {
-                $who_online .= $tpl->getHtmlFrag('session-row', [
+                $who_online .= $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                     'geo_html' => user_geo_ip($host, 3),
                     'name_title' => getDuration($time),
                     'name_text' => $strip,
@@ -3872,7 +3872,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             $alstrip = cutstr($alink, 15);
             $guest = intval($guest);
             if ($guest == 3) {
-                $title_who = $tpl->getHtmlFrag('session-row', [
+                $title_who = $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                     'geo_html' => user_geo_ip($host, 3),
                     'name_href' => $conf['ip_link'].$host,
                     'name_title' => getDuration($time).' - '._IP.': '.$host,
@@ -3887,7 +3887,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                 $a++;
             } elseif ($guest == 2) {
                 if ($lstrip != '') {
-                    $title_who = $tpl->getHtmlFrag('session-row', [
+                    $title_who = $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                         'geo_html' => user_geo_ip($host, 3),
                         'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                         'name_title' => getDuration($time).' - '._IP.': '.$host,
@@ -3901,7 +3901,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     ]);
                     $m++;
                 } else {
-                    $title_who = $tpl->getHtmlFrag('session-row', [
+                    $title_who = $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                         'geo_html' => user_geo_ip($host, 3),
                         'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                         'name_title' => getDuration($time).' - '._IP.': '.$host,
@@ -3915,7 +3915,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     ]);
                 }
             } elseif ($guest == 1) {
-                $title_who = $tpl->getHtmlFrag('session-row', [
+                $title_who = $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                     'geo_html' => user_geo_ip($host, 3),
                     'name_href' => $conf['ip_link'].$host,
                     'name_title' => getDuration($time).' - '._IP.': '.$host,
@@ -3929,7 +3929,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                 ]);
                 $b++;
             } else {
-                $title_who = ($u < 250) ? $tpl->getHtmlFrag('session-row', [
+                $title_who = ($u < 250) ? $tpl->getHtmlFrag(getTplFragmentName('session-row'), [
                     'geo_html' => user_geo_ip($host, 3),
                     'name_href' => $conf['ip_link'].$host,
                     'name_title' => getDuration($time),
@@ -3946,7 +3946,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             $who_online[$guest] .= $title_who;
             $i++;
         }
-        $content_who .= $tpl->getHtmlFrag('session-admin-summary', [
+        $content_who .= $tpl->getHtmlFrag(getTplFragmentName('session-admin-summary'), [
             'show_admins' => isAdmin(true),
             'admins_label' => _ADMINS,
             'admins_count' => $a,
@@ -3993,8 +3993,8 @@ function adminblock(): string {
             $cont .= '<hr>'.$content;
         }
         $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => '<div id="repsainfo">'.getUserSessionAdminInfo(1).'</div>', 'id' => '8', 'close' => $cltit]);
+        return $tpl->getHtmlFrag('sidebar-block', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
+            .$tpl->getHtmlFrag('sidebar-block', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }
@@ -4176,7 +4176,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
 
 function editorFilePreview(int $index, string $imageUrl, string $fallbackUrl, bool $showImage): string {
  global $tpl;
-    return $tpl->getHtmlFrag('editor-file-preview', [
+    return $tpl->getHtmlFrag('image-preview', [
         'preview_id' => 'sf-form-'.$index,
         'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
         'image_url' => $imageUrl,
@@ -4208,29 +4208,41 @@ function editorActionMenu(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('action-menu', [
-        'editor_label' => _EDITOR,
+    return $tpl->getHtmlFrag('row-actions', [
+        'trigger_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
 }
 
 function editorFilesRow(array $row): string {
  global $tpl;
-    return $tpl->getHtmlFrag('admin-files-row', $row);
+    return $tpl->getHtmlFrag('table-row', [
+        'cells_html' => $tpl->getHtmlFrag('table-cells', [
+            'cells' => [
+                ['content_html' => (string)($row['preview_html'] ?? '')],
+                ['content_html' => (string)($row['file_name'] ?? '')],
+                ['content_html' => ''],
+                ['content_html' => (string)($row['size_value'] ?? '')],
+                ['content_html' => ''],
+                ['content_html' => (string)($row['functions_html'] ?? '')],
+            ],
+        ]),
+    ]);
 }
 
 function editorFilesTable(string $rowsHtml): string {
  global $tpl;
-    return $tpl->getHtmlFrag('admin-files-table', [
-        'table_class' => 'sl_table_ajax',
-        'head_class' => 'sl_table_ajax_head',
-        'body_class' => 'sl_table_ajax_body',
-        'image_label' => cutstr(_IMG, 4, 1),
-        'file_label' => _FILE,
-        'date_label' => '',
-        'size_label' => _SIZE,
-        'dimensions_label' => '',
-        'functions_label' => _FUNCTIONS,
+    return $tpl->getHtmlFrag('table', [
+        'is_wrapless' => true,
+        'disable_sort' => true,
+        'head' => [
+            ['content' => cutstr(_IMG, 4, 1), 'nosort' => true],
+            ['content' => _FILE, 'nosort' => true],
+            ['content' => '', 'nosort' => true],
+            ['content' => _SIZE, 'nosort' => true],
+            ['content' => '', 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ],
         'rows_html' => $rowsHtml,
     ]);
 }
@@ -4278,8 +4290,8 @@ function commentActionMenu(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('action-menu', [
-        'editor_label' => _EDITOR,
+    return $tpl->getHtmlFrag('row-actions', [
+        'trigger_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
 }
@@ -4519,8 +4531,8 @@ function votingActionMenu(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('action-menu', [
-        'editor_label' => _EDITOR,
+    return $tpl->getHtmlFrag('row-actions', [
+        'trigger_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
 }
@@ -4804,8 +4816,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
     global $tpl;
     if ($typ) {
         return ($id)
-            ? $tpl->getHtmlFrag('span-btn', ['title' => _PROLD, 'class' => 'sl_n_act', 'label' => ''])
-            : $tpl->getHtmlFrag('span-btn', ['title' => _PROUTNEW, 'class' => 'sl_n_deact', 'label' => '']);
+            ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROLD, 'class' => 'sl_n_act', 'label' => ''])
+            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROUTNEW, 'class' => 'sl_n_deact', 'label' => '']);
     } elseif ($link) {
         $deact = ($text) ? _DEACTIVATE.': '.$text : _DEACTIVATE;
         $act = ($text) ? _ACTIVATE.': '.$text : _ACTIVATE;
@@ -4814,8 +4826,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
             : $tpl->getHtmlFrag('link-btn', ['href' => $link, 'title' => $act, 'class' => '', 'label' => $act]);
     }
     return ($id == 1)
-        ? $tpl->getHtmlFrag('span-btn', ['title' => _ACT, 'class' => 'sl_n_act', 'label' => ''])
-        : $tpl->getHtmlFrag('span-btn', ['title' => _DEACT, 'class' => 'sl_n_deact', 'label' => '']);
+        ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _ACT, 'class' => 'sl_n_act', 'label' => ''])
+        : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'class' => 'sl_n_deact', 'label' => '']);
 }
 
 # Add mailto
@@ -4954,21 +4966,21 @@ function renderFootControls(
     string $licenseHtml = '',
     string $debugHtml = ''
 ): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('foot-controls', [
-        'top_title' => $topTitle,
-        'top_label' => $topLabel,
-        'time_html' => $timeHtml,
-        'license_html' => $licenseHtml,
-        'debug_html' => $debugHtml,
-    ]);
+    $html = '';
+    if ($topLabel !== '') {
+        $html .= '<a OnClick="Upper(\'html, body\', 600);" title="'.htmlspecialchars($topTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="thide">'.htmlspecialchars($topLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</a>';
+    }
+    if ($timeHtml !== '') $html .= '<div class="sl_generates">'.$timeHtml.'</div>';
+    if ($licenseHtml !== '') $html .= '<div class="sl_license">'.$licenseHtml.'</div>';
+    if ($debugHtml !== '') $html .= $debugHtml;
+    return $html;
 }
 
 # Fields in
 function fields_in(mixed $fieldb, string $mod): string {
  global $conf;
     $mod = strtolower($mod);
-    $style = (defined('ADMIN_FILE')) ? 'sl_field sl_form' : 'sl_field '.$conf['style'];
+    $style = (defined('ADMIN_FILE')) ? 'sl_field sl-form-control' : 'sl_field '.$conf['style'];
     $fieldc = $conf['fields'][$mod];
     $field = getVar('post', 'field', 'raw', '');
     if ($field !== '') {
@@ -5651,7 +5663,7 @@ function encode_php(array $text): string {
             }
         }
         $replace = str_replace('&nbsp;&nbsp;', '&nbsp; ', $format);
-        $format = '<table class="sl_table_form">'.$replace.'</table>';
+        $format = '<table class="sl-table-form">'.$replace.'</table>';
     } elseif ($conf['syntax'] == 2) {
         if ($sname != $cname) {
             $scripts = getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shCore.js');
@@ -5858,7 +5870,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     $stloc = substr(_LOCALE, 0, 2);
     $desc = $var ?: filterHtml(getVar('post', $name, 'raw', ''));
     $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
-    $style = (defined('ADMIN_FILE')) ? ' sl_form' : ' '.$conf['style'];
+    $style = (defined('ADMIN_FILE')) ? ' sl-form-control' : ' '.$conf['style'];
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
         $code = ($id == 1) ? getHtmlScriptSrc('plugins/system/insert-code.js') : '';
@@ -5933,7 +5945,7 @@ function getAjaxTextarea(mixed $obj, mixed $go, mixed $op, mixed $id, mixed $cid
     $code = '<form name="textareae" id="form'.$obj.'" method="post">
     <textarea id="text" name="text" cols="65" rows="'.$rows.'" class="sl_earea">'.$desc."</textarea>
     <input type=\"submit\" hx-post=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-include=\"#form".$obj."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" hx-on:click=\"if (!document.getElementById('form".$obj."').querySelector('[name=&quot;text&quot;]').value.trim()) { alert('"._CERROR1."'); event.preventDefault(); }\" value=\""._SAVE.'" title="'._SAVE."\" class=\"sl_but_green\">
-    <input type=\"submit\" hx-get=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" value=\""._BACK.'" title="'._BACK.'" class="sl_but_blue">
+    <input type=\"submit\" hx-get=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" value=\""._BACK.'" title="'._BACK.'" class="sl-but-blue">
     </form>';
     return $code;
 }
@@ -6366,7 +6378,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $gender = (!empty($user_gender)) ? commentMetaText(_GENDER, gender($user_gender)) : '';
             $from = (!empty($user_from)) ? commentMetaText(_FROM, $user_from) : '';
             $sig = (!empty($user_sig)) ? commentSignature($user_sig) : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? commentActionJs("javascript: InsertCode('name', '".$avname."', '', '', '1');", _PERSONAL, _PERS, 'sl_but_blue') : '';
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? commentActionJs("javascript: InsertCode('name', '".$avname."', '', '', '1');", _PERSONAL, _PERS, 'sl-but-blue') : '';
             $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? commentActionLink('index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), _SENDMES, _MESSAGE, 'sl_but_green') : '';
             $profil = ($conf['comments']['profil'] && !empty($user_name)) ? commentActionLink('index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), _PERSONALINFO, _ACCOUNT, 'sl_but') : '';
             $web = ($conf['comments']['web'] && !empty($user_website)) ? commentActionLink($user_website, _DOWNLLINK, _SITE, 'sl_but', ' target="_blank"') : '';
@@ -6408,7 +6420,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             } else {
                 $checkb = '';
             }
-            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('new/title-tip', [
+            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('title-tip', [
                 'items' => [
                     ['label' => _DATE, 'value' => $date, 'is_last' => false],
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],

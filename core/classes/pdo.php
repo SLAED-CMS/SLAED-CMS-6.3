@@ -113,7 +113,7 @@ class Database {
             $color = ($ttime > 0.01) ? 'sl_red' : 'sl_green';
             $iquery = htmlspecialchars($this->filterSqlQuery($query, $params));
             if ($tpl instanceof Template) {
-                $this->qtime .= $tpl->getHtmlFrag('pdo-query-time', ['color' => $color, 'time' => $ttime, 'sec_label' => _SEC, 'type' => $type, 'query' => $iquery]);
+                $this->qtime .= '<span class="'.$color.'">'.$ttime.'</span> '._SEC.'. - ['.htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'] - '.$iquery.';<br>';
             } else {
                 $this->qtime .= '['.$color.'] '.$ttime.' '._SEC.'. - ['.$type.'] - '.$iquery.';'.PHP_EOL;
             }

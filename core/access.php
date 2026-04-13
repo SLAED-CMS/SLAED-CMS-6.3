@@ -42,20 +42,21 @@ function setExit(string $msg, string $typ = ''): never {
     $theme = $conf['theme'] ?? 'default';
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
-    $jump = ($typ !== '') ? $tpl->getHtmlFrag('meta-refresh', ['secs' => '5', 'url' => ($conf['homeurl'] ?? '').'/index.php']).PHP_EOL : '';
-    $meta = $tpl->getHtmlFrag('head-meta-base', ['author' => $conf['sitename'] ?? '', 'generator' => 'SLAED CMS '.($conf['version'] ?? '')]).PHP_EOL.$jump;
+    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.htmlspecialchars((string)($conf['homeurl'] ?? '').'/index.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL : '';
+    $meta = '<meta name="author" content="'.htmlspecialchars((string)($conf['sitename'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL
+        .'<meta name="generator" content="'.htmlspecialchars('SLAED CMS '.($conf['version'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL.$jump;
     $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
     $basedir = realpath($path) ?: $path;
     $themedir = 'templates/'.$theme;
     $linksrc = [];
     if (is_file($basedir.'/'.$themedir.'/favicon.png')) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link-icon', ['href' => $themedir.'/favicon.png']);
+        $linksrc[] = '<link rel="shortcut icon" href="'.htmlspecialchars($themedir.'/favicon.png', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
     } elseif (is_file($basedir.'/'.$themedir.'/favicon.ico')) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link-icon', ['href' => $themedir.'/favicon.ico']);
+        $linksrc[] = '<link rel="shortcut icon" href="'.htmlspecialchars($themedir.'/favicon.ico', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
     }
     foreach (['theme.css', 'system.css', 'new.css', 'blocks.css'] as $asset) {
         if (is_file($basedir.'/'.$themedir.'/'.$asset)) {
-            $linksrc[] = $tpl->getHtmlFrag('head-link-css', ['href' => $themedir.'/'.$asset]);
+            $linksrc[] = $tpl->getHtmlFrag(getTplFragmentName('head-link-css'), ['href' => $themedir.'/'.$asset]);
         }
     }
     $links = implode(PHP_EOL, $linksrc);
