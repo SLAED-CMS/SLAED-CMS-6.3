@@ -73,6 +73,11 @@ support@slaed.net',
     'multilingual' => '1',
     'quality' => '4',
     'redaktor' => '1',
+    'editor' => [
+        'user' => 'plain',
+        'admin' => 'plain',
+        'code' => 'codemirror',
+    ],
     'rewrite' => '0',
     'schema' => '<script type="application/ld+json">
 {

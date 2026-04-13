@@ -114,6 +114,7 @@ if (defined('MODULE_FILE')) {
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
+require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/parser.php';
 $tpl = new Template($theme);
 $prs = new Parser();
