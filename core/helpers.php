@@ -138,7 +138,7 @@ function getTplRefreshTimeSelect(array $data = []): string {
 
 # Render preview field rows from dynamic module field definitions
 function getTplViewFieldRows(array $data = []): string {
-    global $conf, $tpl;
+    global $conf, $tpl, $prs;
     $field = $data['field'] ?? '';
     $mod = $data['mod'] ?? '';
     $mod = strtolower($mod);
@@ -158,7 +158,7 @@ function getTplViewFieldRows(array $data = []): string {
             $valu = $vals[$pos];
             $type = $out[3] ?? '';
             if ($type == '2') {
-                $valu = filterReplaceText(filterMarkdown($valu, $mod, false), $mod);
+                $valu = $prs->filterContent($valu, false, $mod);
             } else {
                 $valu = htmlspecialchars((string)$valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             }
@@ -174,7 +174,7 @@ function getTplViewFieldRows(array $data = []): string {
 
 # Render one full preview block from prepared source texts and dynamic fields
 function getTplPreviewContent(array $data = []): string {
-    global $tpl;
+    global $tpl, $prs;
     $title = $data['title'] ?? '';
     $texta = $data['texta'] ?? '';
     $textb = $data['textb'] ?? '';
@@ -182,8 +182,8 @@ function getTplPreviewContent(array $data = []): string {
     $mod = $data['mod'] ?? '';
     if ($title === '' && $texta === '' && $textb === '' && $field === '') return '';
     $titlhtml = $title ? '<b>'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b>' : '';
-    $bodya = $texta ? filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : '';
-    $bodyb = $textb ? filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
+    $bodya = $texta ? $prs->filterContent($texta, false, $mod) : '';
+    $bodyb = $textb ? $prs->filterContent($textb, false, $mod) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
     return $tpl->getHtmlPart('preview-content', [
         'title' => _PREVIEW,
@@ -521,7 +521,7 @@ function getTplAdminTabs(array $data = []): string {
 
 # Render one full admin info page from a module info file with optional in-place editor
 function setTplAdminInfoPage(array $data = []): void {
-    global $afile, $locale, $conf, $tpl;
+    global $afile, $locale, $conf, $tpl, $prs;
     $name = filterWord(getVar('get', 'name', 'text', ''));
     $ops = $data['ops'] ?? [];
     $tabs = $data['tabs'] ?? [];
@@ -583,7 +583,7 @@ function setTplAdminInfoPage(array $data = []): void {
             }
         }
     }
-    $info = filterReplaceText(filterMarkdown($text, $mod, false), $mod);
+    $info = $prs->filterContent($text, false, $mod);
     $body = ($alert !== '' ? $alert : '').$tpl->getHtmlPart('box', ['content_html' => $info]);
     $head = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '');
     if ($head === 'true') {

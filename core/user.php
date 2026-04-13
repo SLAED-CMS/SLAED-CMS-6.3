@@ -38,7 +38,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
 
 # Render the active site message box for the current language and user role
 function setMessageShow(): string {
-    global $db, $afile, $conf, $currentlang, $tpl;
+    global $db, $afile, $conf, $currentlang, $tpl, $prs;
     if ($conf['message'] == 1) {
         $params = [];
         $querylang = ($conf['multilingual'] == 1) ? 'AND (lang = :lang OR lang = \'\')' : '';
@@ -50,7 +50,7 @@ function setMessageShow(): string {
             while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
                 if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = 0 WHERE id = :mid', ['mid' => $mid]);
-                $body = filterReplaceText(filterMarkdown($body, 'all', false), 'all');
+                $body = $prs->filterContent($body, false, 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
@@ -155,12 +155,12 @@ function getUserInfo() {
 
 # Render the user's custom sidebar block if enabled
 function getUserBlock(): string {
-    global $db, $user, $tpl;
+    global $db, $user, $tpl, $prs;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
-        $userblock = filterReplaceText(filterMarkdown($userblock, 'account', false), 'account');
+        $userblock = $prs->filterContent($userblock, false, 'account');
         return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock]);
     }
     return '';
@@ -218,7 +218,7 @@ function addComment() {
 
 # Validate and update an existing forum post in-place
 function updatePost() {
-    global $db, $user, $conf, $tpl;
+    global $db, $user, $conf, $tpl, $prs;
     $conf['forum'] = $conf['forum'] ?? [];
     $id    = getVar('post', 'id',  'num',  0)  ?: getVar('get', 'id',  'num',  0);
     $cid   = getVar('post', 'cid', 'num',  0)  ?: getVar('get', 'cid', 'num',  0);
@@ -239,7 +239,7 @@ function updatePost() {
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
-                $content = ($typ) ? getAjaxTextarea('for'.$id, '1', 'updatePost', $id, $cid, '0', $mod, $hometext, '15') : filterReplaceText(filterMarkdown($hometext, $mod, false), $mod);
+                $content = ($typ) ? getAjaxTextarea('for'.$id, '1', 'updatePost', $id, $cid, '0', $mod, $hometext, '15') : $prs->filterContent($hometext, false, $mod);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : 0;
@@ -256,7 +256,7 @@ function updatePost() {
                         'UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id',
                         ['body' => $htext, 'euid' => $postid, 'eip' => $ip, 'id' => $id]
                     );
-                    echo filterReplaceText(filterMarkdown($htext, $mod, false), $mod);
+                    echo $prs->filterContent($htext, false, $mod);
                 } else {
                     return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
                 }
@@ -271,7 +271,7 @@ function updatePost() {
 
 # Render the private-message inbox, outbox, saved or detail view
 function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
-    global $db, $user, $conf, $tpl;
+    global $db, $user, $conf, $tpl, $prs;
     $typ = $typ ?: getVar('get', 'typ', 'num', 0);
     $uid = intval($user[0]);
     $newlistnum = intval($conf['privat']['num']);
@@ -420,7 +420,7 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
 
                 
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu('<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod.'" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod.'" hx-target="#rep'.$prmid.'" hx-swap="innerHTML" hx-push-url="false" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-                $cont .= $tpl->getHtmlFrag('privat-message', ['username' => $avname, 'date' => $date, 'ip' => $ip, 'title' => cutstr($title, 35), 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit]);
+                $cont .= $tpl->getHtmlFrag('privat-message', ['username' => $avname, 'date' => $date, 'ip' => $ip, 'title' => cutstr($title, 35), 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -687,7 +687,7 @@ function deleteFavorite(): string {
 
 # Output the RSS 2.0 feed for the specified module and optional category
 function getRssChannel() {
-    global $db, $conf;
+    global $db, $conf, $prs;
     header_remove('X-Content-Type-Options');
     header('Content-Type: application/rss+xml; charset='._CHARSET);
     header('Content-Encoding: none');
@@ -763,7 +763,7 @@ function getRssChannel() {
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
             .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
             .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
-            .'<description>'.htmlspecialchars(filterReplaceText(filterMarkdown($rhometext, $name, false), $name))."</description>\n"
+            .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
             .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= '<author>antispam@antispam.com ('.htmlspecialchars($rauthor).")</author>\n"
@@ -776,7 +776,7 @@ function getRssChannel() {
         .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
         .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
         .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
-        .'<description>'.htmlspecialchars(filterReplaceText(filterMarkdown($rhometext, $name, false), $name))."</description>\n"
+        .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
         ."</item>\n\n";
     } elseif ($name && $name == 'shop' && $result) {
         while ([$rid, $rtitle, $rtime, $rhometext, $rctitle] = $db->getSqlRow($result)) {
@@ -785,7 +785,7 @@ function getRssChannel() {
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
             .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
             .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
-            .'<description>'.htmlspecialchars(filterReplaceText(filterMarkdown($rhometext, $name, false), $name))."</description>\n"
+            .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
             .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= "</item>\n\n";

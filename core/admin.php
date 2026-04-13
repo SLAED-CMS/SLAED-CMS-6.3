@@ -771,7 +771,7 @@ function getAdminFavoriteList(int $obj = 0): string {
 
 # Private messages list view
 function getAdminPrivateList(int $obj = 0): string {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $prs;
     $newlistnum = intval($conf['privat']['anum']);
     $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
     $offset = intval(($cid - 1) * $newlistnum);
@@ -784,7 +784,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $unre = ($user_re) ? user_info($user_re) : _ANONYM;
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
-            $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
+            $info = $prs->filterContent($body, false, 'privat');
             $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $delhref = 'admin.php?name=privat&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -1022,7 +1022,7 @@ function edit_list(string $modul, string $name, string $extraClass = ''): string
 
 # Renders the info/help page for the current admin module
 function getAdminInfo(): string {
-    global $afile, $locale, $conf, $tpl;
+    global $afile, $locale, $conf, $tpl, $prs;
     $id   = getVar('post', 'id', 'num', 0);
     $cont = '';
     $fdoc = static function(string $base): string {
@@ -1068,7 +1068,7 @@ function getAdminInfo(): string {
             $cont .= checkPerms(BASE_DIR.'/'.$dir);
         }
     }
-    $html = filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
+    $html = $prs->filterContent($thefile, false, 'info');
     if ($conf['adminfo']) {
         $html .= $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php?name='.$name.'&op=info',
