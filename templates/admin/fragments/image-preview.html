@@ -1,9 +1,3 @@
-{% if show_image is not null %}
-{% if show_image %}
-<div OnClick="{{ toggle_onclick }}" class="sl-image-preview-toggle sl-image-preview-mini" style="background-image: url({{{ image_url }}});" title="{{ image_title }}"><span id="{{ preview_id }}" class="sl-image-preview-popup"><img src="{{{ image_url }}}" alt="{{ image_title }}" title="{{ image_title }}"></span></div>
-{% else %}
-<div class="sl-image-preview-mini" style="background-image: url({{{ fallback_url }}});" title="{{ no_title }}"></div>
-{% endif %}
-{% else %}
-<img src="{{ src_attr }}" id="{{ image_id }}" alt="{{ alt_text }}">
-{% endif %}
+{% if src_attr %}<img src="{{ src_attr }}" id="{{ image_id }}" alt="{{ alt_text }}">{% endif %}
+{% if show_toggle %}<div OnClick="{{ toggle_onclick }}" class="sl-image-preview-toggle sl-image-preview-mini" style="background-image: url({{{ image_url }}});" title="{{ image_title }}"><span id="{{ preview_id }}" class="sl-image-preview-popup"><img src="{{{ image_url }}}" alt="{{ image_title }}" title="{{ image_title }}"></span></div>{% endif %}
+{% if show_fallback %}<div class="sl-image-preview-mini" style="background-image: url({{{ fallback_url }}});" title="{{ no_title }}"></div>{% endif %}

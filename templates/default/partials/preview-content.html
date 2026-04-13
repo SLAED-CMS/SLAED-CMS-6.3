@@ -1,19 +1,19 @@
-<div class="sl-preview">
+<div class="sl-preview admin-preview">
     {% if title %}
     <div class="sl-preview-head">{{ title }}</div>
     {% endif %}
     <div class="sl-preview-body">
         {% if title_html %}
-        <div class="sl-preview-title">{{{ title_html }}}</div>
+        <div class="sl-preview-title admin-preview-title">{{{ title_html }}}</div>
         {% endif %}
         {% if body_a %}
-        <div class="sl-preview-section">{{{ body_a }}}</div>
+        <div class="sl-preview-section admin-preview-fields1">{{{ body_a }}}</div>
         {% endif %}
         {% if body_b %}
-        <div class="sl-preview-section">{{{ body_b }}}</div>
+        <div class="sl-preview-section admin-preview-fields2">{{{ body_b }}}</div>
         {% endif %}
         {% if body_c %}
-        <div class="sl-preview-section sl-preview-meta">{{{ body_c }}}</div>
+        <div class="sl-preview-section sl-preview-meta admin-preview-fields3">{{{ body_c }}}</div>
         {% endif %}
     </div>
 </div>

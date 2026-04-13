@@ -162,6 +162,20 @@ input.sl-but-blue[value="ОК"] {
     max-width: 100%;
     box-sizing: border-box;
 }
+.sl-div-item-full > .sl-form-control,
+.sl-div-item-full > textarea,
+.sl-div-item-full > .CodeMirror,
+.sl-div-item-full > .tox,
+.sl-div-item-full > .tox-tinymce,
+.sl-div-item-full > .ck,
+.sl-div-item-full > [id$="_ck"],
+.sl-div-item-full > [id$="_toast"],
+.sl-div-item-full > .toastui-editor-defaultUI {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
 .sl-toggle-form-block-item {
     grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr);
 }
@@ -738,4 +752,9 @@ input.sl-but-blue[value="ОК"] {
 .sl-tab-panel { display: none; }
 @media print {
     .sl-tab-panel { display: block !important; }
+}
+
+.sl-div-form .ck.ck-editor__main > .ck-editor__editable,
+.sl-div-form .ck.ck-editor__main > .ck-editor__editable_inline {
+    min-height: 180px;
 }
