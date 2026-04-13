@@ -87,6 +87,7 @@ Current unit test files include:
 - `AdminSearchboxBridgeFlowTest.php`
 - `ExampleTest.php`
 - `InputFilterTest.php`
+- `ParserFixturesTest.php`
 - `PasswordHashTest.php`
 - `StructureTest.php`
 - `ViewBridgeSmokeTest.php`

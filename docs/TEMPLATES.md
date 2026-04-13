@@ -146,6 +146,7 @@ Avoid for new base contracts:
 - module-prefixed names like `admin-foo-*`
 - scenario-prefixed names like `add-*`, `edit-*`, `config-*` when the contract is actually generic
 - mixing page-sized sections into `fragments/`
+- **creating subdirectories in `fragments/` (e.g. `new/`, `blocks/`). The fragment namespace is rigorously flat.**
 
 ## Runtime Syntax
 The current `Template` runtime supports:
@@ -163,6 +164,7 @@ The current `Template` runtime supports:
   - `{% include 'header' %}` (auto-resolves to `partials/header.html`)
   - `{% include 'partials/custom.html' %}`
   - `{% include 'fragments/foo.html' %}`
+  - `{% include 'fragments/row.html' with row %}` (context passing supported)
 - layout inheritance
 - blocks
 - components:
@@ -235,10 +237,10 @@ Behavior:
 - `robots` overrides the default robots meta value
 - if `canon` is omitted, the runtime builds the canonical URL from normalized route parameters
 
+## Engine Limitations
+- no advanced expression language
+- no complex named include arguments as a supported baseline (simple context passing like `with item` is permitted)
+- no deep inheritance chains
+
 ## Migration Source Of Truth
-For active repository template guidance, use:
-
-- `docs/TEMPLATE_STATUS.md`
-
-For current runtime status, use:
-- `docs/TEMPLATE_STATUS.md`
+For active repository template guidance and current runtime status, use this document (`docs/TEMPLATES.md`).

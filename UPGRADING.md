@@ -1,7 +1,7 @@
 # Upgrading SLAED CMS
 
 > **Migration Guide for SLAED CMS**
-> *Last updated: March 2026*
+> *Last updated: April 2026*
 
 This document describes the upgrade process using currently confirmed files and repository structure. Where the exact historical path cannot be verified from the current codebase alone, it is marked as `TODO:`.
 
@@ -38,10 +38,7 @@ tar -czf slaed_backup_$(date +%Y%m%d).tar.gz /path/to/slaed/
 Confirmed current baseline:
 
 - **PHP:** 8.1+
-- **Database:** PDO MySQL-compatible server required by the current runtime
-
-> [!IMPORTANT]
-> `TODO:` Confirm the minimum supported MySQL and MariaDB server versions before documenting a version-specific database baseline.
+- **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 
 ### Review Writable Directories
 
@@ -125,7 +122,7 @@ rm -rf storage/cache/*
 Additional runtime-generated locations present in the repository:
 
 - `storage/logs/`
-- `storage/sitemap/`
+- `config/sitemap/`
 - `storage/backup/`
 
 ### 6. Verify Entry Points
@@ -180,12 +177,23 @@ Current helpers:
 - `getSiteToken()`
 - `checkSiteToken()`
 
+### Content Editors
+
+The new pluggable editor layer is now active via the `Editor` class (`core/classes/editor.php`). When migrating old forms and textareas, update them to output via `Editor::getContent()` or `Editor::getCode()` rather than rendering raw textareas with hardcoded editor initializers. The available editor drivers are bundled under `plugins/editors/`.
+
+### Content Parsing
+
+Legacy text manipulation functions such as `filterMarkdown()` and `filterReplaceText()` have been removed. All user and administrative content formatting should be passed through the unified `Parser` class (`core/classes/parser.php`), typically accessed via its `filterContent()` method.
+
 ### Template Layer
 
 The active file-backed template runtime is `core/classes/template.php`.
 
 New template work should target the modern runtime and theme HTML files under `templates/`.
 The modern engine supports automatic CSS and JS injection for components placed in `partials/` (e.g., `{% component 'modal' %}` auto-loads `modal.css` and `modal.js` at compile time).
+
+When upgrading custom modules:
+- Remove subdirectories from your module's `fragments/` logic (e.g. `new/`). The fragment namespace has been strictly flattened. Update `$tpl->getHtmlFrag(...)` calls accordingly.
 
 > [!NOTE]
 > The current repository snapshot does not contain an active `core/template.php` runtime file.

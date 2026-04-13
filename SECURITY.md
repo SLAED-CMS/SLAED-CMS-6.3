@@ -1,7 +1,7 @@
 # Security Policy
 
 > **SLAED CMS Security Information**
-> *Last updated: March 2026*
+> *Last updated: April 2026*
 
 ---
 
@@ -91,7 +91,7 @@ Runtime logs are stored under `storage/logs/`.
 The repository also contains runtime-generated data under:
 
 - `storage/cache/`
-- `storage/sitemap/`
+- `config/sitemap/`
 - `storage/backup/`
 
 ### Access Control

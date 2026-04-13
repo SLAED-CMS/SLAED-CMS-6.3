@@ -9,7 +9,7 @@
 
 **Modular PHP Content Management System**
 
-> *Last updated: March 2026*
+> *Last updated: April 2026*
 
 SLAED CMS is a modular content management system with a legacy runtime, a modernized database layer, multi-language support, and an actively evolving template stack. The current codebase contains both stable legacy subsystems and newer runtime components used for ongoing modernization work.
 
@@ -48,16 +48,13 @@ http://localhost/slaed-cms/
 ## System Requirements
 
 - **PHP:** 8.1+
-- **Database:** PDO MySQL-compatible server required by the current runtime
+- **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 - **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
 - **Extensions:** PDO and JSON are required by the current runtime; image-related flows use GD functions
 - **Encoding:** UTF-8 / utf8mb4
 
 > [!NOTE]
 > Some development documentation and modernization work target newer PHP releases, but the current Composer requirement is `>=8.1`.
-
-> [!IMPORTANT]
-> `TODO:` Confirm the minimum supported MySQL and MariaDB server versions before documenting a version-specific deployment guarantee.
 
 ---
 
@@ -122,8 +119,8 @@ composer quality
 - **Backend:** PHP 8.1+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
 - **Template Runtime:** `core/classes/template.php`
-- **Editors / JS Plugins:** CKEditor, TinyMCE, CodeMirror, htmx, Bootstrap and other bundled plugin directories under `plugins/`
-- **Content Parsing:** `filterMarkdown()` in `core/system.php`
+- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: bbcode, ckeditor, codemirror, plain, tinymce, toastui); additional plugins: highlightjs, htmx, tablesort, system
+- **Content Parsing:** `Parser` class in `core/classes/parser.php`
 - **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
 - **Languages:** 6 bundled locale files in `lang/`
 
@@ -142,7 +139,7 @@ composer quality
 - Prepared-statement database layer
 - Caching and logging directories under `storage/`
 - Central frontend head assembly through `setHead()` and final page rendering through `setFoot()`
-- Runtime-generated sitemap data under `storage/sitemap/`
+- Runtime-generated sitemap data under `config/sitemap/`
 
 ### Content and Modules
 
@@ -192,14 +189,17 @@ slaed-cms/
 │   ├── system.php         # Main bootstrap/runtime layer
 │   ├── security.php       # Security helpers
 │   └── classes/
+│       ├── editor.php     # Pluggable editor system
+│       ├── parser.php     # Markdown and BBCode parser
 │       ├── pdo.php        # Database class
 │       └── template.php   # Modern template runtime
+├── docs/                  # Architectural documentation and guidelines
 ├── lang/                  # Main language files
 ├── modules/               # Frontend modules
 ├── plugins/               # Bundled JS/editor/plugin assets
 ├── setup/                 # Installation and SQL files
 ├── sound/                 # Bundled sound assets
-├── storage/               # Cache, logs, backups, sitemap data
+├── storage/               # Cache, logs, backups
 ├── templates/             # Themes and template trees
 ├── tests/                 # PHPUnit and validation tests
 ├── uploads/               # Uploaded files
@@ -243,8 +243,9 @@ For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md]
 | Document | Description |
 |----------|-------------|
 | [docs/TEMPLATES.md](docs/TEMPLATES.md) | Template system and theme structure |
-| [docs/TEMPLATE_STATUS.md](docs/TEMPLATE_STATUS.md) | Current template runtime status |
 | [docs/TESTS.md](docs/TESTS.md) | Testing and validation commands |
+| [docs/EDITORS.md](docs/EDITORS.md) | Pluggable Editor and Plugin system architecture |
+| [docs/PARSER.md](docs/PARSER.md) | Content parsing and Markdown/BBCode architecture |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution and coding rules |
 | [SECURITY.md](SECURITY.md) | Security policy |
 | [UPGRADING.md](UPGRADING.md) | Upgrade notes |

@@ -1,7 +1,7 @@
 # Contributing to SLAED CMS
 
 > **Contribution Guidelines for SLAED CMS 6.3**
-> *Last updated: March 2026*
+> *Last updated: April 2026*
 
 Thank you for your interest in contributing to SLAED CMS. This document describes the current contribution workflow, coding conventions, and project-specific rules that contributors should follow.
 
@@ -30,13 +30,10 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before contribu
 ### Prerequisites
 
 - **PHP:** 8.1+
-- **Database:** PDO MySQL-compatible server required by the current runtime
+- **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 - **Web Server:** Apache, Nginx, or IIS
 - **Extensions:** PDO and JSON are required by the current runtime; image-related flows use GD functions
 - **Tools:** Git, Composer
-
-> [!IMPORTANT]
-> `TODO:` Confirm the minimum supported MySQL and MariaDB server versions before documenting a version-specific requirement here.
 
 ### Fork and Clone
 
@@ -255,6 +252,11 @@ setFoot();
 ```
 
 Admin pages are handled by the admin runtime and do not use the frontend lifecycle in the same way.
+
+### Content Parsers and Editors
+
+- **Parsing:** Use `Parser::filterContent()` from `core/classes/parser.php` to render Markdown/BBCode to HTML. Do not use legacy functions like `filterMarkdown()`.
+- **Editors:** When building forms, use `Editor::getContent()` for WYSIWYG textareas and `Editor::getCode()` for syntax highlighting fields. Do not manually output generic `<textarea>` tags with custom JS initializers.
 
 ---
 
