@@ -461,9 +461,7 @@ if (!isAdmin(true)) {
     }
     if (isset($_POST)) {
         function checkPost($name, $val) {
-            global $conf, $admin;
-            $flag = is_array($admin) ? ($admin[3] ?? '') : '';
-            $editor = (int)substr($flag, 0, 1);
+            global $conf;
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form).*?>#i';
             $string = '#'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i';
@@ -471,7 +469,7 @@ if (!isAdmin(true)) {
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
             if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), getHost())) addWarnReport('POST from referer - '.$name.' = '.$val);
             if ($conf['security']['url_post']) if (preg_match($links, $val)) addWarnReport('URL in POST - '.$name.' = '.$val);
-            if (((defined('ADMIN_FILE') && $editor != 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] != 1)) && preg_match($script, urldecode($val))) addWarnReport('HTML in POST - '.$name.' = '.$val);
+            if (!checkHtmlEditor() && preg_match($script, urldecode($val))) addWarnReport('HTML in POST - '.$name.' = '.$val);
             if (preg_match($string, $val)) addHackReport('XSS in POST - '.$name.' = '.$val);
             if (preg_match($string, $decode)) addHackReport('XSS base64 in POST - '.$name.' = '.$val);
             if (preg_match($string, $slash)) addHackReport('XSS slash in POST - '.$name.' = '.$val);
@@ -1068,11 +1066,9 @@ function filterClickable(string $text): string {
 
 # Convert raw user text to HTML-safe output; applies nl2br, escaping and URL linking; skips URL auto-linking when $id === 1
 function filterHtml(string $text, mixed $id = ''): string {
-    global $admin, $conf;
+    global $conf;
     if ($text) {
-        $flag = is_array($admin) ? ($admin[3] ?? '') : '';
-        $editor = (int)substr($flag, 0, 1);
-        if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
+        if (!checkHtmlEditor()) {
             $text = ($conf['clickable'] && $id != 1) ? filterClickable($text) : $text;
             $out = nl2br(str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(filterText($text, 2))), false);
         } else {

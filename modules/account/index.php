@@ -883,7 +883,7 @@ function edithome(): void {
             'lbl_name' => _YOURNAME,
             'name_value' => $userinfo['name'],
             'lbl_birthday' => _BIRTHDAY,
-            'birthday_html' => datetime(2, 'user_birthday', $birthday, 10, $conf['style']),
+            'birthday_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10]),
             'lbl_gender' => _GENDER,
             'gender_html' => get_gender('gender', $userinfo['gender'], $conf['style']),
             'lbl_email' => _YOUREMAIL,

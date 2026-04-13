@@ -320,9 +320,14 @@ function admininfo() {
             
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
-        $econt = $tpl->getHtmlFrag('admin-editor-form', [
+        $edit = str_replace('<select ', '<select onchange="this.form.submit()" ', Editor::getSelect('editor', $key, 'content', 'admin'));
+        $econt = $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php',
-            'editor_html' => Editor::getSelect('editor', $key, 'content', 'admin'),
+            'hidden' => [
+                ['nameattr' => 'op', 'valueattr' => 'changeeditor'],
+                ['nameattr' => 'refer', 'valueattr' => '1'],
+            ],
+            'content_html' => $edit,
         ]);
         $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _EDITOR, 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
@@ -481,14 +486,22 @@ function updateAdminCategoryOrder(): void {
 }
 
 function catacess(string $name, string $class, string $selected, int $limit): string {
-    global $db;
+    global $db, $tpl;
     $gids = explode('|', $selected);
     $opts = '';
     if ($limit < 1) {
-        $opts .= getTplOption('0|0', _ALL, $selected == '0|0');
+        $opts .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => '0|0',
+            'label_text' => _ALL,
+            'is_selected' => $selected == '0|0',
+        ]);
     }
     if ($limit < 2) {
-        $opts .= getTplOption('1|0', _USERS, $selected == '1|0');
+        $opts .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => '1|0',
+            'label_text' => _USERS,
+            'is_selected' => $selected == '1|0',
+        ]);
         $where  = '';
         $params = [];
     } else {
@@ -508,10 +521,22 @@ function catacess(string $name, string $class, string $selected, int $limit): st
             }
         }
         $title = ($extra) ? _SPEC_GROUP.' "'.$gname.'"' : _GROUP.' "'.$gname.'"';
-        $opts .= getTplOption('2|'.$id, $title, $sel !== '');
+        $opts .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => '2|'.$id,
+            'label_text' => $title,
+            'is_selected' => $sel !== '',
+        ]);
     }
-    $opts .= getTplOption('3|0', _ADMIN, $selected == '3|0');
-    return getTplSelect($name.'[]', $opts, $class, 'multiple="multiple"');
+    $opts .= $tpl->getHtmlFrag('select-option', [
+        'value_attr' => '3|0',
+        'label_text' => _ADMIN,
+        'is_selected' => $selected == '3|0',
+    ]);
+    return $tpl->getHtmlFrag('select', [
+        'name_attr' => $name.'[]',
+        'options_html' => $opts,
+        'select_attr' => 'multiple="multiple"',
+    ]);
 }
 
 function scatacess($auth) {
@@ -891,7 +916,8 @@ function getAdminUploadFiles(): void {
                         'fallback_url' => 'templates/admin/images/admin/no.png',
                         'image_title' => _IMG,
                         'no_title' => _NO,
-                        'show_image' => true,
+                        'show_toggle' => true,
+                        'show_fallback' => false,
                     ]);
                     $isize = $imgwidth.' x '.$imgheight;
                 } else {
@@ -902,7 +928,8 @@ function getAdminUploadFiles(): void {
                         'fallback_url' => 'templates/admin/images/admin/no.png',
                         'image_title' => _IMG,
                         'no_title' => _NO,
-                        'show_image' => false,
+                        'show_toggle' => false,
+                        'show_fallback' => true,
                     ]);
                     $isize = _NO;
                 }
@@ -963,21 +990,10 @@ function getAdminUploadFiles(): void {
     echo $content;
 }
 
-# Format comments access
-function com_access(string $name, int $selected, string $extraClass = ''): string {
-    $opts  = '';
-    $mods  = [_DEACTIVATE, _APOSTMOD, _APOSTNOMOD];
-    for ($i = 0; $i < count($mods); $i++) {
-        $opts .= getTplOption((string)$i, $mods[$i], $selected == $i);
-    }
-    return getTplSelect($name, $opts, $extraClass);
-}
-
 # Add voting
 function add_voting(string $modul, string $selectName, int $selectedId, string $extraClass = ''): string {
- global $db, $locale, $conf;
+ global $db, $locale, $conf, $tpl;
     $modul  = filterVar($modul);
-    $class  = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     $params = ['modul' => $modul];
     if ($conf['multilingual'] == 1) {
         $where  = "(lang = :locale OR lang = '') AND modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
@@ -985,14 +1001,15 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
     } else {
         $where  = "modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     }
-    $opts   = getTplOption('0', _NO, false);
+    $opts   = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => false]);
     $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($id, $title) = $db->getSqlRow($result)) {
-            $opts .= getTplOption((string)$id, $title, $selectedId == $id);
+            $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id]);
         }
     }
-    return getTplSelect($selectName, $opts, $class);
+    $attr = $extraClass ? ' class="'.htmlspecialchars('sl_field '.$extraClass, ENT_QUOTES, 'UTF-8').'"' : '';
+    return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts, 'select_attr' => $attr]);
 }
 
 # Edit select list

@@ -30,18 +30,18 @@ function getAjaxQuery(array $data): string {
 # Render one shared admin select shell from prepared option markup
 function getTplSelect(string $name, string $opts, string $clas = '', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-select', [
+    $selectAttr = trim(($clas !== '' ? 'class="'.htmlspecialchars($clas, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '').($attr !== '' ? ' '.$attr : ''));
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'options_html' => $opts,
-        'select_attr' => $attr,
-        'select_class' => $clas,
+        'select_attr' => $selectAttr,
     ]);
 }
 
 # Render one shared admin option row with optional selected state
 function getTplOption(string $valu, string $text, bool $isel = false): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-select-option', [
+    return $tpl->getHtmlFrag('select-option', [
         'is_selected' => $isel,
         'label_text' => $text,
         'value_attr' => $valu,
@@ -257,14 +257,24 @@ function getTplAdminAccountSearch(int $search, string $chng): string {
     $opts = '';
     foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $k => $v) {
         $n = $k + 1;
-        $opts .= getTplOption((string)$n, $v, $search === $n || (!$search && $n === 2));
+        $opts .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => (string)$n,
+            'label_text' => $v,
+            'is_selected' => $search === $n || (!$search && $n === 2),
+        ]);
     }
     return getTplAdminSearchBox($tpl->getHtmlFrag('admin-account-search-form', [
         'action_url' => $afile.'.php',
-        'input_html' => getUserSearch('chng', $chng, '30'),
+        'input_html' => getTplUserSearchInput([
+            'name' => 'chng',
+            'input_id' => 'chng',
+            'list_id' => 'chng_list',
+            'maxlength' => 30,
+            'value' => $chng,
+        ]),
         'ok_label' => _OK,
         'search_label' => _SEARCH,
-        'select_html' => getTplSelect('search', $opts),
+        'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'search', 'options_html' => $opts]),
     ]));
 }
 
@@ -649,20 +659,6 @@ function getTplAdminInfoForm(array $data): string {
         'submit_label' => (string)($data['submit_label'] ?? ''),
         'submit_title' => (string)($data['submit_title'] ?? ''),
         'textarea_html' => (string)($data['textarea_html'] ?? ''),
-    ]);
-}
-
-# Render one admin file upload preview tile from an index, file path and image-presence flag
-function getTplAdminFilePreview(int $index, string $path, bool $hasImage): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('image-preview', [
-        'preview_id' => 'sf-form-'.$index,
-        'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
-        'image_url' => $path,
-        'fallback_url' => 'templates/admin/images/admin/no.png',
-        'image_title' => _IMG,
-        'no_title' => _NO,
-        'show_image' => $hasImage,
     ]);
 }
 

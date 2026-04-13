@@ -144,7 +144,8 @@ function add_admin() {
         $apwdraw   = trim(substr($_POST['apwd'] ?? '', 0, 25));
         $apwd2raw  = trim(substr($_POST['apwd2'] ?? '', 0, 25));
         $auser_new = intval($_POST['auser_new'] ?? 0);
-        $aeditor   = intval($conf['redaktor']);
+        $aeditor   = (string)($conf['editor']['admin'] ?? 'plain');
+        if (!isValidEditor($aeditor, 'admin')) $aeditor = 'plain';
         $alang     = getCookies('language');
         $aip       = getip();
         if (!$aname || !analyze_name($aname)) $stop = _ERRORINVNICK;

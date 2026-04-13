@@ -82,7 +82,7 @@ function jokes(): void {
 }
 
 function add(): void {
-    global $db, $afile, $stop, $tpl;
+    global $db, $afile, $stop, $tpl, $conf;
     $id = getVar('req', 'id', 'num', 0);
     $jokeid = $id;
     if ($jokeid) {
@@ -111,29 +111,32 @@ function add(): void {
         ]);
     }
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+            'input_id' => 'postname',
+            'list_id' => 'postname_list',
+            'maxlength' => 25,
+            'minlength' => (int)$conf['search']['slet'],
+            'name' => 'postname',
+            'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+            'value' => $postname,
+        ])],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl-form-control')],
-        ['label_html' => _JOKE.':', 'field_html' => textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'), 'is_full' => true],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
+        ['label_html' => _JOKE.':', 'field_html' => textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'), 'is_full' => true, 'field_unwrapped' => true],
     ];
+    $posttypeopts
+        = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+        .($jokeid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=jokes&amp;op=save',
         'hidden' => [
             ['nameattr' => 'jokeid', 'valueattr' => (string)$jokeid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions' => [
-            'hasname' => (bool)$jokeid,
-            'nameattr' => 'jokeid',
-            'opattr' => 'save',
-            'options' => array_merge(
-                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
-                $jokeid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
-            ),
-            'submit_label' => _OK,
-            'valueattr' => $jokeid,
-        ],
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
     echo $cont;

@@ -191,45 +191,51 @@ function add(): void {
                 'input_attr' => ' id="med'.($a).'"',
             ]).'</div></div></div></div>';
     }
+    $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
-        ['label_html' => _MTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+            'input_id' => 'postname',
+            'list_id' => 'postname_list',
+            'maxlength' => 25,
+            'minlength' => (int)$conf['search']['slet'],
+            'name' => 'postname',
+            'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+            'value' => $postname,
+        ])],
+        ['label_html' => _MTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _MSUBTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => 255])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
         ['label_html' => _MYEAR.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearopts])],
         ['label_html' => _MDIRECTOR.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director])],
         ['label_html' => _MROLES.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles])],
-        ['label_html' => _DESCRIPTION.':', 'field_html' => textarea('1', 'description', $description, 'media', '10', _DESCRIPTION, '1'), 'is_full' => true],
+        ['label_html' => _DESCRIPTION.':', 'field_html' => textarea('1', 'description', $description, 'media', '10', _DESCRIPTION, '1'), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _MCREATEDBY.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby])],
         ['label_html' => _MDURATION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration])],
         ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langopts])],
-        ['label_html' => _NOTE.':', 'field_html' => textarea('2', 'note', $note, 'media', '10', _NOTE, '0'), 'is_full' => true],
+        ['label_html' => _NOTE.':', 'field_html' => textarea('2', 'note', $note, 'media', '10', _NOTE, '0'), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _MFORMAT.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $formatopts])],
         ['label_html' => _MQUALITY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $qualityopts])],
         ['label_html' => _MSIZE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size])],
         ['label_html' => _MRELEASED.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released])],
         ['label_html' => '', 'field_html' => $linkshtml, 'is_full' => true],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'mdate', $mdate, 16, 'sl-form-control')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'mdate', 'time' => $mdate, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl-form-control')],
+        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
     ];
+    $posttypeopts
+        = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+        .($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=media&amp;op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions' => [
-            'hasname' => (bool)$mid,
-            'nameattr' => 'mid',
-            'opattr' => 'save',
-            'options' => array_merge(
-                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
-                $mid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
-            ),
-            'submit_label' => _OK,
-            'valueattr' => $mid,
-        ],
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
     echo $cont;

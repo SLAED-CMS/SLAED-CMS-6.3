@@ -122,12 +122,14 @@ function add(): void {
         $url = getVar('post', 'url', 'url', 'https://');
         $email = getVar('post', 'email', 'email', '');
         $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
-        $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
+        $editor = getVar('post', 'editor', 'var', (string)($conf['editor']['admin'] ?? 'plain'));
         $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
         $mods = implode(',', filterAdminmods(getVar('post', 'modules[]', 'var', [])));
         $lang = getVar('post', 'lang', 'var', $conf['language']);
         $stop = $GLOBALS['stop'] ?? [];
     }
+    if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = (string)($conf['editor']['admin'] ?? 'plain');
+    if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = 'plain';
     $need = $aid ? '' : ' required';
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
@@ -271,7 +273,7 @@ function add(): void {
         ],
         [
             'label_html' => _EDITOR.':',
-            'field_html' => redaktor(1, 'editor', 'sl-form-control', (int)$editor, 0),
+            'field_html' => Editor::getSelect('editor', (string)$editor, 'content', 'admin'),
         ],
     ];
     if ($conf['multilingual'] == 1) {
@@ -313,10 +315,12 @@ function save(): void {
     $mods = filterAdminmods(getVar('post', 'modules[]', 'var', []));
     $mods = $mods ? implode(',', $mods) : '';
     $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
-    $edit = getVar('post', 'editor', 'num', intval($conf['redaktor']));
+    $edit = getVar('post', 'editor', 'var', (string)($conf['editor']['admin'] ?? 'plain'));
     $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
     $mail = getVar('post', 'mail', 'bool', 0) ? 1 : 0;
     $stop = [];
+    if (!Editor::isValidEditor($edit, 'admin')) $edit = (string)($conf['editor']['admin'] ?? 'plain');
+    if (!Editor::isValidEditor($edit, 'admin')) $edit = 'plain';
     if (!$aid && ($pwd === '' || $ptwo === '')) $stop[] = _NOPASS;
     if ($name) {
         [$adid, $aname] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name])) ?? [0, ''];

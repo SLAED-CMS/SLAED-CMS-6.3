@@ -35,23 +35,19 @@ function getTplAddFieldRows(array $data = []): array {
         $type = $out[3] ?? '';
         if ($type == '1') {
             $dval = $text ? getConst($text) : '';
-            $html = $tpl->getHtmlFrag('add-field', [
-                'input_attr' => 'placeholder="'.$dval.'"'.$need,
-                'input_type' => 'text',
-                'is_select' => false,
-                'is_textarea' => false,
+            $html = $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
                 'name_attr' => 'field[]',
                 'value_attr' => $dval,
+                'placeholder_text' => $dval,
+                'input_attr' => trim($need),
             ]);
         } elseif ($type == '2') {
-            $html = $tpl->getHtmlFrag('add-field', [
-                'cols_num' => 15,
-                'input_attr' => $need,
-                'is_select' => false,
-                'is_textarea' => true,
+            $html = $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'field[]',
                 'rows_num' => 5,
                 'value_text' => $text,
+                'input_attr' => trim($need),
             ]);
         } elseif ($type == '3') {
             $opts = '';
@@ -61,13 +57,14 @@ function getTplAddFieldRows(array $data = []): array {
                 $safe = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $opts .= '<option value="'.$safe.'"'.(($name == $text) ? ' selected' : '').'>'.$safe.'</option>';
             }
-            $html = $tpl->getHtmlFrag('add-field', [
-                'empty_label' => _NO,
-                'is_select' => true,
-                'is_textarea' => false,
+            $html = $tpl->getHtmlFrag('select', [
                 'name_attr' => 'field[]',
-                'options_html' => $opts,
-                'select_attr' => $need,
+                'options_html' => $tpl->getHtmlFrag('select-option', [
+                    'value_attr' => '',
+                    'label_text' => _NO,
+                    'is_selected' => $text === '',
+                ]).$opts,
+                'select_attr' => trim($need),
             ]);
         } elseif ($type == '4') {
             $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => true, 'max' => 16]);
@@ -98,18 +95,15 @@ function getTplAddDateTime(array $data = []): string {
     $hid = 'sl_datetime_hidden_'.$fieldid;
     $pid = 'sl_datetime_picker_'.$fieldid;
     $phold = $with ? 'YYYY-MM-DD HH:MM' : 'YYYY-MM-DD';
-    return $tpl->getHtmlFrag('add-datetime', [
-        'hidden_id' => $hid,
-        'max_num' => $max,
-        'name_attr' => $name,
-        'picker_attr' => $attr,
-        'picker_id' => $pid,
-        'picker_name' => $pid,
-        'picker_type' => $type,
-        'picker_value' => $pvalu,
-        'placeholder_text' => $phold,
-        'value_attr' => $time,
-    ]);
+    return '<input type="hidden" name="'.htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" value="'.htmlspecialchars((string)$time, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" id="'.$hid.'">'
+        .$tpl->getHtmlFrag('input', [
+            'itype' => $type,
+            'name_attr' => $pid,
+            'value_attr' => $pvalu,
+            'maxlength_num' => $max,
+            'placeholder_text' => $phold,
+            'input_attr' => 'id="'.$pid.'" data-sl-datetime-target="'.$hid.'" data-sl-datetime-kind="'.$type.'"'.($attr ? ' '.$attr : ''),
+        ]);
 }
 
 # Render one shared refresh-time select with fixed interval choices
@@ -191,28 +185,6 @@ function getTplPreviewContent(array $data = []): string {
         'body_a' => $bodya,
         'body_b' => $bodyb,
         'body_c' => $bodyc,
-    ]);
-}
-
-# Render one save-action select with hidden values and submit button
-function getTplSaveAction(array $data = []): string {
-    global $tpl;
-    $name = $data['name'] ?? '';
-    $valu = $data['valu'] ?? '';
-    $op = $data['op'] ?? '';
-    $noprev = !empty($data['noprev']);
-    $isvalu = $valu !== '' && $valu !== null;
-    $opts = [];
-    if (!$noprev) $opts[] = ['valueattr' => 'preview', 'labeltext' => _PREVIEW];
-    $opts[] = ['valueattr' => 'save', 'labeltext' => _SEND];
-    if ($isvalu) $opts[] = ['valueattr' => 'delete', 'labeltext' => _DELETE];
-    return $tpl->getHtmlFrag('save-action', [
-        'hasname' => $name !== '' && $isvalu,
-        'nameattr' => $name,
-        'opattr' => $op,
-        'options' => $opts,
-        'submit_label' => _OK,
-        'valueattr' => (string)$valu,
     ]);
 }
 
@@ -396,12 +368,12 @@ function getTplBbEditor(array $opt = []): string {
         $upload = '<div id="af-form-'.$ei.'" class="sl_bbup-panel sl_none">'.$inner.'</div>';
     }
 
-    return '<table class="sl-table-form"><tr><td><div class="sl_bb-editor">'
+    return '<div class="sl_bb-editor">'
         .'<div class="sl_bb-panel">'.$top.'</div>'
         .$ta
         .'<div class="sl_bb-panel">'.$bottom.'</div>'
         .$upload
-        .'</div></td></tr></table>';
+        .'</div>';
 }
 
 # Universal pager — works in both admin and front-end contexts
@@ -604,6 +576,7 @@ function setTplAdminInfoPage(array $data = []): void {
             'label_html' => '',
             'field_html' => textarea('1', 'text', $text, $mod, '25'),
             'is_full' => true,
+            'field_unwrapped' => true,
         ]];
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
             'action_url' => $action,
@@ -671,22 +644,6 @@ function getTplUserSearchInput(array $data = []): string {
     ]);
 }
 
-# Render one shared CodeMirror-backed code editor field
-function getTplCodeEditor(array $data = []): string {
-    $code = textarea_code(
-        (string)($data['id'] ?? 'code'),
-        (string)($data['name'] ?? ''),
-        (string)($data['style'] ?? 'sl-form-control'),
-        (string)($data['mode'] ?? 'text/plain'),
-        (string)($data['text'] ?? '')
-    );
-    $height = trim((string)($data['height'] ?? ''));
-    if ($height !== '') {
-        $id = (string)($data['id'] ?? 'code');
-        $code .= getHtmlScriptInline('if (typeof editor !== "undefined" && editor && editor.getTextArea && editor.getTextArea().id === "'.$id.'") { editor.setSize(null, "'.$height.'"); }');
-    }
-    return $code;
-}
 
 # Render one shared admin move-controls block with HTMX transport
 function getTplMoveControls(string $target, string $up = '', string $down = ''): string {

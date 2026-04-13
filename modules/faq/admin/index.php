@@ -88,7 +88,7 @@ function faq(): void {
 }
 
 function add(): void {
-    global $db, $afile, $stop, $tpl;
+    global $db, $afile, $stop, $tpl, $conf;
     $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
@@ -123,32 +123,38 @@ function add(): void {
             'is_selected' => (int)$cat === (int)$catid,
         ]);
     }
+    $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
-        ['label_html' => _TITLE.' / '._QUESTION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255])],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+            'input_id' => 'postname',
+            'list_id' => 'postname_list',
+            'maxlength' => 25,
+            'minlength' => (int)$conf['search']['slet'],
+            'name' => 'postname',
+            'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+            'value' => $postname,
+        ])],
+        ['label_html' => _TITLE.' / '._QUESTION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl-form-control')],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'time', $time, 16, 'sl-form-control')],
-        ['label_html' => _ANSWER.':', 'field_html' => textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'), 'is_full' => true],
+        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _ANSWER.':', 'field_html' => textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'), 'is_full' => true, 'field_unwrapped' => true],
     ];
+    $posttypeopts
+        = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+        .($fid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=faq&amp;op=save',
         'hidden' => [
             ['nameattr' => 'fid', 'valueattr' => (string)$fid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions' => [
-            'hasname' => (bool)$fid,
-            'nameattr' => 'fid',
-            'opattr' => 'save',
-            'options' => array_merge(
-                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
-                $fid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
-            ),
-            'submit_label' => _OK,
-            'valueattr' => $fid,
-        ],
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
     echo $cont;

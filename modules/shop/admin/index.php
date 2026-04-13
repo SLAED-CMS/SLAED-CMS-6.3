@@ -310,21 +310,13 @@ function clientadd(): void {
     $rows[] = ['label_html' => _CLIENTPHONE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cphone', 'value_attr' => $cphone, 'is_required' => true, 'maxlength_num' => 255])];
     $rows[] = ['label_html' => _EMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
     $rows[] = ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _CLIENTSTR.':', 'field_html' => datetime(1, 'cregdate', $cregdate, 16, 'sl-form-control')];
-    $rows[] = ['label_html' => _CLIENTEND.':', 'field_html' => datetime(1, 'cenddate', $cenddate, 16, 'sl-form-control')];
+    $rows[] = ['label_html' => _CLIENTSTR.':', 'field_html' => getTplAddDateTime(['name' => 'cregdate', 'time' => $cregdate, 'with' => true, 'max' => 16])];
+    $rows[] = ['label_html' => _CLIENTEND.':', 'field_html' => getTplAddDateTime(['name' => 'cenddate', 'time' => $cenddate, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _PRODUCT.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'options_html' => $prodopts])];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'cactive', 'value' => $cactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _NOTE.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
-    $actions = $tpl->getHtmlFrag('button', [
-        'label' => _SAVECHANGES,
-        'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"'
-    ]);
-    if ($cid) {
-        $actions .= $tpl->getHtmlFrag('button', [
-            'label' => _DELETE,
-            'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"'
-        ]);
-    }
+    $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
+        .($cid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -334,10 +326,10 @@ function clientadd(): void {
             ['nameattr' => 'cid', 'valueattr' => (string)$cid],
             ['nameattr' => 'partner', 'valueattr' => (string)$partner],
             ['nameattr' => 'cppi', 'valueattr' => (string)$cppi],
-            ['nameattr' => 'posttype', 'valueattr' => 'save'],
         ],
         'rows' => $rows,
-        'actions_html' => $actions,
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
     setFoot();
@@ -609,20 +601,21 @@ function productadd(): void {
         }
         $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
     }
-    $rows[] = ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'), 'is_full' => true];
-    $rows[] = ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'), 'is_full' => true];
+    $rows[] = ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'), 'is_full' => true, 'field_unwrapped' => true];
+    $rows[] = ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'), 'is_full' => true, 'field_unwrapped' => true];
     $rows[] = ['label_html' => _PREIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
-    $rows[] = ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'ptime', $ptime, 16, 'sl-form-control')];
+    $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
+    $rows[] = ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'ptime', 'time' => $ptime, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _VOTING.':', 'field_html' => add_voting('shop', 'vote', $vote, 'sl-form-control')];
-    $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl-form-control')];
+    $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])];
     $rows[] = ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _ACTIVATEP, 'field_html' => getTplRadioGroup(['name' => 'pactive', 'value' => $pactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $actions = $tpl->getHtmlFrag('button', ['label' => _PREVIEW, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'preview\'; this.form.submit();"'])
-        .$tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
-    if ($pid) {
-        $actions .= $tpl->getHtmlFrag('button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
-    }
+    $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
+        .($pid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -630,10 +623,10 @@ function productadd(): void {
             ['nameattr' => 'op', 'valueattr' => 'productsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
-            ['nameattr' => 'posttype', 'valueattr' => 'save'],
         ],
         'rows' => $rows,
-        'actions_html' => $actions,
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
     setFoot();
@@ -887,16 +880,14 @@ function partneradd(): void {
     $rows[] = ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'pawebsite', 'value_attr' => $pawebsite])];
     $rows[] = ['label_html' => _WEBMONEY.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'value_attr' => $pawebmoney])];
     $rows[] = ['label_html' => _PAYPAL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'papaypal', 'value_attr' => $papaypal])];
-    $rows[] = ['label_html' => _REG.':', 'field_html' => datetime(1, 'paregdate', $paregdate, 16, 'sl-form-control')];
+    $rows[] = ['label_html' => _REG.':', 'field_html' => getTplAddDateTime(['name' => 'paregdate', 'time' => $paregdate, 'with' => true, 'max' => 16])];
     if ($paactive != 2) {
         $rows[] = ['label_html' => _PARTNERREST.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'parest', 'value_attr' => $parest])];
         $rows[] = ['label_html' => _PARTNERBEK.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pabek', 'value_attr' => $pabek])];
     }
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $actions = $tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
-    if ($paid) {
-        $actions .= $tpl->getHtmlFrag('button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
-    }
+    $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
+        .($paid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -904,10 +895,10 @@ function partneradd(): void {
             ['nameattr' => 'op', 'valueattr' => 'partnersave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ['nameattr' => 'paid', 'valueattr' => (string)$paid],
-            ['nameattr' => 'posttype', 'valueattr' => 'save'],
         ],
         'rows' => $rows,
-        'actions_html' => $actions,
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
     setFoot();

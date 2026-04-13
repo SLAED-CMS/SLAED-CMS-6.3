@@ -169,8 +169,8 @@ function add(): void {
     $rows = [
         ['label_html' => _TITLE.' / '._POLLTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
         ['label_html' => _MODUL.':', 'field_html' => getVotingModuleSelect($modul)],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl-form-control')],
-        ['label_html' => _ENDDATE.':', 'field_html' => datetime(1, 'enddate', $enddate, 16, 'sl-form-control')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
+        ['label_html' => _ENDDATE.':', 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang)])];
@@ -190,10 +190,8 @@ function add(): void {
             .'</div>';
     }
     $rows[] = ['label_html' => _ADD.':', 'field_html' => $answ, 'is_full' => true];
-    $actions = $tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
-    if ($id) {
-        $actions .= $tpl->getHtmlFrag('button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
-    }
+    $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
+        .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -201,10 +199,10 @@ function add(): void {
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ['nameattr' => 'id', 'valueattr' => (string)$id],
-            ['nameattr' => 'posttype', 'valueattr' => 'save'],
         ],
         'rows' => $rows,
-        'actions_html' => $actions,
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
     setFoot();

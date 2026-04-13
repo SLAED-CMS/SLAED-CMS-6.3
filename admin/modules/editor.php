@@ -54,7 +54,7 @@ function getRobotsButton(string $template): string {
         'name_attr' => 'robots_template',
         'value_attr' => _EROBSTD,
         'label' => _EROBSTD,
-        'input_attr' => 'class="sl_but_green" data-robots-template="'.htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8').'" onclick="var src=this.getAttribute(\'data-robots-template\');var code=document.getElementById(\'code\');if(!code||!src)return;code.value=JSON.parse(src);if(window.editor&&typeof window.editor.setValue===\'function\'){window.editor.setValue(code.value);window.editor.focus();}"',
+        'input_attr' => 'class="sl_but_green" data-robots-template="'.htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8').'" onclick="var src=this.getAttribute(\'data-robots-template\');var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(!code||!src)return;code.value=JSON.parse(src);if(view&&view.dispatch){view.dispatch({changes:{from:0,to:view.state.doc.length,insert:code.value}});view.focus();}"',
     ]);
 }
 
@@ -75,7 +75,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]);
     $html = ($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
     $cont .= $tpl->getHtmlFrag('div-collapse', ['target_id' => 'repeditornote', 'content_html' => $html]);
-    $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="if (window.editor && typeof window.editor.save === \'function\') { window.editor.save(); }"';
+    $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(code&&view&&view.state&&view.state.doc){code.value=view.state.doc.toString();}"';
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'form_attr' => $attr,
@@ -137,13 +137,6 @@ function robots(): void {
     renderEditorPage('robots');
 }
 
-function info(): void {
-    setTplAdminInfoPage([
-        'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
-        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO],
-    ]);
-}
-
 function save(): void {
     global $afile, $tpl;
     $edit = getVar('post', 'editor', 'var');
@@ -174,6 +167,13 @@ function save(): void {
         return;
     }
     setRedirect($afile.'.php?name=editor&op='.$edit, false, 302, $saved ? _SUCCFILESAVE : _ERROR.': '.$file, !$saved);
+}
+
+function info(): void {
+    setTplAdminInfoPage([
+        'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
+        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO],
+    ]);
 }
 
 switch ($op) {

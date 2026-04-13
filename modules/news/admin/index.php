@@ -213,8 +213,8 @@ function add(): void {
         ],
         ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'news', 5, _TEXT, '1'), 'is_full' => true],
-        ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'news', 15, _ENDTEXT, '0'), 'is_full' => true],
+        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'news', 5, _TEXT, '1'), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'news', 15, _ENDTEXT, '0'), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
         ['label_html' => _VOTING.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'vote', 'options_html' => $voteopts])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
@@ -223,23 +223,18 @@ function add(): void {
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assohtml, 'is_full' => true],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'news']));
+    $posttypeopts
+        = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+        .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=news&amp;op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions' => [
-            'hasname' => (bool)$id,
-            'nameattr' => 'id',
-            'opattr' => 'save',
-            'options' => array_merge(
-                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
-                $id ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
-            ),
-            'submit_label' => _OK,
-            'valueattr' => $id,
-        ],
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
     echo $cont;

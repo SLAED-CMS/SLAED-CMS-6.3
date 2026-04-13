@@ -102,6 +102,10 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
     }
 }
 
+# Editor bootstrap must load before security POST processing, because security helpers may
+# consult editor-aware functions during request analysis
+require_once BASE_DIR.'/core/classes/editor.php';
+
 # System file include
 require_once BASE_DIR.'/core/security.php';
 
@@ -114,7 +118,6 @@ if (defined('MODULE_FILE')) {
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
-require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/parser.php';
 $tpl = new Template($theme);
 $prs = new Parser();
@@ -2913,21 +2916,6 @@ function checkPassHash(string $pass, string $hash): bool {
 # OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
 ####
 
-# Format Time
-function datetime(int $id, string $name, string $time, int $max, string $class): string {
-    $time = ($time) ? substr($time, 0, $max) : (($id == 1) ? date('Y-m-d H:i') : date('Y-m-d'));
-    $class = ($class) ? 'sl_field '.$class : 'sl_field';
-    static $fieldId = 0;
-    $fieldId++;
-    $type = ($id == 1) ? 'datetime-local' : 'date';
-    $pickerValue = ($id == 1) ? str_replace(' ', 'T', substr($time, 0, 16)) : substr($time, 0, 10);
-    $hiddenId = 'sl_datetime_hidden_'.$fieldId;
-    $pickerId = 'sl_datetime_picker_'.$fieldId;
-    $placeholder = ($id == 1) ? 'YYYY-MM-DD HH:MM' : 'YYYY-MM-DD';
-    return '<input type="hidden" name="'.$name.'" value="'.$time.'" id="'.$hiddenId.'">'
-        .'<input type="'.$type.'" name="'.$pickerId.'" value="'.$pickerValue.'" class="'.$class.'" id="'.$pickerId.'" data-sl-datetime-target="'.$hiddenId.'" data-sl-datetime-kind="'.$type.'" maxlength="'.$max.'" placeholder="'.$placeholder.'">';
-}
-
 # Format Time filter
 function format_time(string $time, string $string = ''): string {
     $string = ($string) ? $string : _DATESTRING;
@@ -2986,12 +2974,42 @@ function gender(int $gender): string {
 
 
 # Replace break
-function replace_break(string $text): string {
+function getEditorKey(): string {
  global $admin, $conf;
+    $role = defined('ADMIN_FILE') ? 'admin' : 'user';
+    if ($role === 'admin') {
+        $key = (string)($admin[3] ?? '');
+        if ($key !== '' && Editor::isValidEditor($key, 'admin')) return $key;
+        $key = (string)($conf['editor']['admin'] ?? 'plain');
+        if (Editor::isValidEditor($key, 'admin')) return $key;
+        return 'plain';
+    }
+    $key = (string)($conf['editor']['user'] ?? 'plain');
+    if (Editor::isValidEditor($key, 'user')) return $key;
+    return 'plain';
+}
+
+# Check whether the active content editor stores trusted HTML
+function checkHtmlEditor(?string $key = null): bool {
+    $key ??= getEditorKey();
+    return in_array($key, ['ckeditor', 'tinymce'], true);
+}
+
+# Resolve content storage format for the selected editor
+function getEditorMode(?string $key = null): string {
+    $key ??= getEditorKey();
+    return match ($key) {
+        'ckeditor', 'tinymce' => 'html',
+        'toastui' => 'markdown',
+        default => 'plain',
+    };
+}
+
+# Replace break
+function replace_break(string $text): string {
+ global $conf;
     if ($text) {
-        $flag = is_array($admin) ? ($admin[3] ?? '') : '';
-        $editor = (int)substr($flag, 0, 1);
-        $out = ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) ? preg_replace('#<br.*>#i', '', $text) : $text;
+        $out = !checkHtmlEditor() ? preg_replace('#<br.*>#i', '', $text) : $text;
         return $out;
     }
     return '';
@@ -3412,7 +3430,8 @@ function editorFilePreview(int $index, string $imageUrl, string $fallbackUrl, bo
         'fallback_url' => $fallbackUrl,
         'image_title' => _IMG,
         'no_title' => _NO,
-        'show_image' => $showImage,
+        'show_toggle' => $showImage,
+        'show_fallback' => !$showImage,
     ]);
 }
 
@@ -3698,7 +3717,12 @@ function categorySelect(string $selectName, string $class, string $title, string
 }
 
 function categorySelectOption(string $value, string $label, bool $selected = false): string {
-    return getTplOption($value, $label, $selected);
+    global $tpl;
+    return $tpl->getHtmlFrag('select-option', [
+        'value_attr' => $value,
+        'label_text' => $label,
+        'is_selected' => $selected,
+    ]);
 }
 
 function breadcrumbLink(string $href, string $title, string $label): string {
@@ -4067,12 +4091,34 @@ function mailto(string $mail): string {
 
 # Add save button
 function ad_save(string $name = '', string $val = '', string $op = '', string $noPreview = ''): string {
-    return getTplSaveAction([
-        'name' => $name,
-        'valu' => $val,
-        'op' => $op,
-        'noprev' => $noPreview,
+    global $tpl;
+    $optionsHtml = '';
+    if (!$noPreview) {
+        $optionsHtml .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => 'preview',
+            'label_text' => _PREVIEW,
+        ]);
+    }
+    $optionsHtml .= $tpl->getHtmlFrag('select-option', [
+        'value_attr' => 'save',
+        'label_text' => _SEND,
     ]);
+    if ($val !== '') {
+        $optionsHtml .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => 'delete',
+            'label_text' => _DELETE,
+        ]);
+    }
+    $html = '';
+    if ($name !== '' && $val !== '') {
+        $html .= $tpl->getHtmlFrag('hidden', ['nameattr' => $name, 'valueattr' => (string)$val]);
+    }
+    if ($op !== '') {
+        $html .= $tpl->getHtmlFrag('hidden', ['nameattr' => 'op', 'valueattr' => $op]);
+    }
+    return $html
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $optionsHtml, 'select_attr' => 'style="margin-right:8px"'])
+        .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']);
 }
 
 # Find img
@@ -4242,9 +4288,9 @@ function fields_in(mixed $fieldb, string $mod): string {
                     }
                     $field .= '</select>';
                 } elseif ($out[3] == 4) {
-                    $field = datetime(1, 'field[]', $fieldin, 16, $conf['style']);
+                    $field = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
                 } elseif ($out[3] == 5) {
-                    $field = datetime(2, 'field[]', $fieldin, 10, $conf['style']);
+                    $field = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
                 }
                 $fields .= '<tr><td>'.getConst($out[1]).':</td><td>'.$field.'</td></tr>';
             }
@@ -4431,15 +4477,6 @@ function getUserList(): void {
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($name, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
-}
-
-# Autocomplete user name
-function getUserSearch(string $id, string $val, int $maxlength, string $extraClass = '', string $required = ''): string {
- global $conf;
-    $class = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
-    $req   = $required ? ' required' : '';
-    $listId = $id.'_list';
-    return '<input type="text" name="'.$id.'" value="'.htmlspecialchars($val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="'.$class.'" id="'.$id.'" maxlength="'.$maxlength.'" placeholder="'._NICKNAME.'" autocomplete="off" data-sl-user-search="index.php?go=1&amp;op=getUserList" data-sl-user-token="'.htmlspecialchars(getSiteToken(), ENT_QUOTES, 'UTF-8').'" data-sl-user-minlength="'.(int)$conf['search']['slet'].'" list="'.$listId.'"'.$req.'><datalist id="'.$listId.'"></datalist>';
 }
 
 # Analyze name
@@ -4894,15 +4931,17 @@ function encode_php(array $text): string {
         $replace = str_replace('&nbsp;&nbsp;', '&nbsp; ', $format);
         $format = '<table class="sl-table-form">'.$replace.'</table>';
     } elseif ($conf['syntax'] == 2) {
-        if ($sname != $cname) {
-            $scripts = getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shCore.js');
-            $scripts .= (file_exists('plugins/syntaxhighlighter/scripts/shBrush'.$cname.'.js')) ? getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shBrush'.$cname.'.js') : getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shBrushPhp.js');
-            $scripts .= getHtmlScriptInline("SyntaxHighlighter.config.clipboardSwf = 'plugins/syntaxhighlighter/scripts/clipboard.swf'; SyntaxHighlighter.all();");
-            $sname = $cname;
+        if ($sname !== 'hljs') {
+            $scripts = getHtmlScriptSrc('plugins/highlightjs/highlight.min.js');
+            $scripts .= getHtmlScriptSrc('plugins/highlightjs/highlight-line-numbers.min.js');
+            $scripts .= getHtmlScriptInline('hljs.highlightAll();hljs.initLineNumbersOnLoad();');
+            $sname = 'hljs';
         } else {
             $scripts = '';
         }
-        $format = $scripts.'<pre class="brush: '.$ucname.';">'.$replace.'</pre>';
+        $hljs_map = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'];
+        $hljsname = $hljs_map[$ucname] ?? $ucname;
+        $format = $scripts.'<pre><code class="language-'.$hljsname.'">'.$replace.'</code></pre>';
     }
     return '<div class="code" title="'.htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$format.'</div>';
 }
@@ -5093,118 +5132,40 @@ function getRatingView(): void {
 
 # Format BB Code and Smilies
 function textarea(string $id, string $name, string $var, string $mod, int $rows, string $placeholder = '', string $required = ''): string {
- global $admin, $op, $user, $conf;
-    $placeholder = $placeholder ? ' placeholder="'.$placeholder.'"' : '';
-    $required    = $required ? ' required' : '';
+ global $conf;
+    $placeholder = (string)$placeholder;
+    $required    = $required === '1' || $required === 'required' || $required === ' true' || $required === true;
     $stloc = substr(_LOCALE, 0, 2);
     $desc = $var ?: filterHtml(getVar('post', $name, 'raw', ''));
     $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
     $style = (defined('ADMIN_FILE')) ? ' sl-form-control' : ' '.$conf['style'];
-    $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-    if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
-        $code = ($id == 1) ? getHtmlScriptSrc('plugins/system/insert-code.js') : '';
-        $code .= getTplBbEditor(['id' => $id, 'name' => $name, 'value' => $desc, 'rows' => $rows, 'style' => $style, 'placeholder' => $placeholder, 'required' => $required, 'stloc' => $stloc, 'mod' => $mod, 'con' => $con]);
-    } elseif ((defined('ADMIN_FILE') && $editor == 2) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 2)) {
-        static $jscript;
-        if (defined('ADMIN_FILE') && $editor == 2) {
-            if (!isset($jscript)) {
-                $code = getHtmlScriptSrc('plugins/tinymce/tinymce.min.js')
-                    .getHtmlScriptInline('tinymce.init({ selector: "textarea", theme: "modern", plugins: ["advlist autolink lists link image charmap print preview hr anchor pagebreak", "searchreplace wordcount visualblocks visualchars code fullscreen", "insertdatetime media nonbreaking save table contextmenu directionality", "emoticons template paste textcolor responsivefilemanager"], toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image", toolbar2: "responsivefilemanager print preview media | forecolor backcolor emoticons", image_advtab: true, templates: [{ title: "Test template 1", content: "Test 1" }, { title: "Test template 2", content: "Test 2" }], language: "'.$stloc.'", external_filemanager_path: "../plugins/filemanager/", filemanager_title: "'._EUPLOAD.'", external_plugins: { "filemanager": "../filemanager/plugin.min.js" } });');
-                $jscript = 1;
-            } else {
-                $code = '';
-            }
-        } elseif (!defined('ADMIN_FILE') && $conf['redaktor'] == 2) {
-            if (!isset($jscript)) {
-                $code = getHtmlScriptSrc('plugins/tinymce/tinymce.min.js')
-                    .getHtmlScriptInline('tinymce.init({ selector: "textarea", plugins: ["advlist autolink lists link image charmap print preview anchor", "searchreplace visualblocks code fullscreen", "insertdatetime media table contextmenu paste"], toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image", language: "'.$stloc.'" });');
-                $jscript = 1;
-            } else {
-                $code = '';
-            }
-        }
-        $code .= '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows.'" class="'.$style.'"'.$placeholder.'>'.$desc.'</textarea>';
-    } elseif ((defined('ADMIN_FILE') && $editor == 3) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 3)) {
-        if (defined('ADMIN_FILE') && $editor == 3) {
-            if (!isset($jscript)) {
-                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js');
-                $jscript = 1;
-            } else {
-                $code = '';
-            }
-            $code .= getHtmlScriptInline("CKEDITOR.domReady(function() { if (document.getElementById('".$id."')) { CKEDITOR.replace('".$id."', { language: '".$stloc."', filebrowserBrowseUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserUploadUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserImageBrowseUrl: '../plugins/filemanager/dialog.php?type=1&editor=ckeditor&fldr=' }); } });");
-        } elseif (!defined('ADMIN_FILE') && $conf['redaktor'] == 3) {
-            if (!isset($jscript)) {
-                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js');
-                $jscript = 1;
-            } else {
-                $code = '';
-            }
-            $code .= getHtmlScriptInline("CKEDITOR.domReady(function() { if (document.getElementById('".$id."')) { CKEDITOR.replace('".$id."', { language: '".$stloc."' }); } });");
-        }
-        $code .= '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows.'" class="'.$style.'"'.$placeholder.'>'.$desc.'</textarea>';
-    } elseif (defined('ADMIN_FILE') && $editor == 4) {
-        if (!isset($jscript)) {
-            $code = getHtmlScriptSrc('plugins/codemirror/lib/codemirror.js')
-                .getHtmlScriptSrc('plugins/codemirror/addon/edit/matchbrackets.js')
-                .getHtmlScriptSrc('plugins/codemirror/addon/hint/show-hint.js')
-                .getHtmlScriptSrc('plugins/codemirror/addon/hint/xml-hint.js')
-                .getHtmlScriptSrc('plugins/codemirror/addon/hint/html-hint.js')
-                .getHtmlScriptSrc('plugins/codemirror/mode/htmlmixed/htmlmixed.js')
-                .getHtmlScriptSrc('plugins/codemirror/mode/xml/xml.js')
-                .getHtmlScriptSrc('plugins/codemirror/mode/javascript/javascript.js')
-                .getHtmlScriptSrc('plugins/codemirror/mode/css/css.js');
-            $jscript = 1;
-        } else {
-            $code = '';
-        }
-        $code .= '<textarea id="'.$id.'" name="'.$name.'" class="'.$style.'"'.$placeholder.'>'.str_replace('&amp;', '&amp;amp;', $desc).'</textarea>'
-            .getHtmlScriptInline('var editor = CodeMirror.fromTextArea(document.getElementById("'.$id.'"), { lineNumbers: true, matchBrackets: true, mode: "text/html", extraKeys: {"Ctrl": "autocomplete"}, value: document.documentElement.innerHTML, indentUnit: 4, indentWithTabs: true });');
-    } else {
-        $code = '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows.'" class="'.$style.'"'.$placeholder.$required.'>'.str_replace('&amp;', '&amp;amp;', $desc).'</textarea>';
-    }
+    $key = getEditorKey();
+    $fmt = getEditorMode($key);
+    $code = Editor::getContent([
+        'editor' => $key,
+        'format' => $fmt,
+        'id' => $id,
+        'name' => $name,
+        'value' => $desc,
+        'rows' => $rows,
+        'placeholder' => $placeholder,
+        'required' => $required,
+        'style' => $style,
+        'stloc' => $stloc,
+        'mod' => $mod,
+        'con' => $con,
+    ]);
     return $code;
 }
 
 # Format ajax edit
 function getAjaxTextarea(mixed $obj, mixed $go, mixed $op, mixed $id, mixed $cid, mixed $typ, mixed $mod, mixed $text, int $rows): string {
- global $conf, $admin;
-    $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-    $desc = ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) ? replace_break($text) : $text;
+    $desc = !checkHtmlEditor() ? replace_break($text) : $text;
     $code = '<form name="textareae" id="form'.$obj.'" method="post">
     <textarea id="text" name="text" cols="65" rows="'.$rows.'" class="sl_earea">'.$desc."</textarea>
     <input type=\"submit\" hx-post=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-include=\"#form".$obj."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" hx-on:click=\"if (!document.getElementById('form".$obj."').querySelector('[name=&quot;text&quot;]').value.trim()) { alert('"._CERROR1."'); event.preventDefault(); }\" value=\""._SAVE.'" title="'._SAVE."\" class=\"sl_but_green\">
     <input type=\"submit\" hx-get=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" value=\""._BACK.'" title="'._BACK.'" class="sl-but-blue">
     </form>';
-    return $code;
-}
-
-# Format code edit
-function textarea_code(string $id, string $name, string $style, string $mode, string $text): string {
-    static $jscript;
-    if (!isset($jscript)) {
-        $code = getHtmlScriptSrc('plugins/codemirror/lib/codemirror.js')
-            .getHtmlScriptSrc('plugins/codemirror/addon/edit/matchbrackets.js')
-            .getHtmlScriptSrc('plugins/codemirror/addon/hint/show-hint.js')
-            .getHtmlScriptSrc('plugins/codemirror/addon/hint/xml-hint.js')
-            .getHtmlScriptSrc('plugins/codemirror/addon/hint/html-hint.js')
-            .getHtmlScriptSrc('plugins/codemirror/addon/hint/css-hint.js')
-            .getHtmlScriptSrc('plugins/codemirror/addon/hint/sql-hint.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/htmlmixed/htmlmixed.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/xml/xml.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/javascript/javascript.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/css/css.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/clike/clike.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/php/php.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/sql/sql.js')
-            .getHtmlScriptSrc('plugins/codemirror/mode/http/http.js');
-        $jscript = 1;
-    } else {
-        $code = '';
-    }
-    $style = ($style) ? ' '.$style : '';
-    $code .= '<textarea id="'.$id.'" name="'.$name.'" class="sl_field'.$style.'">'.$text.'</textarea>'
-        .getHtmlScriptInline('var editor = CodeMirror.fromTextArea(document.getElementById("'.$id.'"), { lineNumbers: true, matchBrackets: true, mode: "'.$mode.'", extraKeys: {"Ctrl": "autocomplete"}, value: document.documentElement.innerHTML, indentUnit: 4, indentWithTabs: true });');
     return $code;
 }
 
@@ -5450,29 +5411,6 @@ function cat_modul(string $selectName, string $extraClass = '', string $selected
     foreach ($mods as $m) {
         $sel     = ($selected == $m) ? ' selected' : '';
         $content .= '<option value="'.$m.'"'.$sel.'>'.getModuleName($m).' - '.$m.'</option>';
-    }
-    $content .= '</select>';
-    return $content;
-}
-
-# Format editor
-function redaktor(int $id, string $name, string $class, int $editor, mixed $submit): string {
- global $conf;
-    $submit = ($submit) ? ' OnChange="submit()"' : '';
-    $class = ($class) ? ' class="'.$class.'"' : '';
-    $content = '<select name="'.$name.'"'.$submit.$class.'>';
-    $ename = ($id == 1) ? [0 => _NO, 1 => 'SLAED BB '.substr($conf['version'], 0, strrpos($conf['version'], '.')), 2 => 'TinyMCE 4.5.6', 3 => 'CKEditor 4.6.2', 4 => 'CodeMirror 5.25.0'] : [0 => _NO, 1 => 'SLAED BB '.substr($conf['version'], 0, strrpos($conf['version'], '.')), 2 => 'TinyMCE 4.5.6', 3 => 'CKEditor 4.6.2'];
-    foreach ($ename as $key => $value) {
-        $sel = ($editor == $key) ? ' selected' : '';
-        if ($key <= 1) {
-            $content .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
-        } elseif ($key == 2) {
-            if (file_exists('plugins/tinymce/')) $content .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
-        } elseif ($key == 3) {
-            if (file_exists('plugins/ckeditor/')) $content .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
-        } elseif ($key == 4) {
-            $content .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
-        }
     }
     $content .= '</select>';
     return $content;

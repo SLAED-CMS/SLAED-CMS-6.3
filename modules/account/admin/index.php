@@ -280,7 +280,7 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _REG.':',
-        'field_html' => datetime(1, 'reg', $reg ?? '', 16, 'sl-select-config'),
+        'field_html' => getTplAddDateTime(['name' => 'reg', 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'attr' => 'class="sl-select-config"']),
     ];
     $rows[] = [
         'label_html' => _OCCUPATION.':',
@@ -385,7 +385,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _BIRTHDAY.':',
-        'field_html' => datetime(2, 'birth', $birth, 10, 'sl-select-config'),
+        'field_html' => getTplAddDateTime(['name' => 'birth', 'time' => (string)$birth, 'with' => false, 'max' => 10, 'attr' => 'class="sl-select-config"']),
     ];
     $rows[] = [
         'label_html' => _GENDER.':',
@@ -417,9 +417,9 @@ function add(): void {
             }
             $fieldhtml = $tpl->getHtmlFrag('select', ['name_attr' => 'field[]', 'options_html' => $fieldopts, 'select_attr' => $required ? 'required' : '']);
         } elseif (($out[3] ?? '0') == 4) {
-            $fieldhtml = datetime(1, 'field[]', $fieldvalue, 16, 'sl-select-config');
+            $fieldhtml = getTplAddDateTime(['name' => 'field[]', 'time' => (string)$fieldvalue, 'with' => true, 'max' => 16, 'attr' => 'class="sl-select-config"']);
         } elseif (($out[3] ?? '0') == 5) {
-            $fieldhtml = datetime(2, 'field[]', $fieldvalue, 10, 'sl-select-config');
+            $fieldhtml = getTplAddDateTime(['name' => 'field[]', 'time' => (string)$fieldvalue, 'with' => false, 'max' => 10, 'attr' => 'class="sl-select-config"']);
         }
         if ($fieldhtml !== '') {
             $rows[] = [

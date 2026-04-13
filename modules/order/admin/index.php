@@ -104,17 +104,8 @@ function add(): void {
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions' => [
-            'hasname' => (bool)$mid,
-            'nameattr' => 'mid',
-            'opattr' => 'save',
-            'options' => array_merge(
-                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
-                $mid ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
-            ),
-            'submit_label' => _OK,
-            'valueattr' => $mid,
-        ],
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW]).$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND]).($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : ''), 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
     echo $cont;

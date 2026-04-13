@@ -626,7 +626,7 @@ function add(): void {
         $rows .= ($subh) ? getTplHiddenInput('subject', $subject) : getTplFormAddRow(_TITLE, getTplTextInput('subject', $subject, 'sl_field '.$conf['style'], 'maxlength="100" placeholder="'._TITLE.'" required'));
         $rows .= getTplFormAddRow(_TEXT, textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1'));
         $rows .= fields_in($field, $conf['name']);
-        $rows .= ($ismod) ? getTplFormAddRow(_OPMOD, pmoder($status, $subh)).getTplFormAddRow(_CHNGSTORY, datetime(1, 'time', $time, 16, $conf['style'])) : '';
+        $rows .= ($ismod) ? getTplFormAddRow(_OPMOD, pmoder($status, $subh)).getTplFormAddRow(_CHNGSTORY, getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])) : '';
         $hide = getTplHiddenInput('id', (string)$id).getTplHiddenInput('fid', (string)$fid).getTplHiddenInput('pid', (string)$pid).getTplHiddenInput('cat', (string)$catid);
         $rows .= getTplFormCenterRow($hide.ad_save('', '', 'send'));
         $cont .= getTplForumReplyForm($conf['name'], $rows);

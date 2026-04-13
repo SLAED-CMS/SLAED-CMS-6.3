@@ -33,7 +33,7 @@ return [
     'close' => '0',
     'css_c' => '0',
     'css_e' => '0',
-    'css_f' => 'plugins/syntaxhighlighter/styles/',
+    'css_f' => 'plugins/highlightjs/slaed-theme.css',
     'css_h' => '0',
     'ctitle' => '1',
     'db_t' => '1',
@@ -72,7 +72,6 @@ https://slaed.net
 support@slaed.net',
     'multilingual' => '1',
     'quality' => '4',
-    'redaktor' => '1',
     'editor' => [
         'user' => 'plain',
         'admin' => 'plain',

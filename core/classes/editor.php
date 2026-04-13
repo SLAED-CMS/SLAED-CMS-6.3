@@ -10,7 +10,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 interface ContentDriver {
     public function getAssets(string $profile): string;
 
-    public function getWidget(string $id, string $name, string $value, string $profile): string;
+    public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string;
 }
 
 # Contract for all code/syntax editors
@@ -42,7 +42,7 @@ class Editor {
         $id = (string)($data['id'] ?? 'editor');
         $name = (string)($data['name'] ?? 'text');
         $value = (string)($data['value'] ?? '');
-        return $driver instanceof ContentDriver ? $driver->getAssets($profile).$driver->getWidget($id, $name, $value, $profile) : '';
+        return $driver instanceof ContentDriver ? $driver->getAssets($profile).$driver->getWidget($id, $name, $value, $profile, $data) : '';
     }
 
     # Render code editor widget; lang required, validated against manifest
@@ -70,7 +70,7 @@ class Editor {
     # Render editor select dropdown for settings UI
     public static function getSelect(string $name, string $selected, string $type, string $role): string {
         $list = self::getEditorList($type, $role);
-        $html = '<select name="'.htmlspecialchars($name, ENT_QUOTES, 'UTF-8').'">';
+        $html = '<select name="'.htmlspecialchars($name, ENT_QUOTES, 'UTF-8').'" class="sl-select">';
         foreach ($list as $id => $man) {
             $sel = ($id === $selected) ? ' selected' : '';
             $html .= '<option value="'.$id.'"'.$sel.'>'.htmlspecialchars((string)($man['label'] ?? $id), ENT_QUOTES, 'UTF-8').'</option>';

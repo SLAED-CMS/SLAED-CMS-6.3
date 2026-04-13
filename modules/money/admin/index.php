@@ -205,30 +205,20 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _CHNGSTORY.':',
-        'field_html' => datetime(1, 'time', $time, 16, 'sl-form-control'),
+        'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16]),
     ];
-    $actions = $tpl->getHtmlFrag('button', [
-        'label' => _PREVIEW,
-        'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'preview\'; this.form.submit();"'
-    ]).$tpl->getHtmlFrag('button', [
-        'label' => _SEND,
-        'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"'
-    ]);
-    if ($mid) {
-        $actions .= $tpl->getHtmlFrag('button', [
-            'label' => _DELETE,
-            'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"'
-        ]);
-    }
+    $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+        .($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=money&amp;op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
-            ['nameattr' => 'posttype', 'valueattr' => ''],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => $rows,
-        'actions_html' => $actions,
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
     setFoot();

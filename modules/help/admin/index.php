@@ -129,7 +129,7 @@ function view(): void {
 }
 
 function addview(int $id): string {
-    global $db, $afile, $admin, $tpl;
+    global $db, $afile, $admin, $conf, $tpl;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
     return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
@@ -143,8 +143,16 @@ function addview(int $id): string {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => [
-            ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $admin[1] ?? '', '25', 'sl-form-control', '1')],
-            ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'), 'is_full' => true],
+            ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+                'input_id' => 'postname',
+                'list_id' => 'postname_list',
+                'maxlength' => 25,
+                'minlength' => (int)$conf['search']['slet'],
+                'name' => 'postname',
+                'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+                'value' => (string)($admin[1] ?? ''),
+            ])],
+            ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'), 'is_full' => true, 'field_unwrapped' => true],
             ['label_html' => _HELPGLOS, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ['label_html' => _MAIL_SENDE.':', 'field_html' => getTplRadioGroup(['name' => 'umail', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ],
@@ -153,7 +161,7 @@ function addview(int $id): string {
 }
 
 function add(): void {
-    global $db, $afile, $stop, $tpl;
+    global $db, $afile, $stop, $tpl, $conf;
     $id = getVar('req', 'id', 'num', 0);
     if ($id) {
         $result = $db->getSqlQuery('SELECT s.pid, s.cid, s.title, s.time, s.body, s.field, s.status, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id', ['id' => $id]);
@@ -184,13 +192,25 @@ function add(): void {
         ]);
     }
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255])],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+            'input_id' => 'postname',
+            'list_id' => 'postname_list',
+            'maxlength' => 25,
+            'minlength' => (int)$conf['search']['slet'],
+            'name' => 'postname',
+            'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
+            'value' => $postname,
+        ])],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'time', $time, 16, 'sl-form-control')],
-        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'), 'is_full' => true],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => '', 'field_html' => fields_in($field, 'help'), 'is_full' => true],
     ];
+    $posttypeopts
+        = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
+        .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=help&amp;op=save',
         'hidden' => [
@@ -198,17 +218,8 @@ function add(): void {
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions' => [
-            'hasname' => (bool)$id,
-            'nameattr' => 'id',
-            'opattr' => 'save',
-            'options' => array_merge(
-                [['valueattr' => 'preview', 'labeltext' => _PREVIEW], ['valueattr' => 'save', 'labeltext' => _SEND]],
-                $id ? [['valueattr' => 'delete', 'labeltext' => _DELETE]] : []
-            ),
-            'submit_label' => _OK,
-            'valueattr' => $id,
-        ],
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+            .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);
     echo $cont;

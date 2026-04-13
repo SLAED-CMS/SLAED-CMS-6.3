@@ -97,7 +97,7 @@ function config(): void {
         'value_text' => (string)$conf['admininfo'],
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _STARTDATE.':', 'field_html' => datetime(1, 'startdate', $conf['startdate'], 16, 'sl_conf')];
+    $rows[] = ['label_html' => _STARTDATE.':', 'field_html' => getTplAddDateTime(['name' => 'startdate', 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'attr' => 'class="sl-select-config"'])];
     $rows[] = ['label_html' => _ADMINEMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'email',
         'name_attr' => 'adminmail',
@@ -630,7 +630,6 @@ function save(): void {
             'quality' => getVar('post', 'quality', 'num'),
             'capkey' => getVar('post', 'capkey', 'text'),
             'capsec' => getVar('post', 'capsec', 'text'),
-            'redaktor' => getVar('post', 'redaktor', 'num'),
             'editor' => [
                 'user' => $eduser,
                 'admin' => $edadmin,
@@ -678,7 +677,7 @@ function save(): void {
             'cache_c' => getVar('post', 'cache_c', 'num'),
             'cache_b' => getVar('post', 'cache_b', 'num'),
             'cache_css' => getVar('post', 'cache_css', 'num'),
-            'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/syntaxhighlighter/styles/'), $kprotect),
+            'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/highlightjs/slaed-theme.css'), $kprotect),
             'css_h' => getVar('post', 'css_h', 'num'),
             'css_c' => getVar('post', 'css_c', 'num'),
             'css_e' => getVar('post', 'css_e', 'num'),
