@@ -33,14 +33,14 @@ function lang(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $rows = [];
-    $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+    $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
             ['content_html' => '1'],
             ['content_html' => _SYSTEM],
             ['content_html' => _ALL],
             ['content_html' => _MVALL],
             ['content_html' => ad_status('', 1)],
-            ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+            ['content_html' => $tpl->getHtmlFrag('row-actions', [
                 'trigger_label' => _FUNCTIONS,
                 'items' => [
                     ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
@@ -64,18 +64,18 @@ function lang(): void {
         $items = [];
         if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT];
         if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], 'label' => _MODUL, 'title' => _FULLEDIT];
-        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)$a],
                 ['content_html' => getModuleName($mod[$i])],
                 ['content_html' => $mod[$i]],
                 ['content_html' => $view],
                 ['content_html' => ad_status('', $act)],
-                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ],
         ])]);
     }
-    $cont .= $tpl->getHtmlFrag('new/table', [
+    $cont .= $tpl->getHtmlFrag('table', [
         'head' => [
             ['content' => _ID],
             ['content' => _NAME],
@@ -102,7 +102,7 @@ function fileedit(): void {
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
     if (!is_dir($lang_path)) {
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _NO_INFO]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO]);
         setFoot();
         return;
     }
@@ -147,12 +147,12 @@ function fileedit(): void {
         $rows = [[
             'label_html' => _CONST.': #'.$n,
             'row_class' => 'sl-lang-edit-row',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'cnst[]',
                 'value_attr' => $valc,
                 'placeholder_text' => _CONST,
-                'input_attr' => 'class="sl_form"',
+                'input_attr' => 'class="sl-form-control"',
             ]),
         ]];
         $cj = count($lng_cn);
@@ -165,47 +165,42 @@ function fileedit(): void {
                 $class = 'to_'.$i.'-'.$j;
                 $floc = substr($conf['lang']['lang'], 0, 2);
                 $tloc = substr($lng_cn[$j], 0, 2);
-                $btn = $tpl->getHtmlFrag('admin-lang-translate-button', [
-                    'api_key' => $conf['lang']['key'],
-                    'error_text' => _ERRORTR,
-                    'from_class' => 'from_'.$i,
+                $btn = $tpl->getHtmlFrag('button', [
                     'label' => _OK,
-                    'locale_pair' => $floc.'-'.$tloc,
-                    'title' => _EAUTOTR,
-                    'to_class' => 'to_'.$i.'-'.$j,
+                    'button_attr' => ' title="'.htmlspecialchars(_EAUTOTR, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" onclick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');"',
                 ]);
             }
             $rows[] = [
                 'label_html' => getLangName($lng_cn[$j]).':',
                 'row_class' => 'sl-lang-edit-row',
-                'field_html' => $tpl->getHtmlFrag('new/input', [
+                'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',
                     'name_attr' => 'lng['.$lng_cn[$j].'][]',
                     'value_attr' => $val,
                     'placeholder_text' => getLangName($lng_cn[$j]),
-                    'input_attr' => 'class="sl_form '.$class.'"',
+                    'input_attr' => 'class="sl-form-control '.$class.'"',
                 ]).$btn,
             ];
         }
-        $groups[] = $tpl->getHtmlFrag('new/div', ['rows' => $rows]);
+        $groups[] = $tpl->getHtmlFrag('div', ['rows' => $rows]);
     }
     $pager = '';
     if ($total_pages > 1) {
         $prev = ($page > 1)
-            ? $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
-            : $tpl->getHtmlFrag('new/pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
+            ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
+            : $tpl->getHtmlFrag('pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
         $next = ($page < $total_pages)
-            ? $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
-            : $tpl->getHtmlFrag('new/pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
+            ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
+            : $tpl->getHtmlFrag('pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
         $items = '';
         for ($i = 1; $i <= $total_pages; $i++) {
             if ($i === $page) {
-                $items .= $tpl->getHtmlFrag('new/pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
+                $items .= $tpl->getHtmlFrag('pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
             } else {
-                $items .= $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$i, 'label' => (string)$i, 'title' => (string)$i]);
+                $items .= $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$i, 'label' => (string)$i, 'title' => (string)$i]);
             }
         }
-        $pager = $tpl->getHtmlFrag('new/pager', [
+        $pager = $tpl->getHtmlFrag('pager', [
             'count' => $total,
             'pages' => $total_pages,
             'limit' => $per_page,
@@ -219,7 +214,7 @@ function fileedit(): void {
             'next' => $next,
         ]);
     }
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_merge(
             array_map(static fn($code) => ['nameattr' => 'lcn[]', 'valueattr' => $code], $lng_cn),
@@ -294,14 +289,14 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($conf['lang']['lang'], 1), 'is_config' => true]);
+    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
-        ['label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
+        ['label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
         ['label_html' => _LANGTR, 'field_html' => $s_lang],
-        ['label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
-        ['label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'per_page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
+        ['label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
+        ['label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'per_page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
     ];
-    $confv = $tpl->getHtmlFrag('new/form', [
+    $confv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'lang'],

@@ -34,8 +34,8 @@ function add(): void {
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
     $rows = [
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'is_required' => true,
                 'maxlength_num' => 60,
@@ -46,7 +46,7 @@ function add(): void {
         ],
         [
             'label_html' => _RSSFILE.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'url',
                 'placeholder_text' => _RSSFILE,
@@ -54,10 +54,10 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _RSSC.':', 'hint' => _RSSLINESINFO.' '._RSSINFO]),
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSC.':', 'hint' => _RSSLINESINFO.' '._RSSINFO]),
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'headline',
-                'options_html' => $tpl->getHtmlFrag('new/select-option', [
+                'options_html' => $tpl->getHtmlFrag('select-option', [
                     'value_attr' => '0',
                     'label_text' => _CUSTOM,
                     'is_selected' => true,
@@ -65,23 +65,23 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _REFRESHTIME.':', 'hint' => _REFINFO]),
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _REFRESHTIME.':', 'hint' => _REFINFO]),
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'refresh',
-                'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => true])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.']),
+                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => true])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.']),
             ]),
         ],
     ];
-    $bfopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
+    $bfopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
-                $bfopts .= $tpl->getHtmlFrag('new/select-option', [
+                $bfopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $matches[0],
                 ]);
@@ -90,12 +90,12 @@ function add(): void {
     }
     $viewItems = '';
     foreach (getBlockModules() as $mod) {
-        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+        $viewItems .= $tpl->getHtmlFrag('label-item', [
+            'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'name_attr' => 'blockwhere[]',
                 'value_attr' => $mod,
             ]),
-            'label_html' => $tpl->getHtmlFrag('new/title-tip', [
+            'label_html' => $tpl->getHtmlFrag('title-tip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
@@ -109,8 +109,8 @@ function add(): void {
         ['value' => 'infly', 'label' => _INFLY],
         ['value' => 'flyfix', 'label' => _FLY_FIX],
     ] as $item) {
-        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+        $viewItems .= $tpl->getHtmlFrag('label-item', [
+            'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'name_attr' => 'blockwhere[]',
                 'value_attr' => $item['value'],
             ]),
@@ -118,15 +118,15 @@ function add(): void {
         ]);
     }
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _FILENAME.':', 'hint' => _FILENAMEIN]),
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _FILENAME.':', 'hint' => _FILENAMEIN]),
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bfile',
             'options_html' => $bfopts,
         ]),
     ];
     $rows[] = [
         'label_html' => _CONTENT.':',
-        'field_html' => $tpl->getHtmlFrag('new/textarea', [
+        'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'content',
             'rows_num' => 15,
             'value_text' => '',
@@ -135,25 +135,25 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _POSITION.':',
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bpos',
-            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'l', 'label_text' => _LEFT])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _RIGHT])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN]),
         ]),
     ];
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('new/radio-group', ['items_html' => $viewItems]),
+        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $viewItems]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
             'label_html' => _LANGUAGE.':',
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
                 'options_html' => language(),
             ]),
@@ -164,8 +164,8 @@ function add(): void {
         'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'is_required' => true,
             'name_attr' => 'expire',
@@ -175,23 +175,23 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _AFTEREXPIRATION.':',
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'action',
-            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _DELETE]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _DELETE]),
         ]),
     ];
     $rows[] = [
         'label_html' => _VIEWPRIV,
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
-            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => true])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVUSERS])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVADMIN])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _MVANON]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => true])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON]),
         ]),
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=addsave',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -212,7 +212,7 @@ function fileadd(): void {
     $rows = [
         [
             'label_html' => _FILENAME.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'is_required' => true,
                 'maxlength_num' => 200,
@@ -226,7 +226,7 @@ function fileadd(): void {
             'field_html' => getTplRadioGroup(['name' => 'flag', 'value' => 'php', 'options' => [['value' => 'php', 'label' => 'PHP'], ['value' => 'html', 'label' => 'HTML']]]),
         ],
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -248,7 +248,7 @@ function fileedit(): void {
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
-                $opts .= $tpl->getHtmlFrag('new/select-option', [
+                $opts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $matches[0],
                 ]);
@@ -257,12 +257,12 @@ function fileedit(): void {
     }
     $rows = [[
         'label_html' => _FILENAME.':',
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bf',
             'options_html' => $opts,
         ]),
     ]];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -328,7 +328,7 @@ function addsave(): void {
     if (($content == '') && ($bfile == '')) {
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _RSSFAIL]).$tpl->getHtmlPart('box', [
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _RSSFAIL]).$tpl->getHtmlPart('box', [
             'content_html' => _GOBACK,
         ]);
         setFoot();
@@ -356,7 +356,7 @@ function filecode(): void {
     if (!checkSiteToken()) {
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
         setFoot();
         return;
     }
@@ -388,12 +388,12 @@ function filecode(): void {
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
         $cont .= checkPerms(BASE_DIR.'/blocks/');
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _BLOCK.': '.$bf]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$bf]);
         if (file_exists('blocks/'.$bf)) {
             $cont .= checkPerms(BASE_DIR.'/blocks/'.$bf);
-            $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _B_FEDIT]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
         }
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _EINFOPHP]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
         $rows = [[
             'label_html' => _FILENAME.':',
             'field_html' => htmlspecialchars($bf, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
@@ -407,7 +407,7 @@ function filecode(): void {
             ]),
             'is_full' => true,
         ]];
-        echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php?name=blocks&amp;op=filecodesave',
             'hidden' => [
                 ['nameattr' => 'bf', 'valueattr' => $bf],
@@ -461,10 +461,10 @@ function edit(): void {
     } else {
         $type = '('._BLOCKHTML.')';
     }
-    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _BLOCK.': '.$title.' '.$type]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$title.' '.$type]);
     $rows = [[
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'is_required' => true,
             'maxlength_num' => 50,
@@ -478,7 +478,7 @@ function edit(): void {
         $files = scandir('blocks');
         foreach ($files as $file) {
             if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-                $bfopts .= $tpl->getHtmlFrag('new/select-option', [
+                $bfopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $matches[0],
                     'is_selected' => $bfile == $file,
@@ -487,7 +487,7 @@ function edit(): void {
         }
         $rows[] = [
             'label_html' => _FILENAME.':',
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'bfile',
                 'options_html' => $bfopts,
             ]),
@@ -495,7 +495,7 @@ function edit(): void {
     } elseif ($url != '') {
         $rows[] = [
             'label_html' => _RSSFILE.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'url',
                 'placeholder_text' => _RSSFILE,
@@ -503,20 +503,20 @@ function edit(): void {
             ]),
         ];
         $rows[] = [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _REFRESHTIME.':', 'hint' => _REFINFO]),
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _REFRESHTIME.':', 'hint' => _REFINFO]),
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'refresh',
-                'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$refresh === '1800'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$refresh === '3600'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$refresh === '18000'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$refresh === '36000'])
-                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$refresh === '86400']),
+                'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$refresh === '1800'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$refresh === '3600'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$refresh === '18000'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$refresh === '36000'])
+                    .$tpl->getHtmlFrag('select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$refresh === '86400']),
             ]),
         ];
     } else {
         $rows[] = [
             'label_html' => _CONTENT.':',
-            'field_html' => $tpl->getHtmlFrag('new/textarea', [
+            'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'content',
                 'rows_num' => 15,
                 'value_text' => (string)$content,
@@ -526,26 +526,26 @@ function edit(): void {
     }
     $rows[] = [
         'label_html' => _POSITION.':',
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'bpos',
-            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => (string)$bpos === 'l'])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => (string)$bpos === 'c'])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => (string)$bpos === 'd'])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r'])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP, 'is_selected' => (string)$bpos === 'b'])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN, 'is_selected' => (string)$bpos === 'f']),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => (string)$bpos === 'l'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => (string)$bpos === 'c'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => (string)$bpos === 'd'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP, 'is_selected' => (string)$bpos === 'b'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN, 'is_selected' => (string)$bpos === 'f']),
         ]),
     ];
     $where = explode(',', (string)($which ?? ''));
     $viewItems = '';
     foreach (getBlockModules() as $mod) {
-        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+        $viewItems .= $tpl->getHtmlFrag('label-item', [
+            'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => in_array($mod, $where),
                 'name_attr' => 'blockwhere[]',
                 'value_attr' => $mod,
             ]),
-            'label_html' => $tpl->getHtmlFrag('new/title-tip', [
+            'label_html' => $tpl->getHtmlFrag('title-tip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
@@ -560,8 +560,8 @@ function edit(): void {
         ['value' => 'infly', 'label' => _INFLY, 'checked' => in_array('infly', $where)],
         ['value' => 'flyfix', 'label' => _FLY_FIX, 'checked' => in_array('flyfix', $where)],
     ] as $item) {
-        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+        $viewItems .= $tpl->getHtmlFrag('label-item', [
+            'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => $item['checked'],
                 'name_attr' => 'blockwhere[]',
                 'value_attr' => $item['value'],
@@ -571,13 +571,13 @@ function edit(): void {
     }
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('new/radio-group', ['items_html' => $viewItems]),
+        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $viewItems]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
             'label_html' => _LANGUAGE.':',
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
                 'options_html' => language((string)$lang),
             ]),
@@ -588,11 +588,11 @@ function edit(): void {
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expireText = $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])
+        $expireText = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])
             ._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expireText = $tpl->getHtmlFrag('new/input', [
+        $expireText = $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'is_required' => true,
             'name_attr' => 'expire',
@@ -605,28 +605,28 @@ function edit(): void {
         'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
         'field_html' => $expireText,
     ];
     $rows[] = [
         'label_html' => _AFTEREXPIRATION.':',
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'action',
-            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => (string)$action === 'd'])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => (string)$action === 'r']),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => (string)$action === 'd'])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => (string)$action === 'r']),
         ]),
     ];
     $rows[] = [
         'label_html' => _VIEWPRIV,
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
-            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2])
-                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (int)$view === 3]),
+            'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2])
+                .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (int)$view === 3]),
         ]),
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=editsave',
         'hidden' => [
             ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],

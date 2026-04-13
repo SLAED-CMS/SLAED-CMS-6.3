@@ -35,7 +35,7 @@ function fields(): void {
             $types = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
             $opta = '';
             foreach ($types as $key => $txt) {
-                $opta .= $tpl->getHtmlFrag('new/select-option', [
+                $opta .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => (string)($key + 1),
                     'label_text' => $txt,
                     'is_selected' => $out[2] == ($key + 1),
@@ -44,7 +44,7 @@ function fields(): void {
             $uses = [_FIELDIN, _FIELDOUT];
             $optb = '';
             foreach ($uses as $key => $txt) {
-                $optb .= $tpl->getHtmlFrag('new/select-option', [
+                $optb .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => (string)($key + 1),
                     'label_text' => $txt,
                     'is_selected' => $out[3] == ($key + 1),
@@ -54,7 +54,7 @@ function fields(): void {
             $rows = [
                 [
                     'label_html' => _NAME.':',
-                    'field_html' => $tpl->getHtmlFrag('new/input', [
+                    'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field1'.$k.'[]',
                         'value_attr' => $out[0],
@@ -65,7 +65,7 @@ function fields(): void {
                 ],
                 [
                     'label_html' => _CONTENT.':',
-                    'field_html' => $tpl->getHtmlFrag('new/input', [
+                    'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field2'.$k.'[]',
                         'value_attr' => $out[1],
@@ -76,7 +76,7 @@ function fields(): void {
                 ],
                 [
                     'label_html' => _TYPE.':',
-                    'field_html' => $tpl->getHtmlFrag('new/select', [
+                    'field_html' => $tpl->getHtmlFrag('select', [
                         'name_attr' => 'field3'.$k.'[]',
                         'options_html' => $opta,
                         'is_config' => true,
@@ -84,23 +84,23 @@ function fields(): void {
                 ],
                 [
                     'label_html' => _USES.':',
-                    'field_html' => $tpl->getHtmlFrag('new/select', [
+                    'field_html' => $tpl->getHtmlFrag('select', [
                         'name_attr' => 'field4'.$k.'[]',
                         'options_html' => $optb,
                         'is_config' => true,
                     ]),
                 ],
             ];
-            $blok .= $tpl->getHtmlFrag('new/toggle-form-block', [
+            $blok .= $tpl->getHtmlFrag('toggle-form-block', [
                 'block_id' => 'fi'.$k.$c,
                 'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
                 'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
                 'title' => _ADD,
                 'label_html' => _FIELD.': '.$next,
-                'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows]),
+                'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows]),
             ]);
         }
-        $panels[] = $tpl->getHtmlFrag('new/tabs-panel', [
+        $panels[] = $tpl->getHtmlFrag('tabs-panel', [
             'panel_id' => 'fields-panel-'.$k,
             'active' => $ctab === $k,
             'content_html' => $blok,
@@ -121,8 +121,8 @@ function fields(): void {
         'tabs_sync_selector' => 'input[name="tab"]',
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
-    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _FIELDINFO]);
-    $fieldv = $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _FIELDINFO]);
+    $fieldv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'fields'],
@@ -130,7 +130,7 @@ function fields(): void {
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => $tpl->getHtmlFrag('new/tabs', [
+        'content_html' => $tpl->getHtmlFrag('tabs', [
             'content_html' => implode('', $panels),
         ]),
         'submit_label' => _SAVECHANGES,

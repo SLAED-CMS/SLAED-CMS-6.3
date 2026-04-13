@@ -12,31 +12,32 @@ function getStatisticSearch(): string {
     $files = [];
     foreach (scandir(COUNTER_DIR.'/statistic/') as $filev) $files[] = $filev;
     rsort($files);
-    $sopts = $tpl->getHtmlFrag('new/select-option', [
+    $sopts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _NO_INFO,
         'is_selected' => !$file,
     ]);
     foreach ($files as $val) {
         if ($val != '' && preg_match('/^statistic\_(.+)\.log/', $val, $matches)) {
-            $sopts .= $tpl->getHtmlFrag('new/select-option', [
+            $sopts .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $val,
                 'label_text' => $matches[1],
                 'is_selected' => $file === $val,
             ]);
         }
     }
-    $sel = $tpl->getHtmlFrag('new/select', [
+    $sel = $tpl->getHtmlFrag('select', [
         'name_attr' => 'file',
         'options_html' => $sopts,
     ]);
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'statistic'],
         ],
-        'content_html' => _STATFROM.': '.$sel.' '.$tpl->getHtmlFrag('new/submit', [
+        'content_html' => _STATFROM.': '.$sel.' '.$tpl->getHtmlFrag('button', [
             'submit_label' => _OK,
+            'button_type' => 'submit',
         ]),
     ]);
     return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
@@ -54,7 +55,7 @@ function statistic(): void {
     ]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
-    $statv = $tpl->getHtmlFrag('new/image-preview', [
+    $statv = $tpl->getHtmlFrag('image-preview', [
         'alt_text' => _STATGR,
         'image_id' => 'statistic-chart-main',
         'src_attr' => $afile.'.php?name=statistic'.($file ? '&file='.$file : '').'&op=add&day=15',
@@ -67,7 +68,7 @@ function statistic(): void {
         } else {
             $out = date('d');
         }
-        $statv .= $tpl->getHtmlFrag('new/image-preview', [
+        $statv .= $tpl->getHtmlFrag('image-preview', [
             'alt_text' => _STATGR,
             'image_id' => 'statistic-chart-extra',
             'src_attr' => $afile.'.php?name=statistic'.($file ? '&file='.$file : '').'&op=add&day='.$out,
@@ -112,7 +113,7 @@ function statistic(): void {
         $auditory += $out_aud;
         if ($auditory < 0) $auditory = 0;
         $regusers += rtrim($out[7]);
-        $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => $out[0]],
                 ['content_html' => $out[1]],
@@ -125,9 +126,9 @@ function statistic(): void {
             ],
         ])]);
     }
-    $rows .= $tpl->getHtmlFrag('new/table-row', [
+    $rows .= $tpl->getHtmlFrag('table-row', [
         'row_attr' => 'data-sort-method="none"',
-        'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        'cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => '<strong>'._ALL.'</strong>'],
                 ['content_html' => '<strong>'.(string)$unique.'</strong>'],
@@ -140,7 +141,7 @@ function statistic(): void {
             ],
         ]),
     ]);
-    $statv .= $tpl->getHtmlFrag('new/table', [
+    $statv .= $tpl->getHtmlFrag('table', [
         'is_wrapless' => true,
         'head' => $head,
         'rows_html' => $rows,
@@ -164,11 +165,11 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $rows = [
-        ['label_html' => _STATBET, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'bet', 'value_attr' => (string)$conf['statistic']['bet'], 'is_config' => true])],
-        ['label_html' => _STATSHI, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'shi', 'value_attr' => (string)$conf['statistic']['shi'], 'is_config' => true])],
+        ['label_html' => _STATBET, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bet', 'value_attr' => (string)$conf['statistic']['bet'], 'is_config' => true])],
+        ['label_html' => _STATSHI, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shi', 'value_attr' => (string)$conf['statistic']['shi'], 'is_config' => true])],
         ['label_html' => _STATACT, 'field_html' => getTplRadioGroup(['name' => 'stat', 'value' => (string)(int)$conf['statistic']['stat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('new/form', [
+    $confv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'statistic'],

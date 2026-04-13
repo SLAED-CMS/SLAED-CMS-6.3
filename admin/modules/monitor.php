@@ -631,7 +631,7 @@ function getCpuDetails(): array {
 function getStatusHtml(?bool $state): string {
     global $tpl;
     if ($state === null) return getTplSpan('sl_muted', 'N/A');
-    return $tpl->getHtmlFrag('new/inline-badge', [
+    return $tpl->getHtmlFrag('inline-badge', [
         'class' => $state ? 'sl_green' : 'sl_red',
         'label' => $state ? 'On' : 'Off',
     ]);
@@ -1122,7 +1122,7 @@ function getMonitorServerStats(): array {
     $srvport = getServerValue('SERVER_PORT', 'N/A');
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
-    $srvhttps = $tpl->getHtmlFrag('new/inline-badge', [
+    $srvhttps = $tpl->getHtmlFrag('inline-badge', [
         'class' => $ishttps ? 'sl_green' : 'sl_red',
         'label' => $ishttps ? 'enabled' : 'disabled',
     ]);
@@ -1217,7 +1217,7 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     if ($reqtime <= 0) $reqtime = microtime(true);
     $extras = getMonitorRuntimeExtras();
     $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
-    $diskwarn = $tpl->getHtmlFrag('new/inline-badge', [
+    $diskwarn = $tpl->getHtmlFrag('inline-badge', [
         'class' => $islowdisk ? 'sl_red' : 'sl_green',
         'label' => $islowdisk ? 'Low free space' : 'Normal',
     ]);

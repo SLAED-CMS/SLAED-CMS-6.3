@@ -33,7 +33,7 @@ function groups(): void {
                 [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE points >= :points', ['points' => $points]));
                 $userlink = $afile.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
             }
-            $acts = $tpl->getHtmlFrag('new/row-actions', [
+            $acts = $tpl->getHtmlFrag('row-actions', [
                 'trigger_label' => _FUNCTIONS,
                 'items' => [
                     [
@@ -55,24 +55,24 @@ function groups(): void {
                 ],
             ]);
             $cells = [
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => (string)$grid]),
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => '<img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'">']),
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => getTplAdminTitleTip(_DESCRIPTION.': '.$description).getTplAdminColorLabel($color, $grname)]),
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => (string)$points]),
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => (string)$users_num]),
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => $extra]),
-                $tpl->getHtmlFrag('new/table-cell', ['content_html' => $acts]),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => (string)$grid]),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => '<img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'">']),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => $tpl->getHtmlFrag('title-tip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'badge_attr' => ' style="color: '.htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'])]),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => (string)$points]),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => (string)$users_num]),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => $extra]),
+                $tpl->getHtmlFrag('table-cell', ['content_html' => $acts]),
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', [
+            $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => implode('', $cells),
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('new/table', [
+        $cont .= $tpl->getHtmlFrag('table', [
             'head' => $head,
             'rows_html' => $rows,
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -99,12 +99,12 @@ function add(): void {
     $rank = empty($rank) ? 'rank_1.png' : $rank;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 1]);
-    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _GROUPSI]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stop]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _GROUPSI]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = [];
     $rows[] = [
         'label_html' => _NAME.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'grname',
             'value_attr' => $grname,
@@ -115,7 +115,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _DESCRIPTION.':',
-        'field_html' => $tpl->getHtmlFrag('new/textarea', [
+        'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
             'value_text' => $description,
             'placeholder_text' => _DESCRIPTION,
@@ -125,7 +125,7 @@ function add(): void {
     $pickopts = '';
     foreach (scandir($path) as $entry) {
         if (preg_match('#(\.gif|\.png|\.jpg|\.jpeg)$#is', $entry)) {
-            $pickopts .= $tpl->getHtmlFrag('new/select-option', [
+            $pickopts .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $path.$entry,
                 'label_text' => $entry,
                 'is_selected' => $rank == $entry,
@@ -134,7 +134,7 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _IMG.':',
-        'field_html' => $tpl->getHtmlFrag('new/select', [
+        'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'rank',
             'options_html' => $pickopts,
             'select_attr' => 'id="img_replace"',
@@ -146,7 +146,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _COLOR.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'color',
             'name_attr' => 'color',
             'value_attr' => $color,
@@ -154,7 +154,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _POINTSNEEDED.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'points',
             'value_attr' => (string)$points,
@@ -162,14 +162,14 @@ function add(): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SPEC_GROUP.':', 'hint' => _GRSINFO]),
-        'field_html' => $tpl->getHtmlFrag('new/checkbox', [
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SPEC_GROUP.':', 'hint' => _GRSINFO]),
+        'field_html' => $tpl->getHtmlFrag('checkbox', [
             'name_attr' => 'grextra',
             'value_attr' => '1',
             'is_checked' => !empty($check),
         ]),
     ];
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'gid', 'valueattr' => (string)$gid],
@@ -234,10 +234,10 @@ function points(): void {
     $count = count($p);
     for ($i = 0; $i < $count; $i++) {
         $cells = [
-            $tpl->getHtmlFrag('new/table-cell', ['content_html' => (string)($i + 1)]),
-            $tpl->getHtmlFrag('new/table-cell', ['content_html' => $p[$i]]),
-            $tpl->getHtmlFrag('new/table-cell', ['content_html' => $d[$i]]),
-            $tpl->getHtmlFrag('new/table-cell', ['content_html' => $tpl->getHtmlFrag('new/input', [
+            $tpl->getHtmlFrag('table-cell', ['content_html' => (string)($i + 1)]),
+            $tpl->getHtmlFrag('table-cell', ['content_html' => $p[$i]]),
+            $tpl->getHtmlFrag('table-cell', ['content_html' => $d[$i]]),
+            $tpl->getHtmlFrag('table-cell', ['content_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
                 'name_attr' => 'spoints[]',
                 'value_attr' => (string)$pts[$i],
@@ -245,18 +245,18 @@ function points(): void {
                 'is_required' => true,
             ])]),
         ];
-        $prows .= $tpl->getHtmlFrag('new/table-row', [
+        $prows .= $tpl->getHtmlFrag('table-row', [
             'cells_html' => implode('', $cells),
         ]);
     }
-    $pointv = $tpl->getHtmlFrag('new/form', [
+    $pointv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'groups'],
             ['nameattr' => 'op', 'valueattr' => 'pointssave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => $tpl->getHtmlFrag('new/table', [
+        'content_html' => $tpl->getHtmlFrag('table', [
             'head' => $phead,
             'rows_html' => $prows,
             'is_wrapless' => true,

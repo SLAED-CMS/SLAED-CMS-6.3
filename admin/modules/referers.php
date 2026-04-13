@@ -14,7 +14,7 @@ function getRefererSearch(): string {
     $sortopts = '';
     foreach ($priv as $key => $value) {
         $idx = $key + 1;
-        $sortopts .= $tpl->getHtmlFrag('new/select-option', [
+        $sortopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$idx,
             'label_text' => $value,
             'is_selected' => $sort == $idx,
@@ -24,26 +24,26 @@ function getRefererSearch(): string {
     $privs = [_ASC, _DESC];
     foreach ($privs as $key => $value) {
         $idx = $key + 1;
-        $orderopts .= $tpl->getHtmlFrag('new/select-option', [
+        $orderopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$idx,
             'label_text' => $value,
             'is_selected' => $order == $idx,
         ]);
     }
     return $tpl->getHtmlPart('searchbox', [
-        'searchbox' => $tpl->getHtmlFrag('new/form', [
+        'searchbox' => $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'referers'],
             ],
             'content_html' =>
                 _SORTE.': '.
-                $tpl->getHtmlFrag('new/select', ['name_attr' => 'sort', 'options_html' => $sortopts]).
+                $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts]).
                 ' '.
                 _SORTORDER.': '.
-                $tpl->getHtmlFrag('new/select', ['name_attr' => 'order', 'options_html' => $orderopts]).
+                $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts]).
                 ' '.
-                $tpl->getHtmlFrag('new/submit', ['submit_label' => _OK]),
+                $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         ]),
     ]);
 }
@@ -84,15 +84,15 @@ function referers(): void {
             if (isset($massiv[$i]) && $massiv[$i] != '') {
                 $name = ($massiv[$i][1]) ? user_info($massiv[$i][2]) : $massiv[$i][2];
                 $words = engines_word($massiv[$i][4]) ?: _NO;
-                $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
                             'label_text' => $massiv[$i][3],
                             'title_text' => _NICKNAME.': '.$name.' | '._DATE.': '.format_time($massiv[$i][6], _TIMESTRING),
                         ])],
                         ['content_html' => domain($massiv[$i][5], 30)],
                         ['content_html' => domain($massiv[$i][4], 30)],
-                        ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
                             'label_text' => cutstr($words, 25),
                             'title_text' => $words,
                         ])],
@@ -101,7 +101,7 @@ function referers(): void {
                 ])]);
             }
         }
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/table', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
             'head' => [
                 ['content' => _IP],
                 ['content' => _HITS],
@@ -113,7 +113,7 @@ function referers(): void {
             'is_wrapless' => true,
         ]).setPageNumbers('pagenum', '', $a, ceil($a / $conf['referers']['anum']), $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump'])]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -130,13 +130,13 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $rows = [
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['referers']['anum'], 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['referers']['anump'], 'is_config' => true])],
-        ['label_html' => _REFER_T, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'refer_t', 'value_attr' => (string)intval($conf['referers']['refer_t'] / 86400), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['referers']['anum'], 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['referers']['anump'], 'is_config' => true])],
+        ['label_html' => _REFER_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'refer_t', 'value_attr' => (string)intval($conf['referers']['refer_t'] / 86400), 'is_config' => true])],
         ['label_html' => _REFER, 'field_html' => getTplRadioGroup(['name' => 'refer', 'value' => (string)$conf['referers']['refer'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _REFERB, 'field_html' => getTplRadioGroup(['name' => 'referb', 'value' => (string)$conf['referers']['referb'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('new/form', [
+    $confv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'referers'],

@@ -13,7 +13,7 @@ function comments(): void {
     $status = getVar('get', 'status', 'num') ? 1 : 0;
     $modul = getVar('get', 'modul', 'var');
     $modlink = ($modul) ? '&amp;modul='.$modul : '';
-    $options = $tpl->getHtmlFrag('new/select-option', [
+    $options = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _ALL,
         'is_selected' => $modul === '',
@@ -21,19 +21,19 @@ function comments(): void {
     $result = $db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment ORDER BY modul ASC');
     while ([$m] = $db->getSqlRow($result)) {
         if (!$m) continue;
-        $options .= $tpl->getHtmlFrag('new/select-option', [
+        $options .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $m,
             'label_text' => getModuleName($m).' - '.$m,
             'is_selected' => $modul === $m,
         ]);
     }
-    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_values(array_filter([
             ['nameattr' => 'name', 'valueattr' => 'comments'],
             $status ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
         ])),
-        'content_html' => _MODUL.': '.$tpl->getHtmlFrag('new/select', [
+        'content_html' => _MODUL.': '.$tpl->getHtmlFrag('select', [
             'name_attr' => 'modul',
             'select_attr' => ' OnChange="submit()"',
             'options_html' => $options,
@@ -47,30 +47,31 @@ function comments(): void {
     ]);
     $list = ashowcom();
     if (trim(strip_tags($list)) === '') {
-        $list = $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $list = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $bulk = $tpl->getHtmlFrag('new/div', ['rows' => [[
+        $bulk = $tpl->getHtmlFrag('div', ['rows' => [[
             'label_html' => _CHECKOP.':',
-            'field_html' => $tpl->getHtmlFrag('new/select', [
+            'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'op',
-                'options_html' => $tpl->getHtmlFrag('new/select-option', [
+                'options_html' => $tpl->getHtmlFrag('select-option', [
                     'value_attr' => 'approve',
                     'label_text' => $status ? _ACTIVATE : _DEACTIVATE,
-                ]).$tpl->getHtmlFrag('new/select-option', [
+                ]).$tpl->getHtmlFrag('select-option', [
                     'value_attr' => 'comm_del',
                     'label_text' => _DELETE,
                 ]),
-            ]).$tpl->getHtmlFrag('new/hidden', [
+            ]).$tpl->getHtmlFrag('hidden', [
                 'nameattr' => 'typ',
                 'valueattr' => $status ? '1' : '0',
-            ]).$tpl->getHtmlFrag('new/hidden', [
+            ]).$tpl->getHtmlFrag('hidden', [
                 'nameattr' => 'refer',
                 'valueattr' => '1',
-            ]).$tpl->getHtmlFrag('new/submit', [
+            ]).$tpl->getHtmlFrag('button', [
                 'submit_label' => _OK,
+                'button_type' => 'submit',
             ]),
         ]]]);
-        $footer = $tpl->getHtmlFrag('new/module-foot', [
+        $footer = $tpl->getHtmlFrag('module-foot', [
             'pager_html' => getTplPager([
                 'field' => 'cid',
                 'limit' => (int)($conf['comments']['anum'] ?? 25),
@@ -97,14 +98,14 @@ function edit(): void {
     [$id, $modul, $com_text] = $db->getSqlRow($result);
     $rows = [[
         'label_html' => _COMMENT.':',
-        'field_html' => $tpl->getHtmlFrag('new/textarea', [
+        'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'comment',
             'rows_num' => 10,
             'value_text' => (string)$com_text,
         ]),
         'is_full' => true,
     ]];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=comments&amp;op=editsave',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -136,39 +137,39 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $rows = [
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['comments']['num']])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['comments']['anum']])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['comments']['nump']])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['comments']['anump']])],
-        ['label_html' => _COMLETTER, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)$conf['comments']['letter']])],
-        ['label_html' => _CEDITT, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'edit', 'value_attr' => (string)intval($conf['comments']['edit'] / 60)])],
-        ['label_html' => _CSEND, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['comments']['send']])],
-        ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'sort', 'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0'])])],
-        ['label_html' => _ALLOWANONPOST, 'field_html' => $tpl->getHtmlFrag('new/select', [
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['comments']['num']])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['comments']['anum']])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['comments']['nump']])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['comments']['anump']])],
+        ['label_html' => _COMLETTER, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)$conf['comments']['letter']])],
+        ['label_html' => _CEDITT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'edit', 'value_attr' => (string)intval($conf['comments']['edit'] / 60)])],
+        ['label_html' => _CSEND, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['comments']['send']])],
+        ['label_html' => _SORT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => (string)($conf['comments']['sort'] ?? '1') === '0'])])],
+        ['label_html' => _ALLOWANONPOST, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'anonpost',
             'is_config' => true,
-            'options_html' => $tpl->getHtmlFrag('new/select-option', [
+            'options_html' => $tpl->getHtmlFrag('select-option', [
                 'value_attr' => '0',
                 'label_text' => _DEACTIVATE,
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '0',
-            ]).$tpl->getHtmlFrag('new/select-option', [
+            ]).$tpl->getHtmlFrag('select-option', [
                 'value_attr' => '1',
                 'label_text' => _APOSTMOD,
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '1',
-            ]).$tpl->getHtmlFrag('new/select-option', [
+            ]).$tpl->getHtmlFrag('select-option', [
                 'value_attr' => '2',
                 'label_text' => _APOSTNOMOD,
                 'is_selected' => (string)($conf['comments']['anonpost'] ?? '0') === '2',
             ]),
         ])],
-        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _NOLINKP, 'hint' => _NOAUM]), 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'link', 'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '0']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '1']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2'])])],
-        ['label_html' => _NOALINKP, 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'alink', 'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '0']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '1']).$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '2'])])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _NOLINKP, 'hint' => _NOAUM]), 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'link', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '0']).$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['link'] ?? '0') === '2'])])],
+        ['label_html' => _NOALINKP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'alink', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '0']).$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ANONIMP, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '1']).$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ALLUSER, 'is_selected' => (string)($conf['comments']['alink'] ?? '0') === '2'])])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)(int)$conf['comments']['addmail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VPRIVAT, 'field_html' => getTplRadioGroup(['name' => 'privat', 'value' => (string)(int)$conf['comments']['privat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VPROFIL, 'field_html' => getTplRadioGroup(['name' => 'profil', 'value' => (string)(int)$conf['comments']['profil'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VWEB, 'field_html' => getTplRadioGroup(['name' => 'web', 'value' => (string)(int)$conf['comments']['web'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=comments&amp;op=save',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'comments'],

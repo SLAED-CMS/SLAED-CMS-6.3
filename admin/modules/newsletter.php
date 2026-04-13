@@ -17,10 +17,10 @@ function newsletter(): void {
         while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
             $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
-            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => [
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                             ['label' => _TIMENL, 'value' => getDuration($sendtime), 'is_last' => true],
@@ -30,7 +30,7 @@ function newsletter(): void {
                     ])],
                     ['content_html' => $sended.' '._NLUSER],
                     ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $afile.'.php?name=newsletter&amp;op=add&amp;id='.$id,
@@ -46,7 +46,7 @@ function newsletter(): void {
                 ],
             ])]);
         }
-        $cont .= $tpl->getHtmlFrag('new/table', [
+        $cont .= $tpl->getHtmlFrag('table', [
             'head' => [
                 ['content' => _ID],
                 ['content' => _TITLE],
@@ -57,7 +57,7 @@ function newsletter(): void {
             'rows_html' => implode('', $rows),
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -78,12 +78,12 @@ function add(): void {
     $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stoptext]);
+    if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
-    $option = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MASSMAIL.' - '.$num, 'is_selected' => (string)$mails === '1']);
+    $option = $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MASSMAIL.' - '.$num, 'is_selected' => (string)$mails === '1']);
     [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users WHERE newslet = 1'));
-    $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _ANEWSLETTER.' - '.$num2, 'is_selected' => (string)$mails === '2']);
+    $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _ANEWSLETTER.' - '.$num2, 'is_selected' => (string)$mails === '2']);
     $result3 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY id');
     if ($db->getSqlRowCount($result3) > 0) {
         while ([$grid, $grname, $points] = $db->getSqlRow($result3)) {
@@ -94,7 +94,7 @@ function add(): void {
                 $email3 .= $user_email.',';
                 $num3++;
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email3, 'label_text' => _SPEC_GROUP.' "'.$grname.'" - '.$num3, 'is_selected' => $email3 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email3, 'label_text' => _SPEC_GROUP.' "'.$grname.'" - '.$num3, 'is_selected' => $email3 === $mails]);
         }
     }
     $result5 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY id');
@@ -107,7 +107,7 @@ function add(): void {
                 $email4 .= $user_email.',';
                 $num4++;
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email4, 'label_text' => _GROUP.' "'.$grname.'" - '.$num4, 'is_selected' => $email4 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email4, 'label_text' => _GROUP.' "'.$grname.'" - '.$num4, 'is_selected' => $email4 === $mails]);
         }
     }
     if (is_active('money')) {
@@ -124,7 +124,7 @@ function add(): void {
                     $num5++;
                 }
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email5, 'label_text' => _CLIENTSM.' "'._MONEY.'" - '.$num5, 'is_selected' => $email5 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email5, 'label_text' => _CLIENTSM.' "'._MONEY.'" - '.$num5, 'is_selected' => $email5 === $mails]);
         }
     }
     if (is_active('order')) {
@@ -141,7 +141,7 @@ function add(): void {
                     $num6++;
                 }
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email6, 'label_text' => _CLIENTSM.' "'._ORDER.'" - '.$num6, 'is_selected' => $email6 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email6, 'label_text' => _CLIENTSM.' "'._ORDER.'" - '.$num6, 'is_selected' => $email6 === $mails]);
         }
     }
     if (is_active('shop')) {
@@ -158,7 +158,7 @@ function add(): void {
                     $num7++;
                 }
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email7, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7, 'is_selected' => $email7 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email7, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7, 'is_selected' => $email7 === $mails]);
         }
         $result10 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 1');
         if ($db->getSqlRowCount($result10) > 0) {
@@ -173,7 +173,7 @@ function add(): void {
                     $num8++;
                 }
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email8, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8, 'is_selected' => $email8 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email8, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8, 'is_selected' => $email8 === $mails]);
         }
         $result11 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 0');
         if ($db->getSqlRowCount($result11) > 0) {
@@ -188,10 +188,10 @@ function add(): void {
                     $num9++;
                 }
             }
-            $option .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $email9, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, 'is_selected' => $email9 === $mails]);
+            $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email9, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, 'is_selected' => $email9 === $mails]);
         }
     }
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'nid', 'valueattr' => (string)$nid],
@@ -201,8 +201,8 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => [
-            ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 50, 'placeholder_text' => _TITLE, 'is_required' => true])],
-            ['label_html' => _NLWHERE.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'mails', 'options_html' => $option])],
+            ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 50, 'placeholder_text' => _TITLE, 'is_required' => true])],
+            ['label_html' => _NLWHERE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mails', 'options_html' => $option])],
             ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'), 'is_full' => true],
         ],
         'submit_label' => _SAVE,
@@ -265,7 +265,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'newsletter'],
@@ -273,8 +273,8 @@ function config(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => [
-            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _NLSEND, 'hint' => _NLSENDI]), 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$conf['newsletter']['active'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-            ['label_html' => _NLCOUNT, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['newsletter']['count'], 'is_config' => true])],
+            ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _NLSEND, 'hint' => _NLSENDI]), 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$conf['newsletter']['active'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+            ['label_html' => _NLCOUNT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['newsletter']['count'], 'is_config' => true])],
         ],
         'submit_label' => _SAVECHANGES,
     ]);

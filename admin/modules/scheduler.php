@@ -11,13 +11,13 @@ function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
     $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-    $wargo = $tpl->getHtmlFrag('new/row-actions-item', [
+    $wargo = $tpl->getHtmlFrag('row-actions-item', [
         'href' => $afile.'.php?name=security&amp;op=config',
         'label' => _SCHEDULER_WARN_GO,
         'title' => _SCHEDULER_WARN_GO,
     ]);
-    if (!$conf['security']['log_b']) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _SCHEDULER_WARN_DB.' '.$wargo.'.']);
-    if (!$conf['security']['log_d']) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _SCHEDULER_WARNLOG.' '.$wargo.'.']);
+    if (!$conf['security']['log_b']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARN_DB.' '.$wargo.'.']);
+    if (!$conf['security']['log_d']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARNLOG.' '.$wargo.'.']);
     $head = [
         ['content' => _TITLE],
         ['content' => _SCHEDULER_NEXTRUN],
@@ -89,19 +89,19 @@ function scheduler(): void {
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
             ];
         }
-        $label = $tpl->getHtmlFrag('new/title-tip', ['items' => $tips]).htmlspecialchars(cutstr((string)$title, 22), ENT_QUOTES, 'UTF-8');
-        $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $label = $tpl->getHtmlFrag('title-tip', ['items' => $tips]).htmlspecialchars(cutstr((string)$title, 22), ENT_QUOTES, 'UTF-8');
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => $label],
                 ['content_html' => htmlspecialchars((string)$nextr, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => htmlspecialchars((string)$stat, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => htmlspecialchars((string)($job['priority'] ?? '100'), ENT_QUOTES, 'UTF-8')],
                 ['content_html' => ((int)$isactive === 1) ? _YES : _NO],
-                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _EDITOR, 'items' => $acts])],
+                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _EDITOR, 'items' => $acts])],
             ],
         ])]);
     }
-    $cont .= $tpl->getHtmlFrag('new/table', ['head' => $head, 'rows_html' => $rows]);
+    $cont .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
     setHead();
     echo $cont;
     setFoot();
@@ -127,10 +127,10 @@ function add(string $name = ''): void {
     $readonly = $isnew ? '' : ' readonly';
     $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
-    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => $info]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
         'label_html' => _SCHEDULER_JOBKEY.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'job',
             'value_attr' => (string)$key,
@@ -141,7 +141,7 @@ function add(string $name = ''): void {
         ]),
     ], [
         'label_html' => _TITLE.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
             'value_attr' => (string)$job['title'],
@@ -151,7 +151,7 @@ function add(string $name = ''): void {
         ]),
     ], [
         'label_html' => _TYPE.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'value_attr' => (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM,
             'is_config' => true,
@@ -161,7 +161,7 @@ function add(string $name = ''): void {
     if ($iscustom) {
         $rows[] = [
             'label_html' => _SCHEDULER_URL.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'url',
                 'value_attr' => $url,
@@ -174,7 +174,7 @@ function add(string $name = ''): void {
     } else {
         $rows[] = [
             'label_html' => _SCHEDULER_SYSTEM.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'value_attr' => (string)($job['system'] ?? ''),
                 'is_config' => true,
@@ -183,8 +183,8 @@ function add(string $name = ''): void {
         ];
     }
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SCHEDULER_SCHED, 'hint' => _SCHEDULER_CRONFMT]),
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEDULER_SCHED, 'hint' => _SCHEDULER_CRONFMT]),
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'schedule',
             'value_attr' => $schedule,
@@ -195,8 +195,8 @@ function add(string $name = ''): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SCHEDULER_PRIO, 'hint' => _SCHEDULER_PRIOTIP]),
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SCHEDULER_PRIO, 'hint' => _SCHEDULER_PRIOTIP]),
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'priority',
             'value_attr' => (string)$job['priority'],
@@ -207,7 +207,7 @@ function add(string $name = ''): void {
     ];
     $rows[] = [
         'label_html' => _SCHEDULER_LOCK.':',
-        'field_html' => $tpl->getHtmlFrag('new/input', [
+        'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'lock_timeout',
             'value_attr' => (string)$job['lock_timeout'],
@@ -219,7 +219,7 @@ function add(string $name = ''): void {
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SCHEDULER_MANUAL.':', 'field_html' => getTplRadioGroup(['name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'scheduler'],

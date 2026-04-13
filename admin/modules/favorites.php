@@ -28,11 +28,11 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $rows = [
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['favorites']['num'], 'class' => 'sl_conf'])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['favorites']['anum'], 'class' => 'sl_conf'])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['favorites']['nump'], 'class' => 'sl_conf'])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['favorites']['anump'], 'class' => 'sl_conf'])],
-        ['label_html' => _FAVOR_UMAX, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'favorites', 'value_attr' => (string)$conf['favorites']['favorites'], 'class' => 'sl_conf'])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['favorites']['num'], 'class' => 'sl_conf'])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['favorites']['anum'], 'class' => 'sl_conf'])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['favorites']['nump'], 'class' => 'sl_conf'])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['favorites']['anump'], 'class' => 'sl_conf'])],
+        ['label_html' => _FAVOR_UMAX, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'favorites', 'value_attr' => (string)$conf['favorites']['favorites'], 'class' => 'sl_conf'])],
         ['label_html' => _FAVOR_ACT, 'field_html' => getTplRadioGroup([
             'name' => 'favact',
             'value' => (string)$conf['favorites']['favact'],
@@ -42,7 +42,7 @@ function config(): void {
             ],
         ])],
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'favorites'],
@@ -79,7 +79,7 @@ function delete(): void {
     $ishtmx = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
     if (!checkSiteToken()) {
         if ($ishtmx) {
-            echo $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             return;
         }
         setRedirect($afile.'.php?name=favorites&num='.$num, false, 302, _TOKENMISS, true);

@@ -49,7 +49,7 @@ function getRobotsTemplate(): string {
 
 function getRobotsButton(string $template): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/input', [
+    return $tpl->getHtmlFrag('input', [
         'itype' => 'button',
         'name_attr' => 'robots_template',
         'value_attr' => _EROBSTD,
@@ -71,12 +71,12 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $text = normalizeRawEditorText($file, $text);
     if ($text === '' && $fallback !== '') $text = $fallback;
     $cont .= checkPerms($file);
-    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => $info]);
-    if ($warn) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $warn]);
-    $html = ($note !== '') ? $tpl->getHtmlFrag('new/alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
-    $cont .= $tpl->getHtmlFrag('new/div-collapse', ['target_id' => 'repeditornote', 'content_html' => $html]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
+    if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]);
+    $html = ($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
+    $cont .= $tpl->getHtmlFrag('div-collapse', ['target_id' => 'repeditornote', 'content_html' => $html]);
     $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="if (window.editor && typeof window.editor.save === \'function\') { window.editor.save(); }"';
-    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'form_attr' => $attr,
         'hidden' => [
@@ -150,7 +150,7 @@ function save(): void {
     $file = getVar('post', 'file');
     if (!checkSiteToken()) {
         if (isHtmxReq()) {
-            echo $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             return;
         }
         setHead();
@@ -159,7 +159,7 @@ function save(): void {
             'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO],
             'tab' => $edit === 'editheader' ? 1 : ($edit === 'htaccess' ? 2 : ($edit === 'robots' ? 3 : 0)),
         ]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
         setFoot();
         return;
     }
@@ -170,7 +170,7 @@ function save(): void {
     if ($file && $templ) $saved = file_put_contents($file, $templ, LOCK_EX) !== false;
     if (isHtmxReq()) {
         $note = $saved ? _ESAVED.': '.$file : _ERROR.': '.$file;
-        echo $tpl->getHtmlFrag('new/alert', ['is_warn' => !$saved, 'text' => $note]);
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => !$saved, 'text' => $note]);
         return;
     }
     setRedirect($afile.'.php?name=editor&op='.$edit, false, 302, $saved ? _SUCCFILESAVE : _ERROR.': '.$file, !$saved);

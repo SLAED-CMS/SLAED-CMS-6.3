@@ -22,16 +22,9 @@ function getTemplateFiles(string $dir, string $ext): array {
 function getTemplateHtmlFiles(string $templ): array {
     $dirs = [];
     $base = 'templates/'.$templ;
-    if ($templ === 'admin') {
-        foreach (['fragments/new', 'partials', 'layouts', 'pages'] as $part) {
-            $path = $base.'/'.$part;
-            if (is_dir($path)) $dirs[] = $path;
-        }
-    } else {
-        foreach (['fragments', 'partials', 'layouts', 'pages'] as $part) {
-            $path = $base.'/'.$part;
-            if (is_dir($path)) $dirs[] = $path;
-        }
+    foreach (['fragments', 'partials', 'layouts', 'pages'] as $part) {
+        $path = $base.'/'.$part;
+        if (is_dir($path)) $dirs[] = $path;
     }
     $list = [];
     foreach ($dirs as $dir) {
@@ -59,19 +52,20 @@ function getTemplateSearch(string $templ): string {
     $opts = '';
     foreach (scandir('templates') as $file) {
         if ($file === '.' || $file === '..' || !is_dir('templates/'.$file)) continue;
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
             'label_text' => $file,
             'is_selected' => $file === $templ,
         ]);
     }
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=template',
-        'content_html' => _THEME.': '.$tpl->getHtmlFrag('new/select', [
+        'content_html' => _THEME.': '.$tpl->getHtmlFrag('select', [
             'name_attr' => 'templ',
             'options_html' => $opts,
-        ]).' '.$tpl->getHtmlFrag('new/submit', [
+        ]).' '.$tpl->getHtmlFrag('button', [
             'submit_label' => _OK,
+            'button_type' => 'submit',
         ]),
     ]);
     return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
@@ -79,7 +73,7 @@ function getTemplateSearch(string $templ): string {
 
 function getTemplateEditorBlock(string $templ, string $filelink, string $mode, string $op): string {
     global $afile, $tpl;
-    $body = $tpl->getHtmlFrag('new/form', [
+    $body = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=template&amp;op='.$op,
         'hidden' => [
             ['nameattr' => 'templ', 'valueattr' => $templ],
@@ -145,9 +139,9 @@ function template(): void {
             if ($permtest) $cont .= $permtest;
             $conts .= getTemplateEditorBlock($templ, $rel, 'text/html', 'save');
         }
-        $cont .= $conts !== '' ? $conts : $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $conts !== '' ? $conts : $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -173,9 +167,9 @@ function style(): void {
             if ($permtest) $cont .= $permtest;
             $conts .= getTemplateEditorBlock($templ, $rel, 'text/css', 'stylesave');
         }
-        $cont .= $conts !== '' ? $conts : $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $conts !== '' ? $conts : $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

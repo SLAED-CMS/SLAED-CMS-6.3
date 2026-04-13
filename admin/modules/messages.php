@@ -30,15 +30,15 @@ function messages(): void {
             $lang = (!$lang) ? _ALL : $lang;
             $exp = intval($expire - time());
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$mid],
-                    ['content_html' => getTplAdminNoteLabel($title, cutstr($title, 35))],
+                    ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => cutstr($title, 35), 'title_text' => $title])],
                     ['content_html' => $exp],
                     ['content_html' => $mview],
                     ['content_html' => getLangName($lang)],
                     ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.($active ? '0' : '1').'&amp;token='.getSiteToken(),
@@ -58,7 +58,7 @@ function messages(): void {
                 ],
             ])]);
         }
-        $cont .= $tpl->getHtmlFrag('new/table', [
+        $cont .= $tpl->getHtmlFrag('table', [
             'head' => [
                 ['content' => _ID],
                 ['content' => _TITLE],
@@ -71,7 +71,7 @@ function messages(): void {
             'rows_html' => implode('', $rows),
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -96,37 +96,37 @@ function add(): void {
     $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stoptext]);
+    if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
     if ($conf['multilingual'] == 1) {
-        $langsel = $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($lang, 1)]);
+        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang, 1)]);
     }
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'expire', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
+        $expire_text = $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'expire', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
     }
     $rows = [
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
         ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', (string)$body, 'all', '10', _TEXT, '1'), 'is_full' => true],
     ];
     if ($langsel) {
         $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $langsel];
     }
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EXPIRATION, 'hint' => _CONFINES]), 'field_html' => $expire_text];
-    $rows[] = ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('new/select', [
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION, 'hint' => _CONFINES]), 'field_html' => $expire_text];
+    $rows[] = ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'view',
         'options_html' =>
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVALL, 'is_selected' => (string)$view === '1']) .
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVANON, 'is_selected' => (string)$view === '2']) .
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _MVUSERS, 'is_selected' => (string)$view === '3']) .
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '4', 'label_text' => _MVADMIN, 'is_selected' => (string)$view === '4']),
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVALL, 'is_selected' => (string)$view === '1']) .
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVANON, 'is_selected' => (string)$view === '2']) .
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVUSERS, 'is_selected' => (string)$view === '3']) .
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _MVADMIN, 'is_selected' => (string)$view === '4']),
     ])];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup([
         'name' => 'status',
@@ -136,7 +136,7 @@ function add(): void {
             ['value' => '0', 'label' => _NO],
         ],
     ])];
-    $form = $tpl->getHtmlFrag('new/form', [
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],

@@ -208,7 +208,10 @@ function admininfo() {
             $newRows = [];
             if (is_active('account') && is_admin_modul('account')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp'));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=account&op=newuser', _NEW_USER, _USERS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=account&op=newuser', 'title' => _NEW_USER, 'label' => _USERS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('album') && is_admin_modul('album')) {
                 #$num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
@@ -217,66 +220,111 @@ function admininfo() {
             }
             if (is_active('faq') && is_admin_modul('faq')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_faq WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=faq&status=1', _FAQ, _FAQ, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=faq&status=1', 'title' => _FAQ, 'label' => _FAQ])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('files') && is_admin_modul('files')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=files&status=1', _FILES, _FILES, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=files&status=1', 'title' => _FILES, 'label' => _FILES])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '2'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=files&status=2', _BROCFILES, _BROCFILES, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=files&status=2', 'title' => _BROCFILES, 'label' => _BROCFILES])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('help') && is_admin_modul('help')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=help', _HELP, _HELP, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=help', 'title' => _HELP, 'label' => _HELP])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('jokes') && is_admin_modul('jokes')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_jokes WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=jokes&status=1', _JOKES, _JOKES, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=jokes&status=1', 'title' => _JOKES, 'label' => _JOKES])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('links') && is_admin_modul('links')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=links&status=1', _LINKS, _LINKS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=links&status=1', 'title' => _LINKS, 'label' => _LINKS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '2'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=links&status=2', _BROCLINKS, _BROCLINKS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=links&status=2', 'title' => _BROCLINKS, 'label' => _BROCLINKS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('media') && is_admin_modul('media')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=media&status=1', _MEDIA, _MEDIA, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=media&status=1', 'title' => _MEDIA, 'label' => _MEDIA])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '2'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=media&status=2', _BROCMFILES, _BROCMFILES, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=media&status=2', 'title' => _BROCMFILES, 'label' => _BROCMFILES])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('news') && is_admin_modul('news')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_news WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=news&status=1', _NEWS, _NEWS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=news&status=1', 'title' => _NEWS, 'label' => _NEWS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('pages') && is_admin_modul('pages')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_pages WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=pages&status=1', _PAGES, _PAGES, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=pages&status=1', 'title' => _PAGES, 'label' => _PAGES])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('shop') && is_admin_modul('shop')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_clients WHERE status = '2'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=shop&op=clients', _CLIENTS, _CLIENTS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=shop&op=clients', 'title' => _CLIENTS, 'label' => _CLIENTS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_partners WHERE status = '2'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=shop&op=partners', _PARTNERS, _PARTNERS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=shop&op=partners', 'title' => _PARTNERS, 'label' => _PARTNERS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
             if (is_active('whois') && is_admin_modul('whois')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_whois WHERE status = '0'"));
-                $newRows[] = getTplAdminInfoRow($afile.'.php?name=whois&status=1', _WHOIS, _WHOIS, $num);
+                $newRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=whois&status=1', 'title' => _WHOIS, 'label' => _WHOIS])],
+                    ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+                ]])]);
             }
-            $ablocks = $tpl->getHtmlFrag('block-left', ['title' => _NEW, 'content' => getTplAdminInfoTable($newRows), 'id' => '3', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlFrag('sidebar-block', ['title' => _NEW, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
             
             $waitingRows = [];
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
-            $waitingRows[] = getTplAdminInfoRow($afile.'.php?name=comments&status=1', _COMMENTS, _COMMENTS, $num);
-            $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _WAITINGCONT, 'content' => getTplAdminInfoTable($waitingRows), 'id' => '4', 'close' => _OPCL]);
+            $waitingRows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                ['content_html' => $tpl->getHtmlFrag('row-actions-item', ['href' => $afile.'.php?name=comments&status=1', 'title' => _COMMENTS, 'label' => _COMMENTS])],
+                ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
+            ]])]);
+            $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
             
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-        $e_cont = $tpl->getHtmlFrag('admin-editor-form', [
+        $e_cont = $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php',
-            'editor_html' => redaktor('1', 'editor', '', $editor, 1),
+            'content_html' => redaktor('1', 'editor', '', $editor, 1),
         ]);
-        $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _EDITOR, 'content' => $e_cont, 'id' => '6', 'close' => _OPCL]);
+        $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _EDITOR, 'content_html' => $e_cont, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
 }
@@ -337,8 +385,14 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             list($ispid) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]));
             $ordernm = $ordern - 1;
             $ordernp = $ordern + 1;
-            $active = getTplAdminFlagBox((bool) $parentid, _YES, _NO);
-            $img = getTplAdminFlagBox((bool) $imgcat, _YES, _NO);
+            $active = $tpl->getHtmlFrag('inline-badge', [
+                'class' => $parentid ? 'sl_green' : 'sl_red',
+                'label' => $parentid ? _YES : _NO,
+            ]);
+            $img = $tpl->getHtmlFrag('inline-badge', [
+                'class' => $imgcat ? 'sl_green' : 'sl_red',
+                'label' => $imgcat ? _YES : _NO,
+            ]);
             $flag = $parentid;
             while ($flag != '0') {
                 $title = $massiv[$flag][2].' / '.$title;
@@ -368,10 +422,10 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ];
             }
-            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => $tipItems,
                         'label_text' => cutstr($title, 45),
                         'title_text' => $title,
@@ -382,14 +436,14 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => (string)$ordern],
                     ['content_html' => getTplMoveControls('ajax_cat', $mup, $mdn)],
                     ['content_html' => ad_status('', $cstatus)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _EDITOR,
                         'items' => $items,
                     ])],
                 ],
             ])]);
         }
-        $cont = $tpl->getHtmlFrag('new/table', [
+        $cont = $tpl->getHtmlFrag('table', [
             'head' => [
             ['content' => _ID],
             ['content' => _CATEGORY],
@@ -404,7 +458,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             'is_wrapless' => true,
         ]);
     } else {
-        $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -502,17 +556,17 @@ function getAdminBlockList(string $token = ''): string {
         }
         $tipItems[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
         if ($bpos == 'l') {
-            $bpos = getTplAdminNoteLabel(_LEFTBLOCK, _LEFT);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => _LEFT, 'title_text' => _LEFTBLOCK]);
         } elseif ($bpos == 'r') {
-            $bpos = getTplAdminNoteLabel(_RIGHTBLOCK, _RIGHT);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => _RIGHT, 'title_text' => _RIGHTBLOCK]);
         } elseif ($bpos == 'c') {
-            $bpos = getTplAdminNoteLabel(_CENTERBLOCK, _CENTERUP);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => _CENTERUP, 'title_text' => _CENTERBLOCK]);
         } elseif ($bpos == 'd') {
-            $bpos = getTplAdminNoteLabel(_CENTERBLOCK, _CENTERDOWN);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => _CENTERDOWN, 'title_text' => _CENTERBLOCK]);
         } elseif ($bpos == 'b') {
-            $bpos = getTplAdminNoteLabel(_BANNER, _BANNERUP);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => _BANNERUP, 'title_text' => _BANNER]);
         } elseif ($bpos == 'f') {
-            $bpos = getTplAdminNoteLabel(_BANNER, _BANNERDOWN);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => _BANNERDOWN, 'title_text' => _BANNER]);
         }
         if ($bkey == '') {
             $type = ($url) ? 'RSS/RDF' : 'HTML';
@@ -531,10 +585,10 @@ function getAdminBlockList(string $token = ''): string {
         }
         $mup = ($prev) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$prev.'&amp;typ='.$wminus.'&amp;ordern='.$weight : '';
         $mdn = ($next) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$next.'&amp;typ='.$wplus.'&amp;ordern='.$weight : '';
-        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string) $bid],
-                ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                ['content_html' => $tpl->getHtmlFrag('title-tip', [
                     'items' => $tipItems,
                     'label_text' => cutstr(getConst($title), 15),
                     'title_text' => $title,
@@ -545,7 +599,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => (string) $weight],
                 ['content_html' => getTplMoveControls('ajax_block', $mup, $mdn)],
                 ['content_html' => ad_status('', $active)],
-                ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                ['content_html' => $tpl->getHtmlFrag('row-actions', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
                         'href' => $afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active.'&amp;token='.getSiteToken(),
@@ -565,7 +619,7 @@ function getAdminBlockList(string $token = ''): string {
             ],
         ])]);
     }
-    return $tpl->getHtmlFrag('new/table', [
+    return $tpl->getHtmlFrag('table', [
         'head' => [
             ['content' => _ID],
             ['content' => _TITLE],
@@ -660,13 +714,13 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $title = html_entity_decode((string)$val[3], ENT_QUOTES | ENT_HTML5, 'UTF-8');
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
                 $delhref = 'admin.php?name=favorites&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
-                $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string) $id],
-                        ['content_html' => getTplAdminNoteLabel($title, cutstr($title, 60))],
+                        ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => cutstr($title, 60), 'title_text' => $title])],
                         ['content_html' => getModuleName($modul)],
                         ['content_html' => $uname],
-                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => [[
                                 'href' => 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid,
@@ -683,7 +737,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                     ],
                 ])]);
             }
-            $cont = $tpl->getHtmlFrag('new/table', [
+            $cont = $tpl->getHtmlFrag('table', [
                 'head' => [
                     ['content' => _ID],
                     ['content' => _TITLE],
@@ -705,10 +759,10 @@ function getAdminFavoriteList(int $obj = 0): string {
                 'push_url' => true,
             ]);
         } else {
-            $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+            $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
         }
     } else {
-        $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -733,15 +787,15 @@ function getAdminPrivateList(int $obj = 0): string {
             $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
             $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $delhref = 'admin.php?name=privat&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
-            $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
-                    ['content_html' => getTplAdminTitleTip($info).getTplAdminNoteLabel($title, cutstr($title, 30))],
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => cutstr($title, 30), 'title_text' => $title])],
                     ['content_html' => $unse],
                     ['content_html' => $unre],
                     ['content_html' => $date],
                     ['content_html' => ad_status('', $status, 1)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $delhref,
@@ -754,7 +808,7 @@ function getAdminPrivateList(int $obj = 0): string {
                 ],
             ])]);
         }
-        $cont = $tpl->getHtmlFrag('new/table', [
+        $cont = $tpl->getHtmlFrag('table', [
             'head' => [
                 ['content' => _ID],
                 ['content' => _TITLE],
@@ -778,7 +832,7 @@ function getAdminPrivateList(int $obj = 0): string {
             'push_url' => true,
         ]);
     } else {
-        $cont = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -826,12 +880,30 @@ function getAdminUploadFiles(): void {
                 list($imgwidth, $imgheight) = getimagesize($path.$entry[1]);
                 $type = strtolower(substr(strrchr($entry[1], '.'), 1));
                 $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
-                $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type)) ? getTplAdminDangerText($entry[1]) : $entry[1];
+                $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type))
+                    ? $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_red', 'label' => $entry[1]])
+                    : $entry[1];
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
-                    $img = getTplAdminFilePreview($a, $path.$entry[1], true);
+                    $img = $tpl->getHtmlFrag('image-preview', [
+                        'preview_id' => 'sf-form-'.$a,
+                        'toggle_onclick' => "HideShow('sf-form-".$a."', 'fold', 'up', 500);",
+                        'image_url' => $path.$entry[1],
+                        'fallback_url' => 'templates/admin/images/admin/no.png',
+                        'image_title' => _IMG,
+                        'no_title' => _NO,
+                        'show_image' => true,
+                    ]);
                     $isize = $imgwidth.' x '.$imgheight;
                 } else {
-                    $img = getTplAdminFilePreview($a, '', false);
+                    $img = $tpl->getHtmlFrag('image-preview', [
+                        'preview_id' => 'sf-form-'.$a,
+                        'toggle_onclick' => "HideShow('sf-form-".$a."', 'fold', 'up', 500);",
+                        'image_url' => '',
+                        'fallback_url' => 'templates/admin/images/admin/no.png',
+                        'image_title' => _IMG,
+                        'no_title' => _NO,
+                        'show_image' => false,
+                    ]);
                     $isize = _NO;
                 }
                 $show = [];
@@ -849,14 +921,14 @@ function getAdminUploadFiles(): void {
                     'title' => _ONDELETE,
                     'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
                 ];
-                $contents[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+                $contents[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => $img],
                         ['content_html' => $dirfile],
                         ['content_html' => date(_TIMESTRING, $entry[0])],
                         ['content_html' => filterSize($filesize)],
                         ['content_html' => $isize],
-                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
                             'trigger_label' => _EDITOR,
                             'items' => $show,
                         ])],
@@ -873,7 +945,7 @@ function getAdminUploadFiles(): void {
             if (!empty($contents[$i])) $cont .= $contents[$i];
         }
         $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'getAdminUploadFiles', 'f'.$id, $id, '', $dir) : '';
-        $content = ($cont) ? $tpl->getHtmlFrag('new/table', [
+        $content = ($cont) ? $tpl->getHtmlFrag('table', [
             'head' => [
                 ['content' => cutstr(_IMG, 4, 1)],
                 ['content' => _FILE],
@@ -886,7 +958,7 @@ function getAdminUploadFiles(): void {
             'disable_sort' => true,
         ]).$contnum : '';
     } else {
-        $content = $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]);
+        $content = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     echo $content;
 }
@@ -927,13 +999,13 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
 function edit_list(string $modul, string $name, string $extraClass = ''): string {
  global $tpl;
     $modul = filterVar($modul);
-    return $tpl->getHtmlFrag('admin-edit-list', [
+    return $tpl->getHtmlFrag('edit-list-select', [
         'activate_label' => _ACTIVATE,
         'apostmod_label' => _APOSTMOD,
         'apostnomod_label' => _APOSTNOMOD,
         'categories_html' => getcat($modul, 0, '', '', '', '1'),
         'checkop_label' => _CHECKOP,
-        'class' => $extraClass,
+        'class_attr' => $extraClass,
         'comments_label' => _COMMENTS,
         'deactivate_label' => _DEACTIVATE,
         'delete_label' => _DELETE,
@@ -998,16 +1070,19 @@ function getAdminInfo(): string {
     }
     $html = filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
-        $html .= getTplAdminInfoForm([
+        $html .= $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php?name='.$name.'&op=info',
-            'hidden_html' => getTplHiddenInput('id', '1')
-                .getTplHiddenInput('type', (string)$type)
-                .getTplHiddenInput('name', $name),
-            'textarea_html' => textarea('1', 'text', $thefile, 'info', '25'),
+            'hidden' => [
+                ['nameattr' => 'id', 'valueattr' => '1'],
+                ['nameattr' => 'type', 'valueattr' => (string)$type],
+                ['nameattr' => 'name', 'valueattr' => $name],
+            ],
+            'content_html' => textarea('1', 'text', $thefile, 'info', '25'),
             'submit_label' => _SAVECHANGES,
-            'submit_title' => _SAVECHANGES,
         ]);
     }
-    $cont .= getTplBox($html);
+    $cont .= $tpl->getHtmlPart('box', [
+        'content_html' => $html,
+    ]);
     return $cont;
 }

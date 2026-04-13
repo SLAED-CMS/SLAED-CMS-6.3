@@ -157,11 +157,11 @@ function getSqltable(array $items): string {
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
-        $status = $tpl->getHtmlFrag('new/inline-badge', [
+        $status = $tpl->getHtmlFrag('inline-badge', [
             'class' => $row['ok'] ? 'sl_green' : 'sl_red',
             'label' => $row['ok'] ? _OK : _ERROR.' - '.$row['error'],
         ]);
-        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)(int)$row['num']],
                 ['content_html' => htmlspecialchars($row['type'])],
@@ -171,7 +171,7 @@ function getSqltable(array $items): string {
             ],
         ])]);
     }
-    return $tpl->getHtmlFrag('new/table', [
+    return $tpl->getHtmlFrag('table', [
         'head' => [
             ['content' => _ID],
             ['content' => _TYPE],
@@ -210,7 +210,7 @@ function getSqlsum(array $items, string $mode, string $name): string {
     if ($stop) {
         $lines[] = _DB_STOP.': '.$stop;
     }
-    return $tpl->getHtmlFrag('new/alert', ['lines' => $lines]);
+    return $tpl->getHtmlFrag('alert', ['lines' => $lines]);
 }
 
 
@@ -224,7 +224,7 @@ function database(): void {
     if ($dbname === '') {
         setHead();
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
-        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _ERROR]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR]);
         setFoot();
         return;
     }
@@ -260,8 +260,8 @@ function database(): void {
 
         // Free space display
         $freetag = $tabeng === 'InnoDB'
-            ? $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_hidden', 'label' => filterSize($tabfree)])
-            : $tpl->getHtmlFrag('new/inline-badge', ['class' => $tabfree ? 'sl_red' : 'sl_green', 'label' => filterSize($tabfree)]);
+            ? $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_hidden', 'label' => filterSize($tabfree)])
+            : $tpl->getHtmlFrag('inline-badge', ['class' => $tabfree ? 'sl_red' : 'sl_green', 'label' => filterSize($tabfree)]);
 
         // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
@@ -272,26 +272,26 @@ function database(): void {
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
-                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_red', 'label' => _ERROR]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_red', 'label' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
             } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_red', 'label' => _ALREADYOPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_red', 'label' => _ALREADYOPTIMIZED]);
             } else {
-                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
             }
 
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_hidden', 'label' => _NO]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_hidden', 'label' => _NO]);
             } else {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => $rresult ? 'sl_green' : 'sl_red', 'label' => $rresult ? _OK : _ERROR]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => $rresult ? 'sl_green' : 'sl_red', 'label' => $rresult ? _OK : _ERROR]);
             }
 
         } else {
             // Default view with actions
-            $stattag = $tpl->getHtmlFrag('new/row-actions', [
+            $stattag = $tpl->getHtmlFrag('row-actions', [
                 'trigger_label' => _EDITOR,
                 'items' => [[
                     'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1&amp;token='.getSiteToken(),
@@ -309,7 +309,7 @@ function database(): void {
 
         $item++;
 
-        $dbrows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $dbrows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)$item],
                 ['content_html' => $name],
@@ -324,9 +324,9 @@ function database(): void {
         ])]);
     }
 
-    $dbrows[] = $tpl->getHtmlFrag('new/table-row', [
+    $dbrows[] = $tpl->getHtmlFrag('table-row', [
         'row_attr' => 'data-sort-method="none"',
-        'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        'cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => '<strong>'.(string)$item.'</strong>'],
                 ['content_html' => '&nbsp;'],
@@ -340,7 +340,7 @@ function database(): void {
             ],
         ]),
     ]);
-    $content = $tpl->getHtmlFrag('new/table', [
+    $content = $tpl->getHtmlFrag('table', [
         'head' => [
             ['content' => _ID],
             ['content' => _TABLE],
@@ -376,14 +376,14 @@ function database(): void {
     // Navigation + Info-Boxen
     if (empty($type)) {
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _OPTTEXT]);
-        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _REPTEXT]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OPTTEXT]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => _REPTEXT]);
 
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
 
-        $cont .= $tpl->getHtmlFrag('new/alert', ['lines' => [
+        $cont .= $tpl->getHtmlFrag('alert', ['lines' => [
             _OPTIMIZE.': '.$conf['db']['name'],
             _TOTALSPACE.': '.filterSize($total),
             _TOTALFREE.': '.filterSize($sumfree),
@@ -392,7 +392,7 @@ function database(): void {
     } elseif ($type === 'repair') {
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
 
-        $cont .= $tpl->getHtmlFrag('new/alert', ['lines' => [
+        $cont .= $tpl->getHtmlFrag('alert', ['lines' => [
             _REPAIR.': '.$conf['db']['name'],
             _TOTALSPACE.': '.filterSize($total),
             _TOTALFREE.': '.filterSize($sumfree),
@@ -415,14 +415,14 @@ function dump(): void {
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump' || $action === _DB_PARSE || $action === _EXECUTE)) {
         if (!checkSiteToken()) {
-            echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             setFoot();
             return;
         }
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $parsed = getSqlbatch(stripslashes($string));
         if ($parsed['error'] !== '') {
-            $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => htmlspecialchars($parsed['error'])]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($parsed['error'])]);
         } else {
             $items = [];
             foreach ($parsed['statements'] as $query) {
@@ -432,7 +432,7 @@ function dump(): void {
             $isdump = ($action === 'dump' || $action === _EXECUTE);
             if ($isdump) {
                 if (!checkDblock()) {
-                    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
+                    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
                 } else {
                     addDblog('START blocks='.count($items));
                     try {
@@ -463,14 +463,14 @@ function dump(): void {
             $cont .= $tpl->getHtmlPart('box', ['content_html' => getSqltable($reslist)]);
         }
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _DBINFO]);
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _DBWARN]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => _DBINFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
     $buttons =
-        $tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _DB_PARSE, 'input_attr' => 'class="sl_but_green"'])
+        $tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _DB_PARSE, 'input_attr' => 'class="sl_but_green"'])
         .' '
-        .$tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _EXECUTE, 'input_attr' => 'class="sl_but_blue"']);
-    $form = $tpl->getHtmlFrag('new/form', [
+        .$tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _EXECUTE, 'input_attr' => 'class="sl-but-blue"']);
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'database'],

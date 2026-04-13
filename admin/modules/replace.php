@@ -37,7 +37,7 @@ function replace(): void {
         'tabs_index' => $ctab,
         'tabs_sync_selector' => 'input[name="tab"]',
     ]);
-    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _REPLACEINFO]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _REPLACEINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/replace.php');
     foreach ($mods as $k => $val) {
         $fieldc = explode('||', $conf['replace'][$val]);
@@ -50,7 +50,7 @@ function replace(): void {
             $rows = [
                 [
                     'label_html' => _WORD.':',
-                    'field_html' => $tpl->getHtmlFrag('new/input', [
+                    'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field1'.$k.'[]',
                         'value_attr' => $out[0],
@@ -59,8 +59,8 @@ function replace(): void {
                     ]),
                 ],
                 [
-                    'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CONTENT, 'hint' => _REPLACEIN]),
-                    'field_html' => $tpl->getHtmlFrag('new/textarea', [
+                    'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CONTENT, 'hint' => _REPLACEIN]),
+                    'field_html' => $tpl->getHtmlFrag('textarea', [
                         'name_attr' => 'field2'.$k.'[]',
                         'value_text' => $out[1],
                         'rows_num' => '5',
@@ -68,22 +68,22 @@ function replace(): void {
                     ]),
                 ],
             ];
-            $blok .= $tpl->getHtmlFrag('new/toggle-form-block', [
+            $blok .= $tpl->getHtmlFrag('toggle-form-block', [
                 'block_id' => 'fi'.$k.$c,
                 'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
                 'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
                 'title' => _ADD,
                 'label_html' => _REPLACE_FIELD.': '.$next,
-                'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows]),
+                'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows]),
             ]);
         }
-        $panels[] = $tpl->getHtmlFrag('new/tabs-panel', [
+        $panels[] = $tpl->getHtmlFrag('tabs-panel', [
             'panel_id' => 'replace-panel-'.$k,
             'active' => $ctab === $k,
             'content_html' => $blok,
         ]);
     }
-    $repv = $tpl->getHtmlFrag('new/form', [
+    $repv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'replace'],
@@ -91,7 +91,7 @@ function replace(): void {
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => $tpl->getHtmlFrag('new/tabs', [
+        'content_html' => $tpl->getHtmlFrag('tabs', [
             'content_html' => implode('', $panels),
         ]),
         'submit_label' => _SAVECHANGES,

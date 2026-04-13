@@ -66,13 +66,13 @@ function admins(): void {
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super] = $db->getSqlRow($result)) {
         $lang = $lang ? getLangName($lang) : _ALL;
         $show = htmlspecialchars((string)$name, ENT_QUOTES, 'UTF-8');
-        $tip = $tpl->getHtmlFrag('new/title-tip', [
+        $tip = $tpl->getHtmlFrag('title-tip', [
             'items' => [
                 ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING), 'is_last' => false],
                 ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING), 'is_last' => true],
             ],
         ]).$show;
-        $acts = $tpl->getHtmlFrag('new/row-actions', [
+        $acts = $tpl->getHtmlFrag('row-actions', [
             'trigger_label' => _EDITOR,
             'items' => [
                 [
@@ -88,7 +88,7 @@ function admins(): void {
                 ],
             ],
         ]);
-        $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => $tip],
                 ['content_html' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
@@ -99,7 +99,7 @@ function admins(): void {
             ],
         ])]);
     }
-    $cont .= $tpl->getHtmlFrag('new/table', ['head' => $head, 'rows_html' => $rows]);
+    $cont .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
     echo $cont;
     setFoot();
 }
@@ -132,7 +132,7 @@ function add(): void {
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText($stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText($stop)]);
     $items = '';
     $mods = getAdminModuleNames((string)$mods);
     $allow = [];
@@ -143,25 +143,25 @@ function add(): void {
     }
     sort($allow);
     foreach ($allow as $mod) {
-        $items .= $tpl->getHtmlFrag('new/label-item', [
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+        $items .= $tpl->getHtmlFrag('label-item', [
+            'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => in_array($mod, $mods, true),
                 'name_attr' => 'modules[]',
                 'value_attr' => $mod,
             ]),
-            'label_html' => $tpl->getHtmlFrag('new/title-tip', [
+            'label_html' => $tpl->getHtmlFrag('title-tip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
         ]);
     }
-    $perm = $tpl->getHtmlFrag('new/radio-group', ['items_html' => $items]);
+    $perm = $tpl->getHtmlFrag('radio-group', ['items_html' => $items]);
     $mailtext = replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
-        ? $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language((string)$lang)])
+        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language((string)$lang)])
         : '';
     $nameField = $aid
-        ? $tpl->getHtmlFrag('new/input', [
+        ? $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'is_required' => true,
             'maxlength_num' => 25,
@@ -185,7 +185,7 @@ function add(): void {
         ],
         [
             'label_html' => _URANK.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'maxlength_num' => 50,
                 'name_attr' => 'title',
@@ -195,7 +195,7 @@ function add(): void {
         ],
         [
             'label_html' => _EMAIL.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'email',
                 'is_required' => true,
                 'maxlength_num' => 255,
@@ -206,7 +206,7 @@ function add(): void {
         ],
         [
             'label_html' => _URL.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'maxlength_num' => 255,
                 'name_attr' => 'url',
@@ -216,9 +216,9 @@ function add(): void {
         ],
         [
             'label_html' => $aid
-                ? $tpl->getHtmlFrag('new/label-hint', ['label' => _PASSWORD.':', 'hint' => _ADMINPASSKEEP])
+                ? $tpl->getHtmlFrag('label-hint', ['label' => _PASSWORD.':', 'hint' => _ADMINPASSKEEP])
                 : _PASSWORD.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'password',
                 'name_attr' => 'pwd',
                 'placeholder_text' => _PASSWORD,
@@ -228,7 +228,7 @@ function add(): void {
         ],
         [
             'label_html' => _RETYPEPASSWORD.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'password',
                 'name_attr' => 'pwdtwo',
                 'placeholder_text' => _RETYPEPASSWORD,
@@ -242,7 +242,7 @@ function add(): void {
         ],
         [
             'label_html' => _SUPERUSER,
-            'field_html' => $tpl->getHtmlFrag('new/checkbox', [
+            'field_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => (int)$super === 1,
                 'name_attr' => 'super',
                 'value_attr' => '1',
@@ -250,7 +250,7 @@ function add(): void {
         ],
         [
             'label_html' => _MAIL_SENDE,
-            'field_html' => $tpl->getHtmlFrag('new/checkbox', [
+            'field_html' => $tpl->getHtmlFrag('checkbox', [
                 'input_attr' => 'OnClick="CloseOpen(\'sl_close_9\', 0);"',
                 'is_checked' => $check !== '',
                 'name_attr' => 'mail',
@@ -258,9 +258,9 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-            'field_html' => $tpl->getHtmlFrag('new/div-collapse', [
-                'content_html' => $tpl->getHtmlFrag('new/textarea', [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
+            'field_html' => $tpl->getHtmlFrag('div-collapse', [
+                'content_html' => $tpl->getHtmlFrag('textarea', [
                     'name_attr' => 'mailtext',
                     'rows_num' => 10,
                     'value_text' => $mailtext,
@@ -271,7 +271,7 @@ function add(): void {
         ],
         [
             'label_html' => _EDITOR.':',
-            'field_html' => redaktor(1, 'editor', 'sl_form', (int)$editor, 0),
+            'field_html' => redaktor(1, 'editor', 'sl-form-control', (int)$editor, 0),
         ],
     ];
     if ($conf['multilingual'] == 1) {
@@ -285,7 +285,7 @@ function add(): void {
         'field_html' => $perm,
         'is_full' => true,
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=admins&amp;op=save',
         'hidden' => [
             ['nameattr' => 'op', 'valueattr' => 'save'],

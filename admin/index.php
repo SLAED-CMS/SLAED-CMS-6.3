@@ -16,24 +16,21 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
     $path = img_find('admin/'.$image);
     $image = file_exists($path) ? $path : img_find('admin/components.png');
     if ($panel) {
-        $cont = (($count - 1) % $conf['admcol'] === 0) ? '<tr>' : '';
-        $cont .= $tpl->getHtmlFrag('admin-panel-grid-item', [
+        $count++;
+        return $tpl->getHtmlFrag('menu-grid-item', [
             'image' => $image,
             'title' => $title,
             'title_attr' => $ltitle,
             'url' => $url,
-            'wrap_class' => 'sl_td_mod'.$class,
+            'wrap_class' => ltrim($class),
         ]);
-        if ($count % $conf['admcol'] === 0) $cont .= '</tr>';
-        $count++;
-        return $cont;
     }
-    return $tpl->getHtmlFrag('admin-panel-list-item', [
+    return $tpl->getHtmlFrag('menu-list-item', [
         'image' => $image,
         'title' => $title,
         'title_attr' => $ltitle,
         'url' => $url,
-        'wrap_class' => 'sl_tab_blm'.$class,
+        'wrap_class' => ltrim($class),
     ]);
 }
 
@@ -53,7 +50,7 @@ function getAdminPanelBlocks(): string {
                     );
                 }
             }
-            $block = $tpl->getHtmlFrag('block-left', ['title' => _ADMIN, 'content' => $cont, 'id' => '1', 'close' => _OPCL]);
+            $block = $tpl->getHtmlFrag('sidebar-block', ['title' => _ADMIN, 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
             $cont = '';
         }
         foreach ($conf['modules'] as $name => $mod) {
@@ -73,7 +70,7 @@ function getAdminPanelBlocks(): string {
                 }
             }
         }
-        $block .= $tpl->getHtmlFrag('block-left', ['title' => _MODULES, 'content' => $cont, 'id' => '2', 'close' => _OPCL]);
+        $block .= $tpl->getHtmlFrag('sidebar-block', ['title' => _MODULES, 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
         return $block;
     }
     return '';
@@ -85,17 +82,17 @@ function getAdminPanel(): void {
     $content = '';
     $minver = '8.1.0';
     $info = sprintf(_PHPSETUP, $minver);
-    if (file_exists('setup.php')) $content .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DELSETUP]);
-    if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $info]);
-    if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $conf['admininfo']]);
+    if (file_exists('setup.php')) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DELSETUP]);
+    if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
+    if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $conf['admininfo']]);
     if ($panel) {
         $count = 1;
         if (isAdmin(true)) {
-            $cont = '';
+            $items = [];
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
                     $class = (!$mod['active']) ? ' sl_hidden' : '';
-                    $cont .= getAdminMenu(
+                    $items[] = getAdminMenu(
                         $afile.'.php?name='.$name,
                         (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
                         $mod['img'],
@@ -103,17 +100,21 @@ function getAdminPanel(): void {
                     );
                 }
             }
-            $content .= getTplAdminPanel('sl_close_1', _MODULESADMIN, $cont);
+            $rows = [];
+            foreach (array_chunk($items, max(1, (int)$conf['admcol'])) as $row) {
+                $rows[] = $tpl->getHtmlFrag('menu-grid-row', ['items_html' => implode('', $row)]);
+            }
+            $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_close_1', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
         }
         $count = 1;
-        $cont = '';
+        $items = [];
         foreach ($conf['modules'] as $name => $mod) {
             if (($mod['type'] ?? 1) == 1) {
                 if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
                         $class = (!$mod['active']) ? ' sl_hidden' : '';
-                        $cont .= getAdminMenu(
+                        $items[] = getAdminMenu(
                             $afile.'.php?name='.$name,
                             (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
                             $mod['img'],
@@ -124,7 +125,11 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= getTplAdminPanel('sl_close_2', _MODULESADMIN, $cont);
+        $rows = [];
+        foreach (array_chunk($items, max(1, (int)$conf['admcol'])) as $row) {
+            $rows[] = $tpl->getHtmlFrag('menu-grid-row', ['items_html' => implode('', $row)]);
+        }
+        $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_close_2', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
     }
     echo $content;
     setFoot();
@@ -207,7 +212,7 @@ function login() {
  global $db, $afile, $conf, $stop, $tpl;
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['type' => 'atten', 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
         $cont .= $tpl->getHtmlPart('registration', [
             'route' => $afile,
             'nickname' => _NICKNAME,
@@ -224,7 +229,7 @@ function login() {
             'send' => _SEND,
         ]);
     } else {
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['type' => 'atten', 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
         $cont .= $tpl->getHtmlPart('login', [
             'route' => $afile,
             'nickname' => _NICKNAME,

@@ -28,21 +28,21 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $rows = [
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['privat']['num'], 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['privat']['anum'], 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['privat']['nump'], 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['privat']['anump'], 'is_config' => true])],
-        ['label_html' => _COMLETTER, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)$conf['privat']['letter'], 'is_config' => true])],
-        ['label_html' => _CSEND, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['privat']['send'], 'is_config' => true])],
-        ['label_html' => _PRINM, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'messin', 'value_attr' => (string)$conf['privat']['messin'], 'is_config' => true])],
-        ['label_html' => _PRSAVEM, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'messsav', 'value_attr' => (string)$conf['privat']['messsav'], 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['privat']['num'], 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['privat']['anum'], 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['privat']['nump'], 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['privat']['anump'], 'is_config' => true])],
+        ['label_html' => _COMLETTER, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'letter', 'value_attr' => (string)$conf['privat']['letter'], 'is_config' => true])],
+        ['label_html' => _CSEND, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'send', 'value_attr' => (string)$conf['privat']['send'], 'is_config' => true])],
+        ['label_html' => _PRINM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'messin', 'value_attr' => (string)$conf['privat']['messin'], 'is_config' => true])],
+        ['label_html' => _PRSAVEM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'messsav', 'value_attr' => (string)$conf['privat']['messsav'], 'is_config' => true])],
         ['label_html' => _PRMAIL, 'field_html' => getTplRadioGroup(['name' => 'newmail', 'value' => (string)(int)$conf['privat']['newmail'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _PRSELF, 'field_html' => getTplRadioGroup(['name' => 'himself', 'value' => (string)(int)$conf['privat']['himself'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VPROFIL, 'field_html' => getTplRadioGroup(['name' => 'profil', 'value' => (string)(int)$conf['privat']['profil'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VWEB, 'field_html' => getTplRadioGroup(['name' => 'web', 'value' => (string)(int)$conf['privat']['web'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _PRACT, 'field_html' => getTplRadioGroup(['name' => 'act', 'value' => (string)(int)$conf['privat']['act'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('new/form', [
+    $confv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'privat'],
@@ -87,7 +87,7 @@ function delete(): void {
     $ishtmx = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
     if (!checkSiteToken()) {
         if ($ishtmx) {
-            echo $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             return;
         }
         setRedirect($afile.'.php?name=privat&num='.$num, false, 302, _TOKENMISS, true);

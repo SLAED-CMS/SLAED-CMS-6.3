@@ -16,15 +16,15 @@ function ratings(): void {
     $blocks = '';
     foreach ($mods as $i => $val) {
         $con = explode('|', $conf['ratings'][$val]);
-        $blocks .= $tpl->getHtmlFrag('new/toggle-form-block', [
+        $blocks .= $tpl->getHtmlFrag('toggle-form-block', [
             'block_id' => 'ratings'.$i,
             'label_html' => getModuleName($val).' - '.$val,
-            'content_html' => $tpl->getHtmlFrag('new/div', [
+            'content_html' => $tpl->getHtmlFrag('div', [
                 'rows' => [
                     [
                         'label_html' => _VOTING_TIME,
                         'row_class' => 'sl-ratings-inner-row',
-                        'field_html' => $tpl->getHtmlFrag('new/input', [
+                        'field_html' => $tpl->getHtmlFrag('input', [
                             'itype' => 'number',
                             'name_attr' => 'time['.$i.']',
                             'value_attr' => (string) intval($con[0] / 86400),
@@ -60,7 +60,7 @@ function ratings(): void {
             ]),
         ]);
     }
-    $confv = $tpl->getHtmlFrag('new/form', [
+    $confv = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'ratings'],
