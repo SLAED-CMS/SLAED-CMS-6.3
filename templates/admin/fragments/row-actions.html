@@ -1,0 +1,3 @@
+<nav class="sl-menu"><ul><li><span class="sl-but-red">{% if trigger_label %}{{ trigger_label }}{% else %}{{ editor_label }}{% endif %}</span><ul>
+{% if items_html %}{{{ items_html }}}{% else %}{% for item in items %}{% include 'fragments/row-actions-item.html' with item %}{% endfor %}{% endif %}
+</ul></li></ul></nav>

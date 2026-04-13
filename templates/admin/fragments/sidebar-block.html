@@ -1,0 +1,5 @@
+<div class="sl-sidebar-block">
+	<h3 OnClick="CloseOpen('sl_close_{{ id }}', 0);" title="{{ close }}"><b>{{ title }}</b></h3>
+	<div id="sl_close_{{ id }}" class="sl-sidebar-block-content">{% if content_id %}<div id="{{ content_id }}">{% endif %}{{{ content_html }}}{% if content_id %}</div>{% endif %}</div>
+	<div class="sl-sidebar-block-bottom"></div>
+</div>

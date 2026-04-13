@@ -15,7 +15,8 @@
 /* Формы и поля */
 /* Общие */
 .sl_field { width: auto; }
-.sl_form { width: 545px; }
+.sl_form,
+.sl-form-control { width: 545px; }
 .sl_conf { width: 350px; }
 
 /* Заметка/Уведомление */
@@ -331,7 +332,8 @@ thead tr th[data-sort-method="none"]::after { content: none; }
 .sl_table_ajax_head th:first-child { text-align: left; border-radius: 8px 0 0 0; }
 .sl_table_ajax_head th:last-child { text-align: right; border-radius: 0 8px 0 0; }
 .sl_table_ajax_body td { border-bottom: 1px solid #fff; padding: 5px; }
-.sl_table_form .sl_table_ajax_body td:first-child { width: 35px; text-align: left;}
+.sl_table_form .sl_table_ajax_body td:first-child,
+.sl-table-form .sl_table_ajax_body td:first-child { width: 35px; text-align: left;}
 .sl_table_ajax_body td:last-child { float: right; }
 .sl_table_ajax_body tr:hover { background-color: #fff; }
 
@@ -506,7 +508,14 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 
 /* Кнопки */
 /* Общее оформление */
-.sl_but, .sl_but_blue, .sl_but_red, .sl_but_green, .sl_but_read, .sl_but_navi, .sl_but_foot, .sl_but_back {
+.sl_but, .sl-but,
+.sl_but_blue, .sl-but-blue,
+.sl_but_red, .sl-but-red,
+.sl_but_green, .sl-but-green,
+.sl_but_read, .sl-but-read,
+.sl_but_navi, .sl-but-navi,
+.sl_but_foot, .sl-but-foot,
+.sl_but_back, .sl-but-back {
 	border-radius: 3px;
 	display: inline-block;
 	white-space: nowrap;
@@ -521,16 +530,25 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 	box-sizing: border-box;
 }
 
-.sl_but:hover, .sl_but_blue:hover, .sl_but_red:hover, .sl_but_green:hover { opacity: 0.8; }
-.sl_but:active, .sl_but_blue:active, .sl_but_red:active, .sl_but_green:active { box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.2); opacity: 1; }
+.sl_but:hover, .sl-but:hover,
+.sl_but_blue:hover, .sl-but-blue:hover,
+.sl_but_red:hover, .sl-but-red:hover,
+.sl_but_green:hover, .sl-but-green:hover { opacity: 0.8; }
+.sl_but:active, .sl-but:active,
+.sl_but_blue:active, .sl-but-blue:active,
+.sl_but_red:active, .sl-but-red:active,
+.sl_but_green:active, .sl-but-green:active { box-shadow: inset 0 1px 4px 0 rgba(0,0,0,0.2); opacity: 1; }
 
 /* Кнопка обычная */
 .sl_but { color: #2a303c; text-shadow: 0 1px 0 #fff; background-color: #eaeef2; background: linear-gradient(to top, #eef1f5 0%, #d5dce3 100%); }
 
 /* Кнопка синяя */
-.sl_but_blue { color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,0.1); background-color: #72c0f9; background: linear-gradient(to top, #78c6fb 0%, #6dbaf7 100%); }
+.sl_but_blue,
+.sl-but-blue { color: #fff; text-shadow: 0 1px 0 rgba(0,0,0,0.1); background-color: #72c0f9; background: linear-gradient(to top, #78c6fb 0%, #6dbaf7 100%); }
 input.sl_but_blue[value="OK"],
-input.sl_but_blue[value="ОК"] {
+input.sl_but_blue[value="ОК"],
+input.sl-but-blue[value="OK"],
+input.sl-but-blue[value="ОК"] {
 	width: 44px;
 	flex: 0 0 44px;
 	min-width: 44px;
@@ -678,10 +696,12 @@ input.sl_but_blue[value="ОК"] {
 .sl_tab_bl tr:hover { background-color: #f1f6f9; }
 
 /* Блоки модулей */
-.sl_tab_blm { width: 100%; text-align: left; border-collapse: collapse; }
+.sl_tab_blm { width: 100%; text-align: left; border-collapse: collapse; display: flex; align-items: center; gap: 6px; padding: 2px; box-sizing: border-box; }
 .sl_tab_blm td { padding: 2px; }
 .sl_tab_blm td:first-child { width: 16px; }
 .sl_tab_blm td:last-child { text-align: left; }
+.sl_tab_blm > div:first-child { flex: 0 0 24px; }
+.sl_tab_blm > div:last-child { min-width: 0; }
 .sl_tab_blm:hover { background-color: #f1f6f9; }
 
 /* Изображения в блоках модулей панели администратора */
@@ -697,9 +717,12 @@ input.sl_but_blue[value="ОК"] {
 .sl_table_edit td { max-width: 783px; padding-bottom: 10px; }
 
 /* Таблицы добавления материала в модулях */
-.sl_table_form { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
-.sl_table_form td:first-child { width: 30%; }
-.sl_table_form td { padding: 4px; vertical-align: top; }
+.sl_table_form,
+.sl-table-form { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
+.sl_table_form td:first-child,
+.sl-table-form td:first-child { width: 30%; }
+.sl_table_form td,
+.sl-table-form td { padding: 4px; vertical-align: top; }
 
 /* Таблицы конфигурации в модулях */
 .sl_table_conf { width: 100%; margin-bottom: 10px; border-collapse: collapse; }
@@ -742,6 +765,7 @@ input.sl_but_blue[value="ОК"] {
 }
 .sl-config-field .sl_conf,
 .sl-config-field .sl_form,
+.sl-config-field .sl-form-control,
 .sl-config-field textarea,
 .sl-config-field select {
     width: 100%;

@@ -1,0 +1,18 @@
+<select name="{{ name_attr }}" title="{{ checkop_label }}"{% if class_attr %} class="{{ class_attr }}"{% endif %}>
+    <optgroup label="{{ ops_label }}" class="sl-label">
+        <option value="a1">{{ activate_label }}</option>
+        <option value="a0">{{ deactivate_label }}</option>
+        <option value="f1">{{ fixed_label }}</option>
+        <option value="f0">{{ lnfix_label }}</option>
+        <option value="h1">{{ lhome_label }}</option>
+        <option value="h0">{{ lnhome_label }}</option>
+        <option value="t">{{ ladate_label }}</option>
+        <option value="d">{{ delete_label }}</option>
+    </optgroup>
+    <optgroup label="{{ comments_label }}" class="sl-label">
+        <option value="c0">{{ deactivate_label }}</option>
+        <option value="c1">{{ apostmod_label }}</option>
+        <option value="c2">{{ apostnomod_label }}</option>
+    </optgroup>
+    <optgroup label="{{ moveto_label }}" class="sl-label">{{{ categories_html }}}</optgroup>
+</select>

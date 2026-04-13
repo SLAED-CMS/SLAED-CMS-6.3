@@ -1,9 +1,0 @@
-<form action="{{ action_url }}" method="post" class="sl-config-form">
-    {% for item in hidden %}
-    {% include 'fragments/config-div-hidden.html' with item %}
-    {% endfor %}
-    {% include 'fragments/config-div-content.html' %}
-    <div class="sl-config-actions">
-        {% include 'fragments/add-div-submit.html' %}
-    </div>
-</form>

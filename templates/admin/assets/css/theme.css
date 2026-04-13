@@ -217,7 +217,7 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 
 /* Поиск в модуле */
 .searchbox { float: right; background-color: #f1f6f9; padding: 6px; border-radius: 6px; }
-.searchbox .sl_but_blue { margin-top: 0; }
+.searchbox .sl-but-blue { margin-top: 0; }
 
 /* Таблица поиска в модуле */
 .searchboxtab { width: 100%; }

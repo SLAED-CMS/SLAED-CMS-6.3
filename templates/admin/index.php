@@ -17,7 +17,7 @@ function getAdminHeadVars(): array {
                     $href = $afile.'.php?newlang='.$lfound;
                     $src = img_find('lang/'.$lfound.'_mini.png');
                     $alt = getLangName($lfound);
-                    $langs .= $tpl->getHtmlFrag('admin-lang-switch-item', ['href' => $href, 'src' => $src, 'alt' => $alt]);
+                    $langs .= '<a href="'.htmlspecialchars((string)$href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" title="'.htmlspecialchars((string)$alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><img src="'.htmlspecialchars((string)$src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" alt="'.htmlspecialchars((string)$alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></a>';
                 }
             }
         }
@@ -43,7 +43,7 @@ function getAdminHeadVars(): array {
         foreach ($items as $item) {
             $cls = ($item['cls'] ?? '') !== '' ? 'class="'.htmlspecialchars((string)$item['cls'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '';
             $target = !empty($item['blank']) ? ' target="_blank"' : '';
-            $menu .= $tpl->getHtmlFrag('admin-menu-item', ['class_attr' => $cls, 'href' => htmlspecialchars((string)$item['href'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'target_attr' => $target, 'label' => htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
+            $menu .= '<li'.($cls !== '' ? ' '.$cls : '').'><a href="'.htmlspecialchars((string)$item['href'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'.$target.'><b>'.htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b></a></li>';
         }
         $blocks = getAdminPanelBlocks().admininfo().adminblock();
     } else {
