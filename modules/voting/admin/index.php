@@ -10,13 +10,13 @@ function getVotingCommentSelect(int $selected): string {
     global $tpl;
     $opts = '';
     foreach ([_DEACTIVATE, _APOSTMOD, _APOSTNOMOD] as $idx => $label) {
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$idx,
             'label_text' => $label,
             'is_selected' => $selected === $idx,
         ]);
     }
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => 'acomm',
         'options_html' => $opts,
     ]);
@@ -24,19 +24,19 @@ function getVotingCommentSelect(int $selected): string {
 
 function getVotingModuleSelect(string $modul = ''): string {
     global $tpl;
-    $opts = $tpl->getHtmlFrag('new/select-option', [
+    $opts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _NO,
         'is_selected' => $modul === '',
     ]);
     foreach (['news', 'shop'] as $val) {
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => getModuleName($val),
             'is_selected' => $modul === $val,
         ]);
     }
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => 'modul',
         'options_html' => $opts,
     ]);
@@ -44,34 +44,34 @@ function getVotingModuleSelect(string $modul = ''): string {
 
 function getVotingStatusSelect(int|string $status): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => 'status',
         'options_html' =>
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _VCLOSED, 'is_selected' => (string)$status === '1'])
-            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _VDEACT, 'is_selected' => (string)$status === '0']),
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VCLOSED, 'is_selected' => (string)$status === '1'])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VDEACT, 'is_selected' => (string)$status === '0']),
     ]);
 }
 
 function getVotingTypeSelect(int|string $typ): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => 'typ',
         'options_html' =>
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _VOPEN, 'is_selected' => (string)$typ === '1'])
-            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _VCLOSE, 'is_selected' => (string)$typ === '0']),
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VOPEN, 'is_selected' => (string)$typ === '1'])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VCLOSE, 'is_selected' => (string)$typ === '0']),
     ]);
 }
 
 function getVotingBlockSelect(string $bval): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => 'block',
         'is_config' => true,
         'options_html' =>
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _VLASTACT, 'is_selected' => $bval === '0'])
-            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _VLASTCLO, 'is_selected' => $bval === '1'])
-            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _VRANACT, 'is_selected' => $bval === '2'])
-            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _VRANCLO, 'is_selected' => $bval === '3']),
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _VLASTACT, 'is_selected' => $bval === '0'])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _VLASTCLO, 'is_selected' => $bval === '1'])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _VRANACT, 'is_selected' => $bval === '2'])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _VRANCLO, 'is_selected' => $bval === '3']),
     ]);
 }
 
@@ -112,7 +112,7 @@ function voting(): void {
             ]);
             $cells = [
                 ['content_html' => (string)$id],
-                ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => [
+                ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => [
                     ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
                     ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
                     ['label' => _TYPE, 'value' => $type, 'is_last' => true],
@@ -123,14 +123,14 @@ function voting(): void {
             }
             $cells[] = ['content_html' => $modul ? getModuleName($modul) : _NONE];
             $cells[] = ['content_html' => ad_status('', $active)];
-            $cells[] = ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => $cells])]);
+            $cells[] = ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=voting&amp;', 'table' => '_voting', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -164,16 +164,16 @@ function add(): void {
         'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
         'tab' => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting')]);
     $rows = [
-        ['label_html' => _TITLE.' / '._POLLTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
+        ['label_html' => _TITLE.' / '._POLLTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
         ['label_html' => _MODUL.':', 'field_html' => getVotingModuleSelect($modul)],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl_form')],
-        ['label_html' => _ENDDATE.':', 'field_html' => datetime(1, 'enddate', $enddate, 16, 'sl_form')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl-form-control')],
+        ['label_html' => _ENDDATE.':', 'field_html' => datetime(1, 'enddate', $enddate, 16, 'sl-form-control')],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => language($lang)])];
+        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang)])];
     }
     $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => getVotingCommentSelect((int)$acomm)];
     $rows[] = ['label_html' => _MULTI, 'field_html' => getTplRadioGroup(['name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
@@ -185,16 +185,16 @@ function add(): void {
         $qval = filterText((string)($body[$i] ?? ''));
         $aval = filterText((string)($answer[$i] ?? '0'));
         $answ .= '<div style="display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;margin-bottom:8px">'
-            .$tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
-            .$tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES])
+            .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
+            .$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES])
             .'</div>';
     }
     $rows[] = ['label_html' => _ADD.':', 'field_html' => $answ, 'is_full' => true];
-    $actions = $tpl->getHtmlFrag('new/button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
+    $actions = $tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
     if ($id) {
-        $actions .= $tpl->getHtmlFrag('new/button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
+        $actions .= $tpl->getHtmlFrag('button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'voting'],
@@ -212,7 +212,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $stop;
-    $warn = !checkSiteToken();
+    $iswarn = !checkSiteToken();
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
     $title = getVar('post', 'title', 'text', '');
@@ -238,7 +238,7 @@ function save(): void {
     $stop = [];
     if (!$title) $stop[] = _CERROR;
     $posttype = getVar('post', 'posttype', 'var', '');
-    if ($warn) {
+    if ($iswarn) {
         setRedirect($afile.'.php?name=voting', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
         if ($id) {
@@ -257,13 +257,13 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile;
-    $warn = !checkSiteToken();
+    $iswarn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num', 0);
-    if (!$warn && $id) {
+    if (!$iswarn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'voting\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
     }
-    setRedirect($afile.'.php?name=voting', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=voting', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function config(): void {
@@ -277,15 +277,15 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
     $rows = [
-        ['label_html' => _VOTING_TIME, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true])],
-        ['label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
+        ['label_html' => _VOTING_TIME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'time', 'value_attr' => (string)intval($conf['voting']['voting_t'] / 86400), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['voting']['num'], 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['voting']['anum'], 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['voting']['nump'], 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['voting']['anump'], 'is_config' => true])],
+        ['label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
         ['label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'voting'],
@@ -301,8 +301,8 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $warn = !checkSiteToken();
-    if (!$warn) {
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
         $cont = [
             'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
             'num' => getVar('post', 'num', 'num', 10),
@@ -314,7 +314,7 @@ function configsave(): void {
         ];
         setConfigFile('voting.php', $cont);
     }
-    setRedirect($afile.'.php?name=voting&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=voting&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {

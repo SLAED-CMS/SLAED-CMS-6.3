@@ -12,7 +12,7 @@ function order(): void {
     $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
     $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
-    if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _OR_8])]);
+    if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OR_8])]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['order']['anum'] ?? 25;
     $anump = $conf['order']['anump'] ?? 10;
@@ -23,10 +23,10 @@ function order(): void {
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = $status ? 0 : 1;
             $infos = fields_out($info, 'order');
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => [
                             ['label' => _COMMENT, 'value' => (string)$note],
                             ['label' => _BROWSER, 'value' => (string)$agent, 'is_last' => true],
@@ -37,7 +37,7 @@ function order(): void {
                     ['content_html' => user_geo_ip($ip, 4)],
                     ['content_html' => format_time($date, _TIMESTRING)],
                     ['content_html' => ad_status('', $status)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
                         ['href' => $afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
                         ['href' => $afile.'.php?name=order&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                         [
@@ -50,7 +50,7 @@ function order(): void {
                 ],
             ])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -65,7 +65,7 @@ function order(): void {
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=order&amp;', 'table' => '_order', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -90,15 +90,15 @@ function add(): void {
     $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
     $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
     $rows = [
-        ['label_html' => _OR_9.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],
+        ['label_html' => _OR_9.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_html' => _OR_10.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
+        ['label_html' => _OR_10.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order']));
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=order&amp;op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
@@ -197,9 +197,9 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _OR_1.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
+        ['label_html' => _OR_1.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $conf['order']['mail'] ?? ''])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['order']['anum'] ?? 25])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['order']['anump'] ?? 10])],
         ['label_html' => _OR_2, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_3, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_4, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
@@ -207,7 +207,7 @@ function config(): void {
         ['label_html' => _OR_6.':', 'field_html' => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', 5, _OR_6, '1'), 'is_full' => true],
         ['label_html' => _OR_7.':', 'field_html' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', 5, _OR_7, '1'), 'is_full' => true],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=order&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

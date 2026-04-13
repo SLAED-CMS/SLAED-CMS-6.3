@@ -14,7 +14,7 @@ function clients(): void {
         'tabs' => [_HOME, _ADD, _INFO],
     ]);
     if ($stop) {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _CERROR]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     }
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
@@ -22,8 +22,8 @@ function clients(): void {
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = $status ? 0 : 1;
             $time = file_exists('uploads/clients/'.$url) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $rows .= $tpl->getHtmlFrag('new/table-row', [
-                'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', [
+                'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$id],
                         ['content_html' => $title],
@@ -31,12 +31,12 @@ function clients(): void {
                         ['content_html' => $time],
                         ['content_html' => (string)$prod],
                         ['content_html' => (string)$hits],
-                        ['content_html' => $tpl->getHtmlFrag('new/inline-badge', [
+                        ['content_html' => $tpl->getHtmlFrag('inline-badge', [
                             'class' => $status ? 'sl-green' : 'sl-red',
                             'label' => $status ? _YES : _NO,
                             'title' => _STATUS,
                         ])],
-                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => [
                                 [
@@ -61,7 +61,7 @@ function clients(): void {
                 ]),
             ]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -78,7 +78,7 @@ function clients(): void {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
-            'content_html' => $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]),
+            'content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]),
         ]);
     }
     echo $cont;
@@ -108,21 +108,21 @@ function add(): void {
         'tab' => 1,
     ]);
     if ($stop) {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     }
     if ($body) {
         $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     }
     $rows = [
-        ['label_html' => _CTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
-        ['label_html' => _CVERSION.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'num', 'value_attr' => $num, 'maxlength_num' => 255])],
-        ['label_html' => _CURL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => 255])],
-        ['label_html' => _CODE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code, 'maxlength_num' => 255])],
-        ['label_html' => _ID.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'prod', 'value_attr' => (string)$prod])],
+        ['label_html' => _CTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _CVERSION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'num', 'value_attr' => $num, 'maxlength_num' => 255])],
+        ['label_html' => _CURL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => 255])],
+        ['label_html' => _CODE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code, 'maxlength_num' => 255])],
+        ['label_html' => _ID.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'prod', 'value_attr' => (string)$prod])],
         ['label_html' => _CADOWN, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _TEXT.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'body', 'value_text' => $body, 'rows_num' => 15])],
+        ['label_html' => _TEXT.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'body', 'value_text' => $body, 'rows_num' => 15])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=clients&amp;op=save',
         'hidden' => [
             ['nameattr' => 'cid', 'valueattr' => (string)$cid],

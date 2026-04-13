@@ -8,17 +8,11 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('changelog')) die('Illegal file ac
 
 require_once __DIR__.'/../common.php';
 
-// ============================================================================
-// MAIN FUNCTIONS
-// ============================================================================
-
 function changelog(): void {
     global $afile, $conf, $tpl;
-
     setHead();
-
-    $_exporten = $conf['changelog']['exporten'] ?? true;
-    $cont = getTplAdminTabs($_exporten ? [
+    $exporten = $conf['changelog']['exporten'] ?? true;
+    $cont = getTplAdminTabs($exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
     ] : [
@@ -38,7 +32,7 @@ function changelog(): void {
     if (empty($commits)) {
         $warnText = $error !== '' ? $error : _CHLOG_ERR_NO_COMMITS;
         $warnType = $error !== '' ? 'warn' : 'info';
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => ($warnType !== 'info'), 'text' => $warnText]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => ($warnType !== 'info'), 'text' => $warnText]);
         echo $cont;
         setFoot();
         return;
@@ -93,8 +87,8 @@ function changelog(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $_exporten = $conf['changelog']['exporten'] ?? true;
-    $cont = getTplAdminTabs($_exporten ? [
+    $exporten = $conf['changelog']['exporten'] ?? true;
+    $cont = getTplAdminTabs($exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
         'tab'  => 1,
@@ -105,42 +99,42 @@ function config(): void {
     ]);
     $source = chlogSource((string) ($conf['changelog']['source'] ?? 'local'));
     $sourceopts =
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'local', 'label_text' => 'Local', 'is_selected' => $source === 'local']) .
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'github', 'label_text' => 'GitHub', 'is_selected' => $source === 'github']);
+        $tpl->getHtmlFrag('select-option', ['value_attr' => 'local', 'label_text' => 'Local', 'is_selected' => $source === 'local']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => 'github', 'label_text' => 'GitHub', 'is_selected' => $source === 'github']);
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CHLOG_SOURCE.':', 'hint' => _CHLOG_SOURCE_TITLE]),
-            'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'source', 'options_html' => $sourceopts, 'is_config' => true]),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_SOURCE.':', 'hint' => _CHLOG_SOURCE_TITLE]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'source', 'options_html' => $sourceopts, 'is_config' => true]),
         ],
         [
             'label_html' => _CHLOG_GH_OWNER.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true]),
             'row_class' => $source === 'github' ? '' : 'sl-none',
         ],
         [
             'label_html' => _CHLOG_GH_REPO.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true]),
             'row_class' => $source === 'github' ? '' : 'sl-none',
         ],
         [
             'label_html' => _CHLOG_GH_TOKEN.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'password', 'name_attr' => 'ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true]),
             'row_class' => $source === 'github' ? '' : 'sl-none',
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CHLOG_LIMIT.':', 'hint' => _CHLOG_STATS_TITLE]),
-            'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50), 'is_config' => true, 'input_attr' => ' min="10" max="500"']),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_LIMIT.':', 'hint' => _CHLOG_STATS_TITLE]),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50), 'is_config' => true, 'input_attr' => ' min="10" max="500"']),
         ],
-        ['label_html' => _CHLOG_PER_PAGE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true, 'input_attr' => ' min="5" max="50"'])],
-        ['label_html' => _CHLOG_CACHE_TTL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true, 'input_attr' => ' min="0" max="3600"'])],
+        ['label_html' => _CHLOG_PER_PAGE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true, 'input_attr' => ' min="5" max="50"'])],
+        ['label_html' => _CHLOG_CACHE_TTL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true, 'input_attr' => ' min="0" max="3600"'])],
         ['label_html' => _CHLOG_GROUP_DATE, 'field_html' => getTplRadioGroup(['name' => 'grpdate', 'value' => (string)($conf['changelog']['grpdate'] ?? 0), 'options' => $yesno])],
         ['label_html' => _CHLOG_SHOW_FILES, 'field_html' => getTplRadioGroup(['name' => 'showfile', 'value' => (string)($conf['changelog']['showfile'] ?? 0), 'options' => $yesno])],
         ['label_html' => _CHLOG_SHOW_STATS, 'field_html' => getTplRadioGroup(['name' => 'showstat', 'value' => (string)($conf['changelog']['showstat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _CHLOG_EXPORT, 'field_html' => getTplRadioGroup(['name' => 'exporten', 'value' => (string)($conf['changelog']['exporten'] ?? 0), 'options' => $yesno])],
     ];
     $body = checkPerms(CONFIG_DIR.'/changelog.php');
-    $body .= $tpl->getHtmlFrag('new/form', [
+    $body .= $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=changelog&amp;op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken('changelog')],
@@ -155,7 +149,6 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-
     $iswarn = !checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog');
     if (!$iswarn) {
         $confdata = [
@@ -178,11 +171,9 @@ function configsave(): void {
 
 function export(): void {
     global $conf;
-
     $format = getVar('get', 'id', 'var', 'txt');
     $loaded = chlogLoadCommits($conf, [], __DIR__.'/../../../');
     $commits = $loaded['commits'];
-
     $filename = 'changelog_'.date('Y-m-d').'.'.($format === 'md' ? 'md' : 'txt');
 
     header('Content-Type: text/plain; charset=utf-8');
@@ -194,15 +185,13 @@ function export(): void {
 
 function info(): void {
     global $conf;
-    $_exporten = $conf['changelog']['exporten'] ?? true;
-    setTplAdminInfoPage($_exporten ? [
+    $exporten = $conf['changelog']['exporten'] ?? true;
+    setTplAdminInfoPage($exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
-        'tab'  => 4,
     ] : [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _INFO],
-        'tab'  => 4,
     ]);
 }
 
@@ -224,33 +213,29 @@ function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $fil
     $maxpg = 10;
     $nnum = $maxpg + 1;
     $prev = $page > 1
-        ? $tpl->getHtmlFrag('new/pager-link', ['href' => $base.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
-        : $tpl->getHtmlFrag('new/pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
+        ? $tpl->getHtmlFrag('pager-link', ['href' => $base.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
+        : $tpl->getHtmlFrag('pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
     $items = '';
     for ($i = 1; $i <= $totpage; $i++) {
         if ($i === $page) {
-            $items .= $tpl->getHtmlFrag('new/pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
+            $items .= $tpl->getHtmlFrag('pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
         } elseif ($i === 1 || $i === $totpage || ($i > ($page - $maxpg) && $i < ($page + $maxpg))) {
-            $items .= $tpl->getHtmlFrag('new/pager-link', ['href' => $base.$i, 'label' => (string)$i, 'title' => (string)$i]).' ';
+            $items .= $tpl->getHtmlFrag('pager-link', ['href' => $base.$i, 'label' => (string)$i, 'title' => (string)$i]).' ';
         }
         if ($i < $totpage) {
-            if (($page > $nnum) && ($i === 1)) $items .= $tpl->getHtmlFrag('new/pager-dots', []);
-            if (($page < ($totpage - $maxpg)) && ($i === ($totpage - 1))) $items .= $tpl->getHtmlFrag('new/pager-dots', []);
+            if (($page > $nnum) && ($i === 1)) $items .= $tpl->getHtmlFrag('pager-dots', []);
+            if (($page < ($totpage - $maxpg)) && ($i === ($totpage - 1))) $items .= $tpl->getHtmlFrag('pager-dots', []);
         }
     }
     $next = $page < $totpage
-        ? $tpl->getHtmlFrag('new/pager-link', ['href' => $base.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
-        : $tpl->getHtmlFrag('new/pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
-    return $tpl->getHtmlFrag('new/pager', [
+        ? $tpl->getHtmlFrag('pager-link', ['href' => $base.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
+        : $tpl->getHtmlFrag('pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
+    return $tpl->getHtmlFrag('pager', [
         'items' => $items,
         'prev' => $prev,
         'next' => $next,
     ]);
 }
-
-// ============================================================================
-// ROUTING
-// ============================================================================
 
 switch ($op) {
     default: changelog(); break;

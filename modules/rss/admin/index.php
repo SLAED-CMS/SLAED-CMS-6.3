@@ -24,12 +24,12 @@ function rss(): void {
         $uses = (int)($out[3] ?? 0);
         $indx = $c + 1;
         $opts =
-            $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
-            .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
-        $block = $tpl->getHtmlFrag('new/div', ['rows' => [
-            ['label_html' => _NAME.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME, 'is_required' => true])],
-            ['label_html' => _ADDRESS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
-            ['label_html' => _USES.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
+        $block = $tpl->getHtmlFrag('div', ['rows' => [
+            ['label_html' => _NAME.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME, 'is_required' => true])],
+            ['label_html' => _ADDRESS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
+            ['label_html' => _USES.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
         ]]);
         $title = '<a OnClick="HideShow(\'rss'.($c + 1).'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._RSSC.' '.$indx.'</a>';
         $pane = '<div id="rss'.$c.'"'.(($name === '' && $c !== 0) ? ' class="sl_none"' : '').'>'
@@ -39,26 +39,26 @@ function rss(): void {
     }
     $sourcehtml = implode('', $rows);
     $prefs = [
-        ['label_html' => _RSSMIN.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true])],
-        ['label_html' => _RSSMAX.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true])],
-        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _RSSTEMP.':', 'hint' => _RSSTEMPINFO]), 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'temp', 'value_text' => (string)($conf['rss']['temp'] ?? ''), 'rows_num' => 5, 'is_required' => true]), 'is_full' => true],
+        ['label_html' => _RSSMIN.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'min', 'value_attr' => (string)($conf['rss']['min'] ?? 10), 'is_required' => true])],
+        ['label_html' => _RSSMAX.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'max', 'value_attr' => (string)($conf['rss']['max'] ?? 100), 'is_required' => true])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSTEMP.':', 'hint' => _RSSTEMPINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'temp', 'value_text' => (string)($conf['rss']['temp'] ?? ''), 'rows_num' => 5, 'is_required' => true]), 'is_full' => true],
         ['label_html' => _RSSACT.':', 'field_html' => getTplRadioGroup(['name' => 'act', 'value' => (string)($conf['rss']['act'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _RSSUSE, 'field_html' => getTplRadioGroup(['name' => 'use', 'value' => (string)($conf['rss']['use'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
     $tabshml =
-        $tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _RSS, 'title' => _RSS, 'is_active' => $tab === 0, 'rel' => 'rss-panel-0'])
-        .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _PREFERENCES, 'title' => _PREFERENCES, 'is_active' => $tab === 1, 'rel' => 'rss-panel-1']);
+        $tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _RSS, 'title' => _RSS, 'is_active' => $tab === 0, 'rel' => 'rss-panel-0'])
+        .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _PREFERENCES, 'title' => _PREFERENCES, 'is_active' => $tab === 1, 'rel' => 'rss-panel-1']);
     $panels =
-        $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'rss-panel-0', 'content_html' => $sourcehtml])
-        .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'rss-panel-1', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $prefs])]);
-    $form = $tpl->getHtmlFrag('new/form', [
+        $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'rss-panel-0', 'content_html' => $sourcehtml])
+        .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'rss-panel-1', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $prefs])]);
+    $form = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=rss&amp;op=save',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ['nameattr' => 'tab', 'valueattr' => (string)$tab],
         ],
-        'content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _RSSDESC])
-            .$tpl->getHtmlFrag('new/tabs', [
+        'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC])
+            .$tpl->getHtmlFrag('tabs', [
                 'id' => 'rss',
                 'is_runtime' => true,
                 'init_attr' => 'data-sl-tabs-index="'.$tab.'"',

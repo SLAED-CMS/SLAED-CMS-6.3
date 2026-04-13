@@ -21,7 +21,7 @@ function content(): void {
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             $view = (time() >= strtotime($time)) ? 'index.php?name=content&amp;op=view&amp;id='.$id : '';
             $active = $view ? '1' : '0';
-            $acts = $tpl->getHtmlFrag('new/edit-tip', [
+            $acts = $tpl->getHtmlFrag('edit-tip', [
                 'delete_confirm' => _DELETE.' "'.$title.'"?',
                 'delete_href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
                 'delete_label' => _ONDELETE,
@@ -34,13 +34,13 @@ function content(): void {
                 'view_label' => _MVIEW,
                 'view_title' => _MVIEW,
             ]);
-            $tip = $tpl->getHtmlFrag('new/title-tip', [
+            $tip = $tpl->getHtmlFrag('title-tip', [
                 'items' => [
                     ['label' => _URL, 'value' => $conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id, 'is_last' => false],
                     ['label' => _ORTYPEURL, 'value' => $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, 'is_last' => true],
                 ],
             ]);
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-row-content', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-row-content', [
                 'actions_html' => $acts,
                 'date_text' => format_time($time, _TIMESTRING),
                 'id_text' => $id,
@@ -49,7 +49,7 @@ function content(): void {
                 'title_html' => $tip.cutstr($title, 50),
             ])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -65,7 +65,7 @@ function content(): void {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
-            'content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]),
+            'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]),
         ]);
     }
     echo $cont;
@@ -91,7 +91,7 @@ function add(): void {
     setHead();
     $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $prev = [
         'title' => $title,
         'texta' => $body,
@@ -102,7 +102,7 @@ function add(): void {
     $rows = [
         [
             'label_html' => _TITLE.':',
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'is_required' => true,
                 'itype' => 'text',
                 'maxlength_num' => 100,
@@ -112,8 +112,8 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _RSSFILE, 'hint' => _RSSINFO]),
-            'field_html' => $tpl->getHtmlFrag('new/input', [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _RSSFILE, 'hint' => _RSSINFO]),
+            'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'maxlength_num' => 200,
                 'name_attr' => 'url',
@@ -122,7 +122,7 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _REFRESHTIME, 'hint' => _REFINFO]),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _REFRESHTIME, 'hint' => _REFINFO]),
             'field_html' => getTplRefreshTimeSelect(['valu' => $refresh]),
         ],
         ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', $body, 'content', '25', _TEXT, '0'), 'is_full' => true],
@@ -145,7 +145,7 @@ function add(): void {
         ['nameattr' => 'name', 'valueattr' => 'content'],
         ['nameattr' => 'token', 'valueattr' => getSiteToken()],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=content&amp;op=add',
         'actions' => $acts,
         'hidden' => $hide,
@@ -209,12 +209,12 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $rows = [
-        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['content']['num']])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['content']['anum']])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['content']['nump']])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['content']['anump']])],
+        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['content']['num']])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['content']['anum']])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['content']['nump']])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['content']['anump']])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=content&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

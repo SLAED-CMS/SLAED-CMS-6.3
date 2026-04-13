@@ -53,10 +53,10 @@ function media(): void {
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($label).'&quot;?\')"',
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
@@ -67,11 +67,11 @@ function media(): void {
                     ])],
                     ['content_html' => $post],
                     ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -85,7 +85,7 @@ function media(): void {
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_media', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -128,12 +128,12 @@ function add(): void {
     $mtitle = $subtitle ? $title.' '.urldecode($conf['media']['mdefis'] ?? '%7C').' '.$subtitle : $title;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $mtitle, 'texta' => $description, 'mod' => 'media']);
     $yearopts = '';
     $xyear = $date['year'] - 100;
     while ($xyear <= ($date['year'] + 1)) {
-        $yearopts .= $tpl->getHtmlFrag('new/select-option', [
+        $yearopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$xyear,
             'label_text' => (string)$xyear,
             'is_selected' => (int)$xyear === (int)$year,
@@ -143,34 +143,34 @@ function add(): void {
     $langopts = '';
     foreach (explode(',', $conf['media']['lang'] ?? '') as $val) {
         if ($val === '') continue;
-        $langopts .= $tpl->getHtmlFrag('new/select-option', [
+        $langopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => $val,
             'is_selected' => $val === $lang,
         ]);
     }
-    $formatopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => $format === '']);
+    $formatopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => $format === '']);
     foreach (explode(',', $conf['media']['format'] ?? '') as $val) {
         if ($val === '') continue;
-        $formatopts .= $tpl->getHtmlFrag('new/select-option', [
+        $formatopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => $val,
             'is_selected' => $val === $format,
         ]);
     }
-    $qualityopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => $quality === '']);
+    $qualityopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => $quality === '']);
     foreach (explode(',', $conf['media']['quality'] ?? '') as $val) {
         if ($val === '') continue;
-        $qualityopts .= $tpl->getHtmlFrag('new/select-option', [
+        $qualityopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => $val,
             'is_selected' => $val === $quality,
         ]);
     }
-    $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cid]);
+    $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cid]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'media\' ORDER BY ordern ASC');
     while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
-        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+        $catopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$catid,
             'label_text' => $cattitle,
             'is_selected' => (int)$cid === (int)$catid,
@@ -183,7 +183,7 @@ function add(): void {
         $link = filterText($links[$i] ?? '');
         $hidden = $i != 0 && $link === '';
         $linkshtml .= '<div id="med'.$i.'"'.($hidden ? ' style="display:none;"' : '').'><div class="sl-div-grid">'.
-            '<div class="sl-div-item"><div class="sl-div-label">'._ADD.' '.$a.':</div><div class="sl-div-field">'.$tpl->getHtmlFrag('new/input', [
+            '<div class="sl-div-item"><div class="sl-div-label">'._ADD.' '.$a.':</div><div class="sl-div-field">'.$tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'links[]',
                 'value_attr' => $link,
@@ -192,28 +192,28 @@ function add(): void {
             ]).'</div></div></div></div>';
     }
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1')],
-        ['label_html' => _MTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
-        ['label_html' => _MSUBTITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => 255])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cid', 'options_html' => $catopts])],
-        ['label_html' => _MYEAR.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'year', 'options_html' => $yearopts])],
-        ['label_html' => _MDIRECTOR.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director])],
-        ['label_html' => _MROLES.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles])],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
+        ['label_html' => _MTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _MSUBTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => 255])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
+        ['label_html' => _MYEAR.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearopts])],
+        ['label_html' => _MDIRECTOR.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director])],
+        ['label_html' => _MROLES.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles])],
         ['label_html' => _DESCRIPTION.':', 'field_html' => textarea('1', 'description', $description, 'media', '10', _DESCRIPTION, '1'), 'is_full' => true],
-        ['label_html' => _MCREATEDBY.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby])],
-        ['label_html' => _MDURATION.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration])],
-        ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'lang', 'options_html' => $langopts])],
+        ['label_html' => _MCREATEDBY.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby])],
+        ['label_html' => _MDURATION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration])],
+        ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langopts])],
         ['label_html' => _NOTE.':', 'field_html' => textarea('2', 'note', $note, 'media', '10', _NOTE, '0'), 'is_full' => true],
-        ['label_html' => _MFORMAT.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'format', 'options_html' => $formatopts])],
-        ['label_html' => _MQUALITY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'quality', 'options_html' => $qualityopts])],
-        ['label_html' => _MSIZE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size])],
-        ['label_html' => _MRELEASED.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released])],
+        ['label_html' => _MFORMAT.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $formatopts])],
+        ['label_html' => _MQUALITY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $qualityopts])],
+        ['label_html' => _MSIZE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size])],
+        ['label_html' => _MRELEASED.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released])],
         ['label_html' => '', 'field_html' => $linkshtml, 'is_full' => true],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'mdate', $mdate, 16, 'sl_form')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'mdate', $mdate, 16, 'sl-form-control')],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl_form')],
+        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl-form-control')],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=media&amp;op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
@@ -321,18 +321,18 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['media']['defis'] ?? ''), 'is_config' => true])],
-        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['media']['linknum'] ?? 10), 'is_config' => true])],
-        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['media']['listnum'] ?? 10), 'is_config' => true])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['media']['num'] ?? 25), 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['media']['anum'] ?? 25), 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['media']['nump'] ?? 10), 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['media']['anump'] ?? 10), 'is_config' => true])],
-        ['label_html' => _M_1, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'lang', 'value_attr' => $conf['media']['lang'] ?? '', 'is_config' => true])],
-        ['label_html' => _M_2, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'format', 'value_attr' => $conf['media']['format'] ?? '', 'is_config' => true])],
-        ['label_html' => _M_3, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'quality', 'value_attr' => $conf['media']['quality'] ?? '', 'is_config' => true])],
-        ['label_html' => _M_4, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'links', 'value_attr' => (string)($conf['media']['links'] ?? 0), 'is_config' => true])],
-        ['label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'mdefis', 'value_attr' => urldecode($conf['media']['mdefis'] ?? ''), 'is_config' => true])],
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['media']['defis'] ?? ''), 'is_config' => true])],
+        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['media']['linknum'] ?? 10), 'is_config' => true])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['media']['listnum'] ?? 10), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['media']['num'] ?? 25), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['media']['anum'] ?? 25), 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['media']['nump'] ?? 10), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['media']['anump'] ?? 10), 'is_config' => true])],
+        ['label_html' => _M_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'lang', 'value_attr' => $conf['media']['lang'] ?? '', 'is_config' => true])],
+        ['label_html' => _M_2, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'format', 'value_attr' => $conf['media']['format'] ?? '', 'is_config' => true])],
+        ['label_html' => _M_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'quality', 'value_attr' => $conf['media']['quality'] ?? '', 'is_config' => true])],
+        ['label_html' => _M_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'links', 'value_attr' => (string)($conf['media']['links'] ?? 0), 'is_config' => true])],
+        ['label_html' => _DEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mdefis', 'value_attr' => urldecode($conf['media']['mdefis'] ?? ''), 'is_config' => true])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['media']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['media']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['media']['catdesc'] ?? 0), 'options' => $yesno])],
@@ -349,7 +349,7 @@ function config(): void {
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['media']['letter'] ?? 0), 'options' => $yesno])],
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['media']['link'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=media&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

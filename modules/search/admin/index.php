@@ -9,11 +9,11 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file acces
 function getSearchmodsOpts(string $cmod = ''): string {
     global $conf, $tpl;
     $mods = explode(',', (string)$conf['search']['mods']);
-    $opts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']);
+    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => $cmod === '']);
     foreach ($mods as $mod) {
         $mod = trim($mod);
         if ($mod === '') continue;
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $mod,
             'label_text' => getModuleName($mod),
             'is_selected' => $cmod === $mod,
@@ -144,7 +144,7 @@ function getSearchsection(string $title, string $html): string {
 
 function getSearchauditTable(array $list, string $view = 'enabled'): string {
     global $tpl;
-    if (!$list) return $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+    if (!$list) return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     $head = [
         ['content' => _MODUL],
         ['content' => 'ID'],
@@ -166,10 +166,10 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
             ['content_html' => htmlspecialchars((string)($row['edit'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
             ['content_html' => htmlspecialchars((string)($row['reason'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ];
-        if ($view === 'ready') $cells[] = ['content_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
-        $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => $cells])]);
+        if ($view === 'ready') $cells[] = ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
+        $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
     }
-    return $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+    return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
 }
 
 function getSearchwhere(): array {
@@ -222,24 +222,24 @@ function getSearchbox(string $type = 'search'): string {
     $fmod = getVar('req', 'fmod', 'var', '');
     $sortopts = '';
     foreach ([1 => _SWORD, 2 => _MODUL, 3 => _DATE, 4 => _HITS] as $key => $val) {
-        $sortopts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $sort == $key]);
+        $sortopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => $val, 'is_selected' => $sort == $key]);
     }
     $orderopts =
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => $order == 1])
-        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _DESC, 'is_selected' => $order == 2]);
-    $hidden = $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'name', 'valueattr' => 'search']);
-    if ($type === 'toplist') $hidden .= $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'op', 'valueattr' => 'toplist']);
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => $order == 1])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _DESC, 'is_selected' => $order == 2]);
+    $hidden = $tpl->getHtmlFrag('hidden', ['nameattr' => 'name', 'valueattr' => 'search']);
+    if ($type === 'toplist') $hidden .= $tpl->getHtmlFrag('hidden', ['nameattr' => 'op', 'valueattr' => 'toplist']);
     $content = '<div class="sl-search-line">'
         ._SORTE.': '
-        .$tpl->getHtmlFrag('new/select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'select_attr' => ' style="width:110px;"'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'select_attr' => ' style="width:110px;"'])
         .' '
-        .$tpl->getHtmlFrag('new/select', ['name_attr' => 'order', 'options_html' => $orderopts, 'select_attr' => ' style="width:165px;"'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts, 'select_attr' => ' style="width:165px;"'])
         .' '._SEARCH.': '
-        .$tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'input_attr' => ' style="width:140px;"'])
+        .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'input_attr' => ' style="width:140px;"'])
         .' '._MODUL.': '
-        .$tpl->getHtmlFrag('new/select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_attr' => ' style="width:140px;"'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_attr' => ' style="width:140px;"'])
         .$hidden
-        .' <input type="submit" value="'._OK.'" class="sl_but_blue">'
+        .' <input type="submit" value="'._OK.'" class="sl-but-blue">'
         .'</div>';
     return '<form method="get" action="'.$afile.'.php">'.$content.'</form>';
 }
@@ -258,7 +258,7 @@ function getSearchsum(string $where, array $pars): string {
         $pars
     )) ?? ['', 0];
     $mlab = $mod ? getModuleName($mod) : _ALL;
-    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', [
+    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', [
         'lines' => [
             _SEARCHTOTAL.': '.intval($hits),
             _SEARCHUNIQUE.': '.intval($uniq),
@@ -296,8 +296,8 @@ function search(): void {
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
-                ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                ['content_html' => $tpl->getHtmlFrag('title-tip', [
                     'items' => [
                         ['label' => _MODUL, 'value' => htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8')],
                         ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING), 'is_last' => true],
@@ -308,7 +308,7 @@ function search(): void {
                 ['content_html' => $hmod],
                 ['content_html' => (string)intval($hits)],
                 ['content_html' => format_time((string)$time, _TIMESTRING)],
-                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
                     ['href' => $afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
@@ -319,7 +319,7 @@ function search(): void {
                 ]])],
             ]])]);
         }
-        $html = $tpl->getHtmlFrag('new/table', [
+        $html = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _SWORD],
@@ -333,7 +333,7 @@ function search(): void {
         $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&amp;sort='.$sort.'&amp;order='.$order.$clink.'&amp;', 'table' => '_search', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -365,12 +365,12 @@ function toplist(): void {
             $mlab = $mlab ?: $mod;
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['content_html' => '<a href="admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', '').'">'.$hword.'</a>'],
                 ['content_html' => $hmod],
                 ['content_html' => (string)intval($hits)],
                 ['content_html' => format_time((string)$time, _TIMESTRING)],
-                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
                     ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
@@ -381,7 +381,7 @@ function toplist(): void {
                 ]])],
             ]])]);
         }
-        $html = $tpl->getHtmlFrag('new/table', [
+        $html = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _SWORD],
@@ -395,7 +395,7 @@ function toplist(): void {
         $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&amp;op=toplist&amp;sort='.$sort.'&amp;order='.$order.$clink.'&amp;', 'table' => '_search', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -412,17 +412,17 @@ function config(): void {
     $ilist = getSearchinvalid($audit);
     setHead();
     $cont = getSearchnavi('', 2);
-    if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))])]);
-    if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))])]);
+    if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))])]);
+    if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))])]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
     $modshtml = '';
     $curr = getSearchcurr();
     foreach (scandir('modules') as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
-        $modshtml .= $tpl->getHtmlFrag('new/label-item', [
+        $modshtml .= $tpl->getHtmlFrag('label-item', [
             'item_class' => 'sl-right',
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+            'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'name_attr' => 'search[]',
                 'value_attr' => $file,
                 'is_checked' => in_array($file, $curr, true),
@@ -432,35 +432,35 @@ function config(): void {
     }
     $cfgrows = [
         ['label_html' => _ASEARCH, 'field_html' => getTplRadioGroup(['name' => 'asearch', 'value' => (string)$conf['search']['asearch'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SMODULE, 'hint' => _CTRLINFO]), 'field_html' => $modshtml, 'is_full' => true],
-        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SEARCHLETMIN, 'hint' => _SEARCHLETINFO]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'slet', 'value_attr' => (string)$conf['search']['slet']])],
-        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SEARCHLIMIT, 'hint' => _SEARCHLIMITINFO]), 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'slimit', 'value_attr' => (string)$conf['search']['slimit']])],
-        ['label_html' => _SEARCHNUM.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'snum', 'value_attr' => (string)$conf['search']['snum']])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'snump', 'value_attr' => (string)$conf['search']['snump']])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SMODULE, 'hint' => _CTRLINFO]), 'field_html' => $modshtml, 'is_full' => true],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHLETMIN, 'hint' => _SEARCHLETINFO]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'slet', 'value_attr' => (string)$conf['search']['slet']])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHLIMIT, 'hint' => _SEARCHLIMITINFO]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'slimit', 'value_attr' => (string)$conf['search']['slimit']])],
+        ['label_html' => _SEARCHNUM.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snum', 'value_attr' => (string)$conf['search']['snum']])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snump', 'value_attr' => (string)$conf['search']['snump']])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
     ];
-    $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlFrag('new/form', [
+    $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=search&amp;op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $cfgrows,
         'submit_label' => _SAVECHANGES,
     ]))]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHENABLED, getSearchauditTable($elist, 'enabled'))]);
-    $readyform = $tpl->getHtmlFrag('new/form', [
+    $readyform = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=search&amp;op=modadd',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'content_html' => getSearchauditTable($rlist, 'ready'),
-        'actions_html' => $tpl->getHtmlFrag('new/label-item', [
+        'actions_html' => $tpl->getHtmlFrag('label-item', [
             'item_class' => 'sl-right',
-            'input_html' => $tpl->getHtmlFrag('new/checkbox', ['name_attr' => 'all', 'value_attr' => '1']),
-            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _SEARCHADDALL, 'hint' => _SEARCHAUTOINFO]),
+            'input_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'all', 'value_attr' => '1']),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHADDALL, 'hint' => _SEARCHAUTOINFO]),
         ]),
         'submit_label' => _SEARCHADDSEL,
     ]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHREADY, $readyform)]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHINVALID, getSearchauditTable($ilist, 'invalid'))]);
-    $reform = $tpl->getHtmlFrag('new/form', [
+    $reform = $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=search&amp;op=reindex',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'submit_label' => _SEARCHAUTO,
@@ -559,12 +559,12 @@ function edit(): void {
         [$word, $mod, $time, $score] = $db->getSqlRow($result);
         $hits = max(intval($score), 1);
         $rows = [
-            ['label_html' => _SWORD.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD])],
-            ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'modul', 'options_html' => getSearchmodsOpts((string)$mod)])],
+            ['label_html' => _SWORD.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD])],
+            ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'options_html' => getSearchmodsOpts((string)$mod)])],
             ['label_html' => _DATE.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => (string)$time, 'with' => true, 'max' => 16])],
-            ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
+            ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
         ];
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php?name=search&amp;op=editsave',
             'hidden' => [
                 ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -579,7 +579,7 @@ function edit(): void {
             'submit_label' => _SAVECHANGES,
         ])]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -613,16 +613,16 @@ function delete(): void {
     setHead();
     $cont = getSearchnavi('', 3);
     $modeopts =
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'all', 'label_text' => _SEARCHCLEAR, 'is_selected' => true])
-        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'mod', 'label_text' => _SEARCHBYMOD])
-        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'days', 'label_text' => _SEARCHBYDAY])
-        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'empty', 'label_text' => _SEARCHEMPTY]);
+        $tpl->getHtmlFrag('select-option', ['value_attr' => 'all', 'label_text' => _SEARCHCLEAR, 'is_selected' => true])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'mod', 'label_text' => _SEARCHBYMOD])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'days', 'label_text' => _SEARCHBYDAY])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => 'empty', 'label_text' => _SEARCHEMPTY]);
     $rows = [
-        ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cmod', 'options_html' => getSearchmodsOpts('')])],
-        ['label_html' => _DAYS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => '30', 'placeholder_text' => _DAYS])],
-        ['label_html' => _DELETE.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
+        ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cmod', 'options_html' => getSearchmodsOpts('')])],
+        ['label_html' => _DAYS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => '30', 'placeholder_text' => _DAYS])],
+        ['label_html' => _DELETE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=search&amp;op=clear',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $rows,

@@ -10,13 +10,13 @@ function getSitemapFreqSelect(string $name, string $value): string {
     global $tpl;
     $opts = '';
     foreach (['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER] as $key => $label) {
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$key,
             'label_text' => $label,
             'is_selected' => $value === (string)$key,
         ]);
     }
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'is_config' => true,
         'options_html' => $opts,
@@ -27,13 +27,13 @@ function getSitemapPrioritySelect(string $name, string $value): string {
     global $tpl;
     $opts = '';
     foreach (['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'] as $val) {
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $val,
             'label_text' => $val,
             'is_selected' => $value === $val,
         ]);
     }
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'is_config' => true,
         'options_html' => $opts,
@@ -74,8 +74,8 @@ function sitemap(): void {
     }
     $lines[] = _FILE_M.': '.$f;
     $lines[] = _FILE_S.': '.filterSize($asize);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'lines' => $lines])]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'lines' => $lines])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
@@ -95,9 +95,9 @@ function sitemap(): void {
 
 function add(): void {
     global $afile;
-    $warn = !checkSiteToken();
-    if (!$warn) addSchedulerRun('sitemap', 'manual');
-    setRedirect($afile.'.php?name=sitemap', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) addSchedulerRun('sitemap', 'manual');
+    setRedirect($afile.'.php?name=sitemap', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function xsledit(): void {
@@ -111,8 +111,8 @@ function xsledit(): void {
     ]);
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)])]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
@@ -133,13 +133,13 @@ function xsledit(): void {
 
 function xslsave(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $iswarn = !checkSiteToken();
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
-    if (!$warn && $template !== '') {
+    if (!$iswarn && $template !== '') {
         file_put_contents($file, $template);
     }
-    setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=sitemap&op=xsledit', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function config(): void {
@@ -161,7 +161,7 @@ function config(): void {
     ]);
     $rows = [
         ['label_html' => _MODULES, 'field_html' => modul('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1), 'is_full' => true],
-        ['label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'auto_t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
+        ['label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'auto_t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
         ['label_html' => _MAP_AUTO, 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0)],
         ['label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],
         ['label_html' => _MAP_FR_M, 'field_html' => getSitemapFreqSelect('fr_m', (string)($conf['sitemap']['fr_m'] ?? '0'))],
@@ -182,7 +182,7 @@ function config(): void {
         ['label_html' => _MAP_XSL, 'field_html' => $yesno('xsl', $conf['sitemap']['xsl'] ?? 0)],
         ['label_html' => _MAP_SITE, 'field_html' => $yesno('txt', $conf['sitemap']['txt'] ?? 0)],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
@@ -198,8 +198,8 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $warn = !checkSiteToken();
-    if (!$warn) {
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
         $mod = getVar('post', 'mod', 'num', []);
         $cont = [
             'mod' => empty($mod[0]) ? '0' : implode(',', $mod),
@@ -226,7 +226,7 @@ function configsave(): void {
         ];
         setConfigFile('sitemap.php', $cont);
     }
-    setRedirect($afile.'.php?name=sitemap&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=sitemap&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {

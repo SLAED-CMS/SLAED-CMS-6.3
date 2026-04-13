@@ -47,10 +47,10 @@ function pages(): void {
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $ctitle],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
@@ -61,11 +61,11 @@ function pages(): void {
                     ])],
                     ['content_html' => $post],
                     ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -79,7 +79,7 @@ function pages(): void {
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_pages', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -108,22 +108,22 @@ function add(): void {
     $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'textb' => $bodytext, 'mod' => 'pages']);
-    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
+    $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'pages\' ORDER BY ordern ASC');
     while ([$cid, $ctitle] = $db->getSqlRow($catres)) {
-        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+        $catopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$cid,
             'label_text' => $ctitle,
             'is_selected' => (int)$cid === (int)$cat,
         ]);
     }
     $commopts =
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
-        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
-        .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
+        .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows = [
         [
             'label_html' => _POSTEDBY.':',
@@ -137,15 +137,15 @@ function add(): void {
                 'value' => $postname,
             ]),
         ],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
         ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'pages', 5, _TEXT, '1'), 'is_full' => true],
         ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'pages', 15, _ENDTEXT, '0'), 'is_full' => true],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=pages&amp;op=save',
         'hidden' => [
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
@@ -234,13 +234,13 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['pages']['defis'] ?? '')])],
-        ['label_html' => _PAGELINKNUM.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => $conf['pages']['linknum'] ?? 10])],
-        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['pages']['listnum'] ?? 10])],
-        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['pages']['num'] ?? 25])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['pages']['anum'] ?? 25])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['pages']['nump'] ?? 10])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['pages']['anump'] ?? 10])],
+        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['pages']['defis'] ?? '')])],
+        ['label_html' => _PAGELINKNUM.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => $conf['pages']['linknum'] ?? 10])],
+        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['pages']['listnum'] ?? 10])],
+        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['pages']['num'] ?? 25])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['pages']['anum'] ?? 25])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['pages']['nump'] ?? 10])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['pages']['anump'] ?? 10])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['pages']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['pages']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['pages']['catdesc'] ?? 0), 'options' => $yesno])],
@@ -255,7 +255,7 @@ function config(): void {
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['pages']['letter'] ?? 0), 'options' => $yesno])],
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['pages']['link'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=pages&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

@@ -18,7 +18,7 @@ function auto_links(): void {
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
     ]);
     if (!$conf['referers']['refer']) {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _A_NOTE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     }
     $result = $db->getSqlQuery(
         'SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT :offset, :limit',
@@ -46,11 +46,11 @@ function auto_links(): void {
                 'title' => _DELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($name).'&quot;?\')"',
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', [
-                'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', [
+                'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$id],
-                        ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
                             'items' => [
                                 ['label' => _REG, 'value' => format_time($added, _TIMESTRING), 'is_last' => true],
                             ],
@@ -60,7 +60,7 @@ function auto_links(): void {
                         ['content_html' => domain($url)],
                         ['content_html' => (string)$hits],
                         ['content_html' => (string)$outs],
-                        ['content_html' => $tpl->getHtmlFrag('new/row-actions', [
+                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => $items,
                         ])],
@@ -68,7 +68,7 @@ function auto_links(): void {
                 ]),
             ]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -90,7 +90,7 @@ function auto_links(): void {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
-            'content_html' => $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]),
+            'content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]),
         ]);
     }
     echo $cont;
@@ -142,7 +142,7 @@ function stats(): void {
     $options = '';
     foreach ([_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF] as $_k => $_v) {
         $_sort = $_k + 1;
-        $options .= $tpl->getHtmlFrag('new/select-option', [
+        $options .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$_sort,
             'label_text' => $_v,
             'is_selected' => $sort == $_sort,
@@ -151,21 +151,21 @@ function stats(): void {
     $ordopts = '';
     foreach ([_ASC, _DESC] as $_k => $_v) {
         $_ord = $_k + 1;
-        $ordopts .= $tpl->getHtmlFrag('new/select-option', [
+        $ordopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$_ord,
             'label_text' => $_v,
             'is_selected' => $order == $_ord,
         ]);
     }
-    $subtitle = $id ? $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+    $subtitle = $id ? $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id,
         'content_html' =>
             _SORTE.': '.
-            $tpl->getHtmlFrag('new/select', ['name_attr' => 'sort', 'options_html' => $options]).
+            $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $options]).
             ' '.
-            $tpl->getHtmlFrag('new/select', ['name_attr' => 'order', 'options_html' => $ordopts]).
+            $tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $ordopts]).
             ' '.
-            $tpl->getHtmlFrag('new/submit', ['submit_label' => _OK]),
+            $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]) : '';
     $ops = ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'];
     setHead();
@@ -175,7 +175,7 @@ function stats(): void {
         'subtitle_html' => $subtitle,
     ]);
     if (!$conf['referers']['refer']) {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _A_NOTE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     }
     $list = [];
     while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
@@ -190,11 +190,11 @@ function stats(): void {
         $rows = '';
         foreach ($slice as $item) {
             $name = $item[1] ? user_info($item[2]) : $item[2];
-            $rows .= $tpl->getHtmlFrag('new/table-row', [
-                'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', [
+                'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$item[0]],
-                        ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
                             'items' => [
                                 ['label' => _DATE, 'value' => date(_TIMESTRING, $item[6]), 'is_last' => true],
                             ],
@@ -206,7 +206,7 @@ function stats(): void {
                 ]),
             ]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'disable_sort' => true,
             'head' => [
@@ -220,16 +220,16 @@ function stats(): void {
         ]);
         if ($countall > (int)$conf['auto_links']['anum']) {
             $prev = $page > 1
-                ? $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
-                : $tpl->getHtmlFrag('new/pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
+                ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
+                : $tpl->getHtmlFrag('pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
             $items = '';
             $maxpg = (int)$conf['auto_links']['anump'];
             $nnum = $maxpg + 1;
             for ($i = 1; $i <= $pages; $i++) {
                 if ($i === $page) {
-                    $items .= $tpl->getHtmlFrag('new/pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
+                    $items .= $tpl->getHtmlFrag('pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
                 } elseif ($i === 1 || $i === $pages || ($i > ($page - $maxpg) && $i < ($page + $maxpg))) {
-                    $items .= $tpl->getHtmlFrag('new/pager-link', [
+                    $items .= $tpl->getHtmlFrag('pager-link', [
                         'href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$i,
                         'label' => (string)$i,
                         'title' => (string)$i,
@@ -237,17 +237,17 @@ function stats(): void {
                 }
                 if ($i < $pages) {
                     if (($page > $nnum) && ($i === 1)) {
-                        $items .= $tpl->getHtmlFrag('new/pager-dots', []);
+                        $items .= $tpl->getHtmlFrag('pager-dots', []);
                     }
                     if (($page < ($pages - $maxpg)) && ($i === ($pages - 1))) {
-                        $items .= $tpl->getHtmlFrag('new/pager-dots', []);
+                        $items .= $tpl->getHtmlFrag('pager-dots', []);
                     }
                 }
             }
             $next = $page < $pages
-                ? $tpl->getHtmlFrag('new/pager-link', ['href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
-                : $tpl->getHtmlFrag('new/pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
-            $body .= $tpl->getHtmlFrag('new/pager', [
+                ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
+                : $tpl->getHtmlFrag('pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
+            $body .= $tpl->getHtmlFrag('pager', [
                 'items' => $items,
                 'prev' => $prev,
                 'next' => $next,
@@ -256,7 +256,7 @@ function stats(): void {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
-            'content_html' => $tpl->getHtmlFrag('new/alert', ['text' => _NO_INFO]),
+            'content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]),
         ]);
     }
     echo $cont;
@@ -287,17 +287,17 @@ function add(): void {
         'tab' => 1,
     ]);
     if ($stop) {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     }
     $rows = [
-        ['label_html' => _SITENAME.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => $name, 'maxlength_num' => 255])],
-        ['label_html' => _A_LINKS_L.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255])],
-        ['label_html' => _A_LINKS_E.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 255])],
-        ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits])],
-        ['label_html' => _OUTS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'outs', 'value_attr' => (string)$outs])],
-        ['label_html' => _A_LINKS_TEXT.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'desc', 'value_text' => $desc, 'rows_num' => 5])],
+        ['label_html' => _SITENAME.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => $name, 'maxlength_num' => 255])],
+        ['label_html' => _A_LINKS_L.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255])],
+        ['label_html' => _A_LINKS_E.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 255])],
+        ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits])],
+        ['label_html' => _OUTS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'outs', 'value_attr' => (string)$outs])],
+        ['label_html' => _A_LINKS_TEXT.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'value_text' => $desc, 'rows_num' => 5])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -383,7 +383,7 @@ function config(): void {
     $pickopts = '';
     foreach (scandir($path) as $entry) {
         if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry)) {
-            $pickopts .= $tpl->getHtmlFrag('new/select-option', [
+            $pickopts .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $entry,
                 'label_text' => $entry,
                 'is_selected' => $conf['auto_links']['img'] == $entry,
@@ -392,14 +392,14 @@ function config(): void {
     }
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _A_1.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
-        ['label_html' => _A_2.':', 'field_html' => $tpl->getHtmlFrag('new/image-preview', ['src_attr' => $path.$conf['auto_links']['img'], 'image_id' => 'picture', 'alt_text' => _SITELOGO])],
-        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['auto_links']['num'], 'is_config' => true])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['auto_links']['anum'], 'is_config' => true])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['auto_links']['nump'], 'is_config' => true])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true])],
-        ['label_html' => _A_4.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true])],
-        ['label_html' => _A_5.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true])],
+        ['label_html' => _A_1.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
+        ['label_html' => _A_2.':', 'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$conf['auto_links']['img'], 'image_id' => 'picture', 'alt_text' => _SITELOGO])],
+        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['auto_links']['num'], 'is_config' => true])],
+        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['auto_links']['anum'], 'is_config' => true])],
+        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['auto_links']['nump'], 'is_config' => true])],
+        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['auto_links']['anump'], 'is_config' => true])],
+        ['label_html' => _A_4.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'strip', 'value_attr' => (string)$conf['auto_links']['strip'], 'is_config' => true])],
+        ['label_html' => _A_5.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)$conf['auto_links']['limit'], 'is_config' => true])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)$conf['auto_links']['addmail'], 'options' => $yesno])],
     ];
     setHead();
@@ -409,10 +409,10 @@ function config(): void {
         'tab' => 4,
     ]);
     if (!$conf['referers']['refer']) {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _A_NOTE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     }
     $body = checkPerms(CONFIG_DIR.'/auto_links.php');
-    $body .= $tpl->getHtmlFrag('new/form', [
+    $body .= $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -448,7 +448,6 @@ function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
-        'tab' => 5,
     ]);
 }
 

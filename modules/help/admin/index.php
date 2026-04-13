@@ -38,10 +38,10 @@ function help(): void {
                     'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
                 ],
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
@@ -53,11 +53,11 @@ function help(): void {
                     ['content_html' => $post],
                     ['content_html' => (string)$comments],
                     ['content_html' => ad_status('', $stat ? 0 : 1)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -72,7 +72,7 @@ function help(): void {
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_help', 'field' => 'id', 'where' => 'pid = \'0\' AND status = \''.$status.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -100,7 +100,7 @@ function view(): void {
         if ($a) {
             $meta[] = '<a class="sl_pnum" href="#'.$id.'" title="'._MESSAGE.': '.$a.'">'.$a.'</a>';
         }
-        $actions = $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+        $actions = $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
             ['href' => $afile.'.php?name=help&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
             [
                 'href' => $afile.'.php?name=help&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
@@ -132,7 +132,7 @@ function addview(int $id): string {
     global $db, $afile, $admin, $tpl;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
-    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=help&amp;op=save',
         'hidden' => [
             ['nameattr' => 'pid', 'valueattr' => (string)$id],
@@ -143,7 +143,7 @@ function addview(int $id): string {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => [
-            ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $admin[1] ?? '', '25', 'sl_form', '1')],
+            ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $admin[1] ?? '', '25', 'sl-form-control', '1')],
             ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'), 'is_full' => true],
             ['label_html' => _HELPGLOS, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ['label_html' => _MAIL_SENDE.':', 'field_html' => getTplRadioGroup(['name' => 'umail', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
@@ -172,26 +172,26 @@ function add(): void {
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'field' => $field, 'mod' => 'help']);
-    $catopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
+    $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'help\' ORDER BY ordern ASC');
     while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
-        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+        $catopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$catid,
             'label_text' => $cattitle,
             'is_selected' => (int)$cat === (int)$catid,
         ]);
     }
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1')],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'time', $time, 16, 'sl_form')],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'time', $time, 16, 'sl-form-control')],
         ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'), 'is_full' => true],
         ['label_html' => '', 'field_html' => fields_in($field, 'help'), 'is_full' => true],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=help&amp;op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -291,12 +291,12 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['help']['defis'] ?? ''), 'is_config' => true])],
-        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['help']['listnum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['help']['num'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['help']['anum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['help']['nump'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['help']['anump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['help']['defis'] ?? ''), 'is_config' => true])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['help']['listnum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['help']['num'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['help']['anum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['help']['nump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['help']['anump'] ?? 0), 'is_config' => true])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['help']['catdesc'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_15, 'field_html' => getTplRadioGroup(['name' => 'subcat', 'value' => (string)($conf['help']['subcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => (string)($conf['help']['addmail'] ?? 0), 'options' => $yesno])],
@@ -305,7 +305,7 @@ function config(): void {
         ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['help']['read'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['help']['letter'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=help&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
@@ -340,7 +340,10 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    setTplAdminInfoPage([
+        'ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'],
+        'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO],
+    ]);
 }
 
 switch ($op) {

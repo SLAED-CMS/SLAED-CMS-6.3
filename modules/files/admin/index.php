@@ -54,10 +54,10 @@ function files(): void {
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('new/title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $ctitle],
                             ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
@@ -68,11 +68,11 @@ function files(): void {
                     ])],
                     ['content_html' => $post],
                     ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', [
+        $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'head' => [
                 ['content' => _ID],
@@ -86,7 +86,7 @@ function files(): void {
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_files', 'field' => 'id', 'where' => 'status = \''.$st.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -120,17 +120,19 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'files']);
-    $link = $url ? getTplAdminTextLink($url, _URL, '_blank', _DOWNLLINK) : _URL;
+    $link = $url
+        ? '<a href="'.htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>'
+        : _URL;
     $path = $conf['files']['path'] ?? 'uploads/files';
-    $pathopts = $tpl->getHtmlFrag('new/select-option', [
+    $pathopts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _NO,
         'is_selected' => !$pathsel,
     ]);
     if (file_exists($url)) {
-        $pathopts .= $tpl->getHtmlFrag('new/select-option', [
+        $pathopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $path,
             'label_text' => $path,
             'is_selected' => $pathsel === $path,
@@ -140,7 +142,7 @@ function add(): void {
             if ($entry === '.' || $entry === '..') continue;
             if (!preg_match('/\./', $entry)) {
                 $dir = $path.'/'.$entry;
-                $pathopts .= $tpl->getHtmlFrag('new/select-option', [
+                $pathopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $dir,
                     'label_text' => $dir,
                     'is_selected' => $pathsel === $dir,
@@ -148,37 +150,37 @@ function add(): void {
             }
         }
     }
-    $catopts = $tpl->getHtmlFrag('new/select-option', [
+    $catopts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _HOMECAT,
         'is_selected' => !$cid,
     ]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'files\' ORDER BY ordern ASC');
     while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
-        $catopts .= $tpl->getHtmlFrag('new/select-option', [
+        $catopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$catid,
             'label_text' => $cattitle,
             'is_selected' => (int)$cid === (int)$catid,
         ]);
     }
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1')],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'cid', 'options_html' => $catopts])],
+        ['label_html' => _POSTEDBY.':', 'field_html' => getUserSearch('postname', $postname, '25', 'sl-form-control', '1')],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255])],
+        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
         ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'description', $description, 'files', '5', _TEXT, '1'), 'is_full' => true],
         ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0'), 'is_full' => true],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl_form')],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl_form')],
-        ['label_html' => $link.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'placeholder_text' => _URL])],
-        ['label_html' => _FILE_DIR.':', 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'path', 'options_html' => $pathopts])],
-        ['label_html' => _SIZENOTE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'filesize', 'value_attr' => (string)$filesize])],
-        ['label_html' => _VERSION.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'version', 'value_attr' => $version])],
-        ['label_html' => _AUEMAIL.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email])],
-        ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'website', 'value_attr' => $website])],
-        ['label_html' => _FILE_SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'file', 'name_attr' => 'filesite'])],
+        ['label_html' => _COMMENTS.':', 'field_html' => com_access('acomm', $acomm, 'sl-form-control')],
+        ['label_html' => _CHNGSTORY.':', 'field_html' => datetime(1, 'date', $date, 16, 'sl-form-control')],
+        ['label_html' => $link.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'url', 'value_attr' => $url, 'placeholder_text' => _URL])],
+        ['label_html' => _FILE_DIR.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'path', 'options_html' => $pathopts])],
+        ['label_html' => _SIZENOTE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'filesize', 'value_attr' => (string)$filesize])],
+        ['label_html' => _VERSION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'version', 'value_attr' => $version])],
+        ['label_html' => _AUEMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email])],
+        ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'website', 'value_attr' => $website])],
+        ['label_html' => _FILE_SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'file', 'name_attr' => 'filesite'])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=files&amp;op=save',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [
@@ -298,23 +300,23 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $streamopts =
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']) .
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _STREAM_1, 'is_selected' => ($conf['files']['stream'] ?? null) == '1']) .
-        $tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _STREAM_2, 'is_selected' => ($conf['files']['stream'] ?? null) == '2']);
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _STREAM_1, 'is_selected' => ($conf['files']['stream'] ?? null) == '1']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _STREAM_2, 'is_selected' => ($conf['files']['stream'] ?? null) == '2']);
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['files']['defis'] ?? ''), 'is_config' => true])],
-        ['label_html' => _F_0, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'temp', 'value_attr' => $conf['files']['temp'] ?? '', 'is_config' => true])],
-        ['label_html' => _F_1, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'path', 'value_attr' => $conf['files']['path'] ?? '', 'is_config' => true])],
-        ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'maxsize', 'value_attr' => (string)($conf['files']['max_size'] ?? 0), 'is_config' => true])],
-        ['label_html' => _NOKOMA, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'typefile', 'value_attr' => $conf['files']['typefile'] ?? '', 'is_config' => true])],
-        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['files']['linknum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['files']['listnum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['files']['num'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['files']['anum'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['files']['nump'] ?? 0), 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['files']['anump'] ?? 0), 'is_config' => true])],
-        ['label_html' => _STREAM, 'field_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'stream', 'is_config' => true, 'options_html' => $streamopts])],
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['files']['defis'] ?? ''), 'is_config' => true])],
+        ['label_html' => _F_0, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'temp', 'value_attr' => $conf['files']['temp'] ?? '', 'is_config' => true])],
+        ['label_html' => _F_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'path', 'value_attr' => $conf['files']['path'] ?? '', 'is_config' => true])],
+        ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'maxsize', 'value_attr' => (string)($conf['files']['max_size'] ?? 0), 'is_config' => true])],
+        ['label_html' => _NOKOMA, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'typefile', 'value_attr' => $conf['files']['typefile'] ?? '', 'is_config' => true])],
+        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => (string)($conf['files']['linknum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)($conf['files']['listnum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)($conf['files']['num'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['files']['anum'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)($conf['files']['nump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['files']['anump'] ?? 0), 'is_config' => true])],
+        ['label_html' => _STREAM, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'stream', 'is_config' => true, 'options_html' => $streamopts])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['files']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['files']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['files']['catdesc'] ?? 0), 'options' => $yesno])],
@@ -333,7 +335,7 @@ function config(): void {
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['files']['letter'] ?? 0), 'options' => $yesno])],
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['files']['link'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=files&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
@@ -386,7 +388,10 @@ function configsave(): void {
 }
 
 function info(): void {
-    setTplAdminInfoPage(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]]);
+    setTplAdminInfoPage([
+        'ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]
+    ]);
 }
 
 switch ($op) {

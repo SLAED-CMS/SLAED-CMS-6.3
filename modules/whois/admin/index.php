@@ -54,24 +54,24 @@ function whois(): void {
                 ['href' => $afile.'.php?name=whois&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                 ['href' => $afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ];
-            $rows .= $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', ['cells' => [
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['content_html' => (string)$id],
                 ['content_html' => domain($domain).' '.ad_status('', $statusDomain)],
                 ['content_html' => $host.' '.ad_status('', $statusHost)],
                 ['content_html' => $dc.' '.ad_status('', $statusDc)],
-                ['content_html' => $tpl->getHtmlFrag('new/title-tip', ['items' => [
+                ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => [
                     ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
                     ['label' => _COMMENT, 'value' => htmlspecialchars((string)$hometext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
                 ]]).$post],
-                ['content_html' => $tpl->getHtmlFrag('new/row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ]])]);
         }
-        $body = $tpl->getHtmlFrag('new/table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_whois', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
     }
     echo $cont;
     setFoot();
@@ -79,7 +79,7 @@ function whois(): void {
 
 function toggle(): void {
     global $db, $afile;
-    $warn = !checkSiteToken();
+    $iswarn = !checkSiteToken();
     $id = getVar('get', 'id', 'num');
     $fid = getVar('get', 'fid', 'num');
     $field = match ($fid) {
@@ -88,12 +88,12 @@ function toggle(): void {
         3 => 'sdc',
         default => '',
     };
-    if (!$warn && $id && $field) {
+    if (!$iswarn && $id && $field) {
         [$active] = $db->getSqlRow($db->getSqlQuery('SELECT '.$field.' FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]));
         $active = $active ? 0 : 1;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_whois SET '.$field.' = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
     }
-    setRedirect($afile.'.php?name=whois', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=whois', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function add(): void {
@@ -119,19 +119,19 @@ function add(): void {
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
         'tab' => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $rows = [
         ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput(['name' => 'postname', 'input_id' => 'postname', 'list_id' => 'postname_list', 'value' => $postname])],
-        ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'is_required' => true])],
-        ['label_html' => _HOST.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host])],
-        ['label_html' => _DC.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc])],
-        ['label_html' => _COMMENT.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'is_required' => true])],
+        ['label_html' => _HOST.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host])],
+        ['label_html' => _DC.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc])],
+        ['label_html' => _COMMENT.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'value_text' => $hometext, 'rows_num' => 5]), 'is_full' => true],
     ];
-    $actions = $tpl->getHtmlFrag('new/button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
+    $actions = $tpl->getHtmlFrag('button', ['label' => _SAVECHANGES, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'save\'; this.form.submit();"']);
     if ($wid) {
-        $actions .= $tpl->getHtmlFrag('new/button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
+        $actions .= $tpl->getHtmlFrag('button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'whois'],
@@ -149,7 +149,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $stop;
-    $warn = !checkSiteToken();
+    $iswarn = !checkSiteToken();
     $wid = getVar('post', 'wid', 'num');
     $postname = getVar('post', 'postname', 'name', '');
     $domain = getVar('post', 'domain', 'url', '');
@@ -160,7 +160,7 @@ function save(): void {
     $stop = [];
     if (!$postname) $stop[] = _CERROR3;
     if (!$domain) $stop[] = _CERROR4;
-    if ($warn) {
+    if ($iswarn) {
         setRedirect($afile.'.php?name=whois', false, 302, _TOKENMISS, true);
     } elseif (!$stop && $posttype == 'save') {
         $postid = is_user_id($postname);
@@ -182,10 +182,10 @@ function save(): void {
 
 function delete(int $id = 0): void {
     global $db, $afile;
-    $warn = !checkSiteToken();
+    $iswarn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num');
-    if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=whois', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=whois', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function config(): void {
@@ -198,13 +198,13 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $rows = [
-        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true])],
-        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['whois']['anum'] ?? 10), 'is_config' => true])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['whois']['anump'] ?? 10), 'is_config' => true])],
         ['label_html' => _ADDAMAIL, 'field_html' => getTplRadioGroup(['name' => 'addmail', 'value' => $conf['whois']['addmail'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _WHOISADD, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => $conf['whois']['add'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _WHOISADDG, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => $conf['whois']['addquest'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'whois'],
@@ -220,8 +220,8 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $warn = !checkSiteToken();
-    if (!$warn) {
+    $iswarn = !checkSiteToken();
+    if (!$iswarn) {
         $cont = [
             'anum' => getVar('post', 'anum', 'num', 10),
             'anump' => getVar('post', 'anump', 'num', 10),
@@ -231,7 +231,7 @@ function configsave(): void {
         ];
         setConfigFile('whois.php', $cont);
     }
-    setRedirect($afile.'.php?name=whois&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=whois&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
 function info(): void {
