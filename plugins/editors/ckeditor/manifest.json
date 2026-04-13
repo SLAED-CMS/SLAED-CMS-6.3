@@ -1,6 +1,6 @@
 {
     "id": "ckeditor",
-    "label": "CKEditor 5 (GPL)",
+    "label": "CKEditor 5",
     "type": "content",
     "driver": "EditorCkeditor",
     "entry": "driver.php",

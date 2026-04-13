@@ -3,6 +3,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class EditorTinymce implements ContentDriver {
     private static bool $done = false;
+    private const BASE_URL = '/plugins/editors/tinymce/assets';
     private const PL_FULL = 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table wordcount';
     private const PL_SIMPLE = 'lists link';
     private const TB_FULL = 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | link image | code';
@@ -14,16 +15,19 @@ class EditorTinymce implements ContentDriver {
         return getHtmlScriptSrc('plugins/editors/tinymce/assets/tinymce.min.js');
     }
 
-    public function getWidget(string $id, string $name, string $value, string $profile): string {
-        $jid = json_encode('#'.$id);
-        $lang = substr(_LOCALE, 0, 2);
+    public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
+        $jid = json_encode($id);
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
         $enm = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
         $eval = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-        $ta = '<textarea id="'.$eid.'" name="'.$enm.'">'.$eval.'</textarea>';
-        $cfg = '{selector:'.$jid.',license_key:"gpl",language:"'.$lang.'",plugins:"'.$pl.'",toolbar:"'.$tb.'",promotion:false,branding:false}';
-        return $ta.getHtmlScriptInline('tinymce.init('.$cfg.');');
+        $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
+        $ta = '<textarea id="'.$eid.'" name="'.$enm.'" rows="'.$rows.'">'.$eval.'</textarea>';
+        $js = '(function(){var el=document.getElementById('.$jid.');';
+        $js .= 'if(!el||typeof tinymce==="undefined"){return;}';
+        $js .= 'tinymce.init({target:el,license_key:"gpl",base_url:"'.self::BASE_URL.'",suffix:".min",icons:"default",plugins:"'.$pl.'",toolbar:"'.$tb.'",skin:"oxide",promotion:false,branding:false,menubar:false,statusbar:true});';
+        $js .= '})();';
+        return $ta.getHtmlScriptInline($js);
     }
 }

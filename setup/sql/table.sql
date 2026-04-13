@@ -12,7 +12,7 @@ CREATE TABLE `{prefix}_admins` (
   `email` VARCHAR(255) NOT NULL,
   `password` VARCHAR(255) DEFAULT NULL,
   `super` BOOLEAN DEFAULT NULL,
-  `editor` BOOLEAN DEFAULT NULL,
+  `editor` VARCHAR(32) NOT NULL DEFAULT 'plain',
   `smail` BOOLEAN DEFAULT NULL,
   `modules` VARCHAR(255) NOT NULL DEFAULT '',
   `lang` VARCHAR(30) NOT NULL DEFAULT '',

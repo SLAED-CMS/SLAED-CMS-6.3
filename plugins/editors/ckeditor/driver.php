@@ -3,19 +3,23 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class EditorCkeditor implements ContentDriver {
     private static bool $done = false;
-    private const TB_FULL = "['heading','|','bold','italic','underline','strikethrough','|','link','bulletedList','numberedList','|','blockQuote','insertTable','|','alignment','|','sourceEditing','htmlEmbed','|','undo','redo']";
+    private const PL_FULL = '[CK5.Essentials,CK5.Paragraph,CK5.Heading,CK5.Bold,CK5.Italic,CK5.Underline,CK5.Strikethrough,CK5.Link,CK5.List,CK5.BlockQuote,CK5.Table,CK5.TableToolbar,CK5.Alignment,CK5.SourceEditing,CK5.HtmlEmbed,CK5.Indent,CK5.IndentBlock]';
+    private const PL_SIMPLE = '[CK5.Essentials,CK5.Paragraph,CK5.Bold,CK5.Italic,CK5.Link,CK5.List,CK5.BlockQuote]';
+    private const TB_FULL = "['heading','|','bold','italic','underline','strikethrough','|','link','bulletedList','numberedList','|','blockQuote','insertTable','|','alignment','|','outdent','indent','|','sourceEditing','htmlEmbed','|','undo','redo']";
     private const TB_SIMPLE = "['bold','italic','|','link','bulletedList','numberedList','|','blockQuote','|','undo','redo']";
 
     public function getAssets(string $profile): string {
         if (self::$done) return '';
         self::$done = true;
-        return getHtmlScriptSrc('plugins/editors/ckeditor/assets/ckeditor.bundle.js');
+        return getHtmlCssLink('plugins/editors/ckeditor/assets/ckeditor.bundle.css')
+            .getHtmlScriptSrc('plugins/editors/ckeditor/assets/ckeditor.bundle.js');
     }
 
-    public function getWidget(string $id, string $name, string $value, string $profile): string {
+    public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
         $jid = json_encode($id);
         $jval = json_encode($value);
         $lang = substr(_LOCALE, 0, 2);
+        $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
         $enm = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
@@ -23,7 +27,7 @@ class EditorCkeditor implements ContentDriver {
         $ta = '<div id="'.$eid.'_ck"></div>';
         $ta .= '<input type="hidden" id="'.$eid.'" name="'.$enm.'" value="'.$eval.'">';
         $js = '(function(){CK5.ClassicEditor.create(document.getElementById('.$jid.'+"_ck"),{';
-        $js .= 'toolbar:'.$tb.',language:"'.$lang.'"}).then(function(ed){';
+        $js .= 'plugins:'.$pl.',toolbar:'.$tb.',language:"'.$lang.'",licenseKey:"GPL",table:{contentToolbar:["tableColumn","tableRow","mergeTableCells"]}}).then(function(ed){';
         $js .= 'ed.setData('.$jval.');';
         $js .= 'var inp=document.getElementById('.$jid.');';
         $js .= 'inp.form&&inp.form.addEventListener("submit",function(){inp.value=ed.getData();},true);';

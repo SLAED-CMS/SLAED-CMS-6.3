@@ -1,0 +1,12 @@
+{
+    "id": "bbcode",
+    "label": "BB Editor",
+    "type": "content",
+    "driver": "EditorBbcode",
+    "entry": "driver.php",
+    "enabled": true,
+    "priority": 15,
+    "roles": ["user", "admin"],
+    "profiles": ["simple", "full"],
+    "formats": ["plain"]
+}

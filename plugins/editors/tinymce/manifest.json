@@ -1,6 +1,6 @@
 {
     "id": "tinymce",
-    "label": "TinyMCE 8 Community (GPLv2+)",
+    "label": "TinyMCE 8 Community",
     "type": "content",
     "driver": "EditorTinymce",
     "entry": "driver.php",
