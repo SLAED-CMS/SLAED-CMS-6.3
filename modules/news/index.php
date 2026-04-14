@@ -113,7 +113,7 @@ function news(): void {
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-            $cont .= getTplContentCard([
+            $cont .= $tpl->getHtmlFrag('new/card', [
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -141,13 +141,11 @@ function news(): void {
                 'favorites' => '',
                 'voting' => '',
                 'editor' => _EDITOR,
-                'edit_href' => $afile.'.php?op=news_add&amp;id='.$id,
+                'edit_href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id,
                 'edit_text' => _FULLEDIT,
-                'delete_href' => $afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1',
+                'delete_href' => $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;refer=2&amp;token='.getSiteToken(),
                 'delete_text' => _ONDELETE,
                 'delete_ask' => $ask,
-                'back_title' => '',
-                'back_text' => '',
                 'is_moder' => is_moder($conf['name']),
             ]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', []);
@@ -160,7 +158,7 @@ function news(): void {
             'pagenum', $conf['name'], $unum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump']
         );
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -192,14 +190,15 @@ function liste(): void {
     setHead(['title' => _LIST]);
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _NEWS]);
     if ($db->getSqlRowCount($result) > 0) {
-        $letter = ($conf['news']['letter']) ? letter($conf['name']) : '';
-        $cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true,
-            'letter' => $letter,
-            'id' => _ID,
-            'title' => _TITLE,
-            'category' => _CATEGORY,
-            'poster' => _POSTER,
-            'date' => _DATE,
+        if ($conf['news']['letter']) $cont .= letter($conf['name']);
+        $cont .= $tpl->getHtmlFrag('new/table', [
+            'open' => true,
+            'sortable' => true,
+            'col_id' => _ID,
+            'col_title' => _TITLE,
+            'col_cat' => _CATEGORY,
+            'col_poster' => _POSTER,
+            'col_date' => _DATE,
         ]);
         while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl([
@@ -209,8 +208,8 @@ function liste(): void {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('liste-basic', [
-                'id' => $id,
+            $cont .= $tpl->getHtmlFrag('new/table-row-liste', [
+                'id' => (string)$id,
                 'title_href' => $thref,
                 'title_attr' => $title,
                 'title_text' => cutstr($title, 40),
@@ -224,14 +223,14 @@ function liste(): void {
                 'time_label' => _DATE,
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('liste-wrap', []);
+        $cont .= $tpl->getHtmlFrag('new/table', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers(
             'pagenum', $conf['name'], $listnum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump'], $params
         );
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -281,9 +280,9 @@ function view(): void {
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
         $fields = fields_out($field, $conf['name']);
-        $fields = ($fields) ? '<br><br>'.$fields : '';
-        $text = (!$bodytext) ? $hometext.$fields : $hometext.'<br><br>'.$bodytext.$fields;
-        $conpag = explode('[pagebreak]', $text);
+        $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
+        if ($fields) $rawtext .= $fields;
+        $conpag = explode('[pagebreak]', $rawtext);
         $pageno = count($conpag);
         if ($pag > $pageno) $pag = $pageno;
         $pagei = (int)$pag;
@@ -297,13 +296,9 @@ function view(): void {
         $favorites = getFavoriteButton($id, $conf['name']);
         $voting = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont .= getTplContentView([
+        $cont .= $tpl->getHtmlFrag('new/view', [
             'is_moder' => is_moder($conf['name']),
             'id' => $id,
-            'title_href' => getSeoUrl([
-                'name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle,
-            ]),
-            'title_attr' => $title,
             'title_text' => filterTextHighlight($title, $word),
             'title_new' => '',
             'category_href' => $ctitle ? $chref : '',
@@ -314,8 +309,6 @@ function view(): void {
                 $prs->filterContent($conpag[$pagei], false, $conf['name']),
                 $word
             ),
-            'read_href' => '',
-            'read_text' => '',
             'post_text' => $post,
             'post_label' => _POSTEDBY,
             'date_text' => $date,
@@ -324,16 +317,13 @@ function view(): void {
             'reads_text' => ($conf['news']['read']) ? $counter : '',
             'reads_label' => _READS,
             'hits' => '',
-            'comm_href' => '',
-            'comm_text' => '',
-            'comm_label' => _COMMENTS,
             'rating' => $rating,
             'favorites' => $favorites,
             'voting' => $voting,
             'editor' => _EDITOR,
-            'edit_href' => $afile.'.php?op=news_add&amp;id='.$id,
+            'edit_href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id,
             'edit_text' => _FULLEDIT,
-            'delete_href' => $afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id,
+            'delete_href' => $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;token='.getSiteToken(),
             'delete_text' => _ONDELETE,
             'delete_ask' => $ask,
             'back_title' => _BACK,

@@ -303,7 +303,8 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
     if (!is_array($ids)) $ids = ($ids > 0) ? [$ids] : [];
     $all = array_unique(array_filter(array_map('intval', array_merge($req, $ids)), static fn($val): bool => $val > 0));
     $typ = $vtyp ?: getVar('post', 'typ', 'text', getVar('get', 'typ', 'text', ''));
-    $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
+    $refer_val = getVar('req', 'refer', 'num', 0);
+    $refer = ($refer_val == 1) ? '&status=1' : '';
     $iswarn = !checkSiteToken();
     if (!$iswarn && $all && $typ !== '') {
         $keys = [];
@@ -333,6 +334,10 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
         }
     }
     $succ = ($typ !== '' && $typ[0] === 'd') ? _SUCCDELETE : _SUCCSTATUS;
+    if ($refer_val == 2) {
+        setRedirect('index.php?name=news', false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
+        return;
+    }
     setRedirect($afile.'.php?name=news'.$refer, false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
 }
 
