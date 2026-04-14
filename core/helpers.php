@@ -390,6 +390,7 @@ function getTplPager(array $opt): string {
     $url    = html_entity_decode($opt['url'] ?? '', ENT_QUOTES, 'UTF-8');
     $targetid = (string)($opt['target_id'] ?? '');
     $pushurl = !empty($opt['push_url']);
+    $prefix = (string)($opt['prefix'] ?? '');
     [$cnt]  = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : '')));
     $cnt    = (int)$cnt;
     if ($cnt <= $limit) return '';
@@ -400,7 +401,7 @@ function getTplPager(array $opt): string {
         if (defined('ADMIN_FILE')) return $afile.'.php?'.$url.$n.'='.$i.$anchor;
         return getSeoUrl($mod ? ['name' => $mod, $url.$n => $i] : [$url.$n => $i]).$anchor;
     };
-    $link   = static function(string $lh, string $label, bool $cur = false, bool $nav = false) use ($tpl, $targetid, $pushurl): string {
+    $link   = static function(string $lh, string $label, bool $cur = false, bool $nav = false) use ($tpl, $targetid, $pushurl, $prefix): string {
         $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav];
         if ($targetid && !$cur && $lh !== '') {
             $opt['query'] = $lh;
@@ -409,14 +410,14 @@ function getTplPager(array $opt): string {
         } else {
             $opt['href'] = $lh;
         }
-        return $tpl->getHtmlFrag('pager-link', $opt);
+        return $tpl->getHtmlFrag($prefix.'pager-link', $opt);
     };
-    $dots   = $tpl->getHtmlFrag('pager-dots', []);
+    $dots   = $tpl->getHtmlFrag($prefix.'pager-dots', []);
     $prev   = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
     $items  = '';
     for ($i = 1; $i <= $pages; $i++) {
         if ($i === $num) {
-            $items .= $link('', (string)$i, true);
+            $items .= $link('', (string)$i, true).' ';
         } elseif ($i === 1 || $i === $pages || (($i > ($num - $maxpg)) && ($i < ($num + $maxpg)))) {
             $items .= $link($mkurl($i), (string)$i).' ';
         }
@@ -426,7 +427,7 @@ function getTplPager(array $opt): string {
         }
     }
     $next   = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true) : $link('', _NEXT, true, true);
-    return $tpl->getHtmlFrag('pager', [
+    return $tpl->getHtmlFrag($prefix.'pager', [
         'count'   => $cnt,
         'pages'   => $pages,
         'limit'   => $limit,
