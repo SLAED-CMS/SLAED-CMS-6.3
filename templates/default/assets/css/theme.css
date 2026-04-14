@@ -596,7 +596,7 @@ button.thd { border: 0 none; background-color: transparent; }
 .meta-foot .pull-right { margin-left: 20px; }
 
 /* Полный просмотр новости */
-.fullview { border-bottom: 1px solid #ebebee; padding-bottom: 25px; }
+.fullview { padding-bottom: 25px; }
 
 /* Заголовки у блоков похожих новостей, комментариев, добаления комментария */
 .mtl { font-weight: bold; font-size: 30px; color: #556779; margin: 45px 0 15px 0; }
