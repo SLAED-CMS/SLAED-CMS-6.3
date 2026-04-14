@@ -197,9 +197,11 @@ function save(): void {
 function delete(int $cid = 0): void {
     global $db, $afile;
     $id = $cid ?: getVar('req', 'id', 'num', 0);
+    $refer = !$cid && (bool)getVar('get', 'refer', 'num', 0);
     $iswarn = !$cid && !checkSiteToken();
     if (!$iswarn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=content', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    $redirect = $refer ? 'index.php?name=content' : $afile.'.php?name=content';
+    setRedirect($redirect, false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function config(): void {
