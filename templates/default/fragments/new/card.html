@@ -1,0 +1,28 @@
+<article id="{{ id }}" class="sl-post sl-card">
+<h3 class="sl-title">{{{ favorites }}} <a href="{{{ title_href }}}" title="{{ title_attr }}">{{{ title_text }}}</a>{% if title_new %} {{{ title_new }}}{% endif %}</h3>
+<div class="sl-meta">
+	<ul class="sl-pull-right">
+		<li>{% if comm_href %}<a href="{{{ comm_href }}}" title="{{ comm_label }}" class="sl_coms">{{ comm_text }}</a>{% endif %}</li>
+		<li>{{{ hits }}}</li>
+		<li>{% if reads_text %}<span title="{{ reads_label }}" class="sl_views">{{ reads_text }}</span>{% endif %}</li>
+		<li>{% if post_text %}<span title="{{ post_label }}" class="sl_post">{{{ post_text }}}</span>{% endif %}</li>
+		<li><a href="#{{ id }}" title="{{ id }}" class="sl_pnum">{{ id }}</a></li>
+	</ul>
+	<ul>
+		<li>{% if date_text %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl_date">{{ date_text }}</time>{% endif %}</li>
+		<li>{% if category_href %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl_cat">{{ category_text }}</a>{% endif %}</li>
+	</ul>
+</div>
+<div class="sl-entry-content">
+	{{{ voting }}}
+	{% if category_img %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl_icat"><img src="{{ category_img }}" alt="{{ category_attr }}" title="{{ category_attr }}"></a>{% endif %}
+	{{{ text }}}
+</div>
+<div class="sl-meta-foot">
+	<div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>
+	{% if is_moder %}
+	<nav class="sl_menu"><ul><li><span class="sl_but_red">{{ editor }}</span><ul><li><a href="{{{ edit_href }}}" title="{{ edit_text }}">{{ edit_text }}</a></li><li><a href="{{{ delete_href }}}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a></li></ul></li></ul></nav>
+	{% endif %}
+	{% if read_href %}<a href="{{{ read_href }}}" title="{{ title_attr }}" class="sl_but_read">{{ read_text }}</a>{% endif %}
+</div>
+</article>

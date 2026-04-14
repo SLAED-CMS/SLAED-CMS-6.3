@@ -1,0 +1,5 @@
+{% if open %}<table class="sl-table{% if sortable %} sl-table--sort{% endif %}"{% if sortable %} data-sl-table-sort{% endif %}>
+{% if col_id or col_title or col_cat or col_poster or col_date or col_func %}<thead class="sl-table-head"><tr>{% if col_id %}<th class="sl-table-col-num">{{ col_id }}</th>{% endif %}{% if col_title %}<th>{{ col_title }}</th>{% endif %}{% if col_cat %}<th>{{ col_cat }}</th>{% endif %}{% if col_poster %}<th>{{ col_poster }}</th>{% endif %}{% if col_date %}<th>{{ col_date }}</th>{% endif %}{% if col_func %}<th data-sort-method="none">{{ col_func }}</th>{% endif %}</tr></thead>{% endif %}
+<tbody class="sl-table-body">
+{% else %}</tbody></table>
+{% endif %}

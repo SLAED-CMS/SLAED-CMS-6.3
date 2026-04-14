@@ -1,0 +1,28 @@
+<article{% if id %} id="{{ id }}"{% endif %} class="sl-post sl-fullview">
+	<h1 class="sl-title">{{{ favorites }}} {{{ title_text }}}{% if title_new %} {{{ title_new }}}{% endif %}</h1>
+	<div class="sl-meta">
+		<ul class="sl-pull-right">
+			<li>{{{ hits }}}</li>
+			<li>{% if reads_text %}<span title="{{ reads_label }}" class="sl_views">{{ reads_text }}</span>{% endif %}</li>
+			<li>{% if post_text %}<span title="{{ post_label }}" class="sl_post">{{{ post_text }}}</span>{% endif %}</li>
+			{% if id %}<li><a href="#{{ id }}" title="{{ id }}" class="sl_pnum">{{ id }}</a></li>{% endif %}
+		</ul>
+		<ul>
+			{% if date_text %}<li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl_date">{{ date_text }}</time></li>{% endif %}
+			<li>{% if category_href %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl_cat">{{ category_text }}</a>{% endif %}</li>
+		</ul>
+	</div>
+	<div class="sl-entry-content">
+		{{{ voting }}}
+		{% if category_img %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl_icat"><img src="{{ category_img }}" alt="{{ category_attr }}" title="{{ category_attr }}"></a>{% endif %}
+		{{{ text }}}{% if fields %}<br><br>{{{ fields }}}{% endif %}
+	</div>
+	<hr>
+	<div class="sl-meta-foot">
+		<div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>
+		{% if back_text %}<span OnClick="javascript:window.history.go(-1);" title="{{ back_title }}" class="sl_but_back">{{ back_text }}</span>{% endif %}
+		{% if is_moder %}
+		<nav class="sl_menu"><ul><li><span class="sl_but_red">{{ editor }}</span><ul><li><a href="{{{ edit_href }}}" title="{{ edit_text }}">{{ edit_text }}</a></li><li><a href="{{{ delete_href }}}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a></li></ul></li></ul></nav>
+		{% endif %}
+	</div>
+</article>

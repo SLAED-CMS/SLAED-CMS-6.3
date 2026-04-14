@@ -1,0 +1,100 @@
+/* New frontend layer styles */
+/* Prefix sl- (hyphen) = new classes. Prefix sl_ (underscore) = legacy classes in system.css/theme.css */
+
+/* Navi menu */
+#content .sl-navi-menu { display: block; }
+.sl-navi-menu { list-style: none; padding: 0 0 20px 0; margin: 0 0 50px 0; border-bottom: 1px solid #ebebee; }
+.sl-navi-menu li { display: inline; }
+.sl-navi-menu li a { margin-right: 20px; }
+
+/* Article container */
+.sl-post { margin-bottom: 50px; }
+.sl-fullview { padding-bottom: 25px; }
+.sl-title { font-size: 22px; color: #222; margin: 0 0 10px 0; }
+.sl-title a { color: #222; }
+
+/* Utility */
+.sl-pull-right { float: right; }
+
+/* Article meta */
+.sl-meta { font-size: .9em; color: #6e7c8b; border-bottom: 1px solid #ebebee; padding-bottom: 20px; margin-bottom: 18px; }
+.sl-meta:after { content: ''; display: block; clear: both; }
+.sl-meta ul { list-style: none; padding: 0; margin: 0; }
+.sl-meta > ul > li { float: left; margin-right: 20px; }
+.sl-meta > ul.sl-pull-right > li { margin-right: 0; margin-left: 20px; }
+
+/* Article body */
+.sl-entry-content { margin-bottom: 18px; }
+.sl-entry-content:after { content: ''; display: block; clear: both; }
+
+/* Article footer */
+.sl-meta-foot:after { content: ''; display: block; clear: both; }
+.sl-meta-foot .sl-rate-box { margin-top: 2px; }
+.sl-meta-foot .sl-pull-right { margin-left: 20px; }
+
+/* Rating box */
+.sl-rate-box { display: inline-block; }
+
+/* List table */
+.sl-table { width: 100%; margin-bottom: 40px; border-collapse: collapse; border-spacing: 0; }
+.sl-table--sort td:first-child { text-align: left; }
+.sl-table--sort td:last-child { text-align: right; }
+.sl-table-head th {
+    padding: 13px 15px 10px 15px;
+    background-color: #f1f3f5;
+    border-bottom: 1px solid #e7e7eb;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+    white-space: nowrap;
+}
+.sl-table-head th a { color: #223345; }
+.sl-table-head th:first-child { text-align: left; border-radius: 8px 0 0 0; }
+.sl-table-head th:last-child { text-align: left; border-radius: 0 8px 0 0; }
+.sl-table-body .sl-table-cell { border-bottom: 1px solid #e7e7eb; padding: 5px; }
+.sl-table-col-num { width: 45px; text-align: center; padding-right: 0; padding-left: 0; }
+
+/* Pager */
+.sl-pager { position: relative; height: 40px; padding: 25px 60px 0 60px; border-top: 1px solid #ebebee; }
+.sl-pager-main { display: block; }
+.sl-pager-pages { padding-top: 5px; text-align: center; font-size: 18px; }
+.sl-pager-nextprev { display: inline; }
+.sl-pager-prev,
+.sl-pager-next { width: 40px; height: 40px; position: absolute; top: 25px; }
+.sl-pager-prev { left: 0; }
+.sl-pager-next { right: 0; }
+
+/* Page numbers */
+.sl-pnum { display: inline-block; height: 30px; line-height: 30px; padding: 0 10px; border-radius: 15px; }
+a.sl-pnum { color: #222; }
+a.sl-pnum:hover { background-color: #ebebee; text-decoration: none; }
+.sl-pnum-cur { background-color: #5ab8fd; color: #fff; }
+.sl-pnum-dots { display: inline-block; height: 30px; line-height: 30px; padding: 0 4px; color: #888; }
+
+/* Prev/next arrow buttons */
+.sl-pager-prev .sl-pnum-nav,
+.sl-pager-next .sl-pnum-nav {
+    display: block;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+    background-image: url(../../images/misc/sprite.png);
+    text-align: left;
+    overflow: hidden;
+    text-indent: -9999px;
+    white-space: nowrap;
+    line-height: normal;
+}
+.sl-pager-prev .sl-pnum-nav { background-position: -243px -105px; }
+.sl-pager-next .sl-pnum-nav { background-position: -283px -105px; }
+.sl-pager-prev a.sl-pnum-nav:hover { background-color: transparent; background-position: -243px -145px; }
+.sl-pager-next a.sl-pnum-nav:hover { background-color: transparent; background-position: -283px -145px; }
+span.sl-pnum-nav { opacity: .4; background-color: transparent; }
+
+/* Pager info */
+.sl-pager-info { margin: 0 0 4px 0; text-align: center; font-size: 12px; font-weight: normal; color: #888; }
+
+/* Card title override */
+.sl-card .sl-title { font-size: 16px; }

@@ -1,0 +1,9 @@
+<ul class="sl-navi-menu">
+	<li><a href="{{ home_href }}" title="{{ htitle }}" class="sl_but_navi">{{ lbl_home }}</a></li>
+	{% if best_href %}<li><a href="{{ best_href }}" title="{{ lbl_best }}" class="sl_but_navi">{{ lbl_best }}</a></li>{% endif %}
+	{% if pop_href %}<li><a href="{{ pop_href }}" title="{{ lbl_pop }}" class="sl_but_navi">{{ lbl_pop }}</a></li>{% endif %}
+	{% if liste_href %}<li><a href="{{ liste_href }}" title="{{ lbl_liste }}" class="sl_but_navi">{{ lbl_liste }}</a></li>{% endif %}
+	{% if add_href %}<li><a href="{{ add_href }}" title="{{ lbl_add }}" class="sl_but_navi">{{ lbl_add }}</a></li>{% endif %}
+	{% if catshow %}<li><a OnClick="CloseOpen('sl_close_1',1);" title="{{ lbl_catvorh }}" class="sl_but_navi">{{ lbl_cats }}</a></li>{% endif %}
+</ul>
+<h2 class="sl_none">{{ title }}</h2>
