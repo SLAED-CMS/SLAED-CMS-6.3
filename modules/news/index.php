@@ -383,14 +383,15 @@ function add(): void {
     if ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'catid', 'num');
-        $hometext = getVar('post', 'hometext', 'text');
-        $bodytext = getVar('post', 'bodytext', 'text');
-        $field = getVar('post', 'field', 'field');
+        $hometext = getVar('post', 'hometext', 'raw');
+        $bodytext = getVar('post', 'bodytext', 'raw');
+        $fieldp = getVar('post', 'field[]', 'raw', []);
+        $field = is_array($fieldp) ? implode('|', array_map('strval', $fieldp)) : '';
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => $stop]);
-        if ($hometext) $cont .= preview($title, $hometext, $bodytext, $field, $conf['name']);
+        if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        if ($hometext) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $hometext, 'textb' => $bodytext, 'field' => $field, 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $cont .= $tpl->getHtmlFrag('new/form-add', [
@@ -427,7 +428,8 @@ function send(): void {
         $cid = getVar('post', 'catid', 'num');
         $hometext = getVar('post', 'hometext', 'text');
         $bodytext = getVar('post', 'bodytext', 'text');
-        $field = getVar('post', 'field', 'field');
+        $fieldp = getVar('post', 'field[]', 'raw', []);
+        $field = is_array($fieldp) ? filterFields($fieldp) : getVar('post', 'field', 'field');
         $postname = getVar('post', 'postname', 'name');
         $stop = [];
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'news')) $stop[] = _ERROR;
