@@ -16,15 +16,15 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $userinfo = getUserInfo();
         if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         if (is_user()) {
-            $name_field = filterText(substr($user[1], 0, 25)).getTplHiddenInput('name', '');
+            $name_field = filterText(substr($user[1], 0, 25)).getTplHiddenInput(['name' => 'name', 'value' => '']);
         } else {
-            $name_field = getTplTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"');
+            $name_field = getTplTextInput('name', _ANONYM, '', 'maxlength="25"');
         }
         $cont .= $tpl->getHtmlFrag('account-comment-form', [
             'name_label'   => _YOURNAME,
             'name_field'   => $name_field,
             'comment_label'=> _COMMENT,
-            'textarea_html'=> textarea(1, 'text', '', $conf['name'], '5'),
+            'textarea_html'=> getTplTextarea(['id' => 1, 'name' => 'text', 'value' => '', 'mod' => $conf['name'], 'rows' => '5']),
             'captcha_html' => getCaptcha(1),
             'item_id'      => $id,
             'cid'          => $cid,
@@ -239,7 +239,7 @@ function updatePost() {
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
-                $content = ($typ) ? getAjaxTextarea('for'.$id, '1', 'updatePost', $id, $cid, '0', $mod, $hometext, '15') : $prs->filterContent($hometext, false, $mod);
+                $content = ($typ) ? getTplAjaxTextarea(['obj' => 'for'.$id, 'go' => '1', 'op' => 'updatePost', 'id' => $id, 'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'text' => $hometext, 'rows' => 15]) : $prs->filterContent($hometext, false, $mod);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : 0;
@@ -279,10 +279,6 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
     $offset = ($cid-1) * $newlistnum;
     $offset = intval($offset);
     $conf['name'] = 'account';
-    $conf['style'] = (string)($conf['style'] ?? '');
-    if ($conf['style'] === '') {
-        $conf['style'] = 'sl_account';
-    }
     $cont = '';
     if ($typ == 1) {
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status <= 1', ['uid' => $uid]));
@@ -447,8 +443,7 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
                 'recipient_label' => _PRRE,
                 'rep_id' => 'rep'.$prmid,
                 'send_label' => _SEND,
-                'style' => $conf['style'],
-                'textarea_html' => textarea($idp, 'text', $rcontent, $conf['name'], '15'),
+                'textarea_html' => getTplTextarea(['id' => $idp, 'name' => 'text', 'value' => $rcontent, 'mod' => $conf['name'], 'rows' => '15']),
                 'title_label' => _TITLE,
                 'title_value' => $rtitle,
             ]);

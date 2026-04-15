@@ -320,7 +320,7 @@ function admininfo() {
             
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
-        $edit = str_replace('<select ', '<select onchange="this.form.submit()" ', Editor::getSelect('editor', $key, 'content', 'admin'));
+        $edit = Editor::getSelect('editor', $key, 'content', 'admin', 'onchange="this.form.submit()"');
         $econt = $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
@@ -439,7 +439,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => $active],
                     ['content_html' => $img],
                     ['content_html' => (string)$ordern],
-                    ['content_html' => getTplMoveControls('ajax_cat', $mup, $mdn)],
+                    ['content_html' => getTplMoveControls(['target' => 'ajax_cat', 'up' => $mup, 'down' => $mdn])],
                     ['content_html' => ad_status('', $cstatus)],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _EDITOR,
@@ -622,7 +622,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => $who_view],
                 ['content_html' => $bpos],
                 ['content_html' => (string) $weight],
-                ['content_html' => getTplMoveControls('ajax_block', $mup, $mdn)],
+                ['content_html' => getTplMoveControls(['target' => 'ajax_block', 'up' => $mup, 'down' => $mdn])],
                 ['content_html' => ad_status('', $active)],
                 ['content_html' => $tpl->getHtmlFrag('row-actions', [
                     'trigger_label' => _EDITOR,
@@ -1008,7 +1008,7 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
             $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$id, 'label_text' => $title, 'is_selected' => $selectedId == $id]);
         }
     }
-    $attr = $extraClass ? ' class="'.htmlspecialchars('sl_field '.$extraClass, ENT_QUOTES, 'UTF-8').'"' : '';
+    $attr = $extraClass ? ' class="'.htmlspecialchars('sl-field '.$extraClass, ENT_QUOTES, 'UTF-8').'"' : '';
     return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts, 'select_attr' => $attr]);
 }
 
@@ -1094,7 +1094,7 @@ function getAdminInfo(): string {
                 ['nameattr' => 'type', 'valueattr' => (string)$type],
                 ['nameattr' => 'name', 'valueattr' => $name],
             ],
-            'content_html' => textarea('1', 'text', $thefile, 'info', '25'),
+            'content_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $thefile, 'mod' => 'info', 'rows' => '25']),
             'submit_label' => _SAVECHANGES,
         ]);
     }

@@ -48,6 +48,7 @@ function getConfig(): array {
     $stored_finger = $local['_meta']['base_fingerprint'] ?? '';
     unset($local['_meta']);
     if ($local !== []) $conf = filterConfigMerge($conf, $local);
+    unset($conf['style']);
     $finger = getConfigFingerprint($default_files);
     if ($conf['dev_mode'] && $finger !== $stored_finger) {
         setConfigFingerprint($local_file, $finger);
@@ -2429,7 +2430,7 @@ function getCaptcha(int $id): string {
     if ($conf['gfx_chk'] >= '1' && ($id == 2 || ($id == 1 && !is_user()))) {
         $cont = getHtmlScriptSrc('https://www.google.com/recaptcha/api.js?render='.$conf['capkey'])
             ."\n        ".getHtmlScriptInline('grecaptcha.ready(function() { grecaptcha.execute("'.$conf['capkey'].'", { action: "homepage" }) .then(function(token) { document.getElementById("recaptcha").value = token; }); });');
-        $cont .= '<input type="hidden" id="recaptcha" name="recaptcha">';
+        $cont .= getTplHiddenInput(['name' => 'recaptcha', 'value' => '', 'attr' => 'id="recaptcha"']);
     } else {
         $cont = '';
     }
@@ -2925,39 +2926,44 @@ function format_time(string $time, string $string = ''): string {
 
 # Format new graphic
 function new_graphic(string $time): string {
+    global $tpl;
     $data = time() - strtotime($time);
-    $img = '';
-    if ($data < 86400) $img = '<span title="'._NEWTODAY.'" class="sl_n_day"></span>';
-    if (($data > 86400) && ($data < 259200)) $img = '<span title="'._NEWLAST3DAYS.'" class="sl_n_days"></span>';
-    if (($data > 259200) && ($data < 604800)) $img = '<span title="'._NEWTHISWEEK.'" class="sl_n_week"></span>';
-    return $img;
+    $cls = '';
+    $ttl = '';
+    if ($data < 86400) { $cls = 'sl_n_day'; $ttl = (string)_NEWTODAY; }
+    elseif ($data < 259200) { $cls = 'sl_n_days'; $ttl = (string)_NEWLAST3DAYS; }
+    elseif ($data < 604800) { $cls = 'sl_n_week'; $ttl = (string)_NEWTHISWEEK; }
+    if (!$cls) return '';
+    return $tpl->getHtmlFrag('new/graphic', ['icon_class' => $cls, 'icon_title' => $ttl]);
 }
 
 # Format radio form
 function radio_form(mixed $var, string $name, string $id = ''): string {
+    global $tpl;
     $state = ($var === 0 || $var === '0') ? '0' : (($var === 1 || $var === '1') ? '1' : '');
     if ($id == 1) {
-        $sel1 = ($state !== '1') ? 'checked' : '';
-        $sel2 = ($state === '1') ? 'checked' : '';
-        $content = '<label><input type="radio" name="'.$name.'" value="0" '.$sel1.'> '._YES.' </label><label><input type="radio" name="'.$name.'" value="1" '.$sel2.'> '._NO.'</label>';
+        $content = $tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '0', 'label_text' => _YES, 'is_checked' => $state !== '1'])
+            .$tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '1', 'label_text' => _NO, 'is_checked' => $state === '1']);
     } else {
-        $sel1 = ($state !== '0') ? 'checked' : '';
-        $sel2 = ($state === '0') ? 'checked' : '';
-        $content = '<label><input type="radio" name="'.$name.'" value="1" '.$sel1.'> '._YES.' </label><label><input type="radio" name="'.$name.'" value="0" '.$sel2.'> '._NO.'</label>';
+        $content = $tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '1', 'label_text' => _YES, 'is_checked' => $state !== '0'])
+            .$tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '0', 'label_text' => _NO, 'is_checked' => $state === '0']);
     }
     return $content;
 }
 
 # Get gender
-function get_gender(string $name, int $typ, string $class): string {
+function get_gender(string $name, int $typ, string $class = ''): string {
+    global $tpl;
     $gender = [_NO_INFO, _MAN, _WOMAN];
-    $cont = '<select name="'.$name.'" class="sl_field '.$class.'">';
+    $cont = '';
     foreach ($gender as $key => $val) {
-        $select = ($key == $typ) ? ' selected' : '';
-        $cont .= '<option value="'.$key.'"'.$select.'>'.$val.'</option>';
+        $cont .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$key,
+            'label_text' => $val,
+            'is_selected' => $key == $typ,
+        ]);
     }
-    $cont .= '</select>';
-    return $cont;
+    return $tpl->getHtmlFrag('new/select', ['name_attr' => $name, 'select_class' => $class, 'options_html' => $cont]);
 }
 
 # Format gender
@@ -3018,27 +3024,18 @@ function replace_break(string $text): string {
 # DELETE OR MODIFY
 # User country information
 function user_geo_ip(string $ip, int $id = 4): string {
- global $conf;
+    global $conf, $tpl;
+    $iplink = $tpl->getHtmlFrag('link-btn-blank', ['href' => $conf['ip_link'].$ip, 'title' => (string)_IP.': '.$ip, 'class' => '', 'label' => $ip]);
     if ((PHP_VERSION >= '5') && $conf['geo_ip'] && preg_match('#([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})#', $ip)) {
-        if ($id == 1) {
-            $cont = $ip;
-        } elseif ($id == 2) {
-            $cont = $ip;
-        } elseif ($id == 3) {
-            $name = $ip;
-            $img = str_replace(' ', '_', strtolower($name));
-            $imgl = (file_exists(img_find('lang/'.$img.'.png'))) ? img_find('lang/'.$img.'.png') : (($img == '?') ? img_find('lang/white.png') : img_find('lang/white.png'));
-            $cont = '<img src="'.$imgl.'" alt="'.$name.'" title="'.$name.'" class="sl_flag">';
-        } elseif ($id == 4) {
-            $name = $ip;
-            $img = str_replace(' ', '_', strtolower($name));
-            $imgl = (file_exists(img_find('lang/'.$img.'.png'))) ? img_find('lang/'.$img.'.png') : (($img == '?') ? img_find('lang/white.png') : img_find('lang/white.png'));
-            $cont = '<img src="'.$imgl.'" alt="'.$name.'" title="'.$name.'" class="sl_flag"><a href="'.$conf['ip_link'].$ip.'" target="_blank" title="'._IP.': '.$ip.'">'.$ip.'</a>';
+        if ($id == 1 || $id == 2) {
+            return $ip;
         }
-    } else {
-        $cont = ($id == 4) ? '<a href="'.$conf['ip_link'].$ip.'" target="_blank" title="'._IP.': '.$ip.'">'.$ip.'</a>' : '';
+        $imgf = str_replace(' ', '_', strtolower($ip));
+        $src = file_exists(img_find('lang/'.$imgf.'.png')) ? img_find('lang/'.$imgf.'.png') : img_find('lang/white.png');
+        $flag = $tpl->getHtmlFrag('geo-ip-flag', ['src' => $src, 'name' => $ip]);
+        return ($id == 4) ? $flag.$iplink : $flag;
     }
-    return $cont;
+    return ($id == 4) ? $iplink : '';
 }
 
 # User information for user
@@ -3231,14 +3228,20 @@ function adminblock(): string {
         $cltit = defined('_OPCL') ? _OPCL : ((defined('_CLOSE') ? _CLOSE : 'Close').' / '.(defined('_WHO') ? _WHO : 'Open'));
         $title = '';
         $content = '';
-        $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'
-            .htmlspecialchars(_ADMINMENU, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'._ADMINMENU
-            .'</a></td></tr><tr><td><a href="'.$afile.'.php?op=logout" title="'
-            .htmlspecialchars(_LOGOUT, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'._LOGOUT.'</a></td></tr></table>';
+        $block = '';
         if (isAdmin(true)) {
             list($title, $content) = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
-            $cont .= '<hr>'.$content;
+            $block = (string)$content;
         }
+        $cont = $tpl->getHtmlFrag('admin-block-links', [
+            'admin_href' => $afile.'.php',
+            'admin_title' => (string)_ADMINMENU,
+            'admin_label' => (string)_ADMINMENU,
+            'logout_href' => $afile.'.php?op=logout',
+            'logout_title' => (string)_LOGOUT,
+            'logout_label' => (string)_LOGOUT,
+            'block_html' => $block,
+        ]);
         $a_title = ($title) ? $title : _ADMINS;
         return $tpl->getHtmlFrag('sidebar-block', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
             .$tpl->getHtmlFrag('sidebar-block', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
@@ -3248,13 +3251,16 @@ function adminblock(): string {
 
 # User info link
 function user_info(string $name): string {
-    global $conf;
-    if ($name) {
-        $link = ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($name).'" title="'._PERSONALINFO.'">'.$name.'</a>' : $name;
-    } else {
-        $link = '';
+    global $conf, $tpl;
+    if (!$name) return '';
+    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
+        return $tpl->getHtmlFrag('breadcrumb-link', [
+            'href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($name),
+            'title' => (string)_PERSONALINFO,
+            'label' => $name,
+        ]);
     }
-    return $link;
+    return $name;
 }
 
 # Show cart
@@ -3369,15 +3375,13 @@ function deleteCartItem(): void {
 
 # Format user warnings
 function warnings(string $warnings): string {
+    global $tpl;
     if ($warnings) {
         $warns = explode('|', $warnings);
-        $cont = '<ol>';
-        foreach ($warns as $val) $cont .= ($val != '') ? '<li>'.$val.'</li>' : '';
-        $cont .= '</ol>';
-    } else {
-        $cont = _NO;
+        $items = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('action-menu-item', ['item_html' => $v]) : '', $warns));
+        return $tpl->getHtmlFrag('warning-list', ['items_html' => $items]);
     }
-    return $cont;
+    return (string)_NO;
 }
 
 # Format ajax rating
@@ -3458,7 +3462,7 @@ function editorActionMenu(array $items): string {
     }
     return $tpl->getHtmlFrag('row-actions', [
         'trigger_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
     ]);
 }
 
@@ -3540,7 +3544,7 @@ function commentActionMenu(array $items): string {
     }
     return $tpl->getHtmlFrag('row-actions', [
         'trigger_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
     ]);
 }
 
@@ -3550,49 +3554,44 @@ function commentMetaText(string $label, string $value): string {
 }
 
 function commentMetaColor(string $label, string $value, string $color): string {
-    return htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': <span style="color: '
-        .htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
-        .htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'</span>';
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-meta-color', ['label' => $label, 'value' => $value, 'color' => $color]);
 }
 
 function commentAvatar(string $username, string $avatar): string {
-    return '<a title="'.htmlspecialchars($username, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'" class="sl_avatar" style="background-image: url('
-        .htmlspecialchars($avatar, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').');"></a>';
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-avatar', ['username' => $username, 'avatar' => $avatar]);
 }
 
 function commentRankImage(string $src, string $title): string {
-    return '<img src="'.htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'" alt="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'" title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-rank-image', ['src' => $src, 'title' => $title]);
 }
 
 function commentSignature(string $content): string {
-    return '<hr>'.$content;
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-signature', ['content' => $content]);
 }
 
 function alphaNavLink(string $href, string $title, string $label): string {
-    return '<a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" title="'
-        .htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><span class="sl_letter">'
-        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span></a>';
+    global $tpl;
+    return $tpl->getHtmlFrag('alpha-nav-link', ['href' => $href, 'title' => $title, 'label' => $label]);
 }
 
 function alphaNavText(string $label): string {
-    return '<span class="sl_letter">'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
+    global $tpl;
+    return $tpl->getHtmlFrag('alpha-nav-text', ['label' => $label]);
 }
 
 function naviTabsLink(string $href, string $label): string {
-    $labelHtml = preg_match('/<[^>]+>/', $label)
-        ? $label
-        : htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    return '<li><a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
-        .$labelHtml
-        .'</a></li>';
+    global $tpl;
+    $lhtml = preg_match('/<[^>]+>/', $label) ? $label : htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return $tpl->getHtmlFrag('navi-tab-link', ['href' => $href, 'label_html' => $lhtml]);
 }
 
 function naviTabsContent(string $id, string $content): string {
-    return '<div id="'.htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$content.'</div>';
+    global $tpl;
+    return $tpl->getHtmlFrag('navi-tab-content', ['tab_id' => $id, 'content' => $content]);
 }
 
 function naviTabsWrap(string $tabsHtml, string $contentHtml, int $id): string {
@@ -3631,7 +3630,8 @@ function pagerCurrent(string $title, string $label, string $class = ''): string 
 }
 
 function pagerDots(): string {
-    return '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
+    global $tpl;
+    return $tpl->getHtmlFrag('pager-dots', []);
 }
 
 function getAsyncPagerLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
@@ -3692,7 +3692,8 @@ function categoryTitleText(string $title): string {
 }
 
 function categorySubItem(string $content): string {
-    return '<div>'.$content.'</div>';
+    global $tpl;
+    return $tpl->getHtmlFrag('category-sub-item', ['content' => $content]);
 }
 
 function categoryRow(string $imageHtml, string $titleHtml, string $descriptionHtml = '', string $subItemsHtml = '', string $style = ''): string {
@@ -3726,7 +3727,8 @@ function categorySelectOption(string $value, string $label, bool $selected = fal
 }
 
 function breadcrumbLink(string $href, string $title, string $label): string {
-    return '<a href="'.$href.'" title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$label.'</a>';
+    global $tpl;
+    return $tpl->getHtmlFrag('breadcrumb-link', ['href' => $href, 'title' => $title, 'label' => $label]);
 }
 
 function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string $memTitle, string $memClass, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
@@ -3747,10 +3749,8 @@ function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string
 }
 
 function debugSection(string $legend, string $color, string $content): string {
-    return '<fieldset class="sl_sys_var"><legend style="color: '
-        .htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
-        .htmlspecialchars($legend, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'</legend>'.$content.'</fieldset>';
+    global $tpl;
+    return $tpl->getHtmlFrag('debug-section', ['legend' => $legend, 'color' => $color, 'content' => $content]);
 }
 
 function votingActionLink(string $href, string $title, string $label, string $class = ''): string {
@@ -3786,7 +3786,7 @@ function votingActionMenu(array $items): string {
     }
     return $tpl->getHtmlFrag('row-actions', [
         'trigger_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
     ]);
 }
 
@@ -3846,8 +3846,8 @@ function ratingBarHover(string $result, string $title, string $nrate, string $wi
 }
 
 function ratingWrap(string $class, string $content, string $id = ''): string {
-    $attr = ($id !== '') ? ' id="'.htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '';
-    return '<div'.$attr.' class="'.htmlspecialchars($class, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$content.'</div>';
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-wrap', ['wrap_class' => $class, 'wrap_id' => $id, 'content' => $content]);
 }
 
 function ratingLikeLive(string $result, string $title, string $nrate, string $targetId, string $rate1Query, string $rate5Query): string {
@@ -4047,12 +4047,11 @@ function letter(string $mod): string {
 
 # Format admin menu
 function add_menu(string $links): string {
+    global $tpl;
     if ($links) {
-        $links = explode('||', $links);
-        $cont = '<nav class="sl_menu"><ul><li><span class="sl_but_red">'._EDITOR.'</span><ul>';
-        foreach ($links as $val) if ($val != '') $cont .= '<li>'.$val.'</li>';
-        $cont .= '</ul></li></ul></nav>';
-        return $cont;
+        $items = explode('||', $links);
+        $html = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('action-menu-item', ['item_html' => $v]) : '', $items));
+        return $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => (string)_EDITOR, 'items_html' => $html]);
     }
     return '';
 }
@@ -4089,37 +4088,6 @@ function mailto(string $mail): string {
     return '<a href="mailto:'.$mail.'?subject='.$conf['sitename'].'" target="_blank">'.$mail.'</a>';
 }
 
-# Add save button
-function ad_save(string $name = '', string $val = '', string $op = '', string $noPreview = ''): string {
-    global $tpl;
-    $optionsHtml = '';
-    if (!$noPreview) {
-        $optionsHtml .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => 'preview',
-            'label_text' => _PREVIEW,
-        ]);
-    }
-    $optionsHtml .= $tpl->getHtmlFrag('select-option', [
-        'value_attr' => 'save',
-        'label_text' => _SEND,
-    ]);
-    if ($val !== '') {
-        $optionsHtml .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => 'delete',
-            'label_text' => _DELETE,
-        ]);
-    }
-    $html = '';
-    if ($name !== '' && $val !== '') {
-        $html .= $tpl->getHtmlFrag('hidden', ['nameattr' => $name, 'valueattr' => (string)$val]);
-    }
-    if ($op !== '') {
-        $html .= $tpl->getHtmlFrag('hidden', ['nameattr' => 'op', 'valueattr' => $op]);
-    }
-    return $html
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $optionsHtml, 'select_attr' => 'style="margin-right:8px"'])
-        .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']);
-}
 
 # Find img
 function img_find(string $img): string {
@@ -4130,7 +4098,7 @@ function img_find(string $img): string {
 
 # Format select RSS
 function rss_select(): string {
-    global $conf;
+    global $conf, $tpl;
     $fieldc = explode('||', $conf['rss']['rss']);
     $url = getVar('post', 'url', 'url', '');
     $cont = '';
@@ -4138,9 +4106,12 @@ function rss_select(): string {
         if ($val != '') {
             preg_match("#(.*)\|(.*)\|(.*)#i", $val, $out);
             if ($out[1] != '0' && $out[2] != '0') {
-                $sel = ($url == $out[2]) ? ' selected' : '';
                 $link = (!preg_match("#http\:\/\/#i", $out[2])) ? $conf['homeurl'].'/'.$out[2] : $out[2];
-                $cont .= '<option value="'.$link.'"'.$sel.'>'.$out[1].'</option>';
+                $cont .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $link,
+                    'label_text' => $out[1],
+                    'is_selected' => $url == $out[2],
+                ]);
             }
         }
     }
@@ -4241,21 +4212,21 @@ function renderFootControls(
     string $licenseHtml = '',
     string $debugHtml = ''
 ): string {
-    $html = '';
-    if ($topLabel !== '') {
-        $html .= '<a OnClick="Upper(\'html, body\', 600);" title="'.htmlspecialchars($topTitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="thide">'.htmlspecialchars($topLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</a>';
-    }
-    if ($timeHtml !== '') $html .= '<div class="sl_generates">'.$timeHtml.'</div>';
-    if ($licenseHtml !== '') $html .= '<div class="sl_license">'.$licenseHtml.'</div>';
-    if ($debugHtml !== '') $html .= $debugHtml;
-    return $html;
+    global $tpl;
+    return $tpl->getHtmlFrag('foot-controls', [
+        'top_title' => $topTitle,
+        'top_label' => $topLabel,
+        'time_html' => $timeHtml,
+        'license_html' => $licenseHtml,
+        'debug_html' => $debugHtml,
+    ]);
 }
 
 # Fields in
 function fields_in(mixed $fieldb, string $mod): string {
- global $conf;
+ global $conf, $tpl;
     $mod = strtolower($mod);
-    $style = (defined('ADMIN_FILE')) ? 'sl_field sl-form-control' : 'sl_field '.$conf['style'];
+    $fieldClass = defined('ADMIN_FILE') ? 'sl-form-control' : '';
     $fieldc = $conf['fields'][$mod];
     $field = getVar('post', 'field', 'raw', '');
     if ($field !== '') {
@@ -4273,20 +4244,29 @@ function fields_in(mixed $fieldb, string $mod): string {
                 $requir = ($out[4] == 1) ? ' required' : '';
                 if ($out[3] == 1) {
                     $dvalue = ($fieldin) ? getConst($fieldin) : '';
-                    $field = getTplTextInput('field[]', $dvalue, $style, 'placeholder="'.$dvalue.'"'.$requir);
+                    $field = getTplTextInput('field[]', $dvalue, $fieldClass, 'placeholder="'.$dvalue.'"'.$requir);
                 } elseif ($out[3] == 2) {
-                    $field = '<textarea name="field[]" cols="15" rows="5" class="'.$style.'"'.$requir.'>'.$fieldin.'</textarea>';
+                    $field = $tpl->getHtmlFrag('new/textarea', [
+                        'name_attr' => 'field[]',
+                        'cols_num' => 15,
+                        'rows_num' => 5,
+                        'value_text' => $fieldin,
+                        'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
+                        'input_attr' => trim($requir),
+                    ]);
                 } elseif ($out[3] == 3) {
-                    $field = '<select name="field[]" class="'.$style.'"'.$requir.'>';
-                    $field .= '<option value="">'._NO.'</option>';
+                    $opts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
                     $fieldcs = explode(',', $out[2]);
                     foreach ($fieldcs as $val) {
                         if ($val != '') {
-                            $sel = ($val == $fieldin) ? ' selected' : '';
-                            $field .= '<option value="'.$val.'"'.$sel.'>'.$val."</option>\n";
+                            $opts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $val, 'label_text' => $val, 'is_selected' => $val == $fieldin]);
                         }
                     }
-                    $field .= '</select>';
+                    $field = $tpl->getHtmlFrag('new/select', [
+                        'name_attr' => 'field[]',
+                        'options_html' => $opts,
+                        'select_attr' => trim($requir),
+                    ]);
                 } elseif ($out[3] == 4) {
                     $field = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
                 } elseif ($out[3] == 5) {
@@ -4757,7 +4737,6 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
  global $db, $conf;
     $modul = filterVar($modul);
     $conf['name'] = $conf['name'] ?? $modul;
-    $class  = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     if ($modul) {
         $where  = 'WHERE modul = :modul ORDER BY ordern';
         $params = ['modul' => $modul];
@@ -4767,7 +4746,7 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
     }
     $result = $db->getSqlQuery('SELECT id, title, parent, pview FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
-        $options = '';
+        $options = $emptyOption;
         while (list($cid, $title, $parentid, $pview) = $db->getSqlRow($result)) if (is_acess($pview)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $val[0];
@@ -4778,9 +4757,9 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
             }
             $options .= categorySelectOption((string)$key, $cont[$key], $id == $key);
         }
-        return (!$noSelect) ? categorySelect($selectName, $class, _CATEGORIES, $options) : $options;
+        return (!$noSelect) ? categorySelect($selectName, $extraClass, _CATEGORIES, $options) : $options;
     } elseif ($emptyOption) {
-        return categorySelect($selectName, $class, _CATEGORIES, $emptyOption);
+        return categorySelect($selectName, $extraClass, _CATEGORIES, $emptyOption);
     }
     return '';
 }
@@ -4915,21 +4894,20 @@ function encode_php(array $text): string {
         }
         $format = str_replace('&nbsp;&nbsp;', '&nbsp; ', $replace);
     } elseif ($conf['syntax'] == 1) {
-        $replace = explode("\n", str_replace(["\r\n", "\r"], "\n", $replace));
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $replace));
         $count = 1;
-        $format = '';
-        foreach ($replace as $code) {
+        $rows = '';
+        foreach ($lines as $code) {
             $bgcolor = ($count % 2) ? 'background-color: #fafafa;' : 'background-color: #fff;';
-            $format .= '<tr style="'.$bgcolor.'"><td style="vertical-align: top;">'.$count.'</td>';
-            $count++;
             if (preg_match("#<\?(php)?[^[:graph:]]#", $code)) {
-                $format .= '<td style="width: 100%;">'.highlight_string($code, true).'</td></tr>';
+                $chtml = highlight_string($code, true);
             } else {
-                $format .= '<td style="width: 100%;">'.preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true)).'</td></tr>';
+                $chtml = preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
             }
+            $rows .= $tpl->getHtmlFrag('new/code-row', ['row_style' => $bgcolor, 'row_num' => $count, 'code_html' => $chtml]);
+            $count++;
         }
-        $replace = str_replace('&nbsp;&nbsp;', '&nbsp; ', $format);
-        $format = '<table class="sl-table-form">'.$replace.'</table>';
+        $format = $tpl->getHtmlFrag('new/code-table', ['rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
     } elseif ($conf['syntax'] == 2) {
         if ($sname !== 'hljs') {
             $scripts = getHtmlScriptSrc('plugins/highlightjs/highlight.min.js');
@@ -4939,11 +4917,11 @@ function encode_php(array $text): string {
         } else {
             $scripts = '';
         }
-        $hljs_map = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'];
-        $hljsname = $hljs_map[$ucname] ?? $ucname;
-        $format = $scripts.'<pre><code class="language-'.$hljsname.'">'.$replace.'</code></pre>';
+        $hmap = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'];
+        $hlang = $hmap[$ucname] ?? $ucname;
+        $format = $tpl->getHtmlFrag('new/code-hljs', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
     }
-    return '<div class="code" title="'.htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$format.'</div>';
+    return $tpl->getHtmlFrag('new/code-block', ['title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'format_html' => $format ?? '']);
 }
 
 # Mail check
@@ -4966,10 +4944,10 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             if (file_exists('blocks/'.$bfile)) {
                 include('blocks/'.$bfile);
             } else {
-                $content = '<div class="sl_center">'._BLOCKPROBLEM.'</div>';
+                $content = $tpl->getHtmlFrag('new/msg-center', ['text' => (string)_BLOCKPROBLEM]);
             }
         }
-        if (!isset($content) || empty($content)) $content = '<div class="sl_center">'._BLOCKPROBLEM2.'</div>';
+        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('new/msg-center', ['text' => (string)_BLOCKPROBLEM2]);
         switch($side) {
             case 'b':
             $showbanners = $content;
@@ -5128,45 +5106,6 @@ function getRatingView(): void {
             echo getRatingAsync(2, '', '', $votes, $totalvotes, '', $stl);
         }
     }
-}
-
-# Format BB Code and Smilies
-function textarea(string $id, string $name, string $var, string $mod, int $rows, string $placeholder = '', string $required = ''): string {
- global $conf;
-    $placeholder = (string)$placeholder;
-    $required    = $required === '1' || $required === 'required' || $required === ' true' || $required === true;
-    $stloc = substr(_LOCALE, 0, 2);
-    $desc = $var ?: filterHtml(getVar('post', $name, 'raw', ''));
-    $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
-    $style = (defined('ADMIN_FILE')) ? ' sl-form-control' : ' '.$conf['style'];
-    $key = getEditorKey();
-    $fmt = getEditorMode($key);
-    $code = Editor::getContent([
-        'editor' => $key,
-        'format' => $fmt,
-        'id' => $id,
-        'name' => $name,
-        'value' => $desc,
-        'rows' => $rows,
-        'placeholder' => $placeholder,
-        'required' => $required,
-        'style' => $style,
-        'stloc' => $stloc,
-        'mod' => $mod,
-        'con' => $con,
-    ]);
-    return $code;
-}
-
-# Format ajax edit
-function getAjaxTextarea(mixed $obj, mixed $go, mixed $op, mixed $id, mixed $cid, mixed $typ, mixed $mod, mixed $text, int $rows): string {
-    $desc = !checkHtmlEditor() ? replace_break($text) : $text;
-    $code = '<form name="textareae" id="form'.$obj.'" method="post">
-    <textarea id="text" name="text" cols="65" rows="'.$rows.'" class="sl_earea">'.$desc."</textarea>
-    <input type=\"submit\" hx-post=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-include=\"#form".$obj."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" hx-on:click=\"if (!document.getElementById('form".$obj."').querySelector('[name=&quot;text&quot;]').value.trim()) { alert('"._CERROR1."'); event.preventDefault(); }\" value=\""._SAVE.'" title="'._SAVE."\" class=\"sl_but_green\">
-    <input type=\"submit\" hx-get=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" value=\""._BACK.'" title="'._BACK.'" class="sl-but-blue">
-    </form>';
-    return $code;
 }
 
 # Format nummer page for Ajax
@@ -5366,14 +5305,18 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
 
 # Format language
 function language(string $lang = '', string $typ = ''): string {
+    global $tpl;
     $dir = opendir('lang');
-    $cont = (!$typ) ? '<option value="">'._ALL.'</option>' : '';
+    $cont = (!$typ) ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
     while (false !== ($file = readdir($dir))) {
         if (preg_match("#^(.+)\.php#", $file, $matches)) {
             $langf = $matches[1];
             $title = getLangName($langf);
-            $sel = ($lang == $langf) ? ' selected' : '';
-            $cont .= '<option value="'.$langf.'"'.$sel.'>'.$title.'</option>';
+            $cont .= $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => $langf,
+                'label_text' => $title,
+                'is_selected' => $lang == $langf,
+            ]);
         }
     }
     closedir($dir);
@@ -5382,38 +5325,38 @@ function language(string $lang = '', string $typ = ''): string {
 
 # Builds a multiple-select list of module directories; $allow limits options to a whitelist when non-empty
 function modul(string $name, string $class, string $modul, string $no = '', array $allow = []): string {
-    $class = ($class) ? ' class="'.$class.'"' : '';
-    $content = '<select name="'.$name.'[]"'.$class.' multiple>';
+    global $tpl;
+    $content = '';
     if (!empty($no)) {
-        $sel = empty($modul) ? ' selected' : '';
-        $content .= '<option value="0"'.$sel.'>'._NO.'</option>';
+        $content .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($modul)]);
     }
     $modul = explode(',', $modul);
     foreach (scandir('modules') as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
-        $sel = '';
+        $selected = false;
         foreach ($modul as $val) {
-            if ($val !== '' && $val === $file) { $sel = ' selected'; break; }
+            if ($val !== '' && $val === $file) { $selected = true; break; }
         }
-        $content .= '<option value="'.$file.'"'.$sel.'>'.getModuleName($file).'</option>';
+        $content .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $selected]);
     }
-    $content .= '</select>';
-    return $content;
+    return $tpl->getHtmlFrag('multi-select', ['name_attr' => $name, 'select_class' => $class, 'options_html' => $content]);
 }
 
 # Format categorie module
 function cat_modul(string $selectName, string $extraClass = '', string $selected = '', bool $autoSubmit = false): string {
-    $submit  = $autoSubmit ? ' OnChange="submit()"' : '';
-    $class   = $extraClass ? ' class="'.$extraClass.'"' : '';
-    $content = '<select name="'.$selectName.'"'.$class.$submit.'>';
+    global $tpl;
+    $submit  = $autoSubmit ? 'OnChange="submit()"' : '';
+    $content = '';
     $mods = ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     foreach ($mods as $m) {
-        $sel     = ($selected == $m) ? ' selected' : '';
-        $content .= '<option value="'.$m.'"'.$sel.'>'.getModuleName($m).' - '.$m.'</option>';
+        $content .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $m,
+            'label_text' => getModuleName($m).' - '.$m,
+            'is_selected' => $selected == $m,
+        ]);
     }
-    $content .= '</select>';
-    return $content;
+    return $tpl->getHtmlFrag('new/select', ['name_attr' => $selectName, 'select_class' => $extraClass, 'select_attr' => $submit, 'options_html' => $content]);
 }
 
 # Show comments
@@ -5486,10 +5429,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             }
         }
         $cont = '';
-        if (defined('ADMIN_FILE')) {
-            $cont .= '<form name="comm" action="'.$afile.'.php" method="post">';
-            $b = 0;
-        }
+        $b = 0;
         foreach ($cmassiv as $val) {
             $com_id = $val[0];
             $com_cid = $val[1];
@@ -5526,13 +5466,9 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 }
             }
             $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
-            $date = '<span title="'.htmlspecialchars(_PADD, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="sl_t_post">'
-                .htmlspecialchars(format_time($com_date, _TIMESTRING), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-                .'</span>';
+            $date = $tpl->getHtmlFrag('comment-date', ['title' => (string)_PADD, 'text' => format_time($com_date, _TIMESTRING)]);
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : '';
-            $amess = '<a href="#'.$com_id.'" title="'.htmlspecialchars(_COMMENT.': '.$a, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="sl_pnum">'
-                .htmlspecialchars((string) $a, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-                .'</a>';
+            $amess = $tpl->getHtmlFrag('comment-num-link', ['com_id' => $com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a]);
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
@@ -5580,9 +5516,19 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 ]) : '';
             }
             $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-            $text = '<div id="repcom'.$com_id.'">'.$prs->filterContent($com_text, false, $com_modul).'</div>';
+            $text = $tpl->getHtmlFrag('comment-text', ['div_id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
             if (defined('ADMIN_FILE')) {
-                $checkb = (!$b) ? ' '._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$com_id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$com_id.'">';
+                $markAll = $tpl->getHtmlFrag('checkbox-input', [
+                    'name_attr' => 'markcheck',
+                    'input_id' => 'markcheck',
+                    'input_attr' => 'OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"',
+                ]);
+                $itemCheck = $tpl->getHtmlFrag('checkbox-input', [
+                    'name_attr' => 'id[]',
+                    'input_class' => 'sl_check',
+                    'value_attr' => (string)$com_id,
+                ]);
+                $checkb = (!$b) ? ' '._CHECKALL.' '.$markAll.' | '.$itemCheck : ' '.$itemCheck;
                 $b++;
             } else {
                 $checkb = '';
@@ -5597,8 +5543,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {
-            $cont .= '</form>';
-            $out = $cont;
+            $out = $tpl->getHtmlFrag('comment-list-form', ['action' => $afile.'.php', 'content' => $cont]);
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
@@ -5623,7 +5568,7 @@ function updateComment(): string {
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
-            $content = ($typ) ? getAjaxTextarea('com'.$id, '1', 'updateComment', $id, '0', '0', $mod, $comment, '10') : $prs->filterContent($comment, false, $mod);
+            $content = ($typ) ? getTplAjaxTextarea(['obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id, 'cid' => '0', 'typ' => '0', 'mod' => $mod, 'text' => $comment, 'rows' => 10]) : $prs->filterContent($comment, false, $mod);
             echo $content;
         } elseif ($id && $mod && $text) {
             $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
@@ -5725,7 +5670,7 @@ function updateVotingResult(): void {
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->getSqlRowCount($result) > 0) {
         if (!$body) {
-            $meta = '<meta http-equiv="refresh" content="3; url=index.php?name=voting&amp;op=view&amp;id='.$id.'">';
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&amp;op=view&amp;id='.$id]);
             $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR1, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
         } else {
             $ip = getIp();
@@ -5736,7 +5681,7 @@ function updateVotingResult(): void {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
             list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
             if ($cookies == $id || $num > 0) {
-                $meta = '<meta http-equiv="refresh" content="3; url=index.php?name=voting&amp;op=view&amp;id='.$id.'">';
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&amp;op=view&amp;id='.$id]);
                 $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR2, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
             } else {
                 setcookie(substr('voting', 0, 2).'-'.$id, $id, time() + intval($conf['voting']['voting_t']));
@@ -5766,7 +5711,7 @@ function updateVotingResult(): void {
             }
         }
     } else {
-        $meta = '<meta http-equiv="refresh" content="3; url=index.php?name=voting">';
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting']);
         $cont = $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
     }
     echo $cont;
