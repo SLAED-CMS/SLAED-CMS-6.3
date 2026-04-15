@@ -50,7 +50,6 @@ function contact(): void {
         'info' => $info,
         'name' => $conf['name'],
         'token' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
-        'style' => $conf['style'],
         'admin_options' => $asend,
         'lbl_to' => _TO,
         'lbl_name' => _YOURNAME,

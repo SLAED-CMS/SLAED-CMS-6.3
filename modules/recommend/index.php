@@ -27,7 +27,6 @@ function recommend(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= $tpl->getHtmlFrag('recommend-form', [
         'name' => $conf['name'],
-        'style' => $conf['style'],
         'token' => htmlspecialchars(getSiteToken('recommend'), ENT_QUOTES, 'UTF-8'),
         'nick_field' => $unkey,
         'sname' => $sname,

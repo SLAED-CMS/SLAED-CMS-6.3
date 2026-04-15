@@ -271,14 +271,13 @@ function addview(int $id): string {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
         $rows = getTplFormAddRow(_HELPGLOS, radio_form($status, 'status'));
-        $hide = getTplHiddenInput('pid', (string)$id).getTplHiddenInput('catid', (string)$cid).getTplHiddenInput('posttype', 'save');
+        $hide = getTplHiddenInput(['name' => 'pid', 'value' => (string)$id]).getTplHiddenInput(['name' => 'catid', 'value' => (string)$cid]).getTplHiddenInput(['name' => 'posttype', 'value' => 'save']);
         return $tpl->getHtmlFrag('form-add', [
             'extrafields' => $rows,
-            'hometext' => textarea('1', 'hometext', '', $conf['name'], 10, _TEXT, '1'),
+            'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => 10, 'placeholder' => _TEXT, 'required' => '1']),
             'lbl_text' => _TEXT,
             'name' => $conf['name'],
-            'style' => $conf['style'],
-            'submit' => getTplFormSubmit('send', _SEND, $hide),
+            'submit' => getTplFormSubmit(['op' => 'send', 'label' => _SEND, 'extra' => $hide]),
             'token' => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
         ]);
     }
@@ -300,15 +299,14 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('form-add', [
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
-            'style' => $conf['style'],
             'lbl_title' => _TITLE,
             'lbl_cat' => _CATEGORY,
             'lbl_text' => _TEXT,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], getTplSelectOption('', _HOMECAT)),
-            'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '10', _TEXT, '1'),
+            'catselect' => getcat($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']),
             'fields' => fields_in($field, $conf['name']),
-            'submit' => ad_save('', '', 'send'),
+            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
         echo $cont;
         setFoot();

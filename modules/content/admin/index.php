@@ -125,7 +125,7 @@ function add(): void {
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _REFRESHTIME, 'hint' => _REFINFO]),
             'field_html' => getTplRefreshTimeSelect(['valu' => $refresh]),
         ],
-        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', $body, 'content', '25', _TEXT, '0'), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'content', 'rows' => '25', 'placeholder' => _TEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'content']));

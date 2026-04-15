@@ -218,7 +218,6 @@ function add(): void {
             'is_user' => is_user(),
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('pages'), ENT_QUOTES, 'UTF-8'),
-            'style' => $conf['style'],
             'lbl_name' => _YOURNAME,
             'lbl_title' => _TITLE,
             'lbl_cat' => _CATEGORY,
@@ -227,11 +226,11 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], getTplSelectOption('', _HOMECAT)),
-            'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
-            'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            'catselect' => getcat($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
+            'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'captcha' => getCaptcha(1),
-            'submit' => ad_save('', '', 'send'),
+            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
 		echo $cont;
 		setFoot();

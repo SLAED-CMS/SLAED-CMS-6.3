@@ -288,7 +288,6 @@ function add(): void {
             'is_user' => is_user(),
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('links'), ENT_QUOTES, 'UTF-8'),
-            'style' => $conf['style'],
             'lbl_name' => _YOURNAME,
             'lbl_email' => _AUEMAIL,
             'lbl_title' => _SITENAME,
@@ -300,13 +299,13 @@ function add(): void {
             'postname' => $postname,
             'emailval' => $mail,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], getTplSelectOption('', _HOMECAT)),
-            'hometext' => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
-            'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            'catselect' => getcat($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'hometext' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
+            'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'siteval' => $site,
             'site_attr' => 'site',
             'captcha' => getCaptcha(1),
-            'submit' => ad_save('', '', 'send'),
+            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
         echo $cont;
         setFoot();

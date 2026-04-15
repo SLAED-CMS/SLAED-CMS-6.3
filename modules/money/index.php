@@ -37,26 +37,25 @@ function money(): void {
             'itype' => 'number',
             'name_attr' => 'sum',
             'value_attr' => (string)$sum,
-            'input_class' => 'sl_field '.$conf['style'],
+            'input_class' => '',
             'input_attr' => 'placeholder="'._MO_7.'" required',
         ]));
-        $rows .= getTplFormAddRow(_MO_8.':', getTplEmailInput('email', $email, 'sl_field '.$conf['style'], 'placeholder="'._MO_8.'" required'));
+        $rows .= getTplFormAddRow(_MO_8.':', getTplEmailInput('email', $email, '', 'placeholder="'._MO_8.'" required'));
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
-                $rows .= getTplFormAddRow($val.':', getTplTextInput('intro[]', filterHtml($intro[$i] ?? '', 1), 'sl_field '.$conf['style'], 'maxlength="255" placeholder="'.$val.'" required'));
+                $rows .= getTplFormAddRow($val.':', getTplTextInput('intro[]', filterHtml($intro[$i] ?? '', 1), '', 'maxlength="255" placeholder="'.$val.'" required'));
                 $i++;
             }
         }
-        $rows .= getTplFormAddRow(_MO_9.':', textarea('1', 'note', $note, $conf['name'], 5, _MO_9));
+        $rows .= getTplFormAddRow(_MO_9.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_6]);
         $cont .= $tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
-            'style' => $conf['style'],
-            'submit' => getTplFormSubmit('send', _MO_10),
+            'submit' => getTplFormSubmit(['op' => 'send', 'label' => _MO_10]),
             'token' => '',
         ]);
     }

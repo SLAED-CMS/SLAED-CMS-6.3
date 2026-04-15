@@ -19,7 +19,6 @@ function mwhois(): void {
 	
 	$licensopt = $tpl->getHtmlFrag('whois-license-form', [
 		'name' => $conf['name'],
-		'style' => $conf['style'],
 		'legend' => _WHOIS_LICENS,
 		'domain_value' => $domainlicens,
 		'submit_label' => _WHOIS_PR
@@ -39,7 +38,6 @@ function mwhois(): void {
 	
 	$domainopt = $tpl->getHtmlFrag('whois-domain-form', [
 		'name' => $conf['name'],
-		'style' => $conf['style'],
 		'legend' => _WHOIS_DOM,
 		'domain_value' => $domainwhois,
 		'options' => $domainoptOptions,
@@ -143,7 +141,6 @@ function add(): void {
 		$cont .= $tpl->getHtmlFrag('whois-add-form', [
 			'is_user' => is_user(),
 			'name' => $conf['name'],
-			'style' => $conf['style'],
 			'token' => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
 			'lbl_yourname' => _YOURNAME,
 			'username_value' => $userNameValue,

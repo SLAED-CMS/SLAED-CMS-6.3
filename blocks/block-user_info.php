@@ -61,9 +61,9 @@ if (is_user()) {
 	$content .= $tpl->getHtmlFrag('block-login-form', [
 		'nickname_label' => _NICKNAME,
 		'password_label' => _PASSWORD,
-		'name_input'     => getTplTextInput('user_name', '', 'sl_field sl_bl_field', 'maxlength="25" placeholder="'._NICKNAME.'" required'),
+		'name_input'     => getTplTextInput('user_name', '', 'sl-field--block', 'maxlength="25" placeholder="'._NICKNAME.'" required'),
 		'captcha_html'   => $captcha,
-		'hidden_inputs'  => getTplHiddenInput('refer', '1').getTplHiddenInput('op', 'login'),
+		'hidden_inputs'  => getTplHiddenInput(['name' => 'refer', 'value' => '1']).getTplHiddenInput(['name' => 'op', 'value' => 'login']),
 		'login_label'    => _LOGIN,
 		'network_row'    => $network_row,
 	]);

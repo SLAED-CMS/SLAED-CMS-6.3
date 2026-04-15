@@ -39,12 +39,11 @@ function info(): void {
     $cont = $tpl->getHtmlFrag('title', ['title' => _RSS]);
     $cont .= $tpl->getHtmlFrag('rss-info-form', [
         'name' => $conf['name'],
-        'style' => $conf['style'],
         'info_text' => _RSS_INFO_TEXT,
         'lbl_tip' => _RSS_INFO_TIP,
         'mods_options' => $modsOptions,
         'lbl_categories' => _CATEGORIES,
-        'catselect' => getcat($mod, $cat, 'cat', $conf['style'], getTplSelectOption('', _RSS_INFO_ALL, true)),
+        'catselect' => getcat($mod, $cat, 'cat', '', getTplSelectOption('', _RSS_INFO_ALL, true)),
         'lbl_amount' => _RSS_INFO_MENG,
         'num_options' => $numOptions,
         'lbl_code' => _CODE,
@@ -55,7 +54,6 @@ function info(): void {
         $link = ($url) ? $url : 'http://';
         $cont .= $tpl->getHtmlFrag('rss-read-forms', [
             'name' => $conf['name'],
-            'style' => $conf['style'],
             'lbl_select_site' => _SELECTASITE,
             'rss_select' => rss_select(),
             'lbl_url' => _ORTYPEURL,

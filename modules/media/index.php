@@ -293,7 +293,7 @@ function add(): void {
         while($i < $conf['media']['links']) {
             $a = $i + 1;
             $link = isset($links[$i]) ? $links[$i] : '';
-            $linksRows .= $tpl->getHtmlFrag('media-link-row', ['is_hidden' => $i != 0 && $link == '', 'id' => 'med'.$i, 'next_id' => 'med'.$a, 'title' => _ADD, 'label' => _URL.' - '.$a.':', 'value' => filterText($link), 'style' => $conf['style']]);
+            $linksRows .= $tpl->getHtmlFrag('media-link-row', ['is_hidden' => $i != 0 && $link == '', 'id' => 'med'.$i, 'next_id' => 'med'.$a, 'title' => _ADD, 'label' => _URL.' - '.$a.':', 'value' => filterText($link)]);
             $i++;
         }
         $cont .= $tpl->getHtmlFrag('media-form-add', [
@@ -301,7 +301,6 @@ function add(): void {
             'is_user' => is_user(),
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('media'), ENT_QUOTES, 'UTF-8'),
-            'style' => $conf['style'],
             'lbl_name' => _YOURNAME,
             'lbl_title' => _MTITLE,
             'lbl_subtitle' => _MSUBTITLE,
@@ -322,15 +321,15 @@ function add(): void {
             'postname' => $postname,
             'title' => $title,
             'subtitle' => $subtitle,
-            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], getTplSelectOption('', _HOMECAT)),
+            'catselect' => getcat($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
             'year_options' => $yearOptions,
             'director' => $director,
             'roles' => $roles,
-            'description' => textarea('1', 'description', $description, $conf['name'], '10', _DESCRIPTION, '1'),
+            'description' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']),
             'createdby' => $createdby,
             'duration' => $duration,
             'lang_options' => $langOptions,
-            'note' => textarea('2', 'note', $note, $conf['name'], '5', _NOTE, '0'),
+            'note' => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0']),
             'no_info' => _NO_INFO,
             'format_options' => $formatOptions,
             'quality_options' => $qualityOptions,
@@ -338,7 +337,7 @@ function add(): void {
             'released' => $released,
             'links_rows' => $linksRows,
             'captcha' => getCaptcha(1),
-            'submit' => ad_save('', '', 'send'),
+            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
         echo $cont;
         setFoot();

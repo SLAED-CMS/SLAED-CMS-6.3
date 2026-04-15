@@ -142,7 +142,6 @@ function add(): void {
             'is_user' => is_user(),
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
-            'style' => $conf['style'],
             'lbl_name' => _YOURNAME,
             'lbl_title' => _JTITLE,
             'lbl_cat' => _CATEGORY,
@@ -150,10 +149,10 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname ?: _ANONYM,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], getTplSelectOption('', _HOMECAT)),
-            'hometext' => textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1'),
+            'catselect' => getcat($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'hometext' => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']),
             'captcha' => getCaptcha(1),
-            'submit' => ad_save('', '', 'send'),
+            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
         echo $cont;
         setFoot();

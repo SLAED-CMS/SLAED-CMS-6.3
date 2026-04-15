@@ -126,18 +126,17 @@ function add(): void {
     $cont .= $tpl->getHtmlFrag('form-add', [
         'name' => $conf['name'],
         'token' => htmlspecialchars(getSiteToken('auto_links'), ENT_QUOTES, 'UTF-8'),
-        'style' => $conf['style'],
         'lbl_email' => _A_LINKS_E,
         'lbl_title' => _SITENAME,
         'lbl_text' => _A_LINKS_TEXT,
         'lbl_site' => _A_LINKS_L,
         'emailval' => $email,
         'titleval' => $name,
-        'hometext' => textarea('1', 'desc', $desc, $conf['name'], '5', _A_LINKS_TEXT, '1'),
+        'hometext' => getTplTextarea(['id' => '1', 'name' => 'desc', 'value' => $desc, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _A_LINKS_TEXT, 'required' => '1']),
         'site_attr' => 'site',
         'siteval' => $site,
         'captcha' => getCaptcha(1),
-        'submit' => ad_save('', '', 'send'),
+        'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
     ]);
     echo $cont;
     setFoot();
@@ -168,13 +167,13 @@ function send(): void {
         addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_OK]);
         $code = $tpl->getHtmlFrag('auto-links-embed-link', ['href' => $conf['homeurl'], 'title' => $conf['slogan'], 'label' => $conf['sitename']]);
-        $rows = $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_M, 'style' => $conf['style'], 'code' => $code]);
+        $rows = $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_M, 'code' => $code]);
         if ($conf['auto_links']['img']) {
             $banner = img_find('banners/'.$conf['auto_links']['img']);
             if ($banner && file_exists($banner)) {
                 [$imgwidth, $imgheight] = getimagesize($banner);
                 $code = $tpl->getHtmlFrag('auto-links-embed-image', ['href' => $conf['homeurl'], 'title' => $conf['sitename'].' - '.$conf['slogan'], 'src' => $conf['homeurl'].'/'.$banner, 'alt' => $conf['sitename'].' - '.$conf['slogan'], 'width' => $imgwidth, 'height' => $imgheight]);
-                $rows .= $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_IMG, 'style' => $conf['style'], 'code' => $code]);
+                $rows .= $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_IMG, 'code' => $code]);
             }
         }
         $cont .= $tpl->getHtmlFrag('auto-links-code-table', ['rows' => $rows]);

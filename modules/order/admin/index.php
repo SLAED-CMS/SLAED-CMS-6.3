@@ -194,9 +194,9 @@ function config(): void {
         ['label_html' => _OR_2, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_3, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_4, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_5.':', 'field_html' => textarea('1', 'text', $conf['order']['text'] ?? '', 'all', 5, _OR_5, '1'), 'is_full' => true],
-        ['label_html' => _OR_6.':', 'field_html' => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', 5, _OR_6, '1'), 'is_full' => true],
-        ['label_html' => _OR_7.':', 'field_html' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', 5, _OR_7, '1'), 'is_full' => true],
+        ['label_html' => _OR_5.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $conf['order']['text'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_5, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _OR_6.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => $conf['order']['info'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_6, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _OR_7.':', 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => $conf['order']['sendinfo'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_7, 'required' => '1']), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=order&amp;op=configsave',

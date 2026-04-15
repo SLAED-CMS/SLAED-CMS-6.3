@@ -18,11 +18,12 @@ function content(): void {
     setHead(['title' => _CONTENT]);
     $cont = '';
     $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num - 1) * $limit;
+    $offset = (int)(($num - 1) * $limit);
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= $tpl->getHtmlFrag('new/table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS]);
-        $isModer = is_moder($conf['name']);
+        $ismoder = is_moder($conf['name']);
+        $token   = getSiteToken();
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
@@ -40,22 +41,23 @@ function content(): void {
                 'title_text' => $title,
                 'title_new' => new_graphic($time),
                 'tip' => $tip,
-                'is_moder' => $isModer,
+                'is_moder' => $ismoder,
                 'editor' => _EDITOR,
                 'edit_href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id,
                 'edit_text' => _FULLEDIT,
-                'delete_href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(),
+                'delete_href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
                 'delete_text' => _ONDELETE,
                 'delete_ask' => $ask,
             ]);
         }
         $cont .= $tpl->getHtmlFrag('new/table', []);
         $cont .= getTplPager([
-            'limit' => $limit,
-            'maxpg' => $nump,
-            'table' => '_content',
-            'field' => 'id',
-            'mod' => $conf['name'],
+            'limit'  => $limit,
+            'maxpg'  => $nump,
+            'table'  => '_content',
+            'field'  => 'id',
+            'mod'    => $conf['name'],
+            'where'  => 'time <= NOW()',
             'prefix' => 'new/',
         ]);
     } else {

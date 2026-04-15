@@ -114,7 +114,7 @@ function add(): void {
     }
     $rows = [
         ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', (string)$body, 'all', '10', _TEXT, '1'), 'is_full' => true],
+        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true],
     ];
     if ($langsel) {
         $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $langsel];

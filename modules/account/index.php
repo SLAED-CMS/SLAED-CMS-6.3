@@ -21,7 +21,6 @@ function account(): void {
         $cont .= $tpl->getHtmlFrag('account-login-form', [
             'network_enabled' => !empty($conf['users']['network']),
             'name' => $conf['name'],
-            'style' => $conf['style'],
             'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
             'lbl_nickname' => _NICKNAME,
             'lbl_password' => _PASSWORD,
@@ -81,7 +80,6 @@ function newuser(): void {
                 'rules_enabled' => !empty($conf['users']['rule']),
                 'network_enabled' => !empty($conf['users']['network']),
                 'name' => $conf['name'],
-                'style' => $conf['style'],
                 'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
                 'nick_field' => $unkey,
                 'nick_value' => $nick,
@@ -537,14 +535,12 @@ function profil(): void {
             $title[] = _RSS;
             $text[] = $tpl->getHtmlFrag('account-rss-select-form', [
                 'name' => $conf['name'],
-                'style' => $conf['style'],
                 'lbl_select' => _SELECTASITE,
                 'options_html' => rss_select(),
                 'submit_label' => _OK,
             ])
             .$tpl->getHtmlFrag('account-rss-url-form', [
                 'name' => $conf['name'],
-                'style' => $conf['style'],
                 'lbl_url' => _ORTYPEURL,
                 'url_value' => $link,
                 'submit_label' => _OK,
@@ -726,7 +722,6 @@ function passlost(): void {
         $cont .= $tpl->getHtmlFrag('account-passlost-form', [
             'has_code' => !empty($email),
             'name' => $conf['name'],
-            'style' => $conf['style'],
             'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
             'lbl_email' => _EMAIL,
             'email_value' => $email,
@@ -836,10 +831,6 @@ function edithome(): void {
             'title' => _CHANGE,
         ]);
         $userinfo = getUserInfo();
-        $conf['style'] = (string)($conf['style'] ?? '');
-        if ($conf['style'] === '') {
-            $conf['style'] = 'sl_account';
-        }
         $birthday = trim((string)($userinfo['birthday'] ?? ''));
         if ($birthday !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
             $birthday = '';
@@ -872,7 +863,6 @@ function edithome(): void {
             'has_privat_mail' => !empty($conf['privat']['act']),
             'has_theme_select' => $tcount > 1,
             'name' => $conf['name'],
-            'style' => $conf['style'],
             'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
             'lbl_ip' => _IP,
             'ip_value' => $userinfo['ip'],
@@ -885,7 +875,7 @@ function edithome(): void {
             'lbl_birthday' => _BIRTHDAY,
             'birthday_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10]),
             'lbl_gender' => _GENDER,
-            'gender_html' => get_gender('gender', $userinfo['gender'], $conf['style']),
+            'gender_html' => get_gender('gender', $userinfo['gender'], 'sl-field--account'),
             'lbl_email' => _YOUREMAIL,
             'mail_value' => $userinfo['email'],
             'lbl_site' => _SITEURL,
@@ -898,7 +888,7 @@ function edithome(): void {
             'inter_value' => $userinfo['interest'],
             'lbl_sig' => _SIGNATURE,
             'sig_info' => _SIGNATURE_TEXT,
-            'sig_html' => textarea('1', 'sig', $userinfo['sig'], $conf['name'], '5', _SIGNATURE, '0'),
+            'sig_html' => getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $userinfo['sig'], 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '0']),
             'fields_html' => fields_in($userinfo['field'], $conf['name']),
             'lbl_story' => _C_12,
             'story_options' => $story,
@@ -915,7 +905,7 @@ function edithome(): void {
             'blockon_html' => radio_form($userinfo['blockon'], 'blockon'),
             'lbl_block' => _MENUCONF,
             'block_info' => _MENUINFO,
-            'block_html' => textarea('2', 'block', $userinfo['block'], $conf['name'], '10', _MENUCONF, '0'),
+            'block_html' => getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $userinfo['block'], 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _MENUCONF, 'required' => '0']),
             'lbl_theme' => _THEME,
             'theme_options' => $theme,
             'submit_label' => _SAVECHANGES,
@@ -929,7 +919,6 @@ function edithome(): void {
         if ($conf['users']['aupload']) {
             $asetup .= $tpl->getHtmlFrag('account-avatar-upload', [
                 'name' => $conf['name'],
-                'style' => $conf['style'],
                 'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
                 'lbl_avatar_user' => _AVATAR_USER,
                 'submit_label' => _UPLOAD,
@@ -957,7 +946,6 @@ function edithome(): void {
         if (empty($network)) {
             $psetup = $tpl->getHtmlFrag('account-password-form', [
                 'name' => $conf['name'],
-                'style' => $conf['style'],
                 'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
                 'info_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT]),
                 'lbl_newpass' => _PASSNEW,

@@ -203,7 +203,7 @@ function add(): void {
         'rows' => [
             ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 50, 'placeholder_text' => _TITLE, 'is_required' => true])],
             ['label_html' => _NLWHERE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mails', 'options_html' => $option])],
-            ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'), 'is_full' => true, 'field_unwrapped' => true],
+            ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'all', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
         ],
         'submit_label' => _SAVE,
     ]);

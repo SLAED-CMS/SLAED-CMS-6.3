@@ -239,7 +239,7 @@ function getSearchbox(string $type = 'search'): string {
         .' '._MODUL.': '
         .$tpl->getHtmlFrag('select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_attr' => ' style="width:140px;"'])
         .$hidden
-        .' <input type="submit" value="'._OK.'" class="sl-but-blue">'
+        .' '.$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK])
         .'</div>';
     return '<form method="get" action="'.$afile.'.php">'.$content.'</form>';
 }

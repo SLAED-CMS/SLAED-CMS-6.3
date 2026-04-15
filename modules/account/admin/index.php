@@ -296,7 +296,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SIGNATURE, 'hint' => _SIGNATURE_TEXT]),
-        'field_html' => textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, ''),
+        'field_html' => getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '']),
     ];
     $rows[] = [
         'label_html' => _ALLOWUSERS,
@@ -322,7 +322,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MENUCONF, 'hint' => _MENUINFO]),
-        'field_html' => textarea('2', 'block', $block, 'account', '5', _MENUCONF, ''),
+        'field_html' => getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'account', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '']),
     ];
     if ($conf['users']['theme']) {
         $themeopts = '';
@@ -446,7 +446,7 @@ function add(): void {
             'target_id' => 'sl_close_9',
             'content_html' => $tpl->getHtmlFrag('div', ['rows' => [[
                 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-                'field_html' => textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''),
+                'field_html' => getTplTextarea(['id' => '3', 'name' => 'mailtext', 'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '']),
             ]]]),
         ]),
         'is_full' => true,

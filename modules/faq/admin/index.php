@@ -141,7 +141,7 @@ function add(): void {
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
-        ['label_html' => _ANSWER.':', 'field_html' => textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ANSWER.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'faq', 'rows' => '10', 'placeholder' => _ANSWER, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
     ];
     $posttypeopts
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])

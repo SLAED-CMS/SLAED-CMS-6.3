@@ -79,14 +79,13 @@ function getSearchTypeList(int $typ): string {
 
 function getSearchForm(array $state): string {
     global $conf;
-    $sty = htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8');
     $all_opt = getTplSelectOption('', _SEARCHALL);
-    $rows = getTplFormAddRow(_MODUL.':', getTplFormSelect('mod', $all_opt.getSearchModList($state['mods'], (string)$state['mod']), 'sl_field '.$sty, 'onchange="submit()"'));
+    $rows = getTplFormAddRow(_MODUL.':', getTplFormSelect('mod', $all_opt.getSearchModList($state['mods'], (string)$state['mod']), '', 'onchange="submit()"'));
     if ($state['mod'] === 'media') {
-        $rows .= getTplFormAddRow(_SEARCHFROM.':', getTplFormSelect('typ', getSearchTypeList(intval($state['typ'])), 'sl_field '.$sty));
+        $rows .= getTplFormAddRow(_SEARCHFROM.':', getTplFormSelect('typ', getSearchTypeList(intval($state['typ'])), ''));
     }
-    $rows .= getTplFormAddRow(_SEARCH.':', getTplTextInput('word', (string)$state['word'], 'sl_field '.$sty, 'maxlength="100" placeholder="'._SEARCH.'" required'));
-    $rows .= getTplFormCenterRow(getTplFormSubmit('', _SEARCH));
+    $rows .= getTplFormAddRow(_SEARCH.':', getTplTextInput('word', (string)$state['word'], '', 'maxlength="100" placeholder="'._SEARCH.'" required'));
+    $rows .= getTplFormCenterRow(getTplFormSubmit(['label' => _SEARCH]));
     return getTplForumReplyForm(htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), $rows);
 }
 

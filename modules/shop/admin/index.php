@@ -601,8 +601,8 @@ function productadd(): void {
         }
         $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
     }
-    $rows[] = ['label_html' => _TEXT.':', 'field_html' => textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'), 'is_full' => true, 'field_unwrapped' => true];
-    $rows[] = ['label_html' => _ENDTEXT.':', 'field_html' => textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'), 'is_full' => true, 'field_unwrapped' => true];
+    $rows[] = ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'ptext', 'value' => $ptext, 'mod' => 'shop', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true];
+    $rows[] = ['label_html' => _ENDTEXT.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'pbodytext', 'value' => $pbodytext, 'mod' => 'shop', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true];
     $rows[] = ['label_html' => _PREIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
     $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])

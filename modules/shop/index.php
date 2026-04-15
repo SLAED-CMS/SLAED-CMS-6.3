@@ -252,7 +252,7 @@ function kasse(): void {
 	$idPartner = filter_input(INPUT_COOKIE, 'part', FILTER_VALIDATE_INT);
 	$idPartner = ($idPartner !== false && $idPartner !== null) ? $idPartner : '';
 	$stop = (!$cookies) ? _SERRORP : '';
-	$form = $tpl->getHtmlFrag('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'style' => $conf['style'], 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
+	$form = $tpl->getHtmlFrag('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
 	setHead(['title' => _C_TITLE]);
 	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
@@ -460,7 +460,7 @@ function partners(): void {
 			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
 			$cont .= $prs->filterContent($conf['shop']['partinfo'], false, $conf['name']);
 			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
-			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'style' => $conf['style'], 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);
+			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);
 		}
 		echo $cont;
 		setFoot();

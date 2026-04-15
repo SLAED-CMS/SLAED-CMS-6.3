@@ -123,7 +123,7 @@ function add(): void {
         ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_html' => _JOKE.':', 'field_html' => textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _JOKE.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => 'jokes', 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
     ];
     $posttypeopts
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])

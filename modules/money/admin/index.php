@@ -359,10 +359,10 @@ function config(): void {
         ['label_html' => _MA_8, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['money']['an'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_9, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['money']['pr'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_10, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['money']['ad'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _MA_11.':', 'field_html' => textarea('1', 'text', (string)($conf['money']['text'] ?? ''), 'all', 5, _MA_11, '1'), 'is_full' => true],
-        ['label_html' => _MA_12.':', 'field_html' => textarea('2', 'info', (string)($conf['money']['info'] ?? ''), 'all', 5, _MA_12, '1'), 'is_full' => true],
-        ['label_html' => _MA_13.':', 'field_html' => textarea('3', 'sendinfo', (string)($conf['money']['sendinfo'] ?? ''), 'all', 5, _MA_13, '1'), 'is_full' => true],
-        ['label_html' => _MA_14.':', 'field_html' => textarea('4', 'autor', (string)($conf['money']['autor'] ?? ''), 'all', 5, _MA_14, '1'), 'is_full' => true],
+        ['label_html' => _MA_11.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => (string)($conf['money']['text'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_11, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_12.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => (string)($conf['money']['info'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_12, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_13.':', 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => (string)($conf['money']['sendinfo'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_13, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_14.':', 'field_html' => getTplTextarea(['id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_14, 'required' => '1']), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=money&amp;op=configsave',

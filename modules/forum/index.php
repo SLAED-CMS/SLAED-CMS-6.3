@@ -237,8 +237,8 @@ function forum(): void {
                         $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', []);
                         if ($ismod) {
                             $selmm = tmoder(1)
-                                .getTplHiddenInput('op', 'move')
-                                .getTplHiddenInput('cat', (string)$cat)
+                                .getTplHiddenInput(['name' => 'op', 'value' => 'move'])
+                                .getTplHiddenInput(['name' => 'cat', 'value' => (string)$cat])
                                 .$tpl->getHtmlFrag('form-submit-btn', ['label' => _OK, 'class' => 'sl-but-blue'])
                                 .'</form>';
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
@@ -472,7 +472,7 @@ function view(): void {
             if ($ismod) {
                 $selmm = $tpl->getHtmlFrag('forum-mod-form-open', ['action' => 'index.php?name='.$conf['name']])
                     .tmoder(1)
-                    .getTplFormSubmit('move', _OK, getTplHiddenInput('cat', (string)$rows[0][2]).getTplHiddenInput('id[]', (string)$topic))
+                    .getTplFormSubmit(['op' => 'move', 'label' => _OK, 'extra' => getTplHiddenInput(['name' => 'cat', 'value' => (string)$rows[0][2]]).getTplHiddenInput(['name' => 'id[]', 'value' => (string)$topic])])
                     .'</form>';
                 $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _OPMOD.': ', 'content' => $selmm]);
             }
@@ -493,11 +493,11 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     $id = (int)$id;
     $catid = (int)$catid;
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
-        $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
-        $rows .= getTplFormAddRow(_TEXT, textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1'));
+        $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, '', 'placeholder="'._YOURNAME.'" required')) : '';
+        $rows .= getTplFormAddRow(_TEXT, getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']));
         $rows .= fields_in(isset($field), $conf['name']);
-        $hide = getTplHiddenInput('subject', $subject).getTplHiddenInput('pid', (string)$id).getTplHiddenInput('cat', (string)$catid).getTplHiddenInput('posttype', 'save');
-        $rows .= getTplFormCenterRow(getTplFormSubmit('send', _SEND, $hide));
+        $hide = getTplHiddenInput(['name' => 'subject', 'value' => $subject]).getTplHiddenInput(['name' => 'pid', 'value' => (string)$id]).getTplHiddenInput(['name' => 'cat', 'value' => (string)$catid]).getTplHiddenInput(['name' => 'posttype', 'value' => 'save']);
+        $rows .= getTplFormCenterRow(getTplFormSubmit(['op' => 'send', 'label' => _SEND, 'extra' => $hide]));
         $cont = getTplForumReplyForm($conf['name'], $rows);
         return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
     }
@@ -622,13 +622,13 @@ function add(): void {
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('forum-all-open', ['title' => $info]);
-        $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
-        $rows .= ($subh) ? getTplHiddenInput('subject', $subject) : getTplFormAddRow(_TITLE, getTplTextInput('subject', $subject, 'sl_field '.$conf['style'], 'maxlength="100" placeholder="'._TITLE.'" required'));
-        $rows .= getTplFormAddRow(_TEXT, textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1'));
+        $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, '', 'placeholder="'._YOURNAME.'" required')) : '';
+        $rows .= ($subh) ? getTplHiddenInput(['name' => 'subject', 'value' => $subject]) : getTplFormAddRow(_TITLE, getTplTextInput('subject', $subject, '', 'maxlength="100" placeholder="'._TITLE.'" required'));
+        $rows .= getTplFormAddRow(_TEXT, getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _TEXT, 'required' => '1']));
         $rows .= fields_in($field, $conf['name']);
         $rows .= ($ismod) ? getTplFormAddRow(_OPMOD, pmoder($status, $subh)).getTplFormAddRow(_CHNGSTORY, getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])) : '';
-        $hide = getTplHiddenInput('id', (string)$id).getTplHiddenInput('fid', (string)$fid).getTplHiddenInput('pid', (string)$pid).getTplHiddenInput('cat', (string)$catid);
-        $rows .= getTplFormCenterRow($hide.ad_save('', '', 'send'));
+        $hide = getTplHiddenInput(['name' => 'id', 'value' => (string)$id]).getTplHiddenInput(['name' => 'fid', 'value' => (string)$fid]).getTplHiddenInput(['name' => 'pid', 'value' => (string)$pid]).getTplHiddenInput(['name' => 'cat', 'value' => (string)$catid]);
+        $rows .= getTplFormCenterRow($hide.getTplFormSubmit(['op' => 'send', 'select' => true]));
         $cont .= getTplForumReplyForm($conf['name'], $rows);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
@@ -650,7 +650,7 @@ function tmoder(int $typ): string {
     foreach ($mass as $vn => $vv) $opts1 .= getTplSelectOption($vv, $vn);
     $opts = $tpl->getHtmlFrag('forum-optgroup', ['label' => _OPMOD, 'class' => 'sl_label', 'options_html' => $opts1]);
     $opts .= $tpl->getHtmlFrag('forum-optgroup', ['label' => _MOVETO, 'class' => 'sl_label', 'options_html' => getcat($conf['name'], 0, '', '', '', '1')]);
-    return getTplFormSelect('tmove', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
+    return getTplFormSelect('tmove', $opts, '', 'title="'._CHECKOP.'"');
 }
 
 function pmoder(int|string $status, int $subh): string {
@@ -660,7 +660,7 @@ function pmoder(int|string $status, int $subh): string {
     foreach ($mass as $vn => $vv) {
         $opts .= getTplSelectOption((string)$vv, $vn, $status == $vv);
     }
-    return getTplFormSelect('status', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
+    return getTplFormSelect('status', $opts, '', 'title="'._CHECKOP.'"');
 }
 
 function send(): void {

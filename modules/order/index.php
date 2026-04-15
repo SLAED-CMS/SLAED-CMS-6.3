@@ -24,16 +24,15 @@ function order(): void {
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        $rows = getTplFormAddRow(_OR_2.':', getTplEmailInput('mail', $mail, 'sl_field '.$conf['style'], 'maxlength="255" placeholder="'._OR_2.'" required'));
+        $rows = getTplFormAddRow(_OR_2.':', getTplEmailInput('mail', $mail, '', 'maxlength="255" placeholder="'._OR_2.'" required'));
         $rows .= fields_in($field, $conf['name']);
-        $rows .= getTplFormAddRow(_OR_3.':', textarea('1', 'note', $note, $conf['name'], 5, _OR_3));
+        $rows .= getTplFormAddRow(_OR_3.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
         $cont .= $tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
-            'style' => $conf['style'],
-            'submit' => getTplFormSubmit('send', _OR_4),
+            'submit' => getTplFormSubmit(['op' => 'send', 'label' => _OR_4]),
             'token' => '',
         ]);
     } else {

@@ -225,7 +225,6 @@ function add(): void {
             'is_user' => is_user(),
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('faq'), ENT_QUOTES, 'UTF-8'),
-            'style' => $conf['style'],
             'lbl_name' => _YOURNAME,
             'lbl_title' => _QUESTION,
             'lbl_cat' => _CATEGORY,
@@ -233,10 +232,10 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], getTplSelectOption('', _HOMECAT)),
-            'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '10', _ANSWER, '1'),
+            'catselect' => getcat($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _ANSWER, 'required' => '1']),
             'captcha' => getCaptcha(1),
-            'submit' => ad_save('', '', 'send'),
+            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
 		echo $cont;
 		setFoot();
