@@ -35,7 +35,7 @@ function getTplAddFieldRows(array $data = []): array {
         $type = $out[3] ?? '';
         if ($type == '1') {
             $dval = $text ? getConst($text) : '';
-            $html = $tpl->getHtmlFrag('input', [
+            $html = $tpl->getHtmlFrag('new/input', [
                 'itype' => 'text',
                 'name_attr' => 'field[]',
                 'value_attr' => $dval,
@@ -43,7 +43,7 @@ function getTplAddFieldRows(array $data = []): array {
                 'input_attr' => trim($need),
             ]);
         } elseif ($type == '2') {
-            $html = $tpl->getHtmlFrag('textarea', [
+            $html = $tpl->getHtmlFrag('new/textarea', [
                 'name_attr' => 'field[]',
                 'rows_num' => 5,
                 'value_text' => $text,
@@ -54,12 +54,15 @@ function getTplAddFieldRows(array $data = []): array {
             $list = explode(',', $out[2] ?? '');
             foreach ($list as $name) {
                 if ($name == '') continue;
-                $safe = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-                $opts .= '<option value="'.$safe.'"'.(($name == $text) ? ' selected' : '').'>'.$safe.'</option>';
+                $opts .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $name,
+                    'label_text' => $name,
+                    'is_selected' => $name == $text,
+                ]);
             }
-            $html = $tpl->getHtmlFrag('select', [
+            $html = $tpl->getHtmlFrag('new/select', [
                 'name_attr' => 'field[]',
-                'options_html' => $tpl->getHtmlFrag('select-option', [
+                'options_html' => $tpl->getHtmlFrag('new/select-option', [
                     'value_attr' => '',
                     'label_text' => _NO,
                     'is_selected' => $text === '',
@@ -95,8 +98,11 @@ function getTplAddDateTime(array $data = []): string {
     $hid = 'sl_datetime_hidden_'.$fieldid;
     $pid = 'sl_datetime_picker_'.$fieldid;
     $phold = $with ? 'YYYY-MM-DD HH:MM' : 'YYYY-MM-DD';
-    return '<input type="hidden" name="'.htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" value="'.htmlspecialchars((string)$time, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" id="'.$hid.'">'
-        .$tpl->getHtmlFrag('input', [
+    return getTplHiddenInput([
+            'name' => (string)$name,
+            'value' => (string)$time,
+            'attr' => 'id="'.$hid.'"',
+        ]).$tpl->getHtmlFrag('new/input', [
             'itype' => $type,
             'name_attr' => $pid,
             'value_attr' => $pvalu,
@@ -122,7 +128,11 @@ function getTplRefreshTimeSelect(array $data = []): string {
         '86400' => '24 '._HOUR.'.',
     ];
     foreach ($times as $value => $label) {
-        $opts .= '<option value="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'.(($valu === $value) ? ' selected' : '').'>'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</option>';
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$value,
+            'label_text' => (string)$label,
+            'is_selected' => $valu === $value,
+        ]);
     }
     return $tpl->getHtmlFrag('refresh-select-time', [
         'name_attr' => $name,
@@ -189,18 +199,17 @@ function getTplPreviewContent(array $data = []): string {
 }
 
 # Build the complete BB editor shell with toolbars, textarea and upload panel as a single inline HTML string
-function getTplBbEditor(array $opt = []): string {
-    global $conf, $user, $op;
-    $id = (string)($opt['id'] ?? '1');
-    $name = $opt['name'] ?? '';
-    $value = replace_break($opt['value'] ?? '');
-    $rows = (int)($opt['rows'] ?? 25);
-    $style = $opt['style'] ?? '';
-    $placeholder = $opt['placeholder'] ?? '';
-    $required = $opt['required'] ?? '';
-    $stloc = $opt['stloc'] ?? substr(_LOCALE, 0, 2);
-    $mod = $opt['mod'] ?? '';
-    $con = $opt['con'] ?? [];
+function getTplBbEditor(array $data = []): string {
+    global $conf, $user, $op, $tpl;
+    $id = (string)($data['id'] ?? '1');
+    $name = $data['name'] ?? '';
+    $value = replace_break($data['value'] ?? '');
+    $rows = (int)($data['rows'] ?? 25);
+    $phld = $data['placeholder'] ?? '';
+    $required = $data['required'] ?? '';
+    $stloc = $data['stloc'] ?? substr(_LOCALE, 0, 2);
+    $mod = $data['mod'] ?? '';
+    $con = $data['con'] ?? [];
     $e = static fn(string $s): string => htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $btn = static function(string $onclick, string $cls, string $title, string $over = '') use ($e): string {
         $ov = ($over !== '') ? ' OnMouseOver="'.$e($over).'"' : '';
@@ -233,12 +242,12 @@ function getTplBbEditor(array $opt = []): string {
         .$btn("InsertCode('quote', '"._JQUOTE."', '', '', '".$id."')", 'sl_bb_quote', _EQUOTE, 'CopyText();');
 
     # Textarea
-    $ta = '<textarea id="'.$e($id).'" name="'.$e($name).'" cols="65" rows="'.$rows.'"'
-        .' OnKeyPress="TransliteFeld(this, event)"'
-        .' OnSelect="FieldName(this, \''.$e($id).'\')"'
-        .' OnClick="FieldName(this, \''.$e($id).'\')"'
-        .' OnKeyUp="FieldName(this, \''.$e($id).'\')"'
-        .' class="sl_field'.$style.'"'.$placeholder.$required.'>'.$value.'</textarea>';
+    $ta = $tpl->getHtmlFrag('new/textarea', [
+        'name_attr' => $name,
+        'rows_num' => $rows,
+        'value_text' => $value,
+        'input_attr' => 'id="'.$e($id).'" OnKeyPress="TransliteFeld(this, event)" OnSelect="FieldName(this, \''.$e($id).'\')" OnClick="FieldName(this, \''.$e($id).'\')" OnKeyUp="FieldName(this, \''.$e($id).'\')"'.$phld.$required,
+    ]);
 
     # Bottom toolbar — info panel
     $bottom = '<div class="sl_pos_right">'
@@ -291,37 +300,37 @@ function getTplBbEditor(array $opt = []): string {
     }
 
     # Text formatting panel (font / color / size)
-    $fonts = '<option value="">'._FONT.'</option>';
+    $fonts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _FONT, 'is_selected' => false]);
     foreach (['Arial', 'Courier', 'Mistral', 'Impact', 'Sans Serif', 'Tahoma', 'Helvetica', 'Verdana'] as $f) {
-        $fonts .= '<option style="font-family: '.$f.';" value="'.$f.'">'.$f.'</option>';
+        $fonts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $f, 'label_text' => $f, 'is_selected' => false]);
     }
-    $colors = '<option value="">'._ECOLOR.'</option>';
+    $colors = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ECOLOR, 'is_selected' => false]);
     foreach (['black', 'gray', 'silver', 'white', 'maroon', 'red', 'orangered', 'orange', 'yellow', 'purple', 'fuchsia', 'violet', 'darkgreen', 'green', 'lime', 'navy', 'blue', 'teal', 'aqua'] as $c) {
-        $colors .= '<option style="background: '.$c.';" value="'.$c.'">'.$c.'</option>';
+        $colors .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $c, 'label_text' => $c, 'is_selected' => false]);
     }
-    $fsizes = '<option value="">'._ESIZE.'</option>';
+    $fsizes = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ESIZE, 'is_selected' => false]);
     foreach (['8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30', '32'] as $fs) {
-        $fsizes .= '<option value="'.$fs.'">'.$fs.'</option>';
+        $fsizes .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $fs, 'label_text' => $fs, 'is_selected' => false]);
     }
     $ei = $e($id);
     $bottom .= $drop(
         $btn("HideShow('t-form-".$id."', 'blind', 'up', 500);", 'sl_bb_text', _TEXT),
         '<div id="t-form-'.$ei.'" class="sl_drop-form"><ul>'
-        .'<li><select name="family" OnChange="InsertCode(\'family\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;" class="sl_field" multiple>'.$fonts.'</select></li>'
-        .'<li><select name="color" OnChange="InsertCode(\'color\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;" class="sl_field" multiple>'.$colors.'</select></li>'
-        .'<li><select name="size" OnChange="InsertCode(\'size\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;" class="sl_field" multiple>'.$fsizes.'</select></li>'
+        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'family', 'options_html' => $fonts, 'select_attr' => 'OnChange="InsertCode(\'family\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
+        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'color', 'options_html' => $colors, 'select_attr' => 'OnChange="InsertCode(\'color\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
+        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'size', 'options_html' => $fsizes, 'select_attr' => 'OnChange="InsertCode(\'size\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
         .'</ul></div>'
     );
 
     # Code syntax panel
-    $fcodes = '<option value="">'._CODE.'</option>';
+    $fcodes = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _CODE, 'is_selected' => false]);
     foreach (['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'] as $fc) {
-        $fcodes .= '<option value="'.strtolower($fc).'">'.$fc.'</option>';
+        $fcodes .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => strtolower($fc), 'label_text' => $fc, 'is_selected' => false]);
     }
     $bottom .= $drop(
         $btn("HideShow('c-form-".$id."', 'blind', 'up', 500);", 'sl_bb_code', _CODE),
         '<div id="c-form-'.$ei.'" class="sl_drop-form"><ul>'
-        .'<li><select name="code" OnChange="InsertCode(\'code\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;" class="sl_field" multiple>'.$fcodes.'</select></li>'
+        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'code', 'options_html' => $fcodes, 'select_attr' => 'OnChange="InsertCode(\'code\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
         .'</ul></div>'
     );
 
@@ -355,14 +364,13 @@ function getTplBbEditor(array $opt = []): string {
                 .' hx-encoding="multipart/form-data" hx-target="#msg" hx-swap="innerHTML" hx-trigger="change from:#file_upload"'
                 .' hx-on:htmx:before-request="document.getElementById(&quot;msg&quot;).innerHTML=&quot;&lt;div class=\&quot;sl_loading\&quot;&gt;&lt;/div&gt;&lt;br&gt;&quot;"'
                 .' hx-on:htmx:after-request="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&amp;op=getEditorFiles&amp;id='.$ei.'&amp;dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;})">'
-                .'<input type="hidden" name="upload_token" value="'.$tok.'">'
-                .'<input type="file" id="file_upload" name="file[]" multiple="multiple" class="sl_field">'
+                .getTplHiddenInput(['name' => 'upload_token', 'value' => $tok])
+                .$tpl->getHtmlFrag('file-input', ['name_attr' => 'file[]', 'input_id' => 'file_upload', 'is_multiple' => true])
                 .'</form>'
-                .'<input type="button" value="'._UPDATE.'" OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$ei.'&dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;}); return false;" class="sl_but_green">'
+                .$tpl->getHtmlFrag('button', ['button_type' => 'button', 'submit_label' => _UPDATE, 'button_class' => 'sl_but_green', 'button_attr' => 'OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$ei.'&dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;}); return false;"'])
                 .'</div>';
         } else {
-            $inner = '<div class="sl_pos_center"><input type="button" value="'._UPDATE.'"'
-                .' OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$ei.'&dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;}); return false;" class="sl_but_green"></div>';
+            $inner = '<div class="sl_pos_center">'.$tpl->getHtmlFrag('button', ['button_type' => 'button', 'submit_label' => _UPDATE, 'button_class' => 'sl_but_green', 'button_attr' => 'OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$ei.'&dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;}); return false;"']).'</div>';
         }
         $inner .= '<div id="repf'.$ei.'" style="margin: 5px;"></div>';
         $upload = '<div id="af-form-'.$ei.'" class="sl_bbup-panel sl_none">'.$inner.'</div>';
@@ -377,31 +385,36 @@ function getTplBbEditor(array $opt = []): string {
 }
 
 # Universal pager — works in both admin and front-end contexts
-function getTplPager(array $opt): string {
+function getTplPager(array $data = []): string {
     global $db, $afile, $tpl;
-    $limit  = (int)($opt['limit'] ?? 10);
-    $maxpg  = (int)($opt['maxpg'] ?? 10);
-    $table  = $opt['table'] ?? '';
-    $field  = $opt['field'] ?? 'id';
-    $where  = $opt['where'] ?? '';
-    $mod    = $opt['mod'] ?? '';
-    $anchor = $opt['anchor'] ?? '';
-    $n      = $opt['n'] ?? 'num';
-    $url    = html_entity_decode($opt['url'] ?? '', ENT_QUOTES, 'UTF-8');
-    $targetid = (string)($opt['target_id'] ?? '');
-    $pushurl = !empty($opt['push_url']);
-    $prefix = (string)($opt['prefix'] ?? '');
-    [$cnt]  = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : '')));
-    $cnt    = (int)$cnt;
+    $limit = (int)($data['limit'] ?? 10);
+    $maxpg = (int)($data['maxpg'] ?? 10);
+    $table = $data['table'] ?? '';
+    $field = $data['field'] ?? 'id';
+    $where = $data['where'] ?? '';
+    $mod = $data['mod'] ?? '';
+    $anchor = $data['anchor'] ?? '';
+    $n = $data['n'] ?? 'num';
+    $url = html_entity_decode($data['url'] ?? '', ENT_QUOTES, 'UTF-8');
+    $targetid = (string)($data['target_id'] ?? '');
+    $pushurl = !empty($data['push_url']);
+    $prefix = (string)($data['prefix'] ?? '');
+    $wparams = (array)($data['where_params'] ?? []);
+    $urlx = (array)($data['url_extra'] ?? []);
+    [$cnt] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : ''), $wparams));
+    $cnt = (int)$cnt;
     if ($cnt <= $limit) return '';
-    $pages  = (int)ceil($cnt / $limit);
-    $num    = max(1, min(getVar('get', $n, 'num', 1), $pages));
-    $nnum   = $maxpg + 1;
-    $mkurl  = static function(int $i) use ($mod, $url, $n, $anchor, $afile): string {
+    $pages = (int)ceil($cnt / $limit);
+    $num = max(1, min(getVar('get', $n, 'num', 1), $pages));
+    $nnum = $maxpg + 1;
+    $mkurl = static function(int $i) use ($mod, $url, $n, $anchor, $afile, $urlx): string {
         if (defined('ADMIN_FILE')) return $afile.'.php?'.$url.$n.'='.$i.$anchor;
-        return getSeoUrl($mod ? ['name' => $mod, $url.$n => $i] : [$url.$n => $i]).$anchor;
+        $params = $mod ? ['name' => $mod] : [];
+        if ($urlx) $params = array_merge($params, $urlx);
+        $params[$n] = $i;
+        return getSeoUrl($params).$anchor;
     };
-    $link   = static function(string $lh, string $label, bool $cur = false, bool $nav = false) use ($tpl, $targetid, $pushurl, $prefix): string {
+    $link = static function(string $lh, string $label, bool $cur = false, bool $nav = false) use ($tpl, $targetid, $pushurl, $prefix): string {
         $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav];
         if ($targetid && !$cur && $lh !== '') {
             $opt['query'] = $lh;
@@ -412,9 +425,9 @@ function getTplPager(array $opt): string {
         }
         return $tpl->getHtmlFrag($prefix.'pager-link', $opt);
     };
-    $dots   = $tpl->getHtmlFrag($prefix.'pager-dots', []);
-    $prev   = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
-    $items  = '';
+    $dots = $tpl->getHtmlFrag($prefix.'pager-dots', []);
+    $prev = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
+    $items = '';
     for ($i = 1; $i <= $pages; $i++) {
         if ($i === $num) {
             $items .= $link('', (string)$i, true).' ';
@@ -426,19 +439,19 @@ function getTplPager(array $opt): string {
             if (($num < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
         }
     }
-    $next   = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true) : $link('', _NEXT, true, true);
+    $next = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true) : $link('', _NEXT, true, true);
     return $tpl->getHtmlFrag($prefix.'pager', [
-        'count'   => $cnt,
-        'pages'   => $pages,
-        'limit'   => $limit,
-        'page'    => $limit,
+        'count' => $cnt,
+        'pages' => $pages,
+        'limit' => $limit,
+        'page' => $limit,
         'overall' => _OVERALL,
-        'by'      => _BY,
-        'page_s'  => _PAGE_S,
+        'by' => _BY,
+        'page_s' => _PAGE_S,
         'perpage' => _PERPAGE,
-        'prev'    => $prev,
-        'items'   => $items,
-        'next'    => $next,
+        'prev' => $prev,
+        'items' => $items,
+        'next' => $next,
     ]);
 }
 
@@ -575,7 +588,7 @@ function setTplAdminInfoPage(array $data = []): void {
     if (!empty($conf['adminfo'])) {
         $rows = [[
             'label_html' => '',
-            'field_html' => textarea('1', 'text', $text, $mod, '25'),
+            'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $text, 'mod' => $mod, 'rows' => '25']),
             'is_full' => true,
             'field_unwrapped' => true,
         ]];
@@ -622,7 +635,7 @@ function getTplUserSearchInput(array $data = []): string {
     $inpid = $data['input_id'] ?? $name;
     $list = $data['list_id'] ?? ($inpid.'_list');
     $endpoint = $data['endpoint'] ?? 'index.php?go=1&amp;op=getUserList';
-    $minlength = (int)($data['minlength'] ?? 1);
+    $mlen = (int)($data['minlength'] ?? 1);
     $tip = (string)($data['tip'] ?? '');
     $tiphtml = '';
     if ($tip !== '') {
@@ -637,7 +650,7 @@ function getTplUserSearchInput(array $data = []): string {
         'input_id' => $inpid,
         'list_id' => $list,
         'maxlength_num' => (int)($data['maxlength'] ?? 25),
-        'minlength_num' => $minlength,
+        'minlength_num' => $mlen,
         'name_attr' => $name,
         'tip_html' => $tiphtml,
         'token_attr' => $data['token'] ?? getSiteToken(),
@@ -647,8 +660,11 @@ function getTplUserSearchInput(array $data = []): string {
 
 
 # Render one shared admin move-controls block with HTMX transport
-function getTplMoveControls(string $target, string $up = '', string $down = ''): string {
+function getTplMoveControls(array $data = []): string {
     global $tpl;
+    $target = (string)($data['target'] ?? '');
+    $up = (string)($data['up'] ?? '');
+    $down = (string)($data['down'] ?? '');
     $up = ($up && !str_contains($up, 'token=')) ? $up.'&amp;token='.getSiteToken() : $up;
     $down = ($down && !str_contains($down, 'token=')) ? $down.'&amp;token='.getSiteToken() : $down;
     return $tpl->getHtmlFrag('move-controls', [
@@ -657,6 +673,157 @@ function getTplMoveControls(string $target, string $up = '', string $down = ''):
         'target' => $target,
         'up_query' => $up,
         'up_title' => _BLOCKUP,
+    ]);
+}
+
+# Render extra field rows for new/ form layout (fields_in() replacement for new/form-add)
+function getTplFieldsIn(array $data = []): string {
+    global $conf, $tpl;
+    $field  = $data['field'] ?? '';
+    $mod    = strtolower($data['mod'] ?? '');
+    $fieldc = $conf['fields'][$mod] ?? '';
+    $posted = getVar('post', 'field', 'raw', '');
+    if ($posted !== '') $field = filterFields($posted);
+    $fieldb = explode('|', is_string($field) ? $field : '');
+    $fieldc = explode('||', $fieldc);
+    $i = 0;
+    $out = '';
+    foreach ($fieldc as $item) {
+        if ($item !== '') {
+            preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $m);
+            if (($m[1] ?? '0') !== '0') {
+                $fieldin   = !empty($fieldb[$i]) ? $fieldb[$i] : ($m[2] ?? '');
+                $requir    = (($m[4] ?? '0') == '1') ? ' required' : '';
+                $fhtml = '';
+                if (($m[3] ?? '') == '1') {
+                    $dval = $fieldin ? getConst($fieldin) : '';
+                    $fhtml = getTplTextInput('field[]', $dval, '', 'placeholder="'.$dval.'"'.$requir);
+                } elseif ($m[3] == '2') {
+                    $fhtml = $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'field[]', 'rows_num' => 5, 'value_text' => $fieldin, 'input_attr' => trim($requir)]);
+                } elseif ($m[3] == '3') {
+                    $opts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
+                    foreach (explode(',', $m[2] ?? '') as $opt) {
+                        if ($opt === '') continue;
+                        $opts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $opt, 'label_text' => $opt, 'is_selected' => $opt === $fieldin]);
+                    }
+                    $fhtml = $tpl->getHtmlFrag('new/select', ['name_attr' => 'field[]', 'options_html' => $opts, 'select_attr' => trim($requir)]);
+                } elseif ($m[3] == '4') {
+                    $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
+                } elseif ($m[3] == '5') {
+                    $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
+                }
+                if ($fhtml !== '') {
+                    $out .= $tpl->getHtmlFrag('new/form-field-row', ['label' => getConst($m[1]), 'field_html' => $fhtml]);
+                }
+            }
+        }
+        $i++;
+    }
+    return $out;
+}
+
+function getTplHiddenInput(array $data = []): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('new/hidden', [
+        'name_attr'  => (string)($data['name']  ?? ''),
+        'value_attr' => (string)($data['value'] ?? ''),
+        'input_attr' => (string)($data['attr'] ?? ''),
+    ]);
+}
+
+function getTplFormSubmit(array $data = []): string {
+    global $tpl;
+    $op = (string)($data['op'] ?? '');
+    $label = (string)($data['label'] ?? _OK);
+    $extra = (string)($data['extra'] ?? '');
+    $name = (string)($data['name'] ?? '');
+    $val = (string)($data['val'] ?? '');
+    $select = !empty($data['select']);
+    $preview = !empty($data['no_preview']);
+    return $tpl->getHtmlFrag('new/form-submit', [
+        'op'            => $op,
+        'extra'         => $extra,
+        'name'          => $name,
+        'val'           => $val,
+        'select'        => $select,
+        'show_preview'  => $select && !$preview,
+        'show_delete'   => $select && $val !== '',
+        'label_preview' => _PREVIEW,
+        'label_save'    => _SEND,
+        'label_delete'  => _DELETE,
+        'label'         => $label,
+    ]);
+}
+
+# Render a rich-text editor textarea with upload config and locale for the given module
+function getTplTextarea(array $data = []): string {
+    global $conf;
+    $id = (string)($data['id'] ?? '1');
+    $name = (string)($data['name'] ?? '');
+    $value = (string)($data['value'] ?? '');
+    $mod = (string)($data['mod'] ?? '');
+    $rows = (int)($data['rows'] ?? 5);
+    $phld = (string)($data['placeholder'] ?? '');
+    $required = in_array($data['required'] ?? '', [true, 1, '1', 'required'], true);
+    $stloc = substr(_LOCALE, 0, 2);
+    $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
+    $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
+    $key = getEditorKey();
+    $fmt = getEditorMode($key);
+    return Editor::getContent([
+        'editor' => $key,
+        'format' => $fmt,
+        'id' => $id,
+        'name' => $name,
+        'value' => $desc,
+        'rows' => $rows,
+        'placeholder' => $phld,
+        'required' => $required,
+        'stloc' => $stloc,
+        'mod' => $mod,
+        'con' => $con,
+    ]);
+}
+
+# Render an inline HTMX edit form with a textarea and save/back buttons
+function getTplAjaxTextarea(array $data = []): string {
+    global $tpl;
+    $obj  = (string)($data['obj']  ?? '');
+    $go   = (string)($data['go']   ?? '');
+    $op   = (string)($data['op']   ?? '');
+    $id   = (string)($data['id']   ?? '');
+    $cid  = (string)($data['cid']  ?? '0');
+    $typ  = (string)($data['typ']  ?? '0');
+    $mod  = (string)($data['mod']  ?? '');
+    $text = (string)($data['text'] ?? '');
+    $rows = (int)   ($data['rows'] ?? 5);
+    $desc    = !checkHtmlEditor() ? replace_break($text) : $text;
+    $formId  = 'form'.$obj;
+    $fieldId = $formId.'_text';
+    $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $query   = 'index.php?go='.$esc($go).'&amp;op='.$esc($op).'&amp;id='.$esc($id).'&amp;cid='.$esc($cid).'&amp;typ='.$esc($typ).'&amp;mod='.$esc($mod);
+    $cerror  = addslashes((string)_CERROR1);
+    return $tpl->getHtmlFrag('new/ajax-textarea-form', [
+        'form_id'          => $formId,
+        'textarea_html'    => $tpl->getHtmlFrag('new/textarea', [
+            'name_attr'   => 'text',
+            'rows_num'    => $rows,
+            'value_text'  => $desc,
+            'input_class' => 'sl_earea',
+            'input_attr'  => 'id="'.$fieldId.'"',
+        ]),
+        'save_button_html' => $tpl->getHtmlFrag('new/button', [
+            'button_type'  => 'submit',
+            'submit_label' => _SAVE,
+            'button_class' => 'sl_but_green',
+            'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''.$cerror.'\'); event.preventDefault(); }"',
+        ]),
+        'back_button_html' => $tpl->getHtmlFrag('new/button', [
+            'button_type'  => 'submit',
+            'submit_label' => _BACK,
+            'button_class' => 'sl-but-blue',
+            'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"',
+        ]),
     ]);
 }
 

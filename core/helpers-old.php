@@ -31,7 +31,7 @@ function getAjaxQuery(array $data): string {
 function getTplSelect(string $name, string $opts, string $clas = '', string $attr = ''): string {
     global $tpl;
     $selectAttr = trim(($clas !== '' ? 'class="'.htmlspecialchars($clas, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '').($attr !== '' ? ' '.$attr : ''));
-    return $tpl->getHtmlFrag('select', [
+    return $tpl->getHtmlFrag('new/select', [
         'name_attr' => $name,
         'options_html' => $opts,
         'select_attr' => $selectAttr,
@@ -41,7 +41,7 @@ function getTplSelect(string $name, string $opts, string $clas = '', string $att
 # Render one shared admin option row with optional selected state
 function getTplOption(string $valu, string $text, bool $isel = false): string {
     global $tpl;
-    return $tpl->getHtmlFrag('select-option', [
+    return $tpl->getHtmlFrag('new/select-option', [
         'is_selected' => $isel,
         'label_text' => $text,
         'value_attr' => $valu,
@@ -74,19 +74,11 @@ function getTplAjaxAction(string $target, string $query, string $title, string $
     ]);
 }
 
-# Render one shared admin hidden input from a field name and value
-function getTplHiddenInput(string $name, string $valu): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-hidden-input', [
-        'name_attr' => $name,
-        'value_attr' => $valu,
-    ]);
-}
 
-# Render one shared admin text input with optional class and extra attributes
-function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
+# Render one shared admin text input with optional extra class and extra attributes
+function getTplTextInput(string $name, string $valu, string $clas = '', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('input', [
+    return $tpl->getHtmlFrag('new/input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'text',
@@ -95,10 +87,10 @@ function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', s
     ]);
 }
 
-# Render one shared admin email input with optional class and extra attributes
-function getTplEmailInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
+# Render one shared admin email input with optional extra class and extra attributes
+function getTplEmailInput(string $name, string $valu, string $clas = '', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('input', [
+    return $tpl->getHtmlFrag('new/input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'email',
@@ -129,14 +121,6 @@ function getTplFormAddRow(string $label, string $field): string {
 }
 
 # Render one shared frontend submit block from prepared hidden fields
-function getTplFormSubmit(string $op, string $label, string $hide = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('form-submit', [
-        'hidden_html' => $hide,
-        'op_value' => $op,
-        'submit_label' => $label,
-    ]);
-}
 
 # Render one shared frontend select from prepared option/optgroup markup
 function getTplFormSelect(string $name, string $opts, string $clas = '', string $attr = ''): string {
@@ -257,7 +241,7 @@ function getTplAdminAccountSearch(int $search, string $chng): string {
     $opts = '';
     foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $k => $v) {
         $n = $k + 1;
-        $opts .= $tpl->getHtmlFrag('select-option', [
+        $opts .= $tpl->getHtmlFrag('new/select-option', [
             'value_attr' => (string)$n,
             'label_text' => $v,
             'is_selected' => $search === $n || (!$search && $n === 2),
@@ -274,7 +258,7 @@ function getTplAdminAccountSearch(int $search, string $chng): string {
         ]),
         'ok_label' => _OK,
         'search_label' => _SEARCH,
-        'select_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'search', 'options_html' => $opts]),
+        'select_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'search', 'options_html' => $opts]),
     ]));
 }
 
@@ -379,7 +363,7 @@ function getTplCategorySelect(string $path, string $selected = ''): string {
     }
     asort($imgs);
     $opts = getTplOption($path.'no.png', _NO).implode('', $imgs);
-    return getTplSelect('imgcat', $opts, 'sl_form', 'id="img_replace"');
+    return getTplSelect('imgcat', $opts, '', 'id="img_replace"');
 }
 
 # Render a categories image preview tag from a full image path
@@ -399,7 +383,7 @@ function getTplBlockPosition(string $selected = ''): string {
           . getTplOption('r', _RIGHT,      $selected === 'r')
           . getTplOption('b', _BANNERUP,   $selected === 'b')
           . getTplOption('f', _BANNERDOWN, $selected === 'f');
-    return getTplSelect('bpos', $opts, 'sl_form');
+    return getTplSelect('bpos', $opts, '');
 }
 
 # Render a block RSS refresh-interval select with optional pre-selected value
@@ -415,14 +399,14 @@ function getTplBlockRefresh(string $selected = '3600'): string {
     foreach ($times as $val => $label) {
         $opts .= getTplOption($val, $label, $selected === $val);
     }
-    return getTplSelect('refresh', $opts, 'sl_form');
+    return getTplSelect('refresh', $opts, '');
 }
 
 # Render a block after-expiration action select with optional pre-selected value
 function getTplBlockAction(string $selected = ''): string {
     $opts = getTplOption('d', _DEACTIVATE, $selected === 'd')
           . getTplOption('r', _DELETE,     $selected === 'r');
-    return getTplSelect('action', $opts, 'sl_form');
+    return getTplSelect('action', $opts, '');
 }
 
 # Render a block view-privilege select with optional pre-selected value
@@ -432,7 +416,7 @@ function getTplBlockView(int $selected = 0): string {
     foreach ($privs as $key => $label) {
         $opts .= getTplOption((string)$key, $label, $selected === $key);
     }
-    return getTplSelect('view', $opts, 'sl_form');
+    return getTplSelect('view', $opts, '');
 }
 
 # Return a label string with an inline sl_small help-text div for admin form rows
@@ -454,18 +438,6 @@ function getStopText(array $stop): string {
     return implode($sep, array_filter($stop, 'strlen'));
 }
 
-# Return an anchor tag for use inside raw HTML slots such as alert text or tooltip content
-# href must be pre-encoded by the caller; label and optional title/class are HTML-escaped here
-function getTplAdminTextLink(string $href, string $label, string $target = '', string $title = '', string $class = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-text-link', [
-        'href'   => $href,
-        'label'  => $label,
-        'cls'    => $class,
-        'target' => $target,
-        'title'  => $title,
-    ]);
-}
 
 # Return one line-break-prefixed key-value pair for building tooltip content_html strings
 function getTplAdminTipLine(string $key, string $val): string {
@@ -534,7 +506,6 @@ function getTplMoneyCalcForm(string $fnname, string $tolbl, string $tocur): stri
         'btn_label' => _MO_4,
         'fn_name' => $fnname,
         'from_label' => _MO_2,
-        'style' => $conf['style'],
         'to_cur' => $tocur,
         'to_label' => $tolbl,
     ]);
@@ -650,17 +621,6 @@ function getTplMenuItems(array $items): string {
     ]);
 }
 
-# Render the admin info text edit form from a data map with action, hidden fields and textarea
-function getTplAdminInfoForm(array $data): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-info-form', [
-        'action_url' => (string)($data['action_url'] ?? ''),
-        'hidden_html' => (string)($data['hidden_html'] ?? ''),
-        'submit_label' => (string)($data['submit_label'] ?? ''),
-        'submit_title' => (string)($data['submit_title'] ?? ''),
-        'textarea_html' => (string)($data['textarea_html'] ?? ''),
-    ]);
-}
 
 # Render a composite title-tip block joined with a note label from tooltip, title and label texts
 function getTplAdminTipLabel(string $tip, string $title, string $label): string {
@@ -677,61 +637,6 @@ function getTplAdminPanel(string $pid, string $title, string $cont): string {
     ]);
 }
 
-# Render one admin tab list open tag from an id and a CSS class
-function getTplAdminTabOpen(string $id, string $cls): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-list-open', [
-        'class' => $cls,
-        'id' => $id,
-    ]);
-}
-
-# Render one admin tab list close tag
-function getTplAdminTabClose(): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-list-close', []);
-}
-
-# Render one admin tab link from href, label, selected state and optional rel and attr strings
-function getTplAdminTabLink(string $href, string $label, bool $isel = false, string $rel = '', string $attr = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-link', [
-        'href' => $href,
-        'label' => $label,
-        'rel' => $rel,
-        'selected' => $isel,
-    ]);
-}
-
-# Render one admin info count badge with a red or green CSS class based on value
-function getTplAdminInfoCount(int|string $cnt): string {
-    global $tpl;
-    if (!is_numeric($cnt)) return '-';
-    $css = ((int)$cnt >= 1) ? 'sl_red' : 'sl_green';
-    return $tpl->getHtmlFrag('admin-info-count', [
-        'class' => $css,
-        'count' => (string)$cnt,
-    ]);
-}
-
-# Render one admin info panel row from href, title, label and count value
-function getTplAdminInfoRow(string $href, string $title, string $label, int|string $cnt): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-info-row', [
-        'count_html' => getTplAdminInfoCount($cnt),
-        'href' => $href,
-        'label' => $label,
-        'title' => $title,
-    ]);
-}
-
-# Render one admin info panel table from an array of pre-rendered row strings
-function getTplAdminInfoTable(array $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-info-table', [
-        'rows_html' => implode('', $rows),
-    ]);
-}
 
 # Render the admin module navigation header with tabs and optional subtabs
 function getTplAdminNavi(array $par): string {
