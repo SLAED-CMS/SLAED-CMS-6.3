@@ -28,7 +28,7 @@ function order(): void {
         $rows .= getTplFieldsIn($field, $conf['name']);
         $rows .= getTplFormAddRow(_OR_3.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],

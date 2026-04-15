@@ -51,7 +51,7 @@ function money(): void {
         }
         $rows .= getTplFormAddRow(_MO_9.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_6]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],

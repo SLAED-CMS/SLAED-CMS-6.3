@@ -272,7 +272,7 @@ function addview(int $id): string {
         [$cid, $status] = $db->getSqlRow($result);
         $rows = getTplFormAddRow(_HELPGLOS, getTplRadioForm($status, 'status'));
         $hide = getTplHiddenInput(['name' => 'pid', 'value' => (string)$id]).getTplHiddenInput(['name' => 'catid', 'value' => (string)$cid]).getTplHiddenInput(['name' => 'posttype', 'value' => 'save']);
-        return $tpl->getHtmlFrag('form-add', [
+        return $tpl->getHtmlFrag('new/form-add', [
             'extrafields' => $rows,
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => 10, 'placeholder' => _TEXT, 'required' => '1']),
             'lbl_text' => _TEXT,
@@ -296,7 +296,7 @@ function add(): void {
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($hometext) $cont .= preview($title, $hometext, '', $field, $conf['name']);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBMIT]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'name' => $conf['name'],
             'token' => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
             'lbl_title' => _TITLE,

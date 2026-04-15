@@ -283,7 +283,7 @@ function add(): void {
         if ($description) $cont .= preview($title, $description, $bodytext, '', $conf['name']);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDFNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'has_name' => true,
             'is_user' => is_user(),
             'name' => $conf['name'],

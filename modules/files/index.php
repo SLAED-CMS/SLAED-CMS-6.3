@@ -308,12 +308,12 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $extra = '';
         if ($conf['files']['upload'] == 1) {
-            $extra .= $tpl->getHtmlFrag('files-add-upload-row', ['label' => _FILE_USER]);
+            $extra .= $tpl->getHtmlFrag('new/files-add-upload-row', ['label' => _FILE_USER]);
         }
-        $extra .= $tpl->getHtmlFrag('files-add-input-row', ['label' => _URL, 'type' => 'url', 'field' => 'url', 'value' => $url, 'maxlength' => '100', 'placeholder' => _URL]);
-        $extra .= $tpl->getHtmlFrag('files-add-input-row', ['label' => _VERSION, 'type' => 'text', 'field' => 'fversion', 'value' => $fversion, 'maxlength' => '10', 'placeholder' => _VERSION]);
-        $extra .= $tpl->getHtmlFrag('files-add-input-row', ['label' => _SIZE, 'type' => 'text', 'field' => 'fsize', 'value' => $fsize, 'maxlength' => '10', 'placeholder' => _SIZE]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $extra .= $tpl->getHtmlFrag('new/files-add-input-row', ['label' => _URL, 'type' => 'url', 'field' => 'url', 'value' => $url, 'maxlength' => '100', 'placeholder' => _URL]);
+        $extra .= $tpl->getHtmlFrag('new/files-add-input-row', ['label' => _VERSION, 'type' => 'text', 'field' => 'fversion', 'value' => $fversion, 'maxlength' => '10', 'placeholder' => _VERSION]);
+        $extra .= $tpl->getHtmlFrag('new/files-add-input-row', ['label' => _SIZE, 'type' => 'text', 'field' => 'fsize', 'value' => $fsize, 'maxlength' => '10', 'placeholder' => _SIZE]);
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'has_name' => true,
             'is_user' => is_user(),
             'name' => $conf['name'],

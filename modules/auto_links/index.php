@@ -123,7 +123,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($desc) $cont .= preview($name, $desc, '', '', $conf['name']);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_I]);
-    $cont .= $tpl->getHtmlFrag('form-add', [
+    $cont .= $tpl->getHtmlFrag('new/form-add', [
         'name' => $conf['name'],
         'token' => htmlspecialchars(getSiteToken('auto_links'), ENT_QUOTES, 'UTF-8'),
         'lbl_email' => _A_LINKS_E,

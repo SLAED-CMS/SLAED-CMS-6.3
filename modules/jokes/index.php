@@ -137,7 +137,7 @@ function add(): void {
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($joke) $cont .= preview($title, $joke, '', '', 'all');
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADD_JNOTE]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'has_name' => true,
             'is_user' => is_user(),
             'name' => $conf['name'],

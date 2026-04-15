@@ -220,7 +220,7 @@ function add(): void {
 		if ($hometext) $cont .= preview($title, $hometext, '', '', $conf['name']);
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('new/form-add', [
             'has_name' => true,
             'is_user' => is_user(),
             'name' => $conf['name'],
