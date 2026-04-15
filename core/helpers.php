@@ -189,8 +189,8 @@ function getTplViewFieldRows(array $data = []): string {
             } else {
                 $valu = htmlspecialchars((string)$valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             }
-            $rows .= $tpl->getHtmlFrag('view-field', [
-                'label_text' => getConst($out[1]).':',
+            $rows .= $tpl->getHtmlFrag('new/view-field', [
+                'label_text' => getConst($out[1]),
                 'value_html' => $valu,
             ]);
         }
@@ -705,9 +705,12 @@ function getTplFieldsIn(array $data = []): string {
     $field  = $data['field'] ?? '';
     $mod    = strtolower($data['mod'] ?? '');
     $fieldc = $conf['fields'][$mod] ?? '';
-    $posted = getVar('post', 'field', 'raw', '');
-    if ($posted !== '') $field = filterFields($posted);
-    $fieldb = explode('|', is_string($field) ? $field : '');
+    $posted = getVar('post', 'field[]', 'raw', []);
+    if (is_array($posted) && $posted) {
+        $fieldb = array_values(array_map('strval', $posted));
+    } else {
+        $fieldb = explode('|', is_string($field) ? $field : '');
+    }
     $fieldc = explode('||', $fieldc);
     $i = 0;
     $out = '';
