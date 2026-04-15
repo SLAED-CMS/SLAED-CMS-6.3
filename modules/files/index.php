@@ -308,11 +308,11 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $extra = '';
         if ($conf['files']['upload'] == 1) {
-            $extra .= $tpl->getHtmlFrag('new/files-add-upload-row', ['label' => _FILE_USER]);
+            $extra .= $tpl->getHtmlFrag('new/form-field-row', ['label' => _FILE_USER, 'field_html' => $tpl->getHtmlFrag('new/file-input', ['name_attr' => 'userfile'])]);
         }
-        $extra .= $tpl->getHtmlFrag('new/files-add-input-row', ['label' => _URL, 'type' => 'url', 'field' => 'url', 'value' => $url, 'maxlength' => '100', 'placeholder' => _URL]);
-        $extra .= $tpl->getHtmlFrag('new/files-add-input-row', ['label' => _VERSION, 'type' => 'text', 'field' => 'fversion', 'value' => $fversion, 'maxlength' => '10', 'placeholder' => _VERSION]);
-        $extra .= $tpl->getHtmlFrag('new/files-add-input-row', ['label' => _SIZE, 'type' => 'text', 'field' => 'fsize', 'value' => $fsize, 'maxlength' => '10', 'placeholder' => _SIZE]);
+        $extra .= $tpl->getHtmlFrag('new/form-field-row', ['label' => _URL, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'url', 'name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => '100', 'placeholder_text' => _URL])]);
+        $extra .= $tpl->getHtmlFrag('new/form-field-row', ['label' => _VERSION, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'fversion', 'value_attr' => $fversion, 'maxlength_num' => '10', 'placeholder_text' => _VERSION])]);
+        $extra .= $tpl->getHtmlFrag('new/form-field-row', ['label' => _SIZE, 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'text', 'name_attr' => 'fsize', 'value_attr' => $fsize, 'maxlength_num' => '10', 'placeholder_text' => _SIZE])]);
         $cont .= $tpl->getHtmlFrag('new/form-add', [
             'has_name' => true,
             'is_user' => is_user(),
