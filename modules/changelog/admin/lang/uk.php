@@ -51,4 +51,3 @@ define('_CHLOG_ERR_GH_API_JSON', 'GitHub API: некоректний JSON.');
 define('_CHLOG_ERR_GIT_MISSING', 'Git-репозиторій не знайдено: %1$s');
 define('_CHLOG_ERR_GIT_CHDIR', 'Не вдалося перейти до каталогу: %1$s');
 define('_CHLOG_ERR_GIT_CMD', 'Команда Git завершилася з помилкою (код: %1$s)');
-define('_CHLOG_ERR_TOKEN', 'Перевірку безпеки не пройдено. Оновіть форму та спробуйте ще раз.');

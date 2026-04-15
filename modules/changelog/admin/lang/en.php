@@ -51,4 +51,3 @@ define('_CHLOG_ERR_GH_API_JSON', 'GitHub API: invalid JSON.');
 define('_CHLOG_ERR_GIT_MISSING', 'Git repository not found: %1$s');
 define('_CHLOG_ERR_GIT_CHDIR', 'Cannot change directory: %1$s');
 define('_CHLOG_ERR_GIT_CMD', 'Git command failed (code: %1$s)');
-define('_CHLOG_ERR_TOKEN', 'Security validation failed. Please reload the form and try again.');

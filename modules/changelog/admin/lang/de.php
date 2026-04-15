@@ -51,4 +51,3 @@ define('_CHLOG_ERR_GH_API_JSON', 'GitHub API: ungültiges JSON.');
 define('_CHLOG_ERR_GIT_MISSING', 'Git-Repository nicht gefunden: %1$s');
 define('_CHLOG_ERR_GIT_CHDIR', 'Konnte nicht in Verzeichnis wechseln: %1$s');
 define('_CHLOG_ERR_GIT_CMD', 'Git-Befehl fehlgeschlagen (Code: %1$s)');
-define('_CHLOG_ERR_TOKEN', 'Sicherheitspruefung fehlgeschlagen. Bitte laden Sie das Formular neu und versuchen Sie es erneut.');
