@@ -1012,31 +1012,6 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
     return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts, 'select_attr' => $attr]);
 }
 
-# Edit select list
-function edit_list(string $modul, string $name, string $extraClass = ''): string {
- global $tpl;
-    $modul = filterVar($modul);
-    return $tpl->getHtmlFrag('edit-list-select', [
-        'activate_label' => _ACTIVATE,
-        'apostmod_label' => _APOSTMOD,
-        'apostnomod_label' => _APOSTNOMOD,
-        'categories_html' => getcat($modul, 0, '', '', '', '1'),
-        'checkop_label' => _CHECKOP,
-        'class_attr' => $extraClass,
-        'comments_label' => _COMMENTS,
-        'deactivate_label' => _DEACTIVATE,
-        'delete_label' => _DELETE,
-        'fixed_label' => _FIXED,
-        'ladate_label' => _LADATE,
-        'lhome_label' => _LHOME,
-        'lnfix_label' => _LNFIX,
-        'lnhome_label' => _LNHOME,
-        'moveto_label' => _MOVETO,
-        'name_attr' => $name,
-        'ops_label' => _OPMOD,
-    ]);
-}
-
 # Renders the info/help page for the current admin module
 function getAdminInfo(): string {
     global $afile, $locale, $conf, $tpl, $prs;

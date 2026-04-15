@@ -48,20 +48,6 @@ function getTplOption(string $valu, string $text, bool $isel = false): string {
     ]);
 }
 
-# Render one shared admin ajax action item with GET load mode and optional CSS class
-function getTplAdminAjaxAction(string $target, string $query, string $title, string $label, string $clas = ''): string {
-    global $tpl;
-    $route = $query;
-    if (!str_contains($route, 'token=')) $route .= '&amp;token='.getSiteToken();
-    return $tpl->getHtmlFrag('comment-action-ajax', [
-        'class' => $clas,
-        'label' => $label,
-        'query' => $route,
-        'target' => $target,
-        'title' => $title,
-    ]);
-}
-
 # Render a safe HTMX GET action item for getTplMenuItems()
 function getTplAjaxAction(string $target, string $query, string $title, string $label, string $clas = ''): string {
     global $tpl;
@@ -133,17 +119,6 @@ function getTplFormSelect(string $name, string $opts, string $clas = '', string 
     ]);
 }
 
-# Render a search result title link with highlighted text and new-badge
-function getTplSearchResultTitle(string $url, string $title, string $word, string $time): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('search-result-title', [
-        'url'               => $url,
-        'title'             => $title,
-        'highlighted_title' => filterTextHighlight($title, $word),
-        'new_badge'         => new_graphic($time),
-    ]);
-}
-
 # Render a centered submit row inside a form table
 function getTplFormCenterRow(string $content): string {
     global $tpl;
@@ -185,175 +160,8 @@ function getTplMetaRefresh(string $url, int $secs = 10): string {
     return '<meta http-equiv="refresh" content="'.(int)$secs.'; url='.htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
 }
 
-# Render one categories permission row with label, hint and pre-built field markup
-function getTplCatPermRow(string $label, string $hint, string $field): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-categories-perm-row', [
-        'field_html' => $field,
-        'hint_text' => $hint,
-        'label_text' => $label,
-    ]);
-}
-
-# Render one categories tab container wrapping a table of prepared row markup
-function getTplCatTab(string $tabid, string $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-categories-tab', [
-        'rows_html' => $rows,
-        'tab_id' => $tabid,
-    ]);
-}
-
-# Render the categories form submit footer with pre-built hidden fields markup
-function getTplCatSubmitRow(string $hide, string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-categories-submit', [
-        'hidden_html' => $hide,
-        'submit_label' => $label,
-    ]);
-}
-
-# Render a ddtabcontent conf-save form from inner content, module name, op value and optional submit label
-function getTplAdminConfSave(string $cont, string $mod, string $op, string $label = ''): string {
-    global $afile, $tpl;
-    return $tpl->getHtmlFrag('admin-conf-save', [
-        'action_url' => $afile.'.php',
-        'content_html' => $cont,
-        'mod_name' => $mod,
-        'op_value' => $op,
-        'submit_label' => $label ?: _SAVECHANGES,
-    ]);
-}
-
-# Render a categories tab form wrapper from a form name and prepared tabs markup
-function getTplCatForm(string $fname, string $cont): string {
-    global $afile, $tpl;
-    return $tpl->getHtmlFrag('admin-cat-form', [
-        'action_url' => $afile.'.php',
-        'form_name' => $fname,
-        'tabs_html' => $cont,
-    ]);
-}
-
-# Render the account admin search box from the currently selected field and search term
-function getTplAdminAccountSearch(int $search, string $chng): string {
-    global $afile, $tpl;
-    $opts = '';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $k => $v) {
-        $n = $k + 1;
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
-            'value_attr' => (string)$n,
-            'label_text' => $v,
-            'is_selected' => $search === $n || (!$search && $n === 2),
-        ]);
-    }
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-account-search-form', [
-        'action_url' => $afile.'.php',
-        'input_html' => getTplUserSearchInput([
-            'name' => 'chng',
-            'input_id' => 'chng',
-            'list_id' => 'chng_list',
-            'maxlength' => 30,
-            'value' => $chng,
-        ]),
-        'ok_label' => _OK,
-        'search_label' => _SEARCH,
-        'select_html' => $tpl->getHtmlFrag('new/select', ['name_attr' => 'search', 'options_html' => $opts]),
-    ]));
-}
-
-# Return frontend-capable block module names from shared module config
-function getBlockModules(): array {
-    global $conf;
-    static $mods = null;
-    if ($mods === null) {
-        $mods = [];
-        foreach ($conf['modules'] as $name => $info) {
-            if ((int)($info['type'] ?? 1) !== 1) continue;
-            $mods[] = $name;
-        }
-        sort($mods);
-    }
-    return $mods;
-}
-
-# Render the 2-column block visibility checkbox grid from an active-values list
-function getTplAdminBlockGrid(array $where = []): string {
-    global $tpl;
-    $cols = 2;
-    $idx  = 1;
-    $rows = '';
-    $wide = intval(100 / $cols);
-    $mods = getBlockModules();
-    foreach ($mods as $name) {
-        if (($idx - 1) % $cols === 0) $rows .= '<tr>';
-        $rows .= $tpl->getHtmlFrag('admin-blocks-view-module-cell', [
-            'checked'    => in_array($name, $where),
-            'label_text' => getModuleName($name),
-            'mod_label'  => _MODUL,
-            'name_attr'  => $name,
-            'width_num'  => $wide,
-        ]);
-        if ($idx % $cols === 0) $rows .= '</tr>';
-        $idx++;
-    }
-    $home_on  = in_array('home', $where);
-    $specials = [
-        ['ihome',     in_array('ihome',     $where),              _HOME],
-        ['home',      $home_on,                                   _INHOME],
-        ['all',       in_array('all',       $where) && !$home_on, _BLOCK_ALL],
-        ['otricanie', in_array('otricanie', $where),              _DENYING],
-        ['infly',     in_array('infly',     $where),              _INFLY],
-        ['flyfix',    in_array('flyfix',    $where),              _FLY_FIX],
-    ];
-    for ($i = 0; $i < count($specials); $i += 2) {
-        $rows .= '<tr>';
-        $rows .= $tpl->getHtmlFrag('admin-blocks-view-special-cell', [
-            'checked'    => $specials[$i][1],
-            'label_text' => $specials[$i][2],
-            'value_attr' => $specials[$i][0],
-        ]);
-        $rows .= $tpl->getHtmlFrag('admin-blocks-view-special-cell', [
-            'checked'    => $specials[$i + 1][1],
-            'label_text' => $specials[$i + 1][2],
-            'value_attr' => $specials[$i + 1][0],
-        ]);
-        $rows .= '</tr>';
-    }
-    return $tpl->getHtmlFrag('admin-blocks-view-grid', ['rows_html' => $rows]);
-}
-
-# Render the search drop-form and delete link from row state and display word
-function getTplAdminSearchDrop(int $id, string $action, int $sort, int $order, int $num, string $find, string $fmod, string $show): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-search-drop-form', [
-        'action_url'   => $action,
-        'confirm_text' => _DELETE.' "'.$show.'"?',
-        'find'         => $find,
-        'fmod'         => $fmod,
-        'form_id'      => (string)$id,
-        'id'           => (string)$id,
-        'label'        => _ONDELETE,
-        'num'          => (string)$num,
-        'order'        => (string)$order,
-        'sort'         => (string)$sort,
-        'title'        => _ONDELETE,
-        'token'        => getSiteToken('search'),
-    ]);
-}
-
-# Render the categories module-filter search form from the active module name
-function getTplAdminCatSearch(string $modul): string {
-    global $afile, $tpl;
-    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-categories-search-form', [
-        'action_url'  => $afile.'.php',
-        'modul_label' => _MODUL,
-        'select_html' => cat_modul('modul', '', $modul, 1),
-    ]));
-}
-
 # Render a categories image select from a path and optional pre-selected filename
-function getTplCategorySelect(string $path, string $selected = ''): string {
+function getTplImageSelect(string $path, string $selected = ''): string {
     $files = is_dir($path) ? scandir($path) : [];
     $imgs  = [];
     foreach ($files as $entry) {
@@ -375,62 +183,6 @@ function getTplCategoryPreview(string $src): string {
     ]);
 }
 
-# Render a block position select with optional pre-selected value
-function getTplBlockPosition(string $selected = ''): string {
-    $opts = getTplOption('l', _LEFT,       $selected === 'l')
-          . getTplOption('c', _CENTERUP,   $selected === 'c')
-          . getTplOption('d', _CENTERDOWN, $selected === 'd')
-          . getTplOption('r', _RIGHT,      $selected === 'r')
-          . getTplOption('b', _BANNERUP,   $selected === 'b')
-          . getTplOption('f', _BANNERDOWN, $selected === 'f');
-    return getTplSelect('bpos', $opts, '');
-}
-
-# Render a block RSS refresh-interval select with optional pre-selected value
-function getTplBlockRefresh(string $selected = '3600'): string {
-    $times = [
-        '1800'  => '30 '._MIN.'.',
-        '3600'  => '1 '._HOUR,
-        '18000' => '5 '._HOUR.'.',
-        '36000' => '10 '._HOUR.'.',
-        '86400' => '24 '._HOUR.'.',
-    ];
-    $opts = '';
-    foreach ($times as $val => $label) {
-        $opts .= getTplOption($val, $label, $selected === $val);
-    }
-    return getTplSelect('refresh', $opts, '');
-}
-
-# Render a block after-expiration action select with optional pre-selected value
-function getTplBlockAction(string $selected = ''): string {
-    $opts = getTplOption('d', _DEACTIVATE, $selected === 'd')
-          . getTplOption('r', _DELETE,     $selected === 'r');
-    return getTplSelect('action', $opts, '');
-}
-
-# Render a block view-privilege select with optional pre-selected value
-function getTplBlockView(int $selected = 0): string {
-    $privs = [0 => _MVALL, 1 => _MVUSERS, 2 => _MVADMIN, 3 => _MVANON];
-    $opts  = '';
-    foreach ($privs as $key => $label) {
-        $opts .= getTplOption((string)$key, $label, $selected === $key);
-    }
-    return getTplSelect('view', $opts, '');
-}
-
-# Return a label string with an inline sl_small help-text div for admin form rows
-function getTplAdminHintLabel(string $label, string $hint): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('label-hint', ['label' => $label, 'hint' => $hint]);
-}
-
-# Return a standalone sl_small note div for admin form rows that have no label
-function getTplAdminSmallNote(string $text): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-small-note', ['text' => $text]);
-}
-
 # Join non-empty stop/error messages into a single HTML string separated by line breaks
 function getStopText(array $stop): string {
     global $tpl;
@@ -439,103 +191,10 @@ function getStopText(array $stop): string {
 }
 
 
-# Return one line-break-prefixed key-value pair for building tooltip content_html strings
-function getTplAdminTipLine(string $key, string $val): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('br-line', ['label' => $key, 'value' => $val]);
-}
-
-# Return one label-value line with a trailing line break for building info block content strings
-function getTplAdminInfoLine(string $label, string $value): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('info-line', ['label' => $label, 'value' => $value]);
-}
-
-# Build the head_html string for getTplAdminTable from an array of column labels
-# Each entry is either a plain string (sortable) or [label, 'nosort'] (non-sortable column)
-function getTplAdminTableHead(array $cols): string {
-    global $tpl;
-    $html = '';
-    foreach ($cols as $col) {
-        if (is_array($col)) {
-            $html .= $tpl->getHtmlFrag('th', ['content' => $col[0], 'nosort' => true]);
-        } else {
-            $html .= $tpl->getHtmlFrag('th', ['content' => $col]);
-        }
-    }
-    return $html;
-}
-
-# Build the cells_html string for getTplAdminTableRow from an array of already-rendered cell contents
-function getTplAdminTableCells(array $cells): string {
-    global $tpl;
-    $html = '';
-    foreach ($cells as $cell) {
-        $html .= $tpl->getHtmlFrag('td', ['content' => $cell]);
-    }
-    return $html;
-}
-
 # Return an inline span with a CSS class and optional title attribute; raw_content is not escaped
 function getTplSpan(string $class, string $raw_content, string $title = ''): string {
     global $tpl;
     return $tpl->getHtmlFrag('span-raw', ['class' => $class, 'content' => $raw_content, 'title' => $title]);
-}
-
-# Return an inline status badge span (sl_green / sl_red) for use inside raw HTML slots
-function getTplAdminStatusBadge(bool $state, string $yes, string $no): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('inline-badge', [
-        'class' => $state ? 'sl_green' : 'sl_red',
-        'label' => $state ? $yes : $no,
-        'title_text' => '',
-    ]);
-}
-
-# Return an inline language hint string for admin title tips; empty string when multilingual is off or lang is empty
-function getTplAdminLangHint(string $lang): string {
-    global $conf;
-    if ($conf['multilingual'] != 1) return '';
-    return getTplAdminTipLine(_LANGUAGE, $lang ? getLangName($lang) : _ALL);
-}
-
-# Render one money calculator form with a JS function name, to-currency label and currency code
-function getTplMoneyCalcForm(string $fnname, string $tolbl, string $tocur): string {
-    global $conf, $tpl;
-    return $tpl->getHtmlFrag('money-calculator-form', [
-        'btn_label' => _MO_4,
-        'fn_name' => $fnname,
-        'from_label' => _MO_2,
-        'to_cur' => $tocur,
-        'to_label' => $tolbl,
-    ]);
-}
-
-# Render a named list form wrapping a table and optional bottom/hidden markup
-function getTplAdminListForm(string $table, string $bottom, string $hide): string {
-    global $afile, $tpl;
-    return $tpl->getHtmlFrag('admin-list-form', [
-        'action_url' => $afile.'.php',
-        'bottom_html' => $bottom,
-        'hide_html' => $hide,
-        'table_html' => $table,
-    ]);
-}
-
-# Render one shared admin submit button from a label string
-function getTplAdminSubmitButton(string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-submit-button', [
-        'label_text' => $label,
-    ]);
-}
-
-# Render one shared admin section heading from a label string
-function getTplAdminSection(string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-section-heading', [
-        'label_text' => $label,
-    ]);
 }
 
 # Render a <link rel="stylesheet"> tag for an external CSS file
@@ -622,72 +281,6 @@ function getTplMenuItems(array $items): string {
 }
 
 
-# Render a composite title-tip block joined with a note label from tooltip, title and label texts
-function getTplAdminTipLabel(string $tip, string $title, string $label): string {
-    return getTplAdminTitleTip($tip).getTplAdminNoteLabel($title, $label);
-}
-
-# Render one admin collapsible panel from a panel id, title and prepared content markup
-function getTplAdminPanel(string $pid, string $title, string $cont): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-panel', [
-        'pid'   => $pid,
-        'title' => $title,
-        'cont'  => $cont,
-    ]);
-}
-
-
-# Render the admin module navigation header with tabs and optional subtabs
-function getTplAdminNavi(array $par): string {
-    global $afile, $conf, $tpl;
-    $ttl = _ADMINMENU;
-    $ico = 'components.png';
-    $name = getVar('req', 'name', 'var');
-    if ($name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name])) {
-        $lang = trim($conf['modules'][$name]['lang'] ?? '');
-        if ($lang !== '') $ttl = defined($lang) ? constant($lang) : $lang;
-        $img = basename(trim($conf['modules'][$name]['img'] ?? ''));
-        if ($img !== '' && file_exists(BASE_DIR.'/templates/admin/images/admin/'.$img)) $ico = $img;
-    }
-    $ops    = $par['ops']    ?? [];
-    $tabs   = $par['tabs']   ?? [];
-    $sops   = $par['sops']   ?? [];
-    $sattrs = $par['sattrs'] ?? [];
-    $stabs  = $par['stabs']  ?? [];
-    $sub    = $par['sub']    ?? '';
-    $act    = $par['tab']    ?? 0;
-    $hassub = (bool)($par['subtab'] ?? false);
-    $actsub = $par['legacy'] ?? 0;
-    $mtab   = $par['id']     ?? 'menutab';
-    $cnt = getTplAdminTabOpen($mtab, 'tabmenu');
-    $scnt = '';
-    $k = 0;
-    foreach ($tabs as $tab) {
-        if ($tab === '') { $k++; continue; }
-        if ($hassub && !empty($stabs)) {
-            $scnt = getTplAdminTabOpen($mtab.'s', 'tabsubmenu');
-            $l = 0;
-            foreach ($stabs as $stab) {
-                if ($stab === '') { $l++; continue; }
-                $hrefsub = !empty($sops[$l]) ? $afile.'.php?'.$sops[$l] : '#';
-                $relsub = !empty($sops[$l]) ? '' : getTplAdminTabName($mtab, $l, true);
-                $attrsub = $sattrs[$l] ?? '';
-                $scnt .= getTplAdminTabLink($hrefsub, $stab, $l === $actsub, $relsub, $attrsub);
-                $l++;
-            }
-            $scnt .= getTplAdminTabClose();
-        }
-        $href = !empty($ops[$k]) ? $afile.'.php?'.$ops[$k] : '#';
-        $rel = !empty($ops[$k]) ? '' : getTplAdminTabName($mtab, $k);
-        $cnt .= getTplAdminTabLink($href, $tab, $k === $act, $rel);
-        $k++;
-    }
-    $cnt .= getTplAdminTabClose();
-    if ($scnt !== '') $cnt .= $scnt;
-    return $tpl->getHtmlFrag('title', ['title' => $ttl, 'icon' => $ico, 'subtitle' => $sub, 'content' => $cnt]);
-}
-
 # Build module navigation — defaults from $conf[$conf['name']], any $p key overrides
 function setModuleNavi(array $p): string {
     global $conf, $tpl;
@@ -746,31 +339,31 @@ function setPageNumbers(string $frag, string $mod, int $count, int $pages, int $
         if ($num > 1) {
             $prev  = $num - 1;
             $prevHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor : $afile.'.php?'.$url.$n.'='.$prev.$anchor;
-            $cprev = pagerLink($prevHref, _BACK, _BACK, 'sl_num');
+            $cprev = getTplPagerLink($prevHref, _BACK, _BACK, 'sl_num');
         } else {
-            $cprev = pagerCurrent(_BACK, _BACK, 'sl_num');
+            $cprev = getTplPagerCurrent(_BACK, _BACK, 'sl_num');
         }
         for ($i = 1; $i < $pages+1; $i++) {
             if ($i == $num) {
-                $cont .= pagerCurrent((string)$i, (string)$i);
+                $cont .= getTplPagerCurrent((string)$i, (string)$i);
             } else {
                 if ((($i > ($num - $maxpg)) && ($i < ($num + $maxpg))) || ($i == $pages) || ($i == 1)) {
                     $href = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor : $afile.'.php?'.$url.$n.'='.$i.$anchor;
-                    $cont .= pagerLink($href, (string)$i, (string)$i);
+                    $cont .= getTplPagerLink($href, (string)$i, (string)$i);
                 }
             }
             if ($i < $pages) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $maxpg))) $cont .= ' ';
-                if (($num > $nnum) && ($i == 1)) $cont .= pagerDots();
-                if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= pagerDots();
+                if (($num > $nnum) && ($i == 1)) $cont .= getTplPagerDots();
+                if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= getTplPagerDots();
             }
         }
         if ($num < $pages) {
             $next  = $num + 1;
             $nextHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor : $afile.'.php?'.$url.$n.'='.$next.$anchor;
-            $cnext = pagerLink($nextHref, _NEXT, _NEXT, 'sl_num');
+            $cnext = getTplPagerLink($nextHref, _NEXT, _NEXT, 'sl_num');
         } else {
-            $cnext = pagerCurrent(_NEXT, _NEXT, 'sl_num');
+            $cnext = getTplPagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
         $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $limit, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
         return $tpl->getHtmlFrag($frag, $data);

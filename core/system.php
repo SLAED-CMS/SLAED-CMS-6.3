@@ -1883,14 +1883,14 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                         $style = '';
                         $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
                         $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
-                        $ilink = categoryIconLink($href, $val[1], $isrc);
-                        $alink = categoryTitleLink($href, $val[1]);
+                        $ilink = getTplCatIcon($href, $val[1], $isrc);
+                        $alink = getTplCatTitle($href, $val[1]);
                     } else {
                         $style = ' sl_hidden';
                         $htitle = $val[1].' - '._CCLOSED;
                         $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
-                        $ilink = categoryIconText($htitle, $isrc);
-                        $alink = categoryTitleText($val[1]);
+                        $ilink = getTplCatIconText($htitle, $isrc);
+                        $alink = getTplCatTitleText($val[1]);
                     }
                     $subcat = '';
                     foreach ($massiv as $sval) {
@@ -1899,13 +1899,13 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                             if ($sub == 1) {
                                 $sval[1] = getConst($sval[1]);
                                 $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
-                                $sublink = is_acess($sval[6]) ? categoryTextLink($shref, $sval[1]) : '';
-                                $subcat .= categorySubItem($sublink);
+                                $sublink = is_acess($sval[6]) ? getTplCatText($shref, $sval[1]) : '';
+                                $subcat .= getTplCatSubitem($sublink);
                             }
                         }
                     }
                     $description = ($desc) ? '<br><i>'.$val[2].'</i>' : '';
-                    $cont .= categoryRow($ilink, $alink, $description, $subcat, $style);
+                    $cont .= getTplCatRow($ilink, $alink, $description, $subcat, $style);
                 }
             }
         }
@@ -2397,9 +2397,9 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
         $tabs,
         $conts
     ));
-    $tlinks = implode('', array_map(fn($p) => naviTabsLink('#'.$pref.'_'.$id.'_'.$p['id'], $p['tab']), $pairs));
-    $cdivs = implode('', array_map(fn($p) => naviTabsContent($pref.'_'.$id.'_'.$p['id'], $p['cont']), $pairs));
-    return naviTabsWrap($tlinks, $cdivs, $id);
+    $tlinks = implode('', array_map(fn($p) => getTplTabLink('#'.$pref.'_'.$id.'_'.$p['id'], $p['tab']), $pairs));
+    $cdivs = implode('', array_map(fn($p) => getTplTabContent($pref.'_'.$id.'_'.$p['id'], $p['cont']), $pairs));
+    return getTplTabWrap($tlinks, $cdivs, $id);
 }
 
 # Transliteration
@@ -2543,14 +2543,14 @@ function getVotingView(int $id = 0, string $votid = ''): string {
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
-            $admin = (is_moder('voting') && $votid == 'voting') ? votingActionMenu([
-                votingActionLink($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                votingActionDelete($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            $admin = (is_moder('voting') && $votid == 'voting') ? getTplVotingMenu([
+                getTplVotingLink($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplVotingDelete($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]) : '';
             $post = (!$rate) ? getVotingAsyncAction($votid, 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl-but-blue', _SEROR1) : '';
-            $polls = ($vnum > 1) ? votingActionLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
-            $votes = (!$modul && $votid != 'voting') ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : '<span class="sl_votes">'.htmlspecialchars(_VOTES.': '.$vote, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
-            $comm = (!$modul && $acomm) ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
+            $polls = ($vnum > 1) ? getTplVotingLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
+            $votes = (!$modul && $votid != 'voting') ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : '<span class="sl_votes">'.htmlspecialchars(_VOTES.': '.$vote, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
+            $comm = (!$modul && $acomm) ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
             $formend = (!$rate) ? '</form>' : '';
             $cont .= '</ul><!-- <div class="vote-btns">'.$admin.$post.$polls.'</div> --><div class="vote-links">'.$votes.' '.$comm.'</div>'.$formend;
         } else {
@@ -2924,61 +2924,6 @@ function format_time(string $time, string $string = ''): string {
     return $cont;
 }
 
-# Format new graphic
-function new_graphic(string $time): string {
-    global $tpl;
-    $data = time() - strtotime($time);
-    $cls = '';
-    $ttl = '';
-    if ($data < 86400) { $cls = 'sl_n_day'; $ttl = (string)_NEWTODAY; }
-    elseif ($data < 259200) { $cls = 'sl_n_days'; $ttl = (string)_NEWLAST3DAYS; }
-    elseif ($data < 604800) { $cls = 'sl_n_week'; $ttl = (string)_NEWTHISWEEK; }
-    if (!$cls) return '';
-    return $tpl->getHtmlFrag('new/graphic', ['icon_class' => $cls, 'icon_title' => $ttl]);
-}
-
-# Format radio form
-function radio_form(mixed $var, string $name, string $id = ''): string {
-    global $tpl;
-    $state = ($var === 0 || $var === '0') ? '0' : (($var === 1 || $var === '1') ? '1' : '');
-    if ($id == 1) {
-        $content = $tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '0', 'label_text' => _YES, 'is_checked' => $state !== '1'])
-            .$tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '1', 'label_text' => _NO, 'is_checked' => $state === '1']);
-    } else {
-        $content = $tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '1', 'label_text' => _YES, 'is_checked' => $state !== '0'])
-            .$tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '0', 'label_text' => _NO, 'is_checked' => $state === '0']);
-    }
-    return $content;
-}
-
-# Get gender
-function get_gender(string $name, int $typ, string $class = ''): string {
-    global $tpl;
-    $gender = [_NO_INFO, _MAN, _WOMAN];
-    $cont = '';
-    foreach ($gender as $key => $val) {
-        $cont .= $tpl->getHtmlFrag('new/select-option', [
-            'value_attr' => (string)$key,
-            'label_text' => $val,
-            'is_selected' => $key == $typ,
-        ]);
-    }
-    return $tpl->getHtmlFrag('new/select', ['name_attr' => $name, 'select_class' => $class, 'options_html' => $cont]);
-}
-
-# Format gender
-function gender(int $gender): string {
-    if ($gender == 2) {
-        $gen = _WOMAN;
-    } elseif ($gender == 1) {
-        $gen = _MAN;
-    } else {
-        $gen = _NO_INFO;
-    }
-    return $gen;
-}
-
-
 # Replace break
 function getEditorKey(): string {
  global $admin, $conf;
@@ -3296,7 +3241,7 @@ function getCartSummary(string $info = ''): string {
                 'title_href' => 'index.php?name=shop&amp;op=view&amp;id='.$id,
                 'title_attr' => $title,
                 'title_text' => $title,
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'qty' => $i,
                 'price_text' => $price.' '.$conf['shop']['valute'],
                 'plus_title' => _PPLUS,
@@ -3384,353 +3329,6 @@ function warnings(string $warnings): string {
     return (string)_NO;
 }
 
-# Format ajax rating
-function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
-    global $conf;
-    if (intval($rat)) {
-        $votnum = $rat;
-        $votes = $rat;
-    } else {
-        $votnum = 0;
-        $votes = 1;
-    }
-    $width = number_format($scor / $votes, 2) * 20;
-    $result = substr($scor / $votes, 0, 4);
-    if (intval($votes) && intval($scor)) {
-        $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
-        $nrate = 'sl_rate-num sl_rate-is';
-    } else {
-        $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
-        $nrate = 'sl_rate-num';
-    }
-    if ($stl == 1) {
-        $img = ratingLike($result, $title, $nrate);
-        $imgr = ratingLikeHover($result, $title, $nrate, $id.$obj, 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1');
-        $crate = 'sl_rate-like';
-    } else {
-        $img = ratingBar($result, $title, $nrate, (string) $width, $votnum);
-        $imgr = ratingBarHover($result, $title, $nrate, (string) $width, $votnum, $id.$obj, 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod);
-        $crate = 'sl_rate';
-    }
-    if ($typ == 2) {
-        $content = ratingWrap($crate, $img);
-    } else {
-        $con = explode('|', $conf['ratings'][strtolower($mod)]);
-        if (($con[1] && $id && $mod) || ($rat && $scor)) {
-            $content = (($con[1] && $typ) || ($con[1] && !$con[2] && !$typ)) ? ratingWrap($crate, $imgr, 'rep'.$id.$obj) : ratingWrap($crate, $img);
-        } else {
-            $content = '';
-        }
-    }
-    return $content;
-}
-
-function editorFilePreview(int $index, string $imageUrl, string $fallbackUrl, bool $showImage): string {
- global $tpl;
-    return $tpl->getHtmlFrag('image-preview', [
-        'preview_id' => 'sf-form-'.$index,
-        'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
-        'image_url' => $imageUrl,
-        'fallback_url' => $fallbackUrl,
-        'image_title' => _IMG,
-        'no_title' => _NO,
-        'show_toggle' => $showImage,
-        'show_fallback' => !$showImage,
-    ]);
-}
-
-function editorInsertAction(string $command, string $value, string $id, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-action-insert', [
-        'command' => $command,
-        'value' => $value,
-        'editor_id' => $id,
-        'title' => $title,
-        'label' => $label,
-    ]);
-}
-
-function getEditorAsyncAction(string $target, string $query, string $title, string $label): string {
-    return getTplAjaxAction($target, $query, $title, $label);
-}
-
-function editorActionMenu(array $items): string {
- global $tpl;
-    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-    if (!$items) {
-        return '';
-    }
-    return $tpl->getHtmlFrag('row-actions', [
-        'trigger_label' => _EDITOR,
-        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
-    ]);
-}
-
-function editorFilesRow(array $row): string {
- global $tpl;
-    return $tpl->getHtmlFrag('table-row', [
-        'cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['content_html' => (string)($row['preview_html'] ?? '')],
-                ['content_html' => (string)($row['file_name'] ?? '')],
-                ['content_html' => ''],
-                ['content_html' => (string)($row['size_value'] ?? '')],
-                ['content_html' => ''],
-                ['content_html' => (string)($row['functions_html'] ?? '')],
-            ],
-        ]),
-    ]);
-}
-
-function editorFilesTable(string $rowsHtml): string {
- global $tpl;
-    return $tpl->getHtmlFrag('table', [
-        'is_wrapless' => true,
-        'disable_sort' => true,
-        'head' => [
-            ['content' => cutstr(_IMG, 4, 1), 'nosort' => true],
-            ['content' => _FILE, 'nosort' => true],
-            ['content' => '', 'nosort' => true],
-            ['content' => _SIZE, 'nosort' => true],
-            ['content' => '', 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
-        ],
-        'rows_html' => $rowsHtml,
-    ]);
-}
-
-
-function commentActionLink(string $href, string $title, string $label, string $class = '', string $target = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-        'target' => $target,
-    ]);
-}
-
-function commentActionJs(string $href, string $title, string $label, string $class = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-        'target' => '',
-    ]);
-}
-
-function getCommentAsyncAction(string $target, string $query, string $title, string $label, string $class = ''): string {
-    return getTplAjaxAction($target, $query, $title, $label, $class);
-}
-
-function commentActionDelete(string $href, string $confirmText, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('action-delete', [
-        'href' => $href,
-        'confirm_text' => $confirmText,
-        'title' => $title,
-        'label' => $label,
-    ]);
-}
-
-function commentActionMenu(array $items): string {
- global $tpl;
-    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-    if (!$items) {
-        return '';
-    }
-    return $tpl->getHtmlFrag('row-actions', [
-        'trigger_label' => _EDITOR,
-        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
-    ]);
-}
-
-function commentMetaText(string $label, string $value): string {
-    return htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '
-        .htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-}
-
-function commentMetaColor(string $label, string $value, string $color): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('comment-meta-color', ['label' => $label, 'value' => $value, 'color' => $color]);
-}
-
-function commentAvatar(string $username, string $avatar): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('comment-avatar', ['username' => $username, 'avatar' => $avatar]);
-}
-
-function commentRankImage(string $src, string $title): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('comment-rank-image', ['src' => $src, 'title' => $title]);
-}
-
-function commentSignature(string $content): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('comment-signature', ['content' => $content]);
-}
-
-function alphaNavLink(string $href, string $title, string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('alpha-nav-link', ['href' => $href, 'title' => $title, 'label' => $label]);
-}
-
-function alphaNavText(string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('alpha-nav-text', ['label' => $label]);
-}
-
-function naviTabsLink(string $href, string $label): string {
-    global $tpl;
-    $lhtml = preg_match('/<[^>]+>/', $label) ? $label : htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    return $tpl->getHtmlFrag('navi-tab-link', ['href' => $href, 'label_html' => $lhtml]);
-}
-
-function naviTabsContent(string $id, string $content): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('navi-tab-content', ['tab_id' => $id, 'content' => $content]);
-}
-
-function naviTabsWrap(string $tabsHtml, string $contentHtml, int $id): string {
- global $tpl;
-    return $tpl->getHtmlFrag('navi-tabs-wrap', [
-        'tabs_html' => $tabsHtml,
-        'content_html' => $contentHtml,
-        'id' => $id,
-    ]);
-}
-
-function pagerLink(string $href, string $title, string $label, string $class = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('pager-link', [
-        'href' => $href,
-        'query' => '',
-        'load_id' => '',
-        'target_id' => '',
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-    ]);
-}
-
-function pagerCurrent(string $title, string $label, string $class = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('pager-link', [
-        'href' => '',
-        'query' => '',
-        'load_id' => '',
-        'target_id' => '',
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-    ]);
-}
-
-function pagerDots(): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('pager-dots', []);
-}
-
-function getAsyncPagerLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
- global $tpl;
-    $route = $query ? 'index.php?'.$query : '';
-    return $tpl->getHtmlFrag('pager-link', [
-        'href' => '',
-        'load_id' => $loadId,
-        'target_id' => $targetId,
-        'query' => $route,
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-    ]);
-}
-
-function categoryIconLink(string $href, string $title, string $src = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-icon', [
-        'href' => $href,
-        'title' => $title,
-        'src' => $src,
-    ]);
-}
-
-function categoryIconText(string $title, string $src = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-icon', [
-        'href' => '',
-        'title' => $title,
-        'src' => $src,
-    ]);
-}
-
-function categoryTitleLink(string $href, string $title): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-title', [
-        'href' => $href,
-        'title' => $title,
-    ]);
-}
-
-function categoryTextLink(string $href, string $title): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-link', [
-        'href' => $href,
-        'title' => $title,
-        'text' => $title,
-    ]);
-}
-
-function categoryTitleText(string $title): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-title', [
-        'href' => '',
-        'title' => $title,
-    ]);
-}
-
-function categorySubItem(string $content): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('category-sub-item', ['content' => $content]);
-}
-
-function categoryRow(string $imageHtml, string $titleHtml, string $descriptionHtml = '', string $subItemsHtml = '', string $style = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-row', [
-        'image_html' => $imageHtml,
-        'title_html' => $titleHtml,
-        'description_html' => $descriptionHtml,
-        'subitems_html' => $subItemsHtml,
-        'style' => $style,
-    ]);
-}
-
-function categorySelect(string $selectName, string $class, string $title, string $optionsHtml): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-select', [
-        'select_name' => $selectName,
-        'class' => $class,
-        'title' => $title,
-        'options_html' => $optionsHtml,
-    ]);
-}
-
-function categorySelectOption(string $value, string $label, bool $selected = false): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('select-option', [
-        'value_attr' => $value,
-        'label_text' => $label,
-        'is_selected' => $selected,
-    ]);
-}
-
-function breadcrumbLink(string $href, string $title, string $label): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('breadcrumb-link', ['href' => $href, 'title' => $title, 'label' => $label]);
-}
-
 function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string $memTitle, string $memClass, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
  global $tpl;
     return $tpl->getHtmlFrag('debug-stats', [
@@ -3751,134 +3349,6 @@ function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string
 function debugSection(string $legend, string $color, string $content): string {
     global $tpl;
     return $tpl->getHtmlFrag('debug-section', ['legend' => $legend, 'color' => $color, 'content' => $content]);
-}
-
-function votingActionLink(string $href, string $title, string $label, string $class = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-        'target' => '',
-    ]);
-}
-
-function getVotingAsyncAction(string $target, string $query, string $title, string $label, string $class = '', string $errorText = ''): string {
-    return getTplAjaxAction($target, $query, $title, $label, $class);
-}
-
-function votingActionDelete(string $href, string $confirmText, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('action-delete', [
-        'href' => $href,
-        'confirm_text' => $confirmText,
-        'title' => $title,
-        'label' => $label,
-    ]);
-}
-
-function votingActionMenu(array $items): string {
- global $tpl;
-    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-    if (!$items) {
-        return '';
-    }
-    return $tpl->getHtmlFrag('row-actions', [
-        'trigger_label' => _EDITOR,
-        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
-    ]);
-}
-
-function ratingLike(string $result, string $title, string $nrate): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-like', [
-        'result' => $result,
-        'title' => $title,
-        'nrate' => $nrate,
-        'rate1_title' => _RATE1,
-        'rate5_title' => _RATE5,
-        'hover_query' => '',
-        'target_id' => '',
-    ]);
-}
-
-function ratingLikeHover(string $result, string $title, string $nrate, string $targetId, string $query): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-like-live', [
-        'result' => $result,
-        'title' => $title,
-        'nrate' => $nrate,
-        'target_id' => $targetId,
-        'rate1_query' => $query.'&amp;rate=1',
-        'rate5_query' => $query.'&amp;rate=5',
-        'rate1_title' => _RATE1,
-        'rate5_title' => _RATE5,
-    ]);
-}
-
-function ratingBar(string $result, string $title, string $nrate, string $width, int|string $votes): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-bar', [
-        'result' => $result,
-        'title' => $title,
-        'nrate' => $nrate,
-        'width' => $width,
-        'votes' => (string) $votes,
-        'votes_title' => _VOTES,
-        'hover_query' => '',
-        'target_id' => '',
-    ]);
-}
-
-function ratingBarHover(string $result, string $title, string $nrate, string $width, int|string $votes, string $targetId, string $query): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-bar', [
-        'result' => $result,
-        'title' => $title,
-        'nrate' => $nrate,
-        'width' => $width,
-        'votes' => (string) $votes,
-        'votes_title' => _VOTES,
-        'target_id' => $targetId,
-        'hover_query' => $query,
-    ]);
-}
-
-function ratingWrap(string $class, string $content, string $id = ''): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('rating-wrap', ['wrap_class' => $class, 'wrap_id' => $id, 'content' => $content]);
-}
-
-function ratingLikeLive(string $result, string $title, string $nrate, string $targetId, string $rate1Query, string $rate5Query): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-like-live', [
-        'result' => $result,
-        'title' => $title,
-        'nrate' => $nrate,
-        'target_id' => $targetId,
-        'rate1_query' => $rate1Query,
-        'rate5_query' => $rate5Query,
-        'rate1_title' => _RATE1,
-        'rate5_title' => _RATE5,
-    ]);
-}
-
-function ratingStarsLive(string $width, string $targetId, string $baseQuery, string $nrate, int|string $votes): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-stars-live', [
-        'width' => $width,
-        'target_id' => $targetId,
-        'base_query' => $baseQuery,
-        'nrate' => $nrate,
-        'votes' => (string) $votes,
-        'votes_title' => _VOTES,
-        'rate1_title' => _RATE1,
-        'rate2_title' => _RATE2,
-        'rate3_title' => _RATE3,
-        'rate4_title' => _RATE4,
-        'rate5_title' => _RATE5,
-    ]);
 }
 
 # Show editor files
@@ -3919,15 +3389,15 @@ function getEditorFiles(): void {
                 $type = strtolower(substr(strrchr($entry[1], '.'), 1));
                 $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
-                    $img = editorFilePreview($a, $path.$entry[1], 'templates/'.$conf['theme'].'/images/categories/no.png', true);
+                    $img = getTplEditorPreview($a, $path.$entry[1], 'templates/'.$conf['theme'].'/images/categories/no.png', true);
                     $show = [
-                        editorInsertAction('attach', $entry[1], (string) $id, _INSERT.' '.$imgwidth.' x '.$imgheight, _INSERT),
-                        editorInsertAction('img', $path.$entry[1], (string) $id, _EIMG.' '.$imgwidth.' x '.$imgheight, _EIMG),
+                        getTplEditorInsert('attach', $entry[1], (string) $id, _INSERT.' '.$imgwidth.' x '.$imgheight, _INSERT),
+                        getTplEditorInsert('img', $path.$entry[1], (string) $id, _EIMG.' '.$imgwidth.' x '.$imgheight, _EIMG),
                     ];
                 } else {
-                    $img = editorFilePreview($a, '', 'templates/'.$conf['theme'].'/images/categories/no.png', false);
+                    $img = getTplEditorPreview($a, '', 'templates/'.$conf['theme'].'/images/categories/no.png', false);
                     $show = [
-                        editorInsertAction('attach', $entry[1], (string) $id, _INSERT, _INSERT),
+                        getTplEditorInsert('attach', $entry[1], (string) $id, _INSERT, _INSERT),
                     ];
                 }
                 if (is_moder($dir)) {
@@ -3936,11 +3406,11 @@ function getEditorFiles(): void {
                     }
                     $show[] = getEditorAsyncAction('f'.$id, 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
                 }
-                $contents[] = editorFilesRow([
+                $contents[] = getTplEditorRow([
                     'preview_html' => $img,
                     'file_name' => $entry[1],
                     'size_value' => filterSize($filesize),
-                    'functions_html' => editorActionMenu($show),
+                    'functions_html' => getTplEditorMenu($show),
                 ]);
                 $a++;
             }
@@ -3955,7 +3425,7 @@ function getEditorFiles(): void {
         if (!empty($contents[$i])) $cont .= $contents[$i];
     }
     $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 1, 'getEditorFiles', 'f'.$id, $id, '', $dir) : '';
-    $content = ($cont) ? editorFilesTable($cont).$contnum : '';
+    $content = ($cont) ? getTplEditorTable($cont).$contnum : '';
     echo $content;
 }
 
@@ -4022,23 +3492,23 @@ function letter(string $mod): string {
     $digits = '';
     foreach (range(0, 9) as $num) {
         $digits .= in_array((string)$num, $alpha)
-            ? alphaNavLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.$num, (string)$num, (string)$num)
-            : alphaNavText((string)$num);
+            ? getTplAlphaLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.$num, (string)$num, (string)$num)
+            : getTplAlphaText((string)$num);
     }
     $rows[] = $digits;
     $locale = '';
     foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
         $locale .= in_array($char, $alpha)
-            ? alphaNavLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char), $char, $char)
-            : alphaNavText($char);
+            ? getTplAlphaLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char), $char, $char)
+            : getTplAlphaText($char);
     }
     $rows[] = $locale;
     if (substr(_LOCALE, 0, 2) != 'fr') {
         $latin = '';
         foreach (range('A', 'Z') as $eng) {
             $latin .= in_array($eng, $alpha)
-                ? alphaNavLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng, $eng, $eng)
-                : alphaNavText($eng);
+                ? getTplAlphaLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng, $eng, $eng)
+                : getTplAlphaText($eng);
         }
         $rows[] = $latin;
     }
@@ -4054,13 +3524,6 @@ function add_menu(string $links): string {
         return $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => (string)_EDITOR, 'items_html' => $html]);
     }
     return '';
-}
-
-# Format title tips
-function title_tip(mixed $data): string {
-    global $tpl;
-    $content = is_array($data) ? implode('<br>', $data) : $data;
-    return $tpl->getHtmlFrag('title-tip', ['content' => $content]);
 }
 
 # Admin status
@@ -4081,13 +3544,6 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
         ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _ACT, 'class' => 'sl_n_act', 'label' => ''])
         : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'class' => 'sl_n_deact', 'label' => '']);
 }
-
-# Add mailto
-function mailto(string $mail): string {
- global $conf;
-    return '<a href="mailto:'.$mail.'?subject='.$conf['sitename'].'" target="_blank">'.$mail.'</a>';
-}
-
 
 # Find img
 function img_find(string $img): string {
@@ -4220,86 +3676,6 @@ function renderFootControls(
         'license_html' => $licenseHtml,
         'debug_html' => $debugHtml,
     ]);
-}
-
-# Fields in
-function fields_in(mixed $fieldb, string $mod): string {
- global $conf, $tpl;
-    $mod = strtolower($mod);
-    $fieldClass = defined('ADMIN_FILE') ? 'sl-form-control' : '';
-    $fieldc = $conf['fields'][$mod];
-    $field = getVar('post', 'field', 'raw', '');
-    if ($field !== '') {
-        $fieldb = filterFields($field);
-    }
-    $fieldb = explode('|', $fieldb ?? '');
-    $fieldc = explode('||', $fieldc);
-    $i = 0;
-    $fields = '';
-    foreach ($fieldc as $val) {
-        if ($val != '') {
-            preg_match("#(.*)\|(.*)\|(.*)\|(.*)#i", $val, $out);
-            if ($out[1] != '0') {
-                $fieldin = (!empty($fieldb[$i])) ? $fieldb[$i] : $out[2];
-                $requir = ($out[4] == 1) ? ' required' : '';
-                if ($out[3] == 1) {
-                    $dvalue = ($fieldin) ? getConst($fieldin) : '';
-                    $field = getTplTextInput('field[]', $dvalue, $fieldClass, 'placeholder="'.$dvalue.'"'.$requir);
-                } elseif ($out[3] == 2) {
-                    $field = $tpl->getHtmlFrag('new/textarea', [
-                        'name_attr' => 'field[]',
-                        'cols_num' => 15,
-                        'rows_num' => 5,
-                        'value_text' => $fieldin,
-                        'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
-                        'input_attr' => trim($requir),
-                    ]);
-                } elseif ($out[3] == 3) {
-                    $opts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
-                    $fieldcs = explode(',', $out[2]);
-                    foreach ($fieldcs as $val) {
-                        if ($val != '') {
-                            $opts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $val, 'label_text' => $val, 'is_selected' => $val == $fieldin]);
-                        }
-                    }
-                    $field = $tpl->getHtmlFrag('new/select', [
-                        'name_attr' => 'field[]',
-                        'options_html' => $opts,
-                        'select_attr' => trim($requir),
-                    ]);
-                } elseif ($out[3] == 4) {
-                    $field = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
-                } elseif ($out[3] == 5) {
-                    $field = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
-                }
-                $fields .= '<tr><td>'.getConst($out[1]).':</td><td>'.$field.'</td></tr>';
-            }
-        }
-        $i++;
-    }
-    return $fields;
-}
-
-# Fields out
-function fields_out(mixed $fieldb, string $mod): string {
-    global $conf;
-    $mod = strtolower($mod);
-    if ($fieldb && $mod) {
-        $fieldc = $conf['fields'][$mod];
-        $fieldb = explode('|', $fieldb);
-        $fieldc = explode('||', $fieldc);
-        $i = 0;
-        $fields = '';
-        foreach ($fieldc as $val) {
-            if ($val != '' && !empty($fieldb[$i])) {
-                preg_match("#(.*)\|(.*)\|(.*)\|(.*)#i", $val, $out);
-                $fields .= getConst($out[1]).': '.$fieldb[$i].'<br>';
-            }
-            $i++;
-        }
-        return $fields;
-    }
-    return '';
 }
 
 # Format domain
@@ -4732,68 +4108,6 @@ function is_acess(string $ids): bool {
     return $isa;
 }
 
-# Format categories select
-function getcat(string $modul = '', int $id = 0, string $selectName = '', string $extraClass = '', string $emptyOption = '', string $noSelect = ''): string {
- global $db, $conf;
-    $modul = filterVar($modul);
-    $conf['name'] = $conf['name'] ?? $modul;
-    if ($modul) {
-        $where  = 'WHERE modul = :modul ORDER BY ordern';
-        $params = ['modul' => $modul];
-    } else {
-        $where  = 'ORDER BY ordern';
-        $params = [];
-    }
-    $result = $db->getSqlQuery('SELECT id, title, parent, pview FROM '.PREFIX_DB.'_categories '.$where, $params);
-    if ($db->getSqlRowCount($result) > 0) {
-        $options = $emptyOption;
-        while (list($cid, $title, $parentid, $pview) = $db->getSqlRow($result)) if (is_acess($pview)) $massiv[$cid] = [getConst($title), $parentid];
-        foreach ($massiv as $key => $val) {
-            $cont[$key] = $val[0];
-            $flag = $val[1];
-            while ($flag != 0) {
-                $cont[$key] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$cont[$key];
-                $flag = intval($massiv[$flag][1]);
-            }
-            $options .= categorySelectOption((string)$key, $cont[$key], $id == $key);
-        }
-        return (!$noSelect) ? categorySelect($selectName, $extraClass, _CATEGORIES, $options) : $options;
-    } elseif ($emptyOption) {
-        return categorySelect($selectName, $extraClass, _CATEGORIES, $emptyOption);
-    }
-    return '';
-}
-
-# Format categories links
-function catlink(string $mod = '', int $id = 0, string $sep = '', string $home = ''): string {
- global $db, $conf;
-    $mod     = filterVar($mod);
-    $sep     = $sep ? ' '.urldecode($sep).' ' : ' '.urldecode($conf['defis']).' ';
-    $content = $home ? breadcrumbLink('index.php?name='.$conf['name'], $home, $home).$sep : '';
-    if ($mod) {
-        $where  = 'WHERE modul = :modul';
-        $params = ['modul' => $mod];
-    } else {
-        $where  = '';
-        $params = [];
-    }
-    $result = $db->getSqlQuery('SELECT id, title, parent FROM '.PREFIX_DB.'_categories '.$where, $params);
-    if ($db->getSqlRowCount($result) > 0) {
-        while (list($cid, $title, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [getConst($title), $parentid];
-        foreach ($massiv as $key => $val) {
-            $flag = $val[1];
-            $cont[$key] = ($flag != 0) ? $val[0] : breadcrumbLink('index.php?name='.$conf['name'].'&amp;cat='.$key, $val[0], $val[0]);
-            while ($flag != 0) {
-                $cont[$key] = breadcrumbLink('index.php?name='.$conf['name'].'&amp;cat='.$flag, $massiv[$flag][0], $massiv[$flag][0]).$sep.breadcrumbLink('index.php?name='.$conf['name'].'&amp;cat='.$key, $val[0], $cont[$key]);
-                $flag = intval($massiv[$flag][1]);
-            }
-            if ($id == $key) $content .= $cont[$key];
-        }
-        return $content;
-    }
-    return '';
-}
-
 # Format categories IDs
 function catids(string $mod = '', int $id = 0): string {
  global $db;
@@ -5040,7 +4354,7 @@ function getRatingView(): void {
                 $nrate = 'sl_rate-num';
             }
             if ($stl == 1) {
-                echo ratingLikeLive(
+                echo getTplRatingLive(
                     $result,
                     $title,
                     $nrate,
@@ -5049,7 +4363,7 @@ function getRatingView(): void {
                     'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=5&amp;stl=1'
                 );
             } else {
-                echo ratingStarsLive(
+                echo getTplRatingStars(
                     (string) $width,
                     $id.$typ,
                     'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod,
@@ -5118,25 +4432,25 @@ function getAsyncPager(string $frag, int $count, int $pages, int $page, int $mnu
             $prev = $num - 1;
             $cprev = getAsyncPagerLink($ld, $id, getAjaxQuery(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $prev, 'typ' => $typ, 'dir' => $mod]), _BACK, _BACK, 'sl_num');
         } else {
-            $cprev = pagerCurrent(_BACK, _BACK, 'sl_num');
+            $cprev = getTplPagerCurrent(_BACK, _BACK, 'sl_num');
         }
         for ($i = 1; $i < $pages+1; $i++) {
             if ($i == $num) {
-                $cont .= pagerCurrent((string)$i, (string)$i);
+                $cont .= getTplPagerCurrent((string)$i, (string)$i);
             } else {
                 if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= getAsyncPagerLink($ld, $id, getAjaxQuery(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $i, 'typ' => $typ, 'dir' => $mod]), (string)$i, (string)$i);
             }
             if ($i < $pages) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= ' ';
-                if (($num > $nnum) && ($i == 1)) $cont .= pagerDots();
-                if (($num < ($pages - $mnum)) && ($i == ($pages - 1))) $cont .= pagerDots();
+                if (($num > $nnum) && ($i == 1)) $cont .= getTplPagerDots();
+                if (($num < ($pages - $mnum)) && ($i == ($pages - 1))) $cont .= getTplPagerDots();
             }
         }
         if ($num < $pages) {
             $next = $num + 1;
             $cnext = getAsyncPagerLink($ld, $id, getAjaxQuery(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $next, 'typ' => $typ, 'dir' => $mod]), _NEXT, _NEXT, 'sl_num');
         } else {
-            $cnext = pagerCurrent(_NEXT, _NEXT, 'sl_num');
+            $cnext = getTplPagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
         $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $page, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
         return $tpl->getHtmlFrag($frag, $data);
@@ -5303,62 +4617,6 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
     return null;
 }
 
-# Format language
-function language(string $lang = '', string $typ = ''): string {
-    global $tpl;
-    $dir = opendir('lang');
-    $cont = (!$typ) ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
-    while (false !== ($file = readdir($dir))) {
-        if (preg_match("#^(.+)\.php#", $file, $matches)) {
-            $langf = $matches[1];
-            $title = getLangName($langf);
-            $cont .= $tpl->getHtmlFrag('new/select-option', [
-                'value_attr' => $langf,
-                'label_text' => $title,
-                'is_selected' => $lang == $langf,
-            ]);
-        }
-    }
-    closedir($dir);
-    return $cont;
-}
-
-# Builds a multiple-select list of module directories; $allow limits options to a whitelist when non-empty
-function modul(string $name, string $class, string $modul, string $no = '', array $allow = []): string {
-    global $tpl;
-    $content = '';
-    if (!empty($no)) {
-        $content .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($modul)]);
-    }
-    $modul = explode(',', $modul);
-    foreach (scandir('modules') as $file) {
-        if (str_contains($file, '.')) continue;
-        if ($allow && !in_array($file, $allow, true)) continue;
-        $selected = false;
-        foreach ($modul as $val) {
-            if ($val !== '' && $val === $file) { $selected = true; break; }
-        }
-        $content .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $selected]);
-    }
-    return $tpl->getHtmlFrag('multi-select', ['name_attr' => $name, 'select_class' => $class, 'options_html' => $content]);
-}
-
-# Format categorie module
-function cat_modul(string $selectName, string $extraClass = '', string $selected = '', bool $autoSubmit = false): string {
-    global $tpl;
-    $submit  = $autoSubmit ? 'OnChange="submit()"' : '';
-    $content = '';
-    $mods = ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
-    foreach ($mods as $m) {
-        $content .= $tpl->getHtmlFrag('new/select-option', [
-            'value_attr' => $m,
-            'label_text' => getModuleName($m).' - '.$m,
-            'is_selected' => $selected == $m,
-        ]);
-    }
-    return $tpl->getHtmlFrag('new/select', ['name_attr' => $selectName, 'select_class' => $extraClass, 'select_attr' => $submit, 'options_html' => $content]);
-}
-
 # Show comments
 function ashowcom(int $cid = 0, string $mod = ''): string {
  global $db, $conf, $afile, $user, $tpl, $prs;
@@ -5472,19 +4730,19 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
-            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? commentRankImage(img_find('ranks/'.$user_grank), $trank) : '';
+            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? getTplCommentRank(img_find('ranks/'.$user_grank), $trank) : '';
             $rate = (!empty($user_id)) ? getRatingAsync(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
-            $rwarn = (!empty($user_warnings)) ? commentMetaText(_UWARNS, warnings($user_warnings)) : '';
-            $group = (!empty($user_gname)) ? commentMetaColor(_GROUP, $user_gname, $user_gcolor) : '';
-            $point = ($conf['users']['point'] && !empty($user_points)) ? commentMetaText(_POINTS, (string) $user_points) : '';
-            $regdate = (!empty($user_regdate)) ? commentMetaText(_REG, format_time($user_regdate)) : _NO_INFO;
-            $gender = (!empty($user_gender)) ? commentMetaText(_GENDER, gender($user_gender)) : '';
-            $from = (!empty($user_from)) ? commentMetaText(_FROM, $user_from) : '';
-            $sig = (!empty($user_sig)) ? commentSignature($user_sig) : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? commentActionJs("javascript: InsertCode('name', '".$avname."', '', '', '1');", _PERSONAL, _PERS, 'sl-but-blue') : '';
-            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? commentActionLink('index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), _SENDMES, _MESSAGE, 'sl_but_green') : '';
-            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? commentActionLink('index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), _PERSONALINFO, _ACCOUNT, 'sl_but') : '';
-            $web = ($conf['comments']['web'] && !empty($user_website)) ? commentActionLink($user_website, _DOWNLLINK, _SITE, 'sl_but', ' target="_blank"') : '';
+            $rwarn = (!empty($user_warnings)) ? getTplCommentMeta(_UWARNS, warnings($user_warnings)) : '';
+            $group = (!empty($user_gname)) ? getTplCommentColor(_GROUP, $user_gname, $user_gcolor) : '';
+            $point = ($conf['users']['point'] && !empty($user_points)) ? getTplCommentMeta(_POINTS, (string) $user_points) : '';
+            $regdate = (!empty($user_regdate)) ? getTplCommentMeta(_REG, format_time($user_regdate)) : _NO_INFO;
+            $gender = (!empty($user_gender)) ? getTplCommentMeta(_GENDER, getGenderText($user_gender)) : '';
+            $from = (!empty($user_from)) ? getTplCommentMeta(_FROM, $user_from) : '';
+            $sig = (!empty($user_sig)) ? getTplCommentSign($user_sig) : '';
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? getTplCommentJs("javascript: InsertCode('name', '".$avname."', '', '', '1');", _PERSONAL, _PERS, 'sl-but-blue') : '';
+            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? getTplCommentLink('index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), _SENDMES, _MESSAGE, 'sl_but_green') : '';
+            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? getTplCommentLink('index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), _PERSONALINFO, _ACCOUNT, 'sl_but') : '';
+            $web = ($conf['comments']['web'] && !empty($user_website)) ? getTplCommentLink($user_website, _DOWNLLINK, _SITE, 'sl_but', ' target="_blank"') : '';
 
             # Future functions
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
@@ -5496,14 +4754,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 if (defined('ADMIN_FILE')) {
                     $acttyp = $com_status ? '0' : '1';
                     $acttxt = $com_status ? _DEACTIVATE : _ACTIVATE;
-                    $edit = commentActionMenu([
-                        commentActionLink('index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id, _MVIEW, _MVIEW),
-                        commentActionLink($afile.'.php?name=comments&amp;op=edit&amp;id='.$com_id, _FULLEDIT, _FULLEDIT),
-                        commentActionLink($afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), $acttxt, $acttxt),
-                        commentActionDelete($afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), _DELETE.' "'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
+                    $edit = getTplCommentMenu([
+                        getTplCommentLink('index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id, _MVIEW, _MVIEW),
+                        getTplCommentLink($afile.'.php?name=comments&amp;op=edit&amp;id='.$com_id, _FULLEDIT, _FULLEDIT),
+                        getTplCommentLink($afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), $acttxt, $acttxt),
+                        getTplCommentDelete($afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), _DELETE.' "'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
                     ]);
                 } else {
-                    $edit = commentActionMenu([
+                    $edit = getTplCommentMenu([
                         getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
                         getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, _FMODC, _FMODC),
                         getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ACTIVATE, _ACTIVATE),
@@ -5511,7 +4769,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 }
             } else {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
-                $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? commentActionMenu([
+                $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? getTplCommentMenu([
                     getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
                 ]) : '';
             }
@@ -5539,7 +4797,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],
                 ],
             ]) : '';
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => commentAvatar($avname, $avatar), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => getTplCommentAvatar($avname, $avatar), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {

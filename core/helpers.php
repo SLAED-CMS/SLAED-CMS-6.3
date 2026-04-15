@@ -140,6 +140,29 @@ function getTplRefreshTimeSelect(array $data = []): string {
     ]);
 }
 
+# Render a search result title link with highlighted text and new-badge
+function getTplSearchResultTitle(string $url, string $title, string $word, string $time): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('search-result-title', [
+        'url' => $url,
+        'title' => $title,
+        'highlighted_title' => filterTextHighlight($title, $word),
+        'new_badge' => getTplNewGraphic($time),
+    ]);
+}
+
+# Render one money calculator form with a JS function name, to-currency label and currency code
+function getTplMoneyCalcForm(string $fnname, string $tolbl, string $tocur): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('money-calculator-form', [
+        'btn_label' => _MO_4,
+        'fn_name' => $fnname,
+        'from_label' => _MO_2,
+        'to_cur' => $tocur,
+        'to_label' => $tolbl,
+    ]);
+}
+
 # Render preview field rows from dynamic module field definitions
 function getTplViewFieldRows(array $data = []): string {
     global $conf, $tpl, $prs;
@@ -676,7 +699,7 @@ function getTplMoveControls(array $data = []): string {
     ]);
 }
 
-# Render extra field rows for new/ form layout (fields_in() replacement for new/form-add)
+# Render extra field rows for new/ form layout (getTplFieldsIn() replacement for new/form-add)
 function getTplFieldsIn(array $data = []): string {
     global $conf, $tpl;
     $field  = $data['field'] ?? '';
@@ -825,6 +848,694 @@ function getTplAjaxTextarea(array $data = []): string {
             'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"',
         ]),
     ]);
+}
+
+# Render the shared "new" badge for fresh content
+function getTplNewGraphic(string $time): string {
+    global $tpl;
+    $data = time() - strtotime($time);
+    $cls = '';
+    $ttl = '';
+    if ($data < 86400) { $cls = 'sl_n_day'; $ttl = (string)_NEWTODAY; }
+    elseif ($data < 259200) { $cls = 'sl_n_days'; $ttl = (string)_NEWLAST3DAYS; }
+    elseif ($data < 604800) { $cls = 'sl_n_week'; $ttl = (string)_NEWTHISWEEK; }
+    if (!$cls) return '';
+    return $tpl->getHtmlFrag('new/graphic', ['icon_class' => $cls, 'icon_title' => $ttl]);
+}
+
+# Render a yes/no radio control pair
+function getTplRadioForm(mixed $var, string $name, string $id = ''): string {
+    global $tpl;
+    $state = ($var === 0 || $var === '0') ? '0' : (($var === 1 || $var === '1') ? '1' : '');
+    if ($id == '1') {
+        return $tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '0', 'label_text' => _YES, 'is_checked' => $state !== '1'])
+            .$tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '1', 'label_text' => _NO, 'is_checked' => $state === '1']);
+    }
+    return $tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '1', 'label_text' => _YES, 'is_checked' => $state !== '0'])
+        .$tpl->getHtmlFrag('radio-option', ['name_attr' => $name, 'value_attr' => '0', 'label_text' => _NO, 'is_checked' => $state === '0']);
+}
+
+# Render a gender select control
+function getTplGenderSelect(string $name, int $typ, string $clas = ''): string {
+    global $tpl;
+    $list = [_NO_INFO, _MAN, _WOMAN];
+    $cont = '';
+    foreach ($list as $key => $val) {
+        $cont .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => (string)$key,
+            'label_text' => $val,
+            'is_selected' => $key == $typ,
+        ]);
+    }
+    return $tpl->getHtmlFrag('new/select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont]);
+}
+
+# Format a gender value for display
+function getGenderText(int $gender): string {
+    if ($gender == 2) return (string)_WOMAN;
+    if ($gender == 1) return (string)_MAN;
+    return (string)_NO_INFO;
+}
+
+# Render one title tip block from one or many label-value items
+function getTplTitleTip(mixed $data): string {
+    global $tpl;
+    if (!is_array($data)) $data = [['value' => (string)$data]];
+    $rows = [];
+    foreach ($data as $item) {
+        $rows[] = [
+            'label' => (string)($item['label'] ?? _INFO),
+            'value' => (string)($item['value'] ?? ''),
+        ];
+    }
+    return $tpl->getHtmlFrag('title-tip', ['items' => $rows]);
+}
+
+# Render preview rows for dynamic fields in the legacy inline format
+function getTplFieldsOut(mixed $fieldb, string $mod): string {
+    global $conf;
+    $mod = strtolower($mod);
+    if (!$fieldb || !$mod) return '';
+    $fieldc = explode('||', $conf['fields'][$mod] ?? '');
+    $fieldb = explode('|', (string)$fieldb);
+    $i = 0;
+    $cont = '';
+    foreach ($fieldc as $val) {
+        if ($val != '' && !empty($fieldb[$i])) {
+            preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $val, $out);
+            $cont .= getConst($out[1]).': '.$fieldb[$i].'<br>';
+        }
+        $i++;
+    }
+    return $cont;
+}
+
+# Render the shared ajax rating block
+function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
+    global $conf;
+    if (intval($rat)) {
+        $votnum = $rat;
+        $votes = $rat;
+    } else {
+        $votnum = 0;
+        $votes = 1;
+    }
+    $width = number_format($scor / $votes, 2) * 20;
+    $result = substr($scor / $votes, 0, 4);
+    if (intval($votes) && intval($scor)) {
+        $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
+        $nrate = 'sl_rate-num sl_rate-is';
+    } else {
+        $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
+        $nrate = 'sl_rate-num';
+    }
+    if ($stl == '1') {
+        $img = getTplRatingLike($result, $title, $nrate);
+        $imgr = getTplRatingHover($result, $title, $nrate, $id.$obj, 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1');
+        $crate = 'sl_rate-like';
+    } else {
+        $img = getTplRatingBar($result, $title, $nrate, (string)$width, $votnum);
+        $imgr = getTplRatingBarHover($result, $title, $nrate, (string)$width, $votnum, $id.$obj, 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod);
+        $crate = 'sl_rate';
+    }
+    if ($typ == 2) return getTplRatingWrap($crate, $img);
+    $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
+    if ((($con[1] ?? '') && $id && $mod) || ($rat && $scor)) {
+        return ((($con[1] ?? '') && $typ) || (($con[1] ?? '') && !($con[2] ?? '') && !$typ)) ? getTplRatingWrap($crate, $imgr, 'rep'.$id.$obj) : getTplRatingWrap($crate, $img);
+    }
+    return '';
+}
+
+# Render the editor file preview block
+function getTplEditorPreview(int $index, string $url, string $fallback, bool $show): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('image-preview', [
+        'preview_id' => 'sf-form-'.$index,
+        'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
+        'image_url' => $url,
+        'fallback_url' => $fallback,
+        'image_title' => _IMG,
+        'no_title' => _NO,
+        'show_toggle' => $show,
+        'show_fallback' => !$show,
+    ]);
+}
+
+# Render one editor async action link
+function getEditorAsyncAction(string $target, string $query, string $title, string $label): string {
+    return getTplAjaxAction($target, $query, $title, $label);
+}
+
+# Render one editor insert action button
+function getTplEditorInsert(string $cmd, string $valu, string $id, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('editor-action-insert', [
+        'command' => $cmd,
+        'value' => $valu,
+        'editor_id' => $id,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+# Render the editor row action menu
+function getTplEditorMenu(array $list): string {
+    global $tpl;
+    $list = array_values(array_filter($list, static fn($item) => $item !== ''));
+    if (!$list) return '';
+    return $tpl->getHtmlFrag('row-actions', [
+        'trigger_label' => _EDITOR,
+        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $list)),
+    ]);
+}
+
+# Render one editor files table row
+function getTplEditorRow(array $data): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('table-row', [
+        'cells_html' => $tpl->getHtmlFrag('table-cells', [
+            'cells' => [
+                ['content_html' => (string)($data['preview_html'] ?? '')],
+                ['content_html' => (string)($data['file_name'] ?? '')],
+                ['content_html' => ''],
+                ['content_html' => (string)($data['size_value'] ?? '')],
+                ['content_html' => ''],
+                ['content_html' => (string)($data['functions_html'] ?? '')],
+            ],
+        ]),
+    ]);
+}
+
+# Render the editor files table shell
+function getTplEditorTable(string $rows): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('table', [
+        'is_wrapless' => true,
+        'disable_sort' => true,
+        'head' => [
+            ['content' => cutstr(_IMG, 4, 1), 'nosort' => true],
+            ['content' => _FILE, 'nosort' => true],
+            ['content' => '', 'nosort' => true],
+            ['content' => _SIZE, 'nosort' => true],
+            ['content' => '', 'nosort' => true],
+            ['content' => _FUNCTIONS, 'nosort' => true],
+        ],
+        'rows_html' => $rows,
+    ]);
+}
+
+# Render a comment action link
+function getTplCommentLink(string $href, string $title, string $label, string $clas = '', string $target = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $clas,
+        'target' => $target,
+    ]);
+}
+
+# Render one async comment action link
+function getCommentAsyncAction(string $target, string $query, string $title, string $label, string $clas = ''): string {
+    return getTplAjaxAction($target, $query, $title, $label, $clas);
+}
+
+# Render a comment javascript action link
+function getTplCommentJs(string $href, string $title, string $label, string $clas = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $clas,
+        'target' => '',
+    ]);
+}
+
+# Render a comment delete action link
+function getTplCommentDelete(string $href, string $text, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('action-delete', [
+        'href' => $href,
+        'confirm_text' => $text,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+# Render the comment row action menu
+function getTplCommentMenu(array $list): string {
+    global $tpl;
+    $list = array_values(array_filter($list, static fn($item) => $item !== ''));
+    if (!$list) return '';
+    return $tpl->getHtmlFrag('row-actions', [
+        'trigger_label' => _EDITOR,
+        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $list)),
+    ]);
+}
+
+# Render one comment meta text item
+function getTplCommentMeta(string $label, string $valu): string {
+    return htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+# Render one colored comment meta item
+function getTplCommentColor(string $label, string $valu, string $color): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-meta-color', ['label' => $label, 'value' => $valu, 'color' => $color]);
+}
+
+# Render one comment avatar block
+function getTplCommentAvatar(string $name, string $avatar): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-avatar', ['username' => $name, 'avatar' => $avatar]);
+}
+
+# Render one comment rank image
+function getTplCommentRank(string $src, string $title): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-rank-image', ['src' => $src, 'title' => $title]);
+}
+
+# Render one comment signature block
+function getTplCommentSign(string $cont): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-signature', ['content' => $cont]);
+}
+
+# Render one alpha navigation link
+function getTplAlphaLink(string $href, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('alpha-nav-link', ['href' => $href, 'title' => $title, 'label' => $label]);
+}
+
+# Render one alpha navigation text item
+function getTplAlphaText(string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('alpha-nav-text', ['label' => $label]);
+}
+
+# Render one tabs navigation link
+function getTplTabLink(string $href, string $label): string {
+    global $tpl;
+    $lhtml = preg_match('/<[^>]+>/', $label) ? $label : htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return $tpl->getHtmlFrag('navi-tab-link', ['href' => $href, 'label_html' => $lhtml]);
+}
+
+# Render one tabs content item
+function getTplTabContent(string $id, string $cont): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('navi-tab-content', ['tab_id' => $id, 'content' => $cont]);
+}
+
+# Render the tabs wrapper
+function getTplTabWrap(string $tabs, string $cont, int $id): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('navi-tabs-wrap', ['tabs_html' => $tabs, 'content_html' => $cont, 'id' => $id]);
+}
+
+# Render a pager link
+function getTplPagerLink(string $href, string $title, string $label, string $clas = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('pager-link', [
+        'href' => $href,
+        'query' => '',
+        'load_id' => '',
+        'target_id' => '',
+        'title' => $title,
+        'label' => $label,
+        'class' => $clas,
+    ]);
+}
+
+# Render the current pager marker
+function getTplPagerCurrent(string $title, string $label, string $clas = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('pager-link', [
+        'href' => '',
+        'query' => '',
+        'load_id' => '',
+        'target_id' => '',
+        'title' => $title,
+        'label' => $label,
+        'class' => $clas,
+    ]);
+}
+
+# Render pager dots
+function getTplPagerDots(): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('pager-dots', []);
+}
+
+# Render an async pager link
+function getAsyncPagerLink(string $loadid, string $targetid, string $query, string $title, string $label, string $clas = ''): string {
+    global $tpl;
+    $route = $query ? 'index.php?'.$query : '';
+    return $tpl->getHtmlFrag('pager-link', [
+        'href' => '',
+        'load_id' => $loadid,
+        'target_id' => $targetid,
+        'query' => $route,
+        'title' => $title,
+        'label' => $label,
+        'class' => $clas,
+    ]);
+}
+
+# Render one category icon link
+function getTplCatIcon(string $href, string $title, string $src = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-icon', ['href' => $href, 'title' => $title, 'src' => $src]);
+}
+
+# Render one category icon text item
+function getTplCatIconText(string $title, string $src = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-icon', ['href' => '', 'title' => $title, 'src' => $src]);
+}
+
+# Render one category title link
+function getTplCatTitle(string $href, string $title): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-title', ['href' => $href, 'title' => $title]);
+}
+
+# Render one category text link
+function getTplCatText(string $href, string $title): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-link', ['href' => $href, 'title' => $title, 'text' => $title]);
+}
+
+# Render one plain category title item
+function getTplCatTitleText(string $title): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-title', ['href' => '', 'title' => $title]);
+}
+
+# Render one category sub-item
+function getTplCatSubitem(string $cont): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-sub-item', ['content' => $cont]);
+}
+
+# Render one category row
+function getTplCatRow(string $img, string $title, string $desc = '', string $subs = '', string $style = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-row', [
+        'image_html' => $img,
+        'title_html' => $title,
+        'description_html' => $desc,
+        'subitems_html' => $subs,
+        'style' => $style,
+    ]);
+}
+
+# Render the category select shell
+function getTplCatPicker(string $name, string $clas, string $title, string $opts): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('category-select', [
+        'select_name' => $name,
+        'class' => $clas,
+        'title' => $title,
+        'options_html' => $opts,
+    ]);
+}
+
+# Render one category select option
+function getTplCatOption(string $valu, string $label, bool $isel = false): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('select-option', [
+        'value_attr' => $valu,
+        'label_text' => $label,
+        'is_selected' => $isel,
+    ]);
+}
+
+# Render one breadcrumb link
+function getTplBreadLink(string $href, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('breadcrumb-link', ['href' => $href, 'title' => $title, 'label' => $label]);
+}
+
+# Render one voting action link
+function getTplVotingLink(string $href, string $title, string $label, string $clas = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $clas,
+        'target' => '',
+    ]);
+}
+
+# Render one async voting action link
+function getVotingAsyncAction(string $target, string $query, string $title, string $label, string $clas = '', string $text = ''): string {
+    return getTplAjaxAction($target, $query, $title, $label, $clas);
+}
+
+# Render one voting delete action link
+function getTplVotingDelete(string $href, string $text, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('action-delete', [
+        'href' => $href,
+        'confirm_text' => $text,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+# Render the voting row action menu
+function getTplVotingMenu(array $list): string {
+    global $tpl;
+    $list = array_values(array_filter($list, static fn($item) => $item !== ''));
+    if (!$list) return '';
+    return $tpl->getHtmlFrag('row-actions', [
+        'trigger_label' => _EDITOR,
+        'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $list)),
+    ]);
+}
+
+# Render a rating like view
+function getTplRatingLike(string $result, string $title, string $nrate): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-like', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'rate1_title' => _RATE1,
+        'rate5_title' => _RATE5,
+        'hover_query' => '',
+        'target_id' => '',
+    ]);
+}
+
+# Render a rating like hover view
+function getTplRatingHover(string $result, string $title, string $nrate, string $target, string $query): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-like-live', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'target_id' => $target,
+        'rate1_query' => $query.'&amp;rate=1',
+        'rate5_query' => $query.'&amp;rate=5',
+        'rate1_title' => _RATE1,
+        'rate5_title' => _RATE5,
+    ]);
+}
+
+# Render a rating bar view
+function getTplRatingBar(string $result, string $title, string $nrate, string $width, int|string $votes): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-bar', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'width' => $width,
+        'votes' => (string)$votes,
+        'votes_title' => _VOTES,
+        'hover_query' => '',
+        'target_id' => '',
+    ]);
+}
+
+# Render a rating bar hover view
+function getTplRatingBarHover(string $result, string $title, string $nrate, string $width, int|string $votes, string $target, string $query): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-bar', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'width' => $width,
+        'votes' => (string)$votes,
+        'votes_title' => _VOTES,
+        'target_id' => $target,
+        'hover_query' => $query,
+    ]);
+}
+
+# Render the rating wrapper
+function getTplRatingWrap(string $clas, string $cont, string $id = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-wrap', ['wrap_class' => $clas, 'wrap_id' => $id, 'content' => $cont]);
+}
+
+# Render a live rating like block
+function getTplRatingLive(string $result, string $title, string $nrate, string $target, string $qone, string $qfive): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-like-live', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'target_id' => $target,
+        'rate1_query' => $qone,
+        'rate5_query' => $qfive,
+        'rate1_title' => _RATE1,
+        'rate5_title' => _RATE5,
+    ]);
+}
+
+# Render a live rating stars block
+function getTplRatingStars(string $width, string $target, string $query, string $nrate, int|string $votes): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('rating-bar-live', [
+        'width' => $width,
+        'target_id' => $target,
+        'hover_query' => $query,
+        'nrate' => $nrate,
+        'votes' => (string)$votes,
+        'votes_title' => _VOTES,
+    ]);
+}
+
+# Render the shared category select from database categories
+function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', string $clas = '', string $empty = '', string $raw = ''): string {
+    global $db, $conf;
+    $mod = filterVar($mod);
+    $conf['name'] = $conf['name'] ?? $mod;
+    if ($mod) {
+        $where = 'WHERE modul = :modul ORDER BY ordern';
+        $pars = ['modul' => $mod];
+    } else {
+        $where = 'ORDER BY ordern';
+        $pars = [];
+    }
+    $res = $db->getSqlQuery('SELECT id, title, parent, pview FROM '.PREFIX_DB.'_categories '.$where, $pars);
+    if ($db->getSqlRowCount($res) > 0) {
+        $opts = $empty;
+        $mass = [];
+        while ([$cid, $title, $parent, $pview] = $db->getSqlRow($res)) {
+            if (is_acess($pview)) $mass[$cid] = [getConst($title), $parent];
+        }
+        foreach ($mass as $key => $val) {
+            $cont[$key] = $val[0];
+            $flag = $val[1];
+            while ($flag != 0) {
+                $cont[$key] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$cont[$key];
+                $flag = intval($mass[$flag][1]);
+            }
+            $opts .= getTplCatOption((string)$key, $cont[$key], $id == $key);
+        }
+        return !$raw ? getTplCatPicker($name, $clas, _CATEGORIES, $opts) : $opts;
+    }
+    if ($empty) return getTplCatPicker($name, $clas, _CATEGORIES, $empty);
+    return '';
+}
+
+# Render the shared category breadcrumb trail
+function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', string $home = ''): string {
+    global $db, $conf;
+    $mod = filterVar($mod);
+    $sep = $sep ? ' '.urldecode($sep).' ' : ' '.urldecode($conf['defis']).' ';
+    $cont = $home ? getTplBreadLink('index.php?name='.$conf['name'], $home, $home).$sep : '';
+    if ($mod) {
+        $where = 'WHERE modul = :modul';
+        $pars = ['modul' => $mod];
+    } else {
+        $where = '';
+        $pars = [];
+    }
+    $res = $db->getSqlQuery('SELECT id, title, parent FROM '.PREFIX_DB.'_categories '.$where, $pars);
+    if ($db->getSqlRowCount($res) > 0) {
+        $mass = [];
+        while ([$cid, $title, $parent] = $db->getSqlRow($res)) $mass[$cid] = [getConst($title), $parent];
+        foreach ($mass as $key => $val) {
+            $flag = $val[1];
+            $path[$key] = ($flag != 0) ? $val[0] : getTplBreadLink('index.php?name='.$conf['name'].'&amp;cat='.$key, $val[0], $val[0]);
+            while ($flag != 0) {
+                $path[$key] = getTplBreadLink('index.php?name='.$conf['name'].'&amp;cat='.$flag, $mass[$flag][0], $mass[$flag][0]).$sep
+                    .getTplBreadLink('index.php?name='.$conf['name'].'&amp;cat='.$key, $val[0], $path[$key]);
+                $flag = intval($mass[$flag][1]);
+            }
+            if ($id == $key) $cont .= $path[$key];
+        }
+    }
+    return $cont;
+}
+
+# Render language options from installed language files
+function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
+    global $tpl;
+    $dir = opendir('lang');
+    $cont = !$typ ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
+    while (false !== ($file = readdir($dir))) {
+        if (preg_match('#^(.+)\.php#', $file, $match)) {
+            $langf = $match[1];
+            $cont .= $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => $langf,
+                'label_text' => getLangName($langf),
+                'is_selected' => $lang == $langf,
+            ]);
+        }
+    }
+    closedir($dir);
+    return $cont;
+}
+
+# Render a multi-select for modules
+function getTplModuleSelect(string $name, string $clas, string $mod, string $no = '', array $allow = []): string {
+    global $tpl;
+    $cont = '';
+    if ($no !== '') $cont .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
+    $mods = explode(',', $mod);
+    foreach (scandir('modules') as $file) {
+        if (str_contains($file, '.')) continue;
+        if ($allow && !in_array($file, $allow, true)) continue;
+        $isel = false;
+        foreach ($mods as $val) {
+            if ($val !== '' && $val === $file) {
+                $isel = true;
+                break;
+            }
+        }
+        $cont .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
+    }
+    return $tpl->getHtmlFrag('multi-select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont]);
+}
+
+# Render a select with category-enabled modules
+function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false): string {
+    global $tpl;
+    $attr = $auto ? 'OnChange="submit()"' : '';
+    $cont = '';
+    $mods = ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
+    foreach ($mods as $mod) {
+        $cont .= $tpl->getHtmlFrag('new/select-option', [
+            'value_attr' => $mod,
+            'label_text' => getModuleName($mod).' - '.$mod,
+            'is_selected' => $sel == $mod,
+        ]);
+    }
+    return $tpl->getHtmlFrag('new/select', ['name_attr' => $name, 'select_class' => $clas, 'select_attr' => $attr, 'options_html' => $cont]);
+}
+
+# Render a mailto link
+function getMailLink(string $mail): string {
+    global $conf;
+    return '<a href="mailto:'.$mail.'?subject='.$conf['sitename'].'" target="_blank">'.$mail.'</a>';
 }
 
 # End of new, stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates
