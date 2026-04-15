@@ -7,6 +7,7 @@ class EditorBbcode implements ContentDriver {
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
+        $value = html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         return getTplBbEditor([
             'id' => $id,
             'name' => $name,
