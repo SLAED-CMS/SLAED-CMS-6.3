@@ -1,4 +1,4 @@
-<article id="{{ id }}" class="sl-post sl-card">
+<article id="{{ id }}" class="sl-post sl-card"{% if width %} style="width: {{ width }}%;"{% endif %}>
 <h3 class="sl-title">{{{ favorites }}} <a href="{{{ title_href }}}" title="{{ title_attr }}">{{{ title_text }}}</a>{% if title_new %} {{{ title_new }}}{% endif %}</h3>
 <div class="sl-meta">
 	<ul class="sl-pull-right">
