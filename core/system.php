@@ -2522,8 +2522,7 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             $body = explode('|', $body);
             $answer = explode('|', $answer);
             $vote = array_sum($answer);
-            $form = (!$rate) ? '<form name="voting" id="form'.$votid.'" method="post">' : '';
-            $cont = $form.'<h4 class="vote-title">'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</h4><ul class="vote-list">';
+            $items = '';
             $pn = 0;
             for ($i = 0; $i < count($body); $i++) {
                 $pn++;
@@ -2537,9 +2536,9 @@ function getVotingView(int $id = 0, string $votid = ''): string {
                 }
                 if (!$rate) {
                     $itype = ($multi) ? 'checkbox' : 'radio';
-                    $cont .= $tpl->getHtmlFrag('voting-post', ['id' => $id, 'n' => $n, 'itype' => $itype, 'name' => 'body[]', 'text' => $body[$i]]);
+                    $items .= $tpl->getHtmlFrag('new/voting-post', ['id' => $id, 'n' => $n, 'itype' => $itype, 'name' => 'body[]', 'text' => $body[$i]]);
                 } else {
-                    $cont .= $tpl->getHtmlFrag('voting-view', ['text' => $body[$i], 'text_safe' => filterText($body[$i]), 'n' => $n, 'pn' => $pn, 'percent' => $procent, 'votes_label' => _VOTES, 'votes' => $answer[$i]]);
+                    $items .= $tpl->getHtmlFrag('new/voting-view', ['text' => $body[$i], 'text_safe' => filterText($body[$i]), 'n' => $n, 'pn' => $pn, 'percent' => $procent, 'votes_label' => _VOTES, 'votes' => $answer[$i]]);
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
@@ -2549,10 +2548,19 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             ]) : '';
             $post = (!$rate) ? getVotingAsyncAction($votid, 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl-but-blue', _SEROR1) : '';
             $polls = ($vnum > 1) ? getTplVotingLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
-            $votes = (!$modul && $votid != 'voting') ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : '<span class="sl_votes">'.htmlspecialchars(_VOTES.': '.$vote, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
+            $votes = (!$modul && $votid != 'voting') ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : $tpl->getHtmlFrag('new/span', ['class' => 'sl_votes', 'text' => _VOTES.': '.$vote]);
             $comm = (!$modul && $acomm) ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
-            $formend = (!$rate) ? '</form>' : '';
-            $cont .= '</ul><!-- <div class="vote-btns">'.$admin.$post.$polls.'</div> --><div class="vote-links">'.$votes.' '.$comm.'</div>'.$formend;
+            $cont = $tpl->getHtmlFrag('new/voting-widget', [
+                'has_form'   => !$rate,
+                'form_id'    => 'form'.$votid,
+                'title'      => $title,
+                'items_html' => $items,
+                'admin_html' => $admin,
+                'post_html'  => $post,
+                'polls_html' => $polls,
+                'votes_html' => $votes,
+                'comm_html'  => $comm,
+            ]);
         } else {
             $cont = $tpl->getHtmlFrag('alert', ['text' => _VCLINFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
