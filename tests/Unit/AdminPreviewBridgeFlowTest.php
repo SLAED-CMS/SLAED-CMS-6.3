@@ -7,8 +7,8 @@ namespace {
     if (!defined('ADMIN_FILE')) define('ADMIN_FILE', true);
     if (!defined('_PREVIEW')) define('_PREVIEW', 'Preview');
 
-    if (!function_exists('fields_out')) {
-        function fields_out(string $text, string $mod = ''): string
+    if (!function_exists('getTplFieldsOut')) {
+        function getTplFieldsOut(string $text, string $mod = ''): string
         {
             return $GLOBALS['__test_fields_out'][$text] ?? $text;
         }
