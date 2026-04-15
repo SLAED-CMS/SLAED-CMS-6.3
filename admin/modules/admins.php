@@ -92,7 +92,7 @@ function admins(): void {
             'cells' => [
                 ['content_html' => $tip],
                 ['content_html' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
-                ['content_html' => mailto($email)],
+                ['content_html' => getMailLink($email)],
                 ['content_html' => htmlspecialchars((string)$lang, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => ((int)$super === 1) ? _YES : _NO],
                 ['content_html' => $acts],
@@ -160,7 +160,7 @@ function add(): void {
     $perm = $tpl->getHtmlFrag('radio-group', ['items_html' => $items]);
     $mailtext = replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
-        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language((string)$lang)])
+        ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions((string)$lang)])
         : '';
     $nameField = $aid
         ? $tpl->getHtmlFrag('input', [

@@ -39,7 +39,7 @@ function content(): void {
                 'href' => $href,
                 'title_attr' => $title,
                 'title_text' => $title,
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'tip' => $tip,
                 'is_moder' => $ismoder,
                 'editor' => _EDITOR,
@@ -82,7 +82,7 @@ function view(): void {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET body = :body, time = NOW() WHERE id = :id', ['body' => $rss, 'id' => $id]);
             }
         }
-        $fields = fields_out($field, $conf['name']);
+        $fields = getTplFieldsOut($field, $conf['name']);
         $hometext = $body . $fields;
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);

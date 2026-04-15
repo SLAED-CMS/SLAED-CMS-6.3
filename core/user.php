@@ -407,7 +407,7 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
                 $group = ($user_gname) ? $tpl->getHtmlFrag('comment-meta-color', ['label' => _GROUP, 'color' => $user_gcolor, 'value' => $user_gname]) : '';
                 $point = ($conf['users']['point'] && $user_points) ? _POINTS.': '.$user_points : '';
                 $regdate = ($user_regdate) ? _REG.': '.format_time($user_regdate) : _NO_INFO;
-                $gender = ($user_gender) ? _GENDER.': '.gender($user_gender) : '';
+                $gender = ($user_gender) ? _GENDER.': '.getGenderText($user_gender) : '';
                 $from = ($user_from) ? _FROM.': '.$user_from : '';
                 $sig = ($user_sig) ? $tpl->getHtmlFrag('comment-signature', ['content' => $user_sig]) : '';
                 $profil = ($conf['privat']['profil'] && $user_name) ? $tpl->getHtmlFrag('account-user-button', ['url' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'target_attr' => '']) : '';

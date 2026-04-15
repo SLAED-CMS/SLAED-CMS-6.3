@@ -168,7 +168,7 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => modul('module', 'sl_conf', $conf['module'], 1)];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => getTplModuleSelect('module', 'sl_conf', $conf['module'], 1)];
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $ival = 0;

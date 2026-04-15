@@ -44,7 +44,7 @@ function getThemeHeadVars(): array {
     global $db, $conf, $tpl;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';
     $fcat = (int)getVar('get', 'cat', 'num', 0);
-    $cname = ($fcat && !empty($conf['files'])) ? catlink($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
+    $cname = ($fcat && !empty($conf['files'])) ? getTplCategoryTrail($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
     [$count] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
     $random = mt_rand(0, (int)$count);
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));

@@ -22,7 +22,7 @@ function order(): void {
         $rows = '';
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = $status ? 0 : 1;
-            $infos = fields_out($info, 'order');
+            $infos = getTplFieldsOut($info, 'order');
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],

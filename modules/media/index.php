@@ -61,7 +61,7 @@ function media(): void {
     $cont = '';
     if (!$home || ($home && $conf['media']['homcat'])) {
         $cont = setModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -80,7 +80,7 @@ function media(): void {
             $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
-            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr($prs->filterContent($description, false, $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
+            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr($prs->filterContent($description, false, $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
@@ -117,7 +117,7 @@ function liste(): void {
             $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]), 'title_attr' => $stitle, 'title_text' => cutstr($stitle, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $ctitle, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]), 'title_attr' => $stitle, 'title_text' => cutstr($stitle, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $ctitle, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
         }
         $cont .= $tpl->getHtmlFrag('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
@@ -156,7 +156,7 @@ function view(): void {
             'author' => $seoauthor,
         ]);
         $cont = setModuleNavi(['title' => _MEDIA]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = ($cdesc) ? $cdesc : $ctitle;
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
@@ -321,7 +321,7 @@ function add(): void {
             'postname' => $postname,
             'title' => $title,
             'subtitle' => $subtitle,
-            'catselect' => getcat($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
             'year_options' => $yearOptions,
             'director' => $director,
             'roles' => $roles,

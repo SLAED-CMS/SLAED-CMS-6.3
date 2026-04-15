@@ -65,7 +65,7 @@ function shop(): void {
 	if (!$home || ($home && $conf['shop']['homcat'])) {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= setModuleNavi(['title' => $ntitle] + SHOP_NAVI);
-		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $defis, _SHOP)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
@@ -91,7 +91,7 @@ function shop(): void {
 			$discount = '';
 			$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
 			$kasse = $tpl->getHtmlFrag('shop-kasse-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH]);
-			$title = $tpl->getHtmlFrag('shop-title-link', ['href' => $thref, 'title' => $stitle, 'label' => $stitle, 'new' => new_graphic($time)]);
+			$title = $tpl->getHtmlFrag('shop-title-link', ['href' => $thref, 'title' => $stitle, 'label' => $stitle, 'new' => getTplNewGraphic($time)]);
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
 			$comm = ($acomm) ? $tpl->getHtmlFrag('shop-comment-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom]) : '';
 			$read = $tpl->getHtmlFrag('shop-read-link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE]);
@@ -141,7 +141,7 @@ function liste(): void {
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = $cdesc ?: $ctitle;
 			$price = $price.' '.$conf['shop']['valute'];
-			$cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $price, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+			$cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $price, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
 		}
 		$cont .= $tpl->getHtmlFrag('liste-wrap', []);
 		$onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
@@ -181,7 +181,7 @@ function view(): void {
 		]);
 		$cont = setModuleNavi(['title' => _SHOP] + SHOP_NAVI);
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
-		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $defis, _SHOP)]);
+		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
 		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
 		if ($bodytext) $text .= '<br><br>'.$bodytext;
@@ -360,7 +360,7 @@ function clients(): void {
 					else $tipItems[count($tipItems) - 1]['is_last'] = true;
 					$cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _NO;
 					$rechn = $tpl->getHtmlFrag('shop-rechn-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid, 'title' => _RECHN_B, 'label' => _RECHN_B]);
-					$cont .= $tpl->getHtmlFrag('shop-client-row', ['id' => $cid, 'tip' => title_tip($tipItems), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'date' => $cenddate, 'status' => ad_status('', $cactive), 'actions' => $rechn]);
+					$cont .= $tpl->getHtmlFrag('shop-client-row', ['id' => $cid, 'tip' => getTplTitleTip($tipItems), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'date' => $cenddate, 'status' => ad_status('', $cactive), 'actions' => $rechn]);
 			}
 			$cont .= '</tbody></table>';
 		}
@@ -444,7 +444,7 @@ function partners(): void {
 					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
 						$partsum = $pprice / 100 * $proz;
 						$partsumges += $partsum;
-						$content .= $tpl->getHtmlFrag('shop-partner-row', ['id' => $cid, 'user' => user_info($nick), 'tip' => title_tip([
+						$content .= $tpl->getHtmlFrag('shop-partner-row', ['id' => $cid, 'user' => user_info($nick), 'tip' => getTplTitleTip([
 							['label' => _PREIS, 'value' => $pprice.' '.$conf['shop']['valute'], 'is_last' => false],
 							['label' => _DATE, 'value' => date(_TIMESTRING, $cregdate), 'is_last' => true],
 						]), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'percent' => $proz.' %', 'sum' => $partsum.' '.$conf['shop']['valute']]);

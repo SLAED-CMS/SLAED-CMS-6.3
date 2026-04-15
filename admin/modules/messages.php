@@ -100,7 +100,7 @@ function add(): void {
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
     if ($conf['multilingual'] == 1) {
-        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang, 1)]);
+        $langsel = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang, 1)]);
     }
     if ($expire != 0) {
         $newexpire = 0;

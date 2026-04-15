@@ -160,7 +160,7 @@ function config(): void {
         ],
     ]);
     $rows = [
-        ['label_html' => _MODULES, 'field_html' => modul('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1), 'is_full' => true],
+        ['label_html' => _MODULES, 'field_html' => getTplModuleSelect('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1), 'is_full' => true],
         ['label_html' => _MAP_AUTO_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'auto_t', 'value_attr' => (string)intval(($conf['sitemap']['auto_t'] ?? 0) / 3600), 'is_config' => true])],
         ['label_html' => _MAP_AUTO, 'field_html' => $yesno('auto', $conf['sitemap']['auto'] ?? 0)],
         ['label_html' => _MAP_FR_H, 'field_html' => getSitemapFreqSelect('fr_h', (string)($conf['sitemap']['fr_h'] ?? '0'))],

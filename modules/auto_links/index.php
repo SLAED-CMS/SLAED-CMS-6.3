@@ -50,7 +50,7 @@ function autolink(): void {
                 'title_href' => $thref,
                 'title_attr' => $sitename,
                 'title_text' => filterTextHighlight($sitename, $word),
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'category_href' => '',
                 'category_attr' => '',
                 'category_text' => '',

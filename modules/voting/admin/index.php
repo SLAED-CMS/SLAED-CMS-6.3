@@ -173,7 +173,7 @@ function add(): void {
         ['label_html' => _ENDDATE.':', 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang)])];
+        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
     $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => getVotingCommentSelect((int)$acomm)];
     $rows[] = ['label_html' => _MULTI, 'field_html' => getTplRadioGroup(['name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];

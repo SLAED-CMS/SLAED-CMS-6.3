@@ -25,7 +25,7 @@ function order(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $rows = getTplFormAddRow(_OR_2.':', getTplEmailInput('mail', $mail, '', 'maxlength="255" placeholder="'._OR_2.'" required'));
-        $rows .= fields_in($field, $conf['name']);
+        $rows .= getTplFieldsIn($field, $conf['name']);
         $rows .= getTplFormAddRow(_OR_3.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
         $cont .= $tpl->getHtmlFrag('form-add', [
@@ -55,7 +55,7 @@ function send(): void {
             $status = ($conf['order']['pr']) ? '0' : '1';
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, NOW(), :status)', ['email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
             if ($conf['order']['ad']) {
-                $infos = fields_out($field, $conf['name']);
+                $infos = getTplFieldsOut($field, $conf['name']);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
                 $msg = $tpl->getHtmlFrag('order-email-admin', [

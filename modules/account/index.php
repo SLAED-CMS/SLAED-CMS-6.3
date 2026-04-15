@@ -86,7 +86,7 @@ function newuser(): void {
                 'mail_value' => $mail,
                 'lbl_nickname' => _NICKNAME,
                 'lbl_email' => _EMAIL,
-                'password_tip' => title_tip(_BLANKFORAUTO),
+                'password_tip' => getTplTitleTip(_BLANKFORAUTO),
                 'lbl_password' => _PASSWORD,
                 'lbl_password2' => _RETYPEPASSWORD,
                 'lbl_rules' => _RULES,
@@ -342,9 +342,9 @@ function view(): void {
             } else {
                 $birth = [_BIRTHDAY, _NO_INFO];
             }
-            $gender = [_GENDER, gender($gender)];
+            $gender = [_GENDER, getGenderText($gender)];
             $rating = [_RATING, getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1)];
-            $field = ($field) ? fields_out($field, $conf['name']) : '';
+            $field = ($field) ? getTplFieldsOut($field, $conf['name']) : '';
             $sgroup = ($gname) ? [_SPEC_GROUP, $gname] : [_SPEC_GROUP, _NO];
             $rgroup = [];
             $uranks = '';
@@ -875,7 +875,7 @@ function edithome(): void {
             'lbl_birthday' => _BIRTHDAY,
             'birthday_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10]),
             'lbl_gender' => _GENDER,
-            'gender_html' => get_gender('gender', $userinfo['gender'], 'sl-field--account'),
+            'gender_html' => getTplGenderSelect('gender', $userinfo['gender'], 'sl-field--account'),
             'lbl_email' => _YOUREMAIL,
             'mail_value' => $userinfo['email'],
             'lbl_site' => _SITEURL,
@@ -889,20 +889,20 @@ function edithome(): void {
             'lbl_sig' => _SIGNATURE,
             'sig_info' => _SIGNATURE_TEXT,
             'sig_html' => getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $userinfo['sig'], 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '0']),
-            'fields_html' => fields_in($userinfo['field'], $conf['name']),
+            'fields_html' => getTplFieldsIn($userinfo['field'], $conf['name']),
             'lbl_story' => _C_12,
             'story_options' => $story,
             'story_hidden' => $conf['news']['num'] ?? 0,
             'lbl_news' => _RNEWSLETTER,
-            'news_html' => radio_form($userinfo['newslet'], 'news'),
+            'news_html' => getTplRadioForm($userinfo['newslet'], 'news'),
             'lbl_fsmail' => _FSMAIL,
-            'fsmail_html' => radio_form($userinfo['fsmail'], 'fsmail'),
+            'fsmail_html' => getTplRadioForm($userinfo['fsmail'], 'fsmail'),
             'lbl_psmail' => _PSMAIL,
-            'psmail_html' => radio_form($userinfo['psmail'], 'psmail'),
+            'psmail_html' => getTplRadioForm($userinfo['psmail'], 'psmail'),
             'lbl_view' => _ALLOWUSERS,
-            'view_html' => radio_form($userinfo['viewmail'], 'view'),
+            'view_html' => getTplRadioForm($userinfo['viewmail'], 'view'),
             'lbl_blockon' => _ACTIVATEPERSONAL,
-            'blockon_html' => radio_form($userinfo['blockon'], 'blockon'),
+            'blockon_html' => getTplRadioForm($userinfo['blockon'], 'blockon'),
             'lbl_block' => _MENUCONF,
             'block_info' => _MENUINFO,
             'block_html' => getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $userinfo['block'], 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _MENUCONF, 'required' => '0']),

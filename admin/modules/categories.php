@@ -17,7 +17,7 @@ function categories(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
         ],
-        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
     ])]);
     setHead();
     $cont = getTplAdminTabs([
@@ -60,7 +60,7 @@ function add(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
         ],
-        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
     ])]);
     setHead();
     $cont = getTplAdminTabs([
@@ -90,12 +90,12 @@ function add(): void {
             'value_text' => '',
             'is_config' => true,
         ])],
-        ['label_html' => _IMG.':', 'field_html' => getTplCategorySelect($path)],
+        ['label_html' => _IMG.':', 'field_html' => getTplImageSelect($path)],
         ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.'no.png')],
-        ['label_html' => _MODUL.':', 'field_html' => cat_modul('modul', 'sl-form-control', $modul)],
+        ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language()])];
+        $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions()])];
     }
     $rows1 = [
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', '', 0)],
@@ -147,7 +147,7 @@ function subadd(): void {
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'categories'],
             ],
-            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+            'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
         ])]);
         $cont = getTplAdminTabs([
             'ops' => $ops,
@@ -163,7 +163,7 @@ function subadd(): void {
         ];
         $rows0 = [
             ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
-            ['label_html' => _CATEGORY.':', 'field_html' => getcat($modul, 0, 'cid', 'sl-form-control')],
+            ['label_html' => _CATEGORY.':', 'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control')],
             ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'title',
@@ -177,12 +177,12 @@ function subadd(): void {
                 'value_text' => '',
                 'is_config' => true,
             ])],
-            ['label_html' => _IMG.':', 'field_html' => getTplCategorySelect($path)],
+            ['label_html' => _IMG.':', 'field_html' => getTplImageSelect($path)],
             ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.'no.png')],
-            ['label_html' => _MODUL.':', 'field_html' => cat_modul('modul', 'sl-form-control', $modul)],
+            ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
         ];
         if ($conf['multilingual'] == 1) {
-            $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language()])];
+            $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions()])];
         }
         $rows1 = [
             ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', '', 0)],
@@ -224,7 +224,7 @@ function subadd(): void {
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'categories'],
             ],
-            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+            'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
         ])]);
         $navi = getTplAdminTabs([
             'ops' => $ops,
@@ -248,7 +248,7 @@ function addedit(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
         ],
-        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
     ])]);
     setHead();
     $cont = getTplAdminTabs([
@@ -267,7 +267,7 @@ function addedit(): void {
             ],
             'rows' => [[
                 'label_html' => _CATEGORY.':',
-                'field_html' => getcat($modul, 0, 'cid', 'sl-form-control'),
+                'field_html' => getTplCategorySelect($modul, 0, 'cid', 'sl-form-control'),
             ]],
             'submit_label' => _EDIT,
         ])]);
@@ -291,7 +291,7 @@ function edit(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
         ],
-        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
     ])]);
     setHead();
     $cont = getTplAdminTabs([
@@ -322,15 +322,15 @@ function edit(): void {
             'value_text' => (string)$desc,
             'is_config' => true,
         ])],
-        ['label_html' => _IMG.':', 'field_html' => getTplCategorySelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
+        ['label_html' => _IMG.':', 'field_html' => getTplImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
         ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.$imgcat)],
-        ['label_html' => _MODUL.':', 'field_html' => cat_modul('modul', 'sl-form-control', $modul)],
+        ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($parent != 0) {
-        $rows0[] = ['label_html' => _CATEGORY.':', 'field_html' => getcat($modul, $parent, 'parent', 'sl-form-control')];
+        $rows0[] = ['label_html' => _CATEGORY.':', 'field_html' => getTplCategorySelect($modul, $parent, 'parent', 'sl-form-control')];
     }
     if ($conf['multilingual'] == 1) {
-        $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang)])];
+        $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
     $rows1 = [
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl-form-control', $pview, 0)],

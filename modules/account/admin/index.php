@@ -101,7 +101,7 @@ function account(): void {
                 ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING)],
                 ['label' => _SPEC_GROUP, 'value' => $sgroup],
                 ['label' => _SITE, 'value' => filterTextHighlight($web, $chng)],
-                ['label' => _GENDER, 'value' => gender($gender)],
+                ['label' => _GENDER, 'value' => getGenderText($gender)],
                 ['label' => _POINTS, 'value' => (string)$point, 'is_last' => true],
             ];
             $delhref = $afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;token='.getSiteToken();
@@ -351,7 +351,7 @@ function add(): void {
     if ($conf['multilingual'] == 1) {
         $rows[] = [
             'label_html' => _LANGUAGE.':',
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($lang)]),
+            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)]),
         ];
     }
     $rows[] = [
@@ -389,7 +389,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _GENDER.':',
-        'field_html' => get_gender('gender', $gender, 'sl-select-config'),
+        'field_html' => getTplGenderSelect('gender', $gender, 'sl-select-config'),
     ];
     $fieldvals = explode('|', $field);
     $fieldcfgs = explode('||', (string)$conf['fields']['account']);

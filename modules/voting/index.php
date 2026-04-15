@@ -24,7 +24,7 @@ function voting(): void {
 			$comm = ($acomm && $comm) ? $comm : _NO;
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
-				$report = title_tip([
+				$report = getTplTitleTip([
 					['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
 					['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
 					['label' => _TYPE, 'value' => $type, 'is_last' => true],
@@ -38,7 +38,7 @@ function voting(): void {
 				'title_href' => $thref,
 				'title_attr' => htmlspecialchars($stitle, ENT_QUOTES),
 				'title_text' => cutstr($stitle, 60),
-				'title_new' => new_graphic($date),
+				'title_new' => getTplNewGraphic($date),
 				'comm' => $comm,
 				'vote' => $vote,
 					'info' => $report,

@@ -63,7 +63,7 @@ function jokes(): void {
     $cont = '';
     if (!$home || ($home && $conf['jokes']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle] + JOKES_NAVI);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -84,7 +84,7 @@ function jokes(): void {
                 'title_href' => '#'.$id,
                 'title_attr' => $jtitle,
                 'title_text' => filterTextHighlight($jtitle, $word),
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
@@ -149,7 +149,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname ?: _ANONYM,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']),
             'captcha' => getCaptcha(1),
             'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),

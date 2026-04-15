@@ -70,7 +70,7 @@ function news(): void {
     $cont = '';
     if (!$home || ($home && $conf['news']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _NEWS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('new/cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('new/cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -104,7 +104,7 @@ function news(): void {
                 'title_href' => $thref,
                 'title_attr' => $stitle,
                 'title_text' => $stitle,
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
@@ -202,7 +202,7 @@ function liste(): void {
                 'title_href' => $thref,
                 'title_attr' => $title,
                 'title_text' => cutstr($title, 40),
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
@@ -267,10 +267,10 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = setModuleNavi(['title' => _NEWS]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('new/cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('new/cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
-        $fields = fields_out($field, $conf['name']);
+        $fields = getTplFieldsOut($field, $conf['name']);
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
         if ($fields) $rawtext .= $fields;
         $conpag = explode('[pagebreak]', $rawtext);
@@ -406,7 +406,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'fields' => getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]),

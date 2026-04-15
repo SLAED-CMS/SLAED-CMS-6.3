@@ -419,9 +419,9 @@ function view(): void {
                 $group = (!empty($gname)) ? $tpl->getHtmlFrag('forum-group-span', ['label' => _GROUP, 'color' => $gcolor, 'name' => $gname]) : '';
                 $point = ($conf['users']['point'] && !empty($point)) ? _POINTS.': '.$point : '';
                 $regdate = (!empty($reg)) ? _REG.': '.format_time($reg) : _NO_INFO;
-                $gender = (!empty($gender)) ? _GENDER.': '.gender($gender) : '';
+                $gender = (!empty($gender)) ? _GENDER.': '.getGenderText($gender) : '';
                 $from = (!empty($from)) ? _FROM.': '.$from : '';
-                $fields = fields_out($val[8], $conf['name']);
+                $fields = getTplFieldsOut($val[8], $conf['name']);
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('forum-sig', ['content' => $sig]) : '';
                 $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
                     ? $tpl->getHtmlFrag('link-btn', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'class' => 'sl-but-blue', 'label' => _PERS])
@@ -495,7 +495,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
         $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, '', 'placeholder="'._YOURNAME.'" required')) : '';
         $rows .= getTplFormAddRow(_TEXT, getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']));
-        $rows .= fields_in(isset($field), $conf['name']);
+        $rows .= getTplFieldsIn(isset($field), $conf['name']);
         $hide = getTplHiddenInput(['name' => 'subject', 'value' => $subject]).getTplHiddenInput(['name' => 'pid', 'value' => (string)$id]).getTplHiddenInput(['name' => 'cat', 'value' => (string)$catid]).getTplHiddenInput(['name' => 'posttype', 'value' => 'save']);
         $rows .= getTplFormCenterRow(getTplFormSubmit(['op' => 'send', 'label' => _SEND, 'extra' => $hide]));
         $cont = getTplForumReplyForm($conf['name'], $rows);
@@ -625,7 +625,7 @@ function add(): void {
         $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, '', 'placeholder="'._YOURNAME.'" required')) : '';
         $rows .= ($subh) ? getTplHiddenInput(['name' => 'subject', 'value' => $subject]) : getTplFormAddRow(_TITLE, getTplTextInput('subject', $subject, '', 'maxlength="100" placeholder="'._TITLE.'" required'));
         $rows .= getTplFormAddRow(_TEXT, getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _TEXT, 'required' => '1']));
-        $rows .= fields_in($field, $conf['name']);
+        $rows .= getTplFieldsIn($field, $conf['name']);
         $rows .= ($ismod) ? getTplFormAddRow(_OPMOD, pmoder($status, $subh)).getTplFormAddRow(_CHNGSTORY, getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])) : '';
         $hide = getTplHiddenInput(['name' => 'id', 'value' => (string)$id]).getTplHiddenInput(['name' => 'fid', 'value' => (string)$fid]).getTplHiddenInput(['name' => 'pid', 'value' => (string)$pid]).getTplHiddenInput(['name' => 'cat', 'value' => (string)$catid]);
         $rows .= getTplFormCenterRow($hide.getTplFormSubmit(['op' => 'send', 'select' => true]));
@@ -649,7 +649,7 @@ function tmoder(int $typ): string {
     $opts1 = '';
     foreach ($mass as $vn => $vv) $opts1 .= getTplSelectOption($vv, $vn);
     $opts = $tpl->getHtmlFrag('forum-optgroup', ['label' => _OPMOD, 'class' => 'sl_label', 'options_html' => $opts1]);
-    $opts .= $tpl->getHtmlFrag('forum-optgroup', ['label' => _MOVETO, 'class' => 'sl_label', 'options_html' => getcat($conf['name'], 0, '', '', '', '1')]);
+    $opts .= $tpl->getHtmlFrag('forum-optgroup', ['label' => _MOVETO, 'class' => 'sl_label', 'options_html' => getTplCategorySelect($conf['name'], 0, '', '', '', '1')]);
     return getTplFormSelect('tmove', $opts, '', 'title="'._CHECKOP.'"');
 }
 

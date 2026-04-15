@@ -155,7 +155,7 @@ function add(): void {
             'label_html' => _LANGUAGE.':',
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
-                'options_html' => language(),
+                'options_html' => getTplLanguageOptions(),
             ]),
         ];
     }
@@ -579,7 +579,7 @@ function edit(): void {
             'label_html' => _LANGUAGE.':',
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'lang',
-                'options_html' => language((string)$lang),
+                'options_html' => getTplLanguageOptions((string)$lang),
             ]),
         ];
     }

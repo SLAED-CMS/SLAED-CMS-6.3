@@ -289,7 +289,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => language($conf['lang']['lang'], 1), 'is_config' => true]);
+    $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
         ['label_html' => _LANGKEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'key', 'value_attr' => (string)$conf['lang']['key'], 'is_config' => true])],
         ['label_html' => _LANGTR, 'field_html' => $s_lang],

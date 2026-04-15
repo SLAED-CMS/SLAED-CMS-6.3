@@ -72,7 +72,7 @@ function help(): void {
     $cont = '';
     if (!$home) {
         $cont .= setModuleNavi(['title' => $ntitle] + HELP_NAVI);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['help']['subcat'], $conf['help']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -86,7 +86,7 @@ function help(): void {
             $cdesc = $cdesc ?: $ctitle;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $date = ($conf['help']['date']) ? format_time($time) : '';
-            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => $prs->filterContent($hometext, false, $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
+            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => $prs->filterContent($hometext, false, $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
@@ -125,7 +125,7 @@ function liste(): void {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
             $status = ($status) ? 0 : 1;
-            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => ad_status('', $status), 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => ad_status('', $status), 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
         }
         $cont .= $tpl->getHtmlFrag('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND pid = '0' AND uid = :uid" : "time <= NOW() AND pid = '0' AND uid = :uid";
@@ -172,7 +172,7 @@ function view(): void {
             $title = (string)$title;
             $title = ($title !== '') ? $title : _MESSAGE.': '.$a;
             $ttext = filterTextHighlight($title, $word);
-            $fields = fields_out($field, $conf['name']);
+            $fields = getTplFieldsOut($field, $conf['name']);
             $fields = ($fields) ? '<br><br>'.$fields : '';
             $text = $hometext.$fields;
             $post = ($nick) ? user_info($nick) : _ANONYM;
@@ -270,7 +270,7 @@ function addview(int $id): string {
     if ((is_user() && $conf['help']['add'] == 1)) {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
-        $rows = getTplFormAddRow(_HELPGLOS, radio_form($status, 'status'));
+        $rows = getTplFormAddRow(_HELPGLOS, getTplRadioForm($status, 'status'));
         $hide = getTplHiddenInput(['name' => 'pid', 'value' => (string)$id]).getTplHiddenInput(['name' => 'catid', 'value' => (string)$cid]).getTplHiddenInput(['name' => 'posttype', 'value' => 'save']);
         return $tpl->getHtmlFrag('form-add', [
             'extrafields' => $rows,
@@ -303,9 +303,9 @@ function add(): void {
             'lbl_cat' => _CATEGORY,
             'lbl_text' => _TEXT,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']),
-            'fields' => fields_in($field, $conf['name']),
+            'fields' => getTplFieldsIn($field, $conf['name']),
             'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
         echo $cont;

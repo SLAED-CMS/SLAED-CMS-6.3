@@ -41,7 +41,7 @@ function clients(): void {
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $cont .= $tpl->getHtmlFrag('clients-list-basic', [
                 'row_id' => $a,
-                'tip' => title_tip(_CDATE.': '.$time),
+                'tip' => getTplTitleTip(_CDATE.': '.$time),
                 'title_text' => $title,
                 'version_text' => $num,
                 'hits_text' => $hits,

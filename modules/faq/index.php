@@ -63,7 +63,7 @@ function faq(): void {
 	$cont = '';
 	if (!$home || ($home && $conf['faq']['homcat'])) {
 		$cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _FAQ]);
-		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], $ncat);
 	}
 	if ($ncat) {
@@ -87,7 +87,7 @@ function faq(): void {
 			$date = ($conf['faq']['date']) ? format_time($time) : '';
 			$rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
 			$ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-			$cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => $prs->filterContent($hometext, false, $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['faq']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=faq_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=faq_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
+			$cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => $prs->filterContent($hometext, false, $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['faq']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=faq_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=faq_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
 		}
 		if (!$ncat) $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_faq', 'cid', $onum, $conf['faq']['nump']);
 	} else {
@@ -125,7 +125,7 @@ function liste(): void {
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cadesc = $cdesc ?: $ctitle;
 			$post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-			$cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cadesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+			$cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cadesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
 		}
 		$cont .= $tpl->getHtmlFrag('liste-wrap', []);
 		$onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
@@ -166,7 +166,7 @@ function view(): void {
 			'author' => $seoauthor,
 		]);
 		$cont = setModuleNavi(['title' => _FAQ]);
-		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
+		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
 		if ($conf['faq']['viewcat']) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], 0);
 		$conpag = explode('[pagebreak]', $hometext);
 		$pageno = count($conpag);
@@ -232,7 +232,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _ANSWER, 'required' => '1']),
             'captcha' => getCaptcha(1),
             'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),

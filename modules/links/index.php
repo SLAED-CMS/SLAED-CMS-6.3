@@ -61,7 +61,7 @@ function links(): void {
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -84,7 +84,7 @@ function links(): void {
                 'title_href' => $thref,
                 'title_attr' => $stitle,
                 'title_text' => $stitle,
-                'title_new' => new_graphic($time),
+                'title_new' => getTplNewGraphic($time),
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
@@ -153,7 +153,7 @@ function liste(): void {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
         }
         $cont .= $tpl->getHtmlFrag('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
@@ -192,7 +192,7 @@ function view(): void {
             'author' => $seoauthor,
         ]);
         $cont = setModuleNavi(['title' => _LINKS]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
@@ -299,7 +299,7 @@ function add(): void {
             'postname' => $postname,
             'emailval' => $mail,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'siteval' => $site,

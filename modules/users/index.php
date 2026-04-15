@@ -34,10 +34,10 @@ function users(): void {
 	                $rating = $rate ? $tpl->getHtmlFrag('rating-box', ['content' => getRatingAsync(1, $id, 'account', $votes, $total, '', 1)]) : cutstr((string)$from, 30);
 	            $cont .= $tpl->getHtmlFrag('users-top-basic', [
 	                'row_id' => $count,
-	                'tip' => title_tip($tipItems),
+	                'tip' => getTplTitleTip($tipItems),
 	                'user_link' => user_info($name),
                 'info_text' => $info,
-                'gender_text' => gender($gender),
+                'gender_text' => getGenderText($gender),
                 'sort_text' => $rating,
                 'points_text' => $point,
             ]);
