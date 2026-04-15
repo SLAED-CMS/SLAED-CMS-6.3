@@ -374,7 +374,7 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 
 /* Формы и поля */
 /* Общие */
-.sl_field {
+.sl-field {
 	border-radius: 3px;
 	display: inline-block;
 	height: 18px;
@@ -386,32 +386,32 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 	box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
 	transition: border 0.2s linear 0s, box-shadow 0.2s linear 0s;
 }
-textarea.sl_field { height: auto; resize: vertical; }
-.sl_field:focus { border-color: #80b7e0; box-shadow: 0 1px 1px rgba(0,0,0,0.075) inset; outline: none; }
+textarea.sl-field { height: auto; resize: vertical; }
+.sl-field:focus { border-color: #80b7e0; box-shadow: 0 1px 1px rgba(0,0,0,0.075) inset; outline: none; }
 
 /* Select */
-select.sl_field, input[type="file"].sl_field { height: 26px; line-height: 26px; }
-select.sl_field { background-color: #fff; border: 1px solid #ccc; }
-select[multiple].sl_field, select[size].sl_field { height: auto; }
+select.sl-field, input[type="file"].sl-field { height: 26px; line-height: 26px; }
+select.sl-field { background-color: #fff; border: 1px solid #ccc; }
+select[multiple].sl-field, select[size].sl-field { height: auto; }
 
 /* Оформление label в optgroup */
 .sl_label { font-weight: bold; }
 
 /* Поля форм в модулях */
-.sl_mod_auto_links, .sl_mod_contact, .sl_mod_faq, .sl_mod_files, .sl_mod_forum, .sl_mod_help, .sl_mod_jokes, .sl_mod_links, .sl_mod_media, .sl_mod_money, .sl_mod_news, .sl_mod_order, .sl_mod_pages, .sl_mod_recommend, .sl_mod_voting, .sl_mod_whois { width: 570px; }
-select.sl_mod_auto_links, select.sl_mod_contact, select.sl_mod_faq, select.sl_mod_files, select.sl_mod_forum, select.sl_mod_help, select.sl_mod_jokes, select.sl_mod_links, select.sl_mod_media, select.sl_mod_money, select.sl_mod_news, select.sl_mod_order, select.sl_mod_pages, select.sl_mod_recommend, select.sl_mod_voting, select.sl_mod_whois { width: 584px; }
+.sl-field--auto-links, .sl-field--contact, .sl-field--faq, .sl-field--files, .sl-field--forum, .sl-field--help, .sl-field--jokes, .sl-field--links, .sl-field--media, .sl-field--money, .sl-field--news, .sl-field--order, .sl-field--pages, .sl-field--recommend, .sl-field--voting, .sl-field--whois { width: 570px; }
+select.sl-field--auto-links, select.sl-field--contact, select.sl-field--faq, select.sl-field--files, select.sl-field--forum, select.sl-field--help, select.sl-field--jokes, select.sl-field--links, select.sl-field--media, select.sl-field--money, select.sl-field--news, select.sl-field--order, select.sl-field--pages, select.sl-field--recommend, select.sl-field--voting, select.sl-field--whois { width: 584px; }
 
-.sl_mod_account, .sl_mod_rss_info, .sl_mod_whois { width: 440px; }
-select.sl_mod_account, select.sl_mod_rss_info, select.sl_mod_whois { width: 454px; }
+.sl-field--account, .sl-field--rss-info, .sl-field--whois { width: 440px; }
+select.sl-field--account, select.sl-field--rss-info, select.sl-field--whois { width: 454px; }
 
-.sl_mod_shop, .sl_mod_money { width: 535px; }
-select.sl_mod_shop, select.sl_mod_money { width: 549px; }
+.sl-field--shop, .sl-field--money { width: 535px; }
+select.sl-field--shop, select.sl-field--money { width: 549px; }
 
-.sl_mod_search { width: 490px; }
-select.sl_mod_search { width: 504px; }
+.sl-field--search { width: 490px; }
+select.sl-field--search { width: 504px; }
 
 /* Поля форм в блоках */
-.sl_bl_field { width: 148px; }
+.sl-field--block { width: 148px; }
 
 /* Оформления таблиц */
 /* Таблица просмотра загруженных файлов и переводчика в редакторе */

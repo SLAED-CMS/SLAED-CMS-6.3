@@ -14,8 +14,7 @@
 
 /* Формы и поля */
 /* Общие */
-.sl_field { width: auto; }
-.sl_form,
+.sl-field { width: auto; }
 .sl-form-control { width: 545px; }
 .sl_conf { width: 350px; }
 
@@ -764,7 +763,6 @@ input.sl-but-blue[value="ОК"] {
     display: inline-block;
 }
 .sl-config-field .sl_conf,
-.sl-config-field .sl_form,
 .sl-config-field .sl-form-control,
 .sl-config-field textarea,
 .sl-config-field select {

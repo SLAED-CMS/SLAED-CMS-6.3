@@ -3,11 +3,11 @@
     <form id="f-form" class="dropdown-form" action="index.php?name=contact" method="post">
         <ul class="block-feedback-form clrfix">
             <li class="bff-col1">
-                <textarea name="message" class="sl_field" rows="5" cols="65" placeholder="{{ text }}" required></textarea>
+                <textarea name="message" class="sl-field" rows="5" cols="65" placeholder="{{ text }}" required></textarea>
             </li>
             <li class="bff-col2">
-                <input type="text" name="sname" class="sl_field" placeholder="{{ pname }}" required>
-                <input type="email" name="semail" class="sl_field" placeholder="{{ email }}" required>
+                <input type="text" name="sname" class="sl-field" placeholder="{{ pname }}" required>
+                <input type="email" name="semail" class="sl-field" placeholder="{{ email }}" required>
                 {{{ captcha }}}
                 <input type="hidden" name="token" value="{{ token }}">
                 <input type="hidden" name="op" value="contact">

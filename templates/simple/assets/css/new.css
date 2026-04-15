@@ -98,3 +98,33 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 
 /* Card title override */
 .sl-card .sl-title { font-size: 16px; }
+
+/* Category breadcrumb */
+.sl-cat-navi { margin-bottom: 10px; font-size: .9em; color: #6e7c8b; }
+
+/* Section with HR */
+.sl-section { margin-bottom: 10px; }
+
+/* Form controls */
+.sl-field--auto { width: auto; margin-right: 8px; }
+.sl-but, .sl-but-blue { display: inline-block; padding: 5px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.sl-but-blue { color: #fff; background: linear-gradient(to top, #78c6fb 0%, #6dbaf7 100%); }
+.sl-but-blue:hover { opacity: .85; }
+
+/* Add form */
+.sl-form { margin-bottom: 20px; }
+.sl-form-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
+.sl-form-label { width: 130px; flex-shrink: 0; padding-top: 6px; font-weight: bold; }
+.sl-form-value { padding-top: 6px; }
+.sl-form-submit { padding-top: 10px; text-align: center; }
+
+/* Related articles */
+.sl-related-title { margin: 20px 0 10px 0; }
+.sl-related-list { list-style: none; padding: 0; margin: 0; }
+.sl-related-item { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid #ebebee; }
+.sl-related-img { display: block; width: 60px; height: 60px; flex-shrink: 0; background-size: cover; background-position: center; }
+.sl-related-meta { list-style: none; padding: 0; margin: 4px 0 0 0; font-size: .85em; color: #888; }
+
+/* News card grid */
+.sl-grid { display: flex; flex-wrap: wrap; margin: 0 -10px 20px -10px; }
+.sl-grid .sl-card { padding: 0 10px 20px 10px; box-sizing: border-box; }

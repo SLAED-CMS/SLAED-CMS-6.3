@@ -1,6 +1,6 @@
 <form name="post" id="{{ form_id }}" method="post"><table class="sl_table_form">
 <tr><td>{{ recipient_label }}:</td><td>{{{ recipient_html }}}</td></tr>
-<tr><td>{{ title_label }}:</td><td><input type="text" name="title" value="{{ title_value }}" maxlength="100" class="sl_field {{ style }}"></td></tr>
+<tr><td>{{ title_label }}:</td><td><input type="text" name="title" value="{{ title_value }}" maxlength="100" class="sl-field"></td></tr>
 <tr><td>{{ message_label }}:</td><td>{{{ textarea_html }}}</td></tr>
 <tr><td colspan="2" class="sl_center"><input type="submit" hx-post="index.php?go=1&amp;op=addPrivateMessage" hx-include="#{{ form_id }}" hx-target="#{{ rep_id }}" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById('{{ form_id }}').querySelector('[name=&quot;name&quot;]').value.trim()) { alert('{{ error_msg }}'); event.preventDefault(); }" value="{{ send_label }}" title="{{ send_label }}" class="sl_but_blue"></td></tr>
 </table></form>

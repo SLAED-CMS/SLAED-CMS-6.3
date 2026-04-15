@@ -1,7 +1,7 @@
 <form action="index.php?name={{ name }}" method="post">
 <table class="sl_table_form">
-<tr><td>{{ lbl_email }}:</td><td><input type="email" name="email" value="{{ email_value }}" maxlength="255" class="sl_field {{ style }}" placeholder="{{ lbl_email }}" required></td></tr>
-{% if has_code %}<tr><td>{{ lbl_code }}:</td><td><input type="text" name="code" value="{{ code_value }}" maxlength="10" class="sl_field {{ style }}" placeholder="{{ lbl_code }}" required></td></tr>{% endif %}
+<tr><td>{{ lbl_email }}:</td><td><input type="email" name="email" value="{{ email_value }}" maxlength="255" class="sl-field" placeholder="{{ lbl_email }}" required></td></tr>
+{% if has_code %}<tr><td>{{ lbl_code }}:</td><td><input type="text" name="code" value="{{ code_value }}" maxlength="10" class="sl-field" placeholder="{{ lbl_code }}" required></td></tr>{% endif %}
 <tr><td colspan="2" class="sl_center"><input type="hidden" name="token" value="{{ token }}"><input type="hidden" name="op" value="passmail"><input type="submit" value="{{ submit_label }}" class="sl_but_blue"></td></tr>
 <tr><td colspan="2" class="sl_center"><a href="{{{ login_href }}}" title="{{ login_label }}" class="sl_but_foot">{{ login_label }}</a><a href="{{{ register_href }}}" title="{{ register_label }}" class="sl_but_foot">{{ register_label }}</a></td></tr>
 </table></form>
