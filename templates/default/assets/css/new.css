@@ -105,6 +105,9 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 /* Section with HR */
 .sl-section { margin-bottom: 10px; }
 
+/* Info/warn box icon */
+.sl_info:before, .sl_warn:before { display: block; background-image: url(../../images/misc/sprite.png); content: ''; }
+
 /* Form controls */
 .sl-field--auto { width: auto; margin-right: 8px; }
 .sl-but, .sl-but-blue { display: inline-block; padding: 5px 14px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
@@ -114,7 +117,9 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 /* Add form */
 .sl-form { margin-bottom: 20px; }
 .sl-form-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
-.sl-form-label { width: 130px; flex-shrink: 0; padding-top: 6px; font-weight: bold; }
+.sl-form-label { width: 160px; flex-shrink: 0; padding-top: 6px; }
+.sl-form-label::after { content: ":"; }
+.sl-form-row .sl-field { flex: 1; min-width: 0; }
 .sl-form-value { padding-top: 6px; }
 .sl-form-submit { padding-top: 10px; text-align: center; }
 
