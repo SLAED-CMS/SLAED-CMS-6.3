@@ -59,7 +59,9 @@ class Parser {
     # Convenience wrapper: filterDoc() + replaceText() for the standard rendering pipeline.
     # Use filterDoc() directly when replacement rules must not apply (e.g. changelog, search).
     public function filterContent(string $src, bool $safe, string $mod): string {
-        return $this->replaceText($this->filterDoc($src, $safe, $mod), $mod);
+        return $this->normalizeHtmlImages(
+            $this->replaceText($this->filterDoc($src, $safe, $mod), $mod)
+        );
     }
 
     # Apply module-specific search-and-replace rules from $conf['replace'][$mod].
@@ -133,6 +135,93 @@ class Parser {
         return html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
+    # Public web root for resolving relative asset paths.
+    private function getRootPath(): string {
+        static $root = '';
+        if ($root === '') $root = dirname(__DIR__, 2);
+        return $root;
+    }
+
+    # Theme-aware local placeholder with cross-theme fallback.
+    private function getFallbackImage(): string {
+        static $fallback = '';
+        if ($fallback !== '') return $fallback;
+        $candidates = [
+            img_find('misc/no-image.png'),
+            img_find('misc/loading.gif'),
+            'templates/default/images/misc/no-image.png',
+            'templates/default/images/misc/loading.gif',
+            'templates/lite/images/misc/no-image.png',
+            'templates/lite/images/misc/loading.gif',
+            'templates/admin/images/misc/no-image.png',
+            'templates/admin/images/misc/loading.gif',
+        ];
+        foreach ($candidates as $candidate) {
+            if (is_file($this->getRootPath().'/'.ltrim($candidate, '/'))) {
+                return $fallback = $candidate;
+            }
+        }
+        return $fallback = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+    }
+
+    # Build the resilient onerror fallback used across parser-generated images.
+    private function buildImageError(string $file): string {
+        return ' onerror="this.onerror=null;this.src=\''.$this->getFallbackImage()
+            .'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+    }
+
+    # Convert a local/absolute image source into a stable public path.
+    private function normalizeImageSource(string $src): string {
+        global $conf;
+        $raw = trim($this->filterDec($src));
+        if ($raw === '' || str_starts_with($raw, 'data:') || str_starts_with($raw, '#')) return $raw;
+
+        $host = parse_url($raw, PHP_URL_HOST);
+        $path = parse_url($raw, PHP_URL_PATH);
+        $path = is_string($path) && $path !== '' ? $path : $raw;
+        $path = ltrim($path, '/');
+
+        if ($host) {
+            $homeHost = parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST);
+            if ($homeHost && strcasecmp((string)$host, (string)$homeHost) !== 0) return $raw;
+        } elseif (str_starts_with($raw, '//')) {
+            return $raw;
+        }
+
+        if ($path === '' || preg_match('#^[a-z][a-z0-9+.\-]*:#i', $path)) return $raw;
+
+        $full = $this->getRootPath().'/'.$path;
+        if (is_file($full)) return $path;
+
+        if (preg_match('#^(uploads/[^/]+)/([^/]+)$#', $path, $m)) {
+            $thumb = $m[1].'/thumb/'.$m[2];
+            if (is_file($this->getRootPath().'/'.$thumb)) return $thumb;
+        }
+
+        return $this->getFallbackImage();
+    }
+
+    # Repair persisted raw HTML img tags so broken local sources do not emit frontend 404 placeholders.
+    private function normalizeHtmlImages(string $src): string {
+        return preg_replace_callback(
+            '#<img\b[^>]*>#i',
+            function(array $m): string {
+                $tag = $m[0];
+                if (!preg_match('#\bsrc\s*=\s*(["\'])(.*?)\1#i', $tag, $sm)) return $tag;
+                $file = $this->filterEsc(
+                    basename(rawurldecode((string)(parse_url($sm[2], PHP_URL_PATH) ?: $sm[2]))) ?: 'image'
+                );
+                $resolved = $this->filterEsc($this->normalizeImageSource($sm[2]));
+                $tag = preg_replace('#\bsrc\s*=\s*(["\']).*?\1#i', 'src="'.$resolved.'"', $tag, 1) ?? $tag;
+                if (!preg_match('#\bonerror\s*=#i', $tag)) {
+                    $tag = rtrim($tag, ' >').$this->buildImageError($file).'>';
+                }
+                return $tag;
+            },
+            $src
+        ) ?? $src;
+    }
+
     # Escape non-stash portions of text before inline BB/markdown processing.
     # Splits on stash tokens, escapes only the literal text parts.
     private function filterText(string $s): string {
@@ -179,6 +268,7 @@ class Parser {
     # Build a list element (<ul>/<ol>) from lines starting at $i with indent $ind.
     # Supports nested lists (deeper indent), task-list syntax [x]/[ ], and multi-line items.
     private function filterList(array $lines, int $i, int $ind): array {
+        global $tpl;
         $n   = count($lines);
         $ord = (bool)preg_match('/^\s*\d+\./', $lines[$i]);
         $tag = $ord ? 'ol' : 'ul';
@@ -203,7 +293,7 @@ class Parser {
                 $chk = $tm[1] === 'x' ? ' checked' : '';
                 $lbl = trim($tm[2]);
                 $lbl = str_contains($lbl, "\n") ? $this->filterBlocks($lbl) : $this->filterInline($lbl);
-                $html .= '<li><input type="checkbox" disabled'.$chk.'> '.$lbl."</li>\n";
+                $html .= '<li>'.$tpl->getHtmlFrag('checkbox-input', ['input_attr' => 'disabled'.$chk]).' '.$lbl."</li>\n";
             } elseif (str_contains($item, "\n")) {
                 $html .= '<li>'.$this->filterBlocks($item)."</li>\n";
             } else {
@@ -407,7 +497,7 @@ class Parser {
                 if (file_exists($file)) {
                     [$wd, $hg] = getimagesize($file);
                 } else {
-                    $file = img_find('misc/no-image.png');
+                    $file = $this->getFallbackImage();
                     $timg = $file;
                 }
             }
@@ -714,7 +804,8 @@ class Parser {
                 $path = parse_url($url, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $url;
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
+                $err  = $this->buildImageError($file);
                 return $this->addStash('<img src="'.$src2.'" alt="'.$file.'" title="'.$file.'" class="sl_img"'.$err.'>');
             },
             $src
@@ -732,7 +823,8 @@ class Parser {
                 $path = parse_url($url, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $url;
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
+                $err  = $this->buildImageError($file);
                 return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$file.'" title="'.$file.'" class="sl_img"'.$err.'>');
             },
             $src
@@ -750,7 +842,8 @@ class Parser {
                 $path = is_string($path) && $path !== '' ? $path : $url;
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
+                $err  = $this->buildImageError($file);
                 return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
             },
             $src
@@ -770,7 +863,8 @@ class Parser {
                 $path = is_string($path) && $path !== '' ? $path : $url;
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
+                $err  = $this->buildImageError($file);
                 return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
             },
             $src
@@ -788,8 +882,9 @@ class Parser {
                 $alt  = trim($this->filterDec($m[1]));
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
                 $ttl  = isset($m[3]) ? trim($this->filterDec($m[3])) : '';
+                $url  = $this->filterEsc($this->normalizeImageSource($url));
                 $ttl  = ($ttl === '' || strtolower($ttl) === 'title' || strtolower($ttl) === 'alt') ? ' title="'.$file.'"' : ' title="'.$this->filterEsc($ttl).'"';
-                $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                $err  = $this->buildImageError($file);
                 return $this->addStash('<img src="'.$url.'" alt="'.$alt.'"'.$ttl.$err.'>');
             },
             $src

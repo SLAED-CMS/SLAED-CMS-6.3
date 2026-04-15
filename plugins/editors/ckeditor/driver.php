@@ -16,16 +16,19 @@ class EditorCkeditor implements ContentDriver {
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
+        global $tpl;
         $jid = json_encode($id);
         $jval = json_encode($value);
         $lang = substr(_LOCALE, 0, 2);
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $enm = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        $eval = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
         $ta = '<div id="'.$eid.'_ck"></div>';
-        $ta .= '<input type="hidden" id="'.$eid.'" name="'.$enm.'" value="'.$eval.'">';
+        $ta .= $tpl->getHtmlFrag('new/hidden', [
+            'name_attr' => $name,
+            'value_attr' => $value,
+            'input_attr' => 'id="'.$eid.'"',
+        ]);
         $js = '(function(){CK5.ClassicEditor.create(document.getElementById('.$jid.'+"_ck"),{';
         $js .= 'plugins:'.$pl.',toolbar:'.$tb.',language:"'.$lang.'",licenseKey:"GPL",table:{contentToolbar:["tableColumn","tableRow","mergeTableCells"]}}).then(function(ed){';
         $js .= 'ed.setData('.$jval.');';

@@ -68,14 +68,23 @@ class Editor {
     }
 
     # Render editor select dropdown for settings UI
-    public static function getSelect(string $name, string $selected, string $type, string $role): string {
+    public static function getSelect(string $name, string $selected, string $type, string $role, string $selectAttr = ''): string {
+        global $tpl;
         $list = self::getEditorList($type, $role);
-        $html = '<select name="'.htmlspecialchars($name, ENT_QUOTES, 'UTF-8').'" class="sl-select">';
+        $html = '';
         foreach ($list as $id => $man) {
-            $sel = ($id === $selected) ? ' selected' : '';
-            $html .= '<option value="'.$id.'"'.$sel.'>'.htmlspecialchars((string)($man['label'] ?? $id), ENT_QUOTES, 'UTF-8').'</option>';
+            $html .= $tpl->getHtmlFrag('new/select-option', [
+                'value_attr' => $id,
+                'label_text' => (string)($man['label'] ?? $id),
+                'is_selected' => $id === $selected,
+            ]);
         }
-        return $html.'</select>';
+        return $tpl->getHtmlFrag('new/select', [
+            'name_attr' => $name,
+            'select_class' => '',
+            'select_attr' => $selectAttr,
+            'options_html' => $html,
+        ]);
     }
 
     # Return parsed manifest for one editor; null if missing or invalid

@@ -22,6 +22,7 @@ class EditorCodemirror implements CodeDriver {
     }
 
     public function getWidget(string $id, string $name, string $value, string $lang, string $profile): string {
+        global $tpl;
         $fn = self::LANGS[$lang] ?? '';
         $ext = $fn ? 'CM6.'.$fn.'(),' : '';
         $dark = ($profile === 'full') ? ',CM6.oneDark' : '';
@@ -29,9 +30,12 @@ class EditorCodemirror implements CodeDriver {
         $jid = json_encode($id);
         $jcm = json_encode($id.'_cm');
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $enm = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        $eval = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-        $ta = '<textarea id="'.$eid.'" name="'.$enm.'" style="display:none">'.$eval.'</textarea>';
+        $ta = $tpl->getHtmlFrag('new/textarea', [
+            'name_attr' => $name,
+            'value_text' => $value,
+            'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
+            'input_attr' => 'id="'.$eid.'" style="display:none"',
+        ]);
         $ta .= '<div id="'.$eid.'_cm" class="sl_code_editor"></div>';
         $js = '(function(){var ta=document.getElementById('.$jid.');';
         $js .= 'var view=new CM6.EditorView({state:CM6.EditorState.create({doc:ta.value,extensions:'.$exts.'}),';

@@ -7,15 +7,19 @@ class EditorPlain implements ContentDriver {
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
+        global $tpl;
         $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
         $placeholder = (string)($data['placeholder'] ?? '');
         $required = !empty($data['required']);
-        $cls = defined('ADMIN_FILE') ? 'sl_field sl-form-control' : (($profile === 'full') ? 'sl_form' : 'sl_field');
-        $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $enm = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        $eval = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
-        $ph = $placeholder !== '' ? ' placeholder="'.htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8').'"' : '';
-        $req = $required ? ' required' : '';
-        return '<textarea id="'.$eid.'" name="'.$enm.'" rows="'.$rows.'" class="'.$cls.'"'.$ph.$req.'>'.$eval.'</textarea>';
+        $attr = 'id="'.htmlspecialchars($id, ENT_QUOTES, 'UTF-8').'"';
+        if ($placeholder !== '') $attr .= ' placeholder="'.htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8').'"';
+        if ($required) $attr .= ' required';
+        return $tpl->getHtmlFrag('new/textarea', [
+            'name_attr' => $name,
+            'rows_num' => $rows,
+            'value_text' => $value,
+            'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
+            'input_attr' => $attr,
+        ]);
     }
 }

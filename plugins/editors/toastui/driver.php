@@ -13,6 +13,7 @@ class EditorToastUi implements ContentDriver {
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
+        global $tpl;
         $jid = json_encode($id);
         $jval = json_encode($value);
         $mode = ($profile === 'full') ? '"wysiwyg"' : '"markdown"';
@@ -21,9 +22,13 @@ class EditorToastUi implements ContentDriver {
         $h = '"'.$height.'px"';
         $lang = (substr(_LOCALE, 0, 2) === 'ru') ? '"ru-RU"' : '"en-US"';
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $enm = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
-        $ta = '<textarea id="'.$eid.'" name="'.$enm.'" style="display:none">';
-        $ta .= htmlspecialchars($value, ENT_QUOTES, 'UTF-8').'</textarea>';
+        $ta = $tpl->getHtmlFrag('new/textarea', [
+            'name_attr' => $name,
+            'rows_num' => $rows,
+            'value_text' => $value,
+            'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',
+            'input_attr' => 'id="'.$eid.'" style="display:none"',
+        ]);
         $ta .= '<div id="'.$eid.'_toast"></div>';
         $js = '(function(){var ta=document.getElementById('.$jid.');var root=window.toastui&&window.toastui.Editor;';
         $js .= 'if(!ta||!root){return;}';

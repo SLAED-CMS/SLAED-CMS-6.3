@@ -12,7 +12,6 @@ class EditorBbcode implements ContentDriver {
             'name' => $name,
             'value' => $value,
             'rows' => (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10)),
-            'style' => (string)($data['style'] ?? ''),
             'placeholder' => (($data['placeholder'] ?? '') !== '') ? ' placeholder="'.htmlspecialchars((string)$data['placeholder'], ENT_QUOTES, 'UTF-8').'"' : '',
             'required' => !empty($data['required']) ? ' required' : '',
             'stloc' => (string)($data['stloc'] ?? substr(_LOCALE, 0, 2)),
