@@ -639,7 +639,7 @@ function save(): void {
             'var_view' => getVar('post', 'var_view', 'num'),
             'syntax' => getVar('post', 'syntax', 'num'),
             'variables' => $xvariables,
-            'admcol' => getVar('post', 'admcol', 'num', 5),
+            'admcol' => getVar('post', 'admcol', 'num', 6),
             'dbsync' => getVar('post', 'dbsync', 'num'),
             'session' => getVar('post', 'session', 'num'),
             'message' => getVar('post', 'message', 'num'),

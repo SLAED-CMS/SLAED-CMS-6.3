@@ -131,7 +131,7 @@ function add(): void {
     if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = (string)($conf['editor']['admin'] ?? 'plain');
     if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = 'plain';
     $need = $aid ? '' : ' required';
-    $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
+    $check = '';
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText($stop)]);
@@ -253,7 +253,7 @@ function add(): void {
         [
             'label_html' => _MAIL_SENDE,
             'field_html' => $tpl->getHtmlFrag('checkbox', [
-                'input_attr' => 'OnClick="CloseOpen(\'sl_close_9\', 0);"',
+                'input_attr' => 'data-sl-toggle-control="sl_form_admin_mail"',
                 'is_checked' => $check !== '',
                 'name_attr' => 'mail',
                 'value_attr' => '1',
@@ -267,7 +267,7 @@ function add(): void {
                     'rows_num' => 10,
                     'value_text' => $mailtext,
                 ]),
-                'target_id' => 'sl_close_9',
+                'target_id' => 'sl_form_admin_mail',
             ]),
             'is_full' => true,
         ],

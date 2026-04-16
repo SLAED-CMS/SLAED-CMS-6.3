@@ -438,12 +438,12 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _MAIL_SENDE,
-        'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mail', 'value_attr' => '1', 'is_checked' => getVar('cookie', 'sl_close_9', 'num') != 0, 'input_attr' => 'OnClick="CloseOpen(\'sl_close_9\', 0);"']),
+        'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mail', 'value_attr' => '1', 'is_checked' => false, 'input_attr' => 'data-sl-toggle-control="sl_form_account_mail"']),
     ];
     $rows[] = [
         'label_html' => '',
         'field_html' => $tpl->getHtmlFrag('div-collapse', [
-            'target_id' => 'sl_close_9',
+            'target_id' => 'sl_form_account_mail',
             'content_html' => $tpl->getHtmlFrag('div', ['rows' => [[
                 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
                 'field_html' => getTplTextarea(['id' => '3', 'name' => 'mailtext', 'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '']),

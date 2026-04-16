@@ -242,8 +242,8 @@ function banlist(): void {
         $tabtwo .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
     }
     $name = getVar('get', 'uname', 'name');
-    $cookie = $conf['user_c'].'-close-security';
-    $check = (getCookies('close-security') == '0') ? '' : ' checked';
+    $mailTextId = 'sl_form_security_mail';
+    $check = '';
     $mailtext = replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp']));
     $userrows = [
         [
@@ -279,7 +279,7 @@ function banlist(): void {
         [
             'label_html' => _MAIL_SENDE,
             'field_html' => $tpl->getHtmlFrag('checkbox', [
-                'input_attr' => 'OnClick="CloseOpen(\''.$cookie.'\', 0);"',
+                'input_attr' => 'data-sl-toggle-control="'.$mailTextId.'"',
                 'is_checked' => $check !== '',
                 'name_attr' => 'mail',
                 'value_attr' => '1',
@@ -293,7 +293,7 @@ function banlist(): void {
                     'rows_num' => 10,
                     'value_text' => $mailtext,
                 ]),
-                'target_id' => $cookie,
+                'target_id' => $mailTextId,
             ]),
             'is_full' => true,
         ],

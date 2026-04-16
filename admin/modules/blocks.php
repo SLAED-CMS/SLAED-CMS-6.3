@@ -88,9 +88,14 @@ function add(): void {
             }
         }
     }
-    $viewItems = '';
-    foreach (getBlockModules() as $mod) {
-        $viewItems .= $tpl->getHtmlFrag('label-item', [
+    $items = '';
+    $mods = [];
+    foreach ($conf['modules'] as $name => $info) {
+        if ((int)($info['type'] ?? 1) === 1) $mods[] = $name;
+    }
+    sort($mods);
+    foreach ($mods as $mod) {
+        $items .= $tpl->getHtmlFrag('label-item', [
             'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'name_attr' => 'blockwhere[]',
                 'value_attr' => $mod,
@@ -109,7 +114,7 @@ function add(): void {
         ['value' => 'infly', 'label' => _INFLY],
         ['value' => 'flyfix', 'label' => _FLY_FIX],
     ] as $item) {
-        $viewItems .= $tpl->getHtmlFrag('label-item', [
+        $items .= $tpl->getHtmlFrag('label-item', [
             'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'name_attr' => 'blockwhere[]',
                 'value_attr' => $item['value'],
@@ -147,7 +152,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $viewItems]),
+        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $items]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -309,7 +314,7 @@ function addsave(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
-    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
+    $bwhere = getVar('post', 'blockwhere[]', 'var', []);
     [$weight] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC', ['bpos' => $bpos]));
     $weight++;
     $bkey = '';
@@ -338,11 +343,11 @@ function addsave(): void {
         } else {
             $expire = time() + ($expire * 86400);
         }
-        if (isset($blockwhere)) {
+        if (isset($bwhere)) {
             $which = '';
-            $which = (in_array('all', $blockwhere)) ? 'all' : $which;
-            $which = (in_array('home', $blockwhere)) ? 'home' : $which;
-            if ($which == '') $which = implode(',', $blockwhere);
+            $which = (in_array('all', $bwhere)) ? 'all' : $which;
+            $which = (in_array('home', $bwhere)) ? 'home' : $which;
+            if ($which == '') $which = implode(',', $bwhere);
         }
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :lang, :bfile, :view, :expire, :action, :which)', [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
@@ -428,19 +433,19 @@ function filecode(): void {
 function filecodesave(): void {
     global $afile;
     $warn = !checkSiteToken();
-    $blocktext = (string)getVar('post', 'blocktext', 'raw', '');
+    $btext = (string)getVar('post', 'blocktext', 'raw', '');
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
-    if (!$warn && $blocktext && $bf) {
+    if (!$warn && $btext && $bf) {
         if ($handle = fopen('blocks/'.$bf, 'wb')) {
-            $html_b = '';
-            $html_e = '';
+            $htmlb = '';
+            $htmle = '';
             $flag = getVar('post', 'flag', 'var', '');
             if ($flag == 'html') {
-                $html_b = "\$content = <<<BLOCKHTML\r\n";
-                $html_e = "\r\nBLOCKHTML;\r\n";
+                $htmlb = "\$content = <<<BLOCKHTML\r\n";
+                $htmle = "\r\nBLOCKHTML;\r\n";
             }
-            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
+            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$htmlb.$btext.$htmle.PHP_EOL.'?>');
             fclose($handle);
             setRedirect($afile.'.php?name=blocks', false, 302, _SUCCFILESAVE);
         }
@@ -537,9 +542,14 @@ function edit(): void {
         ]),
     ];
     $where = explode(',', (string)($which ?? ''));
-    $viewItems = '';
-    foreach (getBlockModules() as $mod) {
-        $viewItems .= $tpl->getHtmlFrag('label-item', [
+    $items = '';
+    $mods = [];
+    foreach ($conf['modules'] as $name => $info) {
+        if ((int)($info['type'] ?? 1) === 1) $mods[] = $name;
+    }
+    sort($mods);
+    foreach ($mods as $mod) {
+        $items .= $tpl->getHtmlFrag('label-item', [
             'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => in_array($mod, $where),
                 'name_attr' => 'blockwhere[]',
@@ -551,16 +561,16 @@ function edit(): void {
             ]),
         ]);
     }
-    $homeOn = in_array('home', $where);
+    $homeon = in_array('home', $where);
     foreach ([
         ['value' => 'ihome', 'label' => _HOME, 'checked' => in_array('ihome', $where)],
-        ['value' => 'home', 'label' => _INHOME, 'checked' => $homeOn],
-        ['value' => 'all', 'label' => _BLOCK_ALL, 'checked' => in_array('all', $where) && !$homeOn],
+        ['value' => 'home', 'label' => _INHOME, 'checked' => $homeon],
+        ['value' => 'all', 'label' => _BLOCK_ALL, 'checked' => in_array('all', $where) && !$homeon],
         ['value' => 'otricanie', 'label' => _DENYING, 'checked' => in_array('otricanie', $where)],
         ['value' => 'infly', 'label' => _INFLY, 'checked' => in_array('infly', $where)],
         ['value' => 'flyfix', 'label' => _FLY_FIX, 'checked' => in_array('flyfix', $where)],
     ] as $item) {
-        $viewItems .= $tpl->getHtmlFrag('label-item', [
+        $items .= $tpl->getHtmlFrag('label-item', [
             'input_html' => $tpl->getHtmlFrag('checkbox', [
                 'is_checked' => $item['checked'],
                 'name_attr' => 'blockwhere[]',
@@ -571,7 +581,7 @@ function edit(): void {
     }
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $viewItems]),
+        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $items]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -584,15 +594,15 @@ function edit(): void {
         ];
     }
     if ($expire != 0) {
-        $newexpire = 0;
-        $oldexpire = $expire;
+        $newexp = 0;
+        $oldexp = $expire;
         $expire = intval($expire - time());
-        $exp_day = $expire / 86400;
-        $expireText = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])
-            ._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expday = $expire / 86400;
+        $exptxt = $tpl->getHtmlFrag('hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexp])
+            ._PURCHASED.': '.getDuration($expire).' ('.round($expday, 3).' '._DAYS.')';
     } else {
-        $newexpire = 1;
-        $expireText = $tpl->getHtmlFrag('input', [
+        $newexp = 1;
+        $exptxt = $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'is_required' => true,
             'name_attr' => 'expire',
@@ -606,7 +616,7 @@ function edit(): void {
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
-        'field_html' => $expireText,
+        'field_html' => $exptxt,
     ];
     $rows[] = [
         'label_html' => _AFTEREXPIRATION.':',
@@ -631,7 +641,7 @@ function edit(): void {
         'hidden' => [
             ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],
             ['nameattr' => 'bid', 'valueattr' => (string)$bid],
-            ['nameattr' => 'newexpire', 'valueattr' => (string)$newexpire],
+            ['nameattr' => 'newexpire', 'valueattr' => (string)$newexp],
             ['nameattr' => 'bkey', 'valueattr' => (string)$bkey],
             ['nameattr' => 'weight', 'valueattr' => (string)$weight],
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -647,13 +657,13 @@ function edit(): void {
 function editsave(): void {
     global $db, $afile;
     $warn = !checkSiteToken();
-    $newexpire = getVar('post', 'newexpire', 'num', 0);
+    $newexp = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
     $bkey = getVar('post', 'bkey', 'var', '');
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
-    $oldposition = getVar('post', 'oldposition', 'var', '');
+    $oldpos = getVar('post', 'oldposition', 'var', '');
     $bpos = getVar('post', 'bpos', 'var', '');
     $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
@@ -664,28 +674,28 @@ function editsave(): void {
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
+    $bwhere = getVar('post', 'blockwhere[]', 'var', []);
     if ($warn) {
         setRedirect($afile.'.php?name=blocks&op=edit&id='.$bid, false, 302, _TOKENMISS, true);
     }
-    if (isset($blockwhere)) {
+    if (isset($bwhere)) {
         $which = '';
-        if (in_array('all', $blockwhere)) $which = 'all';
-        if (in_array('home', $blockwhere)) $which = 'home';
+        if (in_array('all', $bwhere)) $which = 'all';
+        if (in_array('home', $bwhere)) $which = 'home';
         if ($which == '') {
-            $which = implode(',', $blockwhere);
+            $which = implode(',', $bwhere);
         } else {
-            if (in_array('otricanie', $blockwhere)) $which .= ',otricanie';
-            if (in_array('flyfix', $blockwhere)) $which .= ',flyfix';
+            if (in_array('otricanie', $bwhere)) $which .= ',otricanie';
+            if (in_array('flyfix', $bwhere)) $which .= ',flyfix';
         }
-        if (in_array('infly', $blockwhere)) {
-            if (in_array('flyfix', $blockwhere)) {
+        if (in_array('infly', $bwhere)) {
+            if (in_array('flyfix', $bwhere)) {
                 $which = 'infly,'.str_replace('infly,', '', $which);
             } else {
                 $which = 'infly,';
             }
         }
-        if (in_array('ihome', $blockwhere) && $which != 'home') {
+        if (in_array('ihome', $bwhere) && $which != 'home') {
             $which = 'ihome,'.str_replace(',ihome', '', $which);
         }
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = :which WHERE id = :bid', ['which' => $which, 'bid' => $bid]);
@@ -695,7 +705,7 @@ function editsave(): void {
     if ($url) {
         $bkey = '';
         $content = rss_read($url, 1);
-        if ($oldposition != $bpos) {
+        if ($oldpos != $bpos) {
             $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
             $fweight = $weight;
             $oweight = $weight;
@@ -703,7 +713,7 @@ function editsave(): void {
                 $weight++;
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
             }
-            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
+            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldpos]);
             while ([$obid] = $db->getSqlRow($result2)) {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
                 $oweight++;
@@ -726,7 +736,7 @@ function editsave(): void {
         }
         setRedirect($afile.'.php?name=blocks', false, 302, _SUCCSAVE);
     } else {
-        if ($oldposition != $bpos) {
+        if ($oldpos != $bpos) {
             $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
             $fweight = $weight;
             $oweight = $weight;
@@ -734,7 +744,7 @@ function editsave(): void {
                 $weight++;
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
             }
-            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
+            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldpos]);
             while ([$obid] = $db->getSqlRow($result2)) {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
                 $oweight++;
@@ -752,7 +762,7 @@ function editsave(): void {
             }
         } else {
             if ($expire == '') $expire = 0;
-            if ($newexpire == 1 && $expire != 0) $expire = time() + ($expire * 86400);
+            if ($newexp == 1 && $expire != 0) $expire = time() + ($expire * 86400);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, lang = :lang, bfile = :bfile, view = :view, expire = :expire, action = :action WHERE id = :bid', [
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'lang' => $lang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);

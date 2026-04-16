@@ -104,7 +104,7 @@ function getAdminPanel(): void {
             foreach (array_chunk($items, max(1, (int)$conf['admcol'])) as $row) {
                 $rows[] = $tpl->getHtmlFrag('menu-grid-row', ['items_html' => implode('', $row)]);
             }
-            $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_close_1', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
+            $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
         }
         $count = 1;
         $items = [];
@@ -129,7 +129,7 @@ function getAdminPanel(): void {
         foreach (array_chunk($items, max(1, (int)$conf['admcol'])) as $row) {
             $rows[] = $tpl->getHtmlFrag('menu-grid-row', ['items_html' => implode('', $row)]);
         }
-        $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_close_2', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
+        $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
     }
     echo $content;
     setFoot();
