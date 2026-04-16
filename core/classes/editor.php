@@ -73,13 +73,13 @@ class Editor {
         $list = self::getEditorList($type, $role);
         $html = '';
         foreach ($list as $id => $man) {
-            $html .= $tpl->getHtmlFrag('new/select-option', [
+            $html .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $id,
                 'label_text' => (string)($man['label'] ?? $id),
                 'is_selected' => $id === $selected,
             ]);
         }
-        return $tpl->getHtmlFrag('new/select', [
+        return $tpl->getHtmlFrag('select', [
             'name_attr' => $name,
             'select_class' => '',
             'select_attr' => $selectAttr,

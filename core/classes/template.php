@@ -120,13 +120,13 @@ class Template {
             $code = $this->filterCode($code);
             if (file_put_contents($cache, $code, LOCK_EX) === false) return '';
         }
-        return $this->getView($cache, $data);
+        return $this->getView($cache, $data, false, $type, $name);
     }
 
     /**
      * Render compiled PHP from a cache file or inline source through one shared path
      */
-    protected function getView(string $file, array $data = [], bool $iscode = false): string {
+    protected function getView(string $file, array $data = [], bool $iscode = false, string $sourceType = '', string $sourceName = ''): string {
         $data = $this->setData($data);
         $path = $file;
         if ($iscode) {
@@ -151,8 +151,10 @@ class Template {
             $html = ob_get_clean();
             return ($html !== false) ? $html : '';
         } catch (Throwable $err) {
-            $this->reportTemplateError('view', $real, 'Template render failed: '.$err->getMessage());
-            return $this->getTemplateDebugComment('view', basename($real), 'render failed: '.$err->getMessage());
+            $type = ($sourceType !== '') ? $sourceType : ($iscode ? 'inline' : 'view');
+            $name = ($sourceName !== '') ? $sourceName : basename($real);
+            $this->reportTemplateError($type, $name, 'Template render failed: '.$err->getMessage());
+            return $this->getTemplateDebugComment($type, $name, 'render failed: '.$err->getMessage());
         } finally {
             while (ob_get_level() > $lev) ob_end_clean();
             if (!$iscode && $this->stack !== []) array_pop($this->stack);
@@ -282,9 +284,13 @@ class Template {
         $path = 'templates/'.$this->theme.'/'.$type;
         $file = basename($name).'.html';
         if (str_contains($name, '/')) $path .= '/'.dirname($name);
-        $text = defined('_TPLMISS')
-            ? sprintf(_TPLMISS, $path, basename($name))
-            : 'Template file not found: '.$path.'/'.$file;
+        if (str_starts_with($reason, 'render failed:')) {
+            $text = 'Template render failed: '.$path.'/'.$file.' ('.substr($reason, 15).')';
+        } else {
+            $text = defined('_TPLMISS')
+                ? sprintf(_TPLMISS, $path, basename($name))
+                : 'Template file not found: '.$path.'/'.$file;
+        }
         $file = $this->getFile('fragments', 'alert');
         if ($file && $this->checkFile($file)) {
             $code = $this->getCode('fragments', 'alert');
@@ -608,6 +614,7 @@ class Template {
         unset($data['this'], $data['GLOBALS'], $data['scope'], $data['res']);
         unset($data['err'], $data['file'], $data['path'], $data['real']);
         unset($data['lev'], $data['iscode']);
+        unset($data['sourceType'], $data['sourceName']);
         return $this->setData($data);
     }
 
