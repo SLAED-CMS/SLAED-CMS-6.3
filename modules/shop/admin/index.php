@@ -512,7 +512,7 @@ function products(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ],
             'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $phead, 'rows_html' => $prows]),
-            'actions_html' => _CHECKOP.': '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_attr' => ' style="margin-right:8px"']).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+            'actions_html' => '<span class="sl-action-label">'._CHECKOP.'</span> '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_attr' => ' style="margin-right:8px"']).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         ]);
         $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_products', 'field' => 'id', 'where' => $sqlstatus]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);

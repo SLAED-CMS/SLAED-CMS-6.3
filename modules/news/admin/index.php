@@ -86,6 +86,9 @@ function news(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c0', 'label_text' => _APOSTNOMOD])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DELETE])
             .$catopts;
+        $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
+        $actions = '<span class="sl-action-label">'._CHECKOP.'</span> '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
+            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
         $body = $tpl->getHtmlFrag('form', [
             'action_url' => $afile.'.php?name=news&amp;op=actions',
             'hidden' => array_filter([
@@ -100,12 +103,11 @@ function news(): void {
                     ['content' => _POSTEDBY],
                     ['content' => _STATUS, 'nosort' => true],
                     ['content' => _FUNCTIONS, 'nosort' => true],
-                    ['content' => $tpl->getHtmlFrag('checkbox-input', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"']), 'nosort' => true],
+                    ['content' => $tpl->getHtmlFrag('checkbox-input', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"']), 'class_name' => 'sl-th-center', 'nosort' => true],
                 ],
                 'rows_html' => $rows,
-            ]).getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']),
-            'actions_html' => _CHECKOP.': '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts]),
-            'submit_label' => _OK,
+            ]),
+            'actions_html' => $tpl->getHtmlFrag('list-bottom', ['pager_html' => $pager, 'actions_html' => $actions]),
         ]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {

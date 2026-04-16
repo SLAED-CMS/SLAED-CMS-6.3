@@ -21,7 +21,7 @@
 .sl-bl-down { background-position: -368px -88px; }
 
 /* Basic controls */
-.sl-select { width: auto; }
+.sl-select { width: 100%; }
 .sl-select-config { width: 350px; }
 
 .sl-plus:before {
@@ -262,16 +262,27 @@ input.sl-but-blue[value="ОК"] {
     width: 100%;
 }
 .sl-list-bottom {
-    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    width: 100%;
 }
 .sl-list-bottom-pager {
     flex: 1 1 auto;
     min-width: 0;
-    text-align: left;
+}
+.sl-list-bottom .sl-pager {
+    padding: 0;
+}
+.sl-list-bottom-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
 }
 .sl-table-form {
     width: 100%;
@@ -589,12 +600,14 @@ input.sl-but-blue[value="ОК"] {
 .sl-menu li:hover ul { top: 0; opacity: 1; visibility: visible; }
 
 /* List table */
-.sl-table-list-sort { width: 100%; margin-bottom: 10px; }
+.sl-table-list-sort { width: 100%; }
 .sl-table-list-sort tr:hover { background-color: #f1f6f9; }
 .sl-table-list-sort td { padding: 4px; border: 1px solid #e8ebee; border-radius: 3px; }
 .sl-table-list-sort td:nth-last-child(-n+3) { text-align: center; }
 .sl-table-list-sort th { font-weight: bold; border: 1px solid #e8ebee; padding: 8px 16px 8px 4px; text-align: left; background-color: #f8f8f8; border-radius: 3px; }
-.sl-table-list-sort th:last-child { text-align: left; padding: 8px 16px 8px 4px; }
+.sl-table-list-sort th:last-child { text-align: center; padding: 8px 16px 8px 4px; }
+.sl-table-list-sort th.sl-th-center { text-align: center; padding-right: 8px; padding-left: 8px; }
+.sl-table-list-sort th.sl-th-center input { display: block; margin: 0 auto; }
 
 /* Tabs */
 .sl-module-head {
@@ -766,6 +779,7 @@ input.sl-but-blue[value="ОК"] {
 .sl-form-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
 .sl-form-label { width: 160px; flex-shrink: 0; padding-top: 6px; }
 .sl-form-label::after { content: ":"; }
+.sl-action-label::after { content: ":"; }
 .sl-form-row .sl-field { flex: 1; min-width: 0; }
 .sl-form-value { padding-top: 6px; }
 .sl-form-submit { padding-top: 10px; text-align: center; }

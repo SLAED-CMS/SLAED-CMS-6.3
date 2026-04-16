@@ -50,7 +50,7 @@ function comments(): void {
         $list = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
         $bulk = $tpl->getHtmlFrag('div', ['rows' => [[
-            'label_html' => _CHECKOP.':',
+            'label_html' => '<span class="sl-action-label">'._CHECKOP.'</span>',
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'op',
                 'options_html' => $tpl->getHtmlFrag('select-option', [

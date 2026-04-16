@@ -107,7 +107,7 @@
 	background-color: #f8f8f8;
 	border-radius: 3px;
 }
-.sl_table_list_sort th:last-child { text-align: left; padding: 8px 16px 8px 4px; }
+.sl_table_list_sort th:last-child { text-align: center; padding: 8px 16px 8px 4px; }
 .sl_table_list th {
 	font-weight: bold;
 	border: 1px solid #e8ebee;
