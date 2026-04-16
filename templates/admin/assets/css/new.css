@@ -344,11 +344,10 @@ input.sl-but-blue[value="ОК"] {
     width: 24px;
     height: 24px;
     border-radius: 15px;
-    background-position: 50% 50%;
-    background-repeat: no-repeat;
-    background-size: cover;
+    overflow: hidden;
     transition: all 0.5s;
 }
+.sl-image-preview-thumb { display: block; width: 100%; height: 100%; object-fit: cover; }
 .sl-image-preview-mini:hover { width: 48px; height: 48px; border-radius: 30px; }
 .sl-ratings-inner-row {
     grid-template-columns: 3fr 1fr !important;

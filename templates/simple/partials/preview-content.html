@@ -3,8 +3,8 @@
     <div class="sl-preview-head">{{ title }}</div>
     {% endif %}
     <div class="sl-preview-body">
-        {% if title_html %}
-        <div class="sl-preview-title admin-preview-title">{{{ title_html }}}</div>
+        {% if title_text %}
+        <div class="sl-preview-title admin-preview-title">{{ title_text }}</div>
         {% endif %}
         {% if body_a %}
         <div class="sl-preview-section admin-preview-fields1">{{{ body_a }}}</div>

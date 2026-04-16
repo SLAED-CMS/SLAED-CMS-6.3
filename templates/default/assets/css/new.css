@@ -156,3 +156,15 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 .sl-assoc-meta li { display: inline; margin-right: 20px; }
 
 .sl-radio-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.sl-session-table{width:100%;border-collapse:collapse}
+.sl-session-right{text-align:right}
+.sl-session-center{text-align:center}
+.sl-session-hidden{display:none}
+.sl-session-note{opacity:.75}
+.sl-session-toggle{cursor:pointer}
+.sl-session-button{display:inline-block}
+.sl-image-preview-toggle{position:relative}
+.sl-image-preview-popup{position:absolute;top:100%;left:0;z-index:1000}
+.sl-image-preview-mini{cursor:pointer;display:block;width:24px;height:24px;border-radius:15px;overflow:hidden;transition:all .5s}
+.sl-image-preview-thumb{display:block;width:100%;height:100%;object-fit:cover}
+.sl-image-preview-mini:hover{width:48px;height:48px;border-radius:30px}
