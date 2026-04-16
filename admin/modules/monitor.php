@@ -1112,6 +1112,7 @@ function getMonitorDbStats(object $db, array $conf): array {
 
 # Collects web server, firewall, extension, and protocol metadata for dashboard
 function getMonitorServerStats(): array {
+    global $tpl;
     $servsw = getServerValue('SERVER_SOFTWARE', '');
     $servname = 'Web Server';
     if (stripos($servsw, 'apache') !== false) $servname = 'Apache';
@@ -1196,6 +1197,7 @@ function getMonitorRuntimeExtras(): array {
 
 # Collects runtime diagnostics, opcache, storage, and timing metrics for monitor
 function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
+    global $tpl;
     $disk = ($snapshot !== null)
         ? [
             'disk_total' => (float)$snapshot['disk_total'],
