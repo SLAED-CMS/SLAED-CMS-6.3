@@ -22,7 +22,7 @@ class EditorToastUi implements ContentDriver {
         $h = '"'.$height.'px"';
         $lang = (substr(_LOCALE, 0, 2) === 'ru') ? '"ru-RU"' : '"en-US"';
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $ta = $tpl->getHtmlFrag('new/textarea', [
+        $ta = $tpl->getHtmlFrag('textarea', [
             'name_attr' => $name,
             'rows_num' => $rows,
             'value_text' => $value,

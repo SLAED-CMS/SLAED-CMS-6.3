@@ -30,7 +30,7 @@ class EditorCodemirror implements CodeDriver {
         $jid = json_encode($id);
         $jcm = json_encode($id.'_cm');
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
-        $ta = $tpl->getHtmlFrag('new/textarea', [
+        $ta = $tpl->getHtmlFrag('textarea', [
             'name_attr' => $name,
             'value_text' => $value,
             'input_class' => defined('ADMIN_FILE') ? 'sl-form-control' : '',

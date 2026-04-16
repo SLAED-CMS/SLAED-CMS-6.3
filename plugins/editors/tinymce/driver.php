@@ -22,7 +22,7 @@ class EditorTinymce implements ContentDriver {
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
         $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
-        $ta = $tpl->getHtmlFrag('new/textarea', [
+        $ta = $tpl->getHtmlFrag('textarea', [
             'name_attr' => $name,
             'rows_num' => $rows,
             'value_text' => $value,

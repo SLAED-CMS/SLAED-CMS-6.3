@@ -336,7 +336,7 @@
         });
     }
 
-    function initCloseOpenBlocks() {
+    function initToggleBlocks() {
         var controls = document.querySelectorAll('[data-sl-toggle-control]');
         for (var i = 0; i < controls.length; i++) bindToggleControl(controls[i]);
 
@@ -475,7 +475,7 @@
         setTableSort(document);
         initLightbox();
         initImageReplace();
-        initCloseOpenBlocks();
+        initToggleBlocks();
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {

@@ -14,7 +14,7 @@ class EditorPlain implements ContentDriver {
         $attr = 'id="'.htmlspecialchars($id, ENT_QUOTES, 'UTF-8').'"';
         if ($placeholder !== '') $attr .= ' placeholder="'.htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8').'"';
         if ($required) $attr .= ' required';
-        return $tpl->getHtmlFrag('new/textarea', [
+        return $tpl->getHtmlFrag('textarea', [
             'name_attr' => $name,
             'rows_num' => $rows,
             'value_text' => $value,
