@@ -23,12 +23,12 @@ function order(): void {
     $cont .= $prs->filterContent($conf['order']['text'], false, 'all');
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
         $rows = getTplFormAddRow(_OR_2.':', getTplEmailInput('mail', $mail, '', 'maxlength="255" placeholder="'._OR_2.'" required'));
         $rows .= getTplFieldsIn($field, $conf['name']);
         $rows .= getTplFormAddRow(_OR_3.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
-        $cont .= $tpl->getHtmlFrag('new/form-add', [
+        $cont .= $tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
@@ -53,7 +53,10 @@ function send(): void {
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['order']['pr']) ? '0' : '1';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, NOW(), :status)', ['email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, NOW(), :status)',
+                ['email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
+            );
             if ($conf['order']['ad']) {
                 $infos = getTplFieldsOut($field, $conf['name']);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
@@ -93,7 +96,7 @@ function send(): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: order(); break;
     case 'send': send(); break;
 }

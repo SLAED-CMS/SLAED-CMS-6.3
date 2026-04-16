@@ -21,20 +21,20 @@ function content(): void {
     $offset = (int)(($num - 1) * $limit);
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('new/table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS]);
+        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS]);
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-            $tip = $tpl->getHtmlFrag('new/tip', [
+            $tip = $tpl->getHtmlFrag('tip', [
                 'tip_date' => format_time($time),
                 'tip_date_iso' => date('c', strtotime($time)),
                 'tip_date_label' => _DATE,
                 'tip_reads' => (string)$counter,
                 'tip_reads_label' => _READS,
             ]);
-            $cont .= $tpl->getHtmlFrag('new/table-row-content', [
+            $cont .= $tpl->getHtmlFrag('table-row-content', [
                 'id' => (string)$id,
                 'href' => $href,
                 'title_attr' => $title,
@@ -50,7 +50,7 @@ function content(): void {
                 'delete_ask' => $ask,
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('new/table', []);
+        $cont .= $tpl->getHtmlFrag('table', []);
         $cont .= getTplPager([
             'limit'  => $limit,
             'maxpg'  => $nump,
@@ -61,7 +61,7 @@ function content(): void {
             'prefix' => 'new/',
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -95,7 +95,7 @@ function view(): void {
             'author' => $conf['sitename'],
         ]);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont = $tpl->getHtmlFrag('new/view', [
+        $cont = $tpl->getHtmlFrag('view', [
             'is_moder' => is_moder($conf['name']),
             'title_text' => filterTextHighlight($title, $word),
             'text' => filterTextHighlight($prs->filterDoc($body, false, $conf['name']), $word),
@@ -116,7 +116,7 @@ function view(): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: content(); break;
     case 'view': view(); break;
 }

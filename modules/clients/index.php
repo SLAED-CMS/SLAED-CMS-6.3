@@ -15,7 +15,7 @@ function clients(): void {
     setHead(['title' => _PRODUCTSINFO]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _PRODUCTSINFO]);
     $cont .= getUserNav();
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($info) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
     if ($db->getSqlRowCount($result) > 0) {
@@ -31,12 +31,12 @@ function clients(): void {
             elseif (file_exists($tpath.'.bz2')) $tpath .= '.bz2';
             else $tpath = '';
             $dtitle = $tpath ? _CDOWN : _GZIPGEN;
-            $moder = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('breadcrumb-link', ['href' => $afile.'.php?op=clients_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]).'||' : '';
+            $moder = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=clients_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]).'||' : '';
             $acont = add_menu(
                 $moder
-                .$tpl->getHtmlFrag('link-btn', ['href' => 'javascript:HideShow(\'cl'.$i.'\',\'blind\',\'up\',500);', 'title' => _CINFO, 'class' => '', 'label' => _CINFO]).'||'
-                .$tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
-                .$tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
+                .$tpl->getHtmlFrag('link', ['href' => 'javascript:HideShow(\'cl'.$i.'\',\'blind\',\'up\',500);', 'title' => _CINFO, 'class' => '', 'label' => _CINFO]).'||'
+                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
+                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
             );
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $cont .= $tpl->getHtmlFrag('clients-list-basic', [
@@ -169,7 +169,7 @@ function generator(string $path = ''): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: clients(); break;
     case 'download': download(); break;
     case 'generator': generator(); break;

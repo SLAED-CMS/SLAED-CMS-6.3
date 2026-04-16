@@ -114,6 +114,6 @@ function main(): void {
     setFoot();
 }
 
-switch($op) {
+switch ($op) {
     default: main(); break;
 }

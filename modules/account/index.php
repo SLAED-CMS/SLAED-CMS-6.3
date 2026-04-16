@@ -17,7 +17,7 @@ function account(): void {
         setHead(['title' => _USERREGLOGIN]);
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
         $cont .= $tpl->getHtmlFrag('account-login-form', [
             'network_enabled' => !empty($conf['users']['network']),
             'name' => $conf['name'],
@@ -63,7 +63,7 @@ function newuser(): void {
         setHead(['title' => _REGNEWUSER]);
         if ($stop) {
             $cont = $tpl->getHtmlFrag('title', ['title' => _NEWUSERERROR]);
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
         } else {
             $cont = $tpl->getHtmlFrag('title', ['title' => _REGNEWUSER]);
         }
@@ -213,7 +213,7 @@ function network(): void {
             $result = $db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]);
             [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
             if ($db->getSqlRowCount($result) == 1) {
-                setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
+                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => $uagent, 'id' => $uid]);
                 login_report(0, 1, $nick, '');
@@ -223,7 +223,7 @@ function network(): void {
                 $upass = getPassHash(getPass(32));
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, ip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :ip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => 'default/00.gif', 'password' => $upass, 'ip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
                 [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]));
-                setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
+                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastvis = NOW() WHERE id = :id', ['id' => $uid]);
                 $uphoto = isset($ulog['photo']) ? $ulog['photo'] : '';
@@ -350,7 +350,7 @@ function view(): void {
             $uranks = '';
             $groupsText = _NO;
             if ($conf['users']['point'] && $point) {
-                $result = $db->getSqlQuery('SELECT name, rank, color FROM '.PREFIX_DB."_groups WHERE points <= :points AND extra != '1' ORDER BY points ASC", ['points' => intval($point)]);
+                $result = $db->getSqlQuery('SELECT name, rank, color FROM '.PREFIX_DB."_groups WHERE points <= :points AND extra != '1' ORDER BY points ASC", ['points' => (int)$point]);
                 $group = [];
                 while([$guname, $gurank, $gcolor] = $db->getSqlRow($result)) {
                     $group[] = $guname;
@@ -557,9 +557,9 @@ function profil(): void {
 
 function last(int|string $uid, string $modul): string {
     global $db, $conf, $user, $tpl, $prs;
-    $uid = intval($uid);
-    $num = getUserNews(25);
-    $limit = intval($num);
+    $uid   = (int)$uid;
+    $num   = getUserNews(25);
+    $limit = (int)$num;
     $cont = '';
     if ($modul == 'comm') {
         $result = $db->getSqlQuery('SELECT id, cid, modul, time, body FROM '.PREFIX_DB."_comment WHERE uid = :user_id AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
@@ -717,7 +717,7 @@ function passlost(): void {
         $cont = $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]);
         $info = ($email) ? _PASSLOSP : _PASSLOSC;
         $send = ($email) ? _SENDPASSWORD : _SEND;
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $cont .= $tpl->getHtmlFrag('account-passlost-form', [
             'has_code' => !empty($email),
@@ -802,7 +802,7 @@ function login(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :pwd WHERE id = :id', ['pwd' => $pass, 'id' => $uid]);
     }
     if (!$stop) {
-        setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
+        setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
         $uip = getIp();
         $uagent = getAgent();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
@@ -836,7 +836,7 @@ function edithome(): void {
             $birthday = '';
         }
         $userinfo['theme'] = (!$userinfo['theme']) ? $conf['theme'] : $userinfo['theme'];
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]) : '';
         $story = '';
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
@@ -926,7 +926,7 @@ function edithome(): void {
         }
         $a = 6;
         $i = 1;
-        $tdwidth = intval(100/$a);
+        $tdwidth = (int)(100 / $a);
         $aset = '';
         $adir = $conf['users']['adirectory'].'/default';
         $list = scandir($adir);
@@ -941,7 +941,7 @@ function edithome(): void {
         }
         if (($i - 1) % $a != 0 && $aset !== '') $aset .= $tpl->getHtmlFrag('account-avatar-grid-row-close', []);
         if ($i >= 1) $asetup .= $tpl->getHtmlFrag('account-avatar-grid', ['info_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT]), 'grid_html' => $aset]);
-        $uid = intval($user[0]);
+        $uid = (int)$user[0];
         [$network] = $db->getSqlRow($db->getSqlQuery('SELECT network FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
         if (empty($network)) {
             $psetup = $tpl->getHtmlFrag('account-password-form', [
@@ -969,7 +969,7 @@ function savehome(): void {
     $mail = getVar('post', 'mail', 'text');
     checkemail($mail);
     if (!$stop) {
-        $uid = intval($user[0]);
+        $uid = (int)$user[0];
         $checkn = htmlspecialchars(substr($user[1], 0, 25));
         $checkp = htmlspecialchars($user[2]);
         [$id, $name, $pass] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
@@ -992,7 +992,7 @@ function savehome(): void {
             $field = getVar('post', 'field', 'field');
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             $theme = $theme ?: ($conf['theme'] ?? '');
-            setCookies('account', time() + intval($conf['user_c_t']), [$uid, $name, $pass, $story, $blockon, $theme]);
+            setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         }
     } else {
@@ -1006,7 +1006,7 @@ function saveavatar(): void {
     if (!$avatar) $avatar = getVar('get', 'avatar', 'text');
     if (getVar('post', 'op', 'word') == 'saveavatar' && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     if (is_user()) {
-        $uid = intval($user[0]);
+        $uid = (int)$user[0];
         if (!$avatar && $conf['users']['aupload']) {
             $uavatar = upload(1, $conf['users']['adirectory'], $conf['users']['atypefile'], $conf['users']['amaxsize'], $conf['name'], $conf['users']['awidth'], $conf['users']['aheight'], $uid);
             $avatar = (!$uavatar) ? $avatar : $uavatar;
@@ -1033,7 +1033,7 @@ function savepass(): void {
     $oldpass = getVar('post', 'oldpass', 'text', false);
     if (is_user() && $oldpass && $newpass && $newpass2) {
         if (strlen($newpass) >= $conf['users']['minpass']) {
-            $uid = intval($user[0]);
+            $uid = (int)$user[0];
             [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :id AND network = :network', ['id' => $uid, 'network' => '']));
             if (!empty($pass) && checkPassHash($oldpass, $pass)) {
                 if ($newpass == $newpass2) {
@@ -1064,7 +1064,7 @@ function savepass(): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: account(); break;
     case 'newuser': newuser(); break;
     case 'finnewuser': finnewuser(); break;

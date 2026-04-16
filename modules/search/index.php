@@ -46,7 +46,7 @@ function getSearchState(): array {
     $mod = in_array($mod, $mods, true) ? $mod : '';
     $typ = getVar('req', 'typ', 'num', 0);
     $num = getVar('req', 'num', 'num', 1);
-    $stop = ($word !== '' && mb_strlen($word) < intval($conf['search']['slet'])) ? _SEARCHLETMIN.': '.$conf['search']['slet'] : '';
+    $stop = ($word !== '' && mb_strlen($word) < (int)$conf['search']['slet']) ? _SEARCHLETMIN.': '.$conf['search']['slet'] : '';
     return [
         'mods' => $mods,
         'word' => $word,
@@ -54,9 +54,9 @@ function getSearchState(): array {
         'typ' => $typ,
         'num' => $num,
         'stop' => $stop,
-        'lim' => intval($conf['search']['slimit'] ?? 500),
-        'snum' => intval($conf['search']['snum'] ?? 25),
-        'snump' => intval($conf['search']['snump'] ?? 5),
+        'lim' => (int)($conf['search']['slimit'] ?? 500),
+        'snum' => (int)($conf['search']['snum'] ?? 25),
+        'snump' => (int)($conf['search']['snump'] ?? 5),
     ];
 }
 
@@ -82,7 +82,7 @@ function getSearchForm(array $state): string {
     $all_opt = getTplSelectOption('', _SEARCHALL);
     $rows = getTplFormAddRow(_MODUL.':', getTplFormSelect('mod', $all_opt.getSearchModList($state['mods'], (string)$state['mod']), '', 'onchange="submit()"'));
     if ($state['mod'] === 'media') {
-        $rows .= getTplFormAddRow(_SEARCHFROM.':', getTplFormSelect('typ', getSearchTypeList(intval($state['typ'])), ''));
+        $rows .= getTplFormAddRow(_SEARCHFROM.':', getTplFormSelect('typ', getSearchTypeList((int)$state['typ']), ''));
     }
     $rows .= getTplFormAddRow(_SEARCH.':', getTplTextInput('word', (string)$state['word'], '', 'maxlength="100" placeholder="'._SEARCH.'" required'));
     $rows .= getTplFormCenterRow(getTplFormSubmit(['label' => _SEARCH]));
@@ -202,7 +202,7 @@ function getSearchSimple(string $mod, array $cfg, array $state): array {
     while ([$mid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
         $url = ($mod === 'jokes') ? 'index.php?name='.$mod.'&amp;cat='.$cid.'&amp;word='.urlencode($state['word']).'#'.$mid : 'index.php?name='.$mod.'&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
         $titl = getTplSearchResultTitle($url, $titl, $state['word'], $time);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow($mod, $afile, intval($mid), $time, intval($cid), $ctit, $cdes, $nick, $user, $cfg['edit'], true, $url);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow($mod, $afile, (int)$mid, $time, (int)$cid, $ctit, $cdes, $nick, $user, $cfg['edit'], true, $url);
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;
@@ -230,7 +230,7 @@ function getSearchAuto(array $state): array {
 function getSearchForum(array $state): array {
     global $db, $afile, $conf;
     $rows = [];
-    $rid = intval($conf['forum']['recycle'] ?? 0);
+    $rid = (int)($conf['forum']['recycle'] ?? 0);
     if (is_moder('forum') || !$rid) {
         $cond = '';
         $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
@@ -244,7 +244,7 @@ function getSearchForum(array $state): array {
         $tid = !$pid ? $mid : $pid;
         $url = 'index.php?name=forum&amp;op=view&amp;id='.$tid.'&amp;word='.urlencode($state['word']);
         $titl = getTplSearchResultTitle($url, $titl, $state['word'], $time);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, intval($tid), $time, intval($cid), $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, (int)$tid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
         if (is_moder('forum')) $edit = getTplMenuItems([
             getTplLinkAction('index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, _FULLEDIT, _FULLEDIT),
             getTplExternalAction($url, _WINDOWNEW, _WINDOWNEW),
@@ -276,7 +276,7 @@ function getSearchMedia(array $state): array {
         $titl = $subt ? $titl.' '.urldecode($conf['media']['mdefis']).' '.$subt : $titl;
         $url = 'index.php?name=media&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
         $titl = getTplSearchResultTitle($url, $titl, $state['word'], $time);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow('media', $afile, intval($mid), $time, intval($cid), $ctit, $cdes, $nick, $user, 'media_add', true, $url);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow('media', $afile, (int)$mid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'media_add', true, $url);
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;
@@ -290,7 +290,7 @@ function getSearchShop(array $state): array {
     while ([$mid, $time, $titl, $cid, $ctit, $cdes] = $db->getSqlRow($result)) {
         $url = 'index.php?name=shop&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
         $titl = getTplSearchResultTitle($url, $titl, $state['word'], $time);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow('shop', $afile, intval($mid), $time, intval($cid), $ctit, $cdes, '', '', 'shop_products_add', false, $url);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow('shop', $afile, (int)$mid, $time, (int)$cid, $ctit, $cdes, '', '', 'shop_products_add', false, $url);
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;

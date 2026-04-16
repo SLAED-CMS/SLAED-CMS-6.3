@@ -124,9 +124,9 @@ function add(): void {
 	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
 		setHead(['title' => _WHOIS_LICENS_SEND]);
 		$cont = setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI);
-		if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABMIT]);
-		$hometext = getVar('post', 'hometext', 'text');
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABMIT]);
+		$hometext = getVar('post', 'hometext', 'raw');
 		$postname = getVar('post', 'postname', 'name');
 		$postname = ($postname) ? $postname : _ANONYM;
 		if (is_user()) {
@@ -177,14 +177,19 @@ function send(): void {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if ($db->getSqlRowCount($db->getSqlQuery('SELECT domain FROM '.PREFIX_DB.'_whois WHERE domain = :domain', ['domain' => $domain])) > 0) $stop[] = _LINKEXIST;
 		if (!$stop) {
-			$postid = (is_user()) ? intval($user[0]) : '';
-			$uname = (!is_user()) ? $postname : '';
-			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :body, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]);
+            $postid = (is_user()) ? (int)$user[0] : '';
+            $uname  = (!is_user()) ? $postname : '';
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status)'
+                ." VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :body, '0', '0', '0', '0')",
+                ['uid' => $postid, 'name' => $uname, 'ip' => getIp(),
+                    'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]
+            );
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);
 			$meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-			echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABTEXT, 'meta' => $meta]);
+            echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABTEXT, 'meta' => $meta]);
 			setFoot();
 		} else {
 			add();
@@ -295,16 +300,8 @@ function namecheck(string $domainwhois): string|null {
 	return null;
 }
 
-switch($op) {
-	default:
-	mwhois();
-	break;
-	
-	case 'add':
-	add();
-	break;
-	
-	case 'send':
-	send();
-	break;
+switch ($op) {
+    default: mwhois(); break;
+    case 'add': add(); break;
+    case 'send': send(); break;
 }

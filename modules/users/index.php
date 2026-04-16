@@ -15,7 +15,7 @@ function users(): void {
     $cont = setModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
     $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num - 1) * $lim;
+    $offset = (int)(($num - 1) * $lim);
     $count = ($num) ? $offset + 1 : 1;
         $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, ip, gender, votes, tvotes FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
         if ($db->getSqlRowCount($result) > 0) {
@@ -44,7 +44,16 @@ function users(): void {
             $count++;
         }
         $cont .= '</tbody></table>';
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $lim, '', 'id', '_users', '', '', '5');
+        $cont .= getTplPager([
+            'limit'     => $lim,
+            'maxpg'     => 5,
+            'table'     => '_users',
+            'field'     => 'id',
+            'mod'       => $conf['name'],
+            'where'     => '',
+            'url_extra' => [],
+            'prefix'    => 'new/',
+        ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -78,7 +87,7 @@ function stats(): void {
     if ($result) {
         $cont .= $tpl->getHtmlFrag('users-stats-open', ['rank' => _RANK, 'description' => _DESCRIPTION, 'points' => _POINTS, 'users_count' => _TU_USERSCOUNT, 'spec' => cutstr(_SPEC, 4, 1)]);
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
-            if (intval($extra)) {
+            if ((int)$extra) {
                 $extra = _YES;
                 [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE grp = :grid', ['grid' => $grid]));
             } else {

@@ -86,7 +86,7 @@ function contact(): void {
             $meta = getTplMetaRefresh('index.php', 5);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
             $cont .= $form;
         }
     } else {
@@ -96,6 +96,6 @@ function contact(): void {
     setFoot();
 }
 
-switch($op) {
+switch ($op) {
     default: contact(); break;
 }

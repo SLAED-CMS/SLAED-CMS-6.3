@@ -31,7 +31,7 @@ function money(): void {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
         $rows = '';
         $rows .= getTplFormAddRow(_MO_7.':', $tpl->getHtmlFrag('input', [
             'itype' => 'number',
@@ -51,7 +51,7 @@ function money(): void {
         }
         $rows .= getTplFormAddRow(_MO_9.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9]));
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_6]);
-        $cont .= $tpl->getHtmlFrag('new/form-add', [
+        $cont .= $tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
@@ -146,7 +146,7 @@ function send(): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: money(); break;
     case 'send': send(); break;
 }

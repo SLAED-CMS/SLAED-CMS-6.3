@@ -11,18 +11,15 @@ if (!defined('MODULE_FILE')) {
 
 const JOKES_NAVI = ['htitle' => _JOKES, 'liste_href' => ''];
 
-
 function jokes(): void {
-    global $db, $afile, $user, $conf, $home, $op, $tpl, $prs;
+    global $db, $afile, $conf, $home, $op, $tpl, $prs;
     $cwhere = catmids($conf['name'], 'j.cid');
-    $word = getVar('get', 'word', 'word');
     $unum = getUserNews($conf['jokes']['num']);
-    $cat = getVar('get', 'cat', 'num');
-    $ncat = $cat;
+    $word = getVar('get', 'word', 'word');
+    $ncat = getVar('get', 'cat', 'num');
     $params = [];
     if (!$ncat && $op && $conf['jokes']['rate']) {
         $caton = 0;
-        $field = 'op='.$op.'&';
         if ($op == 'best') {
             $orderby = 'IFNULL((j.rating/NULLIF(j.ratetot,0)),0) DESC';
             $ntitle = _BEST;
@@ -33,10 +30,21 @@ function jokes(): void {
         $order = "WHERE j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $onum = "time <= NOW() AND status != '0'";
     } elseif ($ncat) {
-        $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-        $orderby = ($op) ? (($op == 'best') ? 'IFNULL((j.rating/NULLIF(j.ratetot,0)),0) DESC' : 'IFNULL((j.ratetot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.time)),0)),0) DESC') : 'j.time DESC';
-        [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
-        $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
+        if ($op == 'best') {
+            $orderby = 'IFNULL((j.rating/NULLIF(j.ratetot,0)),0) DESC';
+        } elseif ($op) {
+            $orderby = 'IFNULL((j.ratetot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.time)),0)),0) DESC';
+        } else {
+            $orderby = 'j.time DESC';
+        }
+        $qres = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]);
+        [$ctitle] = $db->getSqlRow($qres);
+        $ctitle = $ctitle ?? _JOKES;
+        $ntitle = ($op)
+            ? (($op == 'best')
+                ? $ctitle.' '.$conf['defis'].' '._BEST
+                : $ctitle.' '.$conf['defis'].' '._POP)
+            : $ctitle;
         $order = "WHERE (j.cid = :ncat1 OR c.parent = :ncat2) AND j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
         $cids = [];
@@ -46,15 +54,14 @@ function jokes(): void {
         if (isArray($cids)) {
             $caton = 1;
             array_unshift($cids, $ncat);
-            $wcid = 'cid IN ('.implode(', ', $cids).')';
+            $wcid = 'cid IN ('.implode(', ', array_map('intval', $cids)).')';
         } else {
             $caton = 0;
-            $wcid = "cid = '".$ncat."'";
+            $wcid = 'cid = '.(int)$ncat;
         }
         $onum = $wcid." AND time <= NOW() AND status != '0'";
     } else {
         $caton = 1;
-        $field = '';
         $order = "WHERE j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY j.time DESC';
         $onum = "time <= NOW() AND status != '0'";
         $ntitle = _JOKES;
@@ -67,57 +74,77 @@ function jokes(): void {
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num - 1) * $unum;
-    $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.body, j.rating, j.ratetot, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $offset = (int)(($num - 1) * $unum);
+    $sql = 'SELECT j.id, j.name, j.time, j.title, j.cid, j.body, j.rating, j.ratetot, c.title, c.intro, c.img, u.name'
+        .' FROM '.PREFIX_DB.'_jokes AS j'
+        .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id)'
+        .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id)'
+        .' '.$order.' LIMIT '.$offset.', '.$unum;
+    $result = $db->getSqlQuery($sql, $params);
     if ($db->getSqlRowCount($result) > 0) {
+        $ismoder = is_moder($conf['name']);
+        $token   = getSiteToken();
+        $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
         while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
-            $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $date = ($conf['jokes']['date']) ? format_time($time) : '';
-            $cdesc = $cdesc ?: $ctitle;
-            $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
-            $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
+            $cdesc  = $cdesc ?: $ctitle;
+            $cimg   = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $post   = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
+            $date   = ($conf['jokes']['date']) ? format_time($time) : '';
+            $iso    = ($conf['jokes']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(1, $id, $conf['name'], $ratingtot, $rating, '');
-            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$jtitle.'&quot;?');
-            $cont .= getTplContentCard([
-                'id' => $id,
-                'title_href' => '#'.$id,
-                'title_attr' => $jtitle,
-                'title_text' => filterTextHighlight($jtitle, $word),
-                'title_new' => getTplNewGraphic($time),
+            $ask    = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$jtitle.'&quot;?');
+            $cont .= $tpl->getHtmlFrag('card', [
+                'id'            => $id,
+                'width'         => 100,
+                'title_href'    => '#'.$id,
+                'title_attr'    => $jtitle,
+                'title_text'    => filterTextHighlight($jtitle, $word),
+                'title_new'     => getTplNewGraphic($time),
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                'category_img' => $cimg,
-                'text' => filterTextHighlight($prs->filterContent($joke, false, $conf['name']), $word),
-                'read_href' => '',
-                'read_text' => '',
-                'post_text' => $post,
-                'post_label' => _POSTEDBY,
-                'date_text' => $date,
-                'date_iso' => ($date) ? date('c', strtotime($time)) : '',
-                'date_label' => _CHNGSTORY,
-                'reads_text' => '',
-                'reads_label' => _READS,
-                'hits' => '',
-                'comm_href' => '',
-                'comm_text' => '',
-                'comm_label' => _COMMENTS,
-                'rating' => $rating,
-                'favorites' => '',
-                'voting' => '',
-                'editor' => _EDITOR,
-                'edit_href' => $afile.'.php?op=jokes_add&amp;id='.$id,
-                'edit_text' => _FULLEDIT,
-                'delete_href' => $afile.'.php?op=jokes_delete&amp;id='.$id.'&amp;refer=1',
-                'delete_text' => _ONDELETE,
-                'delete_ask' => $ask,
-                'back_title' => '',
-                'back_text' => '',
-                'is_moder' => is_moder($conf['name']),
+                'category_img'  => $cimg,
+                'text'          => filterTextHighlight($prs->filterContent($joke, false, $conf['name']), $word),
+                'read_href'     => '',
+                'read_text'     => '',
+                'post_text'     => $post,
+                'post_label'    => _POSTEDBY,
+                'date_text'     => $date,
+                'date_iso'      => $iso,
+                'date_label'    => _CHNGSTORY,
+                'reads_text'    => '',
+                'reads_label'   => _READS,
+                'hits'          => '',
+                'comm_href'     => '',
+                'comm_text'     => '',
+                'comm_label'    => _COMMENTS,
+                'rating'        => $rating,
+                'favorites'     => '',
+                'voting'        => '',
+                'editor'        => _EDITOR,
+                'edit_href'     => $afile.'.php?name=jokes&amp;op=jokes_add&amp;id='.$id,
+                'edit_text'     => _FULLEDIT,
+                'delete_href'   => $afile.'.php?name=jokes&amp;op=jokes_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
+                'delete_text'   => _ONDELETE,
+                'delete_ask'    => $ask,
+                'is_moder'      => $ismoder,
             ]);
         }
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_jokes', 'cid', $onum, $conf['jokes']['nump']);
+        $cont .= $tpl->getHtmlFrag('grid', []);
+        $url_extra = [];
+        if ($ncat) $url_extra['cat'] = $ncat;
+        if ($op)   $url_extra['op']  = $op;
+        $cont .= getTplPager([
+            'limit'     => $unum,
+            'maxpg'     => $conf['jokes']['nump'],
+            'table'     => '_jokes',
+            'field'     => 'id',
+            'mod'       => $conf['name'],
+            'where'     => $onum,
+            'url_extra' => $url_extra,
+            'prefix'    => 'new/',
+        ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -126,33 +153,34 @@ function jokes(): void {
 }
 
 function add(): void {
-    global $user, $conf, $stop, $tpl;
+    global $conf, $user, $stop, $tpl;
     if ($conf['jokes']['add'] == '1') {
-        $title = getVar('post', 'title', 'text');
-        $cid = getVar('post', 'cid', 'num');
-        $joke = getVar('post', 'joke', 'text');
-        $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
+        $title    = getVar('post', 'title', 'title');
+        $cid      = getVar('post', 'cid', 'num');
+        $joke     = getVar('post', 'joke', 'raw');
+        $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD] + JOKES_NAVI);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        if ($joke) $cont .= preview($title, $joke, '', '', 'all');
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        if ($joke) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $joke, 'textb' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADD_JNOTE]);
-        $cont .= $tpl->getHtmlFrag('new/form-add', [
-            'has_name' => true,
-            'is_user' => is_user(),
-            'name' => $conf['name'],
-            'token' => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
-            'lbl_name' => _YOURNAME,
+        if (!is_user()) $postname = $postname ?: _ANONYM;
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name'  => true,
+            'is_user'   => is_user(),
+            'name'      => $conf['name'],
+            'token'     => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
+            'lbl_name'  => _YOURNAME,
             'lbl_title' => _JTITLE,
-            'lbl_cat' => _CATEGORY,
-            'lbl_text' => _JOKE,
-            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            'postname' => $postname ?: _ANONYM,
-            'titleval' => $title,
+            'lbl_cat'   => _CATEGORY,
+            'lbl_text'  => _JOKE,
+            'username'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname'  => $postname,
+            'titleval'  => $title,
             'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
-            'hometext' => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']),
-            'captcha' => getCaptcha(1),
-            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'hometext'  => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']),
+            'captcha'   => getCaptcha(1),
+            'submit'    => getTplFormSubmit(['op' => 'send', 'select' => true]),
         ]);
         echo $cont;
         setFoot();
@@ -162,12 +190,12 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop, $tpl;
+    global $db, $conf, $user, $stop, $tpl;
     if ($conf['jokes']['add'] == '1') {
-        $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
-        $title = getVar('post', 'title', 'text');
-        $cid = getVar('post', 'cid', 'num');
-        $joke = getVar('post', 'joke', 'text');
+        $title    = getVar('post', 'title', 'title');
+        $cid      = getVar('post', 'cid', 'num');
+        $joke     = getVar('post', 'joke', 'text');
+        $postname = getVar('post', 'postname', 'name');
         $stop = [];
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'jokes')) $stop[] = _ERROR;
         if (!$title) $stop[] = _CERROR;
@@ -175,16 +203,21 @@ function send(): void {
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
-        if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
-            $postid = (is_user()) ? intval($user[0]) : '';
-            $uname = (!is_user()) ? $postname : '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (id, uid, name, time, title, cid, body, ip, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
+        if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
+            $postid = (is_user()) ? (int)$user[0] : '';
+            $uname  = (!is_user()) ? $postname : '';
+            $db->getSqlQuery(
+                'INSERT INTO '.PREFIX_DB.'_jokes (id, uid, name, time, title, cid, body, ip, status)'
+                ." VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, '0')",
+                ['postid' => $postid, 'uname' => $uname,
+                    'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]
+            );
             update_points(19);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
-            setHead(['title' => _JOKES.' '._ADD, 'desc' => _UPLOADFINISHJ]);
+            setHead(['title' => _ADD]);
             $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHJ, 'meta' => $meta]);
+            echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -194,7 +227,7 @@ function send(): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: jokes(); break;
     case 'add': add(); break;
     case 'send': send(); break;

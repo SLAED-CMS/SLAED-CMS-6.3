@@ -15,13 +15,13 @@ const SHOP_NAVI = ['htitle' => _SHOP, 'add_href' => ''];
 function shop(): void {
 	global $db, $conf, $afile, $home, $user, $op, $tpl, $prs;
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$unum = getUserNews($conf['shop']['num']);
+	$unum = (int)getUserNews($conf['shop']['num']);
+	if ($unum < 1) $unum = 1;
 	$cat = getVar('get', 'cat', 'num');
 	$ncat = $cat;
 	$params = [];
 		if (!$ncat && $op && $conf['shop']['rate']) {
 			$caton = 0;
-			$field = 'op='.$op.'&';
 			if ($op == 'best') {
 				$orderby = 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC';
 				$ntitle = _BEST;
@@ -32,7 +32,6 @@ function shop(): void {
 		$order = "WHERE p.time <= NOW() AND p.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "time <= NOW() AND status != '0'";
 	} elseif ($ncat) {
-		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.counter/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
 		[$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
@@ -45,21 +44,23 @@ function shop(): void {
 		if (isArray($cids)) {
 			$caton = 1;
 			array_unshift($cids, $ncat);
-			$wcid = 'cid IN ('.implode(', ', $cids).')';
+			$wcid = 'cid IN ('.implode(', ', array_map('intval', $cids)).')';
 		} else {
 			$caton = 0;
-			$wcid = "cid = '".$ncat."'";
+			$wcid = 'cid = '.(int)$ncat;
 		}
 		$onum = '('.$wcid." OR assoc REGEXP '[[:<:]]".$ncat."[[:>:]]') AND time <= NOW() AND status != '0'";
 	} else {
 		$caton = 1;
-		$field = '';
 		$hwhere = ($home) ? "AND p.ihome = '1'" : '';
 		$hnwhere = ($home) ? "AND ihome = '1'" : '';
 		$order = "WHERE p.time <= NOW() AND p.status != '0' ".$hwhere.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC';
 		$onum = "time <= NOW() AND status != '0' ".$hnwhere;
 		$ntitle = _SHOP;
 	}
+	$url_extra = [];
+	if ($ncat) $url_extra['cat'] = $ncat;
+	if ($op)   $url_extra['op']  = $op;
 	setHead(['title' => $ntitle]);
 	$cont = '';
 	if (!$home || ($home && $conf['shop']['homcat'])) {
@@ -68,9 +69,8 @@ function shop(): void {
 		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
-	$num = getVar('get', 'num', 'num', '1');
-	$offset = ($num - 1) * $unum;
-	$offset = intval($offset);
+	$num    = getVar('get', 'num', 'num', '1');
+	$offset = (int)(($num - 1) * $unum);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
@@ -98,14 +98,23 @@ function shop(): void {
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'delete_confirm' => _DELETE.' &quot;'.$stitle.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
 			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
 			$cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-			$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => '', 'title' => $title, 'comm' => $comm, 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => '', 'cimg' => $cimg, 'text' => $prs->filterContent($text, false, $conf['name']), 'rating' => $rating, 'goback' => '', 'admin' => $admin, 'read' => $read]);
+			$cont .= $tpl->getHtmlFrag('shop-basic', ['id' => $id, 'favorites' => '', 'title' => $title, 'comm' => $comm, 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => '', 'cimg' => $cimg, 'text' => $prs->filterContent($text, false, $conf['name']), 'rating' => $rating, 'goback' => '', 'admin' => $admin, 'read' => $read]);
 			$cont .= $tpl->getHtmlFrag('grid-table-cell', []);
 			if ($i % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
 			$i++;
 		}
 		if (($i - 1) % $conf['shop']['bascol'] != 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
 		$cont .= $tpl->getHtmlFrag('grid-table', []);
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump']);
+		$cont .= getTplPager([
+			'limit'     => $unum,
+			'maxpg'     => $conf['shop']['nump'],
+			'table'     => '_products',
+			'field'     => 'id',
+			'mod'       => $conf['name'],
+			'where'     => $onum,
+			'url_extra' => $url_extra,
+			'prefix'    => 'new/',
+		]);
 	} else {
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
@@ -116,37 +125,47 @@ function shop(): void {
 function liste(): void {
 	global $db, $conf, $tpl;
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$listnum = intval($conf['shop']['listnum']);
-	$let = getVar('get', 'let', 'let');
+	$listnum = (int)$conf['shop']['listnum'];
+	if ($listnum < 1) $listnum = 1;
+	$let    = getVar('get', 'let', 'let');
 	$params = [];
 	if ($let) {
-		$field = 'op=liste&let='.urlencode($let).'&';
 		$order = "WHERE UCASE(p.title) LIKE BINARY :let AND p.time <= NOW() AND p.status != '0'";
 		$params['let'] = $let.'%';
+		$onum = "title LIKE BINARY '".addslashes($let)."%' AND time <= NOW() AND status != '0'";
 	} else {
-		$field = 'op=liste&';
 		$order = "WHERE p.time <= NOW() AND p.status != '0'";
+		$onum  = "time <= NOW() AND status != '0'";
 	}
-	$num = getVar('get', 'num', 'num', '1');
-	$offset = ($num - 1) * $listnum;
-	$offset = intval($offset);
+	$url_extra = ['op' => 'liste'];
+	if ($let) $url_extra['let'] = $let;
+	$num    = getVar('get', 'num', 'num', '1');
+	$offset = (int)(($num - 1) * $listnum);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
 	$cont = setModuleNavi(['title' => _LIST] + SHOP_NAVI);
 	if ($db->getSqlRowCount($result) > 0) {
 		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
-		$cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true, 'letter' => $letter, 'id' => _ID, 'title' => _TITLE, 'category' => _CATEGORY, 'poster' => _PREIS, 'date' => _DATE]);
+		$cont .= $letter;
+		$cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_cat' => _CATEGORY, 'col_poster' => _PREIS, 'col_date' => _DATE]);
 		while ([$id, $cid, $time, $title, $price, $ctitle, $cdesc] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = $cdesc ?: $ctitle;
 			$price = $price.' '.$conf['shop']['valute'];
-			$cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $price, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+			$cont .= $tpl->getHtmlFrag('table-row-liste', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $price, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
 		}
-		$cont .= $tpl->getHtmlFrag('liste-wrap', []);
-		$onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-		$params = ($let) ? ['let' => $let.'%'] : [];
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump'], $params);
+		$cont .= $tpl->getHtmlFrag('table', []);
+		$cont .= getTplPager([
+			'limit'     => $listnum,
+			'maxpg'     => $conf['shop']['nump'],
+			'table'     => '_products',
+			'field'     => 'id',
+			'mod'       => $conf['name'],
+			'where'     => $onum,
+			'url_extra' => $url_extra,
+			'prefix'    => 'new/',
+		]);
 	} else {
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
@@ -201,9 +220,9 @@ function view(): void {
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
 		$goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'delete_confirm' => _DELETE.' &quot;'.$title.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
-		$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => $favorites, 'title' => filterTextHighlight($title, $word), 'comm' => '', 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => $voting, 'cimg' => $cimg, 'text' => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word), 'rating' => $rating, 'goback' => $goback, 'admin' => $admin, 'read' => '']);
+		$cont .= $tpl->getHtmlFrag('shop-basic', ['id' => $id, 'favorites' => $favorites, 'title' => filterTextHighlight($title, $word), 'comm' => '', 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => $voting, 'cimg' => $cimg, 'text' => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word), 'rating' => $rating, 'goback' => $goback, 'admin' => $admin, 'read' => '']);
 		if ($conf['shop']['assoc']) {
-			$limit = intval($conf['shop']['assocnum']);
+			$limit = (int)$conf['shop']['assocnum'];
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
@@ -214,7 +233,7 @@ function view(): void {
 					$text = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-					$cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['shop']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img]);
+					$cont .= $tpl->getHtmlFrag('assoc-item', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['shop']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img]);
 				}
 				$cont .= $tpl->getHtmlFrag('assoc-wrap', []);
 			}
@@ -316,7 +335,10 @@ function kasse(): void {
 			foreach ($massiv as $val) {
 				if ($val != '') {
 					$sreg = time();
-					$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :sender_id, :val, :id_partner, \'0\', :sender_name, :sender_adr, :sender_tel, :sender_email, :sender_dom, :sender_regdate, \'0\', \'0\', \'2\')', ['sender_id' => $sid, 'val' => $val, 'id_partner' => $idPartner, 'sender_name' => $sname, 'sender_adr' => $sadr, 'sender_tel' => $stel, 'sender_email' => $smail, 'sender_dom' => $sdom, 'sender_regdate' => $sreg]);
+					$db->getSqlQuery(
+						'INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :sender_id, :val, :id_partner, \'0\', :sender_name, :sender_adr, :sender_tel, :sender_email, :sender_dom, :sender_regdate, \'0\', \'0\', \'2\')',
+						['sender_id' => $sid, 'val' => $val, 'id_partner' => $idPartner, 'sender_name' => $sname, 'sender_adr' => $sadr, 'sender_tel' => $stel, 'sender_email' => $smail, 'sender_dom' => $sdom, 'sender_regdate' => $sreg]
+					);
 				}
 			}
 			setcookie('shop', false);
@@ -324,13 +346,13 @@ function kasse(): void {
 			update_points(39);
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['shop']['sende'], false, $conf['name'])]);
 		} else {
-			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
 			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
 			$cont .= $form;
 		}
 	} else {
 		$meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
-		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop, 'meta' => $meta]);
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop), 'meta' => $meta]);
 	}
 	echo $cont;
 	setFoot();
@@ -346,7 +368,7 @@ function part(): void {
 function clients(): void {
 	global $db, $user, $conf, $tpl, $prs;
 	if (is_user() && is_active('shop')) {
-		$uid = intval($user[0]);
+		$uid = (int)$user[0];
 		setHead(['title' => _CLIENTINFO]);
 		$cont = setModuleNavi(['title' => _CLIENTINFO] + SHOP_NAVI);
 		$cont .= getUserNav();
@@ -423,7 +445,7 @@ function partners(): void {
 	global $db, $conf, $stop, $tpl, $prs;
 	if (is_user() && is_active('shop')) {
 		$userinfo = getUserInfo();
-		$uid = intval($userinfo['id']);
+		$uid = (int)$userinfo['id'];
 		$smail = $userinfo['email'];
 		$sdom = $userinfo['website'];
 		setHead(['title' => _PARTNERINFO]);
@@ -457,7 +479,7 @@ function partners(): void {
 				$cont .= $prs->filterContent(str_replace('[id]', $uid, $conf['shop']['partinfo2']), false, $conf['name']);
 			}
 		} else {
-			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
 			$cont .= $prs->filterContent($conf['shop']['partinfo'], false, $conf['name']);
 			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
 			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);
@@ -484,7 +506,10 @@ function partners_send(): void {
 		checkemail($paemail);
 		if (!$paname || !$paaddr || !$paphone) $stop[] = _ERROR_ALL;
 		if (!$stop) {
-			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paaddr, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['puid' => $puid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
+			$db->getSqlQuery(
+				'INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paaddr, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')',
+				['puid' => $puid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]
+			);
 			setRedirect('index.php?name='.$conf['name'].'&op=partners');
 		} else {
 			partners();
@@ -494,7 +519,7 @@ function partners_send(): void {
 	}
 }
 
-switch($op) {
+switch ($op) {
 	default: shop(); break;
 	case 'liste': liste(); break;
 	case 'view': view(); break;

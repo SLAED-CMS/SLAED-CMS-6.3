@@ -66,6 +66,6 @@ function info(): void {
     setFoot();
 }
 
-switch($op) {
+switch ($op) {
     default: info(); break;
 }

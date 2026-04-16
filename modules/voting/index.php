@@ -13,7 +13,7 @@ function voting(): void {
 	global $db, $afile, $locale, $conf, $tpl;
 	$onum = ($conf['multilingual'] == 1) ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
 	$num = getVar('get', 'num', 'num', '1');
-	$offset = ($num - 1) * $conf['voting']['num'];
+    $offset = (int)(($num - 1) * $conf['voting']['num']);
 	setHead(['title' => _VOTING]);
 	$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]);
 	$result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
@@ -47,9 +47,18 @@ function voting(): void {
 			]);
 		}
 		$cont .= $tpl->getHtmlFrag('voting-home-wrap', []);
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $conf['voting']['num'], '', 'id', '_voting', '', $onum, $conf['voting']['nump']);
-	} else {
-		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= getTplPager([
+            'limit'     => $conf['voting']['num'],
+            'maxpg'     => $conf['voting']['nump'],
+            'table'     => '_voting',
+            'field'     => 'id',
+            'mod'       => $conf['name'],
+            'where'     => $onum,
+            'url_extra' => [],
+            'prefix'    => 'new/',
+        ]);
+    } else {
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
 	echo $cont;
 	setFoot();
@@ -73,13 +82,13 @@ function view(): void {
 	} else {
 		setHead(['title' => _VOTING]);
 		$meta = getTplMetaRefresh('index.php?name='.$conf['name'], 3);
-		$cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO, 'meta' => $meta]);
+        $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO, 'meta' => $meta]);
 	}
 	echo $cont;
 	setFoot();
 }
 
-switch($op) {
-	default: voting(); break;
-	case 'view': view(); break;
+switch ($op) {
+    default: voting(); break;
+    case 'view': view(); break;
 }

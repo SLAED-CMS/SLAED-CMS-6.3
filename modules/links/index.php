@@ -69,7 +69,7 @@ function links(): void {
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('new/cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -83,7 +83,7 @@ function links(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
-        $cont .= $tpl->getHtmlFrag('new/grid', ['open' => true]);
+        $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
         while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
@@ -95,7 +95,7 @@ function links(): void {
             $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _LINKHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-            $cont .= $tpl->getHtmlFrag('new/card', [
+            $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
                 'width' => 100,
                 'title_href' => $thref,
@@ -132,7 +132,7 @@ function links(): void {
                 'is_moder' => $ismoder,
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('new/grid', []);
+        $cont .= $tpl->getHtmlFrag('grid', []);
         $url_extra = [];
         if ($ncat) $url_extra['cat'] = $ncat;
         if ($op)   $url_extra['op']  = $op;
@@ -147,7 +147,7 @@ function links(): void {
             'prefix'    => 'new/',
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -177,7 +177,7 @@ function liste(): void {
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _LINKS]);
     if ($db->getSqlRowCount($result) > 0) {
         if ($conf['links']['letter']) $cont .= letter($conf['name']);
-        $cont .= $tpl->getHtmlFrag('new/table', [
+        $cont .= $tpl->getHtmlFrag('table', [
             'open'       => true,
             'sortable'   => false,
             'col_id'     => _ID,
@@ -191,7 +191,7 @@ function liste(): void {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('new/table-row-liste', [
+            $cont .= $tpl->getHtmlFrag('table-row-liste', [
                 'id'            => (string)$id,
                 'title_href'    => $thref,
                 'title_attr'    => $title,
@@ -206,7 +206,7 @@ function liste(): void {
                 'time_label'    => _DATE,
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('new/table', []);
+        $cont .= $tpl->getHtmlFrag('table', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $wparams = ($let) ? ['let' => $let.'%'] : [];
         $cont .= getTplPager([
@@ -221,7 +221,7 @@ function liste(): void {
             'prefix'       => 'new/',
         ]);
     } else {
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -253,7 +253,7 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = setModuleNavi(['title' => _LINKS]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('new/cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
@@ -272,7 +272,7 @@ function view(): void {
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
-        $cont .= $tpl->getHtmlFrag('new/view', [
+        $cont .= $tpl->getHtmlFrag('view', [
             'id'            => $id,
             'favorites'     => $favorites,
             'title_text'    => filterTextHighlight($title, $word),
@@ -312,13 +312,13 @@ function view(): void {
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
                 $result = $db->getSqlQuery('SELECT id, title, intro, body, time FROM '.PREFIX_DB.'_links WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
-                $cont .= $tpl->getHtmlFrag('new/related', ['open' => true, 'title' => _CATASSOC]);
+                $cont .= $tpl->getHtmlFrag('related', ['open' => true, 'title' => _CATASSOC]);
                 while ([$aid, $title, $hometext, $bodytext, $time] = $db->getSqlRow($result)) {
                     $date = ($conf['links']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $text = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES, 'UTF-8'), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= $tpl->getHtmlFrag('new/related-item', [
+                    $cont .= $tpl->getHtmlFrag('related-item', [
                         'href'       => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]),
                         'title_attr' => $title,
                         'title_text' => $title,
@@ -329,7 +329,7 @@ function view(): void {
                         'img_src'    => $img,
                     ]);
                 }
-                $cont .= $tpl->getHtmlFrag('new/related', []);
+                $cont .= $tpl->getHtmlFrag('related', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);
@@ -358,11 +358,11 @@ function add(): void {
         }
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
         if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => $conf['name']]);
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _ADDFNOTE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDFNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('new/form-add', [
+        $cont .= $tpl->getHtmlFrag('form-add', [
             'has_name'  => true,
             'is_user'   => is_user(),
             'name'      => $conf['name'],
@@ -428,7 +428,7 @@ function send(): void {
             addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
             $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).$tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _UPLOADFINISHL, 'meta' => $meta]);
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHL, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -445,7 +445,7 @@ function broken(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCLINK]);
         $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
-        echo setModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
+        echo setModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
@@ -462,7 +462,7 @@ function loading(): void {
         $info = sprintf(_NOTELINKLOAD, $title, domain($url));
         setHead(['title' => _LINKS]);
         $cont = setModuleNavi(['title' => _LINKS]);
-        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => $info]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $cont .= setNaviLower($conf['name']);
         echo $cont;
         setFoot();

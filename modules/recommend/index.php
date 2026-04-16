@@ -24,7 +24,7 @@ function recommend(): void {
     $femail = getVar('post', 'femail', 'text');
     setHead(['title' => _RECOMMTITLE]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $cont .= $tpl->getHtmlFrag('recommend-form', [
         'name' => $conf['name'],
         'token' => htmlspecialchars(getSiteToken('recommend'), ENT_QUOTES, 'UTF-8'),
@@ -84,7 +84,7 @@ function send(): void {
     }
 }
 
-switch($op) {
+switch ($op) {
     default: recommend(); break;
     case 'send': send(); break;
 }
