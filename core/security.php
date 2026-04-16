@@ -598,13 +598,13 @@ function setExit(string $msg, string $typ = ''): never {
     $themedir = 'templates/'.$theme;
     $linksrc = [];
     if (is_file(BASE_DIR.'/'.$themedir.'/favicon.png')) {
-        $linksrc[] = '<link rel="shortcut icon" href="'.htmlspecialchars($themedir.'/favicon.png', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $themedir.'/favicon.png', 'type' => '', 'title' => '']);
     } elseif (is_file(BASE_DIR.'/'.$themedir.'/favicon.ico')) {
-        $linksrc[] = '<link rel="shortcut icon" href="'.htmlspecialchars($themedir.'/favicon.ico', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $themedir.'/favicon.ico', 'type' => '', 'title' => '']);
     }
     foreach (['theme.css', 'system.css', 'new.css', 'blocks.css'] as $asset) {
         if (is_file(BASE_DIR.'/'.$themedir.'/'.$asset)) {
-            $linksrc[] = $tpl->getHtmlFrag(getTplFragmentName('head-link-css'), ['href' => $themedir.'/'.$asset]);
+            $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $themedir.'/'.$asset, 'type' => '', 'title' => '']);
         }
     }
     $links = implode(PHP_EOL, $linksrc);

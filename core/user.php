@@ -16,9 +16,15 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $userinfo = getUserInfo();
         if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         if (is_user()) {
-            $name_field = filterText(substr($user[1], 0, 25)).getTplHiddenInput(['name' => 'name', 'value' => '']);
+            $name_field = filterText(substr($user[1], 0, 25)).$tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => '', 'input_attr' => '']);
         } else {
-            $name_field = getTplTextInput('name', _ANONYM, '', 'maxlength="25"');
+            $name_field = $tpl->getHtmlFrag('input', [
+                'input_attr' => 'maxlength="25"',
+                'input_class' => '',
+                'itype' => 'text',
+                'name_attr' => 'name',
+                'value_attr' => _ANONYM,
+            ]);
         }
         $cont .= $tpl->getHtmlFrag('account-comment-form', [
             'name_label'   => _YOURNAME,
@@ -270,7 +276,7 @@ function updatePost() {
 }
 
 # Render the private-message inbox, outbox, saved or detail view
-function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
+function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $info = '', int $typ = 0): string {
     global $db, $user, $conf, $tpl, $prs;
     $typ = $typ ?: getVar('get', 'typ', 'num', 0);
     $uid = intval($user[0]);
@@ -293,7 +299,7 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
         }
         if ($fstatus) $cont .= $tpl->getHtmlFrag('alert', ['text' => $messinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
         if ($stop) {
-            $cont .= $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => is_array($stop) ? '' : $stop, 'messages' => is_array($stop) ? $stop : [], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         } elseif ($info) {
             $cont .= $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -366,7 +372,7 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
         $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmesssa', 0, '3', '');
     } elseif ($typ == 4) {
         if ($stop) {
-            $cont .= $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => is_array($stop) ? '' : $stop, 'messages' => is_array($stop) ? $stop : [], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         } elseif ($info) {
             $cont .= $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -507,7 +513,7 @@ function addPrivateMessage() {
         $info = sprintf(_PRSENDED, $postname);
         return getPrivateMessageView(0, '', $info, 4);
     } else {
-        $stop = ($stop) ? getStopText((array)$stop) : _ERROR;
+        $stop = ($stop) ? (array)$stop : _ERROR;
         return getPrivateMessageView(0, $stop, '', 4);
     }
 }
