@@ -74,7 +74,7 @@ define('_CHANGELOG','Changelog');
 define('_CHANGEFREQ','Change frequency');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Mark all');
-define('_CHECKOP','The action marked with');
+define('_CHECKOP','Action');
 define('_CHNGSTORY','Choose date');
 define('_CLIENT','Client');
 define('_CLIENTS','Clients');

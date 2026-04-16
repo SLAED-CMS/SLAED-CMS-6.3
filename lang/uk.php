@@ -74,7 +74,7 @@ define('_CHANGELOG','Журнал змін');
 define('_CHANGEFREQ','Частота поновлення');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Позначити всі');
-define('_CHECKOP','Дію з зазначеними');
+define('_CHECKOP','Дія');
 define('_CHNGSTORY','Дата публікації');
 define('_CLIENT','Клієнт');
 define('_CLIENTS','Клієнти');

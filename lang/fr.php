@@ -74,7 +74,7 @@ define('_CHANGELOG','Journal des modifications');
 define('_CHANGEFREQ','La fréquence de mise à jour');
 define('_CHARSET','utf-8');
 define('_CHECKALL','Marquer tous');
-define('_CHECKOP','Action de couper');
+define('_CHECKOP','Action');
 define('_CHNGSTORY','Date de publication');
 define('_CLIENT','Client');
 define('_CLIENTS','Clients');
