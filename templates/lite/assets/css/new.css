@@ -119,6 +119,7 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 .sl-form-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
 .sl-form-label { width: 160px; flex-shrink: 0; padding-top: 6px; }
 .sl-form-label::after { content: ":"; }
+.sl-action-label::after { content: ":"; }
 .sl-form-row .sl-field { flex: 1; min-width: 0; }
 .sl-form-value { padding-top: 6px; }
 .sl-form-submit { padding-top: 10px; text-align: center; }
@@ -153,3 +154,5 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 .sl-assoc-img { margin-left: -80px; position: absolute; border-radius: 4px; display: inline-block; width: 60px; height: 60px; background-position: 50% 50%; background-repeat: no-repeat; background-size: cover; }
 .sl-assoc-meta { font-size: .9em; color: #6e7c8b; list-style: none; padding: 0; margin: 0; }
 .sl-assoc-meta li { display: inline; margin-right: 20px; }
+
+.sl-radio-group { display: flex; flex-wrap: wrap; gap: 8px; }

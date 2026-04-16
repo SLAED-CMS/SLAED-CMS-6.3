@@ -1,4 +1,0 @@
-{% if extra %}{{{ extra }}}{% endif %}
-{% if name %}<input type="hidden" name="{{ name }}" value="{{ val }}">{% endif %}
-{% if op %}<input type="hidden" name="op" value="{{ op }}">{% endif %}
-{% if select %}<select name="posttype" class="sl-field sl-field--auto">{% if show_preview %}<option value="preview">{{ label_preview }}</option>{% endif %}<option value="save">{{ label_save }}</option>{% if show_delete %}<option value="delete">{{ label_delete }}</option>{% endif %}</select>{% endif %}<input type="submit" value="{{ label }}" class="sl-but-blue">
