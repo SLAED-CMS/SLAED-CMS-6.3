@@ -41,7 +41,7 @@ function config(): void {
         ['value' => '1', 'label' => _YES],
         ['value' => '0', 'label' => _NO],
     ];
-    $rows[] = ['label_html' => _VERSION.':', 'field_html' => getTplExternalAction('//slaed.net', _VERSION, 'SLAED CMS '.$conf['version'])];
+    $rows[] = ['label_html' => _VERSION.':', 'field_html' => $tpl->getHtmlFrag('comment-action-link', ['href' => '//slaed.net', 'title' => _VERSION, 'label' => 'SLAED CMS '.$conf['version'], 'class' => '', 'target' => ' target="_blank"'])];
     $rows[] = ['label_html' => _SITENAME.':', 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'sitename',

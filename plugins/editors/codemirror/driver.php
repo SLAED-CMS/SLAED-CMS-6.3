@@ -15,10 +15,11 @@ class EditorCodemirror implements CodeDriver {
     ];
 
     public function getAssets(string $profile): string {
+        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return getHtmlCssLink('plugins/editors/codemirror/assets/cm6.css')
-            .getHtmlScriptSrc('plugins/editors/codemirror/assets/cm6.bundle.js');
+        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/codemirror/assets/cm6.css', 'type' => '', 'title' => ''])
+            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/codemirror/assets/cm6.bundle.js', 'attr' => '']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $lang, string $profile): string {
@@ -43,6 +44,6 @@ class EditorCodemirror implements CodeDriver {
         $js .= 'CM6.editors['.$jid.']=view;';
         $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=view.state.doc.toString();},true);';
         $js .= '})();';
-        return $ta.getHtmlScriptInline($js);
+        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
 }

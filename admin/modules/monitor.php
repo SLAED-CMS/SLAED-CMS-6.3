@@ -630,7 +630,7 @@ function getCpuDetails(): array {
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
     global $tpl;
-    if ($state === null) return getTplSpan('sl_muted', 'N/A');
+    if ($state === null) return $tpl->getHtmlFrag('span-raw', ['class' => 'sl_muted', 'content' => 'N/A', 'title' => '']);
     return $tpl->getHtmlFrag('inline-badge', [
         'class' => $state ? 'sl_green' : 'sl_red',
         'label' => $state ? 'On' : 'Off',

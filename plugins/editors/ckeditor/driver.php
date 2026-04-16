@@ -9,10 +9,11 @@ class EditorCkeditor implements ContentDriver {
     private const TB_SIMPLE = "['bold','italic','|','link','bulletedList','numberedList','|','blockQuote','|','undo','redo']";
 
     public function getAssets(string $profile): string {
+        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return getHtmlCssLink('plugins/editors/ckeditor/assets/ckeditor.bundle.css')
-            .getHtmlScriptSrc('plugins/editors/ckeditor/assets/ckeditor.bundle.js');
+        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/ckeditor/assets/ckeditor.bundle.css', 'type' => '', 'title' => ''])
+            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/ckeditor/assets/ckeditor.bundle.js', 'attr' => '']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
@@ -35,6 +36,6 @@ class EditorCkeditor implements ContentDriver {
         $js .= 'var inp=document.getElementById('.$jid.');';
         $js .= 'inp.form&&inp.form.addEventListener("submit",function(){inp.value=ed.getData();},true);';
         $js .= '});})();';
-        return $ta.getHtmlScriptInline($js);
+        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
 }

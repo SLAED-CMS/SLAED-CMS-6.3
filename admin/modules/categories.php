@@ -6,6 +6,19 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+function getAdminCategoryImageSelect(string $path, string $selected = ''): string {
+    global $tpl;
+    $files = is_dir($path) ? scandir($path) : [];
+    $imgs  = [];
+    foreach ($files as $entry) {
+        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry !== 'no.png') {
+            $imgs[] = $tpl->getHtmlFrag('select-option', ['value_attr' => $path.$entry, 'label_text' => $entry, 'is_selected' => $selected === $entry]);
+        }
+    }
+    asort($imgs);
+    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => $path.'no.png', 'label_text' => _NO]).implode('', $imgs);
+    return $tpl->getHtmlFrag('select', ['name_attr' => 'imgcat', 'options_html' => $opts, 'select_attr' => 'id="img_replace"']);
+}
 
 function categories(): void {
     global $afile, $tpl;
@@ -90,8 +103,8 @@ function add(): void {
             'value_text' => '',
             'is_config' => true,
         ])],
-        ['label_html' => _IMG.':', 'field_html' => getTplImageSelect($path)],
-        ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.'no.png')],
+        ['label_html' => _IMG.':', 'field_html' => getAdminCategoryImageSelect($path)],
+        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('img-preview', ['alt' => _IMG, 'src' => $path.'no.png'])],
         ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($conf['multilingual'] == 1) {
@@ -177,8 +190,8 @@ function subadd(): void {
                 'value_text' => '',
                 'is_config' => true,
             ])],
-            ['label_html' => _IMG.':', 'field_html' => getTplImageSelect($path)],
-            ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.'no.png')],
+            ['label_html' => _IMG.':', 'field_html' => getAdminCategoryImageSelect($path)],
+            ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('img-preview', ['alt' => _IMG, 'src' => $path.'no.png'])],
             ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
         ];
         if ($conf['multilingual'] == 1) {
@@ -322,8 +335,8 @@ function edit(): void {
             'value_text' => (string)$desc,
             'is_config' => true,
         ])],
-        ['label_html' => _IMG.':', 'field_html' => getTplImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
-        ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.$imgcat)],
+        ['label_html' => _IMG.':', 'field_html' => getAdminCategoryImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
+        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('img-preview', ['alt' => _IMG, 'src' => $path.$imgcat])],
         ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($parent != 0) {

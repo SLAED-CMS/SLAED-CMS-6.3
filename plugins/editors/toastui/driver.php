@@ -5,11 +5,12 @@ class EditorToastUi implements ContentDriver {
     private static bool $done = false;
 
     public function getAssets(string $profile): string {
+        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return getHtmlCssLink('plugins/editors/toastui/assets/toastui-editor.min.css')
-            .getHtmlScriptSrc('plugins/editors/toastui/assets/toastui-editor.all.min.js')
-            .getHtmlScriptSrc('plugins/editors/toastui/assets/i18n/ru-ru.js');
+        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/toastui/assets/toastui-editor.min.css', 'type' => '', 'title' => ''])
+            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/toastui-editor.all.min.js', 'attr' => ''])
+            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/i18n/ru-ru.js', 'attr' => '']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
@@ -36,6 +37,6 @@ class EditorToastUi implements ContentDriver {
         $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',height:'.$h.',language:'.$lang.',usageStatistics:false});';
         $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=ed.getMarkdown();},true);';
         $js .= '})();';
-        return $ta.getHtmlScriptInline($js);
+        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
 }

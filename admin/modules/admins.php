@@ -48,7 +48,7 @@ function checkAdminlast(int $aid): bool {
 
 
 function admins(): void {
-    global $db, $afile, $tpl;
+    global $db, $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $head = [
@@ -92,7 +92,12 @@ function admins(): void {
             'cells' => [
                 ['content_html' => $tip],
                 ['content_html' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
-                ['content_html' => getMailLink($email)],
+                ['content_html' => $tpl->getHtmlFrag('link', [
+                    'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)$conf['sitename']),
+                    'is_blank' => true,
+                    'label' => $email,
+                    'title' => $email,
+                ])],
                 ['content_html' => htmlspecialchars((string)$lang, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => ((int)$super === 1) ? _YES : _NO],
                 ['content_html' => $acts],
@@ -134,7 +139,7 @@ function add(): void {
     $check = '';
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText($stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $items = '';
     $mods = getAdminModuleNames((string)$mods);
     $allow = [];

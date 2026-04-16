@@ -3,7 +3,8 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class EditorBbcode implements ContentDriver {
     public function getAssets(string $profile): string {
-        return getHtmlScriptSrc('plugins/system/insert-code.js');
+        global $tpl;
+        return $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/system/insert-code.js', 'attr' => '']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {

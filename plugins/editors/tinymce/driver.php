@@ -10,9 +10,10 @@ class EditorTinymce implements ContentDriver {
     private const TB_SIMPLE = 'bold italic | link | bullist numlist';
 
     public function getAssets(string $profile): string {
+        global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return getHtmlScriptSrc('plugins/editors/tinymce/assets/tinymce.min.js');
+        return $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/tinymce/assets/tinymce.min.js', 'attr' => '']);
     }
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
@@ -33,6 +34,6 @@ class EditorTinymce implements ContentDriver {
         $js .= 'if(!el||typeof tinymce==="undefined"){return;}';
         $js .= 'tinymce.init({target:el,license_key:"gpl",base_url:"'.self::BASE_URL.'",suffix:".min",icons:"default",plugins:"'.$pl.'",toolbar:"'.$tb.'",skin:"oxide",promotion:false,branding:false,menubar:false,statusbar:true});';
         $js .= '})();';
-        return $ta.getHtmlScriptInline($js);
+        return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
 }
