@@ -32,7 +32,7 @@ function mwhois(): void {
 	$exmas = ['ru', 'com', 'net', 'org', 'biz', 'info', 'name', 'us', 'de', 'in', 'co.in', 'firm.in', 'gen.in', 'ind.in', 'net.in', 'org.in', 'com.ru', 'net.ru', 'org.ru', 'pp.ru', 'spb.ru', 'msk.ru', 'ws', 'cn'];
 	foreach ($exmas as $val) {
 		if ($val != '') {
-			$domainoptOptions .= getTplSelectOption((string)$val, (string)'.'.$val, (bool)($val == $ext));
+			$domainoptOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)'.'.$val, 'selected' => $val == $ext ? ' selected' : '']);
 		}
 	}
 	
@@ -72,7 +72,7 @@ function mwhois(): void {
 	
 	$option = getVar('req', 'option', 'var');
 	setHead(['title' => _WHOIS_LIC]);
-	$cont = setModuleNavi(['title' => _WHOIS_LIC] + WHOIS_NAVI);
+	$cont = getModuleNavi(['title' => _WHOIS_LIC] + WHOIS_NAVI);
 	$cont .= $licensopt;
 	if ($option == 'licens' && !namecheck($domainlicens)) {
 		$result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE status != \'2\'');
@@ -89,9 +89,9 @@ function mwhois(): void {
 		}
 		$cont .= $tpl->getHtmlFrag('whois-result', ['open' => true, 'legend' => _WHOIS_SUCH]);
 		if ($licens) {
-			$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
+			$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
 		} else {
-			$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
+			$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
 			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? $tpl->getHtmlFrag('whois-license-add-button', ['name' => $conf['name'], 'domain' => $domainlicens, 'submit_label' => _WHOIS_LICENS_SEND]) : '';
 		}
 		$cont .= $tpl->getHtmlFrag('whois-result', ['open' => false]);
@@ -123,8 +123,8 @@ function add(): void {
 	global $db, $user, $conf, $stop, $tpl;
 	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
 		setHead(['title' => _WHOIS_LICENS_SEND]);
-		$cont = setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+		$cont = getModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABMIT]);
 		$hometext = getVar('post', 'hometext', 'raw');
 		$postname = getVar('post', 'postname', 'name');
@@ -137,23 +137,23 @@ function add(): void {
 		$domain = getVar('post', 'domain', 'url', 'http://');
 		$host = getVar('post', 'host', 'url', 'http://');
 		$dc = getVar('post', 'dc', 'url', 'http://');
-		
-		$cont .= $tpl->getHtmlFrag('whois-add-form', [
-			'is_user' => is_user(),
-			'name' => $conf['name'],
-			'token' => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
-			'lbl_yourname' => _YOURNAME,
-			'username_value' => $userNameValue,
-			'domain' => $domain,
-			'host' => $host,
-			'dc' => $dc,
-			'hometext' => $hometext,
-			'captcha' => getCaptcha(1),
-			'lbl_site' => _SITE,
-			'lbl_host' => _HOST,
-			'lbl_dc' => _DC,
-			'lbl_comment' => _COMMENT,
-			'submit_label' => _SEND
+
+		$fields = $tpl->getHtmlFrag('form-field-row', ['label' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'maxlength_num' => '255', 'placeholder_text' => _SITE, 'is_required' => true])]);
+		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host, 'maxlength_num' => '255', 'placeholder_text' => _HOST])]);
+		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc, 'maxlength_num' => '255', 'placeholder_text' => _DC])]);
+		$cont .= $tpl->getHtmlPart('form-add', [
+			'has_name'           => true,
+			'is_user'            => is_user(),
+			'name'               => $conf['name'],
+			'token'              => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
+			'lbl_name'           => _YOURNAME,
+			'username'           => is_user() ? $userNameValue : '',
+			'postname'           => $userNameValue,
+			'fields_before_text' => $fields,
+			'lbl_text'           => _COMMENT,
+			'hometext'           => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'rows_num' => 5, 'value_text' => $hometext, 'placeholder_text' => _COMMENT]),
+			'captcha'            => getCaptcha(1),
+			'submit'             => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
 		]);
 		echo $cont;
 		setFoot();
@@ -188,8 +188,8 @@ function send(): void {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);
-			$meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABTEXT, 'meta' => $meta]);
+			$meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABTEXT, 'meta' => $meta]);
 			setFoot();
 		} else {
 			add();
@@ -267,14 +267,14 @@ function printresults(int|string|null $layout, int $id): string {
 	if (!$id) $cont .= $domainopt;
 	$cont .= $tpl->getHtmlFrag('whois-result', ['open' => true, 'legend' => _WHOIS_SUCH]);
 	if ($layout=='0') {
-		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
+		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
 	} elseif($layout=='1') {
-		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!'])
+		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!'])
 		.$tpl->getHtmlFrag('whois-info-button', ['name' => $conf['name'], 'domain' => $domainwhois, 'ext' => $ext, 'submit_label' => _WHOIS_INF_US]);
 	} elseif($layout=='2') {
-		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => 'Could not contact the whois server '.$server]);
+		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => 'Could not contact the whois server '.$server]);
 	} else {
-		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => $layout]);
+		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => $layout]);
 	}
 	$cont .= $tpl->getHtmlFrag('whois-result', ['open' => false]);
 	return $cont;

@@ -65,7 +65,7 @@ function shop(): void {
 	$cont = '';
 	if (!$home || ($home && $conf['shop']['homcat'])) {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
-		$cont .= setModuleNavi(['title' => $ntitle] + SHOP_NAVI);
+		$cont .= getModuleNavi(['title' => $ntitle] + SHOP_NAVI);
 		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
@@ -143,20 +143,39 @@ function liste(): void {
 	$offset = (int)(($num - 1) * $listnum);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
-	$cont = setModuleNavi(['title' => _LIST] + SHOP_NAVI);
-	if ($db->getSqlRowCount($result) > 0) {
-		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
-		$cont .= $letter;
-		$cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_cat' => _CATEGORY, 'col_poster' => _PREIS, 'col_date' => _DATE]);
-		while ([$id, $cid, $time, $title, $price, $ctitle, $cdesc] = $db->getSqlRow($result)) {
-			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
-			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-			$cdesc = $cdesc ?: $ctitle;
-			$price = $price.' '.$conf['shop']['valute'];
-			$cont .= $tpl->getHtmlFrag('table-row-liste', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $price, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
-		}
-		$cont .= $tpl->getHtmlFrag('table', []);
-		$cont .= getTplPager([
+	$cont = getModuleNavi(['title' => _LIST] + SHOP_NAVI);
+	$rows = [];
+	while ([$id, $cid, $time, $title, $price, $ctitle, $cdesc] = $db->getSqlRow($result)) {
+		$cdesc = $cdesc ?: $ctitle;
+		$rows[] = [
+			'id'            => (string)$id,
+			'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
+			'title_attr'    => $title,
+			'title_text'    => cutstr($title, 40),
+			'title_new'     => getTplNewGraphic($time),
+			'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+			'category_attr' => $cdesc,
+			'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+			'post_text'     => $price.' '.$conf['shop']['valute'],
+			'time_text'     => format_time($time),
+			'time_iso'      => date('c', strtotime($time)),
+			'time_label'    => _DATE,
+		];
+	}
+	$cont .= $tpl->getHtmlPart('liste', [
+		'rows'        => $rows,
+		'before_html' => ($conf['shop']['letter'] && $rows) ? letter($conf['name']) : '',
+		'table_open'  => [
+			'open'       => true,
+			'sortable'   => true,
+			'col_id'     => _ID,
+			'col_title'  => _TITLE,
+			'col_cat'    => _CATEGORY,
+			'col_poster' => _PREIS,
+			'col_date'   => _DATE,
+		],
+		'table_close' => [],
+		'pager_html'  => $rows ? getTplPager([
 			'limit'     => $listnum,
 			'maxpg'     => $conf['shop']['nump'],
 			'table'     => '_products',
@@ -164,11 +183,9 @@ function liste(): void {
 			'mod'       => $conf['name'],
 			'where'     => $onum,
 			'url_extra' => $url_extra,
-			'prefix'    => 'new/',
-		]);
-	} else {
-		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-	}
+		]) : '',
+		'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+	]);
 	echo $cont;
 	setFoot();
 }
@@ -198,7 +215,7 @@ function view(): void {
 			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
-		$cont = setModuleNavi(['title' => _SHOP] + SHOP_NAVI);
+		$cont = getModuleNavi(['title' => _SHOP] + SHOP_NAVI);
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
@@ -273,7 +290,7 @@ function kasse(): void {
 	$stop = (!$cookies) ? _SERRORP : '';
 	$form = $tpl->getHtmlFrag('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
 	setHead(['title' => _C_TITLE]);
-	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
+	$cont = getModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
 		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
 		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
@@ -346,13 +363,13 @@ function kasse(): void {
 			update_points(39);
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['shop']['sende'], false, $conf['name'])]);
 		} else {
-			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
 			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
 			$cont .= $form;
 		}
 	} else {
-		$meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
-		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop), 'meta' => $meta]);
+		$meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop, 'meta' => $meta]);
 	}
 	echo $cont;
 	setFoot();
@@ -370,7 +387,7 @@ function clients(): void {
 	if (is_user() && is_active('shop')) {
 		$uid = (int)$user[0];
 		setHead(['title' => _CLIENTINFO]);
-		$cont = setModuleNavi(['title' => _CLIENTINFO] + SHOP_NAVI);
+		$cont = getModuleNavi(['title' => _CLIENTINFO] + SHOP_NAVI);
 		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.uid = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
@@ -449,7 +466,7 @@ function partners(): void {
 		$smail = $userinfo['email'];
 		$sdom = $userinfo['website'];
 		setHead(['title' => _PARTNERINFO]);
-		$cont = setModuleNavi(['title' => _PARTNERINFO] + SHOP_NAVI);
+		$cont = getModuleNavi(['title' => _PARTNERINFO] + SHOP_NAVI);
 		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE uid = :user_id', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
@@ -479,7 +496,7 @@ function partners(): void {
 				$cont .= $prs->filterContent(str_replace('[id]', $uid, $conf['shop']['partinfo2']), false, $conf['name']);
 			}
 		} else {
-			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
 			$cont .= $prs->filterContent($conf['shop']['partinfo'], false, $conf['name']);
 			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
 			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);

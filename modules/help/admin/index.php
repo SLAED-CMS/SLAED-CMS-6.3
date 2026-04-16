@@ -88,7 +88,7 @@ function view(): void {
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = $title ?: _MESSAGE.': '.$a;
-        $fields = getTplFieldsOut($field, 'help');
+        $fields = getTplViewFieldRows(['field' => $field, 'mod' => 'help']);
         $text = $prs->filterContent($hometext.(($fields) ? PHP_EOL.PHP_EOL.$fields : ''), false, 'help');
         $meta = [];
         if (!$pid) {

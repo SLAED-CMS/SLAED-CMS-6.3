@@ -73,7 +73,7 @@ function help(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home) {
-        $cont .= setModuleNavi(['title' => $ntitle] + HELP_NAVI);
+        $cont .= getModuleNavi(['title' => $ntitle] + HELP_NAVI);
         if ($ncat)      $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['help']['subcat'], $conf['help']['catdesc'], $ncat);
     }
@@ -134,7 +134,6 @@ function help(): void {
             'mod'       => $conf['name'],
             'where'     => $onum,
             'url_extra' => $url_extra,
-            'prefix'    => 'new/',
         ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -165,20 +164,39 @@ function liste(): void {
     $offset = (int)(($num - 1) * $listnum);
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.status, c.title, c.intro FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
-    $cont = setModuleNavi(['title' => _LIST] + HELP_NAVI);
-    if ($db->getSqlRowCount($result) > 0) {
-        $letter = ($conf['help']['letter']) ? letter($conf['name']) : '';
-        $cont .= $letter;
-        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_cat' => _CATEGORY, 'col_poster' => _STATUS, 'col_date' => _DATE]);
-        while ([$id, $cid, $title, $time, $status, $ctitle, $cdesc] = $db->getSqlRow($result)) {
-            $thref  = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
-            $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc  = $cdesc ?: $ctitle;
-            $status = ($status) ? 0 : 1;
-            $cont  .= $tpl->getHtmlFrag('table-row-liste', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => getTplNewGraphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => ad_status('', $status), 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $cont .= getTplPager([
+    $cont = getModuleNavi(['title' => _LIST] + HELP_NAVI);
+    $rows = [];
+    while ([$id, $cid, $title, $time, $status, $ctitle, $cdesc] = $db->getSqlRow($result)) {
+        $cdesc = $cdesc ?: $ctitle;
+        $rows[] = [
+            'id'            => (string)$id,
+            'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
+            'title_attr'    => $title,
+            'title_text'    => cutstr($title, 40),
+            'title_new'     => getTplNewGraphic($time),
+            'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+            'category_attr' => $cdesc,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+            'post_text'     => ad_status('', $status ? 0 : 1),
+            'time_text'     => format_time($time),
+            'time_iso'      => date('c', strtotime($time)),
+            'time_label'    => _DATE,
+        ];
+    }
+    $cont .= $tpl->getHtmlPart('liste', [
+        'rows'        => $rows,
+        'before_html' => ($conf['help']['letter'] && $rows) ? letter($conf['name']) : '',
+        'table_open'  => [
+            'open'       => true,
+            'sortable'   => true,
+            'col_id'     => _ID,
+            'col_title'  => _TITLE,
+            'col_cat'    => _CATEGORY,
+            'col_poster' => _STATUS,
+            'col_date'   => _DATE,
+        ],
+        'table_close' => [],
+        'pager_html'  => $rows ? getTplPager([
             'limit'     => $listnum,
             'maxpg'     => $conf['help']['nump'],
             'table'     => '_help',
@@ -186,11 +204,9 @@ function liste(): void {
             'mod'       => $conf['name'],
             'where'     => $onum,
             'url_extra' => $url_extra,
-            'prefix'    => 'new/',
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
+        ]) : '',
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]);
     echo $cont;
     setFoot();
 }
@@ -222,16 +238,15 @@ function view(): void {
             'time'   => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = setModuleNavi(['title' => _HELPINFO] + HELP_NAVI);
+        $cont = getModuleNavi(['title' => _HELPINFO] + HELP_NAVI);
         $a = 0;
         while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $title  = (string)$title;
             $title  = ($title !== '') ? $title : _MESSAGE.': '.$a;
             $ttext  = filterTextHighlight($title, $word);
-            $fields = getTplFieldsOut($field, $conf['name']);
-            $fields = ($fields) ? '<br><br>'.$fields : '';
-            $text   = $hometext.$fields;
+            $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
+            $text   = $hometext;
             $post   = ($nick) ? user_info($nick) : _ANONYM;
             $date   = ($conf['help']['date']) ? format_time($time) : '';
             $rating = ($haid && $huid != $haid) ? getRatingAsync(1, $hid, $conf['name'], $ratings, $score, '') : '';
@@ -240,7 +255,7 @@ function view(): void {
                 $cdesc    = $cdesc ?: $ctitle;
                 $cimg     = ($cimg) ? img_find('categories/'.$cimg) : '';
                 $favorites = getFavoriteButton($hid, $conf['name']);
-                $cont .= getTplContentView([
+                $cont .= $tpl->getHtmlPart('view', [
                     'id'            => $hid,
                     'favorites'     => $favorites,
                     'title_text'    => $ttext,
@@ -258,6 +273,7 @@ function view(): void {
                     'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                     'category_img'  => $cimg,
                     'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
+                    'fields'        => $fields,
                     'voting'        => '',
                     'rating'        => $rating,
                     'back_title'    => _BACK,
@@ -323,14 +339,20 @@ function addview(int $id): string {
     if ((is_user() && $conf['help']['add'] == 1)) {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
-        $rows = getTplFormAddRow(_HELPGLOS, getTplRadioForm($status, 'status'));
-        $hide = getTplHiddenInput(['name' => 'pid', 'value' => (string)$id]).getTplHiddenInput(['name' => 'catid', 'value' => (string)$cid]).getTplHiddenInput(['name' => 'posttype', 'value' => 'save']);
-        return $tpl->getHtmlFrag('form-add', [
+        $rows = $tpl->getHtmlFrag('form-field-row', ['label' => _HELPGLOS, 'field_html' => getTplRadioGroup([
+            'name' => 'status',
+            'value' => ((string)$status === '0') ? '0' : '1',
+            'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]],
+        ])]);
+        $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'catid', 'value_attr' => (string)$cid, 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
+        return $tpl->getHtmlPart('form-add', [
             'extrafields' => $rows,
             'hometext'    => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => 10, 'placeholder' => _TEXT, 'required' => '1']),
             'lbl_text'    => _TEXT,
             'name'        => $conf['name'],
-            'submit'      => getTplFormSubmit(['op' => 'send', 'label' => _SEND, 'extra' => $hide]),
+            'submit'      => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
             'token'       => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
         ]);
     }
@@ -345,21 +367,21 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'raw');
         $field    = getVar('post', 'field', 'field');
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD] + HELP_NAVI);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD] + HELP_NAVI);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($hometext) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBMIT]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'name'       => $conf['name'],
             'token'      => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
             'lbl_title'  => _TITLE,
             'lbl_cat'    => _CATEGORY,
             'lbl_text'   => _TEXT,
             'titleval'   => $title,
-            'catselect'  => getTplCategorySelect($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect'  => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
             'hometext'   => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']),
             'fields'     => getTplFieldsIn($field, $conf['name']),
-            'submit'     => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit'     => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -391,8 +413,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : '';
             addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
             setHead(['title' => _ADD]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD] + HELP_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBTEXT, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD] + HELP_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {
             add();

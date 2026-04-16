@@ -68,7 +68,7 @@ function links(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
-        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
+        $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
         if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
@@ -174,42 +174,41 @@ function liste(): void {
         .' '.$order.' '.$cwhere.' ORDER BY f.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
     setHead(['title' => _LIST]);
-    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _LINKS]);
-    if ($db->getSqlRowCount($result) > 0) {
-        if ($conf['links']['letter']) $cont .= letter($conf['name']);
-        $cont .= $tpl->getHtmlFrag('table', [
+    $cont = getModuleNavi(['title' => _LIST, 'htitle' => _LINKS]);
+    $rows = [];
+    while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
+        $cdesc = $cdesc ?: $ctitle;
+        $rows[] = [
+            'id'            => (string)$id,
+            'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
+            'title_attr'    => $title,
+            'title_text'    => cutstr($title, 40),
+            'title_new'     => getTplNewGraphic($time),
+            'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+            'category_attr' => $cdesc,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+            'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
+            'time_text'     => format_time($time),
+            'time_iso'      => date('c', strtotime($time)),
+            'time_label'    => _DATE,
+        ];
+    }
+    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $wparams = ($let) ? ['let' => $let.'%'] : [];
+    $cont .= $tpl->getHtmlPart('liste', [
+        'rows'        => $rows,
+        'before_html' => ($conf['links']['letter'] && $rows) ? letter($conf['name']) : '',
+        'table_open'  => [
             'open'       => true,
-            'sortable'   => false,
+            'sortable'   => true,
             'col_id'     => _ID,
             'col_title'  => _TITLE,
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
             'col_date'   => _DATE,
-        ]);
-        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
-            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc = $cdesc ?: $ctitle;
-            $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('table-row-liste', [
-                'id'            => (string)$id,
-                'title_href'    => $thref,
-                'title_attr'    => $title,
-                'title_text'    => cutstr($title, 40),
-                'title_new'     => getTplNewGraphic($time),
-                'category_href' => $ctitle ? $chref : '',
-                'category_attr' => $cdesc,
-                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
-                'post_text'     => $post,
-                'time_text'     => format_time($time),
-                'time_iso'      => date('c', strtotime($time)),
-                'time_label'    => _DATE,
-            ]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $wparams = ($let) ? ['let' => $let.'%'] : [];
-        $cont .= getTplPager([
+        ],
+        'table_close' => [],
+        'pager_html'  => $rows ? getTplPager([
             'limit'        => $listnum,
             'maxpg'        => $conf['links']['nump'],
             'table'        => '_links',
@@ -218,11 +217,9 @@ function liste(): void {
             'where'        => $onum,
             'where_params' => $wparams,
             'url_extra'    => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
-            'prefix'       => 'new/',
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
+        ]) : '',
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]);
     echo $cont;
     setFoot();
 }
@@ -252,7 +249,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = setModuleNavi(['title' => _LINKS]);
+        $cont = getModuleNavi(['title' => _LINKS]);
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
@@ -272,7 +269,7 @@ function view(): void {
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
-        $cont .= $tpl->getHtmlFrag('view', [
+        $cont .= $tpl->getHtmlPart('view', [
             'id'            => $id,
             'favorites'     => $favorites,
             'title_text'    => filterTextHighlight($title, $word),
@@ -357,12 +354,12 @@ function add(): void {
             $site = getVar('post', 'site', 'url', 'http://');
         }
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD, 'htitle' => _LINKS]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDFNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'has_name'  => true,
             'is_user'   => is_user(),
             'name'      => $conf['name'],
@@ -378,13 +375,13 @@ function add(): void {
             'postname'  => $postname,
             'emailval'  => $mail,
             'titleval'  => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
             'hometext'  => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext'  => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'siteval'   => $site,
             'site_attr' => 'site',
             'captcha'   => getCaptcha(1),
-            'submit'    => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -427,8 +424,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHL, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHL, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -444,8 +441,8 @@ function broken(): void {
     if ($conf['links']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCLINK]);
-        $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
-        echo setModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'secs' => 5]);
+        echo getModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
@@ -461,9 +458,17 @@ function loading(): void {
         update_points(23);
         $info = sprintf(_NOTELINKLOAD, $title, domain($url));
         setHead(['title' => _LINKS]);
-        $cont = setModuleNavi(['title' => _LINKS]);
+        $cont = getModuleNavi(['title' => _LINKS]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
-        $cont .= setNaviLower($conf['name']);
+        $cont .= $tpl->getHtmlFrag('navi-lower', [
+            'back_title' => _BACK,
+            'back_label' => _BACK,
+            'home_href' => 'index.php?name='.$conf['name'],
+            'home_title' => _PAGEHOME,
+            'home_label' => _PAGEHOME,
+            'top_title' => _PAGETOP,
+            'top_label' => _PAGETOP,
+        ]);
         echo $cont;
         setFoot();
     } else {

@@ -15,7 +15,7 @@ function clients(): void {
     setHead(['title' => _PRODUCTSINFO]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _PRODUCTSINFO]);
     $cont .= getUserNav();
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($info) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
     if ($db->getSqlRowCount($result) > 0) {

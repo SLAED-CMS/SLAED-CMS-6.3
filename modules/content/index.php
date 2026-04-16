@@ -82,7 +82,7 @@ function view(): void {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET body = :body, time = NOW() WHERE id = :id', ['body' => $rss, 'id' => $id]);
             }
         }
-        $fields = getTplFieldsOut($field, $conf['name']);
+        $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
         $hometext = $body . $fields;
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);
@@ -95,7 +95,7 @@ function view(): void {
             'author' => $conf['sitename'],
         ]);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont = $tpl->getHtmlFrag('view', [
+        $cont = $tpl->getHtmlPart('view', [
             'is_moder' => is_moder($conf['name']),
             'title_text' => filterTextHighlight($title, $word),
             'text' => filterTextHighlight($prs->filterDoc($body, false, $conf['name']), $word),

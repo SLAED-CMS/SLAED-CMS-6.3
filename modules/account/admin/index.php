@@ -379,6 +379,14 @@ function add(): void {
         ]);
     }
     $gender = intval($gender ?? 0);
+    $genderopts = '';
+    foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
+        $genderopts .= $tpl->getHtmlFrag('select-option', [
+            'value_attr' => (string)$key,
+            'label_text' => $val,
+            'is_selected' => $key == $gender,
+        ]);
+    }
     $rows[] = [
         'label_html' => _SPEC_GROUP.':',
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'options_html' => $grpopts]),
@@ -389,7 +397,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _GENDER.':',
-        'field_html' => getTplGenderSelect('gender', $gender, 'sl-select-config'),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'select_class' => 'sl-select-config', 'options_html' => $genderopts]),
     ];
     $fieldvals = explode('|', $field);
     $fieldcfgs = explode('||', (string)$conf['fields']['account']);

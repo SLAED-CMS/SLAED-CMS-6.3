@@ -24,38 +24,54 @@ function money(): void {
     $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), false, 'all');
     $cont .= $tpl->getHtmlFrag('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
     $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_1]);
-    $cont .= getTplMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
-        .getTplMoneyCalcForm('Rechner1', _MO_3.' R:', 'RUB')
-        .getTplMoneyCalcForm('Rechner2', _MO_3.' E:', 'EUR');
+    foreach ([
+        ['Rechner', _MO_3.' Z:', 'USD'],
+        ['Rechner1', _MO_3.' R:', 'RUB'],
+        ['Rechner2', _MO_3.' E:', 'EUR'],
+    ] as [$fnname, $tolbl, $tocur]) {
+        $cont .= $tpl->getHtmlFrag('money-calculator-form', [
+            'btn_label' => _MO_4,
+            'fn_name' => $fnname,
+            'from_label' => _MO_2,
+            'to_cur' => $tocur,
+            'to_label' => $tolbl,
+        ]);
+    }
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = '';
-        $rows .= getTplFormAddRow(_MO_7.':', $tpl->getHtmlFrag('input', [
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_7.':', 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'sum',
             'value_attr' => (string)$sum,
             'input_class' => '',
             'input_attr' => 'placeholder="'._MO_7.'" required',
-        ]));
-        $rows .= getTplFormAddRow(_MO_8.':', getTplEmailInput('email', $email, '', 'placeholder="'._MO_8.'" required'));
+        ])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MO_8.':',
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'input_class' => '', 'itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email]),
+        ]);
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
-                $rows .= getTplFormAddRow($val.':', getTplTextInput('intro[]', filterHtml($intro[$i] ?? '', 1), '', 'maxlength="255" placeholder="'.$val.'" required'));
+                $rows .= $tpl->getHtmlFrag('form-field-row', [
+                    'label' => $val.':',
+                    'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'intro[]', 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
+                ]);
                 $i++;
             }
         }
-        $rows .= getTplFormAddRow(_MO_9.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9]));
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_9.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9])]);
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_6]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
-            'submit' => getTplFormSubmit(['op' => 'send', 'label' => _MO_10]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _MO_10]),
             'token' => '',
         ]);
     }
@@ -135,7 +151,7 @@ function send(): void {
                 addMail($email, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 30);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
             echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['money']['info'], false, 'all'), 'meta' => $meta]);
             setFoot();
         } else {

@@ -69,7 +69,7 @@ function news(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['news']['homcat'])) {
-        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _NEWS]);
+        $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _NEWS]);
         if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], $ncat);
     }
@@ -177,45 +177,41 @@ function liste(): void {
         .' '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
     setHead(['title' => _LIST]);
-    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _NEWS]);
-    if ($db->getSqlRowCount($result) > 0) {
-        if ($conf['news']['letter']) $cont .= letter($conf['name']);
-        $cont .= $tpl->getHtmlFrag('table', [
-            'open' => true,
-            'sortable' => true,
-            'col_id' => _ID,
-            'col_title' => _TITLE,
-            'col_cat' => _CATEGORY,
+    $cont = getModuleNavi(['title' => _LIST, 'htitle' => _NEWS]);
+    $rows = [];
+    while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
+        $cdesc = $cdesc ?: $ctitle;
+        $rows[] = [
+            'id'            => (string)$id,
+            'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
+            'title_attr'    => $title,
+            'title_text'    => cutstr($title, 40),
+            'title_new'     => getTplNewGraphic($time),
+            'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+            'category_attr' => $cdesc,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+            'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
+            'time_text'     => format_time($time),
+            'time_iso'      => date('c', strtotime($time)),
+            'time_label'    => _DATE,
+        ];
+    }
+    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $wparams = ($let) ? ['let' => $let.'%'] : [];
+    $cont .= $tpl->getHtmlPart('liste', [
+        'rows'        => $rows,
+        'before_html' => ($conf['news']['letter'] && $rows) ? letter($conf['name']) : '',
+        'table_open'  => [
+            'open'       => true,
+            'sortable'   => true,
+            'col_id'     => _ID,
+            'col_title'  => _TITLE,
+            'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
-            'col_date' => _DATE,
-        ]);
-        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-            $thref = getSeoUrl([
-                'name' => $conf['name'], 'op' => 'view',
-                'id' => $id, 'title' => $title, 'ctitle' => $ctitle,
-            ]);
-            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc = $cdesc ?: $ctitle;
-            $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('table-row-liste', [
-                'id' => (string)$id,
-                'title_href' => $thref,
-                'title_attr' => $title,
-                'title_text' => cutstr($title, 40),
-                'title_new' => getTplNewGraphic($time),
-                'category_href' => $ctitle ? $chref : '',
-                'category_attr' => $cdesc,
-                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
-                'post_text' => $post,
-                'time_text' => format_time($time),
-                'time_iso' => date('c', strtotime($time)),
-                'time_label' => _DATE,
-            ]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $wparams = ($let) ? ['let' => $let.'%'] : [];
-        $cont .= getTplPager([
+            'col_date'   => _DATE,
+        ],
+        'table_close' => [],
+        'pager_html'  => $rows ? getTplPager([
             'limit'         => $listnum,
             'maxpg'         => $conf['news']['nump'],
             'table'         => '_news',
@@ -224,11 +220,9 @@ function liste(): void {
             'where'         => $onum,
             'where_params'  => $wparams,
             'url_extra'     => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
-            'prefix'        => 'new/',
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
+        ]) : '',
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]);
     echo $cont;
     setFoot();
 }
@@ -266,11 +260,11 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = setModuleNavi(['title' => _NEWS]);
+        $cont = getModuleNavi(['title' => _NEWS]);
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
-        $fields = getTplFieldsOut($field, $conf['name']);
+        $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
         if ($fields) $rawtext .= $fields;
         $conpag = explode('[pagebreak]', $rawtext);
@@ -286,7 +280,7 @@ function view(): void {
         $favorites = getFavoriteButton($id, $conf['name']);
         $voting = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont .= $tpl->getHtmlFrag('view', [
+        $cont .= $tpl->getHtmlPart('view', [
             'is_moder' => is_moder($conf['name']),
             'id' => $id,
             'title_text' => filterTextHighlight($title, $word),
@@ -319,7 +313,7 @@ function view(): void {
             'back_title' => _BACK,
             'back_text' => _BACK,
         ]);
-        $cont .= setPageNumbers(
+        $cont .= getPageNumbers(
             'pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['news']['nump'], (int)$pag, '#'.$id
         );
         if ($conf['news']['assoc']) {
@@ -389,12 +383,12 @@ function add(): void {
         $field = is_array($fieldp) ? implode('|', array_map('strval', $fieldp)) : '';
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD, 'htitle' => _NEWS]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($hometext) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $hometext, 'textb' => $bodytext, 'field' => $field, 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'has_name' => true,
             'is_user' => is_user(),
             'name' => $conf['name'],
@@ -407,12 +401,12 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'fields' => getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]),
             'captcha' => getCaptcha(1),
-            'submit' => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -453,8 +447,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
             setHead(['title' => _ADD]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD, 'htitle' => _NEWS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {
             add();

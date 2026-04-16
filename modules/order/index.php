@@ -23,16 +23,19 @@ function order(): void {
     $cont .= $prs->filterContent($conf['order']['text'], false, 'all');
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-        $rows = getTplFormAddRow(_OR_2.':', getTplEmailInput('mail', $mail, '', 'maxlength="255" placeholder="'._OR_2.'" required'));
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
+        $rows = $tpl->getHtmlFrag('form-field-row', [
+            'label' => _OR_2.':',
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'input_class' => '', 'itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $mail]),
+        ]);
         $rows .= getTplFieldsIn($field, $conf['name']);
-        $rows .= getTplFormAddRow(_OR_3.':', getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3]));
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _OR_3.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3])]);
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
-            'submit' => getTplFormSubmit(['op' => 'send', 'label' => _OR_4]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OR_4]),
             'token' => '',
         ]);
     } else {
@@ -58,7 +61,7 @@ function send(): void {
                 ['email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]
             );
             if ($conf['order']['ad']) {
-                $infos = getTplFieldsOut($field, $conf['name']);
+                $infos = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
                 $msg = $tpl->getHtmlFrag('order-email-admin', [
@@ -85,7 +88,7 @@ function send(): void {
             }
             update_points(34);
             setHead(['title' => _ORDER]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 30);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
             echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);
             setFoot();
         } else {

@@ -258,7 +258,7 @@ function clientadd(): void {
         ]);
     }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $cppi = 0;
     $rows = [];
     if ($partner) {
@@ -568,11 +568,11 @@ function productadd(): void {
         ]);
     }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($vote || $ptext || $pbodytext) {
         $cont .= $tpl->getHtmlPart('preview-content', [
             'title' => _PREVIEW,
-            'title_html' => $ptitle ? '<b>'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b>' : '',
+            'title_text' => (string)$ptitle,
             'body_a' => $vote ? getVotingView($vote, 'shop') : '',
             'body_b' => $ptext ? $prs->filterContent($ptext, false, 'shop') : '',
             'body_c' => $pbodytext ? $prs->filterContent($pbodytext, false, 'shop') : '',
@@ -863,7 +863,7 @@ function partneradd(): void {
         ]);
     }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $rows = [];
     if ($paid) {
         $nick = ($nick) ? user_info($nick) : _ANONYM;

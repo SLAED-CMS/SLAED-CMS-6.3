@@ -67,7 +67,7 @@ function pages(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['pages']['homcat'])) {
-        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _PAGES]);
+        $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _PAGES]);
         if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], $ncat);
     }
@@ -177,10 +177,31 @@ function liste(): void {
         .' '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
     setHead(['title' => _LIST]);
-    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _PAGES]);
-    if ($db->getSqlRowCount($result) > 0) {
-        if ($conf['pages']['letter']) $cont .= letter($conf['name']);
-        $cont .= $tpl->getHtmlFrag('table', [
+    $cont = getModuleNavi(['title' => _LIST, 'htitle' => _PAGES]);
+    $rows = [];
+    while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
+        $cdesc = $cdesc ?: $ctitle;
+        $rows[] = [
+            'id'            => (string)$id,
+            'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
+            'title_attr'    => $title,
+            'title_text'    => cutstr($title, 40),
+            'title_new'     => getTplNewGraphic($time),
+            'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+            'category_attr' => $cdesc,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+            'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
+            'time_text'     => format_time($time),
+            'time_iso'      => date('c', strtotime($time)),
+            'time_label'    => _DATE,
+        ];
+    }
+    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $wparams = ($let) ? ['let' => $let.'%'] : [];
+    $cont .= $tpl->getHtmlPart('liste', [
+        'rows'        => $rows,
+        'before_html' => ($conf['pages']['letter'] && $rows) ? letter($conf['name']) : '',
+        'table_open'  => [
             'open'       => true,
             'sortable'   => true,
             'col_id'     => _ID,
@@ -188,31 +209,9 @@ function liste(): void {
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
             'col_date'   => _DATE,
-        ]);
-        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
-            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc = $cdesc ?: $ctitle;
-            $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('table-row-liste', [
-                'id'            => (string)$id,
-                'title_href'    => $thref,
-                'title_attr'    => $title,
-                'title_text'    => cutstr($title, 40),
-                'title_new'     => getTplNewGraphic($time),
-                'category_href' => $ctitle ? $chref : '',
-                'category_attr' => $cdesc,
-                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
-                'post_text'     => $post,
-                'time_text'     => format_time($time),
-                'time_iso'      => date('c', strtotime($time)),
-                'time_label'    => _DATE,
-            ]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $wparams = ($let) ? ['let' => $let.'%'] : [];
-        $cont .= getTplPager([
+        ],
+        'table_close' => [],
+        'pager_html'  => $rows ? getTplPager([
             'limit'        => $listnum,
             'maxpg'        => $conf['pages']['nump'],
             'table'        => '_pages',
@@ -221,11 +220,9 @@ function liste(): void {
             'where'        => $onum,
             'where_params' => $wparams,
             'url_extra'    => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
-            'prefix'       => 'new/',
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
+        ]) : '',
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]);
     echo $cont;
     setFoot();
 }
@@ -259,7 +256,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = setModuleNavi(['title' => _PAGES]);
+        $cont = getModuleNavi(['title' => _PAGES]);
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
         if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
@@ -275,7 +272,7 @@ function view(): void {
         $rating    = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont .= $tpl->getHtmlFrag('view', [
+        $cont .= $tpl->getHtmlPart('view', [
             'is_moder'      => is_moder($conf['name']),
             'id'            => $id,
             'title_text'    => filterTextHighlight($title, $word),
@@ -305,7 +302,7 @@ function view(): void {
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);
-        $cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['pages']['nump'], (int)$pag, '#'.$id);
+        $cont .= getPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['pages']['nump'], (int)$pag, '#'.$id);
         if ($conf['pages']['link']) {
             $limit = (int)($conf['pages']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery(
@@ -359,12 +356,12 @@ function add(): void {
         $bodytext = getVar('post', 'bodytext', 'raw');
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _PAGES]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD, 'htitle' => _PAGES]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($hometext) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $hometext, 'textb' => $bodytext, 'field' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'has_name' => true,
             'is_user'  => is_user(),
             'name'     => $conf['name'],
@@ -377,11 +374,11 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'captcha'  => getCaptcha(1),
-            'submit'   => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit'   => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -416,8 +413,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['pages']['addmail'], $conf['name'], $puname, _PAGES);
             setHead(['title' => _ADD]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _PAGES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD, 'htitle' => _PAGES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {
             add();

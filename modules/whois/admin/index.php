@@ -119,7 +119,7 @@ function add(): void {
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
         'tab' => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $rows = [
         ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput(['name' => 'postname', 'input_id' => 'postname', 'list_id' => 'postname_list', 'value' => $postname])],
         ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'is_required' => true])],

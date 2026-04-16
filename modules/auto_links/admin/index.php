@@ -287,7 +287,7 @@ function add(): void {
         'tab' => 1,
     ]);
     if ($stop) {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     }
     $rows = [
         ['label_html' => _SITENAME.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => $name, 'maxlength_num' => 255])],

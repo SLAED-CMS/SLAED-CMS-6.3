@@ -36,7 +36,7 @@ function autolink(): void {
     $result = $db->getSqlQuery($sql);
     setHead(['title' => $ntitle]);
     $cont = '';
-    if (!$home) $cont .= setModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
+    if (!$home) $cont .= getModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
@@ -131,11 +131,11 @@ function add(): void {
     $name = getVar('post', 'name', 'title');
     $desc = getVar('post', 'desc', 'raw');
     setHead(['title' => _ADD]);
-    $cont = setModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+    $cont = getModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($desc) $cont .= getTplPreviewContent(['title' => $name, 'texta' => $desc, 'textb' => '', 'mod' => $conf['name']]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_I]);
-    $cont .= $tpl->getHtmlFrag('form-add', [
+    $cont .= $tpl->getHtmlPart('form-add', [
         'name'      => $conf['name'],
         'token'     => htmlspecialchars(getSiteToken('auto_links'), ENT_QUOTES, 'UTF-8'),
         'lbl_email' => _A_LINKS_E,
@@ -148,7 +148,7 @@ function add(): void {
         'site_attr' => 'site',
         'siteval'   => $site,
         'captcha'   => getCaptcha(1),
-        'submit'    => getTplFormSubmit(['op' => 'send', 'select' => true]),
+        'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
     ]);
     echo $cont;
     setFoot();
@@ -170,7 +170,7 @@ function send(): void {
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
+        $cont = getModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
         $db->getSqlQuery(
             'INSERT INTO '.PREFIX_DB.'_auto_links (title, intro, url, email, hits, outs, added) VALUES (:title, :intro, :url, :email, 0, 0, NOW())',
             ['title' => $name, 'intro' => $desc, 'url' => $site, 'email' => $email]

@@ -32,7 +32,7 @@ function faq(): void {
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status == '1' && time() >= strtotime($time)) {
-                $view = getTplLinkAction('index.php?name=faq&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
+                $view = 'index.php?name=faq&amp;op=view&amp;id='.$id;
                 $active = '1';
             } else {
                 $view = '';

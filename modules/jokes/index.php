@@ -69,7 +69,7 @@ function jokes(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['jokes']['homcat'])) {
-        $cont .= setModuleNavi(['title' => $ntitle] + JOKES_NAVI);
+        $cont .= getModuleNavi(['title' => $ntitle] + JOKES_NAVI);
         if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
@@ -160,12 +160,12 @@ function add(): void {
         $joke     = getVar('post', 'joke', 'raw');
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD] + JOKES_NAVI);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD] + JOKES_NAVI);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($joke) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $joke, 'textb' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADD_JNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'has_name'  => true,
             'is_user'   => is_user(),
             'name'      => $conf['name'],
@@ -177,10 +177,10 @@ function add(): void {
             'username'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname'  => $postname,
             'titleval'  => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
             'hometext'  => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']),
             'captcha'   => getCaptcha(1),
-            'submit'    => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -216,8 +216,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
             setHead(['title' => _ADD]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD] + JOKES_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {
             add();

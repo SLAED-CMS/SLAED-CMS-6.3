@@ -108,7 +108,7 @@ function add(): void {
         'tab' => 1,
     ]);
     if ($stop) {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     }
     if ($body) {
         $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);

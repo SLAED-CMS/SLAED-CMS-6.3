@@ -68,7 +68,7 @@ function media(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['media']['homcat'])) {
-        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
+        $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
         if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
     }
@@ -175,41 +175,41 @@ function liste(): void {
         .' '.$order.' '.$cwhere.' ORDER BY m.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
     setHead(['title' => _LIST]);
-    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
-    if ($db->getSqlRowCount($result) > 0) {
-        if ($conf['media']['letter']) $cont .= letter($conf['name']);
-        $cont .= $tpl->getHtmlFrag('table', [
+    $cont = getModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
+    $rows = [];
+    while ([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->getSqlRow($result)) {
+        $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
+        $rows[] = [
+            'id'            => (string)$id,
+            'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]),
+            'title_attr'    => $stitle,
+            'title_text'    => cutstr($stitle, 40),
+            'title_new'     => getTplNewGraphic($time),
+            'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+            'category_attr' => $ctitle,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+            'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
+            'time_text'     => format_time($time),
+            'time_iso'      => date('c', strtotime($time)),
+            'time_label'    => _DATE,
+        ];
+    }
+    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $wparams = ($let) ? ['let' => $let.'%'] : [];
+    $cont .= $tpl->getHtmlPart('liste', [
+        'rows'        => $rows,
+        'before_html' => ($conf['media']['letter'] && $rows) ? letter($conf['name']) : '',
+        'table_open'  => [
             'open'       => true,
-            'sortable'   => false,
+            'sortable'   => true,
             'col_id'     => _ID,
             'col_title'  => _TITLE,
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
             'col_date'   => _DATE,
-        ]);
-        while ([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('table-row-liste', [
-                'id'            => (string)$id,
-                'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]),
-                'title_attr'    => $stitle,
-                'title_text'    => cutstr($stitle, 40),
-                'title_new'     => getTplNewGraphic($time),
-                'category_href' => $ctitle ? $chref : '',
-                'category_attr' => $ctitle,
-                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
-                'post_text'     => $post,
-                'time_text'     => format_time($time),
-                'time_iso'      => date('c', strtotime($time)),
-                'time_label'    => _DATE,
-            ]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $wparams = ($let) ? ['let' => $let.'%'] : [];
-        $cont .= getTplPager([
+        ],
+        'table_close' => [],
+        'pager_html'  => $rows ? getTplPager([
             'limit'        => $listnum,
             'maxpg'        => $conf['media']['nump'],
             'table'        => '_media',
@@ -218,11 +218,9 @@ function liste(): void {
             'where'        => $onum,
             'where_params' => $wparams,
             'url_extra'    => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
-            'prefix'       => 'new/',
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
+        ]) : '',
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]);
     echo $cont;
     setFoot();
 }
@@ -259,7 +257,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = setModuleNavi(['title' => _MEDIA]);
+        $cont = getModuleNavi(['title' => _MEDIA]);
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = $cdesc ?: $ctitle;
@@ -307,7 +305,7 @@ function view(): void {
                 $mlinks = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HIDETEXT]);
             }
         }
-        $cont .= $tpl->getHtmlFrag('view', [
+        $cont .= $tpl->getHtmlPart('view', [
             'is_moder'      => is_moder($conf['name']),
             'id'            => $id,
             'favorites'     => $favorites,
@@ -420,8 +418,8 @@ function add(): void {
         if (!$links || !is_array($links)) $links = [];
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($description) $cont .= getTplPreviewContent(['title' => $mtitle, 'texta' => $description, 'textb' => $note, 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDNOTEM]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
@@ -429,20 +427,20 @@ function add(): void {
         $linksRows = '';
         $y = $date['year'] - 100;
         while ($y <= ($date['year'] + 1)) {
-            $yearOptions .= getTplSelectOption((string)$y, (string)$y, (bool)($y == $year));
+            $yearOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$y, 'label' => (string)$y, 'selected' => $y == $year ? ' selected' : '']);
             $y++;
         }
         $langOptions = '';
         foreach (explode(',', (string)($conf['media']['lang'] ?? '')) as $val) {
-            $langOptions .= getTplSelectOption((string)$val, (string)$val, (bool)($val === $lang && $val !== ''));
+            $langOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)$val, 'selected' => ($val === $lang && $val !== '') ? ' selected' : '']);
         }
         $formatOptions = '';
         foreach (explode(',', (string)($conf['media']['format'] ?? '')) as $val) {
-            $formatOptions .= getTplSelectOption((string)$val, (string)$val, (bool)($val === $format && $val !== ''));
+            $formatOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)$val, 'selected' => ($val === $format && $val !== '') ? ' selected' : '']);
         }
         $qualityOptions = '';
         foreach (explode(',', (string)($conf['media']['quality'] ?? '')) as $val) {
-            $qualityOptions .= getTplSelectOption((string)$val, (string)$val, (bool)($val === $quality && $val !== ''));
+            $qualityOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)$val, 'selected' => ($val === $quality && $val !== '') ? ' selected' : '']);
         }
         $i = 0;
         while ($i < $conf['media']['links']) {
@@ -451,48 +449,38 @@ function add(): void {
             $linksRows .= $tpl->getHtmlFrag('media-link-row', ['is_hidden' => $i != 0 && $link == '', 'id' => 'med'.$i, 'next_id' => 'med'.$a, 'title' => _ADD, 'label' => _URL.' - '.$a.':', 'value' => filterText($link)]);
             $i++;
         }
-        $cont .= $tpl->getHtmlFrag('media-form-add', [
+        $fieldsBeforeText = $tpl->getHtmlFrag('form-field-row', ['label' => _MSUBTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => '100', 'placeholder_text' => _MSUBTITLE])]);
+        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MYEAR, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearOptions])]);
+        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MDIRECTOR, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director, 'maxlength_num' => '100', 'placeholder_text' => _MDIRECTOR])]);
+        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MROLES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles, 'maxlength_num' => '255', 'placeholder_text' => _MROLES])]);
+        $fieldsAfterText = $tpl->getHtmlFrag('form-field-row', ['label' => _MCREATEDBY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby, 'maxlength_num' => '100', 'placeholder_text' => _MCREATEDBY])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MDURATION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration, 'maxlength_num' => '100', 'placeholder_text' => _MDURATION])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langOptions])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MFORMAT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _NO_INFO, 'selected' => '']).$formatOptions])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MQUALITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _NO_INFO, 'selected' => '']).$qualityOptions])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MSIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size, 'maxlength_num' => '100', 'placeholder_text' => _MSIZE])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MRELEASED, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released, 'maxlength_num' => '100', 'placeholder_text' => _MRELEASED])]);
+        $fieldsAfterText .= $linksRows;
+        $cont .= $tpl->getHtmlPart('form-add', [
             'has_name'       => true,
             'is_user'        => is_user(),
             'name'           => $conf['name'],
             'token'          => htmlspecialchars(getSiteToken('media'), ENT_QUOTES, 'UTF-8'),
             'lbl_name'       => _YOURNAME,
             'lbl_title'      => _MTITLE,
-            'lbl_subtitle'   => _MSUBTITLE,
             'lbl_cat'        => _CATEGORY,
-            'lbl_year'       => _MYEAR,
-            'lbl_director'   => _MDIRECTOR,
-            'lbl_roles'      => _MROLES,
-            'lbl_description'=> _DESCRIPTION,
-            'lbl_createdby'  => _MCREATEDBY,
-            'lbl_duration'   => _MDURATION,
-            'lbl_lang'       => _LANGUAGE,
-            'lbl_note'       => _NOTE,
-            'lbl_format'     => _MFORMAT,
-            'lbl_quality'    => _MQUALITY,
-            'lbl_size'       => _MSIZE,
-            'lbl_released'   => _MRELEASED,
+            'lbl_text'       => _DESCRIPTION,
+            'lbl_body'       => _NOTE,
             'username'       => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname'       => $postname,
-            'title'          => $title,
-            'subtitle'       => $subtitle,
-            'catselect'      => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
-            'year_options'   => $yearOptions,
-            'director'       => $director,
-            'roles'          => $roles,
-            'description'    => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']),
-            'createdby'      => $createdby,
-            'duration'       => $duration,
-            'lang_options'   => $langOptions,
-            'note'           => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0']),
-            'no_info'        => _NO_INFO,
-            'format_options' => $formatOptions,
-            'quality_options'=> $qualityOptions,
-            'size'           => $size,
-            'released'       => $released,
-            'links_rows'     => $linksRows,
+            'titleval'       => $title,
+            'catselect'      => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
+            'fields_before_text' => $fieldsBeforeText,
+            'hometext'       => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']),
+            'bodytext'       => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0']),
+            'fields_after_text' => $fieldsAfterText,
             'captcha'        => getCaptcha(1),
-            'submit'         => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit'         => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -549,8 +537,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHM, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHM, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -566,8 +554,8 @@ function broken(): void {
     if ($conf['media']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_media SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
-        $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
-        echo setModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'secs' => 5]);
+        echo getModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

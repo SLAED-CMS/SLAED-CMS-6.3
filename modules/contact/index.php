@@ -33,7 +33,7 @@ function contact(): void {
             while ([$id, $aname, $atitle] = $db->getSqlRow($result)) {
                 $aname = substr($aname, 0, 25);
                 $atitle = substr($atitle, 0, 50);
-                $asend .= getTplSelectOption((string)$id, $aname.' - '.$atitle);
+                $asend .= $tpl->getHtmlFrag('form-option', ['value' => (string)$id, 'label' => $aname.' - '.$atitle, 'selected' => '']);
             }
         }
     }
@@ -83,10 +83,10 @@ function contact(): void {
             $msg = $tpl->getHtmlFrag('contact-email-body', ['sitename' => $conf['sitename'], 'feedback_label' => _FEEDBACK, 'sender_label' => _SENDERNAME, 'sname' => $sname, 'email_label' => _SENDEREMAIL, 'semail' => $semail, 'message_label' => _MESSAGE, 'message' => $message]);
             addMail($to, $semail, $subject, $msg, 1, 1);
             update_points(5);
-            $meta = getTplMetaRefresh('index.php', 5);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 5]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
             $cont .= $form;
         }
     } else {

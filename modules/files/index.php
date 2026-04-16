@@ -65,7 +65,7 @@ function files(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['files']['homcat'])) {
-        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _FILES]);
+        $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _FILES]);
         if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['files']['defis'], _FILES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], $ncat);
     }
@@ -172,10 +172,31 @@ function liste(): void {
         .' '.$order.' '.$cwhere.' ORDER BY f.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
     setHead(['title' => _LIST]);
-    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _FILES]);
-    if ($db->getSqlRowCount($result) > 0) {
-        if ($conf['files']['letter']) $cont .= letter($conf['name']);
-        $cont .= $tpl->getHtmlFrag('table', [
+    $cont = getModuleNavi(['title' => _LIST, 'htitle' => _FILES]);
+    $rows = [];
+    while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
+        $cdesc = $cdesc ?: $ctitle;
+        $rows[] = [
+            'id'            => (string)$id,
+            'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
+            'title_attr'    => $title,
+            'title_text'    => cutstr($title, 40),
+            'title_new'     => getTplNewGraphic($time),
+            'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
+            'category_attr' => $cdesc,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+            'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
+            'time_text'     => format_time($time),
+            'time_iso'      => date('c', strtotime($time)),
+            'time_label'    => _DATE,
+        ];
+    }
+    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $wparams = ($let) ? ['let' => $let.'%'] : [];
+    $cont .= $tpl->getHtmlPart('liste', [
+        'rows'        => $rows,
+        'before_html' => ($conf['files']['letter'] && $rows) ? letter($conf['name']) : '',
+        'table_open'  => [
             'open'       => true,
             'sortable'   => true,
             'col_id'     => _ID,
@@ -183,31 +204,9 @@ function liste(): void {
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
             'col_date'   => _DATE,
-        ]);
-        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
-            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc = $cdesc ?: $ctitle;
-            $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('table-row-liste', [
-                'id'            => (string)$id,
-                'title_href'    => $thref,
-                'title_attr'    => $title,
-                'title_text'    => cutstr($title, 40),
-                'title_new'     => getTplNewGraphic($time),
-                'category_href' => $ctitle ? $chref : '',
-                'category_attr' => $cdesc,
-                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
-                'post_text'     => $post,
-                'time_text'     => format_time($time),
-                'time_iso'      => date('c', strtotime($time)),
-                'time_label'    => _DATE,
-            ]);
-        }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $wparams = ($let) ? ['let' => $let.'%'] : [];
-        $cont .= getTplPager([
+        ],
+        'table_close' => [],
+        'pager_html'  => $rows ? getTplPager([
             'limit'        => $listnum,
             'maxpg'        => $conf['files']['nump'],
             'table'        => '_files',
@@ -216,11 +215,9 @@ function liste(): void {
             'where'        => $onum,
             'where_params' => $wparams,
             'url_extra'    => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
-            'prefix'       => 'new/',
-        ]);
-    } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
-    }
+        ]) : '',
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]);
     echo $cont;
     setFoot();
 }
@@ -256,7 +253,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = setModuleNavi(['title' => _FILES]);
+        $cont = getModuleNavi(['title' => _FILES]);
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['files']['defis'], _FILES)]);
         if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
@@ -274,7 +271,7 @@ function view(): void {
             $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
         }
         $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
-        $cont .= $tpl->getHtmlFrag('view', [
+        $cont .= $tpl->getHtmlPart('view', [
             'is_moder'      => is_moder($conf['name']),
             'id'            => $id,
             'title_text'    => filterTextHighlight($title, $word),
@@ -375,8 +372,8 @@ function add(): void {
         if ($conf['files']['upload'] == 1) $info .= sprintf(_ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), filterSize($conf['files']['max_size']));
         $info .= ' '._ADDFNOTE3;
         setHead(['title' => _ADD]);
-        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _FILES]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        $cont = getModuleNavi(['title' => _ADD, 'htitle' => _FILES]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'field' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
@@ -387,7 +384,7 @@ function add(): void {
         $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _URL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => '100', 'placeholder_text' => _URL])]);
         $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _VERSION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fversion', 'value_attr' => $fversion, 'maxlength_num' => '10', 'placeholder_text' => _VERSION])]);
         $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _SIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fsize', 'value_attr' => $fsize, 'maxlength_num' => '10', 'placeholder_text' => _SIZE])]);
-        $cont .= $tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlPart('form-add', [
             'has_name'    => true,
             'is_user'     => is_user(),
             'name'        => $conf['name'],
@@ -403,14 +400,14 @@ function add(): void {
             'postname'    => $postname,
             'emailval'    => $mail,
             'titleval'    => $title,
-            'catselect'   => getTplCategorySelect($conf['name'], $cid, 'cid', '', getTplSelectOption('', _HOMECAT)),
+            'catselect'   => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
             'hometext'    => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext'    => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'siteval'     => $home,
             'site_attr'   => 'site',
             'extrafields' => $extra,
             'captcha'     => getCaptcha(1),
-            'submit'      => getTplFormSubmit(['op' => 'send', 'select' => true]),
+            'submit'      => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();
@@ -457,8 +454,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISH, 'meta' => $meta]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
+            echo getModuleNavi(['title' => _ADD, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISH, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -474,8 +471,8 @@ function broken(): void {
     if ($conf['files']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
-        $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
-        echo setModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'secs' => 5]);
+        echo getModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
@@ -497,9 +494,17 @@ function loading(): void {
         } else {
             $info = sprintf(_NOTEDOWNLOAD, $stitle, $tpl->getHtmlFrag('files-external-link', ['href' => $url, 'title' => _UPLOAD.': '.$stitle, 'label' => $url]));
             setHead(['title' => _FILES]);
-            $cont = setModuleNavi(['title' => _FILES]);
+            $cont = getModuleNavi(['title' => _FILES]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
-            $cont .= setNaviLower($conf['name']);
+            $cont .= $tpl->getHtmlFrag('navi-lower', [
+                'back_title' => _BACK,
+                'back_label' => _BACK,
+                'home_href' => 'index.php?name='.$conf['name'],
+                'home_title' => _PAGEHOME,
+                'home_label' => _PAGEHOME,
+                'top_title' => _PAGETOP,
+                'top_label' => _PAGETOP,
+            ]);
             echo $cont;
             setFoot();
         }

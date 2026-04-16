@@ -17,7 +17,7 @@ function account(): void {
         setHead(['title' => _USERREGLOGIN]);
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $cont .= $tpl->getHtmlFrag('account-login-form', [
             'network_enabled' => !empty($conf['users']['network']),
             'name' => $conf['name'],
@@ -63,7 +63,7 @@ function newuser(): void {
         setHead(['title' => _REGNEWUSER]);
         if ($stop) {
             $cont = $tpl->getHtmlFrag('title', ['title' => _NEWUSERERROR]);
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         } else {
             $cont = $tpl->getHtmlFrag('title', ['title' => _REGNEWUSER]);
         }
@@ -159,7 +159,7 @@ function finnewuser(): void {
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
-                $meta = getTplMetaRefresh('index.php', 30);
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 30]);
                 $brbr = '<br><br>';
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.$brbr._FINISHUSERCONF.$brbr._THANKSUSER, 'meta' => $meta]);
             }
@@ -242,7 +242,7 @@ function network(): void {
             }
         } else {
             setHead(['title' => _ERRORINPUT]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 15);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
             echo $tpl->getHtmlFrag('title', ['title' => _ERRORINPUT]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERRORSESS, 'meta' => $meta]);
             setFoot();
         }
@@ -268,14 +268,14 @@ function activate(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => 'default/00.gif', 'regdate' => $reg, 'pwd' => getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 15);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
             echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
         } else {
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 15);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
             echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
         }
     } else {
-        $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 15);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
         echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
     }
     setFoot();
@@ -344,7 +344,7 @@ function view(): void {
             }
             $gender = [_GENDER, getGenderText($gender)];
             $rating = [_RATING, getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1)];
-            $field = ($field) ? getTplFieldsOut($field, $conf['name']) : '';
+            $field = ($field) ? getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]) : '';
             $sgroup = ($gname) ? [_SPEC_GROUP, $gname] : [_SPEC_GROUP, _NO];
             $rgroup = [];
             $uranks = '';
@@ -477,13 +477,13 @@ function view(): void {
             setFoot();
         } else {
             setHead(['title' => _USERNOEXIST]);
-            $meta = getTplMetaRefresh('index.php', 3);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 3]);
             echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST, 'meta' => $meta]);
             setFoot();
         }
     } else {
         setHead(['title' => _MODULEUSERS]);
-        $meta = getTplMetaRefresh('index.php', 15);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 15]);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MODULEUSERS, 'meta' => $meta]);
         setFoot();
     }
@@ -678,10 +678,10 @@ function privat(): void {
             _SEND
         ];
         $text = [
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
+            $tpl->getHtmlFrag('post-div', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
+            $tpl->getHtmlFrag('post-div', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
+            $tpl->getHtmlFrag('post-div', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
+            $tpl->getHtmlFrag('post-div', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
         ];
         $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
@@ -717,7 +717,7 @@ function passlost(): void {
         $cont = $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]);
         $info = ($email) ? _PASSLOSP : _PASSLOSC;
         $send = ($email) ? _SENDPASSWORD : _SEND;
-        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $cont .= $tpl->getHtmlFrag('account-passlost-form', [
             'has_code' => !empty($email),
@@ -769,7 +769,7 @@ function passmail(): void {
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
-            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
@@ -836,12 +836,12 @@ function edithome(): void {
             $birthday = '';
         }
         $userinfo['theme'] = (!$userinfo['theme']) ? $conf['theme'] : $userinfo['theme'];
-        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $story = '';
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
             while ($xusnum <= 20) {
-                $story .= getTplSelectOption((string)$xusnum, (string)$xusnum, (bool)($xusnum == $userinfo['storynum']));
+                $story .= $tpl->getHtmlFrag('form-option', ['value' => (string)$xusnum, 'label' => (string)$xusnum, 'selected' => $xusnum == $userinfo['storynum'] ? ' selected' : '']);
                 $xusnum++;
             }
         }
@@ -852,9 +852,17 @@ function edithome(): void {
             foreach ($list ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
                 if (!is_dir('templates/'.$file)) continue;
-                $theme .= getTplSelectOption((string)$file, (string)$file, (bool)($file == $userinfo['theme']));
+                $theme .= $tpl->getHtmlFrag('form-option', ['value' => (string)$file, 'label' => (string)$file, 'selected' => $file == $userinfo['theme'] ? ' selected' : '']);
                 $tcount++;
             }
+        }
+        $genderOptions = '';
+        foreach ([_NO_INFO, _MAN, _WOMAN] as $key => $val) {
+            $genderOptions .= $tpl->getHtmlFrag('select-option', [
+                'value_attr' => (string)$key,
+                'label_text' => $val,
+                'is_selected' => $key == (int)$userinfo['gender'],
+            ]);
         }
         $change = $tpl->getHtmlFrag('account-edit-form', [
             'has_points' => !empty($conf['users']['point']),
@@ -875,7 +883,7 @@ function edithome(): void {
             'lbl_birthday' => _BIRTHDAY,
             'birthday_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10]),
             'lbl_gender' => _GENDER,
-            'gender_html' => getTplGenderSelect('gender', $userinfo['gender'], 'sl-field--account'),
+            'gender_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'select_class' => 'sl-field--account', 'options_html' => $genderOptions]),
             'lbl_email' => _YOUREMAIL,
             'mail_value' => $userinfo['email'],
             'lbl_site' => _SITEURL,
@@ -894,15 +902,15 @@ function edithome(): void {
             'story_options' => $story,
             'story_hidden' => $conf['news']['num'] ?? 0,
             'lbl_news' => _RNEWSLETTER,
-            'news_html' => getTplRadioForm($userinfo['newslet'], 'news'),
+            'news_html' => getTplRadioGroup(['name' => 'news', 'value' => ((string)$userinfo['newslet'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
             'lbl_fsmail' => _FSMAIL,
-            'fsmail_html' => getTplRadioForm($userinfo['fsmail'], 'fsmail'),
+            'fsmail_html' => getTplRadioGroup(['name' => 'fsmail', 'value' => ((string)$userinfo['fsmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
             'lbl_psmail' => _PSMAIL,
-            'psmail_html' => getTplRadioForm($userinfo['psmail'], 'psmail'),
+            'psmail_html' => getTplRadioGroup(['name' => 'psmail', 'value' => ((string)$userinfo['psmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
             'lbl_view' => _ALLOWUSERS,
-            'view_html' => getTplRadioForm($userinfo['viewmail'], 'view'),
+            'view_html' => getTplRadioGroup(['name' => 'view', 'value' => ((string)$userinfo['viewmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
             'lbl_blockon' => _ACTIVATEPERSONAL,
-            'blockon_html' => getTplRadioForm($userinfo['blockon'], 'blockon'),
+            'blockon_html' => getTplRadioGroup(['name' => 'blockon', 'value' => ((string)$userinfo['blockon'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
             'lbl_block' => _MENUCONF,
             'block_info' => _MENUINFO,
             'block_html' => getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $userinfo['block'], 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _MENUCONF, 'required' => '0']),

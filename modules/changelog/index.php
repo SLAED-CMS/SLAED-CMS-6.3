@@ -21,7 +21,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
     ]));
     $url = $query ? $query.'&' : '';
 
-    $out = setPageNumbers('pagenum', $modname, $totcom, $totpage, $perpage, $url, 10, $page, '', 'page');
+    $out = getPageNumbers('pagenum', $modname, $totcom, $totpage, $perpage, $url, 10, $page, '', 'page');
     return $out ?? '';
 }
 
