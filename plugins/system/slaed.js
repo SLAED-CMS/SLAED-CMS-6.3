@@ -201,6 +201,66 @@
         }
     }
 
+    function getToggleControls(id) {
+        var controls = document.querySelectorAll('[data-sl-toggle-control]');
+        var matches = [];
+        for (var i = 0; i < controls.length; i++) {
+            if (controls[i].getAttribute('data-sl-toggle-control') === id) matches.push(controls[i]);
+        }
+        return matches;
+    }
+
+    function setToggleControls(id, isOpen) {
+        var controls = getToggleControls(id);
+        for (var i = 0; i < controls.length; i++) {
+            controls[i].setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            controls[i].classList.toggle('sl-is-open', isOpen);
+            controls[i].classList.toggle('sl-is-closed', !isOpen);
+            if (controls[i].type === 'checkbox') controls[i].checked = isOpen;
+        }
+    }
+
+    function setToggleBlockState(element, id, isOpen) {
+        element.hidden = !isOpen;
+        element.style.display = isOpen ? 'block' : 'none';
+        element.classList.toggle('sl-is-open', isOpen);
+        element.classList.toggle('sl-is-closed', !isOpen);
+        setToggleControls(id, isOpen);
+    }
+
+    function toggleBlock(id, scoped, isOpen) {
+        var element = document.getElementById(id);
+        if (!element) return;
+        var isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
+        var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
+        setToggleBlockState(element, id, nextOpen);
+        writeToggleState(id, scoped, nextOpen ? '1' : '0');
+    }
+
+    function bindToggleControl(control) {
+        if (control.getAttribute('data-sl-toggle-ready') === '1') return;
+        var id = control.getAttribute('data-sl-toggle-control');
+        if (!id) return;
+        var scoped = control.getAttribute('data-sl-toggle-scope') === 'path';
+        var isCheckbox = control.type === 'checkbox';
+        control.setAttribute('data-sl-toggle-ready', '1');
+        control.setAttribute('aria-controls', id);
+        if (!isCheckbox) {
+            control.setAttribute('role', 'button');
+            control.setAttribute('tabindex', '0');
+        }
+        var eventName = isCheckbox ? 'change' : 'click';
+        control.addEventListener(eventName, function () {
+            toggleBlock(id, scoped, isCheckbox ? control.checked : undefined);
+        });
+        control.addEventListener('keydown', function (event) {
+            if (isCheckbox) return;
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            toggleBlock(id, scoped);
+        });
+    }
+
     function animateSlide(element, show, duration) {
         var anims = element.getAnimations ? element.getAnimations() : [];
         for (var i = 0; i < anims.length; i++) anims[i].cancel();
@@ -277,27 +337,28 @@
     }
 
     function initCloseOpenBlocks() {
-        var blocks = document.querySelectorAll('.data[data-all]');
-        for (var i = 0; i < blocks.length; i++) {
-            var raw = blocks[i].getAttribute('data-all');
-            if (!raw) continue;
-            try {
-                var data = JSON.parse(raw);
-                if (!data || !data.id) continue;
-                blocks[i].style.display = readToggleState(data.id, false) === '0' ? 'none' : 'block';
-            } catch (err) {
+        var controls = document.querySelectorAll('[data-sl-toggle-control]');
+        for (var i = 0; i < controls.length; i++) bindToggleControl(controls[i]);
+
+        var blocks = document.querySelectorAll('[data-sl-toggle]');
+        for (var j = 0; j < blocks.length; j++) {
+            var id = blocks[j].getAttribute('data-sl-toggle');
+            var scoped = blocks[j].getAttribute('data-sl-toggle-scope') === 'path';
+            if (!id) continue;
+            var state = readToggleState(id, scoped);
+            var isOpen = state !== '0';
+            if (state === null) {
+                var blockControls = getToggleControls(id);
+                for (var k = 0; k < blockControls.length; k++) {
+                    if (blockControls[k].type === 'checkbox') {
+                        isOpen = blockControls[k].checked;
+                        break;
+                    }
+                }
             }
+            setToggleBlockState(blocks[j], id, isOpen);
         }
     }
-
-    window.CloseOpen = function (obj, path) {
-        var element = document.getElementById(obj);
-        if (!element) return;
-        var isHidden = window.getComputedStyle(element).display === 'none';
-        element.style.display = isHidden ? 'block' : 'none';
-        element.hidden = !isHidden ? true : false;
-        writeToggleState(obj, !!path, isHidden ? '1' : '0');
-    };
 
     window.HideShow = function (obj, eff, opt, dur) {
         var element = document.getElementById(obj);
