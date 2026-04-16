@@ -35,7 +35,7 @@ function getTplAddFieldRows(array $data = []): array {
         $type = $out[3] ?? '';
         if ($type == '1') {
             $dval = $text ? getConst($text) : '';
-            $html = $tpl->getHtmlFrag('new/input', [
+            $html = $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'field[]',
                 'value_attr' => $dval,
@@ -43,7 +43,7 @@ function getTplAddFieldRows(array $data = []): array {
                 'input_attr' => trim($need),
             ]);
         } elseif ($type == '2') {
-            $html = $tpl->getHtmlFrag('new/textarea', [
+            $html = $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'field[]',
                 'rows_num' => 5,
                 'value_text' => $text,
@@ -54,15 +54,15 @@ function getTplAddFieldRows(array $data = []): array {
             $list = explode(',', $out[2] ?? '');
             foreach ($list as $name) {
                 if ($name == '') continue;
-                $opts .= $tpl->getHtmlFrag('new/select-option', [
+                $opts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $name,
                     'label_text' => $name,
                     'is_selected' => $name == $text,
                 ]);
             }
-            $html = $tpl->getHtmlFrag('new/select', [
+            $html = $tpl->getHtmlFrag('select', [
                 'name_attr' => 'field[]',
-                'options_html' => $tpl->getHtmlFrag('new/select-option', [
+                'options_html' => $tpl->getHtmlFrag('select-option', [
                     'value_attr' => '',
                     'label_text' => _NO,
                     'is_selected' => $text === '',
@@ -102,7 +102,7 @@ function getTplAddDateTime(array $data = []): string {
             'name' => (string)$name,
             'value' => (string)$time,
             'attr' => 'id="'.$hid.'"',
-        ]).$tpl->getHtmlFrag('new/input', [
+        ]).$tpl->getHtmlFrag('input', [
             'itype' => $type,
             'name_attr' => $pid,
             'value_attr' => $pvalu,
@@ -128,7 +128,7 @@ function getTplRefreshTimeSelect(array $data = []): string {
         '86400' => '24 '._HOUR.'.',
     ];
     foreach ($times as $value => $label) {
-        $opts .= $tpl->getHtmlFrag('new/select-option', [
+        $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$value,
             'label_text' => (string)$label,
             'is_selected' => $valu === $value,
@@ -189,7 +189,7 @@ function getTplViewFieldRows(array $data = []): string {
             } else {
                 $valu = htmlspecialchars((string)$valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             }
-            $rows .= $tpl->getHtmlFrag('new/view-field', [
+            $rows .= $tpl->getHtmlFrag('view-field', [
                 'label_text' => getConst($out[1]),
                 'value_html' => $valu,
             ]);
@@ -265,7 +265,7 @@ function getTplBbEditor(array $data = []): string {
         .$btn("InsertCode('quote', '"._JQUOTE."', '', '', '".$id."')", 'sl_bb_quote', _EQUOTE, 'CopyText();');
 
     # Textarea
-    $ta = $tpl->getHtmlFrag('new/textarea', [
+    $ta = $tpl->getHtmlFrag('textarea', [
         'name_attr' => $name,
         'rows_num' => $rows,
         'value_text' => $value,
@@ -323,17 +323,17 @@ function getTplBbEditor(array $data = []): string {
     }
 
     # Text formatting panel (font / color / size)
-    $fonts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _FONT, 'is_selected' => false]);
+    $fonts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _FONT, 'is_selected' => false]);
     foreach (['Arial', 'Courier', 'Mistral', 'Impact', 'Sans Serif', 'Tahoma', 'Helvetica', 'Verdana'] as $f) {
-        $fonts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $f, 'label_text' => $f, 'is_selected' => false]);
+        $fonts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $f, 'label_text' => $f, 'is_selected' => false]);
     }
-    $colors = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ECOLOR, 'is_selected' => false]);
+    $colors = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ECOLOR, 'is_selected' => false]);
     foreach (['black', 'gray', 'silver', 'white', 'maroon', 'red', 'orangered', 'orange', 'yellow', 'purple', 'fuchsia', 'violet', 'darkgreen', 'green', 'lime', 'navy', 'blue', 'teal', 'aqua'] as $c) {
-        $colors .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $c, 'label_text' => $c, 'is_selected' => false]);
+        $colors .= $tpl->getHtmlFrag('select-option', ['value_attr' => $c, 'label_text' => $c, 'is_selected' => false]);
     }
-    $fsizes = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ESIZE, 'is_selected' => false]);
+    $fsizes = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ESIZE, 'is_selected' => false]);
     foreach (['8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30', '32'] as $fs) {
-        $fsizes .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $fs, 'label_text' => $fs, 'is_selected' => false]);
+        $fsizes .= $tpl->getHtmlFrag('select-option', ['value_attr' => $fs, 'label_text' => $fs, 'is_selected' => false]);
     }
     $ei = $e($id);
     $bottom .= $drop(
@@ -346,9 +346,9 @@ function getTplBbEditor(array $data = []): string {
     );
 
     # Code syntax panel
-    $fcodes = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _CODE, 'is_selected' => false]);
+    $fcodes = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _CODE, 'is_selected' => false]);
     foreach (['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'] as $fc) {
-        $fcodes .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => strtolower($fc), 'label_text' => $fc, 'is_selected' => false]);
+        $fcodes .= $tpl->getHtmlFrag('select-option', ['value_attr' => strtolower($fc), 'label_text' => $fc, 'is_selected' => false]);
     }
     $bottom .= $drop(
         $btn("HideShow('c-form-".$id."', 'blind', 'up', 500);", 'sl_bb_code', _CODE),
@@ -662,11 +662,7 @@ function getTplUserSearchInput(array $data = []): string {
     $tip = (string)($data['tip'] ?? '');
     $tiphtml = '';
     if ($tip !== '') {
-        $tiphtml = $tpl->getHtmlFrag('title-tip', [
-            'items' => [
-                ['label' => _INFO, 'value' => $tip],
-            ],
-        ]);
+        $tiphtml = getTplTitleTip([['label' => _INFO, 'value' => $tip]]);
     }
     return $tpl->getHtmlFrag('user-search', [
         'endpoint_attr' => $endpoint,
@@ -725,21 +721,21 @@ function getTplFieldsIn(array $data = []): string {
                     $dval = $fieldin ? getConst($fieldin) : '';
                     $fhtml = getTplTextInput('field[]', $dval, '', 'placeholder="'.$dval.'"'.$requir);
                 } elseif ($m[3] == '2') {
-                    $fhtml = $tpl->getHtmlFrag('new/textarea', ['name_attr' => 'field[]', 'rows_num' => 5, 'value_text' => $fieldin, 'input_attr' => trim($requir)]);
+                    $fhtml = $tpl->getHtmlFrag('textarea', ['name_attr' => 'field[]', 'rows_num' => 5, 'value_text' => $fieldin, 'input_attr' => trim($requir)]);
                 } elseif ($m[3] == '3') {
-                    $opts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
+                    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO, 'is_selected' => $fieldin === '']);
                     foreach (explode(',', $m[2] ?? '') as $opt) {
                         if ($opt === '') continue;
-                        $opts .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $opt, 'label_text' => $opt, 'is_selected' => $opt === $fieldin]);
+                        $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $opt, 'label_text' => $opt, 'is_selected' => $opt === $fieldin]);
                     }
-                    $fhtml = $tpl->getHtmlFrag('new/select', ['name_attr' => 'field[]', 'options_html' => $opts, 'select_attr' => trim($requir)]);
+                    $fhtml = $tpl->getHtmlFrag('select', ['name_attr' => 'field[]', 'options_html' => $opts, 'select_attr' => trim($requir)]);
                 } elseif ($m[3] == '4') {
                     $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => true, 'max' => 16]);
                 } elseif ($m[3] == '5') {
                     $fhtml = getTplAddDateTime(['name' => 'field[]', 'time' => $fieldin, 'with' => false, 'max' => 10]);
                 }
                 if ($fhtml !== '') {
-                    $out .= $tpl->getHtmlFrag('new/form-field-row', ['label' => getConst($m[1]), 'field_html' => $fhtml]);
+                    $out .= $tpl->getHtmlFrag('form-field-row', ['label' => getConst($m[1]), 'field_html' => $fhtml]);
                 }
             }
         }
@@ -750,7 +746,7 @@ function getTplFieldsIn(array $data = []): string {
 
 function getTplHiddenInput(array $data = []): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/hidden', [
+    return $tpl->getHtmlFrag('hidden', [
         'name_attr'  => (string)($data['name']  ?? ''),
         'value_attr' => (string)($data['value'] ?? ''),
         'input_attr' => (string)($data['attr'] ?? ''),
@@ -766,7 +762,7 @@ function getTplFormSubmit(array $data = []): string {
     $val = (string)($data['val'] ?? '');
     $select = !empty($data['select']);
     $preview = !empty($data['no_preview']);
-    return $tpl->getHtmlFrag('new/form-submit', [
+    return $tpl->getHtmlFrag('form-submit', [
         'op'            => $op,
         'extra'         => $extra,
         'name'          => $name,
@@ -829,22 +825,22 @@ function getTplAjaxTextarea(array $data = []): string {
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $query   = 'index.php?go='.$esc($go).'&amp;op='.$esc($op).'&amp;id='.$esc($id).'&amp;cid='.$esc($cid).'&amp;typ='.$esc($typ).'&amp;mod='.$esc($mod);
     $cerror  = addslashes((string)_CERROR1);
-    return $tpl->getHtmlFrag('new/ajax-textarea-form', [
+    return $tpl->getHtmlFrag('ajax-textarea-form', [
         'form_id'          => $formId,
-        'textarea_html'    => $tpl->getHtmlFrag('new/textarea', [
+        'textarea_html'    => $tpl->getHtmlFrag('textarea', [
             'name_attr'   => 'text',
             'rows_num'    => $rows,
             'value_text'  => $desc,
             'input_class' => 'sl_earea',
             'input_attr'  => 'id="'.$fieldId.'"',
         ]),
-        'save_button_html' => $tpl->getHtmlFrag('new/button', [
+        'save_button_html' => $tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
             'submit_label' => _SAVE,
             'button_class' => 'sl_but_green',
             'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''.$cerror.'\'); event.preventDefault(); }"',
         ]),
-        'back_button_html' => $tpl->getHtmlFrag('new/button', [
+        'back_button_html' => $tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
             'submit_label' => _BACK,
             'button_class' => 'sl-but-blue',
@@ -863,7 +859,7 @@ function getTplNewGraphic(string $time): string {
     elseif ($data < 259200) { $cls = 'sl_n_days'; $ttl = (string)_NEWLAST3DAYS; }
     elseif ($data < 604800) { $cls = 'sl_n_week'; $ttl = (string)_NEWTHISWEEK; }
     if (!$cls) return '';
-    return $tpl->getHtmlFrag('new/graphic', ['icon_class' => $cls, 'icon_title' => $ttl]);
+    return $tpl->getHtmlFrag('graphic', ['icon_class' => $cls, 'icon_title' => $ttl]);
 }
 
 # Render a yes/no radio control pair
@@ -884,13 +880,13 @@ function getTplGenderSelect(string $name, int $typ, string $clas = ''): string {
     $list = [_NO_INFO, _MAN, _WOMAN];
     $cont = '';
     foreach ($list as $key => $val) {
-        $cont .= $tpl->getHtmlFrag('new/select-option', [
+        $cont .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => (string)$key,
             'label_text' => $val,
             'is_selected' => $key == $typ,
         ]);
     }
-    return $tpl->getHtmlFrag('new/select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont]);
 }
 
 # Format a gender value for display
@@ -904,14 +900,16 @@ function getGenderText(int $gender): string {
 function getTplTitleTip(mixed $data): string {
     global $tpl;
     if (!is_array($data)) $data = [['value' => (string)$data]];
-    $rows = [];
-    foreach ($data as $item) {
-        $rows[] = [
+    $last = count($data) - 1;
+    $cont = '';
+    foreach ($data as $idx => $item) {
+        $cont .= $tpl->getHtmlFrag('title-tip-item', [
             'label' => (string)($item['label'] ?? _INFO),
             'value' => (string)($item['value'] ?? ''),
-        ];
+            'is_last' => $idx === $last,
+        ]);
     }
-    return $tpl->getHtmlFrag('title-tip', ['items' => $rows]);
+    return $tpl->getHtmlFrag('title-tip', ['content' => $cont]);
 }
 
 # Render preview rows for dynamic fields in the legacy inline format
@@ -1015,36 +1013,20 @@ function getTplEditorMenu(array $list): string {
 # Render one editor files table row
 function getTplEditorRow(array $data): string {
     global $tpl;
-    return $tpl->getHtmlFrag('table-row', [
-        'cells_html' => $tpl->getHtmlFrag('table-cells', [
-            'cells' => [
-                ['content_html' => (string)($data['preview_html'] ?? '')],
-                ['content_html' => (string)($data['file_name'] ?? '')],
-                ['content_html' => ''],
-                ['content_html' => (string)($data['size_value'] ?? '')],
-                ['content_html' => ''],
-                ['content_html' => (string)($data['functions_html'] ?? '')],
-            ],
-        ]),
+    return $tpl->getHtmlFrag('editor-file-row', [
+        'preview_html' => (string)($data['preview_html'] ?? ''),
+        'file_name' => (string)($data['file_name'] ?? ''),
+        'size_value' => (string)($data['size_value'] ?? ''),
+        'functions_html' => (string)($data['functions_html'] ?? ''),
     ]);
 }
 
 # Render the editor files table shell
 function getTplEditorTable(string $rows): string {
     global $tpl;
-    return $tpl->getHtmlFrag('table', [
-        'is_wrapless' => true,
-        'disable_sort' => true,
-        'head' => [
-            ['content' => cutstr(_IMG, 4, 1), 'nosort' => true],
-            ['content' => _FILE, 'nosort' => true],
-            ['content' => '', 'nosort' => true],
-            ['content' => _SIZE, 'nosort' => true],
-            ['content' => '', 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
-        ],
-        'rows_html' => $rows,
-    ]);
+    $head = $tpl->getHtmlFrag('table', ['open' => true, 'col_id' => ' ', 'col_title' => _FILE, 'col_poster' => _SIZE, 'col_func' => _FUNCTIONS]);
+    $foot = $tpl->getHtmlFrag('table', []);
+    return $head.$rows.$foot;
 }
 
 # Render a comment action link
@@ -1163,12 +1145,9 @@ function getTplPagerLink(string $href, string $title, string $label, string $cla
     global $tpl;
     return $tpl->getHtmlFrag('pager-link', [
         'href' => $href,
-        'query' => '',
-        'load_id' => '',
-        'target_id' => '',
         'title' => $title,
         'label' => $label,
-        'class' => $clas,
+        'is_nav' => $clas !== '',
     ]);
 }
 
@@ -1176,13 +1155,10 @@ function getTplPagerLink(string $href, string $title, string $label, string $cla
 function getTplPagerCurrent(string $title, string $label, string $clas = ''): string {
     global $tpl;
     return $tpl->getHtmlFrag('pager-link', [
-        'href' => '',
-        'query' => '',
-        'load_id' => '',
-        'target_id' => '',
         'title' => $title,
         'label' => $label,
-        'class' => $clas,
+        'is_cur' => true,
+        'is_nav' => $clas !== '',
     ]);
 }
 
@@ -1197,13 +1173,11 @@ function getAsyncPagerLink(string $loadid, string $targetid, string $query, stri
     global $tpl;
     $route = $query ? 'index.php?'.$query : '';
     return $tpl->getHtmlFrag('pager-link', [
-        'href' => '',
-        'load_id' => $loadid,
-        'target_id' => $targetid,
         'query' => $route,
+        'target_id' => $targetid,
         'title' => $title,
         'label' => $label,
-        'class' => $clas,
+        'is_nav' => $clas !== '',
     ]);
 }
 
@@ -1279,7 +1253,7 @@ function getTplCatOption(string $valu, string $label, bool $isel = false): strin
 # Render one breadcrumb link
 function getTplBreadLink(string $href, string $title, string $label): string {
     global $tpl;
-    return $tpl->getHtmlFrag('breadcrumb-link', ['href' => $href, 'title' => $title, 'label' => $label]);
+    return $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $title, 'label_html' => $label]);
 }
 
 # Render one voting action link
@@ -1483,11 +1457,11 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
 function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
     global $tpl;
     $dir = opendir('lang');
-    $cont = !$typ ? $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
+    $cont = !$typ ? $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
     while (false !== ($file = readdir($dir))) {
         if (preg_match('#^(.+)\.php#', $file, $match)) {
             $langf = $match[1];
-            $cont .= $tpl->getHtmlFrag('new/select-option', [
+            $cont .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => $langf,
                 'label_text' => getLangName($langf),
                 'is_selected' => $lang == $langf,
@@ -1502,7 +1476,7 @@ function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
 function getTplModuleSelect(string $name, string $clas, string $mod, string $no = '', array $allow = []): string {
     global $tpl;
     $cont = '';
-    if ($no !== '') $cont .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
+    if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
     $mods = explode(',', $mod);
     foreach (scandir('modules') as $file) {
         if (str_contains($file, '.')) continue;
@@ -1514,7 +1488,7 @@ function getTplModuleSelect(string $name, string $clas, string $mod, string $no 
                 break;
             }
         }
-        $cont .= $tpl->getHtmlFrag('new/select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
+        $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
     }
     return $tpl->getHtmlFrag('multi-select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont]);
 }
@@ -1526,13 +1500,13 @@ function getTplCategoryModule(string $name, string $clas = '', string $sel = '',
     $cont = '';
     $mods = ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     foreach ($mods as $mod) {
-        $cont .= $tpl->getHtmlFrag('new/select-option', [
+        $cont .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $mod,
             'label_text' => getModuleName($mod).' - '.$mod,
             'is_selected' => $sel == $mod,
         ]);
     }
-    return $tpl->getHtmlFrag('new/select', ['name_attr' => $name, 'select_class' => $clas, 'select_attr' => $attr, 'options_html' => $cont]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'select_attr' => $attr, 'options_html' => $cont]);
 }
 
 # Render a mailto link

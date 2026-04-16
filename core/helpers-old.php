@@ -31,7 +31,7 @@ function getAjaxQuery(array $data): string {
 function getTplSelect(string $name, string $opts, string $clas = '', string $attr = ''): string {
     global $tpl;
     $selectAttr = trim(($clas !== '' ? 'class="'.htmlspecialchars($clas, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '').($attr !== '' ? ' '.$attr : ''));
-    return $tpl->getHtmlFrag('new/select', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'options_html' => $opts,
         'select_attr' => $selectAttr,
@@ -41,7 +41,7 @@ function getTplSelect(string $name, string $opts, string $clas = '', string $att
 # Render one shared admin option row with optional selected state
 function getTplOption(string $valu, string $text, bool $isel = false): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/select-option', [
+    return $tpl->getHtmlFrag('select-option', [
         'is_selected' => $isel,
         'label_text' => $text,
         'value_attr' => $valu,
@@ -64,7 +64,7 @@ function getTplAjaxAction(string $target, string $query, string $title, string $
 # Render one shared admin text input with optional extra class and extra attributes
 function getTplTextInput(string $name, string $valu, string $clas = '', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/input', [
+    return $tpl->getHtmlFrag('input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'text',
@@ -76,7 +76,7 @@ function getTplTextInput(string $name, string $valu, string $clas = '', string $
 # Render one shared admin email input with optional extra class and extra attributes
 function getTplEmailInput(string $name, string $valu, string $clas = '', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('new/input', [
+    return $tpl->getHtmlFrag('input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'email',
@@ -365,8 +365,8 @@ function setPageNumbers(string $frag, string $mod, int $count, int $pages, int $
         } else {
             $cnext = getTplPagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
-        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $limit, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
-        return $tpl->getHtmlFrag($frag, $data);
+        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'limit' => $limit, 'perpage' => _PERPAGE, 'items' => $cont, 'prev' => $cprev, 'next' => $cnext];
+        return $tpl->getHtmlFrag('pager', $data);
     }
     return '';
 }

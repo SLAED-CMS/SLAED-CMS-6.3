@@ -2536,9 +2536,9 @@ function getVotingView(int $id = 0, string $votid = ''): string {
                 }
                 if (!$rate) {
                     $itype = ($multi) ? 'checkbox' : 'radio';
-                    $items .= $tpl->getHtmlFrag('new/voting-post', ['id' => $id, 'n' => $n, 'itype' => $itype, 'name' => 'body[]', 'text' => $body[$i]]);
+                    $items .= $tpl->getHtmlFrag('voting-post', ['id' => $id, 'n' => $n, 'itype' => $itype, 'name' => 'body[]', 'text' => $body[$i]]);
                 } else {
-                    $items .= $tpl->getHtmlFrag('new/voting-view', ['text' => $body[$i], 'text_safe' => filterText($body[$i]), 'n' => $n, 'pn' => $pn, 'percent' => $procent, 'votes_label' => _VOTES, 'votes' => $answer[$i]]);
+                    $items .= $tpl->getHtmlFrag('voting-view', ['text' => $body[$i], 'text_safe' => filterText($body[$i]), 'n' => $n, 'pn' => $pn, 'percent' => $procent, 'votes_label' => _VOTES, 'votes' => $answer[$i]]);
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
@@ -2548,9 +2548,9 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             ]) : '';
             $post = (!$rate) ? getVotingAsyncAction($votid, 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl-but-blue', _SEROR1) : '';
             $polls = ($vnum > 1) ? getTplVotingLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
-            $votes = (!$modul && $votid != 'voting') ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : $tpl->getHtmlFrag('new/span', ['class' => 'sl_votes', 'text' => _VOTES.': '.$vote]);
+            $votes = (!$modul && $votid != 'voting') ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : $tpl->getHtmlFrag('span', ['class' => 'sl_votes', 'text' => _VOTES.': '.$vote]);
             $comm = (!$modul && $acomm) ? getTplVotingLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
-            $cont = $tpl->getHtmlFrag('new/voting-widget', [
+            $cont = $tpl->getHtmlFrag('voting-widget', [
                 'has_form'   => !$rate,
                 'form_id'    => 'form'.$votid,
                 'title'      => $title,
@@ -2978,7 +2978,7 @@ function replace_break(string $text): string {
 # User country information
 function user_geo_ip(string $ip, int $id = 4): string {
     global $conf, $tpl;
-    $iplink = $tpl->getHtmlFrag('link-btn-blank', ['href' => $conf['ip_link'].$ip, 'title' => (string)_IP.': '.$ip, 'class' => '', 'label' => $ip]);
+    $iplink = $tpl->getHtmlFrag('link', ['href' => $conf['ip_link'].$ip, 'title' => (string)_IP.': '.$ip, 'label' => $ip, 'is_blank' => true]);
     if ((PHP_VERSION >= '5') && $conf['geo_ip'] && preg_match('#([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})#', $ip)) {
         if ($id == 1 || $id == 2) {
             return $ip;
@@ -3207,7 +3207,7 @@ function user_info(string $name): string {
     global $conf, $tpl;
     if (!$name) return '';
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
-        return $tpl->getHtmlFrag('breadcrumb-link', [
+        return $tpl->getHtmlFrag('link', [
             'href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($name),
             'title' => (string)_PERSONALINFO,
             'label' => $name,
@@ -3244,7 +3244,7 @@ function getCartSummary(string $info = ''): string {
             }
             $price = $price * $i;
             $ptotal += $price;
-            $cont .= $tpl->getHtmlFrag('kasse-basic', [
+            $cont .= $tpl->getHtmlFrag('shop-cart-item-row', [
                 'id' => $id,
                 'title_href' => 'index.php?name=shop&amp;op=view&amp;id='.$id,
                 'title_attr' => $title,
@@ -3258,7 +3258,7 @@ function getCartSummary(string $info = ''): string {
                 'minus_query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id,
             ]);
         }
-        return $tpl->getHtmlFrag('kasse-wrap', [
+        return $tpl->getHtmlFrag('shop-cart-table', [
             'open' => true,
             'title' => _PBASKET,
             'col_id' => _ID,
@@ -3266,7 +3266,7 @@ function getCartSummary(string $info = ''): string {
             'col_qty' => cutstr(_QUANTITY, 3, 1),
             'col_price' => _PREIS,
             'col_fn' => _FUNCTIONS,
-        ]).$cont.$tpl->getHtmlFrag('kasse-wrap', [
+        ]).$cont.$tpl->getHtmlFrag('shop-cart-table', [
             'cart_href' => 'index.php?name=shop&amp;op=kasse',
             'cart_title' => _SCACH,
             'cart_label' => _SCACH,
@@ -3545,8 +3545,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
         $deact = ($text) ? _DEACTIVATE.': '.$text : _DEACTIVATE;
         $act = ($text) ? _ACTIVATE.': '.$text : _ACTIVATE;
         return ($id == 1)
-            ? $tpl->getHtmlFrag('link-btn', ['href' => $link, 'title' => $deact, 'class' => '', 'label' => $deact])
-            : $tpl->getHtmlFrag('link-btn', ['href' => $link, 'title' => $act, 'class' => '', 'label' => $act]);
+            ? $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $deact, 'class' => '', 'label' => $deact])
+            : $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $act, 'class' => '', 'label' => $act]);
     }
     return ($id == 1)
         ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _ACT, 'class' => 'sl_n_act', 'label' => ''])
@@ -3571,7 +3571,7 @@ function rss_select(): string {
             preg_match("#(.*)\|(.*)\|(.*)#i", $val, $out);
             if ($out[1] != '0' && $out[2] != '0') {
                 $link = (!preg_match("#http\:\/\/#i", $out[2])) ? $conf['homeurl'].'/'.$out[2] : $out[2];
-                $cont .= $tpl->getHtmlFrag('new/select-option', [
+                $cont .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $link,
                     'label_text' => $out[1],
                     'is_selected' => $url == $out[2],
@@ -4226,10 +4226,10 @@ function encode_php(array $text): string {
             } else {
                 $chtml = preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
             }
-            $rows .= $tpl->getHtmlFrag('new/code-row', ['row_style' => $bgcolor, 'row_num' => $count, 'code_html' => $chtml]);
+            $rows .= $tpl->getHtmlFrag('code-row', ['row_style' => $bgcolor, 'row_num' => $count, 'code_html' => $chtml]);
             $count++;
         }
-        $format = $tpl->getHtmlFrag('new/code-table', ['rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
+        $format = $tpl->getHtmlFrag('code-table', ['rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
     } elseif ($conf['syntax'] == 2) {
         if ($sname !== 'hljs') {
             $scripts = getHtmlScriptSrc('plugins/highlightjs/highlight.min.js');
@@ -4241,9 +4241,9 @@ function encode_php(array $text): string {
         }
         $hmap = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'];
         $hlang = $hmap[$ucname] ?? $ucname;
-        $format = $tpl->getHtmlFrag('new/code-hljs', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
+        $format = $tpl->getHtmlFrag('code-hljs', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
     }
-    return $tpl->getHtmlFrag('new/code-block', ['title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'format_html' => $format ?? '']);
+    return $tpl->getHtmlFrag('code-block', ['title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'format_html' => $format ?? '']);
 }
 
 # Mail check
@@ -4266,10 +4266,10 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             if (file_exists('blocks/'.$bfile)) {
                 include('blocks/'.$bfile);
             } else {
-                $content = $tpl->getHtmlFrag('new/msg-center', ['text' => (string)_BLOCKPROBLEM]);
+                $content = $tpl->getHtmlFrag('msg-center', ['text' => (string)_BLOCKPROBLEM]);
             }
         }
-        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('new/msg-center', ['text' => (string)_BLOCKPROBLEM2]);
+        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('msg-center', ['text' => (string)_BLOCKPROBLEM2]);
         switch($side) {
             case 'b':
             $showbanners = $content;
@@ -4460,8 +4460,8 @@ function getAsyncPager(string $frag, int $count, int $pages, int $page, int $mnu
         } else {
             $cnext = getTplPagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
-        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $page, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
-        return $tpl->getHtmlFrag($frag, $data);
+        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'limit' => $page, 'perpage' => _PERPAGE, 'items' => $cont, 'prev' => $cprev, 'next' => $cnext];
+        return $tpl->getHtmlFrag('pager', $data);
     }
     return '';
 }
