@@ -373,7 +373,7 @@ function add(): void {
             'username'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname'  => $postname,
             'titleval'  => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
             'hometext'  => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _ANSWER, 'required' => '1']),
             'captcha'   => getCaptcha(1),
             'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),

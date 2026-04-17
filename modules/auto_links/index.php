@@ -45,7 +45,7 @@ function autolink(): void {
             $thref  = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id]);
             $date   = format_time($time);
             $iso    = date('c', strtotime($time));
-            $hbadge = $tpl->getHtmlFrag('hit-badge', ['title' => _HITS, 'text' => $hits, 'cls' => 'sl_hits']);
+            $hbadge = $tpl->getHtmlFrag('inline-badge', ['title_text' => _HITS, 'label' => $hits, 'is_hits' => true]);
             $ask    = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$sitename.'&quot;?');
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
@@ -188,7 +188,7 @@ function send(): void {
                 $rows .= $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_IMG, 'code' => $code]);
             }
         }
-        $cont .= $tpl->getHtmlFrag('auto-links-code-table', ['rows' => $rows]);
+        $cont .= $tpl->getHtmlFrag('code-table', ['rows_html' => $rows]);
         echo $cont;
         setFoot();
     } else {

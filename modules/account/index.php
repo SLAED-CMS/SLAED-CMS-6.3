@@ -155,7 +155,7 @@ function finnewuser(): void {
                     'submit_label' => _ACTIVATIONSUB,
                 ]);
             } else {
-                $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => str_replace('&amp;', '&', $finishlink), 'target' => ' target="_blank"']);
+                $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label_html' => str_replace('&amp;', '&', $finishlink), 'is_blank' => true]);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -762,7 +762,7 @@ function passmail(): void {
             $newpass = getPass($conf['users']['minpass']);
             $chash = getPassHash($newpass);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
-            $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'target' => '']);
+            $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -773,7 +773,7 @@ function passmail(): void {
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
-            $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'target' => '']);
+            $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -841,7 +841,7 @@ function edithome(): void {
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
             while ($xusnum <= 20) {
-                $story .= $tpl->getHtmlFrag('form-option', ['value' => (string)$xusnum, 'label' => (string)$xusnum, 'selected' => $xusnum == $userinfo['storynum'] ? ' selected' : '']);
+                $story .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$xusnum, 'label_text' => (string)$xusnum, 'is_selected' => $xusnum == $userinfo['storynum']]);
                 $xusnum++;
             }
         }
@@ -852,7 +852,7 @@ function edithome(): void {
             foreach ($list ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
                 if (!is_dir('templates/'.$file)) continue;
-                $theme .= $tpl->getHtmlFrag('form-option', ['value' => (string)$file, 'label' => (string)$file, 'selected' => $file == $userinfo['theme'] ? ' selected' : '']);
+                $theme .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $userinfo['theme']]);
                 $tcount++;
             }
         }
@@ -1048,7 +1048,7 @@ function savepass(): void {
                     $userinfo = getUserInfo();
                     $mail = $userinfo['email'];
                     $nick = $userinfo['name'];
-                    $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'target' => '']);
+                    $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
                     addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);

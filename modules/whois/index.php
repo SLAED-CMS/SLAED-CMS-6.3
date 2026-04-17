@@ -32,7 +32,7 @@ function mwhois(): void {
 	$exmas = ['ru', 'com', 'net', 'org', 'biz', 'info', 'name', 'us', 'de', 'in', 'co.in', 'firm.in', 'gen.in', 'ind.in', 'net.in', 'org.in', 'com.ru', 'net.ru', 'org.ru', 'pp.ru', 'spb.ru', 'msk.ru', 'ws', 'cn'];
 	foreach ($exmas as $val) {
 		if ($val != '') {
-			$domainoptOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)'.'.$val, 'selected' => $val == $ext ? ' selected' : '']);
+			$domainoptOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$val, 'label_text' => (string)'.'.$val, 'is_selected' => $val == $ext]);
 		}
 	}
 	

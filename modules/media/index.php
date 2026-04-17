@@ -93,7 +93,7 @@ function media(): void {
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['media']['date']) ? format_time($time) : '';
             $iso  = ($conf['media']['date']) ? date('c', strtotime($time)) : '';
-            $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
+            $links = (url_types($links)) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _MDOWN.': '.url_types($links), 'label' => url_types($links), 'is_download' => true]) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
             $cont .= $tpl->getHtmlFrag('card', [
@@ -268,7 +268,7 @@ function view(): void {
         $rating    = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$ptitle.'&quot;?');
-        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
+        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $year      = ($year)      ? _MYEAR.': '.$year           : '';
         $director  = ($director)  ? _MDIRECTOR.': '.$director   : '';
         $roles     = ($roles)     ? _MROLES.': '.$roles          : '';
@@ -291,11 +291,11 @@ function view(): void {
                         if (substr($val, 0, 4) == 'ed2k') {
                             $esize = explode('|', $val);
                             $einfo = ($esize[3]) ? _SIZE.': '.filterSize($esize[3]) : '';
-                            $elink = $tpl->getHtmlFrag('media-link-item', ['href' => $val, 'title' => _URL.' '.$e.' - '.$einfo, 'class' => 'sl_ed2k', 'label' => _URL.' '.$e.' - '.$einfo]);
+                            $elink = $tpl->getHtmlFrag('link', ['href' => $val, 'title' => _URL.' '.$e.' - '.$einfo, 'label' => _URL.' '.$e.' - '.$einfo, 'is_blank' => true, 'is_media_ed2k' => true]);
                             $mlinks .= (!$i) ? $elink : $tpl->getHtmlFrag('media-link-break').$elink;
                             $e++;
                         } else {
-                            $hlink = $tpl->getHtmlFrag('media-link-item', ['href' => $val, 'title' => _URL.': '.url_types($val), 'class' => 'sl_http', 'label' => _URL.': '.url_types($val)]);
+                            $hlink = $tpl->getHtmlFrag('link', ['href' => $val, 'title' => _URL.': '.url_types($val), 'label' => _URL.': '.url_types($val), 'is_blank' => true, 'is_media_http' => true]);
                             $mlinks .= (!$i) ? $hlink : $tpl->getHtmlFrag('media-link-break').$hlink;
                         }
                         $i++;
@@ -427,20 +427,20 @@ function add(): void {
         $linksRows = '';
         $y = $date['year'] - 100;
         while ($y <= ($date['year'] + 1)) {
-            $yearOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$y, 'label' => (string)$y, 'selected' => $y == $year ? ' selected' : '']);
+            $yearOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$y, 'label_text' => (string)$y, 'is_selected' => $y == $year]);
             $y++;
         }
         $langOptions = '';
         foreach (explode(',', (string)($conf['media']['lang'] ?? '')) as $val) {
-            $langOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)$val, 'selected' => ($val === $lang && $val !== '') ? ' selected' : '']);
+            $langOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$val, 'label_text' => (string)$val, 'is_selected' => $val === $lang && $val !== '']);
         }
         $formatOptions = '';
         foreach (explode(',', (string)($conf['media']['format'] ?? '')) as $val) {
-            $formatOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)$val, 'selected' => ($val === $format && $val !== '') ? ' selected' : '']);
+            $formatOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$val, 'label_text' => (string)$val, 'is_selected' => $val === $format && $val !== '']);
         }
         $qualityOptions = '';
         foreach (explode(',', (string)($conf['media']['quality'] ?? '')) as $val) {
-            $qualityOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$val, 'label' => (string)$val, 'selected' => ($val === $quality && $val !== '') ? ' selected' : '']);
+            $qualityOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$val, 'label_text' => (string)$val, 'is_selected' => $val === $quality && $val !== '']);
         }
         $i = 0;
         while ($i < $conf['media']['links']) {
@@ -456,8 +456,8 @@ function add(): void {
         $fieldsAfterText = $tpl->getHtmlFrag('form-field-row', ['label' => _MCREATEDBY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby, 'maxlength_num' => '100', 'placeholder_text' => _MCREATEDBY])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MDURATION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration, 'maxlength_num' => '100', 'placeholder_text' => _MDURATION])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langOptions])]);
-        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MFORMAT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _NO_INFO, 'selected' => '']).$formatOptions])]);
-        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MQUALITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _NO_INFO, 'selected' => '']).$qualityOptions])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MFORMAT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => false]).$formatOptions])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MQUALITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => false]).$qualityOptions])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MSIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size, 'maxlength_num' => '100', 'placeholder_text' => _MSIZE])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MRELEASED, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released, 'maxlength_num' => '100', 'placeholder_text' => _MRELEASED])]);
         $fieldsAfterText .= $linksRows;
@@ -474,7 +474,7 @@ function add(): void {
             'username'       => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname'       => $postname,
             'titleval'       => $title,
-            'catselect'      => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
+            'catselect'      => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
             'fields_before_text' => $fieldsBeforeText,
             'hometext'       => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']),
             'bodytext'       => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0']),

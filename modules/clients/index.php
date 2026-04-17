@@ -21,7 +21,17 @@ function clients(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
-        $cont .= $tpl->getHtmlFrag('clients-list-open', ['id' => _ID, 'title' => _CTITLE, 'version' => _CVERSION, 'loads' => _CLOADS, 'functions' => _FUNCTIONS]);
+        $cont .= $tpl->getHtmlFrag('table', [
+            'open' => true,
+            'sortable' => true,
+            'headers' => [
+                ['text' => _ID, 'is_num' => true],
+                ['text' => _CTITLE],
+                ['text' => _CVERSION],
+                ['text' => _CLOADS],
+                ['text' => _FUNCTIONS, 'no_sort' => true],
+            ],
+        ]);
         $i = 0;
         $a = 1;
         while ([$id, $title, $body, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
@@ -34,24 +44,26 @@ function clients(): void {
             $moder = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=clients_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]).'||' : '';
             $acont = add_menu(
                 $moder
-                .$tpl->getHtmlFrag('link', ['href' => 'javascript:HideShow(\'cl'.$i.'\',\'blind\',\'up\',500);', 'title' => _CINFO, 'class' => '', 'label' => _CINFO]).'||'
+                .$tpl->getHtmlFrag('link', ['href' => 'javascript:HideShow(\'cl'.$i.'\',\'blind\',\'up\',500);', 'title' => _CINFO, 'label' => _CINFO]).'||'
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
             );
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $cont .= $tpl->getHtmlFrag('clients-list-basic', [
-                'row_id' => $a,
-                'tip' => getTplTitleTip(_CDATE.': '.$time),
-                'title_text' => $title,
-                'version_text' => $num,
-                'hits_text' => $hits,
-                'actions' => $acont,
+            $cont .= $tpl->getHtmlFrag('table-row', [
+                'id' => (string)$a,
+                'cells' => [
+                    ['text' => (string)$a, 'href' => '#'.$a, 'title' => (string)$a, 'is_num' => true],
+                    ['prefix_html' => getTplTitleTip(_CDATE.': '.$time), 'text' => $title],
+                    ['text' => (string)$num],
+                    ['text' => (string)$hits],
+                    ['content_html' => $acont],
+                ],
             ]);
             $conts .= $tpl->getHtmlFrag('clients-list-info', ['panel_id' => 'cl'.$i, 'body' => $prs->filterContent($body, false, $conf['name'])]);
             $i++;
             $a++;
         }
-        $cont .= '</tbody></table>'.$conts;
+        $cont .= $tpl->getHtmlFrag('table', []).$conts;
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }

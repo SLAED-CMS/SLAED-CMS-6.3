@@ -29,7 +29,7 @@ function money(): void {
         ['Rechner1', _MO_3.' R:', 'RUB'],
         ['Rechner2', _MO_3.' E:', 'EUR'],
     ] as [$fnname, $tolbl, $tocur]) {
-        $cont .= $tpl->getHtmlFrag('money-calculator-form', [
+        $cont .= $tpl->getHtmlPart('calculator-form', [
             'btn_label' => _MO_4,
             'fn_name' => $fnname,
             'from_label' => _MO_2,

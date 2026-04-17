@@ -25,14 +25,14 @@ function info(): void {
     $mods = ['faq' => _FAQ, 'files' => _FILES, 'links' => _LINKS, 'media' => _MEDIA, 'news' => _NEWS, 'pages' => _PAGES, 'shop' => _SHOP];
     foreach ($mods as $key => $val) {
         if (is_active($key)) {
-            $modsOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$key, 'label' => (string)$val, 'selected' => $key == $mod ? ' selected' : '']);
+            $modsOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$key, 'label_text' => (string)$val, 'is_selected' => $key == $mod]);
         }
     }
     $numOptions = '';
     $lim = 1;
     while ($lim <= $conf['rss']['max']) {
         $rsslim = ($num) ? $num : $conf['rss']['min'];
-        $numOptions .= $tpl->getHtmlFrag('form-option', ['value' => (string)$lim, 'label' => (string)_RSS_INFO_MENG.' - '.$lim, 'selected' => $lim == $rsslim ? ' selected' : '']);
+        $numOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$lim, 'label_text' => (string)_RSS_INFO_MENG.' - '.$lim, 'is_selected' => $lim == $rsslim]);
         $lim++;
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
@@ -43,7 +43,7 @@ function info(): void {
         'lbl_tip' => _RSS_INFO_TIP,
         'mods_options' => $modsOptions,
         'lbl_categories' => _CATEGORIES,
-        'catselect' => getTplCategorySelect($mod, $cat, 'cat', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _RSS_INFO_ALL, 'selected' => ' selected'])),
+        'catselect' => getTplCategorySelect($mod, $cat, 'cat', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _RSS_INFO_ALL, 'is_selected' => true])),
         'lbl_amount' => _RSS_INFO_MENG,
         'num_options' => $numOptions,
         'lbl_code' => _CODE,

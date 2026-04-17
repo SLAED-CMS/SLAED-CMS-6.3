@@ -78,7 +78,7 @@ function news(): void {
     $sql = 'SELECT s.id, s.cid, s.name, s.title, s.time, s.intro, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum;
     $result = $db->getSqlQuery($sql, $params);
     if ($db->getSqlRowCount($result) > 0) {
-        $width = 100 / $conf['news']['bascol'];
+        $columns = max(1, min(6, (int)$conf['news']['bascol']));
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
@@ -100,7 +100,7 @@ function news(): void {
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
-                'width' => $width,
+                'columns' => $columns,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
                 'title_text' => $stitle,
@@ -401,7 +401,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
+            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
             'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'fields' => getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]),

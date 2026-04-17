@@ -90,7 +90,7 @@ function files(): void {
             $post   = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date   = ($conf['files']['date']) ? format_time($time) : '';
             $iso    = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
-            $hits   = ($conf['files']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _FILEHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
+            $hits   = ($conf['files']['hits']) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _FILEHITS, 'label' => $hits, 'is_download' => true]) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask    = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             $cont .= $tpl->getHtmlFrag('card', [
@@ -262,7 +262,7 @@ function view(): void {
         $post  = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date  = ($conf['files']['date']) ? format_time($time) : '';
         $iso   = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
-        $hits  = ($conf['files']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _FILEHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
+        $hits  = ($conf['files']['hits']) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _FILEHITS, 'label' => $hits, 'is_download' => true]) : '';
         $rating    = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
@@ -270,7 +270,7 @@ function view(): void {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
             $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
         }
-        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl-but-blue']) : '';
+        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder'      => is_moder($conf['name']),
             'id'            => $id,
@@ -400,7 +400,7 @@ function add(): void {
             'postname'    => $postname,
             'emailval'    => $mail,
             'titleval'    => $title,
-            'catselect'   => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('form-option', ['value' => '', 'label' => _HOMECAT, 'selected' => ''])),
+            'catselect'   => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
             'hometext'    => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
             'bodytext'    => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
             'siteval'     => $home,
@@ -492,11 +492,11 @@ function loading(): void {
         } elseif ($conf['files']['stream'] == '1') {
             stream($url, preg_replace('#(.*?)\/#i', '', $url));
         } else {
-            $info = sprintf(_NOTEDOWNLOAD, $stitle, $tpl->getHtmlFrag('files-external-link', ['href' => $url, 'title' => _UPLOAD.': '.$stitle, 'label' => $url]));
+            $info = sprintf(_NOTEDOWNLOAD, $stitle, $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _UPLOAD.': '.$stitle, 'label' => $url, 'is_blank' => true]));
             setHead(['title' => _FILES]);
             $cont = getModuleNavi(['title' => _FILES]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
-            $cont .= $tpl->getHtmlFrag('navi-lower', [
+            $cont .= $tpl->getHtmlPart('navi-lower', [
                 'back_title' => _BACK,
                 'back_label' => _BACK,
                 'home_href' => 'index.php?name='.$conf['name'],

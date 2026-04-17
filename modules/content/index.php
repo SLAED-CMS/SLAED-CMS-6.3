@@ -34,20 +34,27 @@ function content(): void {
                 'tip_reads' => (string)$counter,
                 'tip_reads_label' => _READS,
             ]);
-            $cont .= $tpl->getHtmlFrag('table-row-content', [
+            $menu = '';
+            if ($ismoder) {
+                $edit = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]);
+                $delete = $tpl->getHtmlFrag('action-delete', [
+                    'href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
+                    'title' => _ONDELETE,
+                    'label' => _ONDELETE,
+                    'confirm_text' => $ask,
+                ]);
+                $menu = $tpl->getHtmlFrag('editor-action-menu', [
+                    'editor_label' => _EDITOR,
+                    'items_html' => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $edit]).$tpl->getHtmlFrag('action-menu-item', ['item_html' => $delete]),
+                ]);
+            }
+            $cont .= $tpl->getHtmlFrag('table-row', [
                 'id' => (string)$id,
-                'href' => $href,
-                'title_attr' => $title,
-                'title_text' => $title,
-                'title_new' => getTplNewGraphic($time),
-                'tip' => $tip,
-                'is_moder' => $ismoder,
-                'editor' => _EDITOR,
-                'edit_href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id,
-                'edit_text' => _FULLEDIT,
-                'delete_href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
-                'delete_text' => _ONDELETE,
-                'delete_ask' => $ask,
+                'cells' => [
+                    ['is_num' => true, 'href' => '#'.$id, 'title' => (string)$id, 'text' => (string)$id],
+                    ['content_html' => getTplNewGraphic($time).' '.$tpl->getHtmlFrag('link', ['href' => $href, 'title' => $title, 'label' => $title, 'suffix_html' => $tip])],
+                    ['content_html' => $menu],
+                ],
             ]);
         }
         $cont .= $tpl->getHtmlFrag('table', []);
