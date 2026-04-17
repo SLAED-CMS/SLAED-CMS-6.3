@@ -1,6 +1,6 @@
 <li class="sl-related-item">
-	<a href="{{{ href }}}" title="{{ title_attr }}" class="sl-related-img" style="background-image: url({{ img_src }});"></a>
+	<a href="{{{ href }}}" title="{{ title_attr }}" class="sl-related-img"><img src="{{ img_src }}" alt="{{ title_attr }}" class="sl-related-img-inner"></a>
 	<b><a href="{{{ href }}}" title="{{ title_attr }}">{{ title_text }}</a></b>
 	<p>{{{ text }}}</p>
-	{% if date_text %}<ul class="sl-related-meta"><li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl_date">{{ date_text }}</time></li></ul>{% endif %}
+	{% if date_text %}<ul class="sl-related-meta"><li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-related-date">{{ date_text }}</time></li></ul>{% endif %}
 </li>

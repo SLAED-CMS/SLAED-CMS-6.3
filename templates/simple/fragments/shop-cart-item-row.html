@@ -1,10 +1,10 @@
-<tr id="kasse-{{ id }}" class="forum-line">
-    <td class="fl-col-num"><a href="#kasse-{{ id }}" title="{{ id }}" class="sl_pnum">{{ id }}</a></td>
-    <td class="fl-col-content"><h4><a href="{{{ title_href }}}" title="{{ title_attr }}">{{ title_text }}</a> {{{ title_new }}}</h4></td>
-    <td class="fl-col-num">{{ qty }}</td>
-    <td class="fl-col-stat">{{ price_text }}</td>
-    <td class="fl-col-stat">
-        <a href="index.php?{{{ plus_query }}}" hx-get="index.php?{{{ plus_query }}}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" title="{{ plus_title }}" class="sl_shop_plus"></a>
-        <a href="index.php?{{{ minus_query }}}" hx-get="index.php?{{{ minus_query }}}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" title="{{ minus_title }}" class="sl_shop_minus"></a>
-    </td>
+<tr id="kasse-{{ id }}" class="sl-cart-row">
+	<td class="sl-cart-col-num"><a href="#kasse-{{ id }}" title="{{ id }}" class="sl-cart-id">{{ id }}</a></td>
+	<td class="sl-cart-col-content"><h4><a href="{{{ title_href }}}" title="{{ title_attr }}">{{ title_text }}</a> {{{ title_new }}}</h4></td>
+	<td class="sl-cart-col-num">{{ qty }}</td>
+	<td class="sl-cart-col-stat">{{ price_text }}</td>
+	<td class="sl-cart-col-stat">
+		<a href="index.php?{{{ plus_query }}}" hx-get="index.php?{{{ plus_query }}}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" title="{{ plus_title }}" class="sl-cart-plus"></a>
+		<a href="index.php?{{{ minus_query }}}" hx-get="index.php?{{{ minus_query }}}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" title="{{ minus_title }}" class="sl-cart-minus"></a>
+	</td>
 </tr>

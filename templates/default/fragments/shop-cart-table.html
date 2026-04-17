@@ -1,8 +1,8 @@
-{% if open %}<h3 class="heading2">{{ title }}</h3>
-<table class="sl_table_list">
-    <thead><tr class="forum-table-head"><th class="fl-col-num">{{ col_id }}</th><th>{{ col_product }}</th><th class="fl-col-num">{{ col_qty }}</th><th class="fl-col-stat">{{ col_price }}</th><th class="fl-col-stat">{{ col_fn }}</th></tr></thead>
-    <tbody>
-{% else %}        <tr class="forum-table-foot"><td colspan="2"><a href="{{{ cart_href }}}" title="{{ cart_title }}" class="sl_shop_kasse">{{ cart_label }}</a></td><td colspan="3"><span title="{{ total_title }}" class="sl_shop_total">{{ total_text }}</span></td></tr>
-    </tbody>
+<h3 class="sl-cart-title">{{ title }}</h3>
+<table class="sl-cart-table">
+	<thead><tr class="sl-cart-head"><th class="sl-cart-col-num">{{ col_id }}</th><th>{{ col_product }}</th><th class="sl-cart-col-num">{{ col_qty }}</th><th class="sl-cart-col-stat">{{ col_price }}</th><th class="sl-cart-col-stat">{{ col_fn }}</th></tr></thead>
+	<tbody>
+		{{{ rows_html }}}
+		<tr class="sl-cart-foot"><td colspan="2"><a href="{{{ cart_href }}}" title="{{ cart_title }}" class="sl-cart-checkout">{{ cart_label }}</a></td><td colspan="3"><span title="{{ total_title }}" class="sl-cart-total">{{ total_text }}</span></td></tr>
+	</tbody>
 </table>
-{% endif %}
