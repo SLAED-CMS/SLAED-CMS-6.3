@@ -1572,7 +1572,7 @@ function filterTextHighlight(string $sourse, string $word): string {
     $sourse = preg_replace_callback($pattern, static function(array $m) use ($tpl): string {
         return defined('ADMIN_FILE')
             ? $tpl->getHtmlFrag('span-raw', ['class' => 'sl_word', 'content' => $m[0], 'title' => ''])
-            : $tpl->getHtmlFrag('span', ['class' => 'sl_word', 'text' => $m[0]]);
+            : $tpl->getHtmlFrag('span', ['is_highlight' => true, 'text' => $m[0]]);
     }, $sourse);
     return str_replace($to, $from, $sourse);
 }
@@ -2414,7 +2414,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
         $label = preg_match('/<[^>]+>/', $p['tab']) ? $p['tab'] : htmlspecialchars($p['tab'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         return $tpl->getHtmlFrag('navi-tab-link', ['href' => '#'.$pref.'_'.$id.'_'.$p['id'], 'label_html' => $label]);
     }, $pairs));
-    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('navi-tab-content', ['tab_id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
+    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('post-div', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
     return $tpl->getHtmlFrag('navi-tabs-wrap', ['tabs_html' => $tlinks, 'content_html' => $cdivs, 'id' => $id]);
 }
 
@@ -3006,7 +3006,7 @@ function user_geo_ip(string $ip, int $id = 4): string {
         }
         $imgf = str_replace(' ', '_', strtolower($ip));
         $src = file_exists(img_find('lang/'.$imgf.'.png')) ? img_find('lang/'.$imgf.'.png') : img_find('lang/white.png');
-        $flag = $tpl->getHtmlFrag('geo-ip-flag', ['src' => $src, 'name' => $ip]);
+        $flag = $tpl->getHtmlFrag('span', ['img_src' => $src, 'img_alt' => $ip, 'is_geo_flag' => true]);
         return ($id == 4) ? $flag.$iplink : $flag;
     }
     return ($id == 4) ? $iplink : '';
@@ -3256,7 +3256,7 @@ function getCartSummary(string $info = ''): string {
             $pm[$ph] = $pid;
         }
         $result = $db->getSqlQuery('SELECT id, time, title, price FROM '.PREFIX_DB.'_products WHERE id IN ('.implode(', ', $pp).')', $pm);
-        $cont = '';
+        $rows = '';
         $ptotal = 0;
         while (list($id, $time, $title, $price) = $db->getSqlRow($result)) {
             $i = 0;
@@ -3265,7 +3265,7 @@ function getCartSummary(string $info = ''): string {
             }
             $price = $price * $i;
             $ptotal += $price;
-            $cont .= $tpl->getHtmlFrag('shop-cart-item-row', [
+            $rows .= $tpl->getHtmlFrag('shop-cart-item-row', [
                 'id' => $id,
                 'title_href' => 'index.php?name=shop&amp;op=view&amp;id='.$id,
                 'title_attr' => $title,
@@ -3280,14 +3280,13 @@ function getCartSummary(string $info = ''): string {
             ]);
         }
         return $tpl->getHtmlFrag('shop-cart-table', [
-            'open' => true,
             'title' => _PBASKET,
             'col_id' => _ID,
             'col_product' => _PRODUCT,
             'col_qty' => cutstr(_QUANTITY, 3, 1),
             'col_price' => _PREIS,
             'col_fn' => _FUNCTIONS,
-        ]).$cont.$tpl->getHtmlFrag('shop-cart-table', [
+            'rows_html' => $rows,
             'cart_href' => 'index.php?name=shop&amp;op=kasse',
             'cart_title' => _SCACH,
             'cart_label' => _SCACH,
@@ -4804,14 +4803,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
             $date = $tpl->getHtmlFrag('comment-date', ['title' => (string)_PADD, 'text' => format_time($com_date, _TIMESTRING)]);
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : '';
-            $amess = $tpl->getHtmlFrag('comment-num-link', ['com_id' => $com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a]);
+            $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_num_anchor' => true]);
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
             $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('comment-rank-image', ['src' => img_find('ranks/'.$user_grank), 'title' => $trank]) : '';
             $rate = (!empty($user_id)) ? getRatingAsync(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
             $rwarn = (!empty($user_warnings)) ? htmlspecialchars(_UWARNS, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(warnings($user_warnings), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $group = (!empty($user_gname)) ? $tpl->getHtmlFrag('comment-meta-color', ['label' => _GROUP, 'value' => $user_gname, 'color' => $user_gcolor]) : '';
+            $group = (!empty($user_gname)) ? $tpl->getHtmlFrag('meta-value', ['label' => _GROUP, 'value' => $user_gname]) : '';
             $point = ($conf['users']['point'] && !empty($user_points)) ? htmlspecialchars(_POINTS, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars((string) $user_points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $regdate = (!empty($user_regdate)) ? htmlspecialchars(_REG, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(format_time($user_regdate), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _NO_INFO;
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
@@ -4860,7 +4859,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 }
             }
             $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-            $text = $tpl->getHtmlFrag('comment-text', ['div_id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
+            $text = $tpl->getHtmlFrag('post-div', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
             if (defined('ADMIN_FILE')) {
                 $markAll = $tpl->getHtmlFrag('checkbox-input', [
                     'name_attr' => 'markcheck',

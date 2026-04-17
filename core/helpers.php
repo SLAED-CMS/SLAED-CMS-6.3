@@ -170,7 +170,7 @@ function getTplRefreshTimeSelect(array $data = []): string {
             'is_selected' => $valu === $value,
         ]);
     }
-    return $tpl->getHtmlFrag('refresh-select-time', [
+    return $tpl->getHtmlFrag('select', [
         'name_attr' => $name,
         'options_html' => $opts,
     ]);
@@ -315,9 +315,9 @@ function getTplBbEditor(array $data = []): string {
     $bottom .= $drop(
         $btn("HideShow('t-form-".$id."', 'blind', 'up', 500);", 'sl_bb_text', _TEXT),
         '<div id="t-form-'.$ei.'" class="sl_drop-form"><ul>'
-        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'family', 'options_html' => $fonts, 'select_attr' => 'OnChange="InsertCode(\'family\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
-        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'color', 'options_html' => $colors, 'select_attr' => 'OnChange="InsertCode(\'color\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
-        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'size', 'options_html' => $fsizes, 'select_attr' => 'OnChange="InsertCode(\'size\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
+        .'<li>'.$tpl->getHtmlFrag('select', ['name_attr' => 'family', 'options_html' => $fonts, 'select_attr' => 'OnChange="InsertCode(\'family\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
+        .'<li>'.$tpl->getHtmlFrag('select', ['name_attr' => 'color', 'options_html' => $colors, 'select_attr' => 'OnChange="InsertCode(\'color\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
+        .'<li>'.$tpl->getHtmlFrag('select', ['name_attr' => 'size', 'options_html' => $fsizes, 'select_attr' => 'OnChange="InsertCode(\'size\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
         .'</ul></div>'
     );
 
@@ -329,7 +329,7 @@ function getTplBbEditor(array $data = []): string {
     $bottom .= $drop(
         $btn("HideShow('c-form-".$id."', 'blind', 'up', 500);", 'sl_bb_code', _CODE),
         '<div id="c-form-'.$ei.'" class="sl_drop-form"><ul>'
-        .'<li>'.$tpl->getHtmlFrag('multi-select', ['name_attr' => 'code', 'options_html' => $fcodes, 'select_attr' => 'OnChange="InsertCode(\'code\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
+        .'<li>'.$tpl->getHtmlFrag('select', ['name_attr' => 'code', 'options_html' => $fcodes, 'select_attr' => 'OnChange="InsertCode(\'code\', this.options[this.selectedIndex].value, \'\', \'\', \''.$ei.'\'); this.selectedIndex=0;"']).'</li>'
         .'</ul></div>'
     );
 
@@ -640,8 +640,11 @@ function getTplUserSearchInput(array $data = []): string {
     if ($tip !== '') {
         $tiphtml = getTplTitleTip([['label' => _INFO, 'value' => $tip]]);
     }
-    return $tpl->getHtmlFrag('user-search', [
+    return $tpl->getHtmlFrag('input', [
         'endpoint_attr' => $endpoint,
+        'is_required' => true,
+        'is_user_search' => true,
+        'itype' => 'text',
         'input_id' => $inpid,
         'list_id' => $list,
         'maxlength_num' => (int)($data['maxlength'] ?? 25),
@@ -1013,7 +1016,7 @@ function getTplModuleSelect(string $name, string $clas, string $mod, string $no 
         }
         $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
     }
-    return $tpl->getHtmlFrag('multi-select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
 }
 
 # Render a select with category-enabled modules
