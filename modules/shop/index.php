@@ -572,7 +572,23 @@ function partners(): void {
 					}
 					$cont .= $content.$tpl->getHtmlFrag('table', []);
 				}
-				$cont .= $tpl->getHtmlFrag('shop-partners-summary', ['head_clients' => _CLIENTEN, 'head_webmoney' => _WEBMONEY, 'head_paypal' => _PAYPAL, 'head_total' => _PARTNERGES, 'head_rest' => _PARTNERREST, 'head_paid' => _PARTNERBEK, 'clients' => $a, 'webmoney' => $pawebmoney, 'paypal' => $papaypal, 'total' => $partsumges.' '.$conf['shop']['valute'], 'rest' => $parest.' '.$conf['shop']['valute'], 'paid' => $pabek.' '.$conf['shop']['valute']]);
+				$cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'headers' => [
+					['text' => _CLIENTEN],
+					['text' => _WEBMONEY],
+					['text' => _PAYPAL],
+					['text' => _PARTNERGES],
+					['text' => _PARTNERREST],
+					['text' => _PARTNERBEK],
+				]]);
+				$cont .= $tpl->getHtmlFrag('table-row', ['cells' => [
+					['text' => (string)$a],
+					['text' => $pawebmoney],
+					['text' => $papaypal],
+					['text' => $partsumges.' '.$conf['shop']['valute']],
+					['text' => $parest.' '.$conf['shop']['valute']],
+					['text' => $pabek.' '.$conf['shop']['valute']],
+				]]);
+				$cont .= $tpl->getHtmlFrag('table', []);
 				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
 				$cont .= $prs->filterContent(str_replace('[id]', $uid, $conf['shop']['partinfo2']), false, $conf['name']);
 			}
@@ -580,7 +596,37 @@ function partners(): void {
 			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
 			$cont .= $prs->filterContent($conf['shop']['partinfo'], false, $conf['name']);
 			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
-			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);
+			$fields = [
+				[_C_PIN, 'text', 'paname', '', _C_PINB, true],
+				[_C_PIP, 'text', 'paaddr', '', _C_PIPB, true],
+				[_C_TEL, 'text', 'paphone', '', _C_TELB, true],
+				[_EMAIL, 'email', 'paemail', $smail, _C_MAILB, true],
+				[_SITE, 'url', 'pawebsite', $sdom, _SDOMB, false],
+				[_WEBMONEY, 'text', 'pawebmoney', '', _C_WEBMONEYB, false],
+				[_PAYPAL, 'text', 'papaypal', '', _C_MAILB, false],
+			];
+			$rows = '';
+			foreach ($fields as [$label, $type, $name, $value, $placeholder, $required]) {
+				$rows .= $tpl->getHtmlFrag('form-field-row', [
+					'label' => $label.':',
+					'field_html' => $tpl->getHtmlFrag('input', [
+						'itype' => $type,
+						'name_attr' => $name,
+						'value_attr' => $value,
+						'maxlength_num' => 255,
+						'placeholder_text' => $placeholder,
+						'is_required' => $required,
+					]),
+				]);
+			}
+			$extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'puid', 'value_attr' => (string)$uid, 'input_attr' => '']);
+			$cont .= $tpl->getHtmlPart('form-add', [
+				'action' => 'index.php?name='.$conf['name'],
+				'extrafields' => $rows,
+				'name' => $conf['name'],
+				'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'partners_send', 'extra' => $extra, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _PARTNERSEND]),
+				'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'),
+			]);
 		}
 		echo $cont;
 		setFoot();

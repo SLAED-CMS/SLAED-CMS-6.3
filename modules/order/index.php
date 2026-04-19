@@ -28,7 +28,7 @@ function order(): void {
             'label' => _OR_2.':',
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'input_class' => '', 'itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $mail]),
         ]);
-        $rows .= getTplFieldsIn($field, $conf['name']);
+        $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _OR_3.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3])]);
         $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
         $cont .= $tpl->getHtmlPart('form-add', [

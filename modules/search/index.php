@@ -23,8 +23,8 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
     $menu = '';
     if (is_moder($mod)) {
         $items = [
-            $tpl->getHtmlFrag('comment-action-link', ['href' => $afile.'.php?op='.$edit.'&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '', 'target' => '']),
-            $tpl->getHtmlFrag('comment-action-link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'target' => ' target="_blank"']),
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
+            $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'is_blank' => true]),
         ];
         $menu = $tpl->getHtmlFrag('editor-action-menu', [
             'editor_label' => _EDITOR,
@@ -255,8 +255,8 @@ function getSearchAuto(array $state): array {
         $edit = '';
         if (is_moder('auto_links')) {
             $items = [
-                $tpl->getHtmlFrag('comment-action-link', ['href' => $afile.'.php?op=auto_links_add&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '', 'target' => '']),
-                $tpl->getHtmlFrag('comment-action-link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'target' => ' target="_blank"']),
+                $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
+                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'is_blank' => true]),
             ];
             $edit = $tpl->getHtmlFrag('editor-action-menu', [
                 'editor_label' => _EDITOR,
@@ -293,8 +293,8 @@ function getSearchForum(array $state): array {
         [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, (int)$tid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
         if (is_moder('forum')) {
             $items = [
-                $tpl->getHtmlFrag('comment-action-link', ['href' => 'index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '', 'target' => '']),
-                $tpl->getHtmlFrag('comment-action-link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'target' => ' target="_blank"']),
+                $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
+                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'is_blank' => true]),
             ];
             $edit = $tpl->getHtmlFrag('editor-action-menu', [
                 'editor_label' => _EDITOR,

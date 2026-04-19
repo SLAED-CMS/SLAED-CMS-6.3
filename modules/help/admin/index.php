@@ -205,7 +205,7 @@ function add(): void {
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
         ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => '', 'field_html' => getTplFieldsIn($field, 'help'), 'is_full' => true],
+        ['label_html' => '', 'field_html' => getTplFieldsIn(['field' => $field, 'mod' => 'help']), 'is_full' => true],
     ];
     $posttypeopts
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])

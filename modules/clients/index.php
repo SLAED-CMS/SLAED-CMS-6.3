@@ -59,7 +59,7 @@ function clients(): void {
                     ['content_html' => $acont],
                 ],
             ]);
-            $conts .= $tpl->getHtmlFrag('clients-list-info', ['panel_id' => 'cl'.$i, 'body' => $prs->filterContent($body, false, $conf['name'])]);
+            $conts .= $tpl->getHtmlFrag('post-div', ['id' => 'cl'.$i, 'class' => 'sl_none', 'content' => $prs->filterContent($body, false, $conf['name'])]);
             $i++;
             $a++;
         }

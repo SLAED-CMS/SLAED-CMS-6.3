@@ -2560,7 +2560,7 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
             if (is_moder('voting') && $votid == 'voting') {
                 $items = [
-                    $tpl->getHtmlFrag('comment-action-link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '', 'target' => '']),
+                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
                     $tpl->getHtmlFrag('action-delete', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE]),
                 ];
                 $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items))]);
@@ -2568,9 +2568,9 @@ function getVotingView(int $id = 0, string $votid = ''): string {
                 $admin = '';
             }
             $post = (!$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'class' => 'sl-but-blue']) : '';
-            $polls = ($vnum > 1) ? $tpl->getHtmlFrag('comment-action-link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'class' => 'sl_but', 'target' => '']) : '';
-            $votes = (!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('comment-action-link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'class' => 'sl_votes', 'target' => '']) : $tpl->getHtmlFrag('span', ['class' => 'sl_votes', 'text' => _VOTES.': '.$vote]);
-            $comm = (!$modul && $acomm) ? $tpl->getHtmlFrag('comment-action-link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'class' => 'sl_coms', 'target' => '']) : '';
+            $polls = ($vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'class' => 'sl_but']) : '';
+            $votes = (!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'class' => 'sl_votes']) : $tpl->getHtmlFrag('span', ['class' => 'sl_votes', 'text' => _VOTES.': '.$vote]);
+            $comm = (!$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'class' => 'sl_coms']) : '';
             $cont = $tpl->getHtmlFrag('voting-widget', [
                 'has_form'   => !$rate,
                 'form_id'    => 'form'.$votid,
@@ -3265,34 +3265,42 @@ function getCartSummary(string $info = ''): string {
             }
             $price = $price * $i;
             $ptotal += $price;
-            $rows .= $tpl->getHtmlFrag('shop-cart-item-row', [
-                'id' => $id,
-                'title_href' => 'index.php?name=shop&amp;op=view&amp;id='.$id,
-                'title_attr' => $title,
-                'title_text' => $title,
-                'title_new' => getTplNewGraphic($time),
-                'qty' => $i,
-                'price_text' => $price.' '.$conf['shop']['valute'],
-                'plus_title' => _PPLUS,
-                'plus_query' => 'go=2&amp;op=addCartItem&amp;id='.$id,
-                'minus_title' => ($i > 1) ? _PMINUS : _DELETE,
-                'minus_query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id,
+            $titleLink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$id, 'title' => $title, 'label' => $title]);
+            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _PPLUS, 'label' => '', 'class' => 'sl-cart-plus'])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'class' => 'sl-cart-minus']);
+            $rows .= $tpl->getHtmlFrag('table-row', [
+                'id' => 'kasse-'.$id,
+                'row_class' => 'sl-cart-row',
+                'cells' => [
+                    ['href' => '#kasse-'.$id, 'title' => (string)$id, 'text' => (string)$id, 'class' => 'sl-cart-col-num', 'link_class' => 'sl-cart-id'],
+                    ['class' => 'sl-cart-col-content', 'heading_html' => $titleLink.' '.getTplNewGraphic($time)],
+                    ['class' => 'sl-cart-col-num', 'text' => (string)$i],
+                    ['class' => 'sl-cart-col-stat', 'text' => $price.' '.$conf['shop']['valute']],
+                    ['class' => 'sl-cart-col-stat', 'content_html' => $actions],
+                ],
             ]);
         }
-        return $tpl->getHtmlFrag('shop-cart-table', [
-            'title' => _PBASKET,
-            'col_id' => _ID,
-            'col_product' => _PRODUCT,
-            'col_qty' => cutstr(_QUANTITY, 3, 1),
-            'col_price' => _PREIS,
-            'col_fn' => _FUNCTIONS,
-            'rows_html' => $rows,
-            'cart_href' => 'index.php?name=shop&amp;op=kasse',
-            'cart_title' => _SCACH,
-            'cart_label' => _SCACH,
-            'total_title' => _PARTNERGES,
-            'total_text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'],
+        $footer = $tpl->getHtmlFrag('table-row', [
+            'row_class' => 'sl-cart-foot',
+            'cells' => [
+                ['colspan' => 2, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'class' => 'sl-cart-checkout'])],
+                ['colspan' => 3, 'content_html' => $tpl->getHtmlFrag('span', ['title' => _PARTNERGES, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'], 'class' => 'sl-cart-total'])],
+            ],
         ]);
+        return $tpl->getHtmlFrag('table', [
+            'open' => true,
+            'title' => _PBASKET,
+            'title_class' => 'sl-cart-title',
+            'class' => 'sl-cart-table',
+            'head_class' => 'sl-cart-head',
+            'headers' => [
+                ['text' => _ID, 'class' => 'sl-cart-col-num'],
+                ['text' => _PRODUCT],
+                ['text' => cutstr(_QUANTITY, 3, 1), 'class' => 'sl-cart-col-num'],
+                ['text' => _PREIS, 'class' => 'sl-cart-col-stat'],
+                ['text' => _FUNCTIONS, 'class' => 'sl-cart-col-stat'],
+            ],
+        ]).$rows.$footer.$tpl->getHtmlFrag('table', []);
     }
     return '';
 }
@@ -4816,10 +4824,10 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('comment-signature', ['content' => $user_sig]) : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('comment-action-link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'class' => 'sl-but-blue', 'target' => '']) : '';
-            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('comment-action-link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'class' => 'sl_but_green', 'target' => '']) : '';
-            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('comment-action-link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'class' => 'sl_but', 'target' => '']) : '';
-            $web = ($conf['comments']['web'] && !empty($user_website)) ? $tpl->getHtmlFrag('comment-action-link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'class' => 'sl_but', 'target' => ' target="_blank"']) : '';
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'class' => 'sl-but-blue']) : '';
+            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'class' => 'sl_but_green']) : '';
+            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'class' => 'sl_but']) : '';
+            $web = ($conf['comments']['web'] && !empty($user_website)) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'class' => 'sl_but', 'is_blank' => true]) : '';
 
             # Future functions
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
@@ -4858,15 +4866,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $edit = '';
                 }
             }
-            $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
             $text = $tpl->getHtmlFrag('post-div', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
             if (defined('ADMIN_FILE')) {
-                $markAll = $tpl->getHtmlFrag('checkbox-input', [
+                $markAll = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'markcheck',
                     'input_id' => 'markcheck',
                     'input_attr' => 'OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"',
                 ]);
-                $itemCheck = $tpl->getHtmlFrag('checkbox-input', [
+                $itemCheck = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'id[]',
                     'input_class' => 'sl_check',
                     'value_attr' => (string)$com_id,
@@ -4882,7 +4889,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],
                 ],
             ]) : '';
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('comment-avatar', ['username' => $avname, 'avatar' => $avatar]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('comment-avatar', ['username' => $avname, 'avatar' => $avatar]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {

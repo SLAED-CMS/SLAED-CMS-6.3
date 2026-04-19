@@ -32,7 +32,7 @@ function voting(): void {
 			$admin = '';
 			if (is_moder($conf['name'])) {
 				$items = [
-					$tpl->getHtmlFrag('comment-action-link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '', 'target' => '']),
+					$tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
 					$tpl->getHtmlFrag('action-delete', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$stitle.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE]),
 				];
 				$admin = $tpl->getHtmlFrag('editor-action-menu', [

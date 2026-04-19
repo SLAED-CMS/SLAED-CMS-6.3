@@ -293,7 +293,7 @@ class Parser {
                 $chk = $tm[1] === 'x' ? ' checked' : '';
                 $lbl = trim($tm[2]);
                 $lbl = str_contains($lbl, "\n") ? $this->filterBlocks($lbl) : $this->filterInline($lbl);
-                $html .= '<li>'.$tpl->getHtmlFrag('checkbox-input', ['input_attr' => 'disabled'.$chk]).' '.$lbl."</li>\n";
+                $html .= '<li>'.$tpl->getHtmlFrag('checkbox', ['input_attr' => 'disabled'.$chk]).' '.$lbl."</li>\n";
             } elseif (str_contains($item, "\n")) {
                 $html .= '<li>'.$this->filterBlocks($item)."</li>\n";
             } else {

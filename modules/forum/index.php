@@ -186,7 +186,7 @@ function forum(): void {
                     if ($db->getSqlRowCount($query) > 0) {
                         $mark = 0;
                         $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', ['open' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
-                        $cont .= ($ismod) ? $tpl->getHtmlFrag('forum-mod-form-open', ['action' => 'index.php?name='.$conf['name']]) : '';
+                        $cont .= ($ismod) ? $tpl->getHtmlFrag('forum-mod-form', ['open' => true, 'action' => 'index.php?name='.$conf['name']]) : '';
                         while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
@@ -250,7 +250,7 @@ function forum(): void {
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$cat, 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('form-submit-btn', ['label' => _OK, 'class' => 'sl-but-blue'])
-                                .'</form>';
+                                .$tpl->getHtmlFrag('forum-mod-form', []);
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
                     } else {
@@ -479,20 +479,19 @@ function view(): void {
                       ])
                     : '';
                 $edit = ($edit) ? add_menu($edit) : '';
-                $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name']), $word);
                 $text = $tpl->getHtmlFrag('post-div', ['id' => 'repfor'.$fid, 'content' => $body_html]);
                 if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name']), $word);
-                $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'hclass' => $hclass]);
+                $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = getPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $cont .= $tpl->getHtmlFrag('forum-view-wrap', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum]);
             if ($ismod) {
-                $selmm = $tpl->getHtmlFrag('forum-mod-form-open', ['action' => 'index.php?name='.$conf['name']])
+                $selmm = $tpl->getHtmlFrag('forum-mod-form', ['open' => true, 'action' => 'index.php?name='.$conf['name']])
                     .tmoder(1)
                     .$tpl->getHtmlFrag('form-submit', ['op' => 'move', 'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']), 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK])
-                    .'</form>';
+                    .$tpl->getHtmlFrag('forum-mod-form', []);
                 $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _OPMOD, 'content' => $selmm]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
@@ -517,7 +516,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
         ]) : '';
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1'])]);
-        $rows .= getTplFieldsIn(isset($field), $conf['name']);
+        $rows .= getTplFieldsIn(['mod' => $conf['name']]);
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
@@ -656,7 +655,7 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject]),
         ]);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _TEXT, 'required' => '1'])]);
-        $rows .= getTplFieldsIn($field, $conf['name']);
+        $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $rows .= ($ismod) ? $tpl->getHtmlFrag('form-field-row', ['label' => _OPMOD, 'field_html' => pmoder($status, $subh)]).$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])]) : '';
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
