@@ -225,3 +225,7 @@ a.sl-cart-id:hover{background-color:#5ab8fd}
 .sl-shop-add:before{display:inline-block;background-image:url(../../images/misc/sprite.png);vertical-align:middle;content:'';width:10px;height:10px;background-position:-351px -16px;margin:-3px 6px 0 0}
 .sl-comment-link:before{display:inline-block;background-image:url(../../images/misc/sprite.png);vertical-align:middle;content:'';width:12px;height:12px;background-position:-183px 0;margin:-3px 6px 0 0}
 .sl-read-link{display:inline-block}
+
+.sl_table_amount td:first-child{width:15%}
+.sl-avatar-grid{table-layout:fixed}.sl-avatar-grid td{width:calc(100%/6)}
+.sl-user-group-special{font-weight:bold}
