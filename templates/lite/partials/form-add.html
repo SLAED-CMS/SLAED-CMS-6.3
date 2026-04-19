@@ -1,5 +1,5 @@
-<form action="index.php?name={{ name }}&amp;op=add" method="post" name="post" enctype="multipart/form-data">
-<input type="hidden" name="token" value="{{{ token }}}">
+<form{% if not no_action %} action="{% if action %}{{{ action }}}{% else %}index.php?name={{ name }}&amp;op=add{% endif %}"{% endif %} method="{% if method %}{{ method }}{% else %}post{% endif %}" name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"{% if form_id %} id="{{ form_id }}"{% endif %}{% if not no_enctype %}{% if enctype %} enctype="{{ enctype }}"{% else %} enctype="multipart/form-data"{% endif %}{% endif %}{% if form_attr %} {{{ form_attr }}}{% endif %}>
+{% if token %}<input type="hidden" name="token" value="{{{ token }}}">{% endif %}
 <div class="sl-form">
 {% if has_name %}
 	{% if is_user %}
@@ -31,5 +31,6 @@
 {% if extrafields %}{{{ extrafields }}}{% endif %}
 {% if fields %}{{{ fields }}}{% endif %}
 <div class="sl-form-submit">{% if captcha %}{{{ captcha }}}{% endif %}{{{ submit }}}</div>
+{% if after_submit %}{{{ after_submit }}}{% endif %}
 </div>
 </form>
