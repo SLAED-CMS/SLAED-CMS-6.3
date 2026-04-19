@@ -1,1 +1,1 @@
-<div id="{{ id }}">{{{ content }}}</div>
+<div{% if id %} id="{{ id }}"{% endif %}{% if class %} class="{{ class }}"{% endif %}>{{{ content }}}</div>
