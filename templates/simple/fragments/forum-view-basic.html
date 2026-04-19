@@ -1,4 +1,4 @@
-<div id="{{ id }}" {{{ hclass }}}>
+<div id="{{ id }}"{% if is_closed %} title="{{ closed_title }}" class="sl_hidden"{% endif %}>
 	<div class="forum-post">
 		<div class="forum-post-in clrfix">
 			<div class="fp-right">
@@ -28,7 +28,7 @@
 						</ul>
 					</div>
 				</div>
-				<a title="{{ username }}" class="sl_avatar" style="background-image: url({{ avatar }});"></a>
+				<img src="{{ avatar }}" alt="{{ username }}" title="{{ username }}" class="sl_avatar">
 				<div class="min-rate">
 					<div class="rate-like-box">{{{ user_rate }}}</div>
 				</div>
