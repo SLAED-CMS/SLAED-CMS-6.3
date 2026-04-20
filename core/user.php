@@ -308,6 +308,12 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
     ]);
+    $messageList = static fn(array $rows, array $headers): string => $tpl->getHtmlPart('liste', [
+        'rows' => $rows,
+        'table_open' => ['open' => true, 'headers' => $headers],
+        'table_close' => [],
+        'empty_alert' => ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false],
+    ]);
     if ($typ == 1) {
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status <= 1', ['uid' => $uid]));
         $fstatus = '';
@@ -326,57 +332,49 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
             $cont .= $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            $rows_html = '';
-            while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-                $ititle = $status ? _PROLD : _PRNEW;
-                $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1';
-                $title_html = $tpl->getHtmlFrag('span', ['title' => $ititle, 'is_message_in' => true, 'is_hidden' => (bool)$status, 'text' => ''])
-                    .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmessin', 'title' => $title, 'label' => cutstr($title, 35), 'class' => '']);
-                $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
-                $items = [
-                    $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1', 'target' => 'prmessin', 'title' => _SHOW, 'label' => _SHOW, 'class' => '']),
-                    $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=setPrivateMessageSaved&amp;id='.$id, 'target' => 'prmessin', 'title' => _SAVE, 'label' => _SAVE, 'class' => '']),
-                    $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1', 'target' => 'prmessin', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']),
-                ];
-                $func = $actionMenu($items);
-                $rows_html .= $tpl->getHtmlFrag('table-row', ['cells' => [
-                    ['content_html' => $title_html],
-                    ['content_html' => $post_html],
-                    ['text' => format_time($date, _TIMESTRING)],
-                    ['content_html' => $func],
-                ]]);
-            }
-            $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => _TITLE], ['text' => _PRSE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]]).$rows_html.$tpl->getHtmlFrag('table', []);
-        } else {
-            $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $rows = [];
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $uidin, $uidout, $title, $date, $status, $user_name] = $row;
+            $ititle = $status ? _PROLD : _PRNEW;
+            $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1';
+            $title_html = $tpl->getHtmlFrag('span', ['title' => $ititle, 'is_message_in' => true, 'is_hidden' => (bool)$status, 'text' => ''])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmessin', 'title' => $title, 'label' => cutstr($title, 35), 'class' => '']);
+            $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
+            $items = [
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1', 'target' => 'prmessin', 'title' => _SHOW, 'label' => _SHOW, 'class' => '']),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=setPrivateMessageSaved&amp;id='.$id, 'target' => 'prmessin', 'title' => _SAVE, 'label' => _SAVE, 'class' => '']),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1', 'target' => 'prmessin', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']),
+            ];
+            $rows[] = ['cells' => [
+                ['content_html' => $title_html],
+                ['content_html' => $post_html],
+                ['text' => format_time($date, _TIMESTRING)],
+                ['content_html' => $actionMenu($items)],
+            ]];
         }
+        $cont .= $messageList($rows, [['text' => _TITLE], ['text' => _PRSE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]);
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmessin', 0, '1', '');
     } elseif ($typ == 2) {
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            $rows_html = '';
-            while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-                $ititle = $status ? _PROLD : _PROUTNEW;
-                $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2';
-                $title_html = $tpl->getHtmlFrag('span', ['title' => $ititle, 'is_message_out' => true, 'is_hidden' => (bool)$status, 'text' => ''])
-                    .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmessou', 'title' => $title, 'label' => cutstr($title, 35), 'class' => '']);
-                $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
-                $items = [$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2', 'target' => 'prmessou', 'title' => _SHOW, 'label' => _SHOW, 'class' => ''])];
-                if (!$status) $items[] = $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2', 'target' => 'prmessou', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']);
-                $func = $actionMenu($items);
-                $rows_html .= $tpl->getHtmlFrag('table-row', ['cells' => [
-                    ['content_html' => $title_html],
-                    ['content_html' => $post_html],
-                    ['text' => format_time($date, _TIMESTRING)],
-                    ['content_html' => $func],
-                ]]);
-            }
-            $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => _TITLE], ['text' => _PRRE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]]).$rows_html.$tpl->getHtmlFrag('table', []);
-        } else {
-            $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $rows = [];
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $uidin, $uidout, $title, $date, $status, $user_name] = $row;
+            $ititle = $status ? _PROLD : _PROUTNEW;
+            $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2';
+            $title_html = $tpl->getHtmlFrag('span', ['title' => $ititle, 'is_message_out' => true, 'is_hidden' => (bool)$status, 'text' => ''])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmessou', 'title' => $title, 'label' => cutstr($title, 35), 'class' => '']);
+            $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
+            $items = [$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2', 'target' => 'prmessou', 'title' => _SHOW, 'label' => _SHOW, 'class' => ''])];
+            if (!$status) $items[] = $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2', 'target' => 'prmessou', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']);
+            $rows[] = ['cells' => [
+                ['content_html' => $title_html],
+                ['content_html' => $post_html],
+                ['text' => format_time($date, _TIMESTRING)],
+                ['content_html' => $actionMenu($items)],
+            ]];
         }
+        $cont .= $messageList($rows, [['text' => _TITLE], ['text' => _PRRE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]);
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmessou', 0, '2', '');
@@ -393,29 +391,25 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
         }
         if ($fstatus) $cont .= $tpl->getHtmlFrag('alert', ['text' => $messinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout=u.id) WHERE p.uidin = :uid AND p.status = 2 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            $rows_html = '';
-            while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-                $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3';
-                $title_html = $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => ''])
-                    .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmesssa', 'title' => $title, 'label' => cutstr($title, 35), 'class' => '']);
-                $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
-                $items = [
-                    $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3', 'target' => 'prmesssa', 'title' => _SHOW, 'label' => _SHOW, 'class' => '']),
-                    $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3', 'target' => 'prmesssa', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']),
-                ];
-                $func = $actionMenu($items);
-                $rows_html .= $tpl->getHtmlFrag('table-row', ['cells' => [
-                    ['content_html' => $title_html],
-                    ['content_html' => $post_html],
-                    ['text' => format_time($date, _TIMESTRING)],
-                    ['content_html' => $func],
-                ]]);
-            }
-            $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => _TITLE], ['text' => _PRSE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]]).$rows_html.$tpl->getHtmlFrag('table', []);
-        } else {
-            $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $rows = [];
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $uidin, $uidout, $title, $date, $status, $user_name] = $row;
+            $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3';
+            $title_html = $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => ''])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmesssa', 'title' => $title, 'label' => cutstr($title, 35), 'class' => '']);
+            $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
+            $items = [
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3', 'target' => 'prmesssa', 'title' => _SHOW, 'label' => _SHOW, 'class' => '']),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3', 'target' => 'prmesssa', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']),
+            ];
+            $rows[] = ['cells' => [
+                ['content_html' => $title_html],
+                ['content_html' => $post_html],
+                ['text' => format_time($date, _TIMESTRING)],
+                ['content_html' => $actionMenu($items)],
+            ]];
         }
+        $cont .= $messageList($rows, [['text' => _TITLE], ['text' => _PRSE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]);
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmesssa', 0, '3', '');
     } elseif ($typ == 4) {
@@ -719,7 +713,7 @@ function getFavoriteList(int $obj = 0): string {
     }
     $cont = $tpl->getHtmlFrag('alert', ['text' => $favinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
     if ($ffmassiv) {
-        $rows_html = '';
+        $rows = [];
         $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('editor-action-menu', [
             'editor_label' => _EDITOR,
             'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
@@ -735,18 +729,21 @@ function getFavoriteList(int $obj = 0): string {
                 $tpl->getHtmlFrag('link', ['href' => $surl, 'title' => $title, 'label' => _S_FAVORITEN, 'rel_attr' => 'sidebar']),
                 $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deleteFavorite&amp;id='.$id, 'target' => 'favorliste', 'title' => _DELETE, 'label' => _DELETE, 'class' => '']),
             ];
-            $func = $actionMenu($items);
-            $rows_html .= $tpl->getHtmlFrag('table-row', [
+            $rows[] = [
                 'id' => (string)$a,
                 'cells' => [
                     ['is_num' => true, 'href' => '#'.$a, 'title' => (string)$a, 'text' => (string)$a],
                     ['href' => $surl, 'title' => $title, 'text' => cutstr($title, 100)],
-                    ['content_html' => $func],
+                    ['content_html' => $actionMenu($items)],
                 ],
-            ]);
+            ];
             $a++;
         }
-        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS]).$rows_html.$tpl->getHtmlFrag('table', []);
+        $cont .= $tpl->getHtmlPart('liste', [
+            'rows' => $rows,
+            'table_open' => ['open' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS],
+            'table_close' => [],
+        ]);
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, '0', 1, 'getFavoriteList', 'favorliste', 0, '', '');
     } else {

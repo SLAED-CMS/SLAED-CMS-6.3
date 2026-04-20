@@ -165,20 +165,23 @@ function add(): void {
         if ($joke) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $joke, 'textb' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADD_JNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
+        $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('jokes')]);
+        $nameField = is_user()
+            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _JTITLE,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _JTITLE, 'is_required' => true]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _CATEGORY,
+            'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _JOKE, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1'])]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'has_name'  => true,
-            'is_user'   => is_user(),
             'name'      => $conf['name'],
-            'token'     => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
-            'lbl_name'  => _YOURNAME,
-            'lbl_title' => _JTITLE,
-            'lbl_cat'   => _CATEGORY,
-            'lbl_text'  => _JOKE,
-            'username'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            'postname'  => $postname,
-            'titleval'  => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
-            'hometext'  => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1']),
+            'fields'    => $fields,
             'captcha'   => getCaptcha(1),
             'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);

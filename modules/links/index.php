@@ -366,27 +366,20 @@ function add(): void {
         if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDFNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
+        $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('links')]);
+        $nameField = is_user()
+            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 100, 'placeholder_text' => _AUEMAIL, 'is_required' => true])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _SITENAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _SITENAME, 'is_required' => true])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1'])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0'])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _URL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 100, 'placeholder_text' => _URL])]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'has_name'  => true,
-            'is_user'   => is_user(),
             'name'      => $conf['name'],
-            'token'     => htmlspecialchars(getSiteToken('links'), ENT_QUOTES, 'UTF-8'),
-            'lbl_name'  => _YOURNAME,
-            'lbl_email' => _AUEMAIL,
-            'lbl_title' => _SITENAME,
-            'lbl_cat'   => _CATEGORY,
-            'lbl_text'  => _TEXT,
-            'lbl_body'  => _ENDTEXT,
-            'lbl_site'  => _URL,
-            'username'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            'postname'  => $postname,
-            'emailval'  => $mail,
-            'titleval'  => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
-            'hometext'  => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
-            'bodytext'  => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
-            'siteval'   => $site,
-            'site_attr' => 'site',
+            'fields'    => $fields,
             'captcha'   => getCaptcha(1),
             'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);

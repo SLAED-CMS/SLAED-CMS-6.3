@@ -175,17 +175,16 @@ function add(): void {
 		$fields = $tpl->getHtmlFrag('form-field-row', ['label' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'maxlength_num' => '255', 'placeholder_text' => _SITE, 'is_required' => true])]);
 		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host, 'maxlength_num' => '255', 'placeholder_text' => _HOST])]);
 		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc, 'maxlength_num' => '255', 'placeholder_text' => _DC])]);
+		$nameField = is_user()
+			? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => $userNameValue])
+			: $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $userNameValue, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+		$fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('whois')])
+			.$tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField])
+			.$fields
+			.$tpl->getHtmlFrag('form-field-row', ['label' => _COMMENT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'rows_num' => 5, 'value_text' => $hometext, 'placeholder_text' => _COMMENT])]);
 		$cont .= $tpl->getHtmlPart('form-add', [
-			'has_name'           => true,
-			'is_user'            => is_user(),
 			'name'               => $conf['name'],
-			'token'              => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
-			'lbl_name'           => _YOURNAME,
-			'username'           => is_user() ? $userNameValue : '',
-			'postname'           => $userNameValue,
-			'fields_before_text' => $fields,
-			'lbl_text'           => _COMMENT,
-			'hometext'           => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'rows_num' => 5, 'value_text' => $hometext, 'placeholder_text' => _COMMENT]),
+			'fields'             => $fields,
 			'captcha'            => getCaptcha(1),
 			'submit'             => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
 		]);

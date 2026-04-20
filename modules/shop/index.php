@@ -360,8 +360,7 @@ function kasse(): void {
 		'method' => 'post',
 		'form_name' => 'post',
 		'no_enctype' => true,
-		'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'),
-		'fields' => $fields,
+		'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('shop')]).$fields,
 		'submit' => $tpl->getHtmlFrag('form-submit', [
 			'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'opi', 'value_attr' => '1']),
 			'op' => 'kasse',
@@ -382,9 +381,10 @@ function kasse(): void {
 		}
 		if (!$stop) {
 			$ptotal = 0;
-			$content = '';
+			$rows = [];
 			$result = $db->getSqlQuery('SELECT id, title, price FROM '.PREFIX_DB.'_products WHERE id IN ('.$cookies.')');
-			while([$id, $title, $price] = $db->getSqlRow($result)) {
+			while ($row = $db->getSqlRow($result)) {
+				[$id, $title, $price] = $row;
 				$massiv = explode(',', $cookies);
 				$i = 0;
 				foreach ($massiv as $val) {
@@ -392,21 +392,26 @@ function kasse(): void {
 				}
 				$price = $price * $i;
 				$ptotal += $price;
-				$content .= $tpl->getHtmlFrag('table-row', ['cells' => [
+				$rows[] = ['cells' => [
 					['text' => $id, 'is_num' => true],
 					['text' => $i, 'is_num' => true],
 					['text' => $title],
 					['text' => $price.' '.$conf['shop']['valute']],
-				]]);
+				]];
 			}
-			$pinfo = $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [
-				['text' => _ID, 'is_num' => true],
-				['text' => _QUANTITY, 'is_num' => true],
-				['text' => _PRODUCT],
-				['text' => _PREIS],
-			]]).$content.$tpl->getHtmlFrag('table-row', ['cells' => [
+			$rows[] = ['cells' => [
 				['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute']]), 'colspan' => 4],
-			]]).$tpl->getHtmlFrag('table', []);
+			]];
+			$pinfo = $tpl->getHtmlPart('liste', [
+				'rows' => $rows,
+				'table_open' => ['open' => true, 'headers' => [
+					['text' => _ID, 'is_num' => true],
+					['text' => _QUANTITY, 'is_num' => true],
+					['text' => _PRODUCT],
+					['text' => _PREIS],
+				]],
+				'table_close' => [],
+			]);
 			if ($conf['shop']['mailsend']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
@@ -489,29 +494,34 @@ function clients(): void {
 		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.uid = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
-			$cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'headers' => [
-				['text' => _ID, 'is_num' => true],
-				['text' => _PRODUCT],
-				['text' => _L_DATE],
-				['text' => _STATUS],
-				['text' => _FUNCTIONS, 'no_sort' => true],
-			]]);
-			while([$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
+			$rows = [];
+			while ($row = $db->getSqlRow($result)) {
+				[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $pprice] = $row;
 					$tipItems = [['label' => _PREIS, 'value' => $pprice.' '.$conf['shop']['valute'], 'is_last' => false]];
 					if ($cwebsite) $tipItems[] = ['label' => _SITE, 'value' => $cwebsite, 'is_last' => false];
 					if ($cinfo) $tipItems[] = ['label' => _NOTE, 'value' => $cinfo, 'is_last' => true];
 					else $tipItems[count($tipItems) - 1]['is_last'] = true;
 					$cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _NO;
 					$rechn = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid, 'title' => _RECHN_B, 'label' => _RECHN_B, 'is_blank' => true]);
-					$cont .= $tpl->getHtmlFrag('table-row', ['id' => $cid, 'cells' => [
+					$rows[] = ['id' => $cid, 'cells' => [
 						['href' => '#'.$cid, 'title' => $cid, 'text' => $cid, 'is_num' => true],
 						['prefix_html' => getTplTitleTip($tipItems), 'primary_title' => $stitle, 'primary_text' => cutstr($stitle, 35)],
 						['content_html' => $cenddate],
 						['content_html' => ad_status('', $cactive)],
 						['content_html' => $rechn],
-					]]);
+					]];
 			}
-			$cont .= $tpl->getHtmlFrag('table', []);
+			$cont .= $tpl->getHtmlPart('liste', [
+				'rows' => $rows,
+				'table_open' => ['open' => true, 'sortable' => true, 'headers' => [
+					['text' => _ID, 'is_num' => true],
+					['text' => _PRODUCT],
+					['text' => _L_DATE],
+					['text' => _STATUS],
+					['text' => _FUNCTIONS, 'no_sort' => true],
+				]],
+				'table_close' => [],
+			]);
 		}
 		$cont .= $prs->filterContent($conf['shop']['userinfo'], false, $conf['name']);
 		echo $cont;
@@ -589,17 +599,12 @@ function partners(): void {
 				$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.part = :user_id AND c.status != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
 				$partsum = $partsumges = $a = 0;
 				if ($db->getSqlRowCount($result) > 0) {
-					$content = $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'headers' => [
-						['text' => _ID, 'is_num' => true],
-						['text' => _NICKNAME],
-						['text' => _PRODUCT],
-						['text' => _PERCENT],
-						['text' => _SUM],
-					]]);
-					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
+					$rows = [];
+					while ($row = $db->getSqlRow($result)) {
+						[$cid, $cuid, $cprod, $cpart, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $pprice] = $row;
 						$partsum = $pprice / 100 * $proz;
 						$partsumges += $partsum;
-						$content .= $tpl->getHtmlFrag('table-row', ['id' => $cid, 'cells' => [
+						$rows[] = ['id' => $cid, 'cells' => [
 							['href' => '#'.$cid, 'title' => $cid, 'text' => $cid, 'is_num' => true],
 							['content_html' => user_info($nick)],
 							['prefix_html' => getTplTitleTip([
@@ -608,28 +613,42 @@ function partners(): void {
 						]), 'primary_title' => $stitle, 'primary_text' => cutstr($stitle, 35)],
 							['text' => $proz.' %'],
 							['text' => $partsum.' '.$conf['shop']['valute']],
-						]]);
+						]];
 						$a++;
 					}
-					$cont .= $content.$tpl->getHtmlFrag('table', []);
+					$cont .= $tpl->getHtmlPart('liste', [
+						'rows' => $rows,
+						'table_open' => ['open' => true, 'sortable' => true, 'headers' => [
+							['text' => _ID, 'is_num' => true],
+							['text' => _NICKNAME],
+							['text' => _PRODUCT],
+							['text' => _PERCENT],
+							['text' => _SUM],
+						]],
+						'table_close' => [],
+					]);
 				}
-				$cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'headers' => [
-					['text' => _CLIENTEN],
-					['text' => _WEBMONEY],
-					['text' => _PAYPAL],
-					['text' => _PARTNERGES],
-					['text' => _PARTNERREST],
-					['text' => _PARTNERBEK],
-				]]);
-				$cont .= $tpl->getHtmlFrag('table-row', ['cells' => [
-					['text' => (string)$a],
-					['text' => $pawebmoney],
-					['text' => $papaypal],
-					['text' => $partsumges.' '.$conf['shop']['valute']],
-					['text' => $parest.' '.$conf['shop']['valute']],
-					['text' => $pabek.' '.$conf['shop']['valute']],
-				]]);
-				$cont .= $tpl->getHtmlFrag('table', []);
+				$cont .= $tpl->getHtmlPart('liste', [
+					'rows' => [[
+						'cells' => [
+							['text' => (string)$a],
+							['text' => $pawebmoney],
+							['text' => $papaypal],
+							['text' => $partsumges.' '.$conf['shop']['valute']],
+							['text' => $parest.' '.$conf['shop']['valute']],
+							['text' => $pabek.' '.$conf['shop']['valute']],
+						],
+					]],
+					'table_open' => ['open' => true, 'sortable' => true, 'headers' => [
+						['text' => _CLIENTEN],
+						['text' => _WEBMONEY],
+						['text' => _PAYPAL],
+						['text' => _PARTNERGES],
+						['text' => _PARTNERREST],
+						['text' => _PARTNERBEK],
+					]],
+					'table_close' => [],
+				]);
 				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
 				$cont .= $prs->filterContent(str_replace('[id]', $uid, $conf['shop']['partinfo2']), false, $conf['name']);
 			}
@@ -663,10 +682,9 @@ function partners(): void {
 			$extra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'puid', 'value_attr' => (string)$uid, 'input_attr' => '']);
 			$cont .= $tpl->getHtmlPart('form-add', [
 				'action' => 'index.php?name='.$conf['name'],
-				'extrafields' => $rows,
+				'extrafields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('shop')]).$rows,
 				'name' => $conf['name'],
 				'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'partners_send', 'extra' => $extra, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _PARTNERSEND]),
-				'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'),
 			]);
 		}
 		echo $cont;

@@ -21,10 +21,11 @@ function content(): void {
     $offset = (int)(($num - 1) * $limit);
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS]);
+        $rows = [];
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
-        while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time, $counter] = $row;
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
             $tip = $tpl->getHtmlFrag('post-div', [
@@ -46,17 +47,20 @@ function content(): void {
                     'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $edit]).$tpl->getHtmlFrag('list-item', ['content_html' => $delete]),
                 ]);
             }
-            $cont .= $tpl->getHtmlFrag('table-row', [
+            $rows[] = [
                 'id' => (string)$id,
                 'cells' => [
                     ['is_num' => true, 'href' => '#'.$id, 'title' => (string)$id, 'text' => (string)$id],
                     ['content_html' => getTplNewGraphic($time).' '.$tpl->getHtmlFrag('link', ['href' => $href, 'title' => $title, 'label' => $title, 'suffix_html' => $tip])],
                     ['content_html' => $menu],
                 ],
-            ]);
+            ];
         }
-        $cont .= $tpl->getHtmlFrag('table', []);
-        $cont .= getTplPager([
+        $cont .= $tpl->getHtmlPart('liste', [
+            'rows' => $rows,
+            'table_open' => ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS],
+            'table_close' => [],
+            'pager_html' => getTplPager([
             'limit'  => $limit,
             'maxpg'  => $nump,
             'table'  => '_content',
@@ -64,6 +68,7 @@ function content(): void {
             'mod'    => $conf['name'],
             'where'  => 'time <= NOW()',
             'prefix' => 'new/',
+            ]),
         ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);

@@ -347,13 +347,13 @@ function addview(int $id): string {
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'catid', 'value_attr' => (string)$cid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
+        $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('help')])
+            .$rows
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => 10, 'placeholder' => _TEXT, 'required' => '1'])]);
         return $tpl->getHtmlPart('form-add', [
-            'extrafields' => $rows,
-            'hometext'    => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => 10, 'placeholder' => _TEXT, 'required' => '1']),
-            'lbl_text'    => _TEXT,
             'name'        => $conf['name'],
+            'fields'      => $fields,
             'submit'      => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
-            'token'       => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
         ]);
     }
     return '';
@@ -371,16 +371,14 @@ function add(): void {
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         if ($hometext) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBMIT]);
+        $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('help')]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1'])]);
+        $fields .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'       => $conf['name'],
-            'token'      => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
-            'lbl_title'  => _TITLE,
-            'lbl_cat'    => _CATEGORY,
-            'lbl_text'   => _TEXT,
-            'titleval'   => $title,
-            'catselect'  => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
-            'hometext'   => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']),
-            'fields'     => getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]),
+            'fields'     => $fields,
             'submit'     => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;

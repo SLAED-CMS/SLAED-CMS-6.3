@@ -361,22 +361,24 @@ function add(): void {
         if ($hometext) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $hometext, 'textb' => $bodytext, 'field' => '', 'mod' => $conf['name']]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
+        $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('pages')]);
+        $nameField = is_user()
+            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _TITLE,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _CATEGORY,
+            'field_html' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1'])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0'])]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'has_name' => true,
-            'is_user'  => is_user(),
             'name'     => $conf['name'],
-            'token'    => htmlspecialchars(getSiteToken('pages'), ENT_QUOTES, 'UTF-8'),
-            'lbl_name' => _YOURNAME,
-            'lbl_title' => _TITLE,
-            'lbl_cat'  => _CATEGORY,
-            'lbl_text' => _TEXT,
-            'lbl_body' => _ENDTEXT,
-            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            'postname' => $postname,
-            'titleval' => $title,
-            'catselect' => getTplCategorySelect($conf['name'], $cid, 'catid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
-            'hometext' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']),
-            'bodytext' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']),
+            'fields'   => $fields,
             'captcha'  => getCaptcha(1),
             'submit'   => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);

@@ -478,24 +478,20 @@ function add(): void {
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MSIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size, 'maxlength_num' => '100', 'placeholder_text' => _MSIZE])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MRELEASED, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released, 'maxlength_num' => '100', 'placeholder_text' => _MRELEASED])]);
         $fieldsAfterText .= $linksRows;
+        $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('media')]);
+        $nameField = is_user()
+            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _MTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _MTITLE, 'is_required' => true])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
+        $fields .= $fieldsBeforeText;
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _DESCRIPTION, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1'])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _NOTE, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0'])]);
+        $fields .= $fieldsAfterText;
         $cont .= $tpl->getHtmlPart('form-add', [
-            'has_name'       => true,
-            'is_user'        => is_user(),
             'name'           => $conf['name'],
-            'token'          => htmlspecialchars(getSiteToken('media'), ENT_QUOTES, 'UTF-8'),
-            'lbl_name'       => _YOURNAME,
-            'lbl_title'      => _MTITLE,
-            'lbl_cat'        => _CATEGORY,
-            'lbl_text'       => _DESCRIPTION,
-            'lbl_body'       => _NOTE,
-            'username'       => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            'postname'       => $postname,
-            'titleval'       => $title,
-            'catselect'      => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
-            'fields_before_text' => $fieldsBeforeText,
-            'hometext'       => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']),
-            'bodytext'       => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0']),
-            'fields_after_text' => $fieldsAfterText,
+            'fields'         => $fields,
             'captcha'        => getCaptcha(1),
             'submit'         => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);

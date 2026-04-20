@@ -67,8 +67,7 @@ function contact(): void {
         'method' => 'post',
         'form_name' => 'post',
         'no_enctype' => true,
-        'token' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
-        'fields' => $fields,
+        'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')]).$fields,
         'captcha' => getCaptcha(1),
         'submit' => $tpl->getHtmlFrag('form-submit', [
             'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),

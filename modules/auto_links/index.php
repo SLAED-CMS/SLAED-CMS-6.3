@@ -135,18 +135,23 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($desc) $cont .= getTplPreviewContent(['title' => $name, 'texta' => $desc, 'textb' => '', 'mod' => $conf['name']]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_I]);
+    $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('auto_links')]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _A_LINKS_E,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_E, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _SITENAME,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => $name, 'maxlength_num' => 100, 'placeholder_text' => _SITENAME, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _A_LINKS_TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'desc', 'value' => $desc, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _A_LINKS_TEXT, 'required' => '1'])]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _A_LINKS_L,
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_L]),
+    ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'name'      => $conf['name'],
-        'token'     => htmlspecialchars(getSiteToken('auto_links'), ENT_QUOTES, 'UTF-8'),
-        'lbl_email' => _A_LINKS_E,
-        'lbl_title' => _SITENAME,
-        'lbl_text'  => _A_LINKS_TEXT,
-        'lbl_site'  => _A_LINKS_L,
-        'emailval'  => $email,
-        'titleval'  => $name,
-        'hometext'  => getTplTextarea(['id' => '1', 'name' => 'desc', 'value' => $desc, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _A_LINKS_TEXT, 'required' => '1']),
-        'site_attr' => 'site',
-        'siteval'   => $site,
+        'fields'    => $fields,
         'captcha'   => getCaptcha(1),
         'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
     ]);
@@ -182,10 +187,12 @@ function send(): void {
         $embedSlogan = htmlspecialchars($conf['slogan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $embedSite = htmlspecialchars($conf['sitename'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         $code = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedSlogan.'&quot;&gt;'.$embedSite.'&lt;/a&gt;';
-        $rows = $tpl->getHtmlFrag('table-row', ['cells' => [
+        $rows = [[
+            'cells' => [
             ['text' => _A_LINKS_M.':'],
             ['content_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'description', 'rows_num' => 5, 'value_text' => $code])],
-        ]]);
+            ],
+        ]];
         if ($conf['auto_links']['img']) {
             $banner = img_find('banners/'.$conf['auto_links']['img']);
             if ($banner && file_exists($banner)) {
@@ -193,13 +200,19 @@ function send(): void {
                 $embedTitle = htmlspecialchars($conf['sitename'].' - '.$conf['slogan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $embedSrc = htmlspecialchars($conf['homeurl'].'/'.$banner, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $code  = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedTitle.'&quot;&gt;&lt;img src=&quot;'.$embedSrc.'&quot; alt=&quot;'.$embedTitle.'&quot; class=&quot;sl-embed-img&quot; width=&quot;'.$imgwidth.'&quot; height=&quot;'.$imgheight.'&quot;&gt;&lt;/a&gt;';
-                $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
+                $rows[] = [
+                    'cells' => [
                     ['text' => _A_LINKS_IMG.':'],
                     ['content_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'description', 'rows_num' => 5, 'value_text' => $code])],
-                ]]);
+                    ],
+                ];
             }
         }
-        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true]).$rows.$tpl->getHtmlFrag('table', []);
+        $cont .= $tpl->getHtmlPart('liste', [
+            'rows' => $rows,
+            'table_open' => ['open' => true, 'is_form' => true],
+            'table_close' => [],
+        ]);
         echo $cont;
         setFoot();
     } else {

@@ -46,8 +46,7 @@ function recommend(): void {
         'method' => 'post',
         'form_name' => 'post',
         'no_enctype' => true,
-        'token' => htmlspecialchars(getSiteToken('recommend'), ENT_QUOTES, 'UTF-8'),
-        'fields' => $fields,
+        'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('recommend')]).$fields,
         'captcha' => getCaptcha(2),
         'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'label' => _SEND]),
     ]);

@@ -35,8 +35,7 @@ function account(): void {
         }
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
-            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            'fields' => $fields,
+            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'captcha' => $captcha,
             'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'login', 'label' => _USERLOGIN]),
             'after_submit' => $after,
@@ -116,8 +115,7 @@ function newuser(): void {
             }
             $cont .= $tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
-                'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                'fields' => $fields,
+                'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'captcha' => $captcha,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'finnewuser', 'label' => _NEWUSER]),
                 'after_submit' => $after,
@@ -588,88 +586,78 @@ function last(int|string $uid, string $modul): string {
     $uid   = (int)$uid;
     $num   = getUserNews(25);
     $limit = (int)$num;
-    $rows = '';
+    $rows = [];
+    $handled = true;
+    $lastRow = static function (string $time, string $href, string $title) use ($tpl): array {
+        return ['cells' => [
+            ['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])],
+            ['content_html' => $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $title, 'label' => $title, 'is_last' => true])],
+        ]];
+    };
     if ($modul == 'comm') {
         $result = $db->getSqlQuery('SELECT id, cid, modul, time, body FROM '.PREFIX_DB."_comment WHERE uid = :user_id AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $cid, $modul, $date, $comment] = $db->getSqlRow($result)) {
-                $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($comment, false, $conf['name']))), 70);
-                $rows .= $tpl->getHtmlFrag('table-row', [
-                    'cells' => [
-                        ['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($date)), 'title' => _CHNGSTORY.': '.format_time($date, _TIMESTRING), 'text' => format_time($date)])],
-                        ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id, 'title' => $comment, 'label' => $comment, 'is_last' => true])],
-                    ],
-                ]);
-            }
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $cid, $commentModul, $date, $comment] = $row;
+            $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($comment, false, $conf['name']))), 70);
+            $rows[] = $lastRow($date, getSeoUrl(['name' => $commentModul, 'op' => 'view', 'id' => $cid]).'#'.$id, $comment);
         }
-    }
-    if ($modul == 'faq') {
+    } elseif ($modul == 'faq') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_faq WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, $title);
         }
-    }
-    if ($modul == 'files') {
+    } elseif ($modul == 'files') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_files WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, $title);
         }
-    }
-    if ($modul == 'forum') {
+    } elseif ($modul == 'forum') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_forum WHERE uid = :user_id AND pid = '0' AND time <= NOW() AND status > '1' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
         }
-    }
-    if ($modul == 'jokes') {
+    } elseif ($modul == 'jokes') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_jokes WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=jokes#'.$id, 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, 'index.php?name=jokes#'.$id, $title);
         }
-    }
-    if ($modul == 'links') {
+    } elseif ($modul == 'links') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
         }
-    }
-    if ($modul == 'media') {
+    } elseif ($modul == 'media') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_media WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
         }
-    }
-    if ($modul == 'news') {
+    } elseif ($modul == 'news') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
         }
-    }
-    if ($modul == 'pages') {
+    } elseif ($modul == 'pages') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
-        } else {
-            return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $time] = $row;
+            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
         }
+    } else {
+        $handled = false;
     }
-    return ($rows !== '') ? $tpl->getHtmlFrag('table', ['open' => true, 'is_amount' => true]).$rows.$tpl->getHtmlFrag('table', []) : '';
+    return $handled ? $tpl->getHtmlPart('liste', [
+        'rows' => $rows,
+        'table_open' => ['open' => true, 'is_amount' => true],
+        'table_close' => [],
+        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+    ]) : '';
 }
 
 function privat(): void {
@@ -744,8 +732,7 @@ function passlost(): void {
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
-            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            'fields' => $fields,
+            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'passmail', 'label' => $send]),
             'after_submit' => $after,
         ]);
@@ -916,22 +903,24 @@ function edithome(): void {
         }
         $change = $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
-            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            'fields' => $fields,
+            'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'submit' => $tpl->getHtmlFrag('form-submit', ['extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
         ]);
         $avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
-        $asetup = $tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true])
-            .$tpl->getHtmlFrag('table-row', ['cells' => [
-                ['primary_text' => _AVATAR.':', 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
-                ['img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
-            ]])
-            .$tpl->getHtmlFrag('table', []);
+        $asetup = $tpl->getHtmlPart('liste', [
+            'rows' => [[
+                'cells' => [
+                    ['primary_text' => _AVATAR.':', 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
+                    ['img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
+                ],
+            ]],
+            'table_open' => ['open' => true, 'is_form' => true],
+            'table_close' => [],
+        ]);
         if ($conf['users']['aupload']) {
             $asetup .= $tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
-                'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                'fields' => $tpl->getHtmlFrag('form-field-row', [
+                'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$tpl->getHtmlFrag('form-field-row', [
                     'label' => _AVATAR_USER.':',
                     'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile']),
                 ]),
@@ -941,7 +930,7 @@ function edithome(): void {
         $a = 6;
         $i = 1;
         $aset = [];
-        $arows = '';
+        $arows = [];
         $adir = $conf['users']['adirectory'].'/default';
         $list = scandir($adir);
         foreach ($list ?: [] as $file) {
@@ -957,18 +946,21 @@ function edithome(): void {
                     'is_avatar' => true,
                 ];
                 if ($i % $a == 0) {
-                    $arows .= $tpl->getHtmlFrag('table-row', ['cells' => $aset]);
+                    $arows[] = ['cells' => $aset];
                     $aset = [];
                 }
                 $i++;
             }
         }
-        if ($aset) $arows .= $tpl->getHtmlFrag('table-row', ['cells' => $aset]);
+        if ($aset) $arows[] = ['cells' => $aset];
         if ($i >= 1) {
             $asetup .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT])
-                .$tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true, 'is_avatar_grid' => true])
-                .$arows
-                .$tpl->getHtmlFrag('table', []);
+                .$tpl->getHtmlPart('liste', [
+                    'rows' => $arows,
+                    'table_open' => ['open' => true, 'is_form' => true, 'is_avatar_grid' => true],
+                    'table_close' => [],
+                    'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
+                ]);
         }
         $uid = (int)$user[0];
         [$network] = $db->getSqlRow($db->getSqlQuery('SELECT network FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
@@ -986,8 +978,7 @@ function edithome(): void {
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT])
                 .$tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
-                'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                'fields' => $fields,
+                'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
         } else {

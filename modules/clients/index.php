@@ -21,20 +21,11 @@ function clients(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
-        $cont .= $tpl->getHtmlFrag('table', [
-            'open' => true,
-            'sortable' => true,
-            'headers' => [
-                ['text' => _ID, 'is_num' => true],
-                ['text' => _CTITLE],
-                ['text' => _CVERSION],
-                ['text' => _CLOADS],
-                ['text' => _FUNCTIONS, 'no_sort' => true],
-            ],
-        ]);
+        $rows = [];
         $i = 0;
         $a = 1;
-        while ([$id, $title, $body, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $title, $body, $url, $num, $hits, $prod] = $row;
             $tpath = 'uploads/clients/thumb/'.$id.'_'.$uid;
             if (file_exists($tpath.'.zip')) $tpath .= '.zip';
             elseif (file_exists($tpath.'.gz')) $tpath .= '.gz';
@@ -49,7 +40,7 @@ function clients(): void {
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
             );
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $cont .= $tpl->getHtmlFrag('table-row', [
+            $rows[] = [
                 'id' => (string)$a,
                 'cells' => [
                     ['text' => (string)$a, 'href' => '#'.$a, 'title' => (string)$a, 'is_num' => true],
@@ -58,12 +49,26 @@ function clients(): void {
                     ['text' => (string)$hits],
                     ['content_html' => $acont],
                 ],
-            ]);
+            ];
             $conts .= $tpl->getHtmlFrag('post-div', ['id' => 'cl'.$i, 'class' => 'sl_none', 'content' => $prs->filterContent($body, false, $conf['name'])]);
             $i++;
             $a++;
         }
-        $cont .= $tpl->getHtmlFrag('table', []).$conts;
+        $cont .= $tpl->getHtmlPart('liste', [
+            'rows' => $rows,
+            'table_open' => [
+                'open' => true,
+                'sortable' => true,
+                'headers' => [
+                    ['text' => _ID, 'is_num' => true],
+                    ['text' => _CTITLE],
+                    ['text' => _CVERSION],
+                    ['text' => _CLOADS],
+                    ['text' => _FUNCTIONS, 'no_sort' => true],
+                ],
+            ],
+            'table_close' => [],
+        ]).$conts;
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
