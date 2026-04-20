@@ -149,7 +149,7 @@
 .block-down h3 { padding-bottom: 20px; border-bottom: 1px solid #ebebee; }
 
 /* Дополнительные блоки */
-/* Оформление блока ключевых слов: blocks/block-keywords_search_style.php */
+/* Оформление блока ключевых слов: blocks/keywords_search_style.php */
 .tags a {
 	display: inline-block;
 	height: 21px;

@@ -394,6 +394,7 @@ CALL renidx('{prefix}_blocks', 'active_position', 'status_position');
 CALL renidx('{prefix}_blocks', 'blanguage', 'blang');
 CALL addidx('{prefix}_blocks', 'title', '`title`', 0);
 CALL addidx('{prefix}_blocks', 'status_position', '`status`, `bpos`', 0);
+UPDATE `{prefix}_blocks` SET bfile = REPLACE(bfile, 'block-', '') WHERE bfile LIKE 'block-%';
 
 # =============================================================================
 # Batch D — _categories

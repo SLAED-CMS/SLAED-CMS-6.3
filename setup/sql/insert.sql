@@ -5,14 +5,14 @@
 # Compatible: MySQL 8.0+ & MariaDB 10+
 
 INSERT INTO `{prefix}_blocks` VALUES
-(1, '', 'Навигация', '', '', 'r', 2, 1, 0, '', '', 'block-modules.php', 0, '0', 'd', 'all'),
+(1, '', 'Навигация', '', '', 'r', 2, 1, 0, '', '', 'modules.php', 0, '0', 'd', 'all'),
 (2, 'admin', 'Администрация', '<a href=\"javascript:OpenWindow(\'plugins/sxd/index.php\', \'DB Backup - Sypex Dumper\', \'600\', \'500\')\" title=\"DB Backup - Sypex Dumper\">DB Backup - Sypex Dumper</a>', '', 'r', 3, 1, 0, '0', '', '', 2, '0', 'd', 'all'),
-(3, '', 'Выбор языка', '', '', 'r', 1, 1, 0, '', '', 'block-languages.php', 0, '0', 'd', 'all'),
+(3, '', 'Выбор языка', '', '', 'r', 1, 1, 0, '', '', 'languages.php', 0, '0', 'd', 'all'),
 (4, 'userbox', 'Блок пользователя', '', '', 'r', 4, 1, 0, '', '', '', 1, '0', 'd', 'all'),
-(5, '', 'Информация пользователя', '', '', 'r', 5, 1, 0, '', '', 'block-user_info.php', 0, '0', 'd', 'all'),
-(6, '', 'Счетчик посещений', '', '', 'r', 6, 1, 0, '', '', 'block-stat.php', 0, '0', 'd', 'all'),
-(7, '', 'Реклама', '', '', 'd', 1, 1, 0, '', '', 'block-banner_random.php', 0, '0', 'd', 'all'),
-(8, '', 'Форум внизу', '', '', 'r', 7, 1, 0, '', '', 'block-forum.php', 0, '0', 'd', 'infly,');
+(5, '', 'Информация пользователя', '', '', 'r', 5, 1, 0, '', '', 'user_info.php', 0, '0', 'd', 'all'),
+(6, '', 'Счетчик посещений', '', '', 'r', 6, 1, 0, '', '', 'stat.php', 0, '0', 'd', 'all'),
+(7, '', 'Реклама', '', '', 'd', 1, 1, 0, '', '', 'banner_random.php', 0, '0', 'd', 'all'),
+(8, '', 'Форум внизу', '', '', 'r', 7, 1, 0, '', '', 'forum.php', 0, '0', 'd', 'infly,');
 
 INSERT INTO `{prefix}_categories` VALUES
 (1, 'news', 'Internet', 'Internet news', 'network.png', '', 0, 1, 1, 0, 0, 0, '0|0', '0|0', '1|0', '1|0', '3|0', '3|0', '3|0'),

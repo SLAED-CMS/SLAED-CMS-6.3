@@ -79,7 +79,7 @@ function add(): void {
     $bfopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
     $files = scandir('blocks');
     foreach ($files as $file) {
-        if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
+        if (preg_match('/^(.+)\.php$/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
                 $bfopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
@@ -251,7 +251,7 @@ function fileedit(): void {
     $opts = '';
     $files = scandir('blocks');
     foreach ($files as $file) {
-        if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
+        if (preg_match('/^(.+)\.php$/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
                 $opts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
@@ -309,7 +309,7 @@ function addsave(): void {
     $headline = getVar('post', 'headline', 'url', '');
     $lang = getVar('post', 'lang', 'var', '');
     $bfile = getVar('post', 'bfile', 'text', '');
-    $bfile = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
+    $bfile = preg_match('/^[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
@@ -321,7 +321,7 @@ function addsave(): void {
     $btime = '';
     if ($bfile != '') {
         $url = '';
-        if ($title == '') $title = str_replace('_', ' ', str_replace(['block-', '.php'], '', $bfile));
+        if ($title == '') $title = str_replace('_', ' ', str_replace('.php', '', $bfile));
     }
     if ($url) {
         $btime = time();
@@ -370,10 +370,10 @@ function filecode(): void {
         $flag = getVar('post', 'flag', 'var', '');
         if ($flag) {
             $flaged = $flag;
-            $bf = preg_replace('/[^a-z0-9_\-]/i', '', str_replace(['block-', '.php'], '', $bf));
-            $bf = 'block-'.$bf.'.php';
+            $bf = preg_replace('/[^a-z0-9_\-]/i', '', str_replace('.php', '', $bf));
+            $bf = $bf.'.php';
         } else {
-            $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
+            $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
             if ($bf === '') {
                 setRedirect($afile.'.php?name=blocks&op=logview');
                 return;
@@ -435,7 +435,7 @@ function filecodesave(): void {
     $warn = !checkSiteToken();
     $btext = (string)getVar('post', 'blocktext', 'raw', '');
     $bf = getVar('post', 'bf', 'text', '');
-    $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
+    $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
     if (!$warn && $btext && $bf) {
         if ($handle = fopen('blocks/'.$bf, 'wb')) {
             $htmlb = '';
@@ -482,7 +482,7 @@ function edit(): void {
         $bfopts = '';
         $files = scandir('blocks');
         foreach ($files as $file) {
-            if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
+            if (preg_match('/^(.+)\.php$/', $file, $matches)) {
                 $bfopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $matches[0],
@@ -670,7 +670,7 @@ function editsave(): void {
     $weight = getVar('post', 'weight', 'num', 0);
     $lang = getVar('post', 'lang', 'var', '');
     $bfile = getVar('post', 'bfile', 'text', '');
-    $bfile = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
+    $bfile = preg_match('/^[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
