@@ -1,7 +1,7 @@
-<div id="{{ id }}"{% if is_closed %} title="{{ closed_title }}" class="sl_hidden"{% endif %}>
+<div id="{{ id }}"{% if is_closed %} title="{{ closed_title }}" class="sl-hidden"{% endif %}>
 	<div class="comment">
 		<div class="com-left">
-			<div class="com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ username }}" title="{{ username }}" class="sl_avatar">{% endif %}</div>
+			<div class="com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ username }}" title="{{ username }}" class="sl-avatar">{% endif %}</div>
 			<div class="min-rate">
 				<div class="rate-like-box">{{{ user_rate }}}</div>
 			</div>
@@ -28,7 +28,7 @@
 				</div>
 				<div class="carg">{{{ btn_edit }}}{{{ btn_personal }}}{{{ btn_pm }}}{{{ btn_profile }}}{{{ btn_web }}}{{{ btn_warn }}}{{{ btn_thank }}}<span class="cargs">{{{ date }}} {{{ ip }}}</span></div>
 			</div>
-			<div class="com-cont clrfix">{{{ text }}}<div class="sl_sig">{{{ sig }}}</div></div>
+			<div class="com-cont clrfix">{{{ text }}}<div class="sl-sig">{{{ sig }}}</div></div>
 		</div>
 	</div>
 </div>

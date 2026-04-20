@@ -1,1 +1,1 @@
-<img src="{{ src }}" alt="{{ alt }}"{% if title %} title="{{ title }}"{% endif %}{% if class %} class="{{ class }}"{% endif %}{% if img_attr %} {{{ img_attr }}}{% endif %}>
+<img src="{{ src }}" alt="{{ alt }}"{% if title %} title="{{ title }}"{% endif %}{% if class or is_avatar or is_hidden %} class="{% if class %}{{ class }}{% endif %}{% if is_avatar %}{% if class %} {% endif %}sl-avatar{% endif %}{% if is_hidden %}{% if class or is_avatar %} {% endif %}sl-hidden{% endif %}"{% endif %}{% if img_attr %} {{{ img_attr }}}{% endif %}>

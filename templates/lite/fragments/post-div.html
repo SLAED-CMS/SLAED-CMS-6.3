@@ -1,1 +1,1 @@
-<div{% if id %} id="{{ id }}"{% endif %}{% if class %} class="{{ class }}"{% endif %}>{{{ content }}}</div>
+<div{% if id %} id="{{ id }}"{% endif %}{% if class or is_form_submit or is_center %} class="{% if class %}{{ class }}{% endif %}{% if is_form_submit %}{% if class %} {% endif %}sl-form-submit{% endif %}{% if is_center %}{% if class or is_form_submit %} {% endif %}sl-center{% endif %}"{% endif %}>{{{ content }}}</div>
