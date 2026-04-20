@@ -46,20 +46,35 @@ function contact(): void {
     }
     setHead(['title' => $title]);
     $cont = $tpl->getHtmlFrag('title', ['title' => $title]);
-    $form = $tpl->getHtmlPart('contact-form', [
-        'info' => $info,
-        'name' => $conf['name'],
+    $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
+        'label' => _TO.':',
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'options_html' => $asend]),
+    ]) : '';
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _YOURNAME.':',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'sname', 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _YOUREMAIL.':',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _MESSAGE.':',
+        'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
+    ]);
+    $form = ($info ? $tpl->getHtmlFrag('post-div', ['class' => 'sl-section', 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
+        'action' => 'index.php?name='.$conf['name'],
+        'method' => 'post',
+        'form_name' => 'post',
+        'no_enctype' => true,
         'token' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
-        'admin_options' => $asend,
-        'lbl_to' => _TO,
-        'lbl_name' => _YOURNAME,
-        'lbl_email' => _YOUREMAIL,
-        'lbl_message' => _MESSAGE,
-        'sname' => $sname,
-        'semail' => $semail,
-        'message' => $message,
+        'fields' => $fields,
         'captcha' => getCaptcha(1),
-        'submit' => _SEND,
+        'submit' => $tpl->getHtmlFrag('form-submit', [
+            'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
+            'op' => 'contact',
+            'label' => _SEND,
+        ]),
     ]);
     if (getVar('post', 'send', 'num') == '1') {
         $id = getVar('post', 'id', 'num');

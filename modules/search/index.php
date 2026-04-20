@@ -110,7 +110,13 @@ function getSearchForm(array $state): string {
         ]),
     ]);
     $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['op' => '', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEARCH])]);
-    return $tpl->getHtmlPart('forum-reply-form', ['mod_name' => htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), 'rows_html' => $rows]);
+    return $tpl->getHtmlPart('form-add', [
+        'action' => 'index.php?name='.$conf['name'],
+        'method' => 'post',
+        'form_name' => 'post',
+        'form_attr' => 'class="sl-forum-reply-form"',
+        'fields' => $rows,
+    ]);
 }
 
 function addSearchStat(array $state): void {
@@ -388,7 +394,23 @@ function getSearchList(array $rows, array $state): string {
     $slice = array_slice($rows, $from, $state['snum']);
     $numb = $from + 1;
     foreach ($slice as $row) {
-        $cont .= $tpl->getHtmlFrag('basic-search', ['n' => $numb, 'title' => $row['title'], 'date' => $row['date'], 'modul' => $row['modul'], 'ctitle' => $row['ctitle'], 'post' => $row['post'], 'admin' => $row['edit']]);
+        $meta = $tpl->getHtmlFrag('list', [
+            'is_unordered' => true,
+            'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $row['date']])
+                .$tpl->getHtmlFrag('list-item', ['content_html' => $row['modul']])
+                .$tpl->getHtmlFrag('list-item', ['content_html' => $row['ctitle']])
+                .$tpl->getHtmlFrag('list-item', ['content_html' => $row['post']]),
+        ]);
+        $cont .= $tpl->getHtmlFrag('post-div', [
+            'id' => (string)$numb,
+            'class' => 'search-line',
+            'content' => $tpl->getHtmlFrag('post-div', [
+                    'class' => 'pull-right',
+                    'content' => $row['edit'].$tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]),
+                ])
+                .$tpl->getHtmlFrag('title', ['title' => $row['title'], 'is_level_four' => true])
+                .$tpl->getHtmlFrag('post-div', ['class' => 'search-meta', 'content' => $meta]),
+        ]);
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);

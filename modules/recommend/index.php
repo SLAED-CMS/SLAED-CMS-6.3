@@ -25,20 +25,31 @@ function recommend(): void {
     setHead(['title' => _RECOMMTITLE]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-    $cont .= $tpl->getHtmlPart('recommend-form', [
-        'name' => $conf['name'],
+    $fields = $tpl->getHtmlFrag('form-field-row', [
+        'label' => _YOURNAME.':',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _YOUREMAIL.':',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _FFRIENDNAME.':',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fname', 'value_attr' => $fname, 'placeholder_text' => _FFRIENDNAME, 'is_required' => true]),
+    ]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _FFRIENDEMAIL.':',
+        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
+    ]);
+    $cont .= $tpl->getHtmlPart('form-add', [
+        'action' => 'index.php?name='.$conf['name'],
+        'method' => 'post',
+        'form_name' => 'post',
+        'no_enctype' => true,
         'token' => htmlspecialchars(getSiteToken('recommend'), ENT_QUOTES, 'UTF-8'),
-        'nick_field' => $unkey,
-        'sname' => $sname,
-        'semail' => $semail,
-        'fname' => $fname,
-        'femail' => $femail,
+        'fields' => $fields,
         'captcha' => getCaptcha(2),
-        'lbl_yourname' => _YOURNAME,
-        'lbl_youremail' => _YOUREMAIL,
-        'lbl_friendname' => _FFRIENDNAME,
-        'lbl_friendemail' => _FFRIENDEMAIL,
-        'submit_label' => _SEND,
+        'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'label' => _SEND]),
     ]);
     echo $cont;
     setFoot();
@@ -72,7 +83,7 @@ function send(): void {
         update_points(38);
         setHead(['title' => _RECOMMTITLE]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
-        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $tpl->getHtmlFrag('recommend-success-text', ['freference' => _FREFERENCE, 'friend_name' => $fname, 'thanksrec' => _THANKSREC]), 'meta' => $meta]);
+        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);
         setFoot();
     } else {
         recommend();

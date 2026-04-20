@@ -264,7 +264,14 @@ function view(): void {
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         if (is_user() || $conf['links']['links'] == '1') {
             $onclick = ' OnClick="javascript:window.open(\''.str_replace(["\\", "'"], ["\\\\", "\\'"], $authorurl).'\')"';
-            $download = $tpl->getHtmlPart('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _DOWNLLINK]);
+            $download = $tpl->getHtmlPart('form-wrap', [
+                'action' => 'index.php?name='.$conf['name'],
+                'method' => 'post',
+                'form_attr' => 'class="sl-inline-form"',
+                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'loading'])
+                    .$tpl->getHtmlFrag('form-submit', ['label' => _DOWNLLINK, 'class' => 'sl-but-green', 'input_attr' => trim($onclick)]),
+            ]);
         }
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';

@@ -176,7 +176,7 @@ function finnewuser(): void {
                     'method' => 'get',
                     'no_enctype' => true,
                     'fields' => $fields,
-                    'submit' => $hidden.$tpl->getHtmlFrag('submit', ['label' => _ACTIVATIONSUB]),
+                    'submit' => $hidden.$tpl->getHtmlFrag('form-submit', ['label' => _ACTIVATIONSUB]),
                 ]);
             } else {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label_html' => str_replace('&amp;', '&', $finishlink), 'is_blank' => true]);

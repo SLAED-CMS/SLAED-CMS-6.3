@@ -257,7 +257,7 @@ function forum(): void {
                             $topicList .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => tmoder(1)
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$cat, 'input_attr' => ''])
-                                .$tpl->getHtmlFrag('submit', ['label' => _OK])]);
+                                .$tpl->getHtmlFrag('form-submit', ['label' => _OK])]);
                             $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $topicList]);
                         } else {
                             $cont .= $topicList;
@@ -528,7 +528,13 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND])]);
-        $cont = $tpl->getHtmlPart('forum-reply-form', ['mod_name' => $conf['name'], 'rows_html' => $rows]);
+        $cont = $tpl->getHtmlPart('form-add', [
+            'action' => 'index.php?name='.$conf['name'],
+            'method' => 'post',
+            'form_name' => 'post',
+            'form_attr' => 'class="sl-forum-reply-form"',
+            'fields' => $rows,
+        ]);
         return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
     }
     return '';
@@ -668,7 +674,13 @@ function add(): void {
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$pid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $hide.$tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK])]);
-        $cont .= $tpl->getHtmlPart('forum-reply-form', ['mod_name' => $conf['name'], 'rows_html' => $rows]);
+        $cont .= $tpl->getHtmlPart('form-add', [
+            'action' => 'index.php?name='.$conf['name'],
+            'method' => 'post',
+            'form_name' => 'post',
+            'form_attr' => 'class="sl-forum-reply-form"',
+            'fields' => $rows,
+        ]);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
         $head = _FORUM.' '.$ctitle.' '.$ctitle;

@@ -29,12 +29,25 @@ function money(): void {
         ['Rechner1', _MO_3.' R:', 'RUB'],
         ['Rechner2', _MO_3.' E:', 'EUR'],
     ] as [$fnname, $tolbl, $tocur]) {
-        $cont .= $tpl->getHtmlPart('calculator-form', [
-            'btn_label' => _MO_4,
-            'fn_name' => $fnname,
-            'from_label' => _MO_2,
-            'to_cur' => $tocur,
-            'to_label' => $tolbl,
+        $fields = $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MO_2.':',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'a', 'input_class' => 'sl-calculator-field']).' EUR',
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => $tolbl,
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'total', 'input_class' => 'sl-calculator-field']).' '.$tocur,
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => '',
+            'field_html' => $tpl->getHtmlFrag('button', ['label' => _MO_4, 'button_attr' => 'OnClick="'.$fnname.'(this.form)"']),
+        ]);
+        $cont .= $tpl->getHtmlPart('form-add', [
+            'no_action' => true,
+            'method' => 'post',
+            'form_name' => 'form',
+            'form_attr' => 'class="sl-calculator-form"',
+            'no_enctype' => true,
+            'fields' => $fields,
         ]);
     }
     if ($conf['money']['an']) {

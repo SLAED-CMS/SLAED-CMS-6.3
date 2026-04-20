@@ -268,7 +268,14 @@ function view(): void {
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         if (is_user() || $conf['files']['down'] == '1') {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
-            $download = $tpl->getHtmlPart('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
+            $download = $tpl->getHtmlPart('form-wrap', [
+                'action' => 'index.php?name='.$conf['name'],
+                'method' => 'post',
+                'form_attr' => 'class="sl-inline-form"',
+                'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'loading'])
+                    .$tpl->getHtmlFrag('form-submit', ['label' => _UPLOAD, 'class' => 'sl-but-green', 'input_attr' => trim($onclick)]),
+            ]);
         }
         $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $cont .= $tpl->getHtmlPart('view', [

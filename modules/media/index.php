@@ -448,7 +448,22 @@ function add(): void {
         while ($i < $conf['media']['links']) {
             $a = $i + 1;
             $link = isset($links[$i]) ? $links[$i] : '';
-            $linksRows .= $tpl->getHtmlFrag('media-link-row', ['is_hidden' => $i != 0 && $link == '', 'id' => 'med'.$i, 'next_id' => 'med'.$a, 'title' => _ADD, 'label' => _URL.' - '.$a.':', 'value' => filterText($link)]);
+            $linksRows .= $tpl->getHtmlFrag('form-field-row', [
+                'row_id' => 'med'.$i,
+                'is_hidden' => $i != 0 && $link == '',
+                'label_html' => $tpl->getHtmlFrag('link', [
+                    'href' => '#',
+                    'title' => _ADD,
+                    'label' => _URL.' - '.$a.':',
+                    'class' => 'sl_plus',
+                    'onclick_attr' => 'onclick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500); return false;"',
+                ]),
+                'field_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'text',
+                    'name_attr' => 'links[]',
+                    'value_attr' => filterText($link),
+                ]),
+            ]);
             $i++;
         }
         $fieldsBeforeText = $tpl->getHtmlFrag('form-field-row', ['label' => _MSUBTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => '100', 'placeholder_text' => _MSUBTITLE])]);

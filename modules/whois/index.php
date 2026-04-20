@@ -17,15 +17,23 @@ function mwhois(): void {
 	global $domainwhois, $ext, $nomatch, $server, $domainopt;
 	$domainlicens = getVar('req', 'domain_licens', 'word');
 	
-	$licensopt = $tpl->getHtmlPart('fieldset-post-form', [
-		'action'        => 'index.php?name='.$conf['name'],
-		'legend'        => _WHOIS_LICENS,
-		'primary_field' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_licens', 'value_attr' => $domainlicens]),
-		'hidden_fields' => [
-			['name_attr' => 'option', 'value_attr' => 'licens', 'input_attr' => ''],
-		],
-		'submit_label'  => _WHOIS_PR,
-		'is_danger'     => true,
+	$licensopt = $tpl->getHtmlPart('fieldset-block', [
+		'legend' => _WHOIS_LICENS,
+		'is_danger' => true,
+		'content' => $tpl->getHtmlPart('form-add', [
+			'action' => 'index.php?name='.$conf['name'],
+			'method' => 'post',
+			'form_name' => 'post',
+			'no_enctype' => true,
+			'fields' => $tpl->getHtmlFrag('form-field-row', [
+				'label' => _WHOIS_LICENS,
+				'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_licens', 'value_attr' => $domainlicens]),
+			]),
+			'submit' => $tpl->getHtmlFrag('form-submit', [
+				'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'option', 'value_attr' => 'licens']),
+				'label' => _WHOIS_PR,
+			]),
+		]),
 	]);
 	
 	$domainwhois = getVar('req', 'domain_whois', 'word');
@@ -40,16 +48,24 @@ function mwhois(): void {
 		}
 	}
 	
-	$domainopt = $tpl->getHtmlPart('fieldset-post-form', [
-		'action'          => 'index.php?name='.$conf['name'],
-		'legend'          => _WHOIS_DOM,
-		'primary_field'   => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_whois', 'value_attr' => $domainwhois]),
-		'secondary_field' => $tpl->getHtmlFrag('select', ['name_attr' => 'ext', 'options_html' => $domainoptOptions]),
-		'hidden_fields'   => [
-			['name_attr' => 'option', 'value_attr' => 'check', 'input_attr' => ''],
-		],
-		'submit_label'    => _WHOIS_PR,
-		'is_success'      => true,
+	$domainopt = $tpl->getHtmlPart('fieldset-block', [
+		'legend' => _WHOIS_DOM,
+		'is_success' => true,
+		'content' => $tpl->getHtmlPart('form-add', [
+			'action' => 'index.php?name='.$conf['name'],
+			'method' => 'post',
+			'form_name' => 'post',
+			'no_enctype' => true,
+			'fields' => $tpl->getHtmlFrag('form-field-row', [
+				'label' => _WHOIS_DOM,
+				'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_whois', 'value_attr' => $domainwhois])
+					.$tpl->getHtmlFrag('select', ['name_attr' => 'ext', 'options_html' => $domainoptOptions]),
+			]),
+			'submit' => $tpl->getHtmlFrag('form-submit', [
+				'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'option', 'value_attr' => 'check']),
+				'label' => _WHOIS_PR,
+			]),
+		]),
 	]);
 
 	$serverdefs = [
@@ -100,13 +116,16 @@ function mwhois(): void {
 			$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!', 'is_success' => true]);
 		} else {
 			$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!', 'is_danger' => true]);
-			$result .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? $tpl->getHtmlPart('mini-post-form', [
-				'action'        => 'index.php?name='.$conf['name'],
-				'hidden_fields' => [
-					['name_attr' => 'op', 'value_attr' => 'add', 'input_attr' => ''],
-					['name_attr' => 'domain', 'value_attr' => $domainlicens, 'input_attr' => ''],
-				],
-				'submit_label'  => _WHOIS_LICENS_SEND,
+			$result .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? $tpl->getHtmlPart('form-add', [
+				'action' => 'index.php?name='.$conf['name'],
+				'method' => 'post',
+				'form_name' => 'post',
+				'no_enctype' => true,
+				'submit' => $tpl->getHtmlFrag('form-submit', [
+					'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'add'])
+						.$tpl->getHtmlFrag('hidden', ['name_attr' => 'domain', 'value_attr' => $domainlicens]),
+					'label' => _WHOIS_LICENS_SEND,
+				]),
 			]) : '';
 		}
 		$cont .= $tpl->getHtmlPart('fieldset-block', ['legend' => _WHOIS_SUCH, 'content' => $result, 'is_center' => true, 'is_info' => true]);
@@ -285,14 +304,17 @@ function printresults(int|string|null $layout, int $id): string {
 		$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!', 'is_success' => true]);
 	} elseif($layout=='1') {
 		$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!', 'is_danger' => true])
-		.$tpl->getHtmlPart('mini-post-form', [
-			'action'        => 'index.php?name='.$conf['name'],
-			'hidden_fields' => [
-				['name_attr' => 'option', 'value_attr' => 'whois', 'input_attr' => ''],
-				['name_attr' => 'domain_whois', 'value_attr' => $domainwhois, 'input_attr' => ''],
-				['name_attr' => 'ext', 'value_attr' => $ext, 'input_attr' => ''],
-			],
-			'submit_label'  => _WHOIS_INF_US,
+		.$tpl->getHtmlPart('form-add', [
+			'action' => 'index.php?name='.$conf['name'],
+			'method' => 'post',
+			'form_name' => 'post',
+			'no_enctype' => true,
+			'submit' => $tpl->getHtmlFrag('form-submit', [
+				'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'option', 'value_attr' => 'whois'])
+					.$tpl->getHtmlFrag('hidden', ['name_attr' => 'domain_whois', 'value_attr' => $domainwhois])
+					.$tpl->getHtmlFrag('hidden', ['name_attr' => 'ext', 'value_attr' => $ext]),
+				'label' => _WHOIS_INF_US,
+			]),
 		]);
 	} elseif($layout=='2') {
 		$result .= $tpl->getHtmlFrag('span', ['text' => 'Could not contact the whois server '.$server, 'is_danger' => true]);
@@ -306,11 +328,11 @@ function printresults(int|string|null $layout, int $id): string {
 function printwhois(string|array $output): string {
 	global $domainwhois, $ext, $domainopt, $tpl;
 	$lines = explode("\n", $output);
-	return $tpl->getHtmlPart('whois-output', [
-		'domain_form' => $domainopt,
-		'legend'      => _WHOIS_INF_US,
-		'lines'       => $lines,
-		'is_info'     => true,
+	$content = implode('', array_map(static fn($line): string => htmlspecialchars((string)$line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'<br>', $lines));
+	return $domainopt.$tpl->getHtmlPart('fieldset-block', [
+		'legend' => _WHOIS_INF_US,
+		'content' => $content,
+		'is_info' => true,
 	]);
 }
 

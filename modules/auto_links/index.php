@@ -178,17 +178,28 @@ function send(): void {
         $puname = (is_user()) ? $user[1] : '';
         addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_OK]);
-        $code = $tpl->getHtmlFrag('auto-links-embed-link', ['href' => $conf['homeurl'], 'title' => $conf['slogan'], 'label' => $conf['sitename']]);
-        $rows = $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_M, 'code' => $code]);
+        $embedHome = htmlspecialchars($conf['homeurl'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $embedSlogan = htmlspecialchars($conf['slogan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $embedSite = htmlspecialchars($conf['sitename'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $code = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedSlogan.'&quot;&gt;'.$embedSite.'&lt;/a&gt;';
+        $rows = $tpl->getHtmlFrag('table-row', ['cells' => [
+            ['text' => _A_LINKS_M.':'],
+            ['content_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'description', 'rows_num' => 5, 'value_text' => $code])],
+        ]]);
         if ($conf['auto_links']['img']) {
             $banner = img_find('banners/'.$conf['auto_links']['img']);
             if ($banner && file_exists($banner)) {
                 [$imgwidth, $imgheight] = getimagesize($banner);
-                $code  = $tpl->getHtmlFrag('auto-links-embed-image', ['href' => $conf['homeurl'], 'title' => $conf['sitename'].' - '.$conf['slogan'], 'src' => $conf['homeurl'].'/'.$banner, 'alt' => $conf['sitename'].' - '.$conf['slogan'], 'width' => $imgwidth, 'height' => $imgheight]);
-                $rows .= $tpl->getHtmlFrag('auto-links-code-row', ['label' => _A_LINKS_IMG, 'code' => $code]);
+                $embedTitle = htmlspecialchars($conf['sitename'].' - '.$conf['slogan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $embedSrc = htmlspecialchars($conf['homeurl'].'/'.$banner, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $code  = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedTitle.'&quot;&gt;&lt;img src=&quot;'.$embedSrc.'&quot; alt=&quot;'.$embedTitle.'&quot; class=&quot;sl-embed-img&quot; width=&quot;'.$imgwidth.'&quot; height=&quot;'.$imgheight.'&quot;&gt;&lt;/a&gt;';
+                $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [
+                    ['text' => _A_LINKS_IMG.':'],
+                    ['content_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'description', 'rows_num' => 5, 'value_text' => $code])],
+                ]]);
             }
         }
-        $cont .= $tpl->getHtmlFrag('code-table', ['rows_html' => $rows]);
+        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true]).$rows.$tpl->getHtmlFrag('table', []);
         echo $cont;
         setFoot();
     } else {

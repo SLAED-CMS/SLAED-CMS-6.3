@@ -278,7 +278,7 @@ function view(): void {
         $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
         $rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
-        $voting = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
+        $voting = ($vote) ? $tpl->getHtmlFrag('post-div', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder' => is_moder($conf['name']),

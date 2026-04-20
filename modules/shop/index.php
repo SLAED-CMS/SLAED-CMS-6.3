@@ -73,7 +73,7 @@ function shop(): void {
 	$offset = (int)(($num - 1) * $unum);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
-		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
+		$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$columns = max(1, min(6, (int)$conf['shop']['bascol']));
 		$cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
 		while ([$id, $cid, $time, $stitle, $text, $bodytext, $pprice, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
@@ -88,7 +88,7 @@ function shop(): void {
 			$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 			$opreis = '';
 			$discount = '';
-			$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
+			$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _SCART, 'label' => _SCART, 'class' => 'sl-shop-add', 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
 			$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 			$title = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label_html' => $stitle, 'suffix_html' => getTplNewGraphic($time)]);
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
@@ -238,19 +238,19 @@ function view(): void {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
-		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
+		$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$cdesc = $cdesc ?: $ctitle;
 		$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('categories/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
 		$post = '';
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$favorites = getFavoriteButton($id, $conf['name']);
-		$voting = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
+		$voting = ($vote) ? $tpl->getHtmlFrag('post-div', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
 		$prtitle = _PREIS;
 		$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 		$opreis = '';
 		$discount = '';
-		$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
+		$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _SCART, 'label' => _SCART, 'class' => 'sl-shop-add', 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
 		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);
@@ -332,11 +332,46 @@ function kasse(): void {
 	$idPartner = filter_input(INPUT_COOKIE, 'part', FILTER_VALIDATE_INT);
 	$idPartner = ($idPartner !== false && $idPartner !== null) ? $idPartner : '';
 	$stop = (!$cookies) ? _SERRORP : '';
-	$form = $tpl->getHtmlPart('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
+	$fields = '';
+	foreach ([
+		[_C_PIN, 'text', 'sname', $sname, _C_PINB, true],
+		[_C_PIP, 'text', 'sadr', $sadr, _C_PIPB, true],
+		[_C_TEL, 'text', 'stel', $stel, _C_TELB, true],
+		[_C_MAIL, 'email', 'smail', $smail, _C_MAILB, true],
+		[_SDOM, 'url', 'sdom', $sdom, _SDOMB, false],
+	] as [$label, $type, $name, $value, $placeholder, $required]) {
+		$fields .= $tpl->getHtmlFrag('form-field-row', [
+			'label' => $label.':',
+			'field_html' => $tpl->getHtmlFrag('input', [
+				'itype' => $type,
+				'name_attr' => $name,
+				'value_attr' => $value,
+				'placeholder_text' => $placeholder,
+				'is_required' => $required,
+			]),
+		]);
+	}
+	$fields .= $tpl->getHtmlFrag('form-field-row', [
+		'label' => _C_MESSAGE.':',
+		'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'smsg', 'rows_num' => 5, 'value_text' => $smsg, 'placeholder_text' => _C_MESSAGE]),
+	]);
+	$form = $tpl->getHtmlPart('form-add', [
+		'action' => 'index.php?name='.$conf['name'],
+		'method' => 'post',
+		'form_name' => 'post',
+		'no_enctype' => true,
+		'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'),
+		'fields' => $fields,
+		'submit' => $tpl->getHtmlFrag('form-submit', [
+			'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'opi', 'value_attr' => '1']),
+			'op' => 'kasse',
+			'label' => _C_SEND,
+		]),
+	]);
 	setHead(['title' => _C_TITLE]);
 	$cont = getModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
-		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
+		$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()]);
 		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
@@ -427,7 +462,7 @@ function kasse(): void {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['shop']['sende'], false, $conf['name'])]);
 		} else {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
+			$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()]);
 			$cont .= $form;
 		}
 	} else {
