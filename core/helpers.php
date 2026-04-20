@@ -138,8 +138,8 @@ function getTplViewFieldRows(array $data = []): string {
             } else {
                 $valu = htmlspecialchars((string)$valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             }
-            $rows .= $tpl->getHtmlFrag('view-field', [
-                'label_text' => getConst($out[1]),
+            $rows .= $tpl->getHtmlFrag('field-value', [
+                'label' => getConst($out[1]),
                 'value_html' => $valu,
             ]);
         }
@@ -348,31 +348,38 @@ function getTplBbEditor(array $data = []): string {
     $upload = '';
     if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
         $uid = intval($user[0] ?? 0);
+        $listId = 'repf'.$ei;
+        $reloadQuery = 'index.php?go=1&amp;op=getEditorFiles&amp;id='.$ei.'&amp;dir='.$e($mod);
+        $uploadData = [
+            'panel_id' => 'af-form-'.$ei,
+            'form_id' => 'formfile'.$ei,
+            'list_id' => $listId,
+            'reload_query' => $reloadQuery,
+            'update_label' => _UPDATE,
+            'show_upload_form' => $id === '1',
+        ];
         if ($id === '1') {
-            $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'
-                ._FTYPE.': '.str_replace(',', ', ', $con[0] ?? '').'<br>'
-                ._FSIZEALL.': '.filterSize($con[1] ?? 0).'<br>'
-                ._FSIZE.': '.filterSize($con[2] ?? 0).'<br>'
-                ._AWIDTH.': '.($con[3] ?? '').' px<br>'
-                ._AHEIGHT.': '.($con[4] ?? '').' px<br>'
-                ._FILEUP.': '.($con[5] ?? '').'<br></div>';
             $tok = $e(getSiteToken('upload'));
-            $inner = '<div id="msg">'.$uinfo.'</div>'
-                .'<div class="sl_pos_center">'
-                .'<form id="formfile'.$ei.'" hx-post="index.php?go=4&amp;mod='.$e($mod).'&amp;userid='.$uid.'"'
-                .' hx-encoding="multipart/form-data" hx-target="#msg" hx-swap="innerHTML" hx-trigger="change from:#file_upload"'
-                .' hx-on:htmx:before-request="document.getElementById(&quot;msg&quot;).innerHTML=&quot;&lt;div class=\&quot;sl_loading\&quot;&gt;&lt;/div&gt;&lt;br&gt;&quot;"'
-                .' hx-on:htmx:after-request="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&amp;op=getEditorFiles&amp;id='.$ei.'&amp;dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;})">'
-                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'upload_token', 'value_attr' => $tok, 'input_attr' => ''])
-                .$tpl->getHtmlFrag('file-input', ['name_attr' => 'file[]', 'input_id' => 'file_upload', 'is_multiple' => true])
-                .'</form>'
-                .$tpl->getHtmlFrag('button', ['button_type' => 'button', 'submit_label' => _UPDATE, 'button_class' => 'sl_but_green', 'button_attr' => 'OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$ei.'&dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;}); return false;"'])
-                .'</div>';
-        } else {
-            $inner = '<div class="sl_pos_center">'.$tpl->getHtmlFrag('button', ['button_type' => 'button', 'submit_label' => _UPDATE, 'button_class' => 'sl_but_green', 'button_attr' => 'OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$ei.'&dir='.$e($mod).'&quot;, {target:&quot;#repf'.$ei.'&quot;, swap:&quot;innerHTML&quot;}); return false;"']).'</div>';
+            $uploadData += [
+                'upload_title' => _UPLOADINFO,
+                'type_label' => _FTYPE,
+                'file_types' => str_replace(',', ', ', $con[0] ?? ''),
+                'total_size_label' => _FSIZEALL,
+                'total_size' => filterSize($con[1] ?? 0),
+                'file_size_label' => _FSIZE,
+                'file_size' => filterSize($con[2] ?? 0),
+                'width_label' => _AWIDTH,
+                'width' => (string)($con[3] ?? ''),
+                'height_label' => _AHEIGHT,
+                'height' => (string)($con[4] ?? ''),
+                'file_count_label' => _FILEUP,
+                'file_count' => (string)($con[5] ?? ''),
+                'upload_query' => 'index.php?go=4&amp;mod='.$e($mod).'&amp;userid='.$uid,
+                'token_field' => ['name_attr' => 'upload_token', 'value_attr' => $tok, 'input_attr' => ''],
+                'file_field' => ['name_attr' => 'file[]', 'input_id' => 'file_upload', 'is_multiple' => true],
+            ];
         }
-        $inner .= '<div id="repf'.$ei.'" style="margin: 5px;"></div>';
-        $upload = '<div id="af-form-'.$ei.'" class="sl_bbup-panel sl_none">'.$inner.'</div>';
+        $upload = $tpl->getHtmlPart('editor-upload-panel', $uploadData);
     }
 
     return '<div class="sl_bb-editor">'
@@ -777,28 +784,25 @@ function getTplAjaxTextarea(array $data = []): string {
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $query   = 'index.php?go='.$esc($go).'&amp;op='.$esc($op).'&amp;id='.$esc($id).'&amp;cid='.$esc($cid).'&amp;typ='.$esc($typ).'&amp;mod='.$esc($mod);
     $cerror  = addslashes((string)_CERROR1);
-    return $tpl->getHtmlFrag('ajax-textarea-form', [
-        'form_id'          => $formId,
-        'textarea_html'    => $tpl->getHtmlFrag('textarea', [
+    $content = $tpl->getHtmlFrag('textarea', [
             'name_attr'   => 'text',
             'rows_num'    => $rows,
             'value_text'  => $desc,
-            'input_class' => 'sl_earea',
+            'is_editor_area' => true,
             'input_attr'  => 'id="'.$fieldId.'"',
-        ]),
-        'save_button_html' => $tpl->getHtmlFrag('button', [
+        ])
+        .$tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
             'submit_label' => _SAVE,
-            'button_class' => 'sl_but_green',
+            'is_legacy_green' => true,
             'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''.$cerror.'\'); event.preventDefault(); }"',
-        ]),
-        'back_button_html' => $tpl->getHtmlFrag('button', [
+        ])
+        .$tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
             'submit_label' => _BACK,
-            'button_class' => 'sl-but-blue',
             'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"',
-        ]),
-    ]);
+        ]);
+    return $tpl->getHtmlPart('form-wrap', ['form_name' => 'textareae', 'form_id' => $formId, 'content_html' => $content]);
 }
 
 # Render the shared "new" badge for fresh content
@@ -847,65 +851,67 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         $votnum = 0;
         $votes = 1;
     }
-    $width = number_format($scor / $votes, 2) * 20;
+    $width = (int) max(0, min(100, round(($scor / $votes) * 20)));
     $result = substr($scor / $votes, 0, 4);
     if (intval($votes) && intval($scor)) {
         $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
-        $nrate = 'sl_rate-num sl_rate-is';
+        $has_score = true;
     } else {
         $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
-        $nrate = 'sl_rate-num';
+        $has_score = false;
     }
     if ($stl == '1') {
         $img = $tpl->getHtmlFrag('rating-like', [
             'result' => $result,
             'title' => $title,
-            'nrate' => $nrate,
+            'has_score' => $has_score,
             'rate1_title' => _RATE1,
             'rate5_title' => _RATE5,
-            'hover_query' => '',
             'target_id' => '',
+            'is_live' => false,
         ]);
-        $imgr = $tpl->getHtmlFrag('rating-like-live', [
+        $imgr = $tpl->getHtmlFrag('rating-like', [
             'result' => $result,
             'title' => $title,
-            'nrate' => $nrate,
+            'has_score' => $has_score,
             'target_id' => $id.$obj,
             'rate1_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1&amp;rate=1',
             'rate5_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1&amp;rate=5',
             'rate1_title' => _RATE1,
             'rate5_title' => _RATE5,
+            'is_live' => true,
         ]);
-        $crate = 'sl_rate-like';
+        $is_like = true;
     } else {
         $img = $tpl->getHtmlFrag('rating-bar', [
             'result' => $result,
             'title' => $title,
-            'nrate' => $nrate,
+            'has_score' => $has_score,
             'width' => (string)$width,
             'votes' => (string)$votnum,
             'votes_title' => _VOTES,
-            'hover_query' => '',
             'target_id' => '',
+            'is_live' => false,
         ]);
         $imgr = $tpl->getHtmlFrag('rating-bar', [
             'result' => $result,
             'title' => $title,
-            'nrate' => $nrate,
+            'has_score' => $has_score,
             'width' => (string)$width,
             'votes' => (string)$votnum,
             'votes_title' => _VOTES,
             'target_id' => $id.$obj,
             'hover_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod,
+            'is_live' => true,
         ]);
-        $crate = 'sl_rate';
+        $is_like = false;
     }
-    if ($typ == 2) return $tpl->getHtmlFrag('rating-wrap', ['wrap_class' => $crate, 'wrap_id' => '', 'content' => $img]);
+    if ($typ == 2) return $tpl->getHtmlFrag('rating-wrap', ['is_like' => $is_like, 'wrap_id' => '', 'content' => $img]);
     $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
     if ((($con[1] ?? '') && $id && $mod) || ($rat && $scor)) {
         return ((($con[1] ?? '') && $typ) || (($con[1] ?? '') && !($con[2] ?? '') && !$typ))
-            ? $tpl->getHtmlFrag('rating-wrap', ['wrap_class' => $crate, 'wrap_id' => 'rep'.$id.$obj, 'content' => $imgr])
-            : $tpl->getHtmlFrag('rating-wrap', ['wrap_class' => $crate, 'wrap_id' => '', 'content' => $img]);
+            ? $tpl->getHtmlFrag('rating-wrap', ['is_like' => $is_like, 'wrap_id' => 'rep'.$id.$obj, 'content' => $imgr])
+            : $tpl->getHtmlFrag('rating-wrap', ['is_like' => $is_like, 'wrap_id' => '', 'content' => $img]);
     }
     return '';
 }
@@ -942,9 +948,9 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
                 'is_selected' => $id == $key,
             ]);
         }
-        return !$raw ? $tpl->getHtmlFrag('category-select', ['select_name' => $name, 'class' => $clas, 'title' => _CATEGORIES, 'options_html' => $opts]) : $opts;
+        return !$raw ? $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $opts]) : $opts;
     }
-    if ($empty) return $tpl->getHtmlFrag('category-select', ['select_name' => $name, 'class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
+    if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
     return '';
 }
 
@@ -1079,7 +1085,7 @@ function getModuleNavi(array $p): string {
 }
 
 # Render page numbers from known counters
-function getPageNumbers(string $frag, string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
+function getPageNumbers(string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
     global $afile, $tpl;
     $num  = $num ?: getVar('get', $n, 'num', 1);
     $nnum = $maxpg + 1;

@@ -1157,8 +1157,15 @@ function addHackReport(string $msg): void {
     if ($conf['security']['mail']) {
         $subject = $conf['sitename'].' - '._SECURITY;
         if ($tpl instanceof Template) {
-            $refHtml = ($refer) ? $tpl->getHtmlFrag('br-line', ['label' => _REFERER, 'value' => $refer]) : '';
-            $mmsg = $tpl->getHtmlFrag('security-report-email', ['sitename' => $conf['sitename'], 'security_label' => _SECURITY, 'event_label' => _HACK, 'message' => $msg, 'ip_label' => _IP, 'ip' => $ip, 'user_label' => _USER, 'user' => $luser, 'url_label' => _URL, 'url' => $url, 'referer_html' => $refHtml, 'browser_label' => _BROWSER, 'browser' => $agent, 'date_label' => _DATE, 'date' => $dtime]);
+            $lines = [
+                ['label' => _IP, 'value' => $ip],
+                ['label' => _USER, 'value' => $luser],
+                ['label' => _URL, 'value' => $url],
+            ];
+            if ($refer) $lines[] = ['label' => _REFERER, 'value' => $refer];
+            $lines[] = ['label' => _BROWSER, 'value' => $agent];
+            $lines[] = ['label' => _DATE, 'value' => $dtime];
+            $mmsg = $tpl->getHtmlPart('message-block', ['title' => $subject, 'intro_text' => _HACK.': '.$msg, 'lines' => $lines]);
         } else {
             $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
         }
@@ -1199,8 +1206,15 @@ function addWarnReport(string $msg): void {
     if ($conf['security']['mail_w']) {
         $subject = $conf['sitename'].' - '._SECURITY;
         if ($tpl instanceof Template) {
-            $refHtml = ($refer) ? $tpl->getHtmlFrag('br-line', ['label' => _REFERER, 'value' => $refer]) : '';
-            $mmsg = $tpl->getHtmlFrag('security-report-email', ['sitename' => $conf['sitename'], 'security_label' => _SECURITY, 'event_label' => _WARN, 'message' => $msg, 'ip_label' => _IP, 'ip' => $ip, 'user_label' => _USER, 'user' => $luser, 'url_label' => _URL, 'url' => $url, 'referer_html' => $refHtml, 'browser_label' => _BROWSER, 'browser' => $agent, 'date_label' => _DATE, 'date' => $dtime]);
+            $lines = [
+                ['label' => _IP, 'value' => $ip],
+                ['label' => _USER, 'value' => $luser],
+                ['label' => _URL, 'value' => $url],
+            ];
+            if ($refer) $lines[] = ['label' => _REFERER, 'value' => $refer];
+            $lines[] = ['label' => _BROWSER, 'value' => $agent];
+            $lines[] = ['label' => _DATE, 'value' => $dtime];
+            $mmsg = $tpl->getHtmlPart('message-block', ['title' => $subject, 'intro_text' => _WARN.': '.$msg, 'lines' => $lines]);
         } else {
             $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
         }

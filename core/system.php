@@ -1340,7 +1340,7 @@ function setHead(array $seo = []): void {
     } elseif ($conf['users']['enter']) {
         $gfx = (int)($conf['gfx_chk'] ?? 0);
         $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
-        $login = $tpl->getHtmlFrag('login', [
+        $login = $tpl->getHtmlPart('login-nav', [
             'login'    => _LOGIN,
             'nickname' => _NICKNAME,
             'password' => _PASSWORD,
@@ -1570,9 +1570,7 @@ function filterTextHighlight(string $sourse, string $word): string {
     $sourse = str_replace($from, $to, $sourse);
     $pattern = '/('.implode('|', array_map(static fn(string $p): string => preg_quote($p, '/'), $parts)).')/iu';
     $sourse = preg_replace_callback($pattern, static function(array $m) use ($tpl): string {
-        return defined('ADMIN_FILE')
-            ? $tpl->getHtmlFrag('span-raw', ['class' => 'sl_word', 'content' => $m[0], 'title' => ''])
-            : $tpl->getHtmlFrag('span', ['is_highlight' => true, 'text' => $m[0]]);
+        return $tpl->getHtmlFrag('span', ['is_highlight' => true, 'text' => $m[0]]);
     }, $sourse);
     return str_replace($to, $from, $sourse);
 }
@@ -1885,13 +1883,13 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                     $val[1] = getConst($val[1]);
                     $val[2] = getConst($val[2]);
                     if (is_acess($val[6])) {
-                        $style = '';
+                        $is_hidden = false;
                         $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
                         $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
                         $ilink = $tpl->getHtmlFrag('category-icon', ['href' => $href, 'title' => $val[1], 'src' => $isrc]);
                         $alink = $tpl->getHtmlFrag('category-title', ['href' => $href, 'title' => $val[1]]);
                     } else {
-                        $style = ' sl_hidden';
+                        $is_hidden = true;
                         $htitle = $val[1].' - '._CCLOSED;
                         $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
                         $ilink = $tpl->getHtmlFrag('category-icon', ['href' => '', 'title' => $htitle, 'src' => $isrc]);
@@ -1904,7 +1902,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                             if ($sub == 1) {
                                 $sval[1] = getConst($sval[1]);
                                 $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
-                                $sublink = is_acess($sval[6]) ? $tpl->getHtmlFrag('category-link', ['href' => $shref, 'title' => $sval[1], 'text' => $sval[1]]) : '';
+                                $sublink = is_acess($sval[6]) ? $tpl->getHtmlFrag('link', ['href' => $shref, 'title' => $sval[1], 'label' => $sval[1], 'is_category' => true]) : '';
                                 $subcat .= $tpl->getHtmlFrag('category-sub-item', ['content' => $sublink]);
                             }
                         }
@@ -1913,7 +1911,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                     $cont .= $tpl->getHtmlFrag('category-row', [
                         'description_text' => $description,
                         'image_html' => $ilink,
-                        'style' => $style,
+                        'is_hidden' => $is_hidden,
                         'subitems_html' => $subcat,
                         'title_html' => $alink,
                     ]);
@@ -2220,7 +2218,7 @@ function doCss(): string {
 
 # Create a sitemap
 function addSitemapTask(bool $force = false): array {
- global $db, $conf;
+ global $db, $conf, $tpl;
     if ($force || defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
         $sess_f = 'sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
@@ -2311,27 +2309,50 @@ function addSitemapTask(bool $force = false): array {
                 }
             }
             if ($conf['sitemap']['txt']) {
-                $buffer = '<ol class="sl_list">';
+                $bufferItems = '';
                 foreach ($htm as $key => $val) {
-                    $buffer .= '<li><a href="'.getSeoUrl(['name' => $key]).'" title="'.getModuleName($key).'">'.getModuleName($key).'</a>';
+                    $moduleLink = $tpl->getHtmlFrag('link', [
+                        'href' => getSeoUrl(['name' => $key]),
+                        'title' => getModuleName($key),
+                        'label' => getModuleName($key),
+                    ]);
+                    $moduleChildren = '';
                     if (count($htm[$key]) > 0) {
-                        $cat = '';
+                        $categoryItems = '';
+                        $publicLists = '';
                         foreach ($htm[$key] as $key2 => $val2) {
-                            $cat .= (isset($cd[$key2][2])) ? '<li><a href="'.getSeoUrl(['name' => $key, 'cat' => $key2]).'" title="'.$cd[$key2][2].'">'.$cd[$key2][2].'</a>' : '';
+                            $categoryLink = isset($cd[$key2][2]) ? $tpl->getHtmlFrag('link', [
+                                'href' => getSeoUrl(['name' => $key, 'cat' => $key2]),
+                                'title' => $cd[$key2][2],
+                                'label' => $cd[$key2][2],
+                            ]) : '';
+                            $viewItems = '';
                             if (count($htm[$key][$key2]) > 0) {
-                                $view = $pub = '';
                                 foreach ($htm[$key][$key2] as $key3 => $val3) {
-                                    $view .= $htm[$key][$key2][$key3][0] ? '<li><a href="'.getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $htm[$key][$key2][$key3][0]]).'" title="'.$htm[$key][$key2][$key3][1].'">'.$htm[$key][$key2][$key3][1].'</a></li>' : '';
+                                    if ($htm[$key][$key2][$key3][0]) {
+                                        $viewLink = $tpl->getHtmlFrag('link', [
+                                            'href' => getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $htm[$key][$key2][$key3][0]]),
+                                            'title' => $htm[$key][$key2][$key3][1],
+                                            'label' => $htm[$key][$key2][$key3][1],
+                                        ]);
+                                        $viewItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $viewLink]);
+                                    }
                                 }
-                                $pub .= $view ? '<ol class="sl_sublist_two">'.$view.'</ol>' : '';
                             }
-                            $cat .= isset($cd[$key2][2]) ? $pub.'</li>' : '';
+                            $viewList = $viewItems ? $tpl->getHtmlFrag('list', ['items_html' => $viewItems, 'is_sub_two' => true]) : '';
+                            if ($categoryLink) {
+                                $categoryItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $categoryLink, 'children_html' => $viewList]);
+                            } else {
+                                $publicLists .= $viewList;
+                            }
                         }
-                        $buffer .= $cat ? '<ol class="sl_sublist">'.$cat.'</ol>' : $pub;
+                        $moduleChildren = $categoryItems
+                            ? $tpl->getHtmlFrag('list', ['items_html' => $categoryItems, 'is_sub' => true])
+                            : $publicLists;
                     }
-                    $buffer .= '</li>';
+                    $bufferItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $moduleLink, 'children_html' => $moduleChildren]);
                 }
-                $buffer .= '</ol>';
+                $buffer = $tpl->getHtmlFrag('list', ['items_html' => $bufferItems]);
                 file_put_contents(SITEMAP_DIR.'/sitemap.txt', $buffer);
             }
             if ($conf['sitemap']['gen_h']) {
@@ -2412,7 +2433,12 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
     ));
     $tlinks = implode('', array_map(static function($p) use ($tpl, $pref, $id): string {
         $label = preg_match('/<[^>]+>/', $p['tab']) ? $p['tab'] : htmlspecialchars($p['tab'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        return $tpl->getHtmlFrag('navi-tab-link', ['href' => '#'.$pref.'_'.$id.'_'.$p['id'], 'label_html' => $label]);
+        $link = $tpl->getHtmlFrag('link', [
+            'href' => '#'.$pref.'_'.$id.'_'.$p['id'],
+            'title' => strip_tags((string)$p['tab']),
+            'label_html' => $label,
+        ]);
+        return $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
     }, $pairs));
     $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('post-div', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
     return $tpl->getHtmlFrag('navi-tabs-wrap', ['tabs_html' => $tlinks, 'content_html' => $cdivs, 'id' => $id]);
@@ -2561,17 +2587,17 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             if (is_moder('voting') && $votid == 'voting') {
                 $items = [
                     $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
-                    $tpl->getHtmlFrag('action-delete', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE]),
+                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
                 ];
-                $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items))]);
+                $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
             } else {
                 $admin = '';
             }
-            $post = (!$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'class' => 'sl-but-blue']) : '';
-            $polls = ($vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'class' => 'sl_but']) : '';
-            $votes = (!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'class' => 'sl_votes']) : $tpl->getHtmlFrag('span', ['class' => 'sl_votes', 'text' => _VOTES.': '.$vote]);
-            $comm = (!$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'class' => 'sl_coms']) : '';
-            $cont = $tpl->getHtmlFrag('voting-widget', [
+            $post = (!$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true]) : '';
+            $polls = ($vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
+            $votes = (!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]) : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
+            $comm = (!$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'is_comments' => true]) : '';
+            $cont = $tpl->getHtmlPart('voting-widget', [
                 'has_form'   => !$rate,
                 'form_id'    => 'form'.$votid,
                 'title'      => $title,
@@ -2680,28 +2706,28 @@ function getVariables(): string {
     $cvar = explode(',', $conf['variables']);
     if ($cvar[1]) {
         list($cpu, $info) = getCpuLoad(4);
-        $cpucls = 'sl_red sl_note';
+        $cpuState = 'danger';
         $cputtl = _RATE1.(($info) ? ' - '.$info : '');
         if ($cpu <= 50) {
-            $cpucls = 'sl_green sl_note';
+            $cpuState = 'success';
             $cputtl = _RATE5.(($info) ? ' - '.$info : '');
         } elseif ($cpu <= 80) {
-            $cpucls = 'sl_orange sl_note';
+            $cpuState = 'warn';
             $cputtl = _RATE3.(($info) ? ' - '.$info : '');
         }
         $memuse = memory_get_usage();
         $memtxt = filterSize((string)$memuse);
-        $memcls = 'sl_red sl_note';
+        $memState = 'danger';
         $memttl = _RATE1;
         if ($memuse <= 10485760) {
-            $memcls = 'sl_green sl_note';
+            $memState = 'success';
             $memttl = _RATE5;
         } elseif ($memuse <= 20971520) {
-            $memcls = 'sl_orange sl_note';
+            $memState = 'warn';
             $memttl = _RATE3;
         }
         $memLimit = (int)(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024);
-        $cont .= debugSection(_SYSTEM_INFO, 'darkgreen', debugStats($cputtl, $cpucls, (string)$cpu, $memttl, $memcls, $memtxt, $memuse, $memLimit, getTimeLoads()));
+        $cont .= debugSection(_SYSTEM_INFO, 'system', debugStats($cputtl, $cpuState, (string)$cpu, $memttl, $memState, $memtxt, $memuse, $memLimit, getTimeLoads()));
     }
     if ($cvar[2] && $_POST) $cont .= debugSection(_AVARIABLES.': POST', 'green', htmlspecialchars(print_r($_POST, true)));
     if ($cvar[3] && $_GET) $cont .= debugSection(_AVARIABLES.': GET', 'blue', htmlspecialchars(print_r($_GET, true)));
@@ -3038,7 +3064,7 @@ function getUserSessionInfo(string $id = ''): string {
                     'geo_html' => user_geo_ip($host, 3),
                     'name_title' => getDuration($time),
                     'name_text' => $strip,
-                    'name_class' => 'sl-session-note',
+                    'is_name_note' => true,
                     'module_title' => $module,
                     'module_text' => $linkstrip,
                 ]);
@@ -3049,7 +3075,7 @@ function getUserSessionInfo(string $id = ''): string {
             }
             $i++;
         }
-        $content = $tpl->getHtmlFrag('session-summary', [
+        $content = $tpl->getHtmlPart('session-summary', [
             'members_label' => _BMEM,
             'members_count' => $m,
             'show_bots' => $conf['botsact'],
@@ -3100,7 +3126,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     'module_title' => $alink,
                     'module_text' => $alstrip,
                     'module_target' => ' target="_blank"',
-                    'module_class' => 'sl-session-right',
+                    'is_module_right' => true,
                 ]);
                 $a++;
             } elseif ($guest == 2) {
@@ -3115,7 +3141,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                         'module_title' => $alink,
                         'module_text' => $lstrip,
                         'module_target' => ' target="_blank"',
-                        'module_class' => 'sl-session-right',
+                        'is_module_right' => true,
                     ]);
                     $m++;
                 } else {
@@ -3129,7 +3155,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                         'module_title' => $alink,
                         'module_text' => $alstrip,
                         'module_target' => ' target="_blank"',
-                        'module_class' => 'sl-session-right',
+                        'is_module_right' => true,
                     ]);
                 }
             } elseif ($guest == 1) {
@@ -3143,7 +3169,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     'module_title' => $alink,
                     'module_text' => $lstrip,
                     'module_target' => ' target="_blank"',
-                    'module_class' => 'sl-session-right',
+                    'is_module_right' => true,
                 ]);
                 $b++;
             } else {
@@ -3157,14 +3183,14 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     'module_title' => $alink,
                     'module_text' => $lstrip,
                     'module_target' => ' target="_blank"',
-                    'module_class' => 'sl-session-right',
+                    'is_module_right' => true,
                 ]) : '';
                 $u++;
             }
             $who_online[$guest] .= $title_who;
             $i++;
         }
-        $content_who .= $tpl->getHtmlFrag('session-summary', [
+        $content_who .= $tpl->getHtmlPart('session-summary', [
             'show_admins' => isAdmin(true),
             'admins_label' => _ADMINS,
             'admins_count' => $a,
@@ -3266,39 +3292,37 @@ function getCartSummary(string $info = ''): string {
             $price = $price * $i;
             $ptotal += $price;
             $titleLink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$id, 'title' => $title, 'label' => $title]);
-            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _PPLUS, 'label' => '', 'class' => 'sl-cart-plus'])
-                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'class' => 'sl-cart-minus']);
+            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'id' => 'kasse-'.$id,
-                'row_class' => 'sl-cart-row',
+                'is_cart_row' => true,
                 'cells' => [
-                    ['href' => '#kasse-'.$id, 'title' => (string)$id, 'text' => (string)$id, 'class' => 'sl-cart-col-num', 'link_class' => 'sl-cart-id'],
-                    ['class' => 'sl-cart-col-content', 'heading_html' => $titleLink.' '.getTplNewGraphic($time)],
-                    ['class' => 'sl-cart-col-num', 'text' => (string)$i],
-                    ['class' => 'sl-cart-col-stat', 'text' => $price.' '.$conf['shop']['valute']],
-                    ['class' => 'sl-cart-col-stat', 'content_html' => $actions],
+                    ['href' => '#kasse-'.$id, 'title' => (string)$id, 'text' => (string)$id, 'is_cart_col_num' => true, 'is_cart_id' => true],
+                    ['is_cart_col_content' => true, 'heading_html' => $titleLink.' '.getTplNewGraphic($time)],
+                    ['is_cart_col_num' => true, 'text' => (string)$i],
+                    ['is_cart_col_stat' => true, 'text' => $price.' '.$conf['shop']['valute']],
+                    ['is_cart_col_stat' => true, 'content_html' => $actions],
                 ],
             ]);
         }
         $footer = $tpl->getHtmlFrag('table-row', [
-            'row_class' => 'sl-cart-foot',
+            'is_cart_foot' => true,
             'cells' => [
-                ['colspan' => 2, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'class' => 'sl-cart-checkout'])],
-                ['colspan' => 3, 'content_html' => $tpl->getHtmlFrag('span', ['title' => _PARTNERGES, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'], 'class' => 'sl-cart-total'])],
+                ['colspan' => 2, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_cart_checkout' => true])],
+                ['colspan' => 3, 'content_html' => $tpl->getHtmlFrag('span', ['title' => _PARTNERGES, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'], 'is_cart_total' => true])],
             ],
         ]);
         return $tpl->getHtmlFrag('table', [
             'open' => true,
             'title' => _PBASKET,
-            'title_class' => 'sl-cart-title',
-            'class' => 'sl-cart-table',
-            'head_class' => 'sl-cart-head',
+            'is_cart' => true,
             'headers' => [
-                ['text' => _ID, 'class' => 'sl-cart-col-num'],
+                ['text' => _ID, 'is_cart_col_num' => true],
                 ['text' => _PRODUCT],
-                ['text' => cutstr(_QUANTITY, 3, 1), 'class' => 'sl-cart-col-num'],
-                ['text' => _PREIS, 'class' => 'sl-cart-col-stat'],
-                ['text' => _FUNCTIONS, 'class' => 'sl-cart-col-stat'],
+                ['text' => cutstr(_QUANTITY, 3, 1), 'is_cart_col_num' => true],
+                ['text' => _PREIS, 'is_cart_col_stat' => true],
+                ['text' => _FUNCTIONS, 'is_cart_col_stat' => true],
             ],
         ]).$rows.$footer.$tpl->getHtmlFrag('table', []);
     }
@@ -3359,22 +3383,26 @@ function warnings(string $warnings): string {
     global $tpl;
     if ($warnings) {
         $warns = explode('|', $warnings);
-        $items = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('action-menu-item', ['item_html' => $v]) : '', $warns));
+        $items = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $v]) : '', $warns));
         return $tpl->getHtmlFrag('warning-list', ['items_html' => $items]);
     }
     return (string)_NO;
 }
 
-function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string $memTitle, string $memClass, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
+function debugStats(string $cpuTitle, string $cpuState, string $cpuValue, string $memTitle, string $memState, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
  global $tpl;
     return $tpl->getHtmlFrag('debug-stats', [
         'lbl_pload' => _PLOAD,
         'cpu_title' => $cpuTitle,
-        'cpu_class' => $cpuClass,
+        'cpu_is_success' => $cpuState === 'success',
+        'cpu_is_warn' => $cpuState === 'warn',
+        'cpu_is_danger' => $cpuState === 'danger',
         'cpu_value' => $cpuValue,
         'lbl_meml' => _MEML,
         'mem_title' => $memTitle,
-        'mem_class' => $memClass,
+        'mem_is_success' => $memState === 'success',
+        'mem_is_warn' => $memState === 'warn',
+        'mem_is_danger' => $memState === 'danger',
         'mem_value' => $memValue,
         'mem_use' => (string)$memUse,
         'mem_limit' => (string)$memLimit,
@@ -3382,9 +3410,9 @@ function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string
     ]);
 }
 
-function debugSection(string $legend, string $color, string $content): string {
+function debugSection(string $legend, string $tone, string $content): string {
     global $tpl;
-    return $tpl->getHtmlFrag('debug-section', ['legend' => $legend, 'color' => $color, 'content' => $content]);
+    return $tpl->getHtmlFrag('debug-section', ['legend' => $legend, 'tone' => $tone, 'content' => $content]);
 }
 
 # Show editor files
@@ -3465,7 +3493,7 @@ function getEditorFiles(): void {
                     'preview_html' => $img,
                     'file_name' => $entry[1],
                     'size_value' => filterSize($filesize),
-                    'functions_html' => $menuItems ? $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $menuItems))]) : '',
+                    'functions_html' => $menuItems ? $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $menuItems))]) : '',
                 ]);
                 $a++;
             }
@@ -3511,7 +3539,7 @@ function anti_spam(string $mail): string {
     global $tpl;
     preg_match('#^(.*?)(@)(.*?)$#', $mail, $info);
     $cont = $tpl->getHtmlFrag('head-script-inline', ['js' => "\"mysi\".AddMail('".$info[1]."', '".$info[3]."');"])
-        .'<noscript>'.$info[1].'<!-- slaed --><span>&#64;</span><!-- slaed -->'.$info[3].'</noscript>';
+        .$tpl->getHtmlFrag('email-noscript', ['local' => $info[1], 'domain' => $info[3]]);
     return $cont;
 }
 
@@ -3547,28 +3575,35 @@ function letter(string $mod): string {
     $rows = [];
     $digits = '';
     foreach (range(0, 9) as $num) {
+        $label = $tpl->getHtmlFrag('span', ['text' => (string)$num, 'is_alpha_letter' => true]);
         $digits .= in_array((string)$num, $alpha)
-            ? $tpl->getHtmlFrag('alpha-nav-link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.$num, 'title' => (string)$num, 'label' => (string)$num])
-            : $tpl->getHtmlFrag('alpha-nav-text', ['label' => (string)$num]);
+            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.$num, 'title' => (string)$num, 'label_html' => $label])
+            : $label;
     }
     $rows[] = $digits;
     $locale = '';
     foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
+        $label = $tpl->getHtmlFrag('span', ['text' => $char, 'is_alpha_letter' => true]);
         $locale .= in_array($char, $alpha)
-            ? $tpl->getHtmlFrag('alpha-nav-link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char), 'title' => $char, 'label' => $char])
-            : $tpl->getHtmlFrag('alpha-nav-text', ['label' => $char]);
+            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char), 'title' => $char, 'label_html' => $label])
+            : $label;
     }
     $rows[] = $locale;
     if (substr(_LOCALE, 0, 2) != 'fr') {
         $latin = '';
         foreach (range('A', 'Z') as $eng) {
+            $label = $tpl->getHtmlFrag('span', ['text' => $eng, 'is_alpha_letter' => true]);
             $latin .= in_array($eng, $alpha)
-                ? $tpl->getHtmlFrag('alpha-nav-link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng, 'title' => $eng, 'label' => $eng])
-                : $tpl->getHtmlFrag('alpha-nav-text', ['label' => $eng]);
+                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng, 'title' => $eng, 'label_html' => $label])
+                : $label;
         }
         $rows[] = $latin;
     }
-    return implode('<br>', $rows);
+    $items = '';
+    foreach ($rows as $row) {
+        $items .= $tpl->getHtmlFrag('line-stack-item', ['content_html' => $row]);
+    }
+    return $items;
 }
 
 # Format admin menu
@@ -3576,7 +3611,7 @@ function add_menu(string $links): string {
     global $tpl;
     if ($links) {
         $items = explode('||', $links);
-        $html = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('action-menu-item', ['item_html' => $v]) : '', $items));
+        $html = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $v]) : '', $items));
         return $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => (string)_EDITOR, 'items_html' => $html]);
     }
     return '';
@@ -3587,8 +3622,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
     global $tpl;
     if ($typ) {
         return ($id)
-            ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROLD, 'class' => 'sl_n_act', 'label' => ''])
-            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROUTNEW, 'class' => 'sl_n_deact', 'label' => '']);
+            ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROLD, 'is_status_active' => true, 'label' => ''])
+            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROUTNEW, 'is_status_inactive' => true, 'label' => '']);
     } elseif ($link) {
         $deact = ($text) ? _DEACTIVATE.': '.$text : _DEACTIVATE;
         $act = ($text) ? _ACTIVATE.': '.$text : _ACTIVATE;
@@ -3597,8 +3632,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
             : $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $act, 'class' => '', 'label' => $act]);
     }
     return ($id == 1)
-        ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _ACT, 'class' => 'sl_n_act', 'label' => ''])
-        : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'class' => 'sl_n_deact', 'label' => '']);
+        ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _ACT, 'is_status_active' => true, 'label' => ''])
+        : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'is_status_inactive' => true, 'label' => '']);
 }
 
 # Find img
@@ -3677,7 +3712,13 @@ function rss_read(mixed $url, mixed $id): string {
                     $temp = str_replace('[description]', filterText(html_entity_decode(str_replace(']]>', '', $rss_desc))), $temp);
                     $cont .= $temp;
                 }
-                $cont = ($id) ? $cont : '<h2>'._RSS_FROM.': <a href="'.htmlspecialchars($url).'" target="_blank" title="'._RSS_FROM.': '.$title.'">'.$title.'</a></h2>'.$cont;
+                $cont = ($id) ? $cont : $tpl->getHtmlFrag('rss-source-title', [
+                    'label' => _RSS_FROM,
+                    'href' => htmlspecialchars($url),
+                    'title' => _RSS_FROM.': '.$title,
+                    'text' => $title,
+                    'content_html' => $cont,
+                ]);
             } else {
                 $cont = ($id) ? '' : $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
             }
@@ -4048,7 +4089,7 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
 
 # Executes a file scan task and returns scheduler metadata
 function addFilescanTask(): array {
- global $conf;
+ global $conf, $tpl;
     if (empty($conf['security']['log_d'])) return ['status' => 'failed', 'message' => 'File scan is disabled'];
     $sess_f = LOGS_DIR.'/dump_map.json';
     $state = [];
@@ -4099,9 +4140,18 @@ function addFilescanTask(): array {
     $state['last_changes'] = is_array($log) ? count($log) : 0;
     file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
     if ($conf['security']['mail_d']) {
-        $mail = ($log) ? implode('<br>', $log) : _NO;
+        $mail = '';
+        foreach (($log ?: [_NO]) as $line) {
+            $mail .= $tpl->getHtmlFrag('line-stack-item', ['content_text' => $line]);
+        }
         $subj = $conf['sitename'].' - '._SECURITY;
-        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'.$mail.'<br>'._DATE.': '.date(_TIMESTRING);
+        $mmsg = $tpl->getHtmlFrag('security-mail-message', [
+            'site' => $conf['sitename'],
+            'title' => _SECURITY,
+            'log_html' => $mail,
+            'date_label' => _DATE,
+            'date' => date(_TIMESTRING),
+        ]);
         addMail($conf['adminmail'], $conf['adminmail'], $subj, $mmsg, 0, 1);
     }
     return [
@@ -4278,13 +4328,13 @@ function encode_php(array $text): string {
         $count = 1;
         $rows = '';
         foreach ($lines as $code) {
-            $bgcolor = ($count % 2) ? 'background-color: #fafafa;' : 'background-color: #fff;';
+            $bgcolor = ($count % 2) ? 'sl-code-row-odd' : 'sl-code-row-even';
             if (preg_match("#<\?(php)?[^[:graph:]]#", $code)) {
                 $chtml = highlight_string($code, true);
             } else {
                 $chtml = preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
             }
-            $rows .= $tpl->getHtmlFrag('code-row', ['row_style' => $bgcolor, 'row_num' => $count, 'code_html' => $chtml]);
+            $rows .= $tpl->getHtmlFrag('code-row', ['row_class' => $bgcolor, 'row_num' => $count, 'code_html' => $chtml]);
             $count++;
         }
         $format = $tpl->getHtmlFrag('code-table', ['rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
@@ -4308,9 +4358,9 @@ function encode_php(array $text): string {
 function checkemail(string $mail): array {
  global $stop;
     $mail = strtolower(filterText($mail, 1));
-    if ((!$mail) || ($mail=='') || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1.'<br>'._ERROR2.' (<b>email@domain.com</b>)';
-    if ((strlen($mail) >= 4) && (substr($mail, 0, 4) == 'www.')) $stop[] = _ERROR1.'<br>'._ERROR3.' (<b>www.</b>)';
-    if (strrpos($mail, ' ') > 0) $stop[] = _ERROR1.'<br>'._ERROR4.'.';
+    if ((!$mail) || ($mail=='') || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1.' '._ERROR2.' (email@domain.com)';
+    if ((strlen($mail) >= 4) && (substr($mail, 0, 4) == 'www.')) $stop[] = _ERROR1.' '._ERROR3.' (www.)';
+    if (strrpos($mail, ' ') > 0) $stop[] = _ERROR1.' '._ERROR4.'.';
     return $stop ?? [];
 }
 
@@ -4410,34 +4460,37 @@ function getRatingView(): void {
                 $votnum = 0;
                 $votes = 1;
             }
-            $width = number_format($totalvotes / $votes, 2) * 20;
+            $width = (int) max(0, min(100, round(($totalvotes / $votes) * 20)));
             $result = substr($totalvotes / $votes, 0, 4);
             if (intval($votes) && intval($totalvotes)) {
                 $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
-                $nrate = 'sl_rate-num sl_rate-is';
+                $has_score = true;
             } else {
                 $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
-                $nrate = 'sl_rate-num';
+                $has_score = false;
             }
             if ($stl == 1) {
-                echo $tpl->getHtmlFrag('rating-like-live', [
+                echo $tpl->getHtmlFrag('rating-like', [
                     'result' => $result,
                     'title' => $title,
-                    'nrate' => $nrate,
+                    'has_score' => $has_score,
                     'target_id' => $id.$typ,
                     'rate1_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=1&amp;stl=1',
                     'rate5_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=5&amp;stl=1',
                     'rate1_title' => _RATE1,
                     'rate5_title' => _RATE5,
+                    'is_live' => true,
                 ]);
             } else {
-                echo $tpl->getHtmlFrag('rating-bar-live', [
+                echo $tpl->getHtmlFrag('rating-bar', [
+                    'title' => $title,
                     'width' => (string) $width,
                     'target_id' => $id.$typ,
                     'hover_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod,
-                    'nrate' => $nrate,
+                    'has_score' => $has_score,
                     'votes' => (string)$votnum,
                     'votes_title' => _VOTES,
+                    'is_live' => true,
                 ]);
             }
         } elseif (!$cookies && !$num && $rate) {
@@ -4560,7 +4613,7 @@ function check_size(string $file, int $width, int $height): string {
 
 # Upload file
 function upload(int $typ, string $directory, string $typefile, int $maxsize, string $namefile, int $width, int $height, string $userid = '', string $url = ''): mixed {
- global $user, $conf, $stop;
+ global $user, $conf, $stop, $tpl;
     if ($typ == 1 && !empty($_FILES['userfile']['size'])) {
         if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
             if ($_FILES['userfile']['size'] > $maxsize) {
@@ -4601,7 +4654,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
             $files = count($_FILES['file']['name']);
             for ($i = 0; $i < $files; $i++) {
                 if ($_FILES['file']['size'][$i] > $maxsize) {
-                    echo '<div class="ico sl_warn">'._ERROR_BIG.'</div>';
+                    echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_BIG]);
                 } else {
                     $type = strtolower(substr(strrchr($_FILES['file']['name'][$i], '.'), 1));
                     if (!check_file($type, $typefile) && !check_size($_FILES['file']['tmp_name'][$i], $width, $height)) {
@@ -4612,23 +4665,23 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
                             $newname = ($namefile) ? $namefile.'-'.getPass(10).'-'.$uname.'.'.$type : getPass(15).'.'.$type;
                         }
                         if (file_exists($directory.'/'.$newname)) {
-                            echo '<div class=" ico sl_warn">'._ERROR_EXIST.'</div>';
+                            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_EXIST]);
                         } else {
                             $res = copy($_FILES['file']['tmp_name'][$i], $directory.'/'.$newname);
                             if (!$res) {
-                                echo '<div class="ico sl_warn">'._ERROR_UP.'</div>';
+                                echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_UP]);
                             } else {
-                                echo '<div class="ico sl_info">'._FILE_RENAMED.': '.$newname.'</div>';
+                                echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FILE_RENAMED.': '.$newname]);
                             }
                         }
                     } else {
                         $info = (!check_file($type, $typefile)) ? check_size($_FILES['file']['tmp_name'][$i], $width, $height) : check_file($type, $typefile);
-                        echo '<div class="ico sl_warn">'.$info.'</div>';
+                        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
                     }
                 }
             }
         } else {
-            echo '<div class="ico sl_warn">'._ERROR_DOWN.'</div>';
+            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_DOWN]);
         }
     } elseif ($typ == 3 && !empty(getVar('post', 'sitefile', 'raw', ''))) {
         $sitefile = getVar('post', 'sitefile', 'raw', '');
@@ -4809,29 +4862,25 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 }
             }
             $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
-            $date = $tpl->getHtmlFrag('comment-date', ['title' => (string)_PADD, 'text' => format_time($com_date, _TIMESTRING)]);
+            $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($com_date, _TIMESTRING), 'is_comment_date' => true]);
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : '';
             $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_num_anchor' => true]);
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
-            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('comment-rank-image', ['src' => img_find('ranks/'.$user_grank), 'title' => $trank]) : '';
+            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
             $rate = (!empty($user_id)) ? getRatingAsync(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
             $rwarn = (!empty($user_warnings)) ? htmlspecialchars(_UWARNS, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(warnings($user_warnings), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $group = (!empty($user_gname)) ? $tpl->getHtmlFrag('meta-value', ['label' => _GROUP, 'value' => $user_gname]) : '';
+            $group = (!empty($user_gname)) ? $tpl->getHtmlFrag('span', ['label' => _GROUP, 'text' => $user_gname]) : '';
             $point = ($conf['users']['point'] && !empty($user_points)) ? htmlspecialchars(_POINTS, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars((string) $user_points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $regdate = (!empty($user_regdate)) ? htmlspecialchars(_REG, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(format_time($user_regdate), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _NO_INFO;
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('comment-signature', ['content' => $user_sig]) : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'class' => 'sl-but-blue']) : '';
-            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'class' => 'sl_but_green']) : '';
-            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'class' => 'sl_but']) : '';
-            $web = ($conf['comments']['web'] && !empty($user_website)) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'class' => 'sl_but', 'is_blank' => true]) : '';
-
-            # Future functions
-            #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
-            #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true]) : '';
+            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'is_button_green' => true]) : '';
+            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
+            $web = ($conf['comments']['web'] && !empty($user_website)) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_account_button' => true, 'is_blank' => true]) : '';
             $warn = '';
             $thank = '';
 
@@ -4853,7 +4902,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE, 'class' => '']),
                     ];
                     $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-                    $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items))]);
+                    $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
                 }
             } else {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
@@ -4861,7 +4910,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $items = [
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT, 'class' => '']),
                     ];
-                    $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items))]);
+                    $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
                 } else {
                     $edit = '';
                 }
@@ -4871,11 +4920,11 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $markAll = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'markcheck',
                     'input_id' => 'markcheck',
-                    'input_attr' => 'OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"',
+                    'input_attr' => 'OnClick="CheckBox(\'#markcheck\', \'.sl-check\')"',
                 ]);
                 $itemCheck = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'id[]',
-                    'input_class' => 'sl_check',
+                    'is_check' => true,
                     'value_attr' => (string)$com_id,
                 ]);
                 $checkb = (!$b) ? ' '._CHECKALL.' '.$markAll.' | '.$itemCheck : ' '.$itemCheck;
@@ -4889,15 +4938,15 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],
                 ],
             ]) : '';
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('comment-avatar', ['username' => $avname, 'avatar' => $avatar]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {
-            $out = $tpl->getHtmlFrag('comment-list-form', ['action' => $afile.'.php', 'content' => $cont]);
+            $out = $tpl->getHtmlPart('form-wrap', ['form_name' => 'comm', 'action' => $afile.'.php', 'content_html' => $cont]);
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
-            $cont .= getPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
+            $cont .= getPageNumbers($com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
             $out = $tpl->getHtmlFrag('title', ['title' => _COMMENTS]).$cont;
         }
     } else {
