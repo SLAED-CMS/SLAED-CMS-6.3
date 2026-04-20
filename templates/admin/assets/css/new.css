@@ -23,6 +23,18 @@
 /* Basic controls */
 .sl-select { width: 100%; }
 .sl-select-config { width: 350px; }
+.sl-save-action-select { width: auto; margin-right: 8px; }
+
+/* Debug/code output */
+.sl-debug-section { border: 1px solid #d9d9dc; margin: 10px 0; padding: 10px; }
+.sl-debug-section legend { font-weight: bold; }
+.sl-debug-section-success legend { color: #168a35; }
+.sl-debug-section-warn legend { color: #a56a00; }
+.sl-debug-section-danger legend { color: #c02f2f; }
+.sl-code-row-odd { background-color: #fafafa; }
+.sl-code-row-even { background-color: #fff; }
+.sl-code-row-num { vertical-align: top; }
+.sl-code-row-cell { width: 100%; }
 
 .sl-plus:before {
     display: inline-block;
@@ -308,9 +320,7 @@ input.sl-but-blue[value="ОК"] {
 .sl-sidebar-block h3:hover { background-position: 0 -32px; }
 .sl-sidebar-block-content { margin: 0 11px; padding: 6px 0 4px 0; }
 .sl-sidebar-block-bottom { font: 1px/1px; width: 214px; height: 5px; position: relative; margin: 0 -1px -1px -1px; background: url(../../images/leftbdbtm.png) no-repeat; }
-.sl-menu-grid { width: 100%; }
-.sl-menu-grid-row { display: flex; justify-content: flex-start; align-items: stretch; gap: 7px; margin-bottom: 7px; padding: 0 4px; }
-.sl-menu-grid-row:last-child { margin-bottom: 0; }
+.sl-menu-grid { display: flex; flex-wrap: wrap; gap: 7px; width: 100%; padding: 0 4px; box-sizing: border-box; }
 .sl-menu-grid-item { flex: 0 0 calc((100% - 35px) / 6); max-width: calc((100% - 35px) / 6); min-width: 0; }
 .sl-menu-grid-link { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; height: 100px; padding: 7px 6px 6px; box-sizing: border-box; border: 1px solid #d8e5ec; border-radius: 6px; background: #fbfdfe; color: #276f99; font-weight: bold; line-height: 1.16; text-align: center; text-decoration: none; box-shadow: 0 1px 2px rgba(32, 75, 102, 0.08); transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }
 .sl-menu-grid-link:hover { border-color: #9dccdf; background-color: #f2f9fc; box-shadow: 0 3px 8px rgba(32, 75, 102, 0.16); transform: translateY(-1px); }
@@ -380,18 +390,6 @@ input.sl-but-blue[value="ОК"] {
     max-width: 100%;
     overflow-wrap: anywhere;
     word-break: break-word;
-}
-.sl-user-search {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.sl-user-search-tip {
-    flex: 0 0 auto;
-}
-.sl-user-search-input {
-    flex: 1 1 auto;
-    min-width: 0;
 }
 .sl-div-item-full {
     grid-template-columns: 1fr;
