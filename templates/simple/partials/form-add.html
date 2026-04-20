@@ -30,7 +30,7 @@
 {% endif %}
 {% if extrafields %}{{{ extrafields }}}{% endif %}
 {% if fields %}{{{ fields }}}{% endif %}
-<div class="sl-form-submit">{% if captcha %}{{{ captcha }}}{% endif %}{{{ submit }}}</div>
+{% if captcha or submit %}<div class="sl-form-submit">{% if captcha %}{{{ captcha }}}{% endif %}{{{ submit }}}</div>{% endif %}
 {% if after_submit %}{{{ after_submit }}}{% endif %}
 </div>
 </form>

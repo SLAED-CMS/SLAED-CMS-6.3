@@ -1,1 +1,1 @@
-<ol class="{% if is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}">{{{ items_html }}}</ol>
+{% if is_unordered %}<ul class="{% if is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}">{{{ items_html }}}</ul>{% else %}<ol class="{% if is_sub_two %}sl-sublist-two{% elseif is_sub %}sl-sublist{% else %}sl-list{% endif %}">{{{ items_html }}}</ol>{% endif %}

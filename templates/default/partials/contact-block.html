@@ -3,16 +3,16 @@
     <form id="f-form" class="dropdown-form" action="index.php?name=contact" method="post">
         <ul class="block-feedback-form clrfix">
             <li class="bff-col1">
-                <textarea name="message" class="sl-field" rows="5" cols="65" placeholder="{{ text }}" required></textarea>
+                {% include 'fragments/textarea.html' with message_field %}
             </li>
             <li class="bff-col2">
-                <input type="text" name="sname" class="sl-field" placeholder="{{ pname }}" required>
-                <input type="email" name="semail" class="sl-field" placeholder="{{ email }}" required>
+                {% include 'fragments/input.html' with name_field %}
+                {% include 'fragments/input.html' with email_field %}
                 {{{ captcha }}}
-                <input type="hidden" name="token" value="{{ token }}">
-                <input type="hidden" name="op" value="contact">
-                <input type="hidden" name="send" value="1">
-                <button type="submit" class="sl-but-blue">{{ send }}</button>
+                {% include 'fragments/hidden.html' with token_field %}
+                {% include 'fragments/hidden.html' with op_field %}
+                {% include 'fragments/hidden.html' with send_field %}
+                {% include 'fragments/button.html' with submit_button %}
             </li>
         </ul>
     </form>
