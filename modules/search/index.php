@@ -12,13 +12,13 @@ if (!defined('MODULE_FILE')) {
 function getSearchRow(string $mod, string $afile, int $mid, string $time, int $cid, ?string $ctit, ?string $cdes, ?string $nick, ?string $user, string $edit, bool $post, string $url): array {
     global $tpl;
     $date = $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]);
-    $mlab = $tpl->getHtmlFrag('modul-link', ['url' => 'index.php?name='.$mod, 'title' => _MODUL, 'label' => getModuleName($mod)]);
+    $mlab = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod, 'title' => _MODUL, 'label' => getModuleName($mod), 'is_module' => true]);
     $cdes = $cdes ?: $ctit;
-    $ctit = $ctit ? $tpl->getHtmlFrag('category-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$cid, 'title' => cutstr((string)$cdes, 50), 'text' => cutstr($ctit, 15)]) : '';
+    $ctit = $ctit ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$cid, 'title' => cutstr((string)$cdes, 50), 'label' => cutstr($ctit, 15), 'is_category' => true]) : '';
     $pout = '';
     if ($post) {
         $pval = $nick ? user_info($nick) : ($user ?: _ANONYM);
-        $pout = $tpl->getHtmlFrag('media-post-badge', ['title' => _POSTEDBY, 'text' => $pval]);
+        $pout = $tpl->getHtmlFrag('inline-badge', ['title_text' => _POSTEDBY, 'label_html' => $pval, 'is_media_post' => true]);
     }
     $menu = '';
     if (is_moder($mod)) {
@@ -28,7 +28,7 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
         ];
         $menu = $tpl->getHtmlFrag('editor-action-menu', [
             'editor_label' => _EDITOR,
-            'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
+            'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
         ]);
     }
     return [$date, $mlab, $ctit, $pout, $menu];
@@ -110,7 +110,7 @@ function getSearchForm(array $state): string {
         ]),
     ]);
     $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['op' => '', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEARCH])]);
-    return $tpl->getHtmlFrag('forum-reply-form', ['mod_name' => htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), 'rows_html' => $rows]);
+    return $tpl->getHtmlPart('forum-reply-form', ['mod_name' => htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), 'rows_html' => $rows]);
 }
 
 function addSearchStat(array $state): void {
@@ -251,7 +251,7 @@ function getSearchAuto(array $state): array {
             'suffix_html' => getTplNewGraphic($time),
         ]);
         $date = $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]);
-        $mlab = $tpl->getHtmlFrag('modul-link', ['url' => 'index.php?name=auto_links', 'title' => _MODUL, 'label' => getModuleName('auto_links')]);
+        $mlab = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=auto_links', 'title' => _MODUL, 'label' => getModuleName('auto_links'), 'is_module' => true]);
         $edit = '';
         if (is_moder('auto_links')) {
             $items = [
@@ -260,7 +260,7 @@ function getSearchAuto(array $state): array {
             ];
             $edit = $tpl->getHtmlFrag('editor-action-menu', [
                 'editor_label' => _EDITOR,
-                'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
+                'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
             ]);
         }
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => '', 'post' => '', 'edit' => $edit];
@@ -298,7 +298,7 @@ function getSearchForum(array $state): array {
             ];
             $edit = $tpl->getHtmlFrag('editor-action-menu', [
                 'editor_label' => _EDITOR,
-                'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $item]), $items)),
+                'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
             ]);
         }
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
@@ -394,7 +394,7 @@ function getSearchList(array $rows, array $state): string {
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
     $pnum = ceil($anum / $state['snum']);
     $tail = $state['typ'] ? '&typ='.$state['typ'] : '';
-    $cont .= ($anum > $state['snum']) ? getPageNumbers('pagenum', $conf['name'], $anum, $pnum, $state['snum'], 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump']) : $tpl->getHtmlPart('navi-lower', [
+    $cont .= ($anum > $state['snum']) ? getPageNumbers($conf['name'], $anum, $pnum, $state['snum'], 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump']) : $tpl->getHtmlPart('navi-lower', [
         'back_title' => _BACK,
         'back_label' => _BACK,
         'home_href' => 'index.php?name='.$conf['name'],

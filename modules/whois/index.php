@@ -17,11 +17,15 @@ function mwhois(): void {
 	global $domainwhois, $ext, $nomatch, $server, $domainopt;
 	$domainlicens = getVar('req', 'domain_licens', 'word');
 	
-	$licensopt = $tpl->getHtmlFrag('whois-license-form', [
-		'name' => $conf['name'],
-		'legend' => _WHOIS_LICENS,
-		'domain_value' => $domainlicens,
-		'submit_label' => _WHOIS_PR
+	$licensopt = $tpl->getHtmlPart('fieldset-post-form', [
+		'action'        => 'index.php?name='.$conf['name'],
+		'legend'        => _WHOIS_LICENS,
+		'primary_field' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_licens', 'value_attr' => $domainlicens]),
+		'hidden_fields' => [
+			['name_attr' => 'option', 'value_attr' => 'licens', 'input_attr' => ''],
+		],
+		'submit_label'  => _WHOIS_PR,
+		'is_danger'     => true,
 	]);
 	
 	$domainwhois = getVar('req', 'domain_whois', 'word');
@@ -36,12 +40,16 @@ function mwhois(): void {
 		}
 	}
 	
-	$domainopt = $tpl->getHtmlFrag('whois-domain-form', [
-		'name' => $conf['name'],
-		'legend' => _WHOIS_DOM,
-		'domain_value' => $domainwhois,
-		'options' => $domainoptOptions,
-		'submit_label' => _WHOIS_PR
+	$domainopt = $tpl->getHtmlPart('fieldset-post-form', [
+		'action'          => 'index.php?name='.$conf['name'],
+		'legend'          => _WHOIS_DOM,
+		'primary_field'   => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'domain_whois', 'value_attr' => $domainwhois]),
+		'secondary_field' => $tpl->getHtmlFrag('select', ['name_attr' => 'ext', 'options_html' => $domainoptOptions]),
+		'hidden_fields'   => [
+			['name_attr' => 'option', 'value_attr' => 'check', 'input_attr' => ''],
+		],
+		'submit_label'    => _WHOIS_PR,
+		'is_success'      => true,
 	]);
 
 	$serverdefs = [
@@ -87,14 +95,21 @@ function mwhois(): void {
 				break;
 			}
 		}
-		$cont .= $tpl->getHtmlFrag('whois-result', ['open' => true, 'legend' => _WHOIS_SUCH]);
+		$result = '';
 		if ($licens) {
-			$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
+			$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!', 'is_success' => true]);
 		} else {
-			$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
-			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? $tpl->getHtmlFrag('whois-license-add-button', ['name' => $conf['name'], 'domain' => $domainlicens, 'submit_label' => _WHOIS_LICENS_SEND]) : '';
+			$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!', 'is_danger' => true]);
+			$result .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? $tpl->getHtmlPart('mini-post-form', [
+				'action'        => 'index.php?name='.$conf['name'],
+				'hidden_fields' => [
+					['name_attr' => 'op', 'value_attr' => 'add', 'input_attr' => ''],
+					['name_attr' => 'domain', 'value_attr' => $domainlicens, 'input_attr' => ''],
+				],
+				'submit_label'  => _WHOIS_LICENS_SEND,
+			]) : '';
 		}
-		$cont .= $tpl->getHtmlFrag('whois-result', ['open' => false]);
+		$cont .= $tpl->getHtmlPart('fieldset-block', ['legend' => _WHOIS_SUCH, 'content' => $result, 'is_center' => true, 'is_info' => true]);
 	} elseif ($option == 'licens') {
 		$cont .= printresults(namecheck($domainlicens), 1);
 	}
@@ -265,30 +280,38 @@ function printresults(int|string|null $layout, int $id): string {
 	global $domainwhois, $ext, $server, $domainopt, $conf, $tpl;
 	$cont = '';
 	if (!$id) $cont .= $domainopt;
-	$cont .= $tpl->getHtmlFrag('whois-result', ['open' => true, 'legend' => _WHOIS_SUCH]);
+	$result = '';
 	if ($layout=='0') {
-		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
+		$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!', 'is_success' => true]);
 	} elseif($layout=='1') {
-		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!'])
-		.$tpl->getHtmlFrag('whois-info-button', ['name' => $conf['name'], 'domain' => $domainwhois, 'ext' => $ext, 'submit_label' => _WHOIS_INF_US]);
+		$result .= $tpl->getHtmlFrag('span', ['text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!', 'is_danger' => true])
+		.$tpl->getHtmlPart('mini-post-form', [
+			'action'        => 'index.php?name='.$conf['name'],
+			'hidden_fields' => [
+				['name_attr' => 'option', 'value_attr' => 'whois', 'input_attr' => ''],
+				['name_attr' => 'domain_whois', 'value_attr' => $domainwhois, 'input_attr' => ''],
+				['name_attr' => 'ext', 'value_attr' => $ext, 'input_attr' => ''],
+			],
+			'submit_label'  => _WHOIS_INF_US,
+		]);
 	} elseif($layout=='2') {
-		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => 'Could not contact the whois server '.$server]);
+		$result .= $tpl->getHtmlFrag('span', ['text' => 'Could not contact the whois server '.$server, 'is_danger' => true]);
 	} else {
-		$cont .= $tpl->getHtmlFrag('span', ['class' => 'sl_red', 'text' => $layout]);
+		$result .= $tpl->getHtmlFrag('span', ['text' => $layout, 'is_danger' => true]);
 	}
-	$cont .= $tpl->getHtmlFrag('whois-result', ['open' => false]);
+	$cont .= $tpl->getHtmlPart('fieldset-block', ['legend' => _WHOIS_SUCH, 'content' => $result, 'is_center' => true, 'is_info' => true]);
 	return $cont;
 }
 
 function printwhois(string|array $output): string {
 	global $domainwhois, $ext, $domainopt, $tpl;
-	$cont = $tpl->getHtmlFrag('whois-output-open', ['domain_form' => $domainopt, 'legend' => _WHOIS_INF_US]);
-	$output= explode("\n",$output);
-	foreach ($output as $value){
-		$cont .= $tpl->getHtmlFrag('whois-output-line', ['value' => $value]);
-	}
-	$cont .= $tpl->getHtmlFrag('whois-output-close');
-	return $cont;
+	$lines = explode("\n", $output);
+	return $tpl->getHtmlPart('whois-output', [
+		'domain_form' => $domainopt,
+		'legend'      => _WHOIS_INF_US,
+		'lines'       => $lines,
+		'is_info'     => true,
+	]);
 }
 
 function namecheck(string $domainwhois): string|null {

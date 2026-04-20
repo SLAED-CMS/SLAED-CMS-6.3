@@ -30,7 +30,7 @@ function order(): void {
         ]);
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _OR_3.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3])]);
-        $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
+        $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _OR_1]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
@@ -64,24 +64,23 @@ function send(): void {
                 $infos = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
-                $msg = $tpl->getHtmlFrag('order-email-admin', [
-                    'sitename'           => $conf['sitename'],
-                    'order_label'        => _ORDER,
-                    'personalinfo_label' => _PERSONALINFO,
-                    'email_label'        => _OR_2,
-                    'email'              => $mail,
-                    'info_html'          => $infos,
-                    'note_label'         => _OR_3,
-                    'note'               => $note,
+                $msg = $tpl->getHtmlPart('message-block', [
+                    'title' => $subject,
+                    'heading_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PERSONALINFO]),
+                    'lines' => [
+                        ['label' => _OR_2, 'value' => $mail],
+                    ],
+                    'details_html' => $infos,
+                    'note_label' => _OR_3,
+                    'note_html' => $note,
                 ]);
                 addMail($amail, $mail, $subject, $msg, 1, 1);
             }
             if (!$conf['order']['pr']) {
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
-                $msg = $tpl->getHtmlFrag('money-email-confirm', [
-                    'sitename'     => $conf['sitename'],
-                    'money_label'  => _ORDER,
+                $msg = $tpl->getHtmlPart('message-block', [
+                    'title' => $subject,
                     'content_html' => $prs->filterContent($conf['order']['sendinfo'], false, 'all'),
                 ]);
                 addMail($mail, $amail, $subject, $msg, 0, 3);

@@ -91,7 +91,7 @@ function shop(): void {
 			$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
 			$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 			$title = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label_html' => $stitle, 'suffix_html' => getTplNewGraphic($time)]);
-			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 			$comm = ($acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom, 'is_comment' => true]) : '';
 			$read = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_read' => true]);
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'delete_confirm' => _DELETE.' &quot;'.$stitle.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
@@ -245,14 +245,14 @@ function view(): void {
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$favorites = getFavoriteButton($id, $conf['name']);
-		$voting = ($vote) ? $tpl->getHtmlFrag('shop-voting-box', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
+		$voting = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
 		$prtitle = _PREIS;
 		$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 		$opreis = '';
 		$discount = '';
 		$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
 		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
-		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'delete_confirm' => _DELETE.' &quot;'.$title.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
 		$cont .= $tpl->getHtmlFrag('card', [
@@ -332,7 +332,7 @@ function kasse(): void {
 	$idPartner = filter_input(INPUT_COOKIE, 'part', FILTER_VALIDATE_INT);
 	$idPartner = ($idPartner !== false && $idPartner !== null) ? $idPartner : '';
 	$stop = (!$cookies) ? _SERRORP : '';
-	$form = $tpl->getHtmlFrag('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
+	$form = $tpl->getHtmlPart('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
 	setHead(['title' => _C_TITLE]);
 	$cont = getModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
@@ -370,39 +370,45 @@ function kasse(): void {
 				['text' => _PRODUCT],
 				['text' => _PREIS],
 			]]).$content.$tpl->getHtmlFrag('table-row', ['cells' => [
-				['content_html' => $tpl->getHtmlFrag('break').$tpl->getHtmlFrag('bold-text', ['text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute']]), 'colspan' => 4],
+				['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute']]), 'colspan' => 4],
 			]]).$tpl->getHtmlFrag('table', []);
 			if ($conf['shop']['mailsend']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
-				$break = $tpl->getHtmlFrag('break');
-				$msg = $conf['sitename'].' - '._C_TITLE.$break;
-				$msg .= $pinfo.$break;
-				$msg .= $tpl->getHtmlFrag('bold-text', ['text' => _PERSONALINFO]).$break;
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _NICKNAME, 'value' => $slogin]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_PIN, 'value' => $sname]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_PIP, 'value' => $sadr]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_TEL, 'value' => $stel]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_MAIL, 'value' => $smail]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _SITEURL, 'value' => $sdom]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_MESSAGE, 'value' => $smsg]);
+				$msg = $tpl->getHtmlPart('message-block', [
+					'title' => $subject,
+					'summary_html' => $pinfo,
+					'heading_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PERSONALINFO]),
+					'lines' => [
+						['label' => _NICKNAME, 'value' => $slogin],
+						['label' => _C_PIN, 'value' => $sname],
+						['label' => _C_PIP, 'value' => $sadr],
+						['label' => _C_TEL, 'value' => $stel],
+						['label' => _C_MAIL, 'value' => $smail],
+						['label' => _SITEURL, 'value' => $sdom],
+						['label' => _C_MESSAGE, 'value' => $smsg],
+					],
+				]);
 				addMail($amail, $smail, $subject, $msg, 1, 1);
 			}
 			if ($conf['shop']['mailuser']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
-				$break = $tpl->getHtmlFrag('break');
-				$msg = $conf['sitename'].' - '._C_TITLE.$break;
-				$msg .= $prs->filterContent($conf['shop']['sende'], false, $conf['name']).$break;
-				$msg .= $pinfo.$break;
-				$msg .= $tpl->getHtmlFrag('bold-text', ['text' => _PERSONALINFO]).$break;
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _NICKNAME, 'value' => $slogin]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_PIN, 'value' => $sname]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_PIP, 'value' => $sadr]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_TEL, 'value' => $stel]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_MAIL, 'value' => $smail]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _SDOM, 'value' => $sdom]);
-				$msg .= $tpl->getHtmlFrag('br-line', ['label' => _C_MESSAGE, 'value' => $smsg]);
+				$msg = $tpl->getHtmlPart('message-block', [
+					'title' => $subject,
+					'intro_html' => $prs->filterContent($conf['shop']['sende'], false, $conf['name']),
+					'summary_html' => $pinfo,
+					'heading_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PERSONALINFO]),
+					'lines' => [
+						['label' => _NICKNAME, 'value' => $slogin],
+						['label' => _C_PIN, 'value' => $sname],
+						['label' => _C_PIP, 'value' => $sadr],
+						['label' => _C_TEL, 'value' => $stel],
+						['label' => _C_MAIL, 'value' => $smail],
+						['label' => _SDOM, 'value' => $sdom],
+						['label' => _C_MESSAGE, 'value' => $smsg],
+					],
+				]);
 				addMail($smail, $amail, $subject, $msg, 0, 3);
 			}
 			$massiv = explode(',', $cookies);

@@ -26,9 +26,9 @@ function account(): void {
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
         ]);
         $after = $tpl->getHtmlFrag('post-div', [
-            'class' => 'sl-form-submit',
-            'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'class' => 'sl_but_foot'])
-                .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'class' => 'sl_but_foot']),
+            'is_form_submit' => true,
+            'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true])
+                .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
         ]);
         if (!empty($conf['users']['network'])) {
             $after .= $tpl->getHtmlFrag('field-value', ['label' => _LOGINNETWORK, 'value_html' => getNetworks()]);
@@ -107,9 +107,9 @@ function newuser(): void {
                 ]);
             }
             $after = $tpl->getHtmlFrag('post-div', [
-                'class' => 'sl-form-submit',
-                'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'class' => 'sl_but_foot'])
-                    .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'class' => 'sl_but_foot']),
+                'is_form_submit' => true,
+                'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
+                    .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]),
             ]);
             if (!empty($conf['users']['network'])) {
                 $after .= $tpl->getHtmlFrag('field-value', ['label' => _LOGINNETWORK, 'value_html' => getNetworks()]);
@@ -176,7 +176,7 @@ function finnewuser(): void {
                     'method' => 'get',
                     'no_enctype' => true,
                     'fields' => $fields,
-                    'submit' => $hidden.$tpl->getHtmlFrag('submit', ['label' => _ACTIVATIONSUB, 'class' => 'sl_but_blue']),
+                    'submit' => $hidden.$tpl->getHtmlFrag('submit', ['label' => _ACTIVATIONSUB]),
                 ]);
             } else {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label_html' => str_replace('&amp;', '&', $finishlink), 'is_blank' => true]);
@@ -424,7 +424,7 @@ function view(): void {
                 $text[] = last($uid, 'pages');
             }
             $tabs = getNaviTabs(0, 'tab', $title, $text);
-            echo $tpl->getHtmlFrag('account-view', [
+            echo $tpl->getHtmlPart('account-view', [
                 'has_sign' => !empty($sign),
                 'has_field' => !empty($field),
                 'has_rank_image' => !empty($rankImage),
@@ -444,7 +444,7 @@ function view(): void {
                 'csite' => $site[0],
                 'site' => $site[1],
                 'avatar' => $avatar,
-                'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $name[1], 'title' => $name[1], 'class' => 'sl_avatar']),
+                'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $name[1], 'title' => $name[1], 'is_avatar' => true]),
                 'cregdate' => $regdate[0],
                 'regdate' => $regdate[1],
                 'coccup' => $occup[0],
@@ -597,7 +597,7 @@ function last(int|string $uid, string $modul): string {
                 $rows .= $tpl->getHtmlFrag('table-row', [
                     'cells' => [
                         ['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($date)), 'title' => _CHNGSTORY.': '.format_time($date, _TIMESTRING), 'text' => format_time($date)])],
-                        ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id, 'title' => $comment, 'label' => $comment, 'class' => 'sl_last'])],
+                        ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id, 'title' => $comment, 'label' => $comment, 'is_last' => true])],
                     ],
                 ]);
             }
@@ -608,7 +608,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'faq') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_faq WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -616,7 +616,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'files') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_files WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -624,7 +624,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'forum') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_forum WHERE uid = :user_id AND pid = '0' AND time <= NOW() AND status > '1' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -632,7 +632,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'jokes') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_jokes WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=jokes#'.$id, 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=jokes#'.$id, 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -640,7 +640,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'links') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -648,7 +648,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'media') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_media WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -656,7 +656,7 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'news') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -664,12 +664,12 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'pages') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'class' => 'sl_last'])]]]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $rows .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])], ['content_html' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title' => $title, 'label' => $title, 'is_last' => true])]]]);
         } else {
             return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
-    return ($rows !== '') ? $tpl->getHtmlFrag('table', ['open' => true, 'class' => 'sl_table_amount']).$rows.$tpl->getHtmlFrag('table', []) : '';
+    return ($rows !== '') ? $tpl->getHtmlFrag('table', ['open' => true, 'is_amount' => true]).$rows.$tpl->getHtmlFrag('table', []) : '';
 }
 
 function privat(): void {
@@ -738,9 +738,9 @@ function passlost(): void {
             ]);
         }
         $after = $tpl->getHtmlFrag('post-div', [
-            'class' => 'sl-form-submit',
-            'content' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'class' => 'sl_but_foot'])
-                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'class' => 'sl_but_foot']),
+            'is_form_submit' => true,
+            'content' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
+                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
@@ -887,7 +887,7 @@ function edithome(): void {
         }
         $fields .= $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME.':', 'value_text' => $userinfo['name']])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _BIRTHDAY.':', 'field_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _GENDER.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'select_class' => 'sl-field--account', 'options_html' => $genderOptions])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _GENDER.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_account' => true, 'options_html' => $genderOptions])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _YOUREMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $userinfo['email'], 'maxlength_num' => 60, 'placeholder_text' => _YOUREMAIL, 'is_required' => true])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _SITEURL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $userinfo['website'], 'maxlength_num' => 100, 'placeholder_text' => _SITEURL])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _OCCUPATION.':', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'occ', 'value_attr' => $userinfo['occ'], 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION])])
@@ -921,10 +921,10 @@ function edithome(): void {
             'submit' => $tpl->getHtmlFrag('form-submit', ['extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
         ]);
         $avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
-        $asetup = $tpl->getHtmlFrag('table', ['open' => true, 'class' => 'sl_table_form'])
+        $asetup = $tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true])
             .$tpl->getHtmlFrag('table-row', ['cells' => [
                 ['primary_text' => _AVATAR.':', 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
-                ['img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'img_class' => 'sl_avatar'],
+                ['img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
             ]])
             .$tpl->getHtmlFrag('table', []);
         if ($conf['users']['aupload']) {
@@ -950,11 +950,11 @@ function edithome(): void {
                 $aset[] = [
                     'href' => 'index.php?name='.$conf['name'].'&amp;op=saveavatar&amp;avatar='.$file,
                     'title' => _AVATARSAVE.' '._ID.' '.$filename,
-                    'link_class' => 'sl-avatar-link',
+                    'is_avatar_link' => true,
                     'img_src' => $adir.'/'.$file,
                     'img_alt' => _AVATARSAVE.' '._ID.' '.$filename,
                     'img_title' => _AVATARSAVE.' '._ID.' '.$filename,
-                    'img_class' => 'sl_avatar',
+                    'is_avatar' => true,
                 ];
                 if ($i % $a == 0) {
                     $arows .= $tpl->getHtmlFrag('table-row', ['cells' => $aset]);
@@ -966,7 +966,7 @@ function edithome(): void {
         if ($aset) $arows .= $tpl->getHtmlFrag('table-row', ['cells' => $aset]);
         if ($i >= 1) {
             $asetup .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT])
-                .$tpl->getHtmlFrag('table', ['open' => true, 'class' => 'sl_table_form sl-avatar-grid'])
+                .$tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true, 'is_avatar_grid' => true])
                 .$arows
                 .$tpl->getHtmlFrag('table', []);
         }

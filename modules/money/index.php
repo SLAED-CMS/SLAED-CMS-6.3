@@ -23,7 +23,7 @@ function money(): void {
     $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
     $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), false, 'all');
     $cont .= $tpl->getHtmlFrag('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
-    $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_1]);
+    $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_1]);
     foreach ([
         ['Rechner', _MO_3.' Z:', 'USD'],
         ['Rechner1', _MO_3.' R:', 'RUB'],
@@ -66,7 +66,7 @@ function money(): void {
             }
         }
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_9.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9])]);
-        $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_6]);
+        $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_6]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
@@ -126,26 +126,24 @@ function send(): void {
                 }
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._MONEY;
-                $msg = $tpl->getHtmlFrag('money-email-order', [
-                    'sitename'           => $conf['sitename'],
-                    'money_label'        => _MONEY,
-                    'personalinfo_label' => _PERSONALINFO,
-                    'amount_label'       => _MO_7,
-                    'amount'             => $sum,
-                    'email_label'        => _MO_8,
-                    'email'              => $email,
-                    'sinfo_html'         => $sinfo,
-                    'note_label'         => _MO_9,
-                    'note'               => $note,
+                $msg = $tpl->getHtmlPart('message-block', [
+                    'title' => $subject,
+                    'heading_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PERSONALINFO]),
+                    'lines' => [
+                        ['label' => _MO_7, 'value' => $sum],
+                        ['label' => _MO_8, 'value' => $email],
+                    ],
+                    'details_html' => $sinfo,
+                    'note_label' => _MO_9,
+                    'note_html' => $note,
                 ]);
                 addMail($amail, $email, $subject, $msg, 1, 1);
             }
             if (!$conf['money']['pr']) {
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._MONEY;
-                $msg = $tpl->getHtmlFrag('money-email-confirm', [
-                    'sitename'    => $conf['sitename'],
-                    'money_label' => _MONEY,
+                $msg = $tpl->getHtmlPart('message-block', [
+                    'title' => $subject,
                     'content_html' => $prs->filterContent($conf['money']['sendinfo'], false, 'all'),
                 ]);
                 addMail($email, $amail, $subject, $msg, 0, 3);

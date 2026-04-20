@@ -302,7 +302,7 @@ function view(): void {
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);
-        $cont .= getPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['pages']['nump'], (int)$pag, '#'.$id);
+        $cont .= getPageNumbers($conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['pages']['nump'], (int)$pag, '#'.$id);
         if ($conf['pages']['link']) {
             $limit = (int)($conf['pages']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery(

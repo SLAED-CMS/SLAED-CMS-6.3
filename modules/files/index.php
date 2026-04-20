@@ -268,7 +268,7 @@ function view(): void {
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         if (is_user() || $conf['files']['down'] == '1') {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
-            $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
+            $download = $tpl->getHtmlPart('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
         }
         $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $cont .= $tpl->getHtmlPart('view', [

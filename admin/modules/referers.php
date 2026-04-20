@@ -111,7 +111,7 @@ function referers(): void {
             ],
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,
-        ]).getPageNumbers('pagenum', '', $a, ceil($a / $conf['referers']['anum']), $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump'])]);
+        ]).getPageNumbers('', $a, ceil($a / $conf['referers']['anum']), $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump'])]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
     }

@@ -314,7 +314,7 @@ function view(): void {
             'back_text' => _BACK,
         ]);
         $cont .= getPageNumbers(
-            'pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['news']['nump'], (int)$pag, '#'.$id
+            $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['news']['nump'], (int)$pag, '#'.$id
         );
         if ($conf['news']['assoc']) {
             $aids = array_values(array_filter(

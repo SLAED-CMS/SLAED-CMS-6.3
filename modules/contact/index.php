@@ -46,7 +46,7 @@ function contact(): void {
     }
     setHead(['title' => $title]);
     $cont = $tpl->getHtmlFrag('title', ['title' => $title]);
-    $form = $tpl->getHtmlFrag('contact-form', [
+    $form = $tpl->getHtmlPart('contact-form', [
         'info' => $info,
         'name' => $conf['name'],
         'token' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
@@ -80,7 +80,15 @@ function contact(): void {
                 $to = $conf['adminmail'];
             }
             $subject = $conf['sitename'].' - '._FEEDBACK;
-            $msg = $tpl->getHtmlFrag('contact-email-body', ['sitename' => $conf['sitename'], 'feedback_label' => _FEEDBACK, 'sender_label' => _SENDERNAME, 'sname' => $sname, 'email_label' => _SENDEREMAIL, 'semail' => $semail, 'message_label' => _MESSAGE, 'message' => $message]);
+            $msg = $tpl->getHtmlPart('message-block', [
+                'title' => $subject,
+                'lines' => [
+                    ['label' => _SENDERNAME, 'value' => $sname],
+                    ['label' => _SENDEREMAIL, 'value' => $semail],
+                ],
+                'body_label' => _MESSAGE,
+                'body_html' => $message,
+            ]);
             addMail($to, $semail, $subject, $msg, 1, 1);
             update_points(5);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 5]);

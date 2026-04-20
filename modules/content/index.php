@@ -37,15 +37,16 @@ function content(): void {
             $menu = '';
             if ($ismoder) {
                 $edit = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]);
-                $delete = $tpl->getHtmlFrag('action-delete', [
+                $delete = $tpl->getHtmlFrag('link', [
                     'href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
                     'title' => _ONDELETE,
                     'label' => _ONDELETE,
                     'confirm_text' => $ask,
+                    'is_delete' => true,
                 ]);
                 $menu = $tpl->getHtmlFrag('editor-action-menu', [
                     'editor_label' => _EDITOR,
-                    'items_html' => $tpl->getHtmlFrag('action-menu-item', ['item_html' => $edit]).$tpl->getHtmlFrag('action-menu-item', ['item_html' => $delete]),
+                    'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $edit]).$tpl->getHtmlFrag('list-item', ['content_html' => $delete]),
                 ]);
             }
             $cont .= $tpl->getHtmlFrag('table-row', [

@@ -37,7 +37,7 @@ function info(): void {
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _RSS]);
-    $cont .= $tpl->getHtmlFrag('rss-info-form', [
+    $cont .= $tpl->getHtmlPart('rss-info-form', [
         'name' => $conf['name'],
         'info_text' => _RSS_INFO_TEXT,
         'lbl_tip' => _RSS_INFO_TIP,
@@ -52,7 +52,7 @@ function info(): void {
     ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
-        $cont .= $tpl->getHtmlFrag('rss-read-forms', [
+        $cont .= $tpl->getHtmlPart('rss-read-forms', [
             'name' => $conf['name'],
             'lbl_select_site' => _SELECTASITE,
             'rss_select' => rss_select(),

@@ -25,7 +25,7 @@ function recommend(): void {
     setHead(['title' => _RECOMMTITLE]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-    $cont .= $tpl->getHtmlFrag('recommend-form', [
+    $cont .= $tpl->getHtmlPart('recommend-form', [
         'name' => $conf['name'],
         'token' => htmlspecialchars(getSiteToken('recommend'), ENT_QUOTES, 'UTF-8'),
         'nick_field' => $unkey,
@@ -60,18 +60,13 @@ function send(): void {
     if (!$stop) {
         $subject = $conf['sitename'].' - '._INTSITE;
         $siteLink = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'], 'title' => $conf['sitename'], 'label' => $conf['homeurl'], 'is_blank' => true]);
-        $message = $tpl->getHtmlFrag('recommend-mail-message', [
-            'hello' => _HELLO,
-            'friend_name' => $fname,
-            'yourfriend' => _YOURFRIEND,
-            'sender_name' => $sname,
-            'oursite' => _OURSITE,
-            'sitename' => $conf['sitename'],
-            'intsent' => _INTSENT,
-            'sitename_label' => _SITENAME,
-            'slogan' => urldecode($conf['defis']).' '.$conf['slogan'],
-            'siteurl_label' => _SITEURL,
-            'site_link' => $siteLink,
+        $message = $tpl->getHtmlPart('message-block', [
+            'title' => _HELLO.' '.$fname.'!',
+            'intro_text' => _YOURFRIEND.' '.$sname.' '._OURSITE.' '.$conf['sitename'].' '._INTSENT,
+            'lines' => [
+                ['label' => _SITENAME, 'value' => $conf['sitename'].' '.urldecode($conf['defis']).' '.$conf['slogan']],
+                ['label' => _SITEURL, 'value_html' => $siteLink],
+            ],
         ]);
         addMail($femail, $semail, $subject, $message, 0, 3);
         update_points(38);

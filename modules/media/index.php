@@ -284,6 +284,7 @@ function view(): void {
         if ($links) {
             if ((is_user() && $conf['media']['hide'] == '0') || $conf['media']['hide'] == '1') {
                 $items = explode(',', $links);
+                $linkItems = [];
                 $e = 1;
                 $i = 0;
                 foreach ($items as $val) {
@@ -292,15 +293,16 @@ function view(): void {
                             $esize = explode('|', $val);
                             $einfo = ($esize[3]) ? _SIZE.': '.filterSize($esize[3]) : '';
                             $elink = $tpl->getHtmlFrag('link', ['href' => $val, 'title' => _URL.' '.$e.' - '.$einfo, 'label' => _URL.' '.$e.' - '.$einfo, 'is_blank' => true, 'is_media_ed2k' => true]);
-                            $mlinks .= (!$i) ? $elink : $tpl->getHtmlFrag('media-link-break').$elink;
+                            $linkItems[] = ['content_html' => $elink, 'is_break_before' => $i > 0];
                             $e++;
                         } else {
                             $hlink = $tpl->getHtmlFrag('link', ['href' => $val, 'title' => _URL.': '.url_types($val), 'label' => _URL.': '.url_types($val), 'is_blank' => true, 'is_media_http' => true]);
-                            $mlinks .= (!$i) ? $hlink : $tpl->getHtmlFrag('media-link-break').$hlink;
+                            $linkItems[] = ['content_html' => $hlink, 'is_break_before' => $i > 0];
                         }
                         $i++;
                     }
                 }
+                $mlinks = ($linkItems) ? $tpl->getHtmlPart('line-list', ['items' => $linkItems]) : '';
             } else {
                 $mlinks = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HIDETEXT]);
             }

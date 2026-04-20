@@ -77,10 +77,19 @@ function faq(): void {
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], $ncat);
     }
     if ($ncat) {
-        $cont .= $tpl->getHtmlFrag('faq-quicklinks-open');
+        $cont .= $tpl->getHtmlFrag('table', ['open' => true, 'is_faq' => true]);
         $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_faq WHERE cid = :ncat AND time <= NOW() AND status != '0' ORDER BY ".$orderbyf, ['ncat' => $ncat]);
-        while ([$fid, $ftitle] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('faq-quicklinks-row', ['id' => $fid, 'title' => $ftitle, 'label' => filterTextHighlight($ftitle, $word)]);
-        $cont .= $tpl->getHtmlFrag('faq-quicklinks-close');
+        while ([$fid, $ftitle] = $db->getSqlRow($result)) {
+            $cont .= $tpl->getHtmlFrag('table-row', [
+                'cells' => [[
+                    'href' => '#'.$fid,
+                    'title' => $ftitle,
+                    'link_label_html' => filterTextHighlight($ftitle, $word),
+                    'is_faq_link' => true,
+                ]],
+            ]);
+        }
+        $cont .= $tpl->getHtmlFrag('table');
     }
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $unum);
@@ -306,7 +315,7 @@ function view(): void {
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);
-        $cont .= getPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['faq']['nump'], (int)$pag, '#'.$id);
+        $cont .= getPageNumbers($conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['faq']['nump'], (int)$pag, '#'.$id);
         if ($conf['faq']['link']) {
             $limit = (int)($conf['faq']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery(
