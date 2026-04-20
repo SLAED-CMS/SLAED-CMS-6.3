@@ -128,7 +128,7 @@ class Database {
                 $errmsg = htmlspecialchars($error['message']);
                 $errinfo = $error['sqlstate'].' / '.$error['code'];
                 if ($tpl instanceof Template) {
-                    $this->qtime .= $tpl->getHtmlFrag('pdo-error-badge', ['error_label' => _ERROR, 'errinfo' => $errinfo, 'errmsg' => $errmsg]);
+                    $this->qtime .= ' '.$tpl->getHtmlFrag('span', ['label' => _ERROR, 'content_html' => $errinfo.' - '.$errmsg, 'is_danger' => true]);
                 } else {
                     $this->qtime .= ' '._ERROR.': '.$errinfo.' - '.$errmsg.PHP_EOL;
                 }

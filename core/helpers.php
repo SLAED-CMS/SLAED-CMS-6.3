@@ -629,9 +629,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('radio-group', [
-        'items_html' => $items,
-    ]);
+    return $tpl->getHtmlFrag('post-div', ['class' => 'sl-radio-group', 'content' => $items]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
@@ -815,7 +813,7 @@ function getTplNewGraphic(string $time): string {
     elseif ($data < 259200) { $cls = 'sl_n_days'; $ttl = (string)_NEWLAST3DAYS; }
     elseif ($data < 604800) { $cls = 'sl_n_week'; $ttl = (string)_NEWTHISWEEK; }
     if (!$cls) return '';
-    return $tpl->getHtmlFrag('graphic', ['icon_class' => $cls, 'icon_title' => $ttl]);
+    return $tpl->getHtmlFrag('span', ['class' => $cls, 'title' => $ttl]);
 }
 
 # Format a gender value for display

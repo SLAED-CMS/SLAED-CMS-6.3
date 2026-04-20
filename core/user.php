@@ -9,7 +9,10 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $cid = 0): string {
     global $conf, $user, $tpl;
-    $cont = $tpl->getHtmlFrag('account-comment-section', ['comments_html' => ashowcom($id, $conf['name'])]);
+    $cont = $tpl->getHtmlFrag('post-div', [
+        'id' => 'comm',
+        'content' => $tpl->getHtmlFrag('post-div', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]),
+    ]);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
@@ -28,7 +31,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
         }
         $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME.':', 'field_html' => $name_field])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _COMMENT.':', 'field_html' => getTplTextarea(['id' => 1, 'name' => 'text', 'value' => '', 'mod' => $conf['name'], 'rows' => '5'])]);
-        $submit = $tpl->getHtmlFrag('submit', [
+        $submit = $tpl->getHtmlFrag('form-submit', [
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
             'input_attr' => 'hx-post="index.php?go=1&amp;op=addComment&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'" hx-include="#formcsave" hx-target="#repcsave" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }" hx-on:htmx:after-request="document.getElementById(\'formcsave\').reset()"',
@@ -62,6 +65,10 @@ function setMessageShow(): string {
         if ($conf['multilingual'] == 1) {
             $params['lang'] = $currentlang;
         }
+        $messageBox = static fn(string $title, string $body): string => $tpl->getHtmlFrag('post-div', [
+            'class' => 'message-box',
+            'content' => $tpl->getHtmlFrag('title', ['title' => $title, 'title_class' => 'title']).$body,
+        ]);
         $result = $db->getSqlQuery('SELECT id, title, body, expire, view FROM '.PREFIX_DB.'_message WHERE status = 1 '.$querylang, $params);
         if ($db->getSqlRowCount($result) > 0) {
             while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
@@ -72,16 +79,16 @@ function setMessageShow(): string {
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
                     if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
-                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
+                    return $messageBox($title, $body);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
                     if (is_moder()) $body .= $adminNote(_MVUSERS, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
-                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
+                    return $messageBox($title, $body);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
                     if (is_moder()) $body .= $adminNote(_MVANON, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
-                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
+                    return $messageBox($title, $body);
                 } elseif ($view == 1) {
                     if (is_moder()) $body .= $adminNote(_MVALL, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
-                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
+                    return $messageBox($title, $body);
                 }
             }
         }
@@ -488,7 +495,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
             $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _PRRE.':', 'field_html' => $recipient])
                 .$tpl->getHtmlFrag('form-field-row', ['label' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $rtitle, 'maxlength_num' => 100])])
                 .$tpl->getHtmlFrag('form-field-row', ['label' => _MESSAGE.':', 'field_html' => getTplTextarea(['id' => $idp, 'name' => 'text', 'value' => $rcontent, 'mod' => $conf['name'], 'rows' => '15'])]);
-            $submit = $tpl->getHtmlFrag('submit', [
+            $submit = $tpl->getHtmlFrag('form-submit', [
                 'label' => _SEND,
                 'title' => _SEND,
                 'input_attr' => 'hx-post="index.php?go=1&amp;op=addPrivateMessage" hx-include="#'.$formId.'" hx-target="#rep'.$prmid.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;name&quot;]\').value.trim()) { alert(\''._CERROR6.'\'); event.preventDefault(); }"',

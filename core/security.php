@@ -1114,7 +1114,14 @@ function addMail(string $email, string $smail, string $subject, string $message,
     if ($id) {
         global $tpl;
         if ($tpl instanceof Template) {
-            $message .= $tpl->getHtmlFrag('security-mail-trace', ['ip_label' => _IP, 'ip' => getIp(), 'browser_label' => _BROWSER, 'browser' => $agent, 'hash_label' => _HASH, 'hash' => md5($agent)]);
+            $message .= $tpl->getHtmlPart('message-block', [
+                'title' => '',
+                'lines' => [
+                    ['label' => _IP, 'value' => getIp()],
+                    ['label' => _BROWSER, 'value' => $agent],
+                    ['label' => _HASH, 'value' => md5($agent)],
+                ],
+            ]);
         } else {
             $message .= PHP_EOL._IP.': '.getIp().PHP_EOL._BROWSER.': '.$agent.PHP_EOL._HASH.': '.md5($agent);
         }
