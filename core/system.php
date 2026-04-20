@@ -3067,6 +3067,7 @@ function getUserSessionInfo(string $id = ''): string {
                     'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                     'name_title' => getDuration($time),
                     'name_text' => $strip,
+                    'name_link' => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time), 'label' => $strip],
                     'module_title' => $module,
                     'module_text' => $linkstrip,
                 ]);
@@ -3133,11 +3134,11 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     'name_href' => $conf['ip_link'].$host,
                     'name_title' => getDuration($time).' - '._IP.': '.$host,
                     'name_text' => $namestrip,
-                    'name_target' => ' target="_blank"',
+                    'name_link' => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_href' => $alink,
                     'module_title' => $alink,
                     'module_text' => $alstrip,
-                    'module_target' => ' target="_blank"',
+                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $alstrip, 'is_blank' => true],
                     'is_module_right' => true,
                 ]);
                 $a++;
@@ -3148,11 +3149,11 @@ function getUserSessionAdminInfo(string $id = ''): string {
                         'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                         'name_title' => getDuration($time).' - '._IP.': '.$host,
                         'name_text' => $namestrip,
-                        'name_target' => ' target="_blank"',
+                        'name_link' => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                         'module_href' => $alink,
                         'module_title' => $alink,
                         'module_text' => $lstrip,
-                        'module_target' => ' target="_blank"',
+                        'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                         'is_module_right' => true,
                     ]);
                     $m++;
@@ -3162,11 +3163,11 @@ function getUserSessionAdminInfo(string $id = ''): string {
                         'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                         'name_title' => getDuration($time).' - '._IP.': '.$host,
                         'name_text' => $namestrip,
-                        'name_target' => ' target="_blank"',
+                        'name_link' => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                         'module_href' => $alink,
                         'module_title' => $alink,
                         'module_text' => $alstrip,
-                        'module_target' => ' target="_blank"',
+                        'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $alstrip, 'is_blank' => true],
                         'is_module_right' => true,
                     ]);
                 }
@@ -3176,11 +3177,11 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     'name_href' => $conf['ip_link'].$host,
                     'name_title' => getDuration($time).' - '._IP.': '.$host,
                     'name_text' => $namestrip,
-                    'name_target' => ' target="_blank"',
+                    'name_link' => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_href' => $alink,
                     'module_title' => $alink,
                     'module_text' => $lstrip,
-                    'module_target' => ' target="_blank"',
+                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                     'is_module_right' => true,
                 ]);
                 $b++;
@@ -3190,11 +3191,11 @@ function getUserSessionAdminInfo(string $id = ''): string {
                     'name_href' => $conf['ip_link'].$host,
                     'name_title' => getDuration($time),
                     'name_text' => $uname,
-                    'name_target' => ' target="_blank"',
+                    'name_link' => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time), 'label' => $uname, 'is_blank' => true],
                     'module_href' => $alink,
                     'module_title' => $alink,
                     'module_text' => $lstrip,
-                    'module_target' => ' target="_blank"',
+                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                     'is_module_right' => true,
                 ]) : '';
                 $u++;
@@ -3252,6 +3253,8 @@ function adminblock(): string {
             'logout_href' => $afile.'.php?op=logout',
             'logout_title' => (string)_LOGOUT,
             'logout_label' => (string)_LOGOUT,
+            'admin_link' => ['href' => $afile.'.php', 'title' => (string)_ADMINMENU, 'label' => (string)_ADMINMENU],
+            'logout_link' => ['href' => $afile.'.php?op=logout', 'title' => (string)_LOGOUT, 'label' => (string)_LOGOUT],
             'block_html' => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
@@ -3303,7 +3306,7 @@ function getCartSummary(string $info = ''): string {
             }
             $price = $price * $i;
             $ptotal += $price;
-            $titleLink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$id, 'title' => $title, 'label' => $title]);
+            $titlink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$id, 'title' => $title, 'label' => $title]);
             $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
                 .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
             $rows .= $tpl->getHtmlFrag('table-row', [
@@ -3311,7 +3314,7 @@ function getCartSummary(string $info = ''): string {
                 'is_cart_row' => true,
                 'cells' => [
                     ['href' => '#kasse-'.$id, 'title' => (string)$id, 'text' => (string)$id, 'is_cart_col_num' => true, 'is_cart_id' => true],
-                    ['is_cart_col_content' => true, 'heading_html' => $titleLink.' '.getTplNewGraphic($time)],
+                    ['is_cart_col_content' => true, 'heading_html' => $titlink.' '.getTplNewGraphic($time)],
                     ['is_cart_col_num' => true, 'text' => (string)$i],
                     ['is_cart_col_stat' => true, 'text' => $price.' '.$conf['shop']['valute']],
                     ['is_cart_col_stat' => true, 'content_html' => $actions],
@@ -3778,6 +3781,7 @@ function renderFootControls(
     return $tpl->getHtmlFrag('foot-controls', [
         'top_title' => $topTitle,
         'top_label' => $topLabel,
+        'top_link' => ['href' => '#', 'title' => $topTitle, 'label' => $topLabel, 'class' => 'thide', 'is_upper' => true],
         'time_html' => $timeHtml,
         'license_html' => $licenseHtml,
         'debug_html' => $debugHtml,
@@ -4360,7 +4364,7 @@ function encode_php(array $text): string {
         $hlang = $hmap[$ucname] ?? $ucname;
         $format = $tpl->getHtmlFrag('code-hljs', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
     }
-    return $tpl->getHtmlFrag('code-block', ['title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'format_html' => $format ?? '']);
+    return $tpl->getHtmlFrag('div', ['is_code' => true, 'title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'content_html' => $format ?? '']);
 }
 
 # Mail check
@@ -4572,7 +4576,7 @@ function getAsyncPager(string $frag, int $count, int $pages, int $page, int $mnu
         'is_cur' => true,
         'is_nav' => $isNav,
     ]);
-    $pagerDots = static fn(): string => $tpl->getHtmlFrag('pager-dots', []);
+    $pagerDots = static fn(): string => $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
     if ($pages > 1) {
         $cont = '';
         if ($num > 1) {

@@ -74,7 +74,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]);
     $html = ($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
-    $cont .= $tpl->getHtmlFrag('div-collapse', ['target_id' => 'repeditornote', 'content_html' => $html]);
+    $cont .= $tpl->getHtmlFrag('div', ['id' => 'repeditornote', 'is_collapsible' => true, 'content_html' => $html]);
     $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(code&&view&&view.state&&view.state.doc){code.value=view.state.doc.toString();}"';
     return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php',

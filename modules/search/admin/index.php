@@ -420,14 +420,13 @@ function config(): void {
     foreach (scandir('modules') as $file) {
         if (str_contains($file, '.')) continue;
         if ($allow && !in_array($file, $allow, true)) continue;
-        $modshtml .= $tpl->getHtmlFrag('label-item', [
-            'item_class' => 'sl-right',
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'name_attr' => 'search[]',
-                'value_attr' => $file,
-                'is_checked' => in_array($file, $curr, true),
-            ]),
-            'label_html' => htmlspecialchars(getModuleName($file), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').' <code>'.$file.'</code>',
+        $modshtml .= $tpl->getHtmlFrag('checkbox', [
+            'is_right' => true,
+            'name_attr' => 'search[]',
+            'value_attr' => $file,
+            'is_checked' => in_array($file, $curr, true),
+            'label_text' => getModuleName($file),
+            'code_text' => $file,
         ]);
     }
     $cfgrows = [
@@ -451,9 +450,10 @@ function config(): void {
         'action_url' => $afile.'.php?name=search&amp;op=modadd',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'content_html' => getSearchauditTable($rlist, 'ready'),
-        'actions_html' => $tpl->getHtmlFrag('label-item', [
-            'item_class' => 'sl-right',
-            'input_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'all', 'value_attr' => '1']),
+        'actions_html' => $tpl->getHtmlFrag('checkbox', [
+            'is_right' => true,
+            'name_attr' => 'all',
+            'value_attr' => '1',
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHADDALL, 'hint' => _SEARCHAUTOINFO]),
         ]),
         'submit_label' => _SEARCHADDSEL,

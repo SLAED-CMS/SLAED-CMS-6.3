@@ -104,7 +104,7 @@ function add(): void {
             'is_config' => true,
         ])],
         ['label_html' => _IMG.':', 'field_html' => getAdminCategoryImageSelect($path)],
-        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('img-preview', ['alt' => _IMG, 'src' => $path.'no.png'])],
+        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('image-preview', ['alt_text' => _IMG, 'image_id' => 'img_replace_img', 'src_attr' => $path.'no.png'])],
         ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($conf['multilingual'] == 1) {
@@ -191,7 +191,7 @@ function subadd(): void {
                 'is_config' => true,
             ])],
             ['label_html' => _IMG.':', 'field_html' => getAdminCategoryImageSelect($path)],
-            ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('img-preview', ['alt' => _IMG, 'src' => $path.'no.png'])],
+            ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('image-preview', ['alt_text' => _IMG, 'image_id' => 'img_replace_img', 'src_attr' => $path.'no.png'])],
             ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
         ];
         if ($conf['multilingual'] == 1) {
@@ -336,7 +336,7 @@ function edit(): void {
             'is_config' => true,
         ])],
         ['label_html' => _IMG.':', 'field_html' => getAdminCategoryImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
-        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('img-preview', ['alt' => _IMG, 'src' => $path.$imgcat])],
+        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('image-preview', ['alt_text' => _IMG, 'image_id' => 'img_replace_img', 'src_attr' => $path.$imgcat])],
         ['label_html' => _MODUL.':', 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($parent != 0) {

@@ -287,13 +287,14 @@ function banlist(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_INFO]),
-            'field_html' => $tpl->getHtmlFrag('div-collapse', [
+            'field_html' => $tpl->getHtmlFrag('div', [
                 'content_html' => $tpl->getHtmlFrag('textarea', [
                     'name_attr' => 'mailtext',
                     'rows_num' => 10,
                     'value_text' => $mailtext,
                 ]),
-                'target_id' => $mailTextId,
+                'id' => $mailTextId,
+                'is_collapsible' => true,
             ]),
             'is_full' => true,
         ],

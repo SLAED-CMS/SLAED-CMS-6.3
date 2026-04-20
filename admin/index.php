@@ -15,14 +15,37 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
     $ltitle = ($class !== '') ? $title.' - '._DEACT : $title;
     $path = img_find('admin/'.$image);
     $image = file_exists($path) ? $path : img_find('admin/components.png');
+    $imglink = [
+        'href' => $url,
+        'title' => $ltitle,
+        'img_src' => $image,
+        'img_alt' => $ltitle,
+        'is_menu_list_image' => true,
+    ];
+    $titlink = [
+        'href' => $url,
+        'title' => $ltitle,
+        'label' => $title,
+    ];
     if ($panel) {
         $count++;
+        $grdlink = [
+            'href' => $url,
+            'title' => $ltitle,
+            'is_menu_grid_link' => true,
+            'img_src' => $image,
+            'img_alt' => $ltitle,
+            'is_menu_grid_image' => true,
+            'label' => $title,
+            'label_span' => true,
+        ];
         return $tpl->getHtmlFrag('menu-grid-item', [
             'image' => $image,
             'title' => $title,
             'title_attr' => $ltitle,
             'url' => $url,
             'wrap_class' => ltrim($class),
+            'link' => $grdlink,
         ]);
     }
     return $tpl->getHtmlFrag('menu-list-item', [
@@ -31,6 +54,8 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
         'title_attr' => $ltitle,
         'url' => $url,
         'wrap_class' => ltrim($class),
+        'image_link' => $imglink,
+        'title_link' => $titlink,
     ]);
 }
 
@@ -100,11 +125,7 @@ function getAdminPanel(): void {
                     );
                 }
             }
-            $rows = [];
-            foreach (array_chunk($items, max(1, (int)$conf['admcol'])) as $row) {
-                $rows[] = $tpl->getHtmlFrag('menu-grid-row', ['items_html' => implode('', $row)]);
-            }
-            $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
+            $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['items_html' => implode('', $items)])]);
         }
         $count = 1;
         $items = [];
@@ -125,11 +146,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $rows = [];
-        foreach (array_chunk($items, max(1, (int)$conf['admcol'])) as $row) {
-            $rows[] = $tpl->getHtmlFrag('menu-grid-row', ['items_html' => implode('', $row)]);
-        }
-        $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['rows_html' => implode('', $rows)])]);
+        $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['items_html' => implode('', $items)])]);
     }
     echo $content;
     setFoot();
@@ -227,15 +244,29 @@ function login() {
             'createuserdata' => _CREATEUSERDATA,
             'yes' => _YES,
             'no' => _NO,
+            'aname_field' => ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => getVar('post', 'aname', 'var'), 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true],
+            'aurl_field' => ['itype' => 'url', 'name_attr' => 'aurl', 'value_attr' => 'http://'.getHost(), 'maxlength_num' => 255, 'placeholder_text' => _HOMEPAGE, 'is_required' => true],
+            'aemail_field' => ['itype' => 'email', 'name_attr' => 'aemail', 'value_attr' => getVar('post', 'aemail', 'text'), 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true],
+            'apwd_field' => ['itype' => 'password', 'name_attr' => 'apwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true],
+            'apwd2_field' => ['itype' => 'password', 'name_attr' => 'apwd2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true],
+            'yes_field' => ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => _YES, 'is_checked' => true],
+            'no_field' => ['name_attr' => 'auser_new', 'value_attr' => '0', 'label_text' => _NO],
+            'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
+            'submit' => ['button_type' => 'submit', 'submit_label' => _SEND],
             'send' => _SEND,
         ]);
     } else {
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
+        $capt = in_array((int)($conf['gfx_chk'] ?? 0), [1, 5, 6, 7], true) ? getCaptcha(2) : '';
         $cont .= $tpl->getHtmlPart('login', [
             'route' => $afile,
             'nickname' => _NICKNAME,
             'password' => _PASSWORD,
-            'captcha' => in_array((int)($conf['gfx_chk'] ?? 0), [1, 5, 6, 7], true) ? getCaptcha(2) : '',
+            'captcha' => $capt,
+            'name_field' => ['itype' => 'text', 'name_attr' => 'name', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'autocomplete_attr' => 'username', 'is_required' => true],
+            'pwd_field' => ['itype' => 'password', 'name_attr' => 'pwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'current-password', 'is_required' => true],
+            'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
+            'submit' => ['button_type' => 'submit', 'submit_label' => _LOGIN],
             'login' => _LOGIN,
         ]);
     }

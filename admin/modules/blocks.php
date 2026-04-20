@@ -95,11 +95,9 @@ function add(): void {
     }
     sort($mods);
     foreach ($mods as $mod) {
-        $items .= $tpl->getHtmlFrag('label-item', [
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'name_attr' => 'blockwhere[]',
-                'value_attr' => $mod,
-            ]),
+        $items .= $tpl->getHtmlFrag('checkbox', [
+            'name_attr' => 'blockwhere[]',
+            'value_attr' => $mod,
             'label_html' => $tpl->getHtmlFrag('title-tip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
@@ -114,11 +112,9 @@ function add(): void {
         ['value' => 'infly', 'label' => _INFLY],
         ['value' => 'flyfix', 'label' => _FLY_FIX],
     ] as $item) {
-        $items .= $tpl->getHtmlFrag('label-item', [
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'name_attr' => 'blockwhere[]',
-                'value_attr' => $item['value'],
-            ]),
+        $items .= $tpl->getHtmlFrag('checkbox', [
+            'name_attr' => 'blockwhere[]',
+            'value_attr' => $item['value'],
             'label_html' => $item['label'],
         ]);
     }
@@ -152,7 +148,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $items]),
+        'field_html' => $tpl->getHtmlFrag('div', ['is_radio_group' => true, 'content_html' => $items]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -549,12 +545,10 @@ function edit(): void {
     }
     sort($mods);
     foreach ($mods as $mod) {
-        $items .= $tpl->getHtmlFrag('label-item', [
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'is_checked' => in_array($mod, $where),
-                'name_attr' => 'blockwhere[]',
-                'value_attr' => $mod,
-            ]),
+        $items .= $tpl->getHtmlFrag('checkbox', [
+            'is_checked' => in_array($mod, $where),
+            'name_attr' => 'blockwhere[]',
+            'value_attr' => $mod,
             'label_html' => $tpl->getHtmlFrag('title-tip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
@@ -570,18 +564,16 @@ function edit(): void {
         ['value' => 'infly', 'label' => _INFLY, 'checked' => in_array('infly', $where)],
         ['value' => 'flyfix', 'label' => _FLY_FIX, 'checked' => in_array('flyfix', $where)],
     ] as $item) {
-        $items .= $tpl->getHtmlFrag('label-item', [
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'is_checked' => $item['checked'],
-                'name_attr' => 'blockwhere[]',
-                'value_attr' => $item['value'],
-            ]),
+        $items .= $tpl->getHtmlFrag('checkbox', [
+            'is_checked' => $item['checked'],
+            'name_attr' => 'blockwhere[]',
+            'value_attr' => $item['value'],
             'label_html' => $item['label'],
         ]);
     }
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('radio-group', ['items_html' => $items]),
+        'field_html' => $tpl->getHtmlFrag('div', ['is_radio_group' => true, 'content_html' => $items]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {

@@ -54,17 +54,16 @@ function groups(): void {
                     ],
                 ],
             ]);
-            $cells = [
-                $tpl->getHtmlFrag('table-cell', ['content_html' => (string)$grid]),
-                $tpl->getHtmlFrag('table-cell', ['content_html' => '<img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'">']),
-                $tpl->getHtmlFrag('table-cell', ['content_html' => $tpl->getHtmlFrag('title-tip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'badge_attr' => ' style="color: '.htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'])]),
-                $tpl->getHtmlFrag('table-cell', ['content_html' => (string)$points]),
-                $tpl->getHtmlFrag('table-cell', ['content_html' => (string)$users_num]),
-                $tpl->getHtmlFrag('table-cell', ['content_html' => $extra]),
-                $tpl->getHtmlFrag('table-cell', ['content_html' => $acts]),
-            ];
             $rows .= $tpl->getHtmlFrag('table-row', [
-                'cells_html' => implode('', $cells),
+                'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                    ['content_html' => (string)$grid],
+                    ['content_html' => '<img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'">'],
+                    ['content_html' => $tpl->getHtmlFrag('title-tip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'badge_attr' => ' style="color: '.htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'])],
+                    ['content_html' => (string)$points],
+                    ['content_html' => (string)$users_num],
+                    ['content_html' => $extra],
+                    ['content_html' => $acts],
+                ]]),
             ]);
         }
         $cont .= $tpl->getHtmlFrag('table', [
@@ -233,20 +232,19 @@ function points(): void {
     $prows = '';
     $count = count($p);
     for ($i = 0; $i < $count; $i++) {
-        $cells = [
-            $tpl->getHtmlFrag('table-cell', ['content_html' => (string)($i + 1)]),
-            $tpl->getHtmlFrag('table-cell', ['content_html' => $p[$i]]),
-            $tpl->getHtmlFrag('table-cell', ['content_html' => $d[$i]]),
-            $tpl->getHtmlFrag('table-cell', ['content_html' => $tpl->getHtmlFrag('input', [
-                'itype' => 'number',
-                'name_attr' => 'spoints[]',
-                'value_attr' => (string)$pts[$i],
-                'placeholder_text' => _POINTS,
-                'is_required' => true,
-            ])]),
-        ];
         $prows .= $tpl->getHtmlFrag('table-row', [
-            'cells_html' => implode('', $cells),
+            'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
+                ['content_html' => (string)($i + 1)],
+                ['content_html' => $p[$i]],
+                ['content_html' => $d[$i]],
+                ['content_html' => $tpl->getHtmlFrag('input', [
+                    'itype' => 'number',
+                    'name_attr' => 'spoints[]',
+                    'value_attr' => (string)$pts[$i],
+                    'placeholder_text' => _POINTS,
+                    'is_required' => true,
+                ])],
+            ]]),
         ]);
     }
     $pointv = $tpl->getHtmlFrag('form', [

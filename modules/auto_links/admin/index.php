@@ -237,10 +237,10 @@ function stats(): void {
                 }
                 if ($i < $pages) {
                     if (($page > $nnum) && ($i === 1)) {
-                        $items .= $tpl->getHtmlFrag('pager-dots', []);
+                        $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
                     }
                     if (($page < ($pages - $maxpg)) && ($i === ($pages - 1))) {
-                        $items .= $tpl->getHtmlFrag('pager-dots', []);
+                        $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
                     }
                 }
             }

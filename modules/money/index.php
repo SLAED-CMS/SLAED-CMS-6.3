@@ -124,15 +124,14 @@ function send(): void {
             );
             if ($conf['money']['ad']) {
                 $form = explode(',', $conf['money']['form']);
-                $sinfo = '';
+                $dets = [];
                 $i = 0;
                 foreach ($form as $val) {
                     if ($val != '') {
-                        $sinfo .= $tpl->getHtmlFrag('title-tip-item', [
+                        $dets[] = [
                             'label' => $val,
-                            'value' => filterHtml($intro[$i] ?? '', 1),
-                            'is_last' => false,
-                        ]);
+                            'value_html' => filterHtml($intro[$i] ?? '', 1),
+                        ];
                         $i++;
                     }
                 }
@@ -145,7 +144,7 @@ function send(): void {
                         ['label' => _MO_7, 'value' => $sum],
                         ['label' => _MO_8, 'value' => $email],
                     ],
-                    'details_html' => $sinfo,
+                    'details' => $dets,
                     'note_label' => _MO_9,
                     'note_html' => $note,
                 ]);

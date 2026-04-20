@@ -158,7 +158,7 @@ function account(): void {
             $pages = (int)ceil($count / (int)$conf['users']['anum']);
             $curr = max(1, min($num, $pages));
             $maxpg = (int)$conf['users']['anump'];
-            $dots = $tpl->getHtmlFrag('pager-dots', []);
+            $dots = $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
             $base = $afile.'.php?name=account'.($search ? '&search='.$search : '').($chng !== '' ? '&chng='.urlencode($chng) : '').'&num=';
             $link = static function(string $href, string $label, bool $cur = false, bool $nav = false) use ($tpl): string {
                 return $tpl->getHtmlFrag('pager-link', $href !== ''
@@ -450,8 +450,9 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => '',
-        'field_html' => $tpl->getHtmlFrag('div-collapse', [
-            'target_id' => 'sl_form_account_mail',
+        'field_html' => $tpl->getHtmlFrag('div', [
+            'id' => 'sl_form_account_mail',
+            'is_collapsible' => true,
             'content_html' => $tpl->getHtmlFrag('div', ['rows' => [[
                 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
                 'field_html' => getTplTextarea(['id' => '3', 'name' => 'mailtext', 'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '']),

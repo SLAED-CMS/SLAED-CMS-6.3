@@ -103,11 +103,15 @@ function news(): void {
                     ['content' => _POSTEDBY],
                     ['content' => _STATUS, 'nosort' => true],
                     ['content' => _FUNCTIONS, 'nosort' => true],
-                    ['content' => $tpl->getHtmlFrag('checkbox-input', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"']), 'class_name' => 'sl-th-center', 'nosort' => true],
+                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"']), 'class_name' => 'sl-th-center', 'nosort' => true],
                 ],
                 'rows_html' => $rows,
             ]),
-            'actions_html' => $tpl->getHtmlFrag('list-bottom', ['pager_html' => $pager, 'actions_html' => $actions]),
+            'actions_html' => $tpl->getHtmlFrag('module-foot', [
+                'is_list' => true,
+                'pager_html' => $pager,
+                'actions_html' => $actions,
+            ]),
         ]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
@@ -171,13 +175,11 @@ function add(): void {
             'label_text' => $ctitle,
             'is_selected' => (int)$cid === (int)$cat,
         ]);
-        $assohtml .= $tpl->getHtmlFrag('label-item', [
-            'item_class' => 'sl-right',
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'name_attr' => 'associated[]',
-                'value_attr' => (string)$cid,
-                'is_checked' => in_array((string)$cid, array_map('strval', $associated), true),
-            ]),
+        $assohtml .= $tpl->getHtmlFrag('checkbox', [
+            'is_right' => true,
+            'name_attr' => 'associated[]',
+            'value_attr' => (string)$cid,
+            'is_checked' => in_array((string)$cid, array_map('strval', $associated), true),
             'label_html' => htmlspecialchars($ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
         ]);
     }

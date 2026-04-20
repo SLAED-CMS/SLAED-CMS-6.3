@@ -150,19 +150,17 @@ function add(): void {
     }
     sort($allow);
     foreach ($allow as $mod) {
-        $items .= $tpl->getHtmlFrag('label-item', [
-            'input_html' => $tpl->getHtmlFrag('checkbox', [
-                'is_checked' => in_array($mod, $mods, true),
-                'name_attr' => 'modules[]',
-                'value_attr' => $mod,
-            ]),
+        $items .= $tpl->getHtmlFrag('checkbox', [
+            'is_checked' => in_array($mod, $mods, true),
+            'name_attr' => 'modules[]',
+            'value_attr' => $mod,
             'label_html' => $tpl->getHtmlFrag('title-tip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
         ]);
     }
-    $perm = $tpl->getHtmlFrag('radio-group', ['items_html' => $items]);
+    $perm = $tpl->getHtmlFrag('div', ['is_radio_group' => true, 'content_html' => $items]);
     $mailtext = replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
         ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions((string)$lang)])
@@ -266,13 +264,14 @@ function add(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-            'field_html' => $tpl->getHtmlFrag('div-collapse', [
+            'field_html' => $tpl->getHtmlFrag('div', [
                 'content_html' => $tpl->getHtmlFrag('textarea', [
                     'name_attr' => 'mailtext',
                     'rows_num' => 10,
                     'value_text' => $mailtext,
                 ]),
-                'target_id' => 'sl_form_admin_mail',
+                'id' => 'sl_form_admin_mail',
+                'is_collapsible' => true,
             ]),
             'is_full' => true,
         ],

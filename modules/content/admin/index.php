@@ -22,17 +22,16 @@ function content(): void {
             $view = (time() >= strtotime($time)) ? 'index.php?name=content&amp;op=view&amp;id='.$id : '';
             $active = $view ? '1' : '0';
             $acts = $tpl->getHtmlFrag('edit-tip', [
-                'delete_confirm' => _DELETE.' "'.$title.'"?',
-                'delete_href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
-                'delete_label' => _ONDELETE,
-                'delete_title' => _ONDELETE,
                 'editor_label' => _EDITOR,
-                'edit_href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id,
-                'edit_label' => _FULLEDIT,
-                'edit_title' => _FULLEDIT,
-                'view_href' => $view,
-                'view_label' => _MVIEW,
-                'view_title' => _MVIEW,
+                'view_link' => $view ? ['href' => $view, 'title' => _MVIEW, 'label' => _MVIEW] : [],
+                'edit_link' => ['href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
+                'delete_link' => [
+                    'href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                    'confirm_text' => _DELETE.' "'.$title.'"?',
+                    'title' => _ONDELETE,
+                    'label' => _ONDELETE,
+                    'is_delete' => true,
+                ],
             ]);
             $tip = $tpl->getHtmlFrag('title-tip', [
                 'items' => [
@@ -40,13 +39,15 @@ function content(): void {
                     ['label' => _ORTYPEURL, 'value' => $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, 'is_last' => true],
                 ],
             ]);
-            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-row-content', [
-                'actions_html' => $acts,
-                'date_text' => format_time($time, _TIMESTRING),
-                'id_text' => $id,
-                'reads_text' => $counter,
-                'status_html' => ad_status('', $active),
-                'title_html' => $tip.cutstr($title, 50),
+            $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+                'cells' => [
+                    ['content_html' => (string)$id],
+                    ['content_html' => $tip.cutstr($title, 50)],
+                    ['content_html' => format_time($time, _TIMESTRING)],
+                    ['content_html' => (string)$counter],
+                    ['content_html' => ad_status('', $active)],
+                    ['content_html' => $acts],
+                ],
             ])]);
         }
         $body = $tpl->getHtmlFrag('table', [
@@ -129,25 +130,28 @@ function add(): void {
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'content']));
-    $acts = [
+    $actions = [
         'hasname' => (bool)$cid,
-        'nameattr' => 'cid',
-        'opattr' => 'save',
-        'options' => [
-            ['valueattr' => 'preview', 'labeltext' => _PREVIEW],
-            ['valueattr' => 'save', 'labeltext' => _SEND],
+        'cid_hidden' => ['name_attr' => 'cid', 'value_attr' => (string)$cid],
+        'op_hidden' => ['name_attr' => 'op', 'value_attr' => 'save'],
+        'select' => [
+            'name_attr' => 'posttype',
+            'is_save_action' => true,
+            'options' => [
+                ['value_attr' => 'preview', 'label_text' => _PREVIEW],
+                ['value_attr' => 'save', 'label_text' => _SEND],
+            ],
         ],
-        'submit_label' => _OK,
-        'valueattr' => $cid,
+        'submit' => ['button_type' => 'submit', 'submit_label' => _OK],
     ];
-    if ($cid) $acts['options'][] = ['valueattr' => 'delete', 'labeltext' => _DELETE];
+    if ($cid) $actions['select']['options'][] = ['value_attr' => 'delete', 'label_text' => _DELETE];
     $hide = [
         ['nameattr' => 'name', 'valueattr' => 'content'],
         ['nameattr' => 'token', 'valueattr' => getSiteToken()],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
         'action_url' => $afile.'.php?name=content&amp;op=add',
-        'actions' => $acts,
+        'actions' => $actions,
         'hidden' => $hide,
         'rows' => $rows,
     ])]);

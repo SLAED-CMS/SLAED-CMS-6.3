@@ -11,7 +11,7 @@ function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
     $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-    $wargo = $tpl->getHtmlFrag('row-actions-item', [
+    $wargo = $tpl->getHtmlFrag('link', [
         'href' => $afile.'.php?name=security&amp;op=config',
         'label' => _SCHEDULER_WARN_GO,
         'title' => _SCHEDULER_WARN_GO,

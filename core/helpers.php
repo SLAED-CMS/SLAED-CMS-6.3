@@ -431,7 +431,7 @@ function getTplPager(array $data = []): string {
         }
         return $tpl->getHtmlFrag($prefix.'pager-link', $opt);
     };
-    $dots = $tpl->getHtmlFrag($prefix.'pager-dots', []);
+    $dots = $tpl->getHtmlFrag($prefix.'inline-badge', ['is_pager_dots' => true]);
     $prev = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
     $items = '';
     for ($i = 1; $i <= $pages; $i++) {
@@ -629,7 +629,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('post-div', ['class' => 'sl-radio-group', 'content' => $items]);
+    return $tpl->getHtmlFrag('post-div', ['is_radio_group' => true, 'content' => $items]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
@@ -828,15 +828,15 @@ function getTplTitleTip(mixed $data): string {
     global $tpl;
     if (!is_array($data)) $data = [['value' => (string)$data]];
     $last = count($data) - 1;
-    $cont = '';
+    $items = [];
     foreach ($data as $idx => $item) {
-        $cont .= $tpl->getHtmlFrag('title-tip-item', [
+        $items[] = [
             'label' => (string)($item['label'] ?? _INFO),
             'value' => (string)($item['value'] ?? ''),
             'is_last' => $idx === $last,
-        ]);
+        ];
     }
-    return $tpl->getHtmlFrag('title-tip', ['content' => $cont]);
+    return $tpl->getHtmlFrag('title-tip', ['items' => $items]);
 }
 
 # Render the shared ajax rating block
@@ -904,12 +904,12 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         ]);
         $is_like = false;
     }
-    if ($typ == 2) return $tpl->getHtmlFrag('rating-wrap', ['is_like' => $is_like, 'wrap_id' => '', 'content' => $img]);
+    if ($typ == 2) return $tpl->getHtmlFrag('div', ['content_html' => $img]);
     $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
     if ((($con[1] ?? '') && $id && $mod) || ($rat && $scor)) {
         return ((($con[1] ?? '') && $typ) || (($con[1] ?? '') && !($con[2] ?? '') && !$typ))
-            ? $tpl->getHtmlFrag('rating-wrap', ['is_like' => $is_like, 'wrap_id' => 'rep'.$id.$obj, 'content' => $imgr])
-            : $tpl->getHtmlFrag('rating-wrap', ['is_like' => $is_like, 'wrap_id' => '', 'content' => $img]);
+            ? $tpl->getHtmlFrag('div', ['id' => 'rep'.$id.$obj, 'content_html' => $imgr])
+            : $tpl->getHtmlFrag('div', ['content_html' => $img]);
     }
     return '';
 }
@@ -1101,7 +1101,7 @@ function getPageNumbers(string $mod, int $count, int $pages, int $limit, string 
         'is_cur' => true,
         'is_nav' => $isNav,
     ]);
-    $pagerDots = static fn(): string => $tpl->getHtmlFrag('pager-dots', []);
+    $pagerDots = static fn(): string => $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
     $cont = '';
     if ($num > 1) {
         $prev  = $num - 1;

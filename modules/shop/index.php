@@ -94,7 +94,7 @@ function shop(): void {
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 			$comm = ($acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom, 'is_comment' => true]) : '';
 			$read = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_read' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'delete_confirm' => _DELETE.' &quot;'.$stitle.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 			$cont .= $tpl->getHtmlFrag('card', [
 				'id'           => $id,
 				'columns'      => $columns,
@@ -254,7 +254,7 @@ function view(): void {
 		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_title' => _FULLEDIT, 'edit_label' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'delete_confirm' => _DELETE.' &quot;'.$title.'&quot;?', 'delete_title' => _ONDELETE, 'delete_label' => _ONDELETE]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 		$cont .= $tpl->getHtmlFrag('card', [
 			'id'           => $id,
 			'favorites'    => $favorites,

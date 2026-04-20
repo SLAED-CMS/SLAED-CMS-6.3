@@ -50,12 +50,15 @@ function changelog(): void {
 
     $cont .= $tpl->getHtmlPart('box', ['content_html' => checkPerms(CONFIG_DIR.'/changelog.php').$tpl->getHtmlPart('changelog', [
         'action_url' => $afile.'.php',
-        'search' => chlogEsc($filters['search']),
-        'author' => chlogEsc($filters['author']),
-        'file' => chlogEsc($filters['file']),
-        'datefrom' => chlogEsc($filters['since']),
-        'dateto' => chlogEsc($filters['until']),
         'reset_url' => $afile.'.php?name=changelog',
+        'hidden' => ['name_attr' => 'name', 'value_attr' => 'changelog'],
+        'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'search', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
+        'author_field' => ['itype' => 'text', 'input_id' => 'author', 'name_attr' => 'author', 'value_attr' => chlogEsc($filters['author']), 'placeholder_text' => _CHLOG_AUTHOR_PH],
+        'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
+        'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
+        'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
+        'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN, 'is_chlog_primary' => true],
+        'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'is_chlog_secondary' => true, 'reset_url' => $afile.'.php?name=changelog'],
         'totcount' => $totcount,
         'totcom' => $totcom,
         'page' => $page,
@@ -223,8 +226,8 @@ function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $fil
             $items .= $tpl->getHtmlFrag('pager-link', ['href' => $base.$i, 'label' => (string)$i, 'title' => (string)$i]).' ';
         }
         if ($i < $totpage) {
-            if (($page > $nnum) && ($i === 1)) $items .= $tpl->getHtmlFrag('pager-dots', []);
-            if (($page < ($totpage - $maxpg)) && ($i === ($totpage - 1))) $items .= $tpl->getHtmlFrag('pager-dots', []);
+            if (($page > $nnum) && ($i === 1)) $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
+            if (($page < ($totpage - $maxpg)) && ($i === ($totpage - 1))) $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
         }
     }
     $next = $page < $totpage
