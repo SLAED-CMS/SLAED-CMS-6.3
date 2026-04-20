@@ -1,33 +1,5 @@
 <form{% if not no_action %} action="{% if action %}{{{ action }}}{% else %}index.php?name={{ name }}&amp;op=add{% endif %}"{% endif %} method="{% if method %}{{ method }}{% else %}post{% endif %}" name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"{% if form_id %} id="{{ form_id }}"{% endif %}{% if not no_enctype %}{% if enctype %} enctype="{{ enctype }}"{% else %} enctype="multipart/form-data"{% endif %}{% endif %}{% if form_attr %} {{{ form_attr }}}{% endif %}>
-{% if token %}<input type="hidden" name="token" value="{{{ token }}}">{% endif %}
 <div class="sl-form">
-{% if has_name %}
-	{% if is_user %}
-	<div class="sl-form-row"><label class="sl-form-label">{{ lbl_name }}</label><span class="sl-form-value">{{ username }}</span></div>
-	{% else %}
-	<div class="sl-form-row"><label class="sl-form-label">{{ lbl_name }}</label><input type="text" name="postname" value="{{ postname }}" class="sl-field" placeholder="{{ lbl_name }}" required></div>
-	{% endif %}
-{% endif %}
-{% if emailval %}
-<div class="sl-form-row"><label class="sl-form-label">{{ lbl_email }}</label><input type="text" name="mail" value="{{ emailval }}" maxlength="100" class="sl-field" placeholder="{{ lbl_email }}" required></div>
-{% endif %}
-{% if lbl_title %}
-<div class="sl-form-row"><label class="sl-form-label">{{ lbl_title }}</label><input type="text" name="title" value="{{ titleval }}" maxlength="100" class="sl-field" placeholder="{{ lbl_title }}" required></div>
-{% endif %}
-{% if lbl_cat %}
-<div class="sl-form-row"><label class="sl-form-label">{{ lbl_cat }}</label>{{{ catselect }}}</div>
-{% endif %}
-{% if fields_before_text %}{{{ fields_before_text }}}{% endif %}
-{% if hometext %}
-<div class="sl-form-row"><label class="sl-form-label">{{ lbl_text }}</label>{{{ hometext }}}</div>
-{% endif %}
-{% if bodytext %}
-<div class="sl-form-row"><label class="sl-form-label">{{ lbl_body }}</label>{{{ bodytext }}}</div>
-{% endif %}
-{% if fields_after_text %}{{{ fields_after_text }}}{% endif %}
-{% if siteval %}
-<div class="sl-form-row"><label class="sl-form-label">{{ lbl_site }}</label><input type="text" name="{{ site_attr }}" value="{{ siteval }}" maxlength="100" class="sl-field" placeholder="{{ lbl_site }}"></div>
-{% endif %}
 {% if extrafields %}{{{ extrafields }}}{% endif %}
 {% if fields %}{{{ fields }}}{% endif %}
 {% if captcha or submit %}<div class="sl-form-submit">{% if captcha %}{{{ captcha }}}{% endif %}{{{ submit }}}</div>{% endif %}
