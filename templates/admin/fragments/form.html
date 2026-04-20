@@ -8,18 +8,18 @@
     {% if content_html %}
     {{{ content_html }}}
     {% endif %}
-    {% if submit_label or actions_html %}
+    {% if submit_label or actions_html or actions %}
     <div class="sl-div-actions">
+        {% if actions %}
+        {% include 'fragments/save-action.html' with actions %}
+        {% else %}
         {% if actions_html %}
         {{{ actions_html }}}
         {% endif %}
         {% if submit_label %}
         {% include 'fragments/button.html' %}
         {% endif %}
-    </div>
-    {% elseif actions %}
-    <div class="sl-div-actions">
-        {% include 'fragments/save-action.html' with actions %}
+        {% endif %}
     </div>
     {% endif %}
 </form>

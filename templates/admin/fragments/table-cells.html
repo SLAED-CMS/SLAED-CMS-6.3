@@ -1,1 +1,1 @@
-{% for cell in cells %}{% include 'fragments/table-cell.html' with cell %}{% endfor %}
+{% for cell in cells %}<td{% if cell.attr %} {{{ cell.attr }}}{% endif %}>{{{ cell.content_html }}}</td>{% endfor %}

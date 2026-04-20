@@ -1,18 +1,12 @@
 {% if is_wrapless %}
-{% if disable_sort %}
-<table class="sl-table-list-sort"><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
-{% else %}
-<table class="sl-table-list-sort" data-sl-table-sort><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
-{% endif %}
 {% else %}
 <div class="sl-box">
     <div class="sl-box-pad">
         <div class="sl-box-content">
-            {% if disable_sort %}
-            <table class="sl-table-list-sort"><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
-            {% else %}
-            <table class="sl-table-list-sort" data-sl-table-sort><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
-            {% endif %}
+{% endif %}
+<table class="sl-table-list-sort"{% if disable_sort %}{% else %} data-sl-table-sort{% endif %}><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
+{% if is_wrapless %}
+{% else %}
         </div>
     </div>
 </div>

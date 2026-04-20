@@ -1,4 +1,4 @@
-<div class="sl-module-foot">
-    <div class="sl-module-foot-main">{{{ pager_html }}}</div>
-    <div class="sl-module-foot-side">{{{ select_html }}}</div>
+<div class="{% if is_list %}sl-list-bottom{% else %}sl-module-foot{% endif %}">
+    <div class="{% if is_list %}sl-list-bottom-pager{% else %}sl-module-foot-main{% endif %}">{{{ pager_html }}}</div>
+    <div class="{% if is_list %}sl-list-bottom-actions{% else %}sl-module-foot-side{% endif %}">{% if actions_html %}{{{ actions_html }}}{% else %}{{{ select_html }}}{% endif %}</div>
 </div>

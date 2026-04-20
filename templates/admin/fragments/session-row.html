@@ -1,15 +1,15 @@
 <tr>
     <td>
         {{{ geo_html }}}
-        {% if name_href %}
-        <a href="{{{ name_href }}}" title="{{ name_title }}"{% if name_target %}{{{ name_target }}}{% endif %}{% if name_class %} class="{{ name_class }}"{% endif %}>{{ name_text }}</a>
+        {% if name_link %}
+        {% include 'fragments/link.html' with name_link %}
         {% else %}
         <span title="{{ name_title }}"{% if name_class %} class="{{ name_class }}"{% endif %}>{{ name_text }}</span>
         {% endif %}
     </td>
     <td title="{{ module_title }}" class="{% if module_class %}{{ module_class }}{% else %}sl_right sl_note{% endif %}">
-        {% if module_href %}
-        <a href="{{{ module_href }}}" title="{{ module_title }}"{% if module_target %}{{{ module_target }}}{% endif %}>{{ module_text }}</a>
+        {% if module_link %}
+        {% include 'fragments/link.html' with module_link %}
         {% else %}
         {{ module_text }}
         {% endif %}

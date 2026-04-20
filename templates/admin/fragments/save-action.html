@@ -1,4 +1,4 @@
-{% if hasname %}<input type="hidden" name="{{ nameattr }}" value="{{ valueattr }}">{% endif %}
-{% if opattr %}<input type="hidden" name="op" value="{{ opattr }}">{% endif %}
-{% if options_html %}<select name="posttype" class="sl-select" style="margin-right:8px">{{{ options_html }}}</select>{% endif %}
-<input type="{% if button_type %}{{ button_type }}{% else %}submit{% endif %}" value="{% if submit_label %}{{ submit_label }}{% else %}{{ label }}{% endif %}" class="sl-but-blue">
+{% if hasname %}{% include 'fragments/hidden.html' with cid_hidden %}{% endif %}
+{% include 'fragments/hidden.html' with op_hidden %}
+{% include 'fragments/select.html' with select %}
+{% include 'fragments/button.html' with submit %}

@@ -1,5 +1,5 @@
 {% if top_label %}
-<a OnClick="Upper('html, body', 600);" title="{{ top_title }}" class="thide">{{ top_label }}</a>
+{% include 'fragments/link.html' with top_link %}
 {% endif %}
 {% if time_html %}
 <div class="sl_generates">{{{ time_html }}}</div>
