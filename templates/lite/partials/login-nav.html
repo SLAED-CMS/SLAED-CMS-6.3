@@ -1,0 +1,21 @@
+<ul class="login-top">
+	<li class="dropdown">
+		<a OnClick="HideShow('a-form', 'puff', 'up', 500);" class="ico login-btn"><b>{{ login }}</b></a>
+		<form id="a-form" action="index.php?name=account" method="post" class="dropdown-form">
+			<ul class="login-form">
+				<li><input type="text" name="user_name" maxlength="25" class="sl-field" placeholder="{{ nickname }}" required></li>
+				<li><input type="password" name="user_password" maxlength="25" class="sl-field" placeholder="{{ password }}" required></li>
+				{% if captcha %}{{{ captcha }}}{% endif %}
+				<li><button type="submit" title="{{ login }}" class="sl-but">{{ login }}</button></li>
+				<li class="login-links">
+					<a href="index.php?name=account&amp;op=passlost" title="{{ lost }}">{{ lost }}</a>
+					<a href="index.php?name=account&amp;op=newuser" title="{{ register }}">{{ register }}</a>
+				</li>
+			</ul>
+			{% if token %}<input type="hidden" name="token" value="{{ token }}">{% endif %}
+			<input type="hidden" name="refer" value="1">
+			<input type="hidden" name="op" value="login">
+		</form>
+	</li>
+	<li><a href="index.php?name=account&amp;op=newuser" title="{{ register }}">{{ register }}</a></li>
+</ul>

@@ -1,0 +1,5 @@
+{% if has_form %}<form name="voting" id="{{ form_id }}" method="post">{% endif %}<h4 class="vote-title">{{ title }}</h4>
+<ul class="vote-list">{{{ items_html }}}</ul>
+{% if admin_html or post_html or polls_html %}<div class="vote-btns">{{{ admin_html }}}{{{ post_html }}}{{{ polls_html }}}</div>{% endif %}
+<div class="vote-links">{{{ votes_html }}} {{{ comm_html }}}</div>
+{% if has_form %}</form>{% endif %}

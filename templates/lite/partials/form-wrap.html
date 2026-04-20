@@ -1,0 +1,1 @@
+<form{% if form_name %} name="{{ form_name }}"{% endif %}{% if form_id %} id="{{ form_id }}"{% endif %}{% if action %} action="{{{ action }}}"{% endif %} method="{% if method %}{{ method }}{% else %}post{% endif %}">{{{ content_html }}}</form>
