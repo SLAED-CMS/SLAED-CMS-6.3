@@ -187,7 +187,7 @@ class TemplateValidationTest extends TestCase
         // Обязательные шаблоны для каждой frontend-темы
         $required = [
             'fragments/title.html',
-            'partials/liste.html',
+            'partials/content-list.html',
             'partials/view.html',
             'pages/module.html',
             'layouts/app.html',
@@ -278,6 +278,116 @@ class TemplateValidationTest extends TestCase
         $this->assertEmpty(
             $errors,
             "Shared frontend fragments рассинхронизированы:\n".implode("\n", $errors)
+        );
+    }
+
+    public function testConcreteTemplateReferencesExist(): void
+    {
+        $errors = [];
+        $frontendThemes = ['default', 'simple', 'lite'];
+        $scanRoots = ['admin', 'modules', 'templates/default', 'templates/simple', 'templates/lite'];
+
+        foreach ($scanRoots as $root) {
+            $path = self::$basePath.'/'.$root;
+            if (!is_dir($path)) {
+                continue;
+            }
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                if (!in_array($file->getExtension(), ['php', 'html'], true)) {
+                    continue;
+                }
+                $relativePath = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file->getPathname()));
+                $content = file_get_contents($file->getPathname());
+                if (!preg_match_all("/getHtml(Frag|Part)\(\s*'([^']+)'/", $content, $matches, PREG_SET_ORDER)) {
+                    continue;
+                }
+                foreach ($matches as $match) {
+                    $type = $match[1] === 'Frag' ? 'fragments' : 'partials';
+                    $name = $match[2];
+                    $themes = [];
+                    if (str_starts_with($relativePath, 'admin/') || preg_match('#^modules/[^/]+/admin/#', $relativePath)) {
+                        $themes = ['admin'];
+                    } elseif ($relativePath === 'templates/lite/index.php') {
+                        $themes = ['lite'];
+                    } elseif (preg_match('#^modules/[^/]+/index\.php$#', $relativePath)) {
+                        $themes = $frontendThemes;
+                    } elseif (preg_match('#^templates/(default|simple|lite)/#', $relativePath, $themeMatch)) {
+                        $themes = [$themeMatch[1]];
+                    }
+                    foreach ($themes as $theme) {
+                        $target = self::$templatesPath.'/'.$theme.'/'.$type.'/'.$name.'.html';
+                        if (!is_file($target)) {
+                            $errors[] = $relativePath.' -> templates/'.$theme.'/'.$type.'/'.$name.'.html';
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (self::$templates as $file) {
+            if (pathinfo($file, PATHINFO_EXTENSION) !== 'html') {
+                continue;
+            }
+            $relativePath = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file));
+            if (!preg_match('#^templates/([^/]+)/#', $relativePath, $themeMatch)) {
+                continue;
+            }
+            $theme = $themeMatch[1];
+            $content = file_get_contents($file);
+            if (preg_match_all("/\{%\s*(?:include|extends)\s+'([^']+)'/", $content, $matches)) {
+                foreach ($matches[1] as $target) {
+                    if (!is_file(self::$templatesPath.'/'.$theme.'/'.$target)) {
+                        $errors[] = $relativePath.' -> templates/'.$theme.'/'.$target;
+                    }
+                }
+            }
+        }
+
+        $errors = array_values(array_unique($errors));
+        sort($errors);
+
+        $this->assertEmpty(
+            $errors,
+            "Отсутствуют используемые template references:\n".implode("\n", $errors)
+        );
+    }
+
+    public function testHtmlTemplatesDoNotContainInlineStyles(): void
+    {
+        $errors = [];
+        $paths = self::$templates;
+
+        $moduleTemplatePath = self::$basePath.'/modules';
+        if (is_dir($moduleTemplatePath)) {
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($moduleTemplatePath, RecursiveDirectoryIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                $path = str_replace('\\', '/', $file->getPathname());
+                if ($file->getExtension() === 'html' && str_contains($path, '/templates/')) {
+                    $paths[] = $file->getPathname();
+                }
+            }
+        }
+
+        foreach (array_unique($paths) as $file) {
+            if (pathinfo($file, PATHINFO_EXTENSION) !== 'html') {
+                continue;
+            }
+            $content = file_get_contents($file);
+            if (preg_match('/<style\b|<\/style>|style\s*=/i', $content)) {
+                $errors[] = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file));
+            }
+        }
+
+        sort($errors);
+
+        $this->assertEmpty(
+            $errors,
+            "Inline styles должны быть вынесены в CSS:\n".implode("\n", $errors)
         );
     }
 

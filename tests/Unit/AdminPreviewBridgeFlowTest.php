@@ -57,7 +57,7 @@ namespace Tests\Unit {
             ]);
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('admin-preview', $html);
+        $this->assertStringContainsString('sl-preview-admin', $html);
             $this->assertStringContainsString('Preview', $html);
             $this->assertStringContainsString('<b>Title</b>', $html);
             $this->assertStringContainsString('Text one', $html);
@@ -112,7 +112,7 @@ namespace Tests\Unit {
 
             $this->assertNotSame('', $html);
             $this->assertStringContainsString('<em>Html text</em>', $html);
-            $this->assertStringContainsString('admin-preview-fields1', $html);
+        $this->assertStringContainsString('sl-preview-field-primary', $html);
         }
     }
 }

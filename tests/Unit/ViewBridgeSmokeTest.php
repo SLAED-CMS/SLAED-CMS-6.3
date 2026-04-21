@@ -182,7 +182,7 @@ namespace Tests\Unit {
             ], 'home');
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('sl_home', $html);
+            $this->assertStringContainsString('sl-home', $html);
             $this->assertStringContainsString('home-head', $html);
             $this->assertStringContainsString('home-body', $html);
             $this->assertStringContainsString('home-down', $html);
