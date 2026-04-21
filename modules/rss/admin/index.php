@@ -26,7 +26,7 @@ function rss(): void {
         $opts =
             $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
-        $block = $tpl->getHtmlFrag('div', ['rows' => [
+        $block = $tpl->getHtmlPart('div', ['rows' => [
             ['label_html' => _NAME.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME, 'is_required' => true])],
             ['label_html' => _ADDRESS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
             ['label_html' => _USES.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
@@ -50,15 +50,15 @@ function rss(): void {
         .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _PREFERENCES, 'title' => _PREFERENCES, 'is_active' => $tab === 1, 'rel' => 'rss-panel-1']);
     $panels =
         $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'rss-panel-0', 'content_html' => $sourcehtml])
-        .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'rss-panel-1', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $prefs])]);
-    $form = $tpl->getHtmlFrag('form', [
+        .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'rss-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $prefs])]);
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=rss&amp;op=save',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ['nameattr' => 'tab', 'valueattr' => (string)$tab],
         ],
         'content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC])
-            .$tpl->getHtmlFrag('tabs', [
+            .$tpl->getHtmlPart('tabs', [
                 'id' => 'rss',
                 'is_runtime' => true,
                 'init_attr' => 'data-sl-tabs-index="'.$tab.'"',

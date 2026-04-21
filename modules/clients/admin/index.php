@@ -122,7 +122,7 @@ function add(): void {
         ['label_html' => _CADOWN, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _TEXT.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'body', 'value_text' => $body, 'rows_num' => 15])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=clients&amp;op=save',
         'hidden' => [
             ['nameattr' => 'cid', 'valueattr' => (string)$cid],

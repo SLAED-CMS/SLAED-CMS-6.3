@@ -75,7 +75,7 @@ function sitemap(): void {
     $lines[] = _FILE_M.': '.$f;
     $lines[] = _FILE_S.': '.filterSize($asize);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'lines' => $lines])]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
@@ -112,7 +112,7 @@ function xsledit(): void {
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)])]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],
@@ -182,7 +182,7 @@ function config(): void {
         ['label_html' => _MAP_XSL, 'field_html' => $yesno('xsl', $conf['sitemap']['xsl'] ?? 0)],
         ['label_html' => _MAP_SITE, 'field_html' => $yesno('txt', $conf['sitemap']['txt'] ?? 0)],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'sitemap'],

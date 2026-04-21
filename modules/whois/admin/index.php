@@ -131,7 +131,7 @@ function add(): void {
     if ($wid) {
         $actions .= $tpl->getHtmlFrag('button', ['label' => _DELETE, 'button_attr' => ' onclick="this.form.elements[\'posttype\'].value=\'delete\'; this.form.submit();"']);
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'whois'],
@@ -204,7 +204,7 @@ function config(): void {
         ['label_html' => _WHOISADD, 'field_html' => getTplRadioGroup(['name' => 'add', 'value' => $conf['whois']['add'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _WHOISADDG, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => $conf['whois']['addquest'] ?? 0, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'whois'],

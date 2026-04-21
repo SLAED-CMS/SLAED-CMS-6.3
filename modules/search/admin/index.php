@@ -439,14 +439,14 @@ function config(): void {
         ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
         ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
     ];
-    $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlFrag('form', [
+    $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&amp;op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $cfgrows,
         'submit_label' => _SAVECHANGES,
     ]))]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHENABLED, getSearchauditTable($elist, 'enabled'))]);
-    $readyform = $tpl->getHtmlFrag('form', [
+    $readyform = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&amp;op=modadd',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'content_html' => getSearchauditTable($rlist, 'ready'),
@@ -460,7 +460,7 @@ function config(): void {
     ]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHREADY, $readyform)]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHINVALID, getSearchauditTable($ilist, 'invalid'))]);
-    $reform = $tpl->getHtmlFrag('form', [
+    $reform = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&amp;op=reindex',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'submit_label' => _SEARCHAUTO,
@@ -564,7 +564,7 @@ function edit(): void {
             ['label_html' => _DATE.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => (string)$time, 'with' => true, 'max' => 16])],
             ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
         ];
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=search&amp;op=editsave',
             'hidden' => [
                 ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -622,7 +622,7 @@ function delete(): void {
         ['label_html' => _DAYS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => '30', 'placeholder_text' => _DAYS])],
         ['label_html' => _DELETE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&amp;op=clear',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $rows,

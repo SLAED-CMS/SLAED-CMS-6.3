@@ -21,7 +21,7 @@ function buildShopSearchBox(): string {
             'is_selected' => $sel == $sort || (!$sel && $sort == 2),
         ]);
     }
-    return $tpl->getHtmlFrag('form', [
+    return $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=shop&op=clients',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -115,7 +115,7 @@ function clients(): void {
         'subtitle_html' => buildShopSearchBox(),
     ]);
     $cont .= $tpl->getHtmlPart('box', [
-        'content_html' => $tpl->getHtmlFrag('tabs', [
+        'content_html' => $tpl->getHtmlPart('tabs', [
             'tabs_html' => $tabs,
             'is_subtabs' => true,
         ]),
@@ -257,7 +257,7 @@ function clientadd(): void {
             'title' => $link['label'],
         ]);
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $cppi = 0;
     $rows = [];
@@ -317,7 +317,7 @@ function clientadd(): void {
     $rows[] = ['label_html' => _NOTE.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($cid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -441,7 +441,7 @@ function products(): void {
         'tab' => 1,
         'subtitle_html' => buildShopSearchBox(),
     ]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $phead = [
@@ -503,7 +503,7 @@ function products(): void {
                 'label_text' => $ctitle,
             ]);
         }
-        $html = $tpl->getHtmlFrag('form', [
+        $html = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -567,10 +567,10 @@ function productadd(): void {
             'title' => $link['label'],
         ]);
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($vote || $ptext || $pbodytext) {
-        $cont .= $tpl->getHtmlPart('preview-content', [
+        $cont .= $tpl->getHtmlPart('preview', [
             'title' => _PREVIEW,
             'title_text' => (string)$ptitle,
             'body_a' => $vote ? getVotingView($vote, 'shop') : '',
@@ -616,7 +616,7 @@ function productadd(): void {
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($pid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -751,7 +751,7 @@ function partners(): void {
         'tab' => 2,
         'subtitle_html' => buildShopSearchBox(),
     ]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $pahead = [
@@ -862,7 +862,7 @@ function partneradd(): void {
             'title' => $link['label'],
         ]);
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('tabs', ['tabs_html' => $tabs, 'is_subtabs' => true])]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $rows = [];
     if ($paid) {
@@ -888,7 +888,7 @@ function partneradd(): void {
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($paid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -1091,7 +1091,7 @@ function export(): void {
             $bdopts = ($pr ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'products', 'label_text' => _PRODUCTS]) : '')
                 .($cl ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'clients', 'label_text' => _CLIENTS]) : '')
                 .($pa ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'partners', 'label_text' => _PARTNERS]) : '');
-            $export = $tpl->getHtmlFrag('form', [
+            $export = $tpl->getHtmlPart('form', [
                 'action_url' => $afile.'.php',
                 'hidden' => [
                     ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -1122,7 +1122,7 @@ function export(): void {
         }
         $import = '';
         if ($ocont) {
-            $import = $tpl->getHtmlFrag('form', [
+            $import = $tpl->getHtmlPart('form', [
                 'action_url' => $afile.'.php',
                 'hidden' => [
                     ['nameattr' => 'name', 'valueattr' => 'shop'],
@@ -1139,7 +1139,7 @@ function export(): void {
         } else {
             $import = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
-        $tabs = $tpl->getHtmlFrag('tabs', [
+        $tabs = $tpl->getHtmlPart('tabs', [
             'id' => 'shop-export-tabs',
             'is_runtime' => true,
             'is_subtabs' => true,
@@ -1214,7 +1214,7 @@ function config(): void {
         ['label_html' => _C_30.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
         ['label_html' => _C_31.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'shopinfo', 'value_text' => (string)$conf['shop']['shopinfo'], 'rows_num' => 5]), 'is_full' => true],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'shop'],

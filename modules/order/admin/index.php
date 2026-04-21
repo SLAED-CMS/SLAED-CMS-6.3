@@ -98,7 +98,7 @@ function add(): void {
         ['label_html' => _OR_10.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order']));
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=order&amp;op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
@@ -198,7 +198,7 @@ function config(): void {
         ['label_html' => _OR_6.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => $conf['order']['info'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_6, 'required' => '1']), 'is_full' => true],
         ['label_html' => _OR_7.':', 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => $conf['order']['sendinfo'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_7, 'required' => '1']), 'is_full' => true],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=order&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

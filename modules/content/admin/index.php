@@ -149,7 +149,7 @@ function add(): void {
         ['nameattr' => 'name', 'valueattr' => 'content'],
         ['nameattr' => 'token', 'valueattr' => getSiteToken()],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=content&amp;op=add',
         'actions' => $actions,
         'hidden' => $hide,
@@ -220,7 +220,7 @@ function config(): void {
         ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['content']['nump']])],
         ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['content']['anump']])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=content&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

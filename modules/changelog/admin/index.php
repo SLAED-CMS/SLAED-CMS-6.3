@@ -137,7 +137,7 @@ function config(): void {
         ['label_html' => _CHLOG_EXPORT, 'field_html' => getTplRadioGroup(['name' => 'exporten', 'value' => (string)($conf['changelog']['exporten'] ?? 0), 'options' => $yesno])],
     ];
     $body = checkPerms(CONFIG_DIR.'/changelog.php');
-    $body .= $tpl->getHtmlFrag('form', [
+    $body .= $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=changelog&amp;op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken('changelog')],

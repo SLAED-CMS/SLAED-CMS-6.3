@@ -210,7 +210,7 @@ function add(): void {
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=money&amp;op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
@@ -364,7 +364,7 @@ function config(): void {
         ['label_html' => _MA_13.':', 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => (string)($conf['money']['sendinfo'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_13, 'required' => '1']), 'is_full' => true],
         ['label_html' => _MA_14.':', 'field_html' => getTplTextarea(['id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_14, 'required' => '1']), 'is_full' => true],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=money&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

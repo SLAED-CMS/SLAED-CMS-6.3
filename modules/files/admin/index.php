@@ -195,7 +195,7 @@ function add(): void {
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($fid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=files&amp;op=save',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [
@@ -341,7 +341,7 @@ function config(): void {
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['files']['letter'] ?? 0), 'options' => $yesno])],
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['files']['link'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=files&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

@@ -89,7 +89,7 @@ function news(): void {
         $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $actions = '<span class="sl-action-label">'._CHECKOP.'</span> '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
-        $body = $tpl->getHtmlFrag('form', [
+        $body = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=news&amp;op=actions',
             'hidden' => array_filter([
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -232,7 +232,7 @@ function add(): void {
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=news&amp;op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -377,7 +377,7 @@ function config(): void {
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['news']['letter'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_23, 'field_html' => getTplRadioGroup(['name' => 'assoc', 'value' => (string)($conf['news']['assoc'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=news&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,

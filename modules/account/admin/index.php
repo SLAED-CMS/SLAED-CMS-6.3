@@ -17,7 +17,7 @@ function getAccountSearch(): string {
         $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _EMAIL, 'is_selected' => $search === 3]) .
         $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _IP, 'is_selected' => $search === 4]) .
         $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _URL, 'is_selected' => $search === 5]);
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=account',
         'content_html' =>
             _SEARCH.': '.
@@ -450,10 +450,10 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => '',
-        'field_html' => $tpl->getHtmlFrag('div', [
+        'field_html' => $tpl->getHtmlPart('div', [
             'id' => 'sl_form_account_mail',
             'is_collapsible' => true,
-            'content_html' => $tpl->getHtmlFrag('div', ['rows' => [[
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
                 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
                 'field_html' => getTplTextarea(['id' => '3', 'name' => 'mailtext', 'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '']),
             ]]]),
@@ -469,7 +469,7 @@ function add(): void {
     if ($conf['users']['news'] != 1) {
         $hidden[] = ['nameattr' => 'story', 'valueattr' => (string)$conf['news']['num']];
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => $hidden,
         'rows' => $rows,
@@ -686,7 +686,7 @@ function pointreset(): void {
             ]),
         ],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'account'],
@@ -839,7 +839,7 @@ function config(): void {
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)$conf['users']['mail_b'], 'is_config' => true]),
         ],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'account'],

@@ -192,7 +192,7 @@ function add(): void {
     $rows[] = ['label_html' => _ADD.':', 'field_html' => $answ, 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'voting'],
@@ -283,7 +283,7 @@ function config(): void {
         ['label_html' => _VANSW, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answ', 'value_attr' => (string)$conf['voting']['answ'], 'is_config' => true])],
         ['label_html' => _VBLOCK, 'field_html' => getVotingBlockSelect($bval)],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'voting'],

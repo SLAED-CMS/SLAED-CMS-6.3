@@ -157,7 +157,7 @@ function stats(): void {
             'is_selected' => $order == $_ord,
         ]);
     }
-    $subtitle = $id ? $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+    $subtitle = $id ? $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id,
         'content_html' =>
             _SORTE.': '.
@@ -297,7 +297,7 @@ function add(): void {
         ['label_html' => _OUTS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'outs', 'value_attr' => (string)$outs])],
         ['label_html' => _A_LINKS_TEXT.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'value_text' => $desc, 'rows_num' => 5])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -412,7 +412,7 @@ function config(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     }
     $body = checkPerms(CONFIG_DIR.'/auto_links.php');
-    $body .= $tpl->getHtmlFrag('form', [
+    $body .= $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],

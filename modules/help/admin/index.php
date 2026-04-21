@@ -132,7 +132,7 @@ function addview(int $id): string {
     global $db, $afile, $admin, $conf, $tpl;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
-    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=help&amp;op=save',
         'hidden' => [
             ['nameattr' => 'pid', 'valueattr' => (string)$id],
@@ -211,7 +211,7 @@ function add(): void {
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=help&amp;op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -316,7 +316,7 @@ function config(): void {
         ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['help']['read'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['help']['letter'] ?? 0), 'options' => $yesno])],
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=help&amp;op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
