@@ -1,0 +1,8 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="{{ charset }}">
+{% if theme_css %}<link rel="stylesheet" href="{{ theme_css }}">{% endif %}
+<title>{{ title }}</title>
+</head>
+<body><table class="sl-shop-invoice"><tr><td colspan="2"><hr></td></tr><tr><td class="sl-shop-invoice-logo"><img src="{{ logo_src }}" alt="{{ logo_alt }}"></td><td class="sl-right">{{{ shopinfo }}}</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>{{ lbl_name }}: {{ name }}<br>{{ lbl_addr }}: {{ addr }}<br>{{ lbl_phone }}: {{ phone }}<br>{{ lbl_email }}: {{ email }}</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>{{ heading }}</b></td><td class="sl-right"><b>{{ date_label }}: {{ date_value }}</b></td></tr><tr><td colspan="2"><hr></td></tr><tr><td>{{ lbl_product }}:</td><td class="sl-right">{{ product }}</td></tr><tr><td>{{ lbl_site }}:</td><td class="sl-right">{{ site }}</td></tr><tr><td>{{ lbl_note }}:</td><td class="sl-right">{{ note }}</td></tr><tr><td>{{ lbl_license_end }}:</td><td class="sl-right">{{ license_end }}</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><b>{{ product_text_label }}</b></td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2">{{{ product_text }}}</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2" class="sl-right"><b>{{ price_label }}: {{ price_value }}</b></td></tr></table></body></html>

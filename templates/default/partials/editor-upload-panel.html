@@ -1,9 +1,9 @@
-<div id="{{ panel_id }}" class="sl_bbup-panel sl_none">
+<div id="{{ panel_id }}" class="sl-bbup-panel sl-none">
 {% if show_upload_form %}
-<div id="msg"><div class="ico sl-info sl_left"><b>{{ upload_title }}</b><br>{{ type_label }}: {{ file_types }}<br>{{ total_size_label }}: {{ total_size }}<br>{{ file_size_label }}: {{ file_size }}<br>{{ width_label }}: {{ width }} px<br>{{ height_label }}: {{ height }} px<br>{{ file_count_label }}: {{ file_count }}<br></div></div>
-<div class="sl_pos_center"><form id="{{ form_id }}" hx-post="{{{ upload_query }}}" hx-encoding="multipart/form-data" hx-target="#msg" hx-swap="innerHTML" hx-trigger="change from:#file_upload" hx-on:htmx:before-request="document.getElementById(&quot;msg&quot;).innerHTML=&quot;&lt;div class=\&quot;sl_loading\&quot;&gt;&lt;/div&gt;&lt;br&gt;&quot;" hx-on:htmx:after-request="htmx.ajax(&quot;GET&quot;, &quot;{{{ reload_query }}}&quot;, {target:&quot;#{{ list_id }}&quot;, swap:&quot;innerHTML&quot;})">{% include 'fragments/hidden.html' with token_field %}{% include 'fragments/file-input.html' with file_field %}</form><input type="button" value="{{ update_label }}" class="sl_but_green" OnClick="htmx.ajax(&quot;GET&quot;, &quot;{{{ reload_query }}}&quot;, {target:&quot;#{{ list_id }}&quot;, swap:&quot;innerHTML&quot;}); return false;"></div>
+<div id="msg"><div class="ico sl-info sl-left"><b>{{ upload_title }}</b><br>{{ type_label }}: {{ file_types }}<br>{{ total_size_label }}: {{ total_size }}<br>{{ file_size_label }}: {{ file_size }}<br>{{ width_label }}: {{ width }} px<br>{{ height_label }}: {{ height }} px<br>{{ file_count_label }}: {{ file_count }}<br></div></div>
+<div class="sl-center"><form id="{{ form_id }}" hx-post="{{{ upload_query }}}" hx-encoding="multipart/form-data" hx-target="#msg" hx-swap="innerHTML" hx-trigger="change from:#file_upload" hx-on:htmx:before-request="document.getElementById(&quot;msg&quot;).innerHTML=&quot;&lt;div class=\&quot;sl-loading\&quot;&gt;&lt;/div&gt;&lt;br&gt;&quot;" hx-on:htmx:after-request="htmx.ajax(&quot;GET&quot;, &quot;{{{ reload_query }}}&quot;, {target:&quot;#{{ list_id }}&quot;, swap:&quot;innerHTML&quot;})">{% include 'fragments/hidden.html' with token_field %}{% include 'fragments/file-input.html' with file_field %}</form>{% include 'fragments/button.html' %}</div>
 {% else %}
-<div class="sl_pos_center"><input type="button" value="{{ update_label }}" class="sl_but_green" OnClick="htmx.ajax(&quot;GET&quot;, &quot;{{{ reload_query }}}&quot;, {target:&quot;#{{ list_id }}&quot;, swap:&quot;innerHTML&quot;}); return false;"></div>
+<div class="sl-center">{% include 'fragments/button.html' %}</div>
 {% endif %}
 <div id="{{ list_id }}" class="sl-editor-upload-files"></div>
 </div>

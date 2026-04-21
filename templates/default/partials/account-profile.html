@@ -21,7 +21,7 @@
 				</div>
 			</div>
 			<div class="carg">
-				{% if has_admin_actions %}<span class="sl-menu"><a href="{{{ admin_edit_href }}}" title="{{ admin_edit_label }}">{{ admin_edit_label }}</a><a href="{{{ admin_block_href }}}" OnClick="return DelCheck(this, '{{{ admin_block_confirm }}}');" title="{{ admin_block_title }}">{{ admin_block_title }}</a><a href="{{{ admin_delete_href }}}" OnClick="return DelCheck(this, '{{{ admin_delete_confirm }}}');" title="{{ admin_delete_title }}">{{ admin_delete_title }}</a></span>{% endif %}
+				{% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}
 				{% if has_privat_button %}<a href="{{{ privat_href }}}" title="{{ privat_title }}" class="sl-but-green">{{ privat_label }}</a>{% endif %}
 				{% if has_profil_button %}<a href="{{{ profil_href }}}" title="{{ profil_title }}" class="sl-but">{{ profil_label }}</a>{% endif %}
 				{% if has_back_button %}{% include 'fragments/span.html' %}{% endif %}

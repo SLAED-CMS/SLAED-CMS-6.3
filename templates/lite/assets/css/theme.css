@@ -54,7 +54,7 @@ h2 { font-size: 24px; margin: 25px 0 10px; }
 h3 { font-size: 22px; margin: 14px 0 8px; }
 h4 { font-size: 18px; margin: 2px 0; display: inline; }
 h5 { font-size: 16px; }
-h5.cat-navi { font-weight: bold; max-width: 660px; margin: -10px 0 30px 0; }
+h5.category-nav { font-weight: bold; max-width: 660px; margin: -10px 0 30px 0; }
 p,dl,dd,pre,ul,ol,blockquote { margin-bottom: 18px; }
 legend { padding: 5px; border: 1px solid #dee0e2; border-radius: 4px; }
 fieldset { padding: 5px; margin: 5px; border: 1px solid #dee0e2; border-radius: 4px; }

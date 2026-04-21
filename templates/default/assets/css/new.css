@@ -279,7 +279,7 @@ span.sl-pnum-nav { opacity: .4; background-color: transparent; }
 .sl-card .sl-title { font-size: 16px; }
 
 /* Category breadcrumb */
-.sl-cat-navi { margin-bottom: 10px; font-size: .9em; color: #6e7c8b; }
+.sl-category-nav { margin-bottom: 10px; font-size: .9em; color: #6e7c8b; }
 
 /* Section with HR */
 .sl-section { margin-bottom: 10px; }
@@ -523,3 +523,348 @@ ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
 .sl-debug-warn{color:#f50}
 .sl-debug-danger{color:#f00}
 .sl-code-row-odd{background-color:#fafafa}.sl-code-row-even{background-color:#fff}.sl-code-row-num{vertical-align:top}.sl-code-row-cell{width:100%}.sl-embed-img{border:0}
+.sl-note{cursor:help}
+.sl-small{margin:10px;font-size:.9em;text-align:justify}
+.sl-img{margin:0 5px 0 0;border-radius:5px}
+.sl-home{min-height:100%}
+.sl-left{text-align:left}
+.sl-right{text-align:right}
+.sl-shop-invoice{width:640px;margin:5%}
+.sl-shop-invoice-logo{width:40%}
+.sl-money-separator{border:1px solid #000}
+.sl-tip{position:relative;display:inline-block;background-image:url(../../images/misc/sprite.png);vertical-align:middle;content:'';cursor:help;width:16px;height:16px;background-position:-336px -88px;margin:-3px 6px 0 0}
+.sl-tip div{position:absolute;top:100%;left:0;z-index:100;float:left;width:max-content;max-width:520px;padding:10px;margin:2px 0 0 0;list-style:none;background-color:#fff;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:6px;box-shadow:0 6px 12px rgba(0,0,0,.175);background-clip:padding-box;opacity:0;visibility:hidden;transition:all .5s ease}
+.sl-tip:hover>div{top:0;opacity:1;visibility:visible}
+.sl-table-block{width:100%}.sl-table-block td{padding-bottom:5px}
+.sl-generates,.sl-license{font-size:.9em;color:#6e7c8b}
+.sl-bbup-panel{background:#f9f9f9;border:1px solid #dee0e2;border-radius:4px;padding:5px;height:1%;margin:0 0 3px 0}
+.sl-bbup-panel:after{display:block;content:'';clear:both}
+.sl-loading{display:block;text-align:center;margin-left:auto;margin-right:auto;width:73px;height:17px;background:url(../../images/misc/loading.gif) no-repeat}
+.sl-editor-area{font:12px Verdana;width:100%;height:100px;padding:5px;background-color:#fafafa;border:1px solid #dee0e2;border-radius:4px;color:#47515a;box-sizing:border-box}
+.sl-editor-area:focus{border-color:#80b7e0;box-shadow:0 1px 1px rgba(0,0,0,.075) inset;outline:none}
+.sl-plus:before{display:inline-block;background-image:url(../../images/misc/sprite.png);vertical-align:middle;content:'';width:10px;height:10px;background-position:-351px -16px;margin:-3px 6px 0 0}
+.sl-preview{border:1px solid #dde5ec;border-radius:8px;background:#fff;margin-bottom:12px;overflow:hidden}
+.sl-preview-head{padding:12px 15px;background:#f1f5f8;border-bottom:1px solid #dde5ec;font-weight:bold;color:#25313d}
+.sl-preview-body{display:grid;gap:0}
+.sl-preview-title,.sl-preview-section{padding:12px 15px;border-bottom:1px solid #edf1f4}
+.sl-preview-body>:last-child{border-bottom:0}
+.sl-preview-title{font-weight:bold;color:#25313d}
+.sl-preview-meta{background-color:#fafcfd;color:#5d6b79}
+.sl-preview-meta>div+div{margin-top:6px}
+.sl-preview-admin-title,.sl-preview-field-primary,.sl-preview-field-secondary,.sl-preview-field-meta{min-width:0}
+.sl-vote-list{list-style:none;margin:20px 0;padding:0}
+.sl-vote-list li input{margin-right:5px}
+.sl-vote-title{font-weight:bold;font-size:1em;margin:0 0 20px 0}
+.sl-vote-links{margin-top:1em;margin-bottom:-8px;font-size:.9em}
+.sl-vote-links a{margin-right:20px}
+.sl-vote-actions{display:inline-block}
+.sl-vote-progress{display:block;width:100%;height:8px;border:1px solid #d1d9e0;border-radius:4px;overflow:hidden;background:#f4f6f8}
+.sl-vote-progress::-webkit-progress-bar{background:#f4f6f8}
+.sl-vote-progress::-webkit-progress-value{border-radius:3px;background:linear-gradient(to top,#00adee 10%,#0078a5 90%)}
+.sl-vote-progress::-moz-progress-bar{border-radius:3px;background:linear-gradient(to top,#00adee 10%,#0078a5 90%)}
+.sl-vote-progress-2::-webkit-progress-value{background:linear-gradient(to top,#8fc857 10%,#5c9425 90%)}
+.sl-vote-progress-2::-moz-progress-bar{background:linear-gradient(to top,#8fc857 10%,#5c9425 90%)}
+.sl-vote-progress-3::-webkit-progress-value{background:linear-gradient(to top,#faa51a 10%,#f47a20 90%)}
+.sl-vote-progress-3::-moz-progress-bar{background:linear-gradient(to top,#faa51a 10%,#f47a20 90%)}
+.sl-vote-progress-4::-webkit-progress-value{background:linear-gradient(to top,#dd5f5f 10%,#a92c2c 90%)}
+.sl-vote-progress-4::-moz-progress-bar{background:linear-gradient(to top,#dd5f5f 10%,#a92c2c 90%)}
+.sl-vote-progress-5::-webkit-progress-value{background:linear-gradient(to top,#bf5fdd 10%,#8c2ca9 90%)}
+.sl-vote-progress-5::-moz-progress-bar{background:linear-gradient(to top,#bf5fdd 10%,#8c2ca9 90%)}
+.sl-search-line .sl-pull-right img{vertical-align:middle;margin-left:3px}
+.sl-search-meta>ul.sl-pull-right>li{margin-right:0;margin-left:20px}
+
+/* Changelog */
+:root {
+    --sl-changelog-bg: #f9fafb;
+    --sl-changelog-card: #ffffff;
+    --sl-changelog-border: #e5e7eb;
+    --sl-changelog-text: #374151;
+    --sl-changelog-meta: #6b7280;
+    --sl-changelog-code: #1f2937;
+    --sl-changelog-add: #10b981;
+    --sl-changelog-del: #ef4444;
+    --sl-changelog-header: #f3f4f6;
+}
+
+.sl-changelog {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--sl-changelog-text);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.sl-changelog-filter {
+    background: var(--sl-changelog-card);
+    border: 1px solid var(--sl-changelog-border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sl-changelog-filter h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.sl-changelog-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.sl-changelog-filter-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.sl-changelog-filter-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+.sl-changelog-filter-top .sl-changelog-filter-field {
+    flex: 1 1 320px;
+}
+
+.sl-changelog-filter-field label {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: var(--sl-changelog-meta);
+}
+
+.sl-changelog-filter-field input {
+    padding: 8px 12px;
+    border: 1px solid var(--sl-changelog-border);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.sl-changelog-filter-field input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.sl-changelog-filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.sl-changelog-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sl-changelog-button-primary {
+    background: linear-gradient(135deg, #6cb5f5 0%, #3f7fda 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.sl-changelog-button-primary:hover {
+    background: linear-gradient(135deg, #5aa7e8 0%, #366fca 100%);
+}
+
+.sl-changelog-button-secondary {
+    background: #e5e7eb;
+    color: var(--sl-changelog-text);
+}
+
+.sl-changelog-button-secondary:hover {
+    background: #d1d5db;
+}
+
+.sl-changelog-results {
+    background: var(--sl-changelog-header);
+    border: 1px solid var(--sl-changelog-border);
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sl-changelog-results-info {
+    font-size: 14px;
+    color: var(--sl-changelog-meta);
+}
+
+.sl-changelog-results-info strong {
+    color: var(--sl-changelog-text);
+    font-weight: 600;
+}
+
+.sl-changelog-commits {
+    background: var(--sl-changelog-card);
+    border: 1px solid var(--sl-changelog-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sl-changelog-date-header {
+    background: linear-gradient(135deg, #6cb5f5 0%, #3f7fda 100%);
+    color: white;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 15px;
+    border-bottom: 1px solid var(--sl-changelog-border);
+}
+
+.sl-changelog-commit {
+    padding: 20px;
+    border-bottom: 1px solid var(--sl-changelog-border);
+    transition: background-color 0.2s;
+}
+
+.sl-changelog-commit:last-child {
+    border-bottom: none;
+}
+
+.sl-changelog-commit:hover {
+    background-color: #fafbfc !important;
+}
+
+.sl-changelog-commit-alt {
+    background: #f9f9f9;
+}
+
+.sl-changelog-commit-header {
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.sl-changelog-commit-header strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+.sl-changelog-commit-header code {
+    background: var(--sl-changelog-code);
+    color: #fbbf24;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+}
+
+.sl-changelog-commit-meta {
+    font-size: 13px;
+    color: var(--sl-changelog-meta);
+    margin-bottom: 12px;
+    padding-left: 2px;
+}
+
+.sl-changelog-commit-meta strong {
+    font-weight: 500;
+    color: var(--sl-changelog-text);
+}
+
+.sl-changelog-commit-body {
+    background: var(--sl-changelog-header);
+    border-left: 4px solid #6ab2f4;
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.sl-changelog-commit-body code {
+    background: var(--sl-changelog-card);
+    border: 1px solid var(--sl-changelog-border);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+    color: #d97706;
+}
+
+.sl-changelog-commit-stats {
+    font-size: 13px;
+    padding: 10px 0;
+    border-top: 1px solid var(--sl-changelog-border);
+    margin-top: 12px;
+}
+
+.sl-changelog-commit-stats strong {
+    font-weight: 500;
+}
+
+.sl-changelog-commit-stats .sl-changelog-add {
+    color: var(--sl-changelog-add);
+    font-weight: 600;
+}
+
+.sl-changelog-commit-stats .sl-changelog-del {
+    color: var(--sl-changelog-del);
+    font-weight: 600;
+}
+
+.sl-changelog-commit-files {
+    margin-top: 10px;
+    background: #f9fafb;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.sl-changelog-commit-files div {
+    padding: 3px 0;
+    line-height: 1.5;
+}
+
+.sl-changelog-commit-files .sl-changelog-add,
+.sl-changelog-commit-files .sl-changelog-del {
+    display: inline-block;
+    width: 50px;
+    text-align: right;
+    font-weight: 600;
+}
+
+.sl-changelog-pagination {
+    margin: 20px 0;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .sl-changelog-filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sl-changelog-filter-grid .sl-changelog-filter-field:last-child:nth-child(odd) {
+        grid-column: span 2;
+    }
+
+    .sl-changelog-results {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .sl-changelog-commit-header {
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,12 @@
+{% if top_label %}
+{% include 'fragments/link.html' with top_link %}
+{% endif %}
+{% if time_html %}
+<div class="sl-generates">{{{ time_html }}}</div>
+{% endif %}
+{% if license_html %}
+<div class="sl-license">{{{ license_html }}}</div>
+{% endif %}
+{% if debug_html %}
+{{{ debug_html }}}
+{% endif %}
