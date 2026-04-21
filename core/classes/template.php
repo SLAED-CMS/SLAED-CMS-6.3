@@ -116,7 +116,7 @@ class Template {
         if ($cache === '') return '';
         $mdir = dirname($cache);
         if (!is_dir($mdir) && !mkdir($mdir, 0777, true) && !is_dir($mdir)) return '';
-        if (!is_file($cache) || filemtime($file) > filemtime($cache)) {
+        if (!is_file($cache) || filemtime($file) > filemtime($cache) || filemtime(__FILE__) > filemtime($cache)) {
             $code = $this->filterCode($code);
             if (file_put_contents($cache, $code, LOCK_EX) === false) return '';
         }
@@ -338,22 +338,32 @@ class Template {
         return $this->filterUse($code);
     }
 
-    # Compile escaped echo tags with simple variable names
+    # Compile escaped echo tags with simple variable names or array paths
     protected function filterEcho(string $code): string {
         if ($code === '' || !str_contains($code, '{{')) return $code;
         return (string)preg_replace_callback(
-            '/(?<!\{)\{\{\s*([_a-z][_a-z0-9]*)\s*\}\}(?!\})/',
-            fn(array $data): string => '<?= $this->getSafe($'.$data[1].' ?? null); ?>',
+            '/(?<!\{)\{\{\s*([_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)\s*\}\}(?!\})/',
+            function(array $data): string {
+                $path = explode('.', $data[1]);
+                $expr = '$'.array_shift($path);
+                foreach ($path as $key) $expr .= '[\''.$key.'\']';
+                return '<?= $this->getSafe('.$expr.' ?? null); ?>';
+            },
             $code
         );
     }
 
-    # Compile raw echo tags with simple variable names
+    # Compile raw echo tags with simple variable names or array paths
     protected function filterRaw(string $code): string {
         if ($code === '' || !str_contains($code, '{{{')) return $code;
         return (string)preg_replace_callback(
-            '/\{\{\{\s*([_a-z][_a-z0-9]*)\s*\}\}\}/',
-            fn(array $data): string => '<?= $this->getRaw($'.$data[1].' ?? null); ?>',
+            '/\{\{\{\s*([_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)\s*\}\}\}/',
+            function(array $data): string {
+                $path = explode('.', $data[1]);
+                $expr = '$'.array_shift($path);
+                foreach ($path as $key) $expr .= '[\''.$key.'\']';
+                return '<?= $this->getRaw('.$expr.' ?? null); ?>';
+            },
             $code
         );
     }
@@ -375,10 +385,10 @@ class Template {
         );
     }
 
-    # Parse a small safe template condition grammar: !var, var, joined by and/or
+    # Parse a small safe template condition grammar: !var, var.path, joined by and/or
     protected function parseIfCondition(string $expr): string {
         if ($expr === '') return '';
-        if (!preg_match('/^!?[_a-z][_a-z0-9]*(?:\s+(?:and|or)\s+!?[_a-z][_a-z0-9]*)*$/', $expr)) return '';
+        if (!preg_match('/^!?[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*(?:\s+(?:and|or)\s+!?[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)*$/', $expr)) return '';
         $parts = preg_split('/\s+(and|or)\s+/', $expr, -1, PREG_SPLIT_DELIM_CAPTURE);
         if ($parts === false || $parts === []) return '';
         $compiled = [];
@@ -388,8 +398,10 @@ class Template {
                 continue;
             }
             $neg = str_starts_with($part, '!');
-            $name = '$'.ltrim($part, '!');
-            $compiled[] = $neg ? 'empty('.$name.')' : '!empty('.$name.')';
+            $path = explode('.', ltrim($part, '!'));
+            $expr = '$'.array_shift($path);
+            foreach ($path as $key) $expr .= '[\''.$key.'\']';
+            $compiled[] = $neg ? 'empty('.$expr.')' : '!empty('.$expr.')';
         }
         return implode(' ', $compiled);
     }
