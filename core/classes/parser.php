@@ -806,7 +806,7 @@ class Parser {
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" alt="'.$file.'" title="'.$file.'" class="sl_img"'.$err.'>');
+                return $this->addStash('<img src="'.$src2.'" alt="'.$file.'" title="'.$file.'" class="sl-img"'.$err.'>');
             },
             $src
         ) ?? $src;
@@ -825,7 +825,7 @@ class Parser {
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$file.'" title="'.$file.'" class="sl_img"'.$err.'>');
+                return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$file.'" title="'.$file.'" class="sl-img"'.$err.'>');
             },
             $src
         ) ?? $src;
@@ -844,7 +844,7 @@ class Parser {
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
+                return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl-img"'.$err.'>');
             },
             $src
         ) ?? $src;
@@ -865,7 +865,7 @@ class Parser {
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
+                return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl-img"'.$err.'>');
             },
             $src
         ) ?? $src;

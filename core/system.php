@@ -1916,7 +1916,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                                 $sval[1] = getConst($sval[1]);
                                 $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
                                 $sublink = is_acess($sval[6]) ? $tpl->getHtmlFrag('link', ['href' => $shref, 'title' => $sval[1], 'label' => $sval[1], 'is_category' => true]) : '';
-                                $subcat .= $tpl->getHtmlFrag('post-div', ['content' => $sublink]);
+                                $subcat .= $tpl->getHtmlFrag('content-block', ['content' => $sublink]);
                             }
                         }
                     }
@@ -2453,7 +2453,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
         ]);
         return $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
     }, $pairs));
-    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('post-div', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
+    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('content-block', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
     return $tpl->getHtmlFrag('navi-tabs-wrap', ['tabs_html' => $tlinks, 'content_html' => $cdivs, 'id' => $id]);
 }
 
@@ -4366,7 +4366,7 @@ function encode_php(array $text): string {
         }
         $hmap = ['jscript' => 'javascript', 'vb' => 'vbnet', 'plain' => 'plaintext'];
         $hlang = $hmap[$ucname] ?? $ucname;
-        $format = $tpl->getHtmlFrag('code-hljs', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
+        $format = $tpl->getHtmlFrag('code-highlight', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
     }
     return $tpl->getHtmlPart('div', ['is_code' => true, 'title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'content_html' => $format ?? '']);
 }
@@ -4391,10 +4391,10 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             if (file_exists('blocks/'.$bfile)) {
                 include('blocks/'.$bfile);
             } else {
-                $content = $tpl->getHtmlFrag('post-div', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
+                $content = $tpl->getHtmlFrag('content-block', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
             }
         }
-        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('post-div', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM2]);
+        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('content-block', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM2]);
         switch($side) {
             case 'b':
             $showbanners = $content;
@@ -4893,7 +4893,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $regdate = (!empty($user_regdate)) ? htmlspecialchars(_REG, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(format_time($user_regdate), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _NO_INFO;
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('post-div', ['is_signature' => true, 'content' => $user_sig]) : '';
+            $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('content-block', ['is_signature' => true, 'content' => $user_sig]) : '';
             $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true]) : '';
             $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'is_button_green' => true]) : '';
             $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
@@ -4932,7 +4932,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $edit = '';
                 }
             }
-            $text = $tpl->getHtmlFrag('post-div', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
+            $text = $tpl->getHtmlFrag('content-block', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
             if (defined('ADMIN_FILE')) {
                 $markAll = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'markcheck',
@@ -4949,7 +4949,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             } else {
                 $checkb = '';
             }
-            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('title-tip', [
+            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('info-tooltip', [
                 'items' => [
                     ['label' => _DATE, 'value' => $date, 'is_last' => false],
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],

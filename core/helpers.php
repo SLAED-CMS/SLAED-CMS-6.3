@@ -629,7 +629,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('post-div', ['is_radio_group' => true, 'content' => $items]);
+    return $tpl->getHtmlFrag('content-block', ['is_radio_group' => true, 'content' => $items]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
@@ -836,7 +836,7 @@ function getTplTitleTip(mixed $data): string {
             'is_last' => $idx === $last,
         ];
     }
-    return $tpl->getHtmlFrag('title-tip', ['items' => $items]);
+    return $tpl->getHtmlFrag('info-tooltip', ['items' => $items]);
 }
 
 # Render the shared ajax rating block

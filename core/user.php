@@ -9,9 +9,9 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $cid = 0): string {
     global $conf, $user, $tpl;
-    $cont = $tpl->getHtmlFrag('post-div', [
+    $cont = $tpl->getHtmlFrag('content-block', [
         'id' => 'comm',
-        'content' => $tpl->getHtmlFrag('post-div', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]),
+        'content' => $tpl->getHtmlFrag('content-block', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]),
     ]);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -31,7 +31,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
         }
         $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME.':', 'field_html' => $name_field])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _COMMENT.':', 'field_html' => getTplTextarea(['id' => 1, 'name' => 'text', 'value' => '', 'mod' => $conf['name'], 'rows' => '5'])]);
-        $submit = $tpl->getHtmlFrag('form-submit', [
+        $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
             'input_attr' => 'hx-post="index.php?go=1&amp;op=addComment&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'" hx-include="#formcsave" hx-target="#repcsave" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }" hx-on:htmx:after-request="document.getElementById(\'formcsave\').reset()"',
@@ -55,7 +55,7 @@ function setMessageShow(): string {
     if ($conf['message'] == 1) {
         $adminNote = static function (string $viewType, string $duration, string $editUrl) use ($tpl): string {
             $edit = $tpl->getHtmlFrag('link', ['href' => $editUrl, 'title' => _EDIT, 'label' => _EDIT]);
-            return $tpl->getHtmlFrag('post-div', [
+            return $tpl->getHtmlFrag('content-block', [
                 'is_center' => true,
                 'content' => '['._VIEW.': '.$viewType.' | '._PURCHASED.': '.$duration.' | '.$edit.' ]',
             ]);
@@ -65,7 +65,7 @@ function setMessageShow(): string {
         if ($conf['multilingual'] == 1) {
             $params['lang'] = $currentlang;
         }
-        $messageBox = static fn(string $title, string $body): string => $tpl->getHtmlFrag('post-div', [
+        $messageBox = static fn(string $title, string $body): string => $tpl->getHtmlFrag('content-block', [
             'class' => 'message-box',
             'content' => $tpl->getHtmlFrag('title', ['title' => $title, 'title_class' => 'title']).$body,
         ]);
@@ -131,12 +131,12 @@ function getUserNav(): string {
 
     $items = '';
     foreach ($navs as [$titl, $itit, $link, $icon]) {
-        $items .= $tpl->getHtmlFrag('post-div', [
+        $items .= $tpl->getHtmlFrag('content-block', [
             'is_catflex_box' => true,
             'content' => $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $itit, 'img_src' => img_find($icon), 'img_alt' => $itit, 'label' => $titl, 'is_line_break' => true]),
         ]);
     }
-    return $tpl->getHtmlFrag('post-div', ['is_catflex_cont' => true, 'content' => $items]);
+    return $tpl->getHtmlFrag('content-block', ['is_catflex_cont' => true, 'content' => $items]);
 }
 
 # Check if the logged-in user meets the group or points requirement for a module
@@ -306,7 +306,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
     ]);
-    $messageList = static fn(array $rows, array $headers): string => $tpl->getHtmlPart('liste', [
+    $messageList = static fn(array $rows, array $headers): string => $tpl->getHtmlPart('content-list', [
         'rows' => $rows,
         'table_open' => ['open' => true, 'headers' => $headers],
         'table_close' => [],
@@ -455,15 +455,15 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $regdate = ($user_regdate) ? _REG.': '.format_time($user_regdate) : _NO_INFO;
                 $gender = ($user_gender) ? _GENDER.': '.getGenderText($user_gender) : '';
                 $from = ($user_from) ? _FROM.': '.$user_from : '';
-                $sig = ($user_sig) ? $tpl->getHtmlFrag('post-div', ['is_signature' => true, 'content' => $user_sig]) : '';
+                $sig = ($user_sig) ? $tpl->getHtmlFrag('content-block', ['is_signature' => true, 'content' => $user_sig]) : '';
                 $profil = ($conf['privat']['profil'] && $user_name) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
                 $web = ($conf['privat']['web'] && $user_website) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true, 'is_account_button' => true]) : '';
-                
 
-                
+
+
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? $actionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE, 'class' => ''])]) : '';
                 $rankHtml = ($rank) ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $rank]) : '';
-                $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => 'pm'.$idp, 'dropdown_id' => 'm-form-'.$idp, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit, 'is_private_message' => true]);
+                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'dropdown_id' => 'm-form-'.$idp, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit, 'is_private_message' => true]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -474,7 +474,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
             $rpost = ($sname) ? $sname : (($user_name ?? '') ? $user_name : '');
             $rtitle = ($stitle) ? $stitle : (($title ?? '') ? _PRREP.': '.$title : '');
             $rcontent = ($stext) ? $stext : (($body ?? '') ? '[quote]'.$body.'[/quote]' : '');
-            
+
             $idp = ($id) ? '2' : '1';
             $formId = 'form'.$prmid;
             $recipient = getTplUserSearchInput([
@@ -487,7 +487,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
             $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _PRRE.':', 'field_html' => $recipient])
                 .$tpl->getHtmlFrag('form-field-row', ['label' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $rtitle, 'maxlength_num' => 100])])
                 .$tpl->getHtmlFrag('form-field-row', ['label' => _MESSAGE.':', 'field_html' => getTplTextarea(['id' => $idp, 'name' => 'text', 'value' => $rcontent, 'mod' => $conf['name'], 'rows' => '15'])]);
-            $submit = $tpl->getHtmlFrag('form-submit', [
+            $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
                 'label' => _SEND,
                 'title' => _SEND,
                 'input_attr' => 'hx-post="index.php?go=1&amp;op=addPrivateMessage" hx-include="#'.$formId.'" hx-target="#rep'.$prmid.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;name&quot;]\').value.trim()) { alert(\''._CERROR6.'\'); event.preventDefault(); }"',
@@ -517,13 +517,13 @@ function addPrivateMessage() {
 
     $uidin = (is_user_id($postname)) ? is_user_id($postname) : '';
     $uidout = (is_user()) ? intval($user[0]) : '';
-    
+
     [$date] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_privat WHERE uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidout' => $uidout]));
     $stime = strtotime($date) + $conf['privat']['send'];
     $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
     $e = explode(' ', $checks);
     for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
-    
+
     $stop = [];
     if (!$postname) {
         $stop[] = _CERROR6;
@@ -539,7 +539,7 @@ function addPrivateMessage() {
 
     [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND status <= 1', ['uidin' => $uidin]));
     if ($pr_num >= $conf['privat']['messin']) $stop[] = sprintf(_PRSENDOVER, $postname);
-    
+
     if (!$stop && $conf['privat']['act'] && is_user()) {
         $title = filterHtml($title, 1);
         $text = filterHtml($text);
@@ -610,7 +610,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
             } else {
                 $rep_id = 'rep'.$fid.$mod;
                 $url = 'index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod;
-                $content = $tpl->getHtmlFrag('post-div', [
+                $content = $tpl->getHtmlFrag('content-block', [
                     'id' => $rep_id,
                     'content' => $tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => $rep_id, 'swap' => 'outerHTML', 'title' => _FAVOR_ADD, 'label' => '', 'is_favorite' => true]),
                 ]);
@@ -648,7 +648,7 @@ function getFavoriteList(int $obj = 0): string {
     $offset = ($cid - 1) * $newlistnum;
     $offset = intval($offset);
     $a = ($cid) ? $offset + 1 : 1;
-    
+
     [$fav_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
     if ($fav_num >= $conf['favorites']['favorites']) {
         $favinfo = sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']);
@@ -658,10 +658,10 @@ function getFavoriteList(int $obj = 0): string {
         $favinfo = sprintf(_FAVOR_MAX, $conf['favorites']['favorites'], $fav_num, $acfavor);
         $fstatus = 'info';
     }
-    
+
     $result = $db->getSqlQuery('SELECT fid, modul FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
     while ([$fid, $modul] = $db->getSqlRow($result)) $fmassiv[$modul][] = $fid;
-    
+
     if (is_array($fmassiv)) {
         foreach ($fmassiv as $key => $val) {
             $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
@@ -737,7 +737,7 @@ function getFavoriteList(int $obj = 0): string {
             ];
             $a++;
         }
-        $cont .= $tpl->getHtmlPart('liste', [
+        $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
             'table_open' => ['open' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS],
             'table_close' => [],
