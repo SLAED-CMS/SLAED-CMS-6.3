@@ -182,40 +182,25 @@ function chlogRenderCommitStats(array $commit, bool $showStats, bool $showFiles)
         $totdel += (int)($file['deleted'] ?? 0);
     }
 
-    $filesHtml = '';
+    $files = [];
     if ($showFiles) {
-        if (defined('ADMIN_FILE')) {
-            $rows = '';
-            foreach ($commit['files'] as $file) {
-                $rows .= '<div><span class="add">+'.str_pad((string)((int)($file['added'] ?? 0)), 3, ' ', STR_PAD_LEFT).'</span> <span class="del">-'.str_pad((string)((int)($file['deleted'] ?? 0)), 3, ' ', STR_PAD_LEFT).'</span> '.chlogEsc((string)($file['file'] ?? '')).'</div>';
-            }
-            $filesHtml = '<div class="commit-files">'.$rows.'</div>';
-        } else {
-            $rows = '';
-            foreach ($commit['files'] as $file) {
-                $rows .= $tpl->getHtmlFrag('changelog-file-row', [
-                    'added'   => str_pad((string)((int)($file['added'] ?? 0)), 3, ' ', STR_PAD_LEFT),
-                    'deleted' => str_pad((string)((int)($file['deleted'] ?? 0)), 3, ' ', STR_PAD_LEFT),
-                    'file'    => chlogEsc((string)($file['file'] ?? '')),
-                ]);
-            }
-            $filesHtml = $tpl->getHtmlFrag('changelog-file-list', ['rows_html' => $rows]);
+        foreach ($commit['files'] as $file) {
+            $files[] = [
+                'added'   => str_pad((string)((int)($file['added'] ?? 0)), 3, ' ', STR_PAD_LEFT),
+                'deleted' => str_pad((string)((int)($file['deleted'] ?? 0)), 3, ' ', STR_PAD_LEFT),
+                'file'    => chlogEsc((string)($file['file'] ?? '')),
+            ];
         }
     }
 
-    if (defined('ADMIN_FILE')) {
-        $statsHtml = '<div class="commit-stats"><strong>'._CHLOG_CHANGES.':</strong> <span class="add">+'.$totadd.'</span> / <span class="del">-'.$totdel.'</span> | <strong>'.count($commit['files']).' '._CHLOG_FILES.'</strong></div>';
-    } else {
-        $statsHtml = $tpl->getHtmlFrag('changelog-stats', [
-            'changes_label' => _CHLOG_CHANGES,
-            'added'         => $totadd,
-            'deleted'       => $totdel,
-            'count'         => count($commit['files']),
-            'files_label'   => _CHLOG_FILES,
-        ]);
-    }
-
-    return $statsHtml.$filesHtml;
+    return $tpl->getHtmlFrag('changelog-stats', [
+        'changes_label' => _CHLOG_CHANGES,
+        'added'         => $totadd,
+        'deleted'       => $totdel,
+        'count'         => count($commit['files']),
+        'files_label'   => _CHLOG_FILES,
+        'files'         => $files,
+    ]);
 }
 
 function chlogRenderCommits(array $commits, array $options = []): string {
@@ -227,44 +212,27 @@ function chlogRenderCommits(array $commits, array $options = []): string {
 
     foreach ($commits as $commit) {
         if (isset($commit['datehdr'])) {
-            if (defined('ADMIN_FILE')) {
-                $html .= '<div class="date-header">'.chlogEsc((string)$commit['datehdr']).'</div>';
-            } else {
-                $html .= $tpl->getHtmlFrag('changelog-date-header', ['label' => chlogEsc((string)$commit['datehdr'])]);
-            }
+            $html .= $tpl->getHtmlFrag('changelog-date-header', ['label' => chlogEsc((string)$commit['datehdr'])]);
             continue;
         }
 
         $bodyHtml = '';
         if (!empty($commit['body']) && $commit['body'] !== CHLOG_COMMIT_END) {
-            if (defined('ADMIN_FILE')) {
-                $bodyHtml = '<div class="commit-body">'.$prs->filterDoc((string)$commit['body'], true, 'changelog').'</div>';
-            } else {
-                $bodyHtml = $tpl->getHtmlFrag('changelog-commit-body', ['content' => $prs->filterDoc((string)$commit['body'], true, 'changelog')]);
-            }
+            $bodyHtml = $prs->filterDoc((string)$commit['body'], true, 'changelog');
         }
 
-        if (defined('ADMIN_FILE')) {
-            $html .= '<div class="commit" style="background: '.($i % 2 ? '#f9f9f9' : '#fff').'">'
-                .'<div class="commit-header"><strong>'.chlogEsc((string)($commit['subject'] ?? '')).'</strong><code>'.chlogEsc((string)($commit['hash'] ?? '')).'</code></div>'
-                .'<div class="commit-meta"><strong>'._CHLOG_AUTHOR.':</strong> '.chlogEsc((string)($commit['author'] ?? '')).' &lt;'.chlogEsc((string)($commit['email'] ?? '')).'&gt; | <strong>'._CHLOG_DATE.':</strong> '.chlogFormatDate((string)($commit['date'] ?? '')).'</div>'
-                .$bodyHtml
-                .chlogRenderCommitStats($commit, $showStats, $showFiles)
-                .'</div>';
-        } else {
-            $html .= $tpl->getHtmlFrag('basic-changelog-commit', [
-                'background' => $i % 2 ? '#f9f9f9' : '#fff',
-                'subject' => chlogEsc((string)($commit['subject'] ?? '')),
-                'hash' => chlogEsc((string)($commit['hash'] ?? '')),
-                'author' => chlogEsc((string)($commit['author'] ?? '')),
-                'email' => chlogEsc((string)($commit['email'] ?? '')),
-                'date' => chlogFormatDate((string)($commit['date'] ?? '')),
-                'label_author' => _CHLOG_AUTHOR,
-                'label_date' => _CHLOG_DATE,
-                'body' => $bodyHtml,
-                'stats' => chlogRenderCommitStats($commit, $showStats, $showFiles)
-            ]);
-        }
+        $html .= $tpl->getHtmlFrag('changelog-commit', [
+            'is_alt' => (bool)($i % 2),
+            'subject' => chlogEsc((string)($commit['subject'] ?? '')),
+            'hash' => chlogEsc((string)($commit['hash'] ?? '')),
+            'author' => chlogEsc((string)($commit['author'] ?? '')),
+            'email' => chlogEsc((string)($commit['email'] ?? '')),
+            'date' => chlogFormatDate((string)($commit['date'] ?? '')),
+            'label_author' => _CHLOG_AUTHOR,
+            'label_date' => _CHLOG_DATE,
+            'body_html' => $bodyHtml,
+            'stats_html' => chlogRenderCommitStats($commit, $showStats, $showFiles)
+        ]);
         $i++;
     }
 
