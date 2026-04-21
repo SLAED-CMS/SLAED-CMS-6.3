@@ -129,16 +129,14 @@ function getUserNav(): string {
     $navs[] = [_CHANGE, _CHANGE,       'index.php?name=account&amp;op=edithome',           'account/preferences.png'];
     $navs[] = [_LOGOUT, _LOGOUT,       'index.php?name=account&amp;op=logout',             'account/exit.png'];
 
-    $items_html = '';
+    $items = '';
     foreach ($navs as [$titl, $itit, $link, $icon]) {
-        $items_html .= $tpl->getHtmlFrag('account-nav-item', [
-            'url'   => $link,
-            'title' => $itit,
-            'icon'  => img_find($icon),
-            'label' => $titl,
+        $items .= $tpl->getHtmlFrag('post-div', [
+            'is_catflex_box' => true,
+            'content' => $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $itit, 'img_src' => img_find($icon), 'img_alt' => $itit, 'label' => $titl, 'is_line_break' => true]),
         ]);
     }
-    return $tpl->getHtmlFrag('account-nav', ['items_html' => $items_html]);
+    return $tpl->getHtmlFrag('post-div', ['is_catflex_cont' => true, 'content' => $items]);
 }
 
 # Check if the logged-in user meets the group or points requirement for a module
@@ -457,7 +455,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $regdate = ($user_regdate) ? _REG.': '.format_time($user_regdate) : _NO_INFO;
                 $gender = ($user_gender) ? _GENDER.': '.getGenderText($user_gender) : '';
                 $from = ($user_from) ? _FROM.': '.$user_from : '';
-                $sig = ($user_sig) ? $tpl->getHtmlFrag('comment-signature', ['content' => $user_sig]) : '';
+                $sig = ($user_sig) ? $tpl->getHtmlFrag('post-div', ['is_signature' => true, 'content' => $user_sig]) : '';
                 $profil = ($conf['privat']['profil'] && $user_name) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
                 $web = ($conf['privat']['web'] && $user_website) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true, 'is_account_button' => true]) : '';
                 

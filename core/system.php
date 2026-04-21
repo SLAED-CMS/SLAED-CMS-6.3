@@ -1331,35 +1331,39 @@ function setHead(array $seo = []): void {
         $userinfo = getUserInfo();
         $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.($userinfo['avatar'] ?? '');
         $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
-        $login = $tpl->getHtmlFrag('login-logged', [
-            'title'  => _ACCOUNT,
-            'avatar' => $conf['users']['adirectory'].'/'.$avatar,
-            'user'   => $uname,
-            'logout' => _LOGOUT,
-        ]);
+        $items = [
+            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _ACCOUNT, 'img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _ACCOUNT, 'label' => $uname, 'is_login_profile' => true, 'is_login_avatar' => true, 'is_bold_label' => true]),
+            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=logout&amp;refer=1', 'title' => _LOGOUT, 'label' => _LOGOUT]),
+        ];
+        $html = '';
+        foreach ($items as $item) {
+            $html .= $tpl->getHtmlFrag('list-item', ['content_html' => $item]);
+        }
+        $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'is_logged' => true, 'items_html' => $html]);
     } elseif ($conf['users']['enter']) {
         $gfx = (int)($conf['gfx_chk'] ?? 0);
         $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
-        $accountToken = htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8');
+        $atok = htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8');
         $login = $tpl->getHtmlPart('login-nav', [
             'login'    => _LOGIN,
             'nickname' => _NICKNAME,
             'password' => _PASSWORD,
             'captcha'  => $captcha,
-            'token'    => $accountToken,
+            'token'    => $atok,
             'lost'     => _PASSFOR,
             'register' => _REG,
             'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true],
             'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true],
-            'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'button_class' => 'sl-but', 'button_attr' => 'title="'._LOGIN.'"'],
+            'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN, 'is_login_submit' => true],
             'lost_link' => ['href' => 'index.php?name=account&amp;op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
             'register_link' => ['href' => 'index.php?name=account&amp;op=newuser', 'title' => _REG, 'label' => _REG],
-            'token_field' => ['name_attr' => 'token', 'value_attr' => $accountToken],
+            'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
             'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
         ]);
     } else {
-        $login = $tpl->getHtmlFrag('login-without', ['register' => _BREG]);
+        $item = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
+        $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
     $sitevars = [
         'theme' => getTheme(),
@@ -1968,7 +1972,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                 list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INS;
             }
-            return $tpl->getHtmlFrag('categories', ['categories' => _CATEGORIES, 'content' => $cont, 'total' => _ALLIN, 'pages' => $pnum, 'in' => $in, 'cat' => $cnum, 'category' => _ALLINC, 'mod' => $mod]);
+            return $tpl->getHtmlPart('categories', ['categories' => _CATEGORIES, 'content' => $cont, 'total' => _ALLIN, 'pages' => $pnum, 'in' => $in, 'cat' => $cnum, 'category' => _ALLINC, 'mod' => $mod]);
         }
     }
     return '';
@@ -3258,8 +3262,8 @@ function adminblock(): string {
             'block_html' => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlFrag('sidebar-block', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlFrag('sidebar-block', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
+        return $tpl->getHtmlPart('sidebar-block', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
+            .$tpl->getHtmlPart('sidebar-block', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }
@@ -3778,7 +3782,7 @@ function renderFootControls(
     string $debugHtml = ''
 ): string {
     global $tpl;
-    return $tpl->getHtmlFrag('foot-controls', [
+    return $tpl->getHtmlPart('foot-controls', [
         'top_title' => $topTitle,
         'top_label' => $topLabel,
         'top_link' => ['href' => '#', 'title' => $topTitle, 'label' => $topLabel, 'class' => 'thide', 'is_upper' => true],
@@ -4364,7 +4368,7 @@ function encode_php(array $text): string {
         $hlang = $hmap[$ucname] ?? $ucname;
         $format = $tpl->getHtmlFrag('code-hljs', ['scripts_html' => $scripts, 'lang' => $hlang, 'code_html' => $replace]);
     }
-    return $tpl->getHtmlFrag('div', ['is_code' => true, 'title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'content_html' => $format ?? '']);
+    return $tpl->getHtmlPart('div', ['is_code' => true, 'title' => htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'content_html' => $format ?? '']);
 }
 
 # Mail check
@@ -4889,7 +4893,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $regdate = (!empty($user_regdate)) ? htmlspecialchars(_REG, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(format_time($user_regdate), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _NO_INFO;
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('comment-signature', ['content' => $user_sig]) : '';
+            $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('post-div', ['is_signature' => true, 'content' => $user_sig]) : '';
             $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true]) : '';
             $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'is_button_green' => true]) : '';
             $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';

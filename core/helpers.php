@@ -188,7 +188,7 @@ function getTplPreviewContent(array $data = []): string {
     $bodya = $texta ? $prs->filterContent($texta, false, $mod) : '';
     $bodyb = $textb ? $prs->filterContent($textb, false, $mod) : '';
     $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
-    return $tpl->getHtmlPart('preview-content', [
+    return $tpl->getHtmlPart('preview', [
         'title' => _PREVIEW,
         'title_text' => (string)$title,
         'body_a' => $bodya,
@@ -499,7 +499,7 @@ function getTplAdminTabs(array $data = []): string {
             'title' => (string)($link['title'] ?? ($link['label'] ?? '')),
         ]);
     }
-    return $tpl->getHtmlFrag('module-head', [
+    return $tpl->getHtmlPart('module-head', [
         'icon' => $icon,
         'is_runtime' => !empty($data['is_runtime']),
         'subtitle_html' => $subtitle,
@@ -598,7 +598,7 @@ function setTplAdminInfoPage(array $data = []): void {
             'is_full' => true,
             'field_unwrapped' => true,
         ]];
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $action,
             'hidden' => [
                 ['nameattr' => $save, 'valueattr' => '1'],
@@ -904,12 +904,12 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         ]);
         $is_like = false;
     }
-    if ($typ == 2) return $tpl->getHtmlFrag('div', ['content_html' => $img]);
+    if ($typ == 2) return $tpl->getHtmlPart('div', ['content_html' => $img]);
     $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
     if ((($con[1] ?? '') && $id && $mod) || ($rat && $scor)) {
         return ((($con[1] ?? '') && $typ) || (($con[1] ?? '') && !($con[2] ?? '') && !$typ))
-            ? $tpl->getHtmlFrag('div', ['id' => 'rep'.$id.$obj, 'content_html' => $imgr])
-            : $tpl->getHtmlFrag('div', ['content_html' => $img]);
+            ? $tpl->getHtmlPart('div', ['id' => 'rep'.$id.$obj, 'content_html' => $imgr])
+            : $tpl->getHtmlPart('div', ['content_html' => $img]);
     }
     return '';
 }
@@ -1063,22 +1063,22 @@ function getModuleNavi(array $p): string {
     $showrate = $always || !empty($mconf['rate']);
     $canadd = (is_user() && ($mconf['add'] ?? 0) == 1)
            || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
-    return $tpl->getHtmlFrag('navi', [
+    $home = $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]);
+    $best = $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : '');
+    $pop = $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : '');
+    $list = $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']);
+    $add = $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : '');
+    $btit = $p['btitle'] ?? _BEST;
+    $ptit = $p['ptitle'] ?? _POP;
+    $catshow = $p['catshow'] ?? $cat;
+    return $tpl->getHtmlPart('navi', [
         'title' => $title,
-        'htitle' => $htitle,
-        'lbl_home' => _HOME,
-        'home_href' => $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]),
-        'best_href' => $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : ''),
-        'lbl_best' => $p['btitle'] ?? _BEST,
-        'pop_href' => $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : ''),
-        'lbl_pop' => $p['ptitle'] ?? _POP,
-        'liste_href' => $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']),
-        'lbl_liste' => _LIST,
-        'add_href' => $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : ''),
-        'lbl_add' => _ADD,
-        'catshow' => $p['catshow'] ?? $cat,
-        'lbl_catvorh' => _CATVORH,
-        'lbl_cats' => _CATEGORIES,
+        'home_link' => ['href' => $home, 'title' => $htitle, 'label' => _HOME, 'is_navi_button' => true],
+        'best_link' => $best ? ['href' => $best, 'title' => $btit, 'label' => $btit, 'is_navi_button' => true] : [],
+        'pop_link' => $pop ? ['href' => $pop, 'title' => $ptit, 'label' => $ptit, 'is_navi_button' => true] : [],
+        'list_link' => $list ? ['href' => $list, 'title' => _LIST, 'label' => _LIST, 'is_navi_button' => true] : [],
+        'add_link' => $add ? ['href' => $add, 'title' => _ADD, 'label' => _ADD, 'is_navi_button' => true] : [],
+        'cat_link' => $catshow ? ['title' => _CATVORH, 'label' => _CATEGORIES, 'is_navi_button' => true, 'is_category_toggle' => true] : [],
     ]);
 }
 

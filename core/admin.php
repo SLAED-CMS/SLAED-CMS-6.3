@@ -308,7 +308,7 @@ function admininfo() {
                     ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
                 ]])]);
             }
-            $ablocks = $tpl->getHtmlFrag('sidebar-block', ['title' => _NEW, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlPart('sidebar-block', ['title' => _NEW, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
             
             $waitingRows = [];
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
@@ -316,12 +316,12 @@ function admininfo() {
                 ['content_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=comments&status=1', 'title' => _COMMENTS, 'label' => _COMMENTS])],
                 ['content_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl_red' : 'sl_green', 'label' => (string)$num]) : '-'],
             ]])]);
-            $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
+            $ablocks .= $tpl->getHtmlPart('sidebar-block', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'disable_sort' => true, 'head' => [['content' => '', 'nosort' => true], ['content' => '', 'nosort' => true]], 'rows_html' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
             
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
         $edit = Editor::getSelect('editor', $key, 'content', 'admin', 'onchange="this.form.submit()"');
-        $econt = $tpl->getHtmlFrag('form', [
+        $econt = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'op', 'valueattr' => 'changeeditor'],
@@ -329,7 +329,7 @@ function admininfo() {
             ],
             'content_html' => $edit,
         ]);
-        $ablocks .= $tpl->getHtmlFrag('sidebar-block', ['title' => _EDITOR, 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
+        $ablocks .= $tpl->getHtmlPart('sidebar-block', ['title' => _EDITOR, 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
 }
@@ -1062,7 +1062,7 @@ function getAdminInfo(): string {
     }
     $html = $prs->filterContent($thefile, false, 'info');
     if ($conf['adminfo']) {
-        $html .= $tpl->getHtmlFrag('form', [
+        $html .= $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name='.$name.'&op=info',
             'hidden' => [
                 ['nameattr' => 'id', 'valueattr' => '1'],
