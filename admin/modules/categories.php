@@ -25,7 +25,7 @@ function categories(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -68,7 +68,7 @@ function add(): void {
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
     $path = 'templates/'.$conf['theme'].'/images/categories/';
-    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -121,7 +121,7 @@ function add(): void {
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl-form-control', '', 1)],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl-form-control', '', 2)],
     ];
-    $tabs = $tpl->getHtmlFrag('tabs', [
+    $tabs = $tpl->getHtmlPart('tabs', [
         'id' => 'categories-add',
         'is_runtime' => true,
         'is_subtabs' => true,
@@ -130,11 +130,11 @@ function add(): void {
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-add-panel-1', 'title' => _ACESS])
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-add-panel-2', 'title' => _ACESSF]),
         'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-0', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows0])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-1', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows1])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-2', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows2])]),
+            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-add-panel-2', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])]),
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'content_html' => $tabs,
         'hidden' => [
@@ -155,7 +155,7 @@ function subadd(): void {
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -208,7 +208,7 @@ function subadd(): void {
             ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl-form-control', '', 1)],
             ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl-form-control', '', 2)],
         ];
-        $tabs = $tpl->getHtmlFrag('tabs', [
+        $tabs = $tpl->getHtmlPart('tabs', [
             'id' => 'categories-subadd',
             'is_runtime' => true,
             'is_subtabs' => true,
@@ -217,11 +217,11 @@ function subadd(): void {
                 .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-subadd-panel-1', 'title' => _ACESS])
                 .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-subadd-panel-2', 'title' => _ACESSF]),
             'content_html' =>
-                $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-0', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows0])])
-                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-1', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows1])])
-                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-2', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows2])]),
+                $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
+                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
+                .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-subadd-panel-2', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])]),
         ]);
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'content_html' => $tabs,
             'hidden' => [
@@ -232,7 +232,7 @@ function subadd(): void {
             'submit_label' => _ADD,
         ])]);
     } else {
-        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -256,7 +256,7 @@ function addedit(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -271,7 +271,7 @@ function addedit(): void {
         'subtitle_html' => $subtitle,
     ]);
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -299,7 +299,7 @@ function edit(): void {
     [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
@@ -356,7 +356,7 @@ function edit(): void {
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl-form-control', $pdelete, 1)],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl-form-control', $pmod, 2)],
     ];
-    $tabs = $tpl->getHtmlFrag('tabs', [
+    $tabs = $tpl->getHtmlPart('tabs', [
         'id' => 'categories-edit',
         'is_runtime' => true,
         'is_subtabs' => true,
@@ -365,11 +365,11 @@ function edit(): void {
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-edit-panel-1', 'title' => _ACESS])
             .$tpl->getHtmlFrag('tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-edit-panel-2', 'title' => _ACESSF]),
         'content_html' =>
-            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-0', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows0])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-1', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows1])])
-            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-2', 'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows2])]),
+            $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-0', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows0])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-1', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows1])])
+            .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'categories-edit-panel-2', 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows2])]),
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'content_html' => $tabs,
         'hidden' => array_merge(

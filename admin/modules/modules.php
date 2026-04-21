@@ -13,7 +13,7 @@ function modules(): void {
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
     $search = $tpl->getHtmlPart('searchbox', [
-        'searchbox' => $tpl->getHtmlFrag('form', [
+        'searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'modules'],
@@ -129,7 +129,7 @@ function modules(): void {
         }
         $typel = ($type == 0) ? 'tools' : 'people-fill';
         $titlel = ($menu == 0)
-            ? $tpl->getHtmlFrag('title-tip', [
+            ? $tpl->getHtmlFrag('info-tooltip', [
                 'items' => [
                     ['label' => _INFO, 'value' => _NO_SICHT, 'is_last' => true],
                 ],
@@ -225,7 +225,7 @@ function edit(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $search = $tpl->getHtmlPart('searchbox', [
-        'searchbox' => $tpl->getHtmlFrag('form', [
+        'searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'modules'],
@@ -292,7 +292,7 @@ function edit(): void {
         ])],
         ['label_html' => _SHOWINMENU, 'field_html' => getTplRadioGroup(['name' => 'menu', 'value' => (string)(int)$menu, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'mod', 'valueattr' => $mod],

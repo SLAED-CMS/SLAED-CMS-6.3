@@ -182,7 +182,7 @@ function fileedit(): void {
                 ]).$btn,
             ];
         }
-        $groups[] = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+        $groups[] = $tpl->getHtmlPart('div', ['rows' => $rows]);
     }
     $pager = '';
     if ($total_pages > 1) {
@@ -214,7 +214,7 @@ function fileedit(): void {
             'next' => $next,
         ]);
     }
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_merge(
             array_map(static fn($code) => ['nameattr' => 'lcn[]', 'valueattr' => $code], $lng_cn),
@@ -296,7 +296,7 @@ function config(): void {
         ['label_html' => _LANGCOUNT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'count', 'value_attr' => (string)$conf['lang']['count'], 'is_config' => true])],
         ['label_html' => _PERPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'per_page', 'value_attr' => (string)($conf['lang']['per_page'] ?? 100), 'is_config' => true])],
     ];
-    $confv = $tpl->getHtmlFrag('form', [
+    $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'lang'],

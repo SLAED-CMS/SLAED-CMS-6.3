@@ -42,7 +42,7 @@ function config(): void {
         ['label_html' => _VWEB, 'field_html' => getTplRadioGroup(['name' => 'web', 'value' => (string)(int)$conf['privat']['web'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _PRACT, 'field_html' => getTplRadioGroup(['name' => 'act', 'value' => (string)(int)$conf['privat']['act'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('form', [
+    $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'privat'],

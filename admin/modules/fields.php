@@ -91,13 +91,13 @@ function fields(): void {
                     ]),
                 ],
             ];
-            $blok .= $tpl->getHtmlFrag('toggle-form-block', [
+            $blok .= $tpl->getHtmlPart('toggle-form-block', [
                 'block_id' => 'fi'.$k.$c,
                 'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
                 'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
                 'title' => _ADD,
                 'label_html' => _FIELD.': '.$next,
-                'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows]),
+                'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
             ]);
         }
         $panels[] = $tpl->getHtmlFrag('tabs-panel', [
@@ -122,7 +122,7 @@ function fields(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     $cont .= $tpl->getHtmlFrag('alert', ['text' => _FIELDINFO]);
-    $fieldv = $tpl->getHtmlFrag('form', [
+    $fieldv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'fields'],
@@ -130,7 +130,7 @@ function fields(): void {
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => $tpl->getHtmlFrag('tabs', [
+        'content_html' => $tpl->getHtmlPart('tabs', [
             'content_html' => implode('', $panels),
         ]),
         'submit_label' => _SAVECHANGES,

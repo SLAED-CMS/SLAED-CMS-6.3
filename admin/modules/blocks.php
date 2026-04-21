@@ -98,7 +98,7 @@ function add(): void {
         $items .= $tpl->getHtmlFrag('checkbox', [
             'name_attr' => 'blockwhere[]',
             'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('title-tip', [
+            'label_html' => $tpl->getHtmlFrag('info-tooltip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
@@ -148,7 +148,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('div', ['is_radio_group' => true, 'content_html' => $items]),
+        'field_html' => $tpl->getHtmlPart('div', ['is_radio_group' => true, 'content_html' => $items]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -192,7 +192,7 @@ function add(): void {
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON]),
         ]),
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=addsave',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -227,7 +227,7 @@ function fileadd(): void {
             'field_html' => getTplRadioGroup(['name' => 'flag', 'value' => 'php', 'options' => [['value' => 'php', 'label' => 'PHP'], ['value' => 'html', 'label' => 'HTML']]]),
         ],
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -263,7 +263,7 @@ function fileedit(): void {
             'options_html' => $opts,
         ]),
     ]];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
@@ -408,7 +408,7 @@ function filecode(): void {
             ]),
             'is_full' => true,
         ]];
-        echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+        echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=blocks&amp;op=filecodesave',
             'hidden' => [
                 ['nameattr' => 'bf', 'valueattr' => $bf],
@@ -549,7 +549,7 @@ function edit(): void {
             'is_checked' => in_array($mod, $where),
             'name_attr' => 'blockwhere[]',
             'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('title-tip', [
+            'label_html' => $tpl->getHtmlFrag('info-tooltip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
@@ -573,7 +573,7 @@ function edit(): void {
     }
     $rows[] = [
         'label_html' => _BLOCK_VIEW.':',
-        'field_html' => $tpl->getHtmlFrag('div', ['is_radio_group' => true, 'content_html' => $items]),
+        'field_html' => $tpl->getHtmlPart('div', ['is_radio_group' => true, 'content_html' => $items]),
         'is_full' => true,
     ];
     if ($conf['multilingual'] == 1) {
@@ -628,7 +628,7 @@ function edit(): void {
                 .$tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (int)$view === 3]),
         ]),
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=blocks&amp;op=editsave',
         'hidden' => [
             ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],

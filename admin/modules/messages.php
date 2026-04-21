@@ -33,7 +33,7 @@ function messages(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$mid],
-                    ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_note', 'label' => cutstr($title, 35), 'title_text' => $title])],
+                    ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => cutstr($title, 35), 'title_text' => $title])],
                     ['content_html' => $exp],
                     ['content_html' => $mview],
                     ['content_html' => getLangName($lang)],
@@ -136,7 +136,7 @@ function add(): void {
             ['value' => '0', 'label' => _NO],
         ],
     ])];
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],

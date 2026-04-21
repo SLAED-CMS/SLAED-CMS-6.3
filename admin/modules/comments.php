@@ -27,7 +27,7 @@ function comments(): void {
             'is_selected' => $modul === $m,
         ]);
     }
-    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('form', [
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_values(array_filter([
             ['nameattr' => 'name', 'valueattr' => 'comments'],
@@ -49,8 +49,8 @@ function comments(): void {
     if (trim(strip_tags($list)) === '') {
         $list = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
-        $bulk = $tpl->getHtmlFrag('div', ['rows' => [[
-            'label_html' => '<span class="sl-action-label">'._CHECKOP.'</span>',
+        $bulk = $tpl->getHtmlPart('div', ['rows' => [[
+            'label_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-action-label', 'label' => _CHECKOP]),
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'op',
                 'options_html' => $tpl->getHtmlFrag('select-option', [
@@ -105,7 +105,7 @@ function edit(): void {
         ]),
         'is_full' => true,
     ]];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=comments&amp;op=editsave',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
@@ -169,7 +169,7 @@ function config(): void {
         ['label_html' => _VPROFIL, 'field_html' => getTplRadioGroup(['name' => 'profil', 'value' => (string)(int)$conf['comments']['profil'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VWEB, 'field_html' => getTplRadioGroup(['name' => 'web', 'value' => (string)(int)$conf['comments']['web'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=comments&amp;op=save',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'comments'],

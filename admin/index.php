@@ -66,7 +66,7 @@ function getAdminPanelBlocks(): string {
         if (isAdmin(true)) {
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
-                    $class = (!$mod['active']) ? ' sl_hidden' : '';
+                    $class = (!$mod['active']) ? ' sl-dimmed' : '';
                     $cont .= getAdminMenu(
                         $afile.'.php?name='.$name,
                         (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
@@ -75,7 +75,7 @@ function getAdminPanelBlocks(): string {
                     );
                 }
             }
-            $block = $tpl->getHtmlFrag('sidebar-block', ['title' => _ADMIN, 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
+            $block = $tpl->getHtmlPart('sidebar-block', ['title' => _ADMIN, 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
             $cont = '';
         }
         foreach ($conf['modules'] as $name => $mod) {
@@ -83,7 +83,7 @@ function getAdminPanelBlocks(): string {
                 if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
-                        $class = (!$mod['active']) ? ' sl_hidden' : '';
+                        $class = (!$mod['active']) ? ' sl-dimmed' : '';
                         $cont .= getAdminMenu(
                             $afile.'.php?name='.$name,
                             (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
@@ -95,7 +95,7 @@ function getAdminPanelBlocks(): string {
                 }
             }
         }
-        $block .= $tpl->getHtmlFrag('sidebar-block', ['title' => _MODULES, 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
+        $block .= $tpl->getHtmlPart('sidebar-block', ['title' => _MODULES, 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
         return $block;
     }
     return '';
@@ -116,7 +116,7 @@ function getAdminPanel(): void {
             $items = [];
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
-                    $class = (!$mod['active']) ? ' sl_hidden' : '';
+                    $class = (!$mod['active']) ? ' sl-dimmed' : '';
                     $items[] = getAdminMenu(
                         $afile.'.php?name='.$name,
                         (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
@@ -125,7 +125,7 @@ function getAdminPanel(): void {
                     );
                 }
             }
-            $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['items_html' => implode('', $items)])]);
+            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
         }
         $count = 1;
         $items = [];
@@ -134,7 +134,7 @@ function getAdminPanel(): void {
                 if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
-                        $class = (!$mod['active']) ? ' sl_hidden' : '';
+                        $class = (!$mod['active']) ? ' sl-dimmed' : '';
                         $items[] = getAdminMenu(
                             $afile.'.php?name='.$name,
                             (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
@@ -146,7 +146,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= $tpl->getHtmlFrag('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlFrag('menu-grid', ['items_html' => implode('', $items)])]);
+        $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
     }
     echo $content;
     setFoot();

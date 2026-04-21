@@ -30,7 +30,7 @@ function getStatisticSearch(): string {
         'name_attr' => 'file',
         'options_html' => $sopts,
     ]);
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'statistic'],
@@ -169,7 +169,7 @@ function config(): void {
         ['label_html' => _STATSHI, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shi', 'value_attr' => (string)$conf['statistic']['shi'], 'is_config' => true])],
         ['label_html' => _STATACT, 'field_html' => getTplRadioGroup(['name' => 'stat', 'value' => (string)(int)$conf['statistic']['stat'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('form', [
+    $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'statistic'],

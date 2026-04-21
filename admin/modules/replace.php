@@ -68,13 +68,13 @@ function replace(): void {
                     ]),
                 ],
             ];
-            $blok .= $tpl->getHtmlFrag('toggle-form-block', [
+            $blok .= $tpl->getHtmlPart('toggle-form-block', [
                 'block_id' => 'fi'.$k.$c,
                 'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
                 'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
                 'title' => _ADD,
                 'label_html' => _REPLACE_FIELD.': '.$next,
-                'content_html' => $tpl->getHtmlFrag('div', ['rows' => $rows]),
+                'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),
             ]);
         }
         $panels[] = $tpl->getHtmlFrag('tabs-panel', [
@@ -83,7 +83,7 @@ function replace(): void {
             'content_html' => $blok,
         ]);
     }
-    $repv = $tpl->getHtmlFrag('form', [
+    $repv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'replace'],
@@ -91,7 +91,7 @@ function replace(): void {
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'content_html' => $tpl->getHtmlFrag('tabs', [
+        'content_html' => $tpl->getHtmlPart('tabs', [
             'content_html' => implode('', $panels),
         ]),
         'submit_label' => _SAVECHANGES,

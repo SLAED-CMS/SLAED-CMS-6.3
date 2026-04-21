@@ -54,7 +54,7 @@ function getRobotsButton(string $template): string {
         'name_attr' => 'robots_template',
         'value_attr' => _EROBSTD,
         'label' => _EROBSTD,
-        'input_attr' => 'class="sl_but_green" data-robots-template="'.htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8').'" onclick="var src=this.getAttribute(\'data-robots-template\');var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(!code||!src)return;code.value=JSON.parse(src);if(view&&view.dispatch){view.dispatch({changes:{from:0,to:view.state.doc.length,insert:code.value}});view.focus();}"',
+        'input_attr' => 'class="sl-but-green" data-robots-template="'.htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8').'" onclick="var src=this.getAttribute(\'data-robots-template\');var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(!code||!src)return;code.value=JSON.parse(src);if(view&&view.dispatch){view.dispatch({changes:{from:0,to:view.state.doc.length,insert:code.value}});view.focus();}"',
     ]);
 }
 
@@ -74,9 +74,9 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $warn]);
     $html = ($note !== '') ? $tpl->getHtmlFrag('alert', ['is_warn' => $type === 'warn', 'text' => $note]) : '';
-    $cont .= $tpl->getHtmlFrag('div', ['id' => 'repeditornote', 'is_collapsible' => true, 'content_html' => $html]);
+    $cont .= $tpl->getHtmlPart('div', ['id' => 'repeditornote', 'is_collapsible' => true, 'content_html' => $html]);
     $attr = 'hx-post="'.$afile.'.php" hx-target="#repeditornote" hx-swap="innerHTML" hx-push-url="false" hx-on:htmx:config-request="var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(code&&view&&view.state&&view.state.doc){code.value=view.state.doc.toString();}"';
-    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    return $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'form_attr' => $attr,
         'hidden' => [

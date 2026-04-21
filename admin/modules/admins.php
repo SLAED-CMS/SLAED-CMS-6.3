@@ -66,7 +66,7 @@ function admins(): void {
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super] = $db->getSqlRow($result)) {
         $lang = $lang ? getLangName($lang) : _ALL;
         $show = htmlspecialchars((string)$name, ENT_QUOTES, 'UTF-8');
-        $tip = $tpl->getHtmlFrag('title-tip', [
+        $tip = $tpl->getHtmlFrag('info-tooltip', [
             'items' => [
                 ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING), 'is_last' => false],
                 ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING), 'is_last' => true],
@@ -154,13 +154,13 @@ function add(): void {
             'is_checked' => in_array($mod, $mods, true),
             'name_attr' => 'modules[]',
             'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('title-tip', [
+            'label_html' => $tpl->getHtmlFrag('info-tooltip', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
         ]);
     }
-    $perm = $tpl->getHtmlFrag('div', ['is_radio_group' => true, 'content_html' => $items]);
+    $perm = $tpl->getHtmlPart('div', ['is_radio_group' => true, 'content_html' => $items]);
     $mailtext = replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
         ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions((string)$lang)])
@@ -264,7 +264,7 @@ function add(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-            'field_html' => $tpl->getHtmlFrag('div', [
+            'field_html' => $tpl->getHtmlPart('div', [
                 'content_html' => $tpl->getHtmlFrag('textarea', [
                     'name_attr' => 'mailtext',
                     'rows_num' => 10,
@@ -291,7 +291,7 @@ function add(): void {
         'field_html' => $perm,
         'is_full' => true,
     ];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=admins&amp;op=save',
         'hidden' => [
             ['nameattr' => 'op', 'valueattr' => 'save'],

@@ -18,7 +18,7 @@ function getUploadsSearch(): string {
             'is_selected' => $dir == $file,
         ]);
     }
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=uploads',
         'content_html' => _DIR.': '.$tpl->getHtmlFrag('select', [
             'name_attr' => 'dir',
@@ -49,7 +49,7 @@ function uploads(): void {
             _DIR.': uploads/'.$dir,
         ],
     ]);
-    $tabone .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $tabone .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [
@@ -138,7 +138,7 @@ function uploads(): void {
             'link_attr' => $tab['link_attr'],
         ]);
     }
-    $uplv = $tpl->getHtmlFrag('tabs', [
+    $uplv = $tpl->getHtmlPart('tabs', [
         'id' => 'uploads-tabs',
         'is_runtime' => true,
         'is_subtabs' => true,
@@ -178,7 +178,7 @@ function tplconfig(): void {
     $typm = explode(',', $conf['uploads']['typ']);
     $blocks = '';
     for ($i = 0; $i < count($typm); $i++) {
-        $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('div', [
+        $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', [
             'rows' => [[
                 'label_html' => '',
                 'field_html' => _TPFOR.': '.$typm[$i],
@@ -195,7 +195,7 @@ function tplconfig(): void {
             ]],
         ])]);
     }
-    $tplv = $tpl->getHtmlFrag('form', [
+    $tplv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'uploads'],
@@ -247,7 +247,7 @@ function config(): void {
         ['label_html' => _TPWIDTH.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'twidth', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['width']])],
         ['label_html' => _TPHEIGHT.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'theight', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['height']])],
     ];
-    $tabone = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabone = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $blocks = '';
     $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
     $i = 0;
@@ -269,7 +269,7 @@ function config(): void {
                 ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => $i.'upload', 'value' => $con[10], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
                 ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => $i.'upguest', 'value' => $con[11], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ];
-            $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('div', ['rows' => $mrows])]);
+            $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $mrows])]);
             $i++;
         }
     }
@@ -285,7 +285,7 @@ function config(): void {
         'rel' => 'uploads-config-panel-1',
         'is_active' => false,
     ]);
-    $conts = $tpl->getHtmlFrag('tabs', [
+    $conts = $tpl->getHtmlPart('tabs', [
         'id' => 'uploads-config-tabs',
         'is_runtime' => true,
         'tabs_html' => $tabsHtml,
@@ -293,7 +293,7 @@ function config(): void {
             $tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-config-panel-0', 'content_html' => $tabone])
             .$tpl->getHtmlFrag('tabs-panel', ['panel_id' => 'uploads-config-panel-1', 'content_html' => $tabtwo]),
     ]);
-    $confv = $tpl->getHtmlFrag('form', [
+    $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'uploads'],

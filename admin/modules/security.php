@@ -61,7 +61,7 @@ function security(): void {
                     ],
                 ],
             ]);
-            $titleHtml = $tpl->getHtmlFrag('title-tip', [
+            $titleHtml = $tpl->getHtmlFrag('info-tooltip', [
                 'items' => [
                     ['label' => _FILE, 'value' => 'storage/logs/'.$file, 'is_last' => true],
                 ],
@@ -136,7 +136,7 @@ function banlist(): void {
                 $tcidr = getIpCidr($binfo[0]);
                 if ($tcidr === false) continue;
                 [$tip] = explode('/', $tcidr, 2);
-                $reason = $tpl->getHtmlFrag('title-tip', [
+                $reason = $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [
                         ['label' => _IP_CIDR, 'value' => htmlspecialchars($tcidr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _BANN_REAS, 'value' => htmlspecialchars((string)$binfo[3], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
@@ -198,7 +198,7 @@ function banlist(): void {
             ]),
         ],
     ];
-    $tabone .= $tpl->getHtmlFrag('form', [
+    $tabone .= $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=security&op=bansave',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => '2'],
@@ -287,7 +287,7 @@ function banlist(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_INFO]),
-            'field_html' => $tpl->getHtmlFrag('div', [
+            'field_html' => $tpl->getHtmlPart('div', [
                 'content_html' => $tpl->getHtmlFrag('textarea', [
                     'name_attr' => 'mailtext',
                     'rows_num' => 10,
@@ -299,7 +299,7 @@ function banlist(): void {
             'is_full' => true,
         ],
     ];
-    $tabtwo .= $tpl->getHtmlFrag('form', [
+    $tabtwo .= $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=security&op=bansave',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => '4'],
@@ -308,7 +308,7 @@ function banlist(): void {
         'rows' => $userrows,
         'submit_label' => _ADD,
     ]);
-    $banv = $tpl->getHtmlFrag('tabs', [
+    $banv = $tpl->getHtmlPart('tabs', [
         'id' => 'securitys',
         'is_runtime' => true,
         'is_subtabs' => true,
@@ -435,7 +435,7 @@ function passwd(): void {
             ['nameattr' => 'password', 'valueattr' => ''],
         ];
     }
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=security',
         'hidden' => $hidden,
         'rows' => $rows,
@@ -521,7 +521,7 @@ function config(): void {
         ['label_html' => _SEC_LOG_U, 'field_html' => getTplRadioGroup(['name' => 'log_u', 'value' => $conf['security']['log_u'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_WARN_BLOCK, 'field_html' => getTplRadioGroup(['name' => 'block', 'value' => $conf['security']['block'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('form', [
+    $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'security'],

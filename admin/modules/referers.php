@@ -31,7 +31,7 @@ function getRefererSearch(): string {
         ]);
     }
     return $tpl->getHtmlPart('searchbox', [
-        'searchbox' => $tpl->getHtmlFrag('form', [
+        'searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'referers'],
@@ -86,13 +86,13 @@ function referers(): void {
                 $words = engines_word($massiv[$i][4]) ?: _NO;
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'label_text' => $massiv[$i][3],
                             'title_text' => _NICKNAME.': '.$name.' | '._DATE.': '.format_time($massiv[$i][6], _TIMESTRING),
                         ])],
                         ['content_html' => domain($massiv[$i][5], 30)],
                         ['content_html' => domain($massiv[$i][4], 30)],
-                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'label_text' => cutstr($words, 25),
                             'title_text' => $words,
                         ])],
@@ -136,7 +136,7 @@ function config(): void {
         ['label_html' => _REFER, 'field_html' => getTplRadioGroup(['name' => 'refer', 'value' => (string)$conf['referers']['refer'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _REFERB, 'field_html' => getTplRadioGroup(['name' => 'referb', 'value' => (string)$conf['referers']['referb'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
-    $confv = $tpl->getHtmlFrag('form', [
+    $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'referers'],

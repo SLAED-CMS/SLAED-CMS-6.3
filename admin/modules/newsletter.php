@@ -20,7 +20,7 @@ function newsletter(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                             ['label' => _TIMENL, 'value' => getDuration($sendtime), 'is_last' => true],
@@ -191,7 +191,7 @@ function add(): void {
             $option .= $tpl->getHtmlFrag('select-option', ['value_attr' => $email9, 'label_text' => _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, 'is_selected' => $email9 === $mails]);
         }
     }
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'nid', 'valueattr' => (string)$nid],
@@ -265,7 +265,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'newsletter'],

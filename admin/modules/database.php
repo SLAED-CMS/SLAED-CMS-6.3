@@ -158,7 +158,7 @@ function getSqltable(array $items): string {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
         $status = $tpl->getHtmlFrag('inline-badge', [
-            'class' => $row['ok'] ? 'sl_green' : 'sl_red',
+            'class' => $row['ok'] ? 'sl-text-success' : 'sl-text-danger',
             'label' => $row['ok'] ? _OK : _ERROR.' - '.$row['error'],
         ]);
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -260,8 +260,8 @@ function database(): void {
 
         // Free space display
         $freetag = $tabeng === 'InnoDB'
-            ? $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_hidden', 'label' => filterSize($tabfree)])
-            : $tpl->getHtmlFrag('inline-badge', ['class' => $tabfree ? 'sl_red' : 'sl_green', 'label' => filterSize($tabfree)]);
+            ? $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-dimmed', 'label' => filterSize($tabfree)])
+            : $tpl->getHtmlFrag('inline-badge', ['class' => $tabfree ? 'sl-text-danger' : 'sl-text-success', 'label' => filterSize($tabfree)]);
 
         // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
@@ -272,21 +272,21 @@ function database(): void {
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_red', 'label' => _ERROR]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-danger', 'label' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-success', 'label' => _OPTIMIZED]);
             } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_red', 'label' => _ALREADYOPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-danger', 'label' => _ALREADYOPTIMIZED]);
             } else {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-success', 'label' => _OPTIMIZED]);
             }
 
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_hidden', 'label' => _NO]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-dimmed', 'label' => _NO]);
             } else {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => $rresult ? 'sl_green' : 'sl_red', 'label' => $rresult ? _OK : _ERROR]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => $rresult ? 'sl-text-success' : 'sl-text-danger', 'label' => $rresult ? _OK : _ERROR]);
             }
 
         } else {
@@ -467,10 +467,10 @@ function dump(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
     $buttons =
-        $tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _DB_PARSE, 'input_attr' => 'class="sl_but_green"'])
+        $tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _DB_PARSE, 'input_attr' => 'class="sl-but-green"'])
         .' '
         .$tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _EXECUTE, 'input_attr' => 'class="sl-but-blue"']);
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'database'],

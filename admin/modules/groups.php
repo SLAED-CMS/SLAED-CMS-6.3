@@ -58,7 +58,7 @@ function groups(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                     ['content_html' => (string)$grid],
                     ['content_html' => '<img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'">'],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'badge_attr' => ' style="color: '.htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'])],
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'badge_attr' => ' style="color: '.htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'])],
                     ['content_html' => (string)$points],
                     ['content_html' => (string)$users_num],
                     ['content_html' => $extra],
@@ -168,7 +168,7 @@ function add(): void {
             'is_checked' => !empty($check),
         ]),
     ];
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'gid', 'valueattr' => (string)$gid],
@@ -247,7 +247,7 @@ function points(): void {
             ]]),
         ]);
     }
-    $pointv = $tpl->getHtmlFrag('form', [
+    $pointv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'groups'],

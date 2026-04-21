@@ -168,7 +168,7 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => getTplModuleSelect('module', 'sl_conf', $conf['module'], 1)];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => getTplModuleSelect('module', 'sl-select-config', $conf['module'], 1)];
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $ival = 0;
@@ -325,7 +325,7 @@ function config(): void {
     $rows[] = ['label_html' => _ADMINFOEDIT, 'field_html' => getTplRadioGroup(['name' => 'adminfo', 'value' => $conf['adminfo'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SITE_CLOSE, 'field_html' => getTplRadioGroup(['name' => 'close', 'value' => $conf['close'], 'options' => $yesno])];
     $rows[] = ['label_html' => _DEVMODE, 'field_html' => getTplRadioGroup(['name' => 'dev_mode', 'value' => $conf['dev_mode'] ?? 0, 'options' => $yesno])];
-    $taba = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $taba = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
     $rows[] = ['label_html' => _DEFIS.':', 'field_html' => $tpl->getHtmlFrag('input', [
@@ -384,7 +384,7 @@ function config(): void {
         'rows_num' => 15,
         'is_config' => true,
     ])];
-    $tabb = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabb = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $list = is_dir('lang') ? scandir('lang') : [];
     $opts = '';
@@ -410,7 +410,7 @@ function config(): void {
     $rows[] = ['label_html' => _ACTUSEFLAGS, 'field_html' => getTplRadioGroup(['name' => 'flags', 'value' => $conf['flags'], 'options' => $yesno])];
     $rows[] = ['label_html' => _GEO_IP, 'field_html' => getTplRadioGroup(['name' => 'geo_ip', 'value' => $conf['geo_ip'], 'options' => $yesno])];
     $rows[] = ['label_html' => _ACTUSELANG, 'field_html' => getTplRadioGroup(['name' => 'alang', 'value' => $conf['alang'], 'options' => $yesno])];
-    $tabc = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabc = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
     $opts = $tpl->getHtmlFrag('select-option', [
@@ -443,7 +443,7 @@ function config(): void {
         'is_config' => true,
     ])];
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CLICABLE, 'hint' => _CLICABLEINFO]), 'field_html' => getTplRadioGroup(['name' => 'clickable', 'value' => $conf['clickable'], 'options' => $yesno])];
-    $tabd = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabd = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _BOTSLIST, 'hint' => _NOKOMA.' '._BOTSINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', [
@@ -463,7 +463,7 @@ function config(): void {
         'is_config' => true,
     ])];
     $rows[] = ['label_html' => _BOTSACT, 'field_html' => getTplRadioGroup(['name' => 'botsact', 'value' => $conf['botsact'], 'options' => $yesno])];
-    $tabe = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabe = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $cnt = 0;
     $size = 0;
@@ -538,7 +538,7 @@ function config(): void {
         _FILE_M.': '.$cnt,
         _FILE_S.': '.filterSize($size),
     ]]);
-    $tabf = $html.$tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAILTEMP, 'hint' => _MAILTEMPINFO]), 'field_html' => $tpl->getHtmlFrag('textarea', [
@@ -549,7 +549,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $tabg = $tpl->getHtmlFrag('div', ['rows' => $rows]);
+    $tabg = $tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $content = '';
     foreach ([$taba, $tabb, $tabc, $tabd, $tabe, $tabf, $tabg] as $idx => $panel) {
@@ -558,7 +558,7 @@ function config(): void {
             'content_html' => $panel,
         ]);
     }
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'content_html' => $content,
         'hidden' => [

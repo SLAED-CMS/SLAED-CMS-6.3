@@ -58,7 +58,7 @@ function getTemplateSearch(string $templ): string {
             'is_selected' => $file === $templ,
         ]);
     }
-    $form = $tpl->getHtmlFrag('form', [
+    $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=template',
         'content_html' => _THEME.': '.$tpl->getHtmlFrag('select', [
             'name_attr' => 'templ',
@@ -73,7 +73,7 @@ function getTemplateSearch(string $templ): string {
 
 function getTemplateEditorBlock(string $templ, string $filelink, string $mode, string $op): string {
     global $afile, $tpl;
-    $body = $tpl->getHtmlFrag('form', [
+    $body = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=template&amp;op='.$op,
         'hidden' => [
             ['nameattr' => 'templ', 'valueattr' => $templ],

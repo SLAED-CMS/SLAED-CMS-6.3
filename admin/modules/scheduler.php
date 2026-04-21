@@ -89,7 +89,7 @@ function scheduler(): void {
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
             ];
         }
-        $label = $tpl->getHtmlFrag('title-tip', ['items' => $tips]).htmlspecialchars(cutstr((string)$title, 22), ENT_QUOTES, 'UTF-8');
+        $label = $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars(cutstr((string)$title, 22), ENT_QUOTES, 'UTF-8');
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => $label],
@@ -219,7 +219,7 @@ function add(string $name = ''): void {
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SCHEDULER_MANUAL.':', 'field_html' => getTplRadioGroup(['name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('form', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'scheduler'],

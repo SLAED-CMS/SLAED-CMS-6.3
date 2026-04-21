@@ -630,9 +630,9 @@ function getCpuDetails(): array {
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
     global $tpl;
-    if ($state === null) return $tpl->getHtmlFrag('inline-badge', ['class' => 'sl_muted', 'label' => 'N/A']);
+    if ($state === null) return $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-muted', 'label' => 'N/A']);
     return $tpl->getHtmlFrag('inline-badge', [
-        'class' => $state ? 'sl_green' : 'sl_red',
+        'class' => $state ? 'sl-text-success' : 'sl-text-danger',
         'label' => $state ? 'On' : 'Off',
     ]);
 }
@@ -679,7 +679,7 @@ function getTooltipText(string $text, int $limit = 50): string {
     if ($text === '' || $text === 'N/A' || mb_strlen($text, 'UTF-8') <= $limit) return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     $short = htmlspecialchars(mb_substr($text, 0, $limit, 'UTF-8'), ENT_QUOTES, 'UTF-8').'...';
     $full = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    return $short.' <i class="bi bi-info-circle" title="'.$full.'" style="cursor:help; color:#3b82f6;"></i>';
+    return $short.' <i class="bi bi-info-circle sl-monitor-info-icon" title="'.$full.'"></i>';
 }
 
 # Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
@@ -919,14 +919,6 @@ function getDbIssueEventHours(int $hours = 24): string {
 }
 
 
-# Maps percentage load value to semantic color code for dashboard usage indicators
-function getUsageColor(float $pct): string {
-    if ($pct > 95) return '#ef4444';
-    if ($pct > 75) return '#f97316';
-    if ($pct > 50) return '#3b82f6';
-    return '#22c55e';
-}
-
 # Collects disk capacity and usage values used by both realtime and full dashboard render paths
 function getMonitorDiskSnapshot(): array {
     $disksum = (float)disk_total_space('.');
@@ -1042,24 +1034,27 @@ function getServerStatusVars(?array $snapshot = null): array {
     $offload = $dash - ($dash * $cpup / 100);
     $offr = $dash - ($dash * $mem['percent'] / 100);
     $offd = $dash - ($dash * $diskpct / 100);
+    $usagecls = static fn(float $pct): string => $pct > 95
+        ? 'sl-knob-danger'
+        : ($pct > 75 ? 'sl-knob-warning' : ($pct > 50 ? 'sl-knob-info' : 'sl-knob-success'));
     return [
         'dash' => $dash,
         'off' => $offload,
         'load_0' => round((float)$cpup, 1),
-        'cpucolor' => getUsageColor((float)$cpup),
+        'cpuclass' => $usagecls((float)$cpup),
         'cpucores' => $cpu['logical'],
         'cpuphys' => $cpu['physical'],
         'cpufreq' => $cpu['freq'],
         'dash_r' => $dash,
         'off_r' => $offr,
-        'ramcolor' => getUsageColor((float)$mem['percent']),
+        'ramclass' => $usagecls((float)$mem['percent']),
         'ram_p' => round((float)$mem['percent'], 1),
         'ramumb' => filterSize($mem['used']),
         'ramtmb' => filterSize($mem['total']),
         'ramavailmb' => filterSize($mem['free']),
         'dash_d' => $dash,
         'off_d' => $offd,
-        'diskcolor' => getUsageColor((float)$diskpct),
+        'diskclass' => $usagecls((float)$diskpct),
         'disk_p' => $diskpct,
         'diskused' => filterSize($diskused),
         'disktot' => filterSize($disksum),
@@ -1080,7 +1075,7 @@ function getMonitorPartial(array $snapshot, bool $showstat, bool $showtraf, bool
             'show_traffic' => $showtraf,
         ]
     );
-    return $tpl->getHtmlFrag('basic-monitor', $vars);
+    return $tpl->getHtmlPart('basic-monitor', $vars);
 }
 
 # Collects monitor counts and database size statistics needed for dashboard summary
@@ -1124,7 +1119,7 @@ function getMonitorServerStats(): array {
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
     $srvhttps = $tpl->getHtmlFrag('inline-badge', [
-        'class' => $ishttps ? 'sl_green' : 'sl_red',
+        'class' => $ishttps ? 'sl-text-success' : 'sl-text-danger',
         'label' => $ishttps ? 'enabled' : 'disabled',
     ]);
     $loaded = get_loaded_extensions();
@@ -1220,7 +1215,7 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     $extras = getMonitorRuntimeExtras();
     $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
     $diskwarn = $tpl->getHtmlFrag('inline-badge', [
-        'class' => $islowdisk ? 'sl_red' : 'sl_green',
+        'class' => $islowdisk ? 'sl-text-danger' : 'sl-text-success',
         'label' => $islowdisk ? 'Low free space' : 'Normal',
     ]);
     return [
@@ -1388,7 +1383,7 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
     $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&amp;op=info'], 'tabs' => [_HOME, _INFO]]);
-    echo $navi.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('basic-monitor', $vars)]);
+    echo $navi.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('basic-monitor', $vars)]);
 }
 
 # Renders the main monitor page including navigation, panels, and full dashboard layout
