@@ -7,7 +7,7 @@
         <span title="{{ name_title }}"{% if name_class %} class="{{ name_class }}"{% endif %}>{{ name_text }}</span>
         {% endif %}
     </td>
-    <td title="{{ module_title }}" class="{% if module_class %}{{ module_class }}{% else %}sl_right sl_note{% endif %}">
+    <td title="{{ module_title }}" class="{% if module_class %}{{ module_class }}{% else %}sl-right sl-note{% endif %}">
         {% if module_link %}
         {% include 'fragments/link.html' with module_link %}
         {% else %}

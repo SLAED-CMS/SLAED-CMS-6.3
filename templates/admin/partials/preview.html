@@ -1,24 +1,24 @@
 <div class="sl-box">
     <div class="sl-box-pad">
         <div class="sl-box-content">
-<div class="sl-preview admin-preview">
+<div{% if id %} id="{{ id }}"{% endif %} class="sl-preview sl-preview-admin">
                 {% if title %}
                 <div class="sl-preview-head">{{ title }}</div>
                 {% endif %}
                 <div class="sl-preview-body">
                     {% if title_text %}
-        <div class="sl-preview-title admin-preview-title">{{ title_text }}</div>
+        <div class="sl-preview-title sl-preview-admin-title">{{ title_text }}</div>
         {% elseif title_html %}
-        <div class="sl-preview-title admin-preview-title">{{{ title_html }}}</div>
+        <div class="sl-preview-title sl-preview-admin-title">{{{ title_html }}}</div>
         {% endif %}
         {% if body_a %}
-        <div class="sl-preview-section admin-preview-fields1">{{{ body_a }}}</div>
+        <div class="sl-preview-section sl-preview-field-primary">{{{ body_a }}}</div>
         {% endif %}
         {% if body_b %}
-        <div class="sl-preview-section admin-preview-fields2">{{{ body_b }}}</div>
+        <div class="sl-preview-section sl-preview-field-secondary">{{{ body_b }}}</div>
         {% endif %}
         {% if body_c %}
-        <div class="sl-preview-section sl-preview-meta admin-preview-fields3">{{{ body_c }}}</div>
+        <div class="sl-preview-section sl-preview-meta sl-preview-field-meta">{{{ body_c }}}</div>
         {% endif %}
     </div>
 </div>
