@@ -1,4 +1,6 @@
-{% if content or icon or subtitle %}
+{% if is_forum_heading %}
+<h1 class="heading">{{ title }}</h1>
+{% elseif content or icon or subtitle %}
 <div class="basecont">
     <div class="bpad">
         <div class="headmodule">

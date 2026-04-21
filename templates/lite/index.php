@@ -79,7 +79,7 @@ function getThemeFootVars(): array {
         'token_field' => ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')],
         'op_field' => ['name_attr' => 'op', 'value_attr' => 'contact'],
         'send_field' => ['name_attr' => 'send', 'value_attr' => '1'],
-        'submit_button' => ['button_type' => 'submit', 'label' => _SEND, 'button_class' => 'sl-but-blue'],
+        'submit_button' => ['button_type' => 'submit', 'label' => _SEND],
     ]);
     return [
         'forumblock' => setTemplateForum(),

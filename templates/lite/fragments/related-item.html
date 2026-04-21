@@ -1,6 +1,6 @@
 <li class="sl-related-item">
-	<a href="{{{ href }}}" title="{{ title_attr }}" class="sl-related-img"><img src="{{ img_src }}" alt="{{ title_attr }}" class="sl-related-img-inner"></a>
-	<b><a href="{{{ href }}}" title="{{ title_attr }}">{{ title_text }}</a></b>
+	{% if image_link %}{% include 'fragments/link.html' with image_link %}{% else %}<a href="{{{ href }}}" title="{{ title_attr }}" class="sl-related-img"><img src="{{ img_src }}" alt="{{ title_attr }}" class="sl-related-img-inner"></a>{% endif %}
+	<b>{% if title_link %}{% include 'fragments/link.html' with title_link %}{% else %}<a href="{{{ href }}}" title="{{ title_attr }}">{{ title_text }}</a>{% endif %}</b>
 	<p>{{{ text }}}</p>
-	{% if date_text %}<ul class="sl-related-meta"><li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-related-date">{{ date_text }}</time></li></ul>{% endif %}
+	{% if date_badge or date_text %}<ul class="sl-related-meta"><li>{% if date_badge %}{% include 'fragments/date-badge.html' with date_badge %}{% else %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-related-date">{{ date_text }}</time>{% endif %}</li></ul>{% endif %}
 </li>

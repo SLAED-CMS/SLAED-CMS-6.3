@@ -1,3 +1,10 @@
+{% if is_category_info %}
+<ul class="grid_1_3 forum-cat-info">
+	<li class="grid">{{{ new }}}</li>
+	<li class="grid">{{{ nonew }}}</li>
+	<li class="grid">{{{ closed }}}</li>
+</ul>
+{% else %}
 <div class="forum-list-info grid_1_2">
 	<ul class="grid">
 		<li>{{{ new }}}</li>
@@ -23,3 +30,4 @@
 		<li>{{{ perm_mod }}}</li>
 	</ul> -->
 </div>
+{% endif %}

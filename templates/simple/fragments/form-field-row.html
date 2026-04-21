@@ -1,1 +1,1 @@
-<div{% if row_id %} id="{{ row_id }}"{% endif %} class="sl-form-row{% if is_hidden %} sl_none{% endif %}"><label class="sl-form-label">{% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</label>{{{ field_html }}}</div>
+<div{% if row_id %} id="{{ row_id }}"{% endif %} class="sl-form-row{% if is_hidden %} sl_none{% endif %}">{% include 'fragments/label.html' %}{{{ field_html }}}</div>

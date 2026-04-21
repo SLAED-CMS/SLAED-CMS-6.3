@@ -43,7 +43,7 @@
 	<div class="sl-meta-foot">
 		<div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>
 		{{{ download }}} {{{ broken }}}
-		{% if back_text %}<span OnClick="javascript:window.history.go(-1);" title="{{ back_title }}" class="sl-but-back">{{ back_text }}</span>{% endif %}
+		{% if back_text %}{% include 'fragments/span.html' %}{% endif %}
 		{% if is_moder %}
 		<nav class="sl-menu"><ul><li><span class="sl-but-red">{{ editor }}</span><ul><li><a href="{{{ edit_href }}}" title="{{ edit_text }}">{{ edit_text }}</a></li><li><a href="{{{ delete_href }}}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a></li></ul></li></ul></nav>
 		{% endif %}

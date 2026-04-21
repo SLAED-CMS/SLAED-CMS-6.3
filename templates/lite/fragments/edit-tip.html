@@ -1,5 +1,5 @@
 <nav class="sl-menu"><ul><li><span class="sl-but-red">{{ editor_label }}</span><ul>
-        {% if view_href %}<a href="{{{ view_href }}}" title="{{ view_title }}">{{ view_label }}</a>{% endif %}
-        <a href="{{{ edit_href }}}" title="{{ edit_title }}">{{ edit_label }}</a>
-        <a href="{{{ delete_href }}}" OnClick="return DelCheck(this, '{{ delete_confirm }}');" title="{{ delete_title }}">{{ delete_label }}</a>
+        {% if view_link %}{% include 'fragments/link.html' with view_link %}{% endif %}
+        {% include 'fragments/link.html' with edit_link %}
+        {% include 'fragments/link.html' with delete_link %}
     </ul></li></ul></nav>
