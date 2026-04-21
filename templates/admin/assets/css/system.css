@@ -1,9 +1,9 @@
 /* Подлючение плагинов системы */
 /* Code Mirror - Динамичная подсветка кода */
-.CodeMirror { font: 12px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
+.CodeMirror { font: 14px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
 .sl_table_conf td .CodeMirror { max-width: 352px; }
 .CodeMirror:hover { box-shadow: 0 0 3px #34c8ed; }
-.CodeMirror-hints { font: 12px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
+.CodeMirror-hints { font: 14px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
 
 /* Общие стили системы */
 /* Стиль 50 процентного белого фона */
@@ -517,9 +517,9 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 	align-items: center;
 	justify-content: center;
 	white-space: nowrap;
-	min-height: 29px;
+	min-height: 28px;
 	padding: 0 12px;
-	line-height: 27px;
+	line-height: 26px;
 	border: 1px solid transparent;
 	text-decoration: none !important;
 	cursor: pointer;
@@ -535,7 +535,7 @@ input.sl-but-red,
 input.sl-but-green,
 input.sl-but-foot,
 input.sl-but-back {
-	height: 29px;
+	height: 28px;
 	line-height: normal;
 }
 input[type="submit"].sl-but,

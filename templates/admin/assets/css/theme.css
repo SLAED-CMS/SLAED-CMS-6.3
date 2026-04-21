@@ -27,7 +27,7 @@ body:has(.slaenter) {
 	box-sizing: border-box;
 	overflow: hidden;
 }
-body, select, input, textarea, button { font: 13px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
+body, select, input, textarea, button { font: 14px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
 
 h1, h2, h3, h4, h5 { line-height: normal; }
 h1 { font-size: 1.8em; }
@@ -49,7 +49,7 @@ ul { padding-left: 16px; list-style-position:outside; list-style-image:none; }
 ol { list-style-image: none; list-style-position: outside; list-style-type: decimal; margin-left: 2.2em; }
 
 input, textarea, select {
-	min-height: 18px;
+	min-height: 28px;
 	background: #fafafa;
 	color: #777;
 	border: 1px #dee0e2 solid;
@@ -125,7 +125,7 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 /* Размеры страницы */
 .wrapper {
 	position: relative;
-	width: min(1280px, calc(100vw - 32px));
+	width: min(1440px, calc(100vw - 32px));
 	overflow: hidden;
 	text-align: left;
 	margin: 26px auto 27px auto;
@@ -167,7 +167,7 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 }
 .sl-admin-header {
 	display: grid;
-	grid-template-columns: 250px minmax(0, 1fr);
+	grid-template-columns: 300px minmax(0, 1fr);
 	align-items: start;
 	padding-left: 0;
 	overflow: visible;
@@ -192,7 +192,7 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 .toolbar { margin: 9px 10px 0 5px; }
 .toolbar, .toolbar div { min-height: 32px; overflow: hidden; background: url(../../images/toolbar.png); }
 .toolbar div { min-width: 0; padding: 0 1px; background-position: 100% -32px; }
-.toolbar li { line-height: 29px; }
+.toolbar li { line-height: 28px; }
 .toolbar li, .toolbar li a, .toolbar li a b { float: left; height: 30px; }
 .toolbar li a b { cursor: pointer; padding: 0 11px; background: url(../../images/topmenu.png) no-repeat; }
 .toolbar li a { background: url(../../images/topmenu.png) no-repeat 100% -30px; }
@@ -220,14 +220,14 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 
 /* Структура из 2х колонок */
 .container, .leftside, .midside { overflow: visible; }
-.container { padding-left: 250px; }
-.leftside { margin: 0 0 0 -250px; width: 227px; padding: 0 12px 0 11px; }
+.container { padding-left: 300px; }
+.leftside { margin: 0 0 0 -300px; width: 227px; padding: 0 12px 0 11px; }
 .container .leftside { padding-top: 5px; background: none; }
 .midside { width: 100%; }
 .container .midside { padding-top: 8px; }
 .sl-admin-main {
 	display: grid;
-	grid-template-columns: 250px minmax(0, 1fr);
+	grid-template-columns: 300px minmax(0, 1fr);
 	align-items: stretch;
 	width: 100%;
 	min-height: 1px;
@@ -391,7 +391,7 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 /* Настройка оформления левых блоков */
 .leftside .block {
 	margin-bottom: 12px;
-	width: 225px;
+	width: 275px;
 	overflow: hidden;
 	background-color: #fff;
 	border: 1px solid #8ec96a;
@@ -431,11 +431,11 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 /* Заголовок центрального блока */
 .bchead {
 	display: block;
-	height: 29px;
+	height: 28px;
 	margin-bottom: 12px;
 	cursor: pointer;
 	font-size: 1em;
-	line-height: 29px;
+	line-height: 28px;
 	text-transform: uppercase;
 	color: #fff;
 	text-align: center;
@@ -445,7 +445,7 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 	border-radius: 4px;
 	box-shadow: 0 1px 2px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
 }
-.bchead b { display: block; height: 29px; margin: 0; padding: 0 16px; line-height: 29px; background: none; }
+.bchead b { display: block; height: 28px; margin: 0; padding: 0 16px; line-height: 28px; background: none; }
 .bchead:hover { background: linear-gradient(to bottom, #84cef9 0%, #4db7ea 44%, #2790cb 50%, #2c8dc8 75%, #3296cf 100%); }
 .bchead:hover b { background: none; }
 
