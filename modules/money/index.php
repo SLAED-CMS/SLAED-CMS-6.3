@@ -22,7 +22,7 @@ function money(): void {
     $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY]);
     $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
     $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), false, 'all');
-    $cont .= $tpl->getHtmlFrag('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
+    $cont .= $tpl->getHtmlPart('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
     $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_1]);
     foreach ([
         ['Rechner', _MO_3.' Z:', 'USD'],

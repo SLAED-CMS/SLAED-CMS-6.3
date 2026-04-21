@@ -114,13 +114,9 @@ function rules(): void {
         'table_close' => [],
     ]);
     $cont .= $tpl->getHtmlPart('navi-lower', [
-        'back_title' => _BACK,
-        'back_label' => _BACK,
-        'home_href' => 'index.php?name='.$conf['name'],
-        'home_title' => _PAGEHOME,
-        'home_label' => _PAGEHOME,
-        'top_title' => _PAGETOP,
-        'top_label' => _PAGETOP,
+        'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
+        'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+        'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
     ]);
     echo $cont;
     setFoot();
@@ -170,13 +166,9 @@ function stats(): void {
             'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
         ]);
         $cont .= $tpl->getHtmlPart('navi-lower', [
-            'back_title' => _BACK,
-            'back_label' => _BACK,
-            'home_href' => 'index.php?name='.$conf['name'],
-            'home_title' => _PAGEHOME,
-            'home_label' => _PAGEHOME,
-            'top_title' => _PAGETOP,
-            'top_label' => _PAGETOP,
+            'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
+            'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+            'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
         ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);

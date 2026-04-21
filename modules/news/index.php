@@ -104,34 +104,44 @@ function news(): void {
                 'title_href' => $thref,
                 'title_attr' => $stitle,
                 'title_text' => $stitle,
+                'title_link' => ['href' => $thref, 'title' => $stitle, 'label_html' => $stitle],
                 'title_new' => getTplNewGraphic($time),
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
+                'category_link' => $ctitle ? ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_card_category' => true] : [],
                 'category_img' => $cimg,
+                'category_image_link' => $cimg ? ['href' => $chref, 'title' => $cdesc, 'img_src' => $cimg, 'img_alt' => $cdesc, 'is_card_image' => true] : [],
                 'text' => $prs->filterContent($hometext, false, $conf['name']),
                 'read_href' => $thref,
                 'read_text' => _READMORE,
+                'read_link' => ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_card_read' => true],
                 'post_text' => $post,
                 'post_label' => _POSTEDBY,
+                'post_span' => $post ? ['title' => _POSTEDBY, 'content_html' => $post, 'is_card_post' => true] : [],
                 'date_text' => $date,
                 'date_iso' => $iso,
                 'date_label' => _CHNGSTORY,
                 'reads_text' => ($conf['news']['read']) ? $counter : '',
                 'reads_label' => _READS,
+                'reads_span' => ($conf['news']['read']) ? ['title' => _READS, 'text' => $counter, 'is_card_reads' => true] : [],
                 'hits' => '',
                 'comm_href' => ($acomm) ? $thref.'#comm' : '',
                 'comm_text' => ($acomm) ? $comm : '',
                 'comm_label' => _COMMENTS,
+                'comm_link' => ($acomm) ? ['href' => $thref.'#comm', 'title' => _COMMENTS, 'label' => $comm, 'is_card_comment' => true] : [],
                 'rating' => $rating,
                 'favorites' => '',
                 'voting' => '',
                 'editor' => _EDITOR,
+                'editor_span' => ['text' => _EDITOR, 'is_card_admin' => true],
                 'edit_href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id,
                 'edit_text' => _FULLEDIT,
+                'edit_link' => ['href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
                 'delete_href' => $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;refer=2&amp;token='.$token,
                 'delete_text' => _ONDELETE,
                 'delete_ask' => $ask,
+                'delete_link' => ['href' => $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;refer=2&amp;token='.$token, 'title' => _ONDELETE, 'label' => _ONDELETE, 'confirm_text' => $ask, 'is_delete' => true],
                 'is_moder' => $ismoder,
             ]);
         }
@@ -336,7 +346,7 @@ function view(): void {
                     .' WHERE cid IN ('.$assin.') AND id != :id'
                     ." AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.', '.$limit;
                 $result = $db->getSqlQuery($asql, ['id' => $id]);
-                $cont .= $tpl->getHtmlFrag('related', ['open' => true, 'title' => _ASSTORY]);
+                $cont .= $tpl->getHtmlPart('related', ['open' => true, 'title' => _ASSTORY]);
                 while ([$aid, $title, $time, $hometext, $bodytext] = $db->getSqlRow($result)) {
                     $date = ($conf['news']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $text = cutstr(htmlspecialchars(
@@ -347,11 +357,12 @@ function view(): void {
                     ), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
+                    $href = getSeoUrl([
+                        'name' => $conf['name'], 'op' => 'view',
+                        'id' => $aid, 'title' => $title,
+                    ]);
                     $cont .= $tpl->getHtmlFrag('related-item', [
-                        'href' => getSeoUrl([
-                            'name' => $conf['name'], 'op' => 'view',
-                            'id' => $aid, 'title' => $title,
-                        ]),
+                        'href' => $href,
                         'title_attr' => $title,
                         'title_text' => $title,
                         'date_text' => $date,
@@ -359,9 +370,12 @@ function view(): void {
                         'date_label' => _CHNGSTORY,
                         'text' => $text,
                         'img_src' => $img,
+                        'image_link' => ['href' => $href, 'title' => $title, 'img_src' => $img, 'img_alt' => $title, 'is_related_image' => true],
+                        'title_link' => ['href' => $href, 'title' => $title, 'label' => $title],
+                        'date_badge' => ($date) ? ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => $date, 'is_related_date' => true] : [],
                     ]);
                 }
-                $cont .= $tpl->getHtmlFrag('related', []);
+                $cont .= $tpl->getHtmlPart('related', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);

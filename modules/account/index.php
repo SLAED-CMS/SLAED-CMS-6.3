@@ -668,9 +668,9 @@ function privat(): void {
             'title' => _PRIVAT,
         ]);
         $title = [
-            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessin', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=1', 'label' => _PRIN]),
-            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessou', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=2', 'label' => _PROUT]),
-            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmesssa', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=3', 'label' => _PRSAVE]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmessin', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=1', 'text' => _PRIN, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmessou', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=2', 'text' => _PROUT, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmesssa', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=3', 'text' => _PRSAVE, 'is_htmx' => true]),
             _SEND
         ];
         $text = [

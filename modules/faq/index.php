@@ -336,14 +336,15 @@ function view(): void {
                     ." WHERE cid = :cid AND id != :id AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.', '.$limit,
                     ['cid' => $cid, 'id' => $id]
                 );
-                $cont .= $tpl->getHtmlFrag('related', ['open' => true, 'title' => _CATASSOC]);
+                $cont .= $tpl->getHtmlPart('related', ['open' => true, 'title' => _CATASSOC]);
                 while ([$aid, $title, $time, $hometext] = $db->getSqlRow($result)) {
                     $adate = ($conf['faq']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $atext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES, 'UTF-8'), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
+                    $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]);
                     $cont .= $tpl->getHtmlFrag('related-item', [
-                        'href'       => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]),
+                        'href'       => $href,
                         'title_attr' => $title,
                         'title_text' => $title,
                         'date_text'  => $adate,
@@ -351,9 +352,12 @@ function view(): void {
                         'date_label' => _CHNGSTORY,
                         'text'       => $atext,
                         'img_src'    => $img,
+                        'image_link' => ['href' => $href, 'title' => $title, 'img_src' => $img, 'img_alt' => $title, 'is_related_image' => true],
+                        'title_link' => ['href' => $href, 'title' => $title, 'label' => $title],
+                        'date_badge' => ($adate) ? ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => $adate, 'is_related_date' => true] : [],
                     ]);
                 }
-                $cont .= $tpl->getHtmlFrag('related', []);
+                $cont .= $tpl->getHtmlPart('related', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);

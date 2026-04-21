@@ -417,13 +417,9 @@ function getSearchList(array $rows, array $state): string {
     $pnum = ceil($anum / $state['snum']);
     $tail = $state['typ'] ? '&typ='.$state['typ'] : '';
     $cont .= ($anum > $state['snum']) ? getPageNumbers($conf['name'], $anum, $pnum, $state['snum'], 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump']) : $tpl->getHtmlPart('navi-lower', [
-        'back_title' => _BACK,
-        'back_label' => _BACK,
-        'home_href' => 'index.php?name='.$conf['name'],
-        'home_title' => _PAGEHOME,
-        'home_label' => _PAGEHOME,
-        'top_title' => _PAGETOP,
-        'top_label' => _PAGETOP,
+        'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
+        'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+        'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
     ]);
     return $cont;
 }

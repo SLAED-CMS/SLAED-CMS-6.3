@@ -325,7 +325,7 @@ function view(): void {
                     ." WHERE cid = :cid AND id != :id AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.', '.$limit,
                     ['cid' => $cid, 'id' => $id]
                 );
-                $cont .= $tpl->getHtmlFrag('related', ['open' => true, 'title' => _CATASSOC]);
+                $cont .= $tpl->getHtmlPart('related', ['open' => true, 'title' => _CATASSOC]);
                 while ([$aid, $title, $hometext, $bodytext, $time] = $db->getSqlRow($result)) {
                     $date = ($conf['files']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $text = cutstr(htmlspecialchars(
@@ -334,8 +334,9 @@ function view(): void {
                     ), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
+                    $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]);
                     $cont .= $tpl->getHtmlFrag('related-item', [
-                        'href'       => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]),
+                        'href'       => $href,
                         'title_attr' => $title,
                         'title_text' => $title,
                         'date_text'  => $date,
@@ -343,9 +344,12 @@ function view(): void {
                         'date_label' => _CHNGSTORY,
                         'text'       => $text,
                         'img_src'    => $img,
+                        'image_link' => ['href' => $href, 'title' => $title, 'img_src' => $img, 'img_alt' => $title, 'is_related_image' => true],
+                        'title_link' => ['href' => $href, 'title' => $title, 'label' => $title],
+                        'date_badge' => ($date) ? ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => $date, 'is_related_date' => true] : [],
                     ]);
                 }
-                $cont .= $tpl->getHtmlFrag('related', []);
+                $cont .= $tpl->getHtmlPart('related', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);
@@ -497,13 +501,9 @@ function loading(): void {
             $cont = getModuleNavi(['title' => _FILES]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
             $cont .= $tpl->getHtmlPart('navi-lower', [
-                'back_title' => _BACK,
-                'back_label' => _BACK,
-                'home_href' => 'index.php?name='.$conf['name'],
-                'home_title' => _PAGEHOME,
-                'home_label' => _PAGEHOME,
-                'top_title' => _PAGETOP,
-                'top_label' => _PAGETOP,
+                'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
+                'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
+                'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],
             ]);
             echo $cont;
             setFoot();

@@ -18,7 +18,16 @@ function voting(): void {
 	$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]);
 	$result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
 	if ($db->getSqlRowCount($result) > 0) {
-		$cont .= $tpl->getHtmlFrag('voting-home-wrap', ['open' => true, 'id' => _ID, 'title' => _TITLE, 'comm' => cutstr(_COMMENTS, 4, 1), 'votes' => cutstr(_VOTES, 3, 1)]);
+		$cont .= $tpl->getHtmlFrag('table', [
+			'open' => true,
+			'is_voting_list' => true,
+			'headers' => [
+				['text' => _ID, 'is_forum_num' => true],
+				['text' => _TITLE],
+				['text' => cutstr(_COMMENTS, 4, 1), 'is_forum_stat' => true],
+				['text' => cutstr(_VOTES, 3, 1), 'is_forum_stat' => true],
+			],
+		]);
 		while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]);
 			$comm = ($acomm && $comm) ? $comm : _NO;
@@ -40,11 +49,22 @@ function voting(): void {
 					'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
 				]);
 			}
-			$cont .= $tpl->getHtmlFrag('voting-home', [
+			$cont .= $tpl->getHtmlPart('voting-home', [
 				'id' => $id,
+				'id_link' => [
+					'href' => '#'.$id,
+					'title' => (string)$id,
+					'label' => (string)$id,
+					'is_num_anchor' => true,
+				],
 				'title_href' => $thref,
 				'title_attr' => htmlspecialchars($stitle, ENT_QUOTES),
 				'title_text' => cutstr($stitle, 60),
+				'title_link' => [
+					'href' => $thref,
+					'title' => htmlspecialchars($stitle, ENT_QUOTES),
+					'label' => cutstr($stitle, 60),
+				],
 				'title_new' => getTplNewGraphic($date),
 				'comm' => $comm,
 				'vote' => $vote,
@@ -53,7 +73,7 @@ function voting(): void {
 				'admin' => $admin,
 			]);
 		}
-		$cont .= $tpl->getHtmlFrag('voting-home-wrap', []);
+		$cont .= $tpl->getHtmlFrag('table', []);
         $cont .= getTplPager([
             'limit'     => $conf['voting']['num'],
             'maxpg'     => $conf['voting']['nump'],

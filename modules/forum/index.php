@@ -185,10 +185,10 @@ function forum(): void {
                         ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][0], 'title' => _NEWTOPIC, 'is_account_button' => true, 'label' => _OPEN])
                         : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOT, _NOTCAN), 'is_account_button' => true, 'is_hidden' => true, 'label' => _OPEN]);
                     $cat_link = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$rows[0][0], 'title' => $rows[0][1], 'label' => $rows[0][1]]);
-                    $cont = $tpl->getHtmlFrag('forum-list-wrap', ['open' => true, 'button' => $newbt, 'cat' => $cat_link]);
+                    $cont = $tpl->getHtmlFrag('forum-view-wrap', ['open' => true, 'button' => $newbt, 'title_html' => $cat_link]);
                     if ($db->getSqlRowCount($query) > 0) {
                         $mark = 0;
-                        $topicList = $tpl->getHtmlFrag('forum-list-basic-wrap', ['open' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
+                        $topicList = $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'is_topic_list' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
                         while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
@@ -250,11 +250,11 @@ function forum(): void {
                             } else {
                                 $checkb = '';
                             }
-                            $topicList .= ($view) ? $tpl->getHtmlFrag('forum-list-basic', ['icon' => $timg, 'link' => $tlink, 'replies' => $comments, 'posts' => $post, 'views' => $counter, 'last_date' => $ldata, 'last_poster' => $lposter, 'last_link' => $lpost.$checkb]) : '';
+                            $topicList .= ($view) ? $tpl->getHtmlFrag('forum-cat-basic', ['is_topic_list' => true, 'icon' => $timg, 'link' => $tlink, 'replies' => $comments, 'posts' => $post, 'views' => $counter, 'last_date' => $ldata, 'last_poster' => $lposter, 'last_link' => $lpost.$checkb]) : '';
                         }
-                        $topicList .= $tpl->getHtmlFrag('forum-list-basic-wrap', []);
+                        $topicList .= $tpl->getHtmlFrag('forum-cat-wrap', []);
                         if ($ismod) {
-                            $topicList .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => tmoder(1)
+                            $topicList .= $tpl->getHtmlPart('fieldset-block', ['legend' => _CHECKOP, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => tmoder(1)
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$cat, 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('form-submit', ['label' => _OK])]);
@@ -276,7 +276,7 @@ function forum(): void {
                         'url_extra' => ['cat' => $cat],
                         'prefix'    => 'new/',
                     ]);
-                    $cont .= $tpl->getHtmlFrag('forum-list-wrap', ['button' => $newbt, 'pager' => $pnum]);
+                    $cont .= $tpl->getHtmlFrag('forum-view-wrap', ['button' => $newbt, 'pager' => $pnum]);
                     $b_can = $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _ISCAN]);
                     $b_not = $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _NOTCAN]);
                     $infov = ($isview) ? sprintf(_ACINFOV, $b_can) : sprintf(_ACINFOV, $b_not);
@@ -316,7 +316,8 @@ function forum(): void {
         } else {
             $cont = '';
         }
-        if ($show) $cont .= $tpl->getHtmlFrag('forum-cat-info', [
+        if ($show) $cont .= $tpl->getHtmlFrag('forum-list-info', [
+            'is_category_info' => true,
             'new'    => $tpl->getHtmlFrag('inline-badge', ['title_text' => _ISNEWPOST, 'is_forum_new' => true, 'label' => _ISNEWPOST]),
             'nonew'  => $tpl->getHtmlFrag('inline-badge', ['title_text' => _NONEWPOST, 'is_forum_old' => true, 'label' => _NONEWPOST]),
             'closed' => $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'is_forum_closed' => true, 'label' => _FCLOSED]),
@@ -450,7 +451,7 @@ function view(): void {
                 $gender = (!empty($gender)) ? _GENDER.': '.getGenderText($gender) : '';
                 $from = (!empty($from)) ? _FROM.': '.$from : '';
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
-                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('comment-signature', ['content' => $sig]) : '';
+                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('post-div', ['is_signature' => true, 'content' => $sig]) : '';
                 $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
                     ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'is_button_blue' => true, 'label' => _PERS])
                     : '';
@@ -498,7 +499,7 @@ function view(): void {
             if ($ismod) {
                 $selmm = tmoder(1)
                     .$tpl->getHtmlFrag('form-submit', ['op' => 'move', 'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']), 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]);
-                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('forum-view-change', ['title' => _OPMOD, 'content' => $selmm])]);
+                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlPart('fieldset-block', ['legend' => _OPMOD, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => $selmm])]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         } else {
@@ -535,7 +536,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             'form_attr' => 'class="sl-forum-reply-form"',
             'fields' => $rows,
         ]);
-        return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
+        return $tpl->getHtmlFrag('title', ['title' => _QUICKREPLY, 'is_forum_heading' => true]).$cont;
     }
     return '';
 }
@@ -657,7 +658,7 @@ function add(): void {
         if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name']]);
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
-        $cont .= $tpl->getHtmlFrag('forum-all-open', ['title' => $info]);
+        $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_forum_heading' => true]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
@@ -685,7 +686,7 @@ function add(): void {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
         $head = _FORUM.' '.$ctitle.' '.$ctitle;
         setHead(['title' => $head]);
-        $cont = $tpl->getHtmlFrag('forum-all-open', ['title' => $ctitle]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => $ctitle, 'is_forum_heading' => true]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
     }
