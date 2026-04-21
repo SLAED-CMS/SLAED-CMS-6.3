@@ -80,16 +80,19 @@ namespace Tests\Unit {
         {
             $GLOBALS['__test_captcha'] = '<div class="admin-captcha">captcha</div>';
 
-            $html = (new \Template('default'))->getHtmlPart('login', [
+            $html = (new \Template('admin'))->getHtmlPart('login', [
                 'route' => 'admin',
                 'nickname' => 'Nickname',
                 'password' => 'Password',
                 'captcha' => $GLOBALS['__test_captcha'],
-                'login' => 'Login',
+                'name_field' => ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser'],
+                'pwd_field' => ['itype' => 'password', 'name_attr' => 'apwd'],
+                'hidden' => ['name_attr' => 'op', 'value_attr' => 'login'],
+                'submit' => ['button_type' => 'submit', 'label' => 'Login'],
             ]);
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('login-form', $html);
+            $this->assertStringContainsString('action="admin.php"', $html);
             $this->assertStringContainsString('Nickname', $html);
             $this->assertStringContainsString('Password', $html);
             $this->assertStringContainsString('Login', $html);
@@ -99,24 +102,27 @@ namespace Tests\Unit {
         #[Test]
         public function adminRegistrationFlowUsesNewRegistrationPartialHappyPath(): void
         {
-            $html = (new \Template('default'))->getHtmlPart('registration', [
+            $html = (new \Template('admin'))->getHtmlPart('registration', [
                 'route' => 'admin',
                 'nickname' => 'Nickname',
-                'aname' => 'AdminUser',
                 'homepage' => 'Homepage',
-                'host' => 'admin.example.test',
                 'email' => 'Email',
-                'aemail' => 'admin@example.test',
                 'password' => 'Password',
                 'retype' => 'Retype password',
                 'createuserdata' => 'Create user data',
-                'yes' => 'Yes',
-                'no' => 'No',
-                'send' => 'Send',
+                'aname_field' => ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser'],
+                'aurl_field' => ['itype' => 'url', 'name_attr' => 'aurl', 'value_attr' => 'http://admin.example.test'],
+                'aemail_field' => ['itype' => 'email', 'name_attr' => 'aemail', 'value_attr' => 'admin@example.test'],
+                'apwd_field' => ['itype' => 'password', 'name_attr' => 'apwd'],
+                'apwd2_field' => ['itype' => 'password', 'name_attr' => 'apwd2'],
+                'yes_field' => ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => 'Yes', 'is_checked' => true],
+                'no_field' => ['name_attr' => 'auser_new', 'value_attr' => '0', 'label_text' => 'No'],
+                'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
+                'submit' => ['button_type' => 'submit', 'label' => 'Send'],
             ]);
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('admin-registration-form', $html);
+            $this->assertStringContainsString('action="admin.php"', $html);
             $this->assertStringContainsString('AdminUser', $html);
             $this->assertStringContainsString('admin.example.test', $html);
             $this->assertStringContainsString('Create user data', $html);

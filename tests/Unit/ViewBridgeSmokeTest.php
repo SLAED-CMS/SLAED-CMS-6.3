@@ -27,47 +27,52 @@ namespace Tests\Unit {
         }
 
         #[Test]
-        public function viewRendersLoginWithoutPartial(): void
+        public function viewRendersLoginNavPartial(): void
         {
             $tpl = new \Template('default');
-            $html = $tpl->getHtmlPart('login-without', ['register' => 'Register']);
+            $html = $tpl->getHtmlPart('login-nav', [
+                'login' => 'Login',
+                'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'placeholder_text' => 'Nickname'],
+                'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'placeholder_text' => 'Password'],
+                'submit_button' => ['button_type' => 'submit', 'label' => 'Send'],
+                'lost_link' => ['href' => 'index.php?name=account&amp;op=pass_lost', 'label' => 'Lost'],
+                'register_link' => ['href' => 'index.php?name=account&amp;op=registration', 'label' => 'Register'],
+                'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
+                'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
+            ]);
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('login-without', $html);
+            $this->assertStringContainsString('login-form', $html);
+            $this->assertStringContainsString('Nickname', $html);
             $this->assertStringContainsString('Register', $html);
         }
 
         #[Test]
-        public function viewRendersLoginLoggedPartial(): void
+        public function viewRendersMessageBlockPartial(): void
         {
             $tpl = new \Template('default');
-            $html = $tpl->getHtmlPart('login-logged', [
-                'title' => 'Account',
-                'avatar' => 'uploads/avatars/default/00.gif',
-                'user' => 'Tester',
-                'logout' => 'Logout',
-            ]);
-
-            $this->assertNotSame('', $html);
-            $this->assertStringContainsString('Tester', $html);
-            $this->assertStringContainsString('uploads/avatars/default/00.gif', $html);
-            $this->assertStringContainsString('Logout', $html);
-        }
-
-        #[Test]
-        public function viewRendersMessageFragment(): void
-        {
-            $tpl = new \Template('default');
-            $html = $tpl->getHtmlFrag('message', [
-                'text' => 'Hello',
-                'is_warn' => true,
-                'is_error' => false,
+            $html = $tpl->getHtmlPart('message-block', [
+                'title' => 'Hello',
+                'intro_text' => 'Warn',
             ]);
 
             $this->assertNotSame('', $html);
             $this->assertStringContainsString('Hello', $html);
-            $this->assertStringContainsString('view-frag-message', $html);
-            $this->assertStringContainsString('alert-warning', $html);
+            $this->assertStringContainsString('Warn', $html);
+        }
+
+        #[Test]
+        public function viewRendersAlertFragment(): void
+        {
+            $tpl = new \Template('default');
+            $html = $tpl->getHtmlFrag('alert', [
+                'text' => 'Hello',
+                'is_warn' => true,
+            ]);
+
+            $this->assertNotSame('', $html);
+            $this->assertStringContainsString('Hello', $html);
+            $this->assertStringContainsString('sl-warn', $html);
         }
 
         #[Test]
@@ -99,11 +104,19 @@ namespace Tests\Unit {
         public function viewDirectCallsRenderSmokeOutputs(): void
         {
             $tpl = new \Template('default');
-            $part = $tpl->getHtmlPart('login-without', ['register' => 'Join']);
-            $frag = $tpl->getHtmlFrag('message', [
+            $part = $tpl->getHtmlPart('login-nav', [
+                'login' => 'Login',
+                'name_field' => ['itype' => 'text', 'name_attr' => 'user_name'],
+                'password_field' => ['itype' => 'password', 'name_attr' => 'user_password'],
+                'submit_button' => ['button_type' => 'submit', 'label' => 'Send'],
+                'lost_link' => ['href' => 'index.php?name=account&amp;op=pass_lost', 'label' => 'Lost'],
+                'register_link' => ['href' => 'index.php?name=account&amp;op=registration', 'label' => 'Join'],
+                'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
+                'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
+            ]);
+            $frag = $tpl->getHtmlFrag('alert', [
                 'text' => 'Warn',
                 'is_warn' => true,
-                'is_error' => false,
             ]);
             $page = $tpl->getHtmlPage('error', [
                 'lang' => 'en',

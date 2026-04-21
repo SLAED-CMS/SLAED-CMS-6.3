@@ -70,9 +70,9 @@ class BlockValidationTest extends TestCase
         foreach (self::$blockFiles as $file) {
             $fileName = basename($file);
 
-            // Блоки должны начинаться с block-
-            if (!preg_match('/^block-[\w-]+\.php$/', $fileName)) {
-                $errors[] = "blocks/$fileName - некорректное именование (должно быть block-*.php)";
+            // Runtime loads the bfile value directly from blocks/.
+            if (!preg_match('/^[a-z][a-z0-9_]*\.php$/', $fileName)) {
+                $errors[] = "blocks/$fileName - некорректное именование (должно быть snake_case.php)";
             }
         }
 
@@ -180,9 +180,7 @@ class BlockValidationTest extends TestCase
         $fileBlocks = [];
         foreach (self::$blockFiles as $file) {
             $fileName = basename($file, '.php');
-            if (preg_match('/^block-(.+)$/', $fileName, $m)) {
-                $fileBlocks[] = $m[1];
-            }
+            $fileBlocks[] = $fileName;
         }
 
         // Эта проверка информационная - БД может содержать динамические блоки

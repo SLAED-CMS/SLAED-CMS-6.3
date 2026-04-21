@@ -184,8 +184,14 @@ class TemplateValidationTest extends TestCase
             }
         }
 
-        // Обязательные фрагменты для каждой frontend-темы
-        $required = ['fragments/basic.html', 'fragments/title.html'];
+        // Обязательные шаблоны для каждой frontend-темы
+        $required = [
+            'fragments/title.html',
+            'partials/liste.html',
+            'partials/view.html',
+            'pages/module.html',
+            'layouts/app.html',
+        ];
 
         foreach ($themes as $theme) {
             // Пропускаем admin тему
@@ -209,21 +215,7 @@ class TemplateValidationTest extends TestCase
     public function testSharedFrontendFragmentsStayInSyncAcrossThemes(): void
     {
         $themes = ['default', 'lite', 'simple'];
-        $allowed = [
-            'fragments/basic-changelog-commit.html',
-            'fragments/basic.html',
-            'fragments/comment.html',
-            'fragments/kasse-basic.html',
-            'fragments/kasse-wrap.html',
-            'fragments/liste-wrap.html',
-            'fragments/login-logged.html',
-            'fragments/login-without.html',
-            'fragments/login.html',
-            'fragments/message.html',
-            'fragments/pagenum.html',
-            'fragments/title.html',
-            'fragments/voting-close.html',
-        ];
+        $allowed = [];
         $errors = [];
         $maps = [];
 
@@ -278,7 +270,7 @@ class TemplateValidationTest extends TestCase
         );
 
         $this->assertGreaterThan(
-            100,
+            60,
             count($common),
             'Слишком мало общих frontend fragments для cross-theme проверки'
         );
