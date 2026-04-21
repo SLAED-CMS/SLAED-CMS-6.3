@@ -1,7 +1,5 @@
 <div class="sl-box">
-    <div class="sl-box-pad">
-        <div class="sl-box-content">
-<div{% if id %} id="{{ id }}"{% endif %} class="sl-preview sl-preview-admin">
+	<div{% if id %} id="{{ id }}"{% endif %} class="sl-preview sl-preview-admin">
                 {% if title %}
                 <div class="sl-preview-head">{{ title }}</div>
                 {% endif %}
@@ -19,9 +17,7 @@
         {% endif %}
         {% if body_c %}
         <div class="sl-preview-section sl-preview-meta sl-preview-field-meta">{{{ body_c }}}</div>
-        {% endif %}
-    </div>
-</div>
-        </div>
-    </div>
+	        {% endif %}
+	    </div>
+	</div>
 </div>
