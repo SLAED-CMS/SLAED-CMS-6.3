@@ -467,9 +467,8 @@ function dump(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
     $buttons =
-        $tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _DB_PARSE, 'input_attr' => 'class="sl-but-green"'])
-        .' '
-        .$tpl->getHtmlFrag('input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => _EXECUTE, 'input_attr' => 'class="sl-but-blue"']);
+        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'submit_label' => _DB_PARSE, 'class' => 'sl-but-green'])
+        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'submit_label' => _EXECUTE, 'class' => 'sl-but-blue']);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
