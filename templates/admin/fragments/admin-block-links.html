@@ -1,1 +1,5 @@
-<table class="sl-table-block"><tr><td>{% include 'fragments/link.html' with admin_link %}</td></tr><tr><td>{% include 'fragments/link.html' with logout_link %}</td></tr></table>{% if block_html %}<hr>{{{ block_html }}}{% endif %}
+<div class="sl-admin-block-links">
+    <div class="sl-admin-block-link">{% include 'fragments/link.html' with admin_link %}</div>
+    <div class="sl-admin-block-link">{% include 'fragments/link.html' with logout_link %}</div>
+</div>
+{% if block_html %}<hr>{{{ block_html }}}{% endif %}
