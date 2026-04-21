@@ -153,7 +153,7 @@ function add(): void {
         'name'      => $conf['name'],
         'fields'    => $fields,
         'captcha'   => getCaptcha(1),
-        'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+        'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
     ]);
     echo $cont;
     setFoot();
@@ -208,7 +208,7 @@ function send(): void {
                 ];
             }
         }
-        $cont .= $tpl->getHtmlPart('liste', [
+        $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
             'table_open' => ['open' => true, 'is_form' => true],
             'table_close' => [],

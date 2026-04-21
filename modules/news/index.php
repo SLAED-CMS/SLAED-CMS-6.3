@@ -70,7 +70,7 @@ function news(): void {
     $cont = '';
     if (!$home || ($home && $conf['news']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _NEWS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -208,7 +208,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['news']['letter'] && $rows) ? letter($conf['name']) : '',
         'table_open'  => [
@@ -271,7 +271,7 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _NEWS]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
         $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
@@ -288,7 +288,7 @@ function view(): void {
         $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
         $rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
-        $voting = ($vote) ? $tpl->getHtmlFrag('post-div', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
+        $voting = ($vote) ? $tpl->getHtmlFrag('content-block', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder' => is_moder($conf['name']),
@@ -422,7 +422,7 @@ function add(): void {
             'name' => $conf['name'],
             'fields' => $fields,
             'captcha' => getCaptcha(1),
-            'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

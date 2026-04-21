@@ -60,11 +60,11 @@ function info(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $fields,
-        'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'info', 'label' => _RSS_INFO_CODE]),
+        'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'info', 'label' => _RSS_INFO_CODE]),
     ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
-        $cont .= $tpl->getHtmlFrag('post-div', ['class' => 'sl-section', 'has_hr' => true]);
+        $cont .= $tpl->getHtmlFrag('content-block', ['class' => 'sl-section', 'has_hr' => true]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'method' => 'post',
@@ -74,7 +74,7 @@ function info(): void {
                 'label' => _SELECTASITE.':',
                 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'options_html' => rss_select()]),
             ]),
-            'submit' => $tpl->getHtmlFrag('form-submit', ['label' => _OK]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
@@ -85,7 +85,7 @@ function info(): void {
                 'label' => _ORTYPEURL.':',
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
             ]),
-            'submit' => $tpl->getHtmlFrag('form-submit', ['label' => _OK]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
         ]);
         $cont .= rss_read($url, '');
     }

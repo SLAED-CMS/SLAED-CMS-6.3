@@ -112,7 +112,7 @@ function voting(): void {
             ]);
             $cells = [
                 ['content_html' => (string)$id],
-                ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => [
+                ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
                     ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
                     ['label' => _TYPE, 'value' => $type, 'is_last' => true],
@@ -184,10 +184,11 @@ function add(): void {
         $a = $i + 1;
         $qval = filterText((string)($body[$i] ?? ''));
         $aval = filterText((string)($answer[$i] ?? '0'));
-        $answ .= '<div style="display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:8px;margin-bottom:8px">'
-            .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
-            .$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES])
-            .'</div>';
+        $answ .= $tpl->getHtmlPart('div', ['rows' => [[
+            'label_html' => _POLLEACH.' - '.$a.':',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
+                .$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES]),
+        ]]]);
     }
     $rows[] = ['label_html' => _ADD.':', 'field_html' => $answ, 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
@@ -201,7 +202,7 @@ function add(): void {
             ['nameattr' => 'id', 'valueattr' => (string)$id],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;

@@ -74,7 +74,7 @@ function help(): void {
     $cont = '';
     if (!$home) {
         $cont .= getModuleNavi(['title' => $ntitle] + HELP_NAVI);
-        if ($ncat)      $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
+        if ($ncat)      $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['help']['subcat'], $conf['help']['catdesc'], $ncat);
     }
     $num    = getVar('get', 'num', 'num', '1');
@@ -183,7 +183,7 @@ function liste(): void {
             'time_label'    => _DATE,
         ];
     }
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['help']['letter'] && $rows) ? letter($conf['name']) : '',
         'table_open'  => [
@@ -353,7 +353,7 @@ function addview(int $id): string {
         return $tpl->getHtmlPart('form-add', [
             'name'        => $conf['name'],
             'fields'      => $fields,
-            'submit'      => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
+            'submit'      => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
         ]);
     }
     return '';
@@ -379,7 +379,7 @@ function add(): void {
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'       => $conf['name'],
             'fields'     => $fields,
-            'submit'     => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit'     => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

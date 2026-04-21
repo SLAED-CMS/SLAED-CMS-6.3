@@ -68,7 +68,7 @@ function pages(): void {
     $cont = '';
     if (!$home || ($home && $conf['pages']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _PAGES]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -198,7 +198,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['pages']['letter'] && $rows) ? letter($conf['name']) : '',
         'table_open'  => [
@@ -257,7 +257,7 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _PAGES]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
         if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
         $conpag = explode('[pagebreak]', $rawtext);
@@ -384,7 +384,7 @@ function add(): void {
             'name'     => $conf['name'],
             'fields'   => $fields,
             'captcha'  => getCaptcha(1),
-            'submit'   => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit'   => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

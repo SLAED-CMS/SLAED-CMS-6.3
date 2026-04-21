@@ -50,11 +50,11 @@ function clients(): void {
                     ['content_html' => $acont],
                 ],
             ];
-            $conts .= $tpl->getHtmlFrag('post-div', ['id' => 'cl'.$i, 'class' => 'sl_none', 'content' => $prs->filterContent($body, false, $conf['name'])]);
+            $conts .= $tpl->getHtmlFrag('content-block', ['id' => 'cl'.$i, 'class' => 'sl-none', 'content' => $prs->filterContent($body, false, $conf['name'])]);
             $i++;
             $a++;
         }
-        $cont .= $tpl->getHtmlPart('liste', [
+        $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
             'table_open' => [
                 'open' => true,

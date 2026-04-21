@@ -62,14 +62,14 @@ function contact(): void {
         'label' => _MESSAGE.':',
         'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
     ]);
-    $form = ($info ? $tpl->getHtmlFrag('post-div', ['class' => 'sl-section', 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
+    $form = ($info ? $tpl->getHtmlFrag('content-block', ['class' => 'sl-section', 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],
         'method' => 'post',
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')]).$fields,
         'captcha' => getCaptcha(1),
-        'submit' => $tpl->getHtmlFrag('form-submit', [
+        'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
             'op' => 'contact',
             'label' => _SEND,

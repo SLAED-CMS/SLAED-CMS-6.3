@@ -34,15 +34,15 @@ function buildShopSearchBox(): string {
                 'value_attr' => $txt,
                 'maxlength_num' => 100,
                 'placeholder_text' => _SEARCH,
-                'input_attr' => ' style="margin-right:8px"',
+                'input_class' => 'sl-inline-gap',
             ])
             .$tpl->getHtmlFrag('select', [
                 'name_attr' => 'search',
                 'options_html' => $opts,
-                'select_attr' => ' style="margin-right:8px"',
+                'select_class' => 'sl-inline-gap',
             ]),
         'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
-        'form_attr' => ' style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"',
+        'form_class' => 'sl-inline-filter-form',
     ]);
 }
 
@@ -175,7 +175,7 @@ function clients(): void {
                 'cells' => [
                     ['content_html' => (string)$cid],
                     ['content_html' => $nick],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => $tips]).htmlspecialchars(cutstr((string)$ptitle, 40), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars(cutstr((string)$ptitle, 40), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
                     ['content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
                     ['content_html' => $cenddate],
                     ['content_html' => ad_status('', $cactive)],
@@ -328,7 +328,7 @@ function clientadd(): void {
             ['nameattr' => 'cppi', 'valueattr' => (string)$cppi],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
@@ -471,7 +471,7 @@ function products(): void {
                 'cells' => [
                     ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
                     ['content_html' => (string)$pid],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => [
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                         ['label' => _CATEGORY, 'value' => htmlspecialchars((string)$ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _DATE, 'value' => format_time($ptime ?? '', _TIMESTRING), 'is_last' => true],
                     ]]).htmlspecialchars(cutstr((string)$ptitle, 60), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
@@ -512,7 +512,7 @@ function products(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ],
             'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $phead, 'rows_html' => $prows]),
-            'actions_html' => '<span class="sl-action-label">'._CHECKOP.'</span> '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_attr' => ' style="margin-right:8px"']).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+            'actions_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-action-label', 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_class' => 'sl-inline-gap']).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         ]);
         $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_products', 'field' => 'id', 'where' => $sqlstatus]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
@@ -597,7 +597,10 @@ function productadd(): void {
         while ([$id, $title] = $db->getSqlRow($result2)) {
             $isch = false;
             if ($associated) foreach ((array)$associated as $val) if ($val == $id) $isch = true;
-            $assoc .= '<label style="display:inline-flex;align-items:center;gap:6px;margin:0 12px 8px 0">'.$tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</label>';
+            $assoc .= $tpl->getHtmlFrag('label', [
+                'class' => 'sl-associated-option',
+                'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            ]);
         }
         $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
     }
@@ -625,7 +628,7 @@ function productadd(): void {
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
@@ -781,7 +784,7 @@ function partners(): void {
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$paid],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => [
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                         ['label' => _CLIENTNAME, 'value' => htmlspecialchars((string)$paname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$paaddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _CLIENTPHONE, 'value' => htmlspecialchars((string)$paphone, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
@@ -897,7 +900,7 @@ function partneradd(): void {
             ['nameattr' => 'paid', 'valueattr' => (string)$paid],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;

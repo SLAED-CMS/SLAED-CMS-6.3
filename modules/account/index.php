@@ -25,7 +25,7 @@ function account(): void {
             'label' => _PASSWORD.':',
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
         ]);
-        $after = $tpl->getHtmlFrag('post-div', [
+        $after = $tpl->getHtmlFrag('content-block', [
             'is_form_submit' => true,
             'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true])
                 .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
@@ -37,7 +37,7 @@ function account(): void {
             'action' => 'index.php?name='.$conf['name'],
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'captcha' => $captcha,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'login', 'label' => _USERLOGIN]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'login', 'label' => _USERLOGIN]),
             'after_submit' => $after,
         ]);
         echo $cont;
@@ -105,7 +105,7 @@ function newuser(): void {
                     'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'rules', 'value_attr' => '1', 'is_required' => true]),
                 ]);
             }
-            $after = $tpl->getHtmlFrag('post-div', [
+            $after = $tpl->getHtmlFrag('content-block', [
                 'is_form_submit' => true,
                 'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
                     .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]),
@@ -117,7 +117,7 @@ function newuser(): void {
                 'action' => 'index.php?name='.$conf['name'],
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'captcha' => $captcha,
-                'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'finnewuser', 'label' => _NEWUSER]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'finnewuser', 'label' => _NEWUSER]),
                 'after_submit' => $after,
             ]);
         }
@@ -174,7 +174,7 @@ function finnewuser(): void {
                     'method' => 'get',
                     'no_enctype' => true,
                     'fields' => $fields,
-                    'submit' => $hidden.$tpl->getHtmlFrag('form-submit', ['label' => _ACTIVATIONSUB]),
+                    'submit' => $hidden.$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _ACTIVATIONSUB]),
                 ]);
             } else {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label_html' => str_replace('&amp;', '&', $finishlink), 'is_blank' => true]);
@@ -422,7 +422,13 @@ function view(): void {
                 $text[] = last($uid, 'pages');
             }
             $tabs = getNaviTabs(0, 'tab', $title, $text);
-            echo $tpl->getHtmlPart('account-view', [
+            $acts = isAdmin() ? $tpl->getHtmlFrag('editor-action-menu', [
+                'editor_label' => _EDITOR,
+                'items_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_add&amp;id='.$uid, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
+                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw, 'confirm_text' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?', 'title' => _BANIPSENDER, 'label' => _BANIPSENDER, 'is_delete' => true])
+                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_del&amp;id='.$uid, 'confirm_text' => _DELETE.' &quot;'.$nick.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
+            ]) : '';
+            echo $tpl->getHtmlPart('account-profile', [
                 'has_sign' => !empty($sign),
                 'has_field' => !empty($field),
                 'has_rank_image' => !empty($rankImage),
@@ -477,6 +483,7 @@ function view(): void {
                 'groups' => $groups[1],
                 'rank_src' => $rankImage,
                 'rank_alt' => $trank,
+                'admin_actions_html' => $acts,
                 'admin_edit_href' => $afile.'.php?op=users_add&amp;id='.$uid,
                 'admin_edit_label' => _FULLEDIT,
                 'admin_block_href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw,
@@ -561,7 +568,7 @@ function profil(): void {
                     'label' => _SELECTASITE,
                     'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'options_html' => rss_select()]),
                 ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', ['label' => _OK]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
             ])
             .$tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
@@ -569,7 +576,7 @@ function profil(): void {
                     'label' => _ORTYPEURL,
                     'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
                 ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', ['label' => _OK]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
             ])
             .rss_read($url, '');
         }
@@ -652,7 +659,7 @@ function last(int|string $uid, string $modul): string {
     } else {
         $handled = false;
     }
-    return $handled ? $tpl->getHtmlPart('liste', [
+    return $handled ? $tpl->getHtmlPart('content-list', [
         'rows' => $rows,
         'table_open' => ['open' => true, 'is_amount' => true],
         'table_close' => [],
@@ -674,10 +681,10 @@ function privat(): void {
             _SEND
         ];
         $text = [
-            $tpl->getHtmlFrag('post-div', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
-            $tpl->getHtmlFrag('post-div', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
-            $tpl->getHtmlFrag('post-div', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
-            $tpl->getHtmlFrag('post-div', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
+            $tpl->getHtmlFrag('content-block', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
+            $tpl->getHtmlFrag('content-block', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
+            $tpl->getHtmlFrag('content-block', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
+            $tpl->getHtmlFrag('content-block', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
         ];
         $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
@@ -693,7 +700,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('post-div', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('content-block', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
         setFoot();
     } else {
         account();
@@ -725,7 +732,7 @@ function passlost(): void {
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code ?: '', 'maxlength_num' => 10, 'placeholder_text' => _CONFIRMATIONCODE, 'is_required' => true]),
             ]);
         }
-        $after = $tpl->getHtmlFrag('post-div', [
+        $after = $tpl->getHtmlFrag('content-block', [
             'is_form_submit' => true,
             'content' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
@@ -733,7 +740,7 @@ function passlost(): void {
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'passmail', 'label' => $send]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'passmail', 'label' => $send]),
             'after_submit' => $after,
         ]);
         echo $cont;
@@ -904,10 +911,10 @@ function edithome(): void {
         $change = $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
-            'submit' => $tpl->getHtmlFrag('form-submit', ['extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
+            'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
         ]);
         $avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
-        $asetup = $tpl->getHtmlPart('liste', [
+        $asetup = $tpl->getHtmlPart('content-list', [
             'rows' => [[
                 'cells' => [
                     ['primary_text' => _AVATAR.':', 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
@@ -924,7 +931,7 @@ function edithome(): void {
                     'label' => _AVATAR_USER.':',
                     'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile']),
                 ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'saveavatar', 'label' => _UPLOAD]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'saveavatar', 'label' => _UPLOAD]),
             ]);
         }
         $a = 6;
@@ -955,7 +962,7 @@ function edithome(): void {
         if ($aset) $arows[] = ['cells' => $aset];
         if ($i >= 1) {
             $asetup .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT])
-                .$tpl->getHtmlPart('liste', [
+                .$tpl->getHtmlPart('content-list', [
                     'rows' => $arows,
                     'table_open' => ['open' => true, 'is_form' => true, 'is_avatar_grid' => true],
                     'table_close' => [],
@@ -979,7 +986,7 @@ function edithome(): void {
                 .$tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
-                'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'savepass', 'label' => _SAVECHANGES]),
+                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
         } else {
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NETWORKPASS]);

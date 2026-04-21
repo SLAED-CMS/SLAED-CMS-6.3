@@ -109,7 +109,7 @@ function getSearchForm(array $state): string {
             'value_attr' => (string)$state['word'],
         ]),
     ]);
-    $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['op' => '', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEARCH])]);
+    $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => '', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEARCH])]);
     return $tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],
         'method' => 'post',
@@ -401,15 +401,15 @@ function getSearchList(array $rows, array $state): string {
                 .$tpl->getHtmlFrag('list-item', ['content_html' => $row['ctitle']])
                 .$tpl->getHtmlFrag('list-item', ['content_html' => $row['post']]),
         ]);
-        $cont .= $tpl->getHtmlFrag('post-div', [
+        $cont .= $tpl->getHtmlFrag('content-block', [
             'id' => (string)$numb,
-            'class' => 'search-line',
-            'content' => $tpl->getHtmlFrag('post-div', [
+            'class' => 'sl-search-line',
+            'content' => $tpl->getHtmlFrag('content-block', [
                     'class' => 'pull-right',
                     'content' => $row['edit'].$tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]),
                 ])
                 .$tpl->getHtmlFrag('title', ['title' => $row['title'], 'is_level_four' => true])
-                .$tpl->getHtmlFrag('post-div', ['class' => 'search-meta', 'content' => $meta]),
+                .$tpl->getHtmlFrag('content-block', ['class' => 'sl-search-meta', 'content' => $meta]),
         ]);
         $numb++;
     }

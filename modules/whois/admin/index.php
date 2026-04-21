@@ -59,7 +59,7 @@ function whois(): void {
                 ['content_html' => domain($domain).' '.ad_status('', $statusDomain)],
                 ['content_html' => $host.' '.ad_status('', $statusHost)],
                 ['content_html' => $dc.' '.ad_status('', $statusDc)],
-                ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => [
+                ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
                     ['label' => _COMMENT, 'value' => htmlspecialchars((string)$hometext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],

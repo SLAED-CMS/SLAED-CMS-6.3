@@ -73,7 +73,7 @@ function faq(): void {
     $cont = '';
     if (!$home || ($home && $conf['faq']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _FAQ]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], $ncat);
     }
     if ($ncat) {
@@ -91,7 +91,7 @@ function faq(): void {
             ];
         }
         if ($rows) {
-            $cont .= $tpl->getHtmlPart('liste', [
+            $cont .= $tpl->getHtmlPart('content-list', [
                 'rows' => $rows,
                 'table_open' => ['open' => true, 'is_faq' => true],
                 'table_close' => [],
@@ -222,7 +222,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['faq']['letter'] && $rows) ? letter($conf['name']) : '',
         'table_open'  => [
@@ -278,7 +278,7 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _FAQ]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
         if ($conf['faq']['viewcat']) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], 0);
         $conpag = explode('[pagebreak]', $hometext);
         $pageno = count($conpag);
@@ -399,7 +399,7 @@ function add(): void {
             'name'      => $conf['name'],
             'fields'    => $fields,
             'captcha'   => getCaptcha(1),
-            'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

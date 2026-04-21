@@ -79,7 +79,7 @@ function money(): void {
                     'cells' => [
                         ['content_html' => (string)$id],
                         ['content_html' => $sum.' EUR'],
-                        ['content_html' => $tpl->getHtmlFrag('title-tip', ['items' => $tips]).anti_spam($email)],
+                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).anti_spam($email)],
                         ['content_html' => user_geo_ip($ip, 4)],
                         ['content_html' => format_time($time, _TIMESTRING)],
                         ['content_html' => ad_status('', $status)],
@@ -217,7 +217,7 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;

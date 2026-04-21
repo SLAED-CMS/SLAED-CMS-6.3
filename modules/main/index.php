@@ -123,7 +123,7 @@ function main(): void {
         'more_label'    => _FILES,
         'more_link'     => ['href' => 'index.php?name=files', 'title' => _FILES, 'label' => _FILES, 'is_main_more' => true],
     ]);
-    $cont .= $tpl->getHtmlFrag('post-div', ['is_main_grid' => true, 'content' => $col1.$col2]);
+    $cont .= $tpl->getHtmlFrag('content-block', ['is_main_grid' => true, 'content' => $col1.$col2]);
     echo $cont;
     setFoot();
 }

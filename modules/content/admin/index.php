@@ -21,7 +21,7 @@ function content(): void {
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             $view = (time() >= strtotime($time)) ? 'index.php?name=content&amp;op=view&amp;id='.$id : '';
             $active = $view ? '1' : '0';
-            $acts = $tpl->getHtmlFrag('edit-tip', [
+            $acts = $tpl->getHtmlFrag('edit-actions', [
                 'editor_label' => _EDITOR,
                 'view_link' => $view ? ['href' => $view, 'title' => _MVIEW, 'label' => _MVIEW] : [],
                 'edit_link' => ['href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
@@ -33,7 +33,7 @@ function content(): void {
                     'is_delete' => true,
                 ],
             ]);
-            $tip = $tpl->getHtmlFrag('title-tip', [
+            $tip = $tpl->getHtmlFrag('info-tooltip', [
                 'items' => [
                     ['label' => _URL, 'value' => $conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id, 'is_last' => false],
                     ['label' => _ORTYPEURL, 'value' => $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, 'is_last' => true],

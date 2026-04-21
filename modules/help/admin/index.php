@@ -41,7 +41,7 @@ function help(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
@@ -92,13 +92,13 @@ function view(): void {
         $text = $prs->filterContent($hometext.(($fields) ? PHP_EOL.PHP_EOL.$fields : ''), false, 'help');
         $meta = [];
         if (!$pid) {
-            $meta[] = '<span class="sl_cat">'.($ctitle ?: _NO).'</span>';
-            $meta[] = '<span class="sl_views">'.(string)$counter.'</span>';
+            $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-cat', 'label' => ($ctitle ?: _NO)]);
+            $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-views', 'label' => (string)$counter]);
         }
-        $meta[] = '<span class="sl_post">'.($nick ? user_info($nick) : _ANONYM).'</span>';
-        $meta[] = '<span class="sl_date">'.format_time($time, _TIMESTRING).'</span>';
+        $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-post-icon', 'label_html' => ($nick ? user_info($nick) : _ANONYM)]);
+        $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-date', 'label' => format_time($time, _TIMESTRING)]);
         if ($a) {
-            $meta[] = '<a class="sl_pnum" href="#'.$id.'" title="'._MESSAGE.': '.$a.'">'.$a.'</a>';
+            $meta[] = $tpl->getHtmlFrag('link', ['href' => '#'.$id, 'class' => 'sl-pnum', 'title' => _MESSAGE.': '.$a, 'label' => (string)$a]);
         }
         $actions = $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
             ['href' => $afile.'.php?name=help&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
@@ -109,16 +109,13 @@ function view(): void {
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ],
         ]]);
-        $rating = ($haid && $huid != $haid) ? '<div class="rate-box pull-right">'.getRatingAsync(0, $id, 'help', $ratings, $score, '').'</div>' : '';
-        $body .= $tpl->getHtmlPart('box', ['content_html' =>
-            '<div id="'.$id.'" class="sl-preview">'.
-                '<div class="sl-preview-head">'.$title.'</div>'.
-                '<div class="sl-preview-body">'.
-                    '<div class="sl-preview-section">'.$text.'</div>'.
-                    '<div class="sl-preview-section sl-preview-meta">'.implode(' ', $meta).'</div>'.
-                    '<div class="sl-preview-section">'.$rating.$actions.'</div>'.
-                '</div>'.
-            '</div>',
+        $rating = ($haid && $huid != $haid) ? $tpl->getHtmlPart('div', ['class' => 'rate-box pull-right', 'content_html' => getRatingAsync(0, $id, 'help', $ratings, $score, '')]) : '';
+        $body .= $tpl->getHtmlPart('preview', [
+            'id' => (string)$id,
+            'title' => $title,
+            'body_a' => $text,
+            'body_b' => implode(' ', $meta),
+            'body_c' => $rating.$actions,
         ]);
         $a++;
     }
@@ -218,7 +215,7 @@ function add(): void {
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);

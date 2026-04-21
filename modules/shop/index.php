@@ -66,14 +66,14 @@ function shop(): void {
 	if (!$home || ($home && $conf['shop']['homcat'])) {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= getModuleNavi(['title' => $ntitle] + SHOP_NAVI);
-		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
 	$num    = getVar('get', 'num', 'num', '1');
 	$offset = (int)(($num - 1) * $unum);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
-		$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()])]);
+		$cont .= $tpl->getHtmlFrag('content-block', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('content-block', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$columns = max(1, min(6, (int)$conf['shop']['bascol']));
 		$cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
 		while ([$id, $cid, $time, $stitle, $text, $bodytext, $pprice, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
@@ -94,7 +94,7 @@ function shop(): void {
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 			$comm = ($acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom, 'is_comment' => true]) : '';
 			$read = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_read' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 			$cont .= $tpl->getHtmlFrag('card', [
 				'id'           => $id,
 				'columns'      => $columns,
@@ -181,7 +181,7 @@ function liste(): void {
 			'time_label'    => _DATE,
 		];
 	}
-	$cont .= $tpl->getHtmlPart('liste', [
+	$cont .= $tpl->getHtmlPart('content-list', [
 		'rows'        => $rows,
 		'before_html' => ($conf['shop']['letter'] && $rows) ? letter($conf['name']) : '',
 		'table_open'  => [
@@ -236,16 +236,16 @@ function view(): void {
 		]);
 		$cont = getModuleNavi(['title' => _SHOP] + SHOP_NAVI);
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
-		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
+		if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
-		$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()])]);
+		$cont .= $tpl->getHtmlFrag('content-block', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('content-block', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$cdesc = $cdesc ?: $ctitle;
 		$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('categories/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
 		$post = '';
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$favorites = getFavoriteButton($id, $conf['name']);
-		$voting = ($vote) ? $tpl->getHtmlFrag('post-div', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
+		$voting = ($vote) ? $tpl->getHtmlFrag('content-block', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
 		$prtitle = _PREIS;
 		$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 		$opreis = '';
@@ -254,7 +254,7 @@ function view(): void {
 		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-tip', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 		$cont .= $tpl->getHtmlFrag('card', [
 			'id'           => $id,
 			'favorites'    => $favorites,
@@ -362,7 +362,7 @@ function kasse(): void {
 		'form_name' => 'post',
 		'no_enctype' => true,
 		'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('shop')]).$fields,
-		'submit' => $tpl->getHtmlFrag('form-submit', [
+		'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
 			'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'opi', 'value_attr' => '1']),
 			'op' => 'kasse',
 			'label' => _C_SEND,
@@ -371,7 +371,7 @@ function kasse(): void {
 	setHead(['title' => _C_TITLE]);
 	$cont = getModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
-		$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()]);
+		$cont .= $tpl->getHtmlFrag('content-block', ['id' => 'repkasse', 'content' => getCartSummary()]);
 		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
@@ -403,7 +403,7 @@ function kasse(): void {
 			$rows[] = ['cells' => [
 				['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute']]), 'colspan' => 4],
 			]];
-			$pinfo = $tpl->getHtmlPart('liste', [
+			$pinfo = $tpl->getHtmlPart('content-list', [
 				'rows' => $rows,
 				'table_open' => ['open' => true, 'headers' => [
 					['text' => _ID, 'is_num' => true],
@@ -468,7 +468,7 @@ function kasse(): void {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['shop']['sende'], false, $conf['name'])]);
 		} else {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
-			$cont .= $tpl->getHtmlFrag('post-div', ['id' => 'repkasse', 'content' => getCartSummary()]);
+			$cont .= $tpl->getHtmlFrag('content-block', ['id' => 'repkasse', 'content' => getCartSummary()]);
 			$cont .= $form;
 		}
 	} else {
@@ -512,7 +512,7 @@ function clients(): void {
 						['content_html' => $rechn],
 					]];
 			}
-			$cont .= $tpl->getHtmlPart('liste', [
+			$cont .= $tpl->getHtmlPart('content-list', [
 				'rows' => $rows,
 				'table_open' => ['open' => true, 'sortable' => true, 'headers' => [
 					['text' => _ID, 'is_num' => true],
@@ -540,9 +540,9 @@ function rech(): void {
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.intro, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->getSqlRowCount($result) > 0) {
 			[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $pprice] = $db->getSqlRow($result);
-			$themeCss = file_exists('templates/'.$theme.'/assets/css/theme.css') ? 'templates/'.$theme.'/assets/css/theme.css' : '';
+			$themeCss = file_exists('templates/'.$theme.'/assets/css/new.css') ? 'templates/'.$theme.'/assets/css/new.css' : '';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
-			echo $tpl->getHtmlFrag('shop-rech', [
+			echo $tpl->getHtmlFrag('shop-invoice', [
 				'charset' => _CHARSET,
 				'theme_css' => $themeCss,
 				'title' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
@@ -617,7 +617,7 @@ function partners(): void {
 						]];
 						$a++;
 					}
-					$cont .= $tpl->getHtmlPart('liste', [
+					$cont .= $tpl->getHtmlPart('content-list', [
 						'rows' => $rows,
 						'table_open' => ['open' => true, 'sortable' => true, 'headers' => [
 							['text' => _ID, 'is_num' => true],
@@ -629,7 +629,7 @@ function partners(): void {
 						'table_close' => [],
 					]);
 				}
-				$cont .= $tpl->getHtmlPart('liste', [
+				$cont .= $tpl->getHtmlPart('content-list', [
 					'rows' => [[
 						'cells' => [
 							['text' => (string)$a],
@@ -685,7 +685,7 @@ function partners(): void {
 				'action' => 'index.php?name='.$conf['name'],
 				'extrafields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('shop')]).$rows,
 				'name' => $conf['name'],
-				'submit' => $tpl->getHtmlFrag('form-submit', ['op' => 'partners_send', 'extra' => $extra, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _PARTNERSEND]),
+				'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'partners_send', 'extra' => $extra, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _PARTNERSEND]),
 			]);
 		}
 		echo $cont;

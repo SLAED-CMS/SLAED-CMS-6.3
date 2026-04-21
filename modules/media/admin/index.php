@@ -56,7 +56,7 @@ function media(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
@@ -182,14 +182,18 @@ function add(): void {
         $a = $i + 1;
         $link = filterText($links[$i] ?? '');
         $hidden = $i != 0 && $link === '';
-        $linkshtml .= '<div id="med'.$i.'"'.($hidden ? ' style="display:none;"' : '').'><div class="sl-div-grid">'.
-            '<div class="sl-div-item"><div class="sl-div-label">'._ADD.' '.$a.':</div><div class="sl-div-field">'.$tpl->getHtmlFrag('input', [
+        $linkshtml .= $tpl->getHtmlPart('toggle-form-block', [
+            'block_id' => 'med'.$i,
+            'is_hidden' => $hidden,
+            'label_html' => _ADD.' '.$a.':',
+            'content_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'links[]',
                 'value_attr' => $link,
                 'placeholder_text' => _URL,
                 'input_attr' => ' id="med'.($a).'"',
-            ]).'</div></div></div></div>';
+            ]),
+        ]);
     }
     $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
@@ -234,7 +238,7 @@ function add(): void {
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_attr' => ' style="margin-right:8px"'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);

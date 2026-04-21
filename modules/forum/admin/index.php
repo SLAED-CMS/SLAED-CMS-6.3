@@ -35,7 +35,7 @@ function forum(): void {
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)$id],
-                ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [['label' => _DESCRIPTION, 'value' => $intro ?: _NO, 'is_last' => true]],
                     'label_text' => cutstr($title, 60),
                     'title_text' => $title,

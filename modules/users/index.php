@@ -46,7 +46,7 @@ function users(): void {
             ];
             $count++;
         }
-        $cont .= $tpl->getHtmlPart('liste', [
+        $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
             'table_open' => [
                 'open' => true,
@@ -99,7 +99,7 @@ function rules(): void {
             ],
         ];
     }
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows' => $rows,
         'table_open' => [
             'open' => true,
@@ -149,7 +149,7 @@ function stats(): void {
                 ],
             ];
         }
-        $cont .= $tpl->getHtmlPart('liste', [
+        $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
             'table_open' => [
                 'open' => true,

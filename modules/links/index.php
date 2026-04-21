@@ -69,7 +69,7 @@ function links(): void {
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -195,7 +195,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['links']['letter'] && $rows) ? letter($conf['name']) : '',
         'table_open'  => [
@@ -250,7 +250,7 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _LINKS]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
@@ -270,7 +270,7 @@ function view(): void {
                 'form_attr' => 'class="sl-inline-form"',
                 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'loading'])
-                    .$tpl->getHtmlFrag('form-submit', ['label' => _DOWNLLINK, 'class' => 'sl-but-green', 'input_attr' => trim($onclick)]),
+                    .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _DOWNLLINK, 'class' => 'sl-but-green', 'input_attr' => trim($onclick)]),
             ]);
         }
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
@@ -385,7 +385,7 @@ function add(): void {
             'name'      => $conf['name'],
             'fields'    => $fields,
             'captcha'   => getCaptcha(1),
-            'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

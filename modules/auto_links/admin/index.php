@@ -50,7 +50,7 @@ function auto_links(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$id],
-                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'items' => [
                                 ['label' => _REG, 'value' => format_time($added, _TIMESTRING), 'is_last' => true],
                             ],
@@ -194,7 +194,7 @@ function stats(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$item[0]],
-                        ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'items' => [
                                 ['label' => _DATE, 'value' => date(_TIMESTRING, $item[6]), 'is_last' => true],
                             ],

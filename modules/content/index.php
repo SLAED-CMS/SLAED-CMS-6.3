@@ -28,9 +28,9 @@ function content(): void {
             [$id, $title, $time, $counter] = $row;
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-            $tip = $tpl->getHtmlFrag('post-div', [
-                'content' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _DATE, 'text' => format_time($time), 'class' => 'sl_date'])
-                    .(($counter) ? ' '.$tpl->getHtmlFrag('span', ['title' => _READS, 'class' => 'sl_views', 'text' => (string)$counter]) : ''),
+            $tip = $tpl->getHtmlFrag('content-block', [
+                'content' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _DATE, 'text' => format_time($time), 'class' => 'sl-date'])
+                    .(($counter) ? ' '.$tpl->getHtmlFrag('span', ['title' => _READS, 'class' => 'sl-views', 'text' => (string)$counter]) : ''),
             ]);
             $menu = '';
             if ($ismoder) {
@@ -56,7 +56,7 @@ function content(): void {
                 ],
             ];
         }
-        $cont .= $tpl->getHtmlPart('liste', [
+        $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
             'table_open' => ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS],
             'table_close' => [],

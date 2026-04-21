@@ -31,11 +31,17 @@ function rss(): void {
             ['label_html' => _ADDRESS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
             ['label_html' => _USES.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
         ]]);
-        $title = '<a OnClick="HideShow(\'rss'.($c + 1).'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._RSSC.' '.$indx.'</a>';
-        $pane = '<div id="rss'.$c.'"'.(($name === '' && $c !== 0) ? ' class="sl_none"' : '').'>'
-            .($c === 0 ? '' : '<hr>')
-            .'<div class="sl-div-grid"><div class="sl-div-item sl-div-item-full"><div class="sl-div-label">'.$title.'</div><div class="sl-div-field">'.$block.'</div></div></div></div>';
-        $rows[] = $pane;
+        $rows[] = $tpl->getHtmlPart('toggle-form-block', [
+            'block_id' => 'rss'.$c,
+            'is_hidden' => $name === '' && $c !== 0,
+            'toggle_onclick' => true,
+            'href' => '#',
+            'title' => _ADD,
+            'class' => 'sl-plus',
+            'label' => _RSSC.' '.$indx,
+            'onclick_attr' => ' OnClick="HideShow(\'rss'.$indx.'\', \'slide\', \'up\', 500); return false;"',
+            'content_html' => $block,
+        ]);
     }
     $sourcehtml = implode('', $rows);
     $prefs = [

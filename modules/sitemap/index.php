@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function sitemap(): void {
-    global $conf, $tpl;
+    global $tpl;
     $path = SITEMAP_DIR.'/sitemap.txt';
     setHead(['title' => _SITEMAP]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _SITEMAP]);

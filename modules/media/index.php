@@ -69,7 +69,7 @@ function media(): void {
     $cont = '';
     if (!$home || ($home && $conf['media']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -196,7 +196,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    $cont .= $tpl->getHtmlPart('liste', [
+    $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['media']['letter'] && $rows) ? letter($conf['name']) : '',
         'table_open'  => [
@@ -258,7 +258,7 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _MEDIA]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = $cdesc ?: $ctitle;
         $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
@@ -302,7 +302,7 @@ function view(): void {
                         $i++;
                     }
                 }
-                $mlinks = ($linkItems) ? $tpl->getHtmlPart('line-list', ['items' => $linkItems]) : '';
+                $mlinks = ($linkItems) ? $tpl->getHtmlPart('compact-list', ['items' => $linkItems]) : '';
             } else {
                 $mlinks = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HIDETEXT]);
             }
@@ -459,7 +459,7 @@ function add(): void {
                     'href' => '#',
                     'title' => _ADD,
                     'label' => _URL.' - '.$a.':',
-                    'class' => 'sl_plus',
+                    'class' => 'sl-plus',
                     'onclick_attr' => 'onclick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500); return false;"',
                 ]),
                 'field_html' => $tpl->getHtmlFrag('input', [
@@ -497,7 +497,7 @@ function add(): void {
             'name'           => $conf['name'],
             'fields'         => $fields,
             'captcha'        => getCaptcha(1),
-            'submit'         => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit'         => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

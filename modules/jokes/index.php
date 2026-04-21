@@ -70,7 +70,7 @@ function jokes(): void {
     $cont = '';
     if (!$home || ($home && $conf['jokes']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle] + JOKES_NAVI);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -183,7 +183,7 @@ function add(): void {
             'name'      => $conf['name'],
             'fields'    => $fields,
             'captcha'   => getCaptcha(1),
-            'submit'    => $tpl->getHtmlFrag('form-submit', ['op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
+            'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
         setFoot();

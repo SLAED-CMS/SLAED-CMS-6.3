@@ -229,19 +229,21 @@ function getSearchbox(string $type = 'search'): string {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _DESC, 'is_selected' => $order == 2]);
     $hidden = $tpl->getHtmlFrag('hidden', ['nameattr' => 'name', 'valueattr' => 'search']);
     if ($type === 'toplist') $hidden .= $tpl->getHtmlFrag('hidden', ['nameattr' => 'op', 'valueattr' => 'toplist']);
-    $content = '<div class="sl-search-line">'
-        ._SORTE.': '
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'select_attr' => ' style="width:110px;"'])
+    $content = _SORTE.': '
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'select_class' => 'sl-search-sort-select'])
         .' '
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts, 'select_attr' => ' style="width:165px;"'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts, 'select_class' => 'sl-search-order-select'])
         .' '._SEARCH.': '
-        .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'input_attr' => ' style="width:140px;"'])
+        .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'input_class' => 'sl-search-filter-field'])
         .' '._MODUL.': '
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_attr' => ' style="width:140px;"'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_class' => 'sl-search-filter-field'])
         .$hidden
-        .' '.$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK])
-        .'</div>';
-    return '<form method="get" action="'.$afile.'.php">'.$content.'</form>';
+        .' '.$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
+    return $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php',
+        'method' => 'get',
+        'content_html' => $tpl->getHtmlPart('div', ['class' => 'sl-search-line', 'content_html' => $content]),
+    ]);
 }
 
 function getSearchsum(string $where, array $pars): string {
@@ -297,7 +299,7 @@ function search(): void {
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => $tpl->getHtmlFrag('title-tip', [
+                ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [
                         ['label' => _MODUL, 'value' => htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8')],
                         ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING), 'is_last' => true],
@@ -366,7 +368,7 @@ function toplist(): void {
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => '<a href="admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', '').'">'.$hword.'</a>'],
+                ['content_html' => $tpl->getHtmlFrag('link', ['href' => 'admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', ''), 'label_html' => $hword])],
                 ['content_html' => $hmod],
                 ['content_html' => (string)intval($hits)],
                 ['content_html' => format_time((string)$time, _TIMESTRING)],

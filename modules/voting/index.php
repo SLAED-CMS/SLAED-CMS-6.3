@@ -104,7 +104,7 @@ function view(): void {
 			'time' => $date,
 			'author' => $conf['sitename'],
 		]);
-		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('post-div', ['class' => 'post-vote', 'content' => $tpl->getHtmlFrag('post-div', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
+		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('content-block', ['class' => 'post-vote', 'content' => $tpl->getHtmlFrag('content-block', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);
