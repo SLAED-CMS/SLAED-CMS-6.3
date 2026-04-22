@@ -8,4 +8,4 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
-$content = $tpl->getHtmlFrag('block-menu', []);
+$content = $tpl->getHtmlFrag('block-menu', ['content' => $content]);

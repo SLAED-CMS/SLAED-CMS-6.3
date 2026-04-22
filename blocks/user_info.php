@@ -13,52 +13,38 @@ global $db, $locale, $conf, $tpl;
 if (is_user()) {
 	$userinfo = getUserInfo();
 	$uname = $userinfo['name'];
-	$user_id = intval($userinfo['id']);
-	$user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
-	$content = $tpl->getHtmlFrag('block-user-avatar', [
-		'name'       => $uname,
-		'avatar_url' => $conf['users']['adirectory'].'/'.$user_avatar,
-		'greeting'   => _HELLO.',<br>'.$uname,
-	]);
+	$uid = intval($userinfo['id']);
+	$ava = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
+	$prin = 0;
+	$prout = 0;
 	if ($conf['privat']['act']) {
-		list($prin) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_privat WHERE uidin='".$user_id."' AND status = '0'"));
-		list($prout) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_privat WHERE uidout='".$user_id."' AND status = '0'"));
-		if ($prin > 0) {
-			$content .= $tpl->getHtmlFrag('block-user-pm-notification', [
-				'audio_src'    => 'sound/privat-'.$locale.'.mp3',
-				'unread_count' => $prin,
-			]);
-		}
-		$content .= $tpl->getHtmlFrag('block-user-pm-table', [
-			'privat_label' => _PRIVAT,
-			'inbox_label'  => _PRINNO,
-			'inbox_count'  => $prin,
-			'outbox_label' => _PROUTNO,
-			'outbox_count' => $prout,
-		]);
+		list($prin) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_privat WHERE uidin='".$uid."' AND status = '0'"));
+		list($prout) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_privat WHERE uidout='".$uid."' AND status = '0'"));
 	}
-	$favorites_row = ($conf['favorites']['favact']) ? $tpl->getHtmlFrag('block-user-favorite-row', ['favorites_label' => _FAVORITES]) : '';
-	$content .= $tpl->getHtmlFrag('block-user-actions-table', [
-		'favorites_row' => $favorites_row,
-		'change_label'  => _CHANGE,
-		'logout_label'  => _LOGOUT,
-	]);
+	$data = [
+		'is_user' => true,
+		'avatar_url' => $conf['users']['adirectory'].'/'.$ava,
+		'greeting' => _HELLO.',<br>'.$uname,
+		'audio_src' => ($prin > 0) ? 'sound/privat-'.$locale.'.mp3' : '',
+		'has_privat' => $conf['privat']['act'],
+		'privat_label' => _PRIVAT,
+		'inbox_label' => _PRINNO,
+		'inbox_count' => $prin,
+		'outbox_label' => _PROUTNO,
+		'outbox_count' => $prout,
+		'has_fav' => $conf['favorites']['favact'],
+		'favorites_label' => _FAVORITES,
+		'change_label' => _CHANGE,
+		'logout_label' => _LOGOUT,
+	];
 } else {
 	$captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-	$network_row = ($conf['users']['network']) ? $tpl->getHtmlFrag('block-network-row', [
-		'network_label' => _LOGINNETWORK,
-		'networks_html' => getNetworks(),
-	]) : '';
-	$content = $tpl->getHtmlFrag('block-user-avatar', [
-		'name'       => _ANONYM,
+	$data = [
+		'is_user' => false,
 		'avatar_url' => $conf['users']['adirectory'].'/default/0.gif',
-		'greeting'   => _WELCOMETO.',<br>'._ANONYM,
-	]);
-	$content .= $tpl->getHtmlFrag('block-user-guest-links', [
+		'greeting' => _WELCOMETO.',<br>'._ANONYM,
 		'register_label' => _BREG,
-		'passfor_label'  => _PASSFOR,
-	]);
-	$content .= $tpl->getHtmlFrag('block-login-form', [
+		'passfor_label' => _PASSFOR,
 		'nickname_label' => _NICKNAME,
 		'password_label' => _PASSWORD,
 		'name_input'     => $tpl->getHtmlFrag('input', [
@@ -71,7 +57,10 @@ if (is_user()) {
 		'captcha_html'   => $captcha,
 		'hidden_inputs'  => $tpl->getHtmlFrag('hidden', ['name_attr' => 'refer', 'value_attr' => '1', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'login', 'input_attr' => '']),
 		'login_label'    => _LOGIN,
-		'network_row'    => $network_row,
-	]);
+		'has_network' => $conf['users']['network'],
+		'network_label' => _LOGINNETWORK,
+		'networks_html' => ($conf['users']['network']) ? getNetworks() : '',
+	];
 }
-if ($conf['session']) $content .= $tpl->getHtmlFrag('block-user-session-info', ['content_html' => getUserSessionInfo(1)]);
+$data['session_html'] = ($conf['session']) ? getUserSessionInfo(1) : '';
+$content = $tpl->getHtmlPart('block-user-info', $data);

@@ -10,17 +10,23 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
-$counter_alt = 'Счетчик посещений страниц и уникальных посетителей в сутки';
-$slaed_title = 'SLAED CMS - Content Management System';
-$rss_title   = 'Экспорт новостей в формате RSS';
-$content = $tpl->getHtmlFrag('block-stat-banners', [
-	'counter_src'   => 'index.php?stat=1&amp;img=2',
-	'counter_alt'   => $counter_alt,
-	'counter_title' => $counter_alt,
-	'slaed_url'     => 'http://www.slaed.net',
-	'slaed_title'   => $slaed_title,
-	'slaed_src'     => img_find('banners/slaed_3_2.gif'),
-	'rss_url'       => 'index.php?go=rss&amp;num=50',
-	'rss_title'     => $rss_title,
-	'rss_src'       => img_find('banners/rss_2.gif'),
+$alt = 'Счетчик посещений страниц и уникальных посетителей в сутки';
+$titl = 'SLAED CMS - Content Management System';
+$rss = 'Экспорт новостей в формате RSS';
+$content = $tpl->getHtmlFrag('image', [
+	'src' => 'index.php?stat=1&amp;img=2',
+	'alt' => $alt,
+	'title' => $alt,
+]);
+$content .= $tpl->getHtmlFrag('link', [
+	'href' => 'http://www.slaed.net',
+	'title' => $titl,
+	'img_src' => img_find('banners/slaed_3_2.gif'),
+	'img_alt' => $titl,
+]);
+$content .= $tpl->getHtmlFrag('link', [
+	'href' => 'index.php?go=rss&amp;num=50',
+	'title' => $rss,
+	'img_src' => img_find('banners/rss_2.gif'),
+	'img_alt' => $rss,
 ]);

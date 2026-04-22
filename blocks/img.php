@@ -9,22 +9,27 @@ if (!defined('BLOCK_FILE')) {
 
 global $tpl;
 $path = 'uploads/screens/thumb';
+$ban = [];
 $dir = opendir($path);
-while (false !== ($file = readdir($dir))) {
-	if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($path.'/'.$file)) $ban[] = $file;
+if ($dir) {
+	while (false !== ($file = readdir($dir))) {
+		if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($path.'/'.$file)) $ban[] = $file;
+	}
+	closedir($dir);
 }
-closedir($dir);
 
-$items_html = '';
-$sarray = array_rand($ban, count($ban));
-shuffle($sarray);
-foreach ($sarray as $val) {
-	$img_html = (!$s) ? '<img src="uploads/screens/thumb/'.$ban[$val].'">' : '';
-	$items_html .= $tpl->getHtmlFrag('block-img-item', [
-		'title'    => 'Лучшие сайты системы',
-		'href'     => 'uploads/screens/'.$ban[$val],
-		'img_html' => $img_html,
-	]);
-	$s++;
+$cont = '';
+if ($ban !== []) {
+	$list = (count($ban) > 1) ? array_rand($ban, count($ban)) : array_keys($ban);
+	shuffle($list);
+	foreach ($list as $val) {
+		$img = ($cont === '') ? 'uploads/screens/thumb/'.$ban[$val] : '';
+		$cont .= $tpl->getHtmlFrag('link', [
+			'title'   => 'Лучшие сайты системы',
+			'href'    => 'uploads/screens/'.$ban[$val],
+			'img_src' => $img,
+			'img_alt' => 'Лучшие сайты системы',
+		]);
+	}
 }
-$content = $tpl->getHtmlFrag('block-img-wrap', ['items_html' => $items_html]);
+$content = $tpl->getHtmlFrag('content-block', ['class' => 'block-img', 'content' => $cont]);

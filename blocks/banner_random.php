@@ -18,9 +18,9 @@ while (false !== ($file = readdir($dir))) {
 closedir($dir);
 $i = mt_rand(0, count($ban) - 1);
 $url = preg_split('#-#', $ban[$i]);
-$content = $tpl->getHtmlFrag('block-banner-random', [
-	'url'   => 'https://'.str_replace(['_', '+'], ['/', '?'], $url[0]),
-	'title' => 'SLAED CMS',
-	'src'   => img_find('banners/random/'.$ban[$i]),
-	'alt'   => 'SLAED CMS',
+$content = $tpl->getHtmlFrag('link', [
+	'href'    => 'https://'.str_replace(['_', '+'], ['/', '?'], $url[0]),
+	'title'   => 'SLAED CMS',
+	'img_src' => img_find('banners/random/'.$ban[$i]),
+	'img_alt' => 'SLAED CMS',
 ]);
