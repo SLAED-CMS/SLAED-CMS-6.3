@@ -34,15 +34,15 @@ function forum(): void {
     while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => (string)$id],
+                ['is_col_id' => true, 'content_html' => (string)$id],
                 ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [['label' => _DESCRIPTION, 'value' => $intro ?: _NO, 'is_last' => true]],
                     'label_text' => $title,
                     'title_text' => $title,
                 ])],
-                ['content_html' => (string)$topics],
-                ['content_html' => (string)$posts],
-                ['content_html' => ad_status('', $state)],
+                ['is_col_count' => true, 'content_html' => (string)$topics],
+                ['is_col_count' => true, 'content_html' => (string)$posts],
+                ['is_col_status' => true, 'content_html' => ad_status('', $state)],
             ],
         ])]);
     }
@@ -50,11 +50,11 @@ function forum(): void {
         'is_wrapless' => true,
         'is_fixed' => true,
         'head' => [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _FORUM, 'is_truncate' => true],
-            ['content' => _NEWTOPICS],
-            ['content' => _MESSAGES],
-            ['content' => _STATUS, 'nosort' => true],
+            ['content' => _NEWTOPICS, 'is_col_count' => true],
+            ['content' => _MESSAGES, 'is_col_count' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
         ],
         'rows_html' => $rows,
     ])]);

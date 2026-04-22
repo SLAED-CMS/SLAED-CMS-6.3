@@ -48,7 +48,7 @@ function news(): void {
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => (string)$id],
                     ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
@@ -58,10 +58,10 @@ function news(): void {
                         'label_text' => $title,
                         'title_text' => $title,
                     ])],
-                    ['content_html' => $post],
-                    ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
-                    ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
+                    ['is_col_author' => true, 'content_html' => $post],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
                 ],
             ])]);
         }
@@ -87,7 +87,7 @@ function news(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DELETE])
             .$catopts;
         $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
-        $actions = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-action-label', 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
+        $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
         $body = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=news&amp;op=actions',
@@ -99,12 +99,12 @@ function news(): void {
                 'is_wrapless' => true,
                 'is_fixed' => true,
                 'head' => [
-                    ['content' => _ID],
+                    ['content' => _ID, 'is_col_id' => true],
                     ['content' => _TITLE, 'is_truncate' => true],
-                    ['content' => _POSTEDBY],
-                    ['content' => _STATUS, 'nosort' => true],
-                    ['content' => _FUNCTIONS, 'nosort' => true],
-                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl-check\')"']), 'class_name' => 'sl-th-center', 'nosort' => true],
+                    ['content' => _POSTEDBY, 'is_col_author' => true],
+                    ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                    ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl-check\')"']), 'is_col_check' => true, 'nosort' => true],
                 ],
                 'rows_html' => $rows,
             ]),
@@ -164,7 +164,7 @@ function add(): void {
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
-    $homepre = ($vote) ? $tpl->getHtmlFrag('content-block', ['id' => 'repnews', 'class' => 'sl-section', 'content' => getVotingView($vote, 'news'), 'has_hr' => true]).$hometext : $hometext;
+    $homepre = ($vote) ? $tpl->getHtmlFrag('block-content', ['id' => 'repnews', 'is_section' => true, 'content' => getVotingView($vote, 'news'), 'has_hr' => true]).$hometext : $hometext;
     if ($homepre) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $homepre, 'textb' => $bodytext, 'field' => $field, 'mod' => 'news']);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
@@ -239,7 +239,7 @@ function add(): void {
             ['nameattr' => 'id', 'valueattr' => (string)$id],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);

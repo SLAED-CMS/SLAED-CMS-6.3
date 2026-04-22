@@ -180,13 +180,13 @@ function modules(): void {
         }
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => (string)$a],
+                ['is_col_id' => true, 'content_html' => (string)$a],
                 ['is_truncate' => true, 'title_text' => $titlel, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
                 ['is_truncate' => true, 'title_text' => $title, 'content_html' => $title],
                 ['content_html' => $who_view],
                 ['content_html' => $group_name],
-                ['content_html' => ad_status('', $active)],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ],
         ])]);
         $a++;
@@ -194,13 +194,13 @@ function modules(): void {
     $cont .= $tpl->getHtmlFrag('table', [
         'is_fixed' => true,
         'head' => [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _NAME, 'is_truncate' => true],
             ['content' => _MODUL, 'is_truncate' => true],
             ['content' => _VIEW],
             ['content' => _GROUP],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
     ]);

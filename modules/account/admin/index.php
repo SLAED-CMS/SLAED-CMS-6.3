@@ -107,15 +107,15 @@ function account(): void {
             $delhref = $afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => filterTextHighlight((string)$uid, $chng)],
+                    ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
                     ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => $titleitems,
                         'title_text' => $name,
                     ]).filterTextHighlight($name, $chng)],
                     ['content_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng)],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
-                    ['content_html' => format_time($reg, _TIMESTRING)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [
                             [
@@ -143,12 +143,12 @@ function account(): void {
         $body .= $tpl->getHtmlFrag('table', [
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _NICKNAME, 'is_truncate' => true],
                 ['content' => _IP],
                 ['content' => _EMAIL, 'is_truncate' => true],
-                ['content' => _REG],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _REG, 'is_col_date' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,
@@ -398,7 +398,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _GENDER.':',
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'select_class' => 'sl-select-config', 'options_html' => $genderopts]),
+        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_config' => true, 'options_html' => $genderopts]),
     ];
     $fieldvals = explode('|', $field);
     $fieldcfgs = explode('||', (string)$conf['fields']['account']);
@@ -581,12 +581,12 @@ function newuser(): void {
             $delhref = $afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$uid],
+                    ['is_col_id' => true, 'content_html' => (string)$uid],
                     ['is_truncate' => true, 'title_text' => $name, 'content_html' => $name],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => $mail],
                     ['content_html' => $pass],
-                    ['content_html' => $reg],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_date' => true, 'content_html' => $reg],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [
                             [
@@ -608,12 +608,12 @@ function newuser(): void {
         $body .= $tpl->getHtmlFrag('table', [
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _NICKNAME, 'is_truncate' => true],
                 ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _PASSWORD],
-                ['content' => _REG],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _REG, 'is_col_date' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,

@@ -1,1 +1,1 @@
-<tr{% if row_class %} class="{{ row_class }}"{% endif %}{% if row_attr %} {{{ row_attr }}}{% endif %}>{{{ cells_html }}}</tr>
+<tr{% if row_class or is_lang_edit or is_ratings_inner %} class="{% if row_class %}{{ row_class }}{% endif %}{% if is_lang_edit %} sl-lang-edit-row{% endif %}{% if is_ratings_inner %} sl-ratings-inner-row{% endif %}"{% endif %}{% if row_attr %} {{{ row_attr }}}{% endif %}>{{{ cells_html }}}</tr>

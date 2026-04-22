@@ -34,15 +34,15 @@ function buildShopSearchBox(): string {
                 'value_attr' => $txt,
                 'maxlength_num' => 100,
                 'placeholder_text' => _SEARCH,
-                'input_class' => 'sl-inline-gap',
+                'is_inline_gap' => true,
             ])
             .$tpl->getHtmlFrag('select', [
                 'name_attr' => 'search',
                 'options_html' => $opts,
-                'select_class' => 'sl-inline-gap',
+                'is_inline_gap' => true,
             ]),
         'actions_html' => $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
-        'form_class' => 'sl-inline-filter-form',
+        'is_inline_filter' => true,
     ]);
 }
 
@@ -125,13 +125,13 @@ function clients(): void {
     $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _NICKNAME],
             ['content' => _PRODUCT],
             ['content' => _SITE],
-            ['content' => _DATE],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _DATE, 'is_col_date' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ];
         $trows = '';
         while([$cid, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
@@ -173,13 +173,13 @@ function clients(): void {
             ];
             $trows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$cid],
+                    ['is_col_id' => true, 'content_html' => (string)$cid],
                     ['content_html' => $nick],
                     ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
                     ['is_truncate' => true, 'title_text' => domain($cwebsite), 'content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
-                    ['content_html' => $cenddate],
-                    ['content_html' => ad_status('', $cactive)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_date' => true, 'content_html' => $cenddate],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $cactive)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
             $a++;
@@ -330,7 +330,7 @@ function clientadd(): void {
             ['nameattr' => 'cppi', 'valueattr' => (string)$cppi],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
@@ -447,12 +447,12 @@ function products(): void {
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $phead = [
-            ['content' => ''],
-            ['content' => _ID],
+            ['content' => '', 'is_col_check' => true],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _PRODUCT],
-            ['content' => _PREIS],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _PREIS, 'is_col_count' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ];
         $prows = '';
         while([$pid, $pcid, $ptime, $ptitle, $pprice, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
@@ -471,15 +471,15 @@ function products(): void {
             $items[] = ['href' => $afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer.'&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'];
             $prows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
-                    ['content_html' => (string)$pid],
+                    ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
+                    ['is_col_id' => true, 'content_html' => (string)$pid],
                     ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                         ['label' => _CATEGORY, 'value' => htmlspecialchars((string)$ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _DATE, 'value' => format_time($ptime ?? '', _TIMESTRING), 'is_last' => true],
                     ]]).htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-                    ['content_html' => $pprice.' '.$conf['shop']['valute']],
-                    ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_count' => true, 'content_html' => $pprice.' '.$conf['shop']['valute']],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
@@ -515,7 +515,7 @@ function products(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ],
             'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $phead, 'rows_html' => $prows]),
-            'actions_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-action-label', 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_class' => 'sl-inline-gap']).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+            'actions_html' => $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'is_inline_gap' => true]).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         ]);
         $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_products', 'field' => 'id', 'where' => $sqlstatus]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
@@ -601,7 +601,7 @@ function productadd(): void {
             $isch = false;
             if ($associated) foreach ((array)$associated as $val) if ($val == $id) $isch = true;
             $assoc .= $tpl->getHtmlFrag('label', [
-                'class' => 'sl-associated-option',
+                'is_associated_option' => true,
                 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
             ]);
         }
@@ -631,7 +631,7 @@ function productadd(): void {
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
@@ -761,13 +761,13 @@ function partners(): void {
     $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $pahead = [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _NICKNAME, 'is_truncate' => true],
             ['content' => _SITE, 'is_truncate' => true],
-            ['content' => _REG],
-            ['content' => _PARTNERREST],
-            ['content' => _PARTNERBEK],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _REG, 'is_col_date' => true],
+            ['content' => _PARTNERREST, 'is_col_count' => true],
+            ['content' => _PARTNERBEK, 'is_col_count' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ];
         $parows = '';
         while([$paid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
@@ -786,7 +786,7 @@ function partners(): void {
             ];
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$paid],
+                    ['is_col_id' => true, 'content_html' => (string)$paid],
                     ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                         ['label' => _CLIENTNAME, 'value' => htmlspecialchars((string)$paname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$paaddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
@@ -794,10 +794,10 @@ function partners(): void {
                         ['label' => _EMAIL, 'value' => htmlspecialchars((string)$paemail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
                     ]]).$nick],
                     ['is_truncate' => true, 'title_text' => domain($pawebsite), 'content_html' => domain($pawebsite)],
-                    ['content_html' => date(_TIMESTRING, $paregdate)],
-                    ['content_html' => $parest.' '.$conf['shop']['valute']],
-                    ['content_html' => $pabek.' '.$conf['shop']['valute']],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_date' => true, 'content_html' => date(_TIMESTRING, $paregdate)],
+                    ['is_col_count' => true, 'content_html' => $parest.' '.$conf['shop']['valute']],
+                    ['is_col_count' => true, 'content_html' => $pabek.' '.$conf['shop']['valute']],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
@@ -903,7 +903,7 @@ function partneradd(): void {
             ['nameattr' => 'paid', 'valueattr' => (string)$paid],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;
@@ -969,13 +969,13 @@ function partnerinfo(): void {
     $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid AND c.status != 2 ORDER BY c.id ASC', ['uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
         $pihead = [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _NICKNAME, 'is_truncate' => true],
             ['content' => _PRODUCT, 'is_truncate' => true],
-            ['content' => _PREIS],
-            ['content' => _PERCENT],
-            ['content' => _SUM],
-            ['content' => _DATE],
+            ['content' => _PREIS, 'is_col_count' => true],
+            ['content' => _PERCENT, 'is_col_count' => true],
+            ['content' => _SUM, 'is_col_count' => true],
+            ['content' => _DATE, 'is_col_date' => true],
         ];
         $pirows = '';
         $partsum = 0;
@@ -985,13 +985,13 @@ function partnerinfo(): void {
             $partsum = $pprice / 100 * $proz;
             $partsumges += $partsum;
             $pirows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => (string)$cid],
+                ['is_col_id' => true, 'content_html' => (string)$cid],
                 ['is_truncate' => true, 'title_text' => (string)$nick, 'content_html' => user_info($nick)],
                 ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-                ['content_html' => $pprice.' '.$conf['shop']['valute']],
-                ['content_html' => $proz.' %'],
-                ['content_html' => $partsum.' '.$conf['shop']['valute']],
-                ['content_html' => date(_TIMESTRING, $cregdate)],
+                ['is_col_count' => true, 'content_html' => $pprice.' '.$conf['shop']['valute']],
+                ['is_col_count' => true, 'content_html' => $proz.' %'],
+                ['is_col_count' => true, 'content_html' => $partsum.' '.$conf['shop']['valute']],
+                ['is_col_date' => true, 'content_html' => date(_TIMESTRING, $cregdate)],
             ]])]);
             $a++;
         }

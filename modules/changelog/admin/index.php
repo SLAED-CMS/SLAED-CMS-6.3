@@ -113,17 +113,17 @@ function config(): void {
         [
             'label_html' => _CHLOG_GH_OWNER.':',
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true]),
-            'row_class' => $source === 'github' ? '' : 'sl-none',
+            'is_hidden' => $source !== 'github',
         ],
         [
             'label_html' => _CHLOG_GH_REPO.':',
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true]),
-            'row_class' => $source === 'github' ? '' : 'sl-none',
+            'is_hidden' => $source !== 'github',
         ],
         [
             'label_html' => _CHLOG_GH_TOKEN.':',
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true]),
-            'row_class' => $source === 'github' ? '' : 'sl-none',
+            'is_hidden' => $source !== 'github',
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_LIMIT.':', 'hint' => _CHLOG_STATS_TITLE]),

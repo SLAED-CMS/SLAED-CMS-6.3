@@ -89,13 +89,13 @@ function voting(): void {
     $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _TITLE],
         ];
         if ($conf['multilingual'] == 1) $head[] = ['content' => _LANGUAGE];
         $head[] = ['content' => _MODUL];
-        $head[] = ['content' => _STATUS, 'nosort' => true];
-        $head[] = ['content' => _FUNCTIONS, 'nosort' => true];
+        $head[] = ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true];
+        $head[] = ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true];
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
@@ -111,7 +111,7 @@ function voting(): void {
                 ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ]);
             $cells = [
-                ['content_html' => (string)$id],
+                ['is_col_id' => true, 'content_html' => (string)$id],
                 ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
                     ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
@@ -122,8 +122,8 @@ function voting(): void {
                 $cells[] = ['content_html' => getLangName((!$lang) ? _ALL : $lang)];
             }
             $cells[] = ['content_html' => $modul ? getModuleName($modul) : _NONE];
-            $cells[] = ['content_html' => ad_status('', $active)];
-            $cells[] = ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
+            $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $active)];
+            $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         }
         $head[1]['is_truncate'] = true;
@@ -203,7 +203,7 @@ function add(): void {
             ['nameattr' => 'id', 'valueattr' => (string)$id],
         ],
         'rows' => $rows,
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]);
     echo $cont;

@@ -130,14 +130,14 @@ function statistic(): void {
         'row_attr' => 'data-sort-method="none"',
         'cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => '<strong>'._ALL.'</strong>'],
-                ['content_html' => '<strong>'.(string)$unique.'</strong>'],
-                ['content_html' => '<strong>'.(string)$today.'</strong>'],
-                ['content_html' => '<strong>'.(string)$homepage.'</strong>'],
-                ['content_html' => '<strong>'.(string)$sites.'</strong>'],
-                ['content_html' => '<strong>'.(string)$engines.'</strong>'],
-                ['content_html' => '<strong>'.(string)$auditory.'</strong>'],
-                ['content_html' => '<strong>'.(string)$regusers.'</strong>'],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _ALL])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$unique])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$today])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$homepage])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$sites])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$engines])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$auditory])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$regusers])],
             ],
         ]),
     ]);

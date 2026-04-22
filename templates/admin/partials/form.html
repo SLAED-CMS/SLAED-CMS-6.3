@@ -1,4 +1,4 @@
-<form action="{{{ action_url }}}" method="{% if method %}{{ method }}{% else %}post{% endif %}" class="sl-div-form{% if form_class %} {{ form_class }}{% endif %}"{% if form_attr %} {{{ form_attr }}}{% endif %}>
+<form action="{{{ action_url }}}" method="{% if method %}{{ method }}{% else %}post{% endif %}" class="sl-div-form{% if form_class %} {{ form_class }}{% endif %}{% if is_inline_filter %} sl-inline-filter-form{% endif %}"{% if form_attr %} {{{ form_attr }}}{% endif %}>
     {% for item in hidden %}
     {% include 'fragments/hidden.html' with item %}
     {% endfor %}

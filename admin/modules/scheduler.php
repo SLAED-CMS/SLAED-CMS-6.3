@@ -20,11 +20,11 @@ function scheduler(): void {
     if (!$conf['security']['log_d']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SCHEDULER_WARNLOG.' '.$wargo.'.']);
     $head = [
         ['content' => _TITLE],
-        ['content' => _SCHEDULER_NEXTRUN],
-        ['content' => _SCHEDULER_RESULT],
-        ['content' => _SCHEDULER_PRIO],
-        ['content' => _STATUS],
-        ['content' => _FUNCTIONS, 'nosort' => true],
+        ['content' => _SCHEDULER_NEXTRUN, 'is_col_date' => true],
+        ['content' => _SCHEDULER_RESULT, 'is_col_status' => true],
+        ['content' => _SCHEDULER_PRIO, 'is_col_count' => true],
+        ['content' => _STATUS, 'is_col_status' => true],
+        ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
     ];
     $rows = '';
     foreach ($jobs as $job) {
@@ -92,11 +92,11 @@ function scheduler(): void {
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
-                ['content_html' => htmlspecialchars((string)$nextr, ENT_QUOTES, 'UTF-8')],
-                ['content_html' => htmlspecialchars((string)$stat, ENT_QUOTES, 'UTF-8')],
-                ['content_html' => htmlspecialchars((string)($job['priority'] ?? '100'), ENT_QUOTES, 'UTF-8')],
-                ['content_html' => ((int)$isactive === 1) ? _YES : _NO],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _EDITOR, 'items' => $acts])],
+                ['is_col_date' => true, 'content_html' => htmlspecialchars((string)$nextr, ENT_QUOTES, 'UTF-8')],
+                ['is_col_status' => true, 'content_html' => htmlspecialchars((string)$stat, ENT_QUOTES, 'UTF-8')],
+                ['is_col_count' => true, 'content_html' => htmlspecialchars((string)($job['priority'] ?? '100'), ENT_QUOTES, 'UTF-8')],
+                ['is_col_status' => true, 'content_html' => ((int)$isactive === 1) ? _YES : _NO],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _EDITOR, 'items' => $acts])],
             ],
         ])]);
     }

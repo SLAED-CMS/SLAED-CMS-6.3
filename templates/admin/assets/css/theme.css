@@ -316,6 +316,11 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	border-radius: 6px;
 	box-sizing: border-box;
 }
+.sl-admin-content-inner {
+	min-width: 0;
+	padding: 0 12px 15px 12px;
+	box-sizing: border-box;
+}
 
 /* Нижняя часть footer */
 .footer {
@@ -426,6 +431,10 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	.wrapper:not(.sl-admin-login-shell) .sl-admin-content {
 		margin: 10px;
 		padding: 0 0 10px 0;
+	}
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-content-inner {
+		padding-right: 0;
+		padding-left: 0;
 	}
 	.wrapper:not(.sl-admin-login-shell) .footer {
 		margin: 0 -10px;

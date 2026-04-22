@@ -23,9 +23,9 @@
                     <div class="sl-knob-wrapper">
                         <svg class="sl-knob-svg" viewBox="0 0 100 100">
                             <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-                            <circle class="sl-knob-val {{ cpuclass }}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash }}" stroke-dashoffset="{{ off }}"></circle>
+                            <circle class="sl-knob-val{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash }}" stroke-dashoffset="{{ off }}"></circle>
                         </svg>
-                        <div class="sl-knob-text {{ cpuclass }}">{{ load_0 }}%</div>
+                        <div class="sl-knob-text{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ load_0 }}%</div>
                     </div>
                     <div class="sl-system-label">CPU Usage</div>
                     <div class="sl-system-sub">{{ cpuphys }} / {{ cpucores }} Cores</div>
@@ -35,9 +35,9 @@
                     <div class="sl-knob-wrapper">
                         <svg class="sl-knob-svg" viewBox="0 0 100 100">
                             <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-                            <circle class="sl-knob-val {{ ramclass }}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_r }}" stroke-dashoffset="{{ off_r }}"></circle>
+                            <circle class="sl-knob-val{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_r }}" stroke-dashoffset="{{ off_r }}"></circle>
                         </svg>
-                        <div class="sl-knob-text {{ ramclass }}">{{ ram_p }}%</div>
+                        <div class="sl-knob-text{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ ram_p }}%</div>
                     </div>
                     <div class="sl-system-label">RAM Usage</div>
                     <div class="sl-system-sub">{{ ramumb }} / {{ ramtmb }}</div>
@@ -47,9 +47,9 @@
                     <div class="sl-knob-wrapper">
                         <svg class="sl-knob-svg" viewBox="0 0 100 100">
                             <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-                            <circle class="sl-knob-val {{ diskclass }}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_d }}" stroke-dashoffset="{{ off_d }}"></circle>
+                            <circle class="sl-knob-val{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_d }}" stroke-dashoffset="{{ off_d }}"></circle>
                         </svg>
-                        <div class="sl-knob-text {{ diskclass }}">{{ disk_p }}%</div>
+                        <div class="sl-knob-text{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ disk_p }}%</div>
                     </div>
                     <div class="sl-system-label">Disk Usage</div>
                     <div class="sl-system-sub">Root /</div>

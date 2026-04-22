@@ -32,13 +32,13 @@ function messages(): void {
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$mid],
-                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => $title, 'title_text' => $title])],
+                    ['is_col_id' => true, 'content_html' => (string)$mid],
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                     ['content_html' => $exp],
                     ['content_html' => $mview],
                     ['content_html' => getLangName($lang)],
-                    ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.($active ? '0' : '1').'&amp;token='.getSiteToken(),
@@ -61,13 +61,13 @@ function messages(): void {
         $cont .= $tpl->getHtmlFrag('table', [
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _TITLE, 'is_truncate' => true],
                 ['content' => _PURCHASED],
                 ['content' => _VIEW],
                 ['content' => _LANGUAGE],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
         ]);

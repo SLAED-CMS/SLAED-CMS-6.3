@@ -14,13 +14,13 @@ function groups(): void {
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _RANK, 'nosort' => 1],
             ['content' => _GROUP, 'is_truncate' => true],
-            ['content' => _POINTS],
-            ['content' => cutstr(_USERSCOUNT, 5, 1)],
-            ['content' => cutstr(_SPEC, 4, 1)],
-            ['content' => _FUNCTIONS, 'nosort' => 1],
+            ['content' => _POINTS, 'is_col_count' => true],
+            ['content' => cutstr(_USERSCOUNT, 5, 1), 'is_col_count' => true],
+            ['content' => cutstr(_SPEC, 4, 1), 'is_col_status' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => 1],
         ];
         $rows = '';
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
@@ -56,13 +56,13 @@ function groups(): void {
             ]);
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                    ['content_html' => (string)$grid],
-                    ['content_html' => '<img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'">'],
-                    ['is_truncate' => true, 'title_text' => $grname, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'badge_attr' => ' style="color: '.htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'])],
-                    ['content_html' => (string)$points],
-                    ['content_html' => (string)$users_num],
-                    ['content_html' => $extra],
-                    ['content_html' => $acts],
+                    ['is_col_id' => true, 'content_html' => (string)$grid],
+                    ['content_html' => $tpl->getHtmlFrag('span', ['img_src' => 'templates/'.$conf['theme'].'/images/ranks/'.$rank, 'img_alt' => _RANK])],
+                    ['is_truncate' => true, 'title_text' => $grname, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'color_attr' => htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')])],
+                    ['is_col_count' => true, 'content_html' => (string)$points],
+                    ['is_col_count' => true, 'content_html' => (string)$users_num],
+                    ['is_col_status' => true, 'content_html' => $extra],
+                    ['is_col_actions' => true, 'content_html' => $acts],
                 ]]),
             ]);
         }
@@ -142,7 +142,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => _RANK.':',
-        'field_html' => '<img src="'.$path.$rank.'" id="picture" alt="'._RANK.'">',
+        'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$rank, 'image_id' => 'picture', 'alt_text' => _RANK]),
     ];
     $rows[] = [
         'label_html' => _COLOR.':',

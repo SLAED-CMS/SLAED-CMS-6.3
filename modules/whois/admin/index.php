@@ -33,12 +33,12 @@ function whois(): void {
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _SITE, 'is_truncate' => true],
             ['content' => _HOST, 'is_truncate' => true],
             ['content' => _DC, 'is_truncate' => true],
             ['content' => _POSTEDBY, 'is_truncate' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ];
         $rows = '';
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
@@ -57,7 +57,7 @@ function whois(): void {
                 ['href' => $afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => (string)$id],
+                ['is_col_id' => true, 'content_html' => (string)$id],
                 ['is_truncate' => true, 'title_text' => $domain, 'content_html' => $domain.' '.ad_status('', $statusDomain)],
                 ['is_truncate' => true, 'title_text' => $host, 'content_html' => $host.' '.ad_status('', $statusHost)],
                 ['is_truncate' => true, 'title_text' => $dc, 'content_html' => $dc.' '.ad_status('', $statusDc)],
@@ -66,7 +66,7 @@ function whois(): void {
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
                     ['label' => _COMMENT, 'value' => htmlspecialchars((string)$hometext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
                 ]]).$post],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ]])]);
         }
         $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);

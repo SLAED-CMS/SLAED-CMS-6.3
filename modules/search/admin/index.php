@@ -154,7 +154,7 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
         ['content' => _SEARCHEDIT, 'is_truncate' => true],
         ['content' => _SEARCHREASON, 'is_truncate' => true],
     ];
-    if ($view === 'ready') $head[] = ['content' => _ADD, 'nosort' => true];
+    if ($view === 'ready') $head[] = ['content' => _ADD, 'is_col_check' => true, 'nosort' => true];
     $rows = '';
     foreach ($list as $row) {
         $cells = [
@@ -166,7 +166,7 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
             ['is_truncate' => true, 'title_text' => (string)($row['edit'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['edit'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
             ['is_truncate' => true, 'title_text' => (string)($row['reason'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['reason'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ];
-        if ($view === 'ready') $cells[] = ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
+        if ($view === 'ready') $cells[] = ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
     }
     return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
@@ -230,19 +230,19 @@ function getSearchbox(string $type = 'search'): string {
     $hidden = $tpl->getHtmlFrag('hidden', ['nameattr' => 'name', 'valueattr' => 'search']);
     if ($type === 'toplist') $hidden .= $tpl->getHtmlFrag('hidden', ['nameattr' => 'op', 'valueattr' => 'toplist']);
     $content = _SORTE.': '
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'select_class' => 'sl-search-sort-select'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $sortopts, 'is_search_sort' => true])
         .' '
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts, 'select_class' => 'sl-search-order-select'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'order', 'options_html' => $orderopts, 'is_search_order' => true])
         .' '._SEARCH.': '
-        .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'input_class' => 'sl-search-filter-field'])
+        .$tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'find', 'value_attr' => $find, 'placeholder_text' => _SWORD, 'is_search_filter' => true])
         .' '._MODUL.': '
-        .$tpl->getHtmlFrag('select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'select_class' => 'sl-search-filter-field'])
+        .$tpl->getHtmlFrag('select', ['name_attr' => 'fmod', 'options_html' => getSearchmodsOpts($fmod), 'is_search_filter' => true])
         .$hidden
         .' '.$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
     return $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'method' => 'get',
-        'content_html' => $tpl->getHtmlPart('div', ['class' => 'sl-search-line', 'content_html' => $content]),
+            'content_html' => $tpl->getHtmlPart('div', ['is_search_line' => true, 'content_html' => $content]),
     ]);
 }
 
@@ -308,9 +308,9 @@ function search(): void {
                     'title_text' => (string)$word,
                 ])],
                 ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
-                ['content_html' => (string)intval($hits)],
-                ['content_html' => format_time((string)$time, _TIMESTRING)],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                ['is_col_count' => true, 'content_html' => (string)intval($hits)],
+                ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
                     ['href' => $afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
@@ -327,9 +327,9 @@ function search(): void {
             'head' => [
                 ['content' => _SWORD, 'is_truncate' => true],
                 ['content' => _MODUL, 'is_truncate' => true],
-                ['content' => _HITS],
-                ['content' => _DATE],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _HITS, 'is_col_count' => true],
+                ['content' => _DATE, 'is_col_date' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);
@@ -371,9 +371,9 @@ function toplist(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_truncate' => true, 'title_text' => (string)$word, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', ''), 'label_html' => $hword])],
                 ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
-                ['content_html' => (string)intval($hits)],
-                ['content_html' => format_time((string)$time, _TIMESTRING)],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                ['is_col_count' => true, 'content_html' => (string)intval($hits)],
+                ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
                     ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
@@ -390,9 +390,9 @@ function toplist(): void {
             'head' => [
                 ['content' => _SWORD, 'is_truncate' => true],
                 ['content' => _MODUL, 'is_truncate' => true],
-                ['content' => _HITS],
-                ['content' => _DATE],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _HITS, 'is_col_count' => true],
+                ['content' => _DATE, 'is_col_date' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);

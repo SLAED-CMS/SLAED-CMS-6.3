@@ -37,7 +37,6 @@ function rss(): void {
             'toggle_onclick' => true,
             'href' => '#',
             'title' => _ADD,
-            'class' => 'sl-plus',
             'label' => _RSSC.' '.$indx,
             'onclick_attr' => ' OnClick="HideShow(\'rss'.$indx.'\', \'slide\', \'up\', 500); return false;"',
             'content_html' => $block,

@@ -55,7 +55,7 @@ function media(): void {
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => (string)$id],
                     ['is_truncate' => true, 'title_text' => $label, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
@@ -65,9 +65,9 @@ function media(): void {
                         'label_text' => $label,
                         'title_text' => $label,
                     ])],
-                    ['content_html' => $post],
-                    ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_author' => true, 'content_html' => $post],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
@@ -75,11 +75,11 @@ function media(): void {
             'is_wrapless' => true,
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _POSTEDBY],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _POSTEDBY, 'is_col_author' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);
@@ -239,7 +239,7 @@ function add(): void {
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);

@@ -56,8 +56,8 @@ function admins(): void {
         ['content' => _URANK],
         ['content' => _EMAIL],
         ['content' => _LANGUAGE],
-        ['content' => _SUPERUSER],
-        ['content' => _FUNCTIONS, 'nosort' => true],
+        ['content' => _SUPERUSER, 'is_col_status' => true],
+        ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
     ];
     $rows = '';
     $result = $db->getSqlQuery(
@@ -99,8 +99,8 @@ function admins(): void {
                     'title' => $email,
                 ])],
                 ['content_html' => htmlspecialchars((string)$lang, ENT_QUOTES, 'UTF-8')],
-                ['content_html' => ((int)$super === 1) ? _YES : _NO],
-                ['content_html' => $acts],
+                ['is_col_status' => true, 'content_html' => ((int)$super === 1) ? _YES : _NO],
+                ['is_col_actions' => true, 'content_html' => $acts],
             ],
         ])]);
     }

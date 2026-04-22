@@ -23,18 +23,18 @@ function ratings(): void {
                 'rows' => [
                     [
                         'label_html' => _VOTING_TIME,
-                        'row_class' => 'sl-ratings-inner-row',
+                        'is_ratings_inner' => true,
                         'field_html' => $tpl->getHtmlFrag('input', [
                             'itype' => 'number',
                             'name_attr' => 'time['.$i.']',
                             'value_attr' => (string) intval($con[0] / 86400),
                             'is_config' => true,
-                            'input_class' => 'sl-ratings-days',
+                            'is_ratings_days' => true,
                         ]),
                     ],
                     [
                         'label_html' => _C_21,
-                        'row_class' => 'sl-ratings-inner-row',
+                        'is_ratings_inner' => true,
                         'field_html' => getTplRadioGroup([
                             'name' => $i.'in',
                             'value' => (string) $con[1],
@@ -46,7 +46,7 @@ function ratings(): void {
                     ],
                     [
                         'label_html' => _C_22,
-                        'row_class' => 'sl-ratings-inner-row',
+                        'is_ratings_inner' => true,
                         'field_html' => getTplRadioGroup([
                             'name' => $i.'view',
                             'value' => (string) $con[2],

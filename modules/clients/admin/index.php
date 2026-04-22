@@ -25,18 +25,19 @@ function clients(): void {
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => (string)$id],
+                        ['is_col_id' => true, 'content_html' => (string)$id],
                         ['is_truncate' => true, 'title_text' => $title, 'content_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-                        ['content_html' => $num],
-                        ['content_html' => $time],
-                        ['content_html' => (string)$prod],
-                        ['content_html' => (string)$hits],
-                        ['content_html' => $tpl->getHtmlFrag('inline-badge', [
-                            'class' => $status ? 'sl-green' : 'sl-red',
+                        ['is_col_count' => true, 'content_html' => $num],
+                        ['is_col_date' => true, 'content_html' => $time],
+                        ['is_col_id' => true, 'content_html' => (string)$prod],
+                        ['is_col_count' => true, 'content_html' => (string)$hits],
+                        ['is_col_status' => true, 'content_html' => $tpl->getHtmlFrag('inline-badge', [
+                            'is_green' => (bool)$status,
+                            'is_red' => !$status,
                             'label' => $status ? _YES : _NO,
                             'title' => _STATUS,
                         ])],
-                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => [
                                 [
@@ -65,14 +66,14 @@ function clients(): void {
             'is_wrapless' => true,
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _CTITLE, 'is_truncate' => true],
-                ['content' => _CVERSION],
-                ['content' => _CDATE],
-                ['content' => _ID],
-                ['content' => _CLOADS],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _CVERSION, 'is_col_count' => true],
+                ['content' => _CDATE, 'is_col_date' => true],
+                ['content' => _ID, 'is_col_id' => true],
+                ['content' => _CLOADS, 'is_col_count' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);

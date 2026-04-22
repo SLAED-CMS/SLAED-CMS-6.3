@@ -41,12 +41,12 @@ function content(): void {
             ]);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => (string)$id],
                     ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tip.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-                    ['content_html' => format_time($time, _TIMESTRING)],
-                    ['content_html' => (string)$counter],
-                    ['content_html' => ad_status('', $active)],
-                    ['content_html' => $acts],
+                    ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
+                    ['is_col_count' => true, 'content_html' => (string)$counter],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                    ['is_col_actions' => true, 'content_html' => $acts],
                 ],
             ])]);
         }
@@ -54,12 +54,12 @@ function content(): void {
             'is_wrapless' => true,
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _DATE],
-                ['content' => cutstr(_READS, 4, 1)],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _DATE, 'is_col_date' => true],
+                ['content' => cutstr(_READS, 4, 1), 'is_col_count' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);

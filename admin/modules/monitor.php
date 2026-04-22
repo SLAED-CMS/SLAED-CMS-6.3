@@ -630,9 +630,10 @@ function getCpuDetails(): array {
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
     global $tpl;
-    if ($state === null) return $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-muted', 'label' => 'N/A']);
+    if ($state === null) return $tpl->getHtmlFrag('inline-badge', ['is_muted' => true, 'label' => 'N/A']);
     return $tpl->getHtmlFrag('inline-badge', [
-        'class' => $state ? 'sl-text-success' : 'sl-text-danger',
+        'is_success' => $state,
+        'is_danger' => !$state,
         'label' => $state ? 'On' : 'Off',
     ]);
 }
@@ -1034,27 +1035,33 @@ function getServerStatusVars(?array $snapshot = null): array {
     $offload = $dash - ($dash * $cpup / 100);
     $offr = $dash - ($dash * $mem['percent'] / 100);
     $offd = $dash - ($dash * $diskpct / 100);
-    $usagecls = static fn(float $pct): string => $pct > 95
-        ? 'sl-knob-danger'
-        : ($pct > 75 ? 'sl-knob-warning' : ($pct > 50 ? 'sl-knob-info' : 'sl-knob-success'));
+    $cpuval = (float)$cpup;
+    $ramval = (float)$mem['percent'];
+    $diskval = (float)$diskpct;
     return [
         'dash' => $dash,
         'off' => $offload,
-        'load_0' => round((float)$cpup, 1),
-        'cpuclass' => $usagecls((float)$cpup),
+        'load_0' => round($cpuval, 1),
+        'cpu_is_danger' => $cpuval > 95,
+        'cpu_is_warning' => $cpuval > 75 && $cpuval <= 95,
+        'cpu_is_info' => $cpuval > 50 && $cpuval <= 75,
         'cpucores' => $cpu['logical'],
         'cpuphys' => $cpu['physical'],
         'cpufreq' => $cpu['freq'],
         'dash_r' => $dash,
         'off_r' => $offr,
-        'ramclass' => $usagecls((float)$mem['percent']),
-        'ram_p' => round((float)$mem['percent'], 1),
+        'ram_is_danger' => $ramval > 95,
+        'ram_is_warning' => $ramval > 75 && $ramval <= 95,
+        'ram_is_info' => $ramval > 50 && $ramval <= 75,
+        'ram_p' => round($ramval, 1),
         'ramumb' => filterSize($mem['used']),
         'ramtmb' => filterSize($mem['total']),
         'ramavailmb' => filterSize($mem['free']),
         'dash_d' => $dash,
         'off_d' => $offd,
-        'diskclass' => $usagecls((float)$diskpct),
+        'disk_is_danger' => $diskval > 95,
+        'disk_is_warning' => $diskval > 75 && $diskval <= 95,
+        'disk_is_info' => $diskval > 50 && $diskval <= 75,
         'disk_p' => $diskpct,
         'diskused' => filterSize($diskused),
         'disktot' => filterSize($disksum),
@@ -1119,7 +1126,8 @@ function getMonitorServerStats(): array {
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
     $srvhttps = $tpl->getHtmlFrag('inline-badge', [
-        'class' => $ishttps ? 'sl-text-success' : 'sl-text-danger',
+        'is_success' => $ishttps,
+        'is_danger' => !$ishttps,
         'label' => $ishttps ? 'enabled' : 'disabled',
     ]);
     $loaded = get_loaded_extensions();
@@ -1215,7 +1223,8 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     $extras = getMonitorRuntimeExtras();
     $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
     $diskwarn = $tpl->getHtmlFrag('inline-badge', [
-        'class' => $islowdisk ? 'sl-text-danger' : 'sl-text-success',
+        'is_danger' => $islowdisk,
+        'is_success' => !$islowdisk,
         'label' => $islowdisk ? 'Low free space' : 'Normal',
     ]);
     return [

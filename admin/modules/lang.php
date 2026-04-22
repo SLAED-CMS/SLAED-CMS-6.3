@@ -35,12 +35,12 @@ function lang(): void {
     $rows = [];
     $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
-            ['content_html' => '1'],
+            ['is_col_id' => true, 'content_html' => '1'],
             ['content_html' => _SYSTEM],
             ['content_html' => _ALL],
             ['content_html' => _MVALL],
-            ['content_html' => ad_status('', 1)],
-            ['content_html' => $tpl->getHtmlFrag('row-actions', [
+            ['is_col_status' => true, 'content_html' => ad_status('', 1)],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                 'trigger_label' => _FUNCTIONS,
                 'items' => [
                     ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
@@ -66,24 +66,24 @@ function lang(): void {
         if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], 'label' => _MODUL, 'title' => _FULLEDIT];
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => (string)$a],
+                ['is_col_id' => true, 'content_html' => (string)$a],
                 ['is_truncate' => true, 'title_text' => getModuleName($mod[$i]), 'content_html' => getModuleName($mod[$i])],
                 ['is_truncate' => true, 'title_text' => $mod[$i], 'content_html' => $mod[$i]],
                 ['content_html' => $view],
-                ['content_html' => ad_status('', $act)],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_status' => true, 'content_html' => ad_status('', $act)],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ],
         ])]);
     }
     $cont .= $tpl->getHtmlFrag('table', [
         'is_fixed' => true,
         'head' => [
-            ['content' => _ID],
+            ['content' => _ID, 'is_col_id' => true],
             ['content' => _NAME, 'is_truncate' => true],
             ['content' => _MODUL, 'is_truncate' => true],
             ['content' => _VIEW],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
     ]);
@@ -147,13 +147,13 @@ function fileedit(): void {
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
         $rows = [[
             'label_html' => _CONST.': #'.$n,
-            'row_class' => 'sl-lang-edit-row',
+            'is_lang_edit' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'cnst[]',
                 'value_attr' => $valc,
                 'placeholder_text' => _CONST,
-                'input_attr' => 'class="sl-form-control"',
+                'is_form_control' => true,
             ]),
         ]];
         $cj = count($lng_cn);
@@ -173,13 +173,14 @@ function fileedit(): void {
             }
             $rows[] = [
                 'label_html' => getLangName($lng_cn[$j]).':',
-                'row_class' => 'sl-lang-edit-row',
+                'is_lang_edit' => true,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',
                     'name_attr' => 'lng['.$lng_cn[$j].'][]',
                     'value_attr' => $val,
                     'placeholder_text' => getLangName($lng_cn[$j]),
-                    'input_attr' => 'class="sl-form-control '.$class.'"',
+                    'is_form_control' => true,
+                    'translate_target' => $class,
                 ]).$btn,
             ];
         }

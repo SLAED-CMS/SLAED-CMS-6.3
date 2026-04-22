@@ -49,7 +49,7 @@ function auto_links(): void {
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => (string)$id],
+                        ['is_col_id' => true, 'content_html' => (string)$id],
                         ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'items' => [
                                 ['label' => _REG, 'value' => format_time($added, _TIMESTRING), 'is_last' => true],
@@ -58,9 +58,9 @@ function auto_links(): void {
                             'title_text' => $name,
                         ])],
                         ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url)],
-                        ['content_html' => (string)$hits],
-                        ['content_html' => (string)$outs],
-                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                        ['is_col_count' => true, 'content_html' => (string)$hits],
+                        ['is_col_count' => true, 'content_html' => (string)$outs],
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => $items,
                         ])],
@@ -72,12 +72,12 @@ function auto_links(): void {
             'is_wrapless' => true,
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _SITENAME, 'is_truncate' => true],
                 ['content' => _SITEURL, 'is_truncate' => true],
-                ['content' => _HITS],
-                ['content' => _OUTS],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _HITS, 'is_col_count' => true],
+                ['content' => _OUTS, 'is_col_count' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);
@@ -196,7 +196,7 @@ function stats(): void {
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => (string)$item[0]],
+                        ['is_col_id' => true, 'content_html' => (string)$item[0]],
                         ['is_truncate' => true, 'title_text' => (string)$item[2], 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'items' => [
                                 ['label' => _DATE, 'value' => date(_TIMESTRING, $item[6]), 'is_last' => true],
@@ -214,7 +214,7 @@ function stats(): void {
             'is_fixed' => true,
             'disable_sort' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _NICKNAME, 'is_truncate' => true],
                 ['content' => _IP],
                 ['content' => _REF_URL, 'is_truncate' => true],

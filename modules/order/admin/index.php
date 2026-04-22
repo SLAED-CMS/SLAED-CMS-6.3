@@ -25,7 +25,7 @@ function order(): void {
             $infos = getTplViewFieldRows(['field' => $info, 'mod' => 'order']);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => (string)$id],
                     ['is_truncate' => true, 'title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _COMMENT, 'value' => (string)$note],
@@ -35,9 +35,9 @@ function order(): void {
                         'title_html' => $infos,
                     ])],
                     ['content_html' => user_geo_ip($ip, 4)],
-                    ['content_html' => format_time($date, _TIMESTRING)],
-                    ['content_html' => ad_status('', $status)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                    ['is_col_date' => true, 'content_html' => format_time($date, _TIMESTRING)],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $status)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
                         ['href' => $afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
                         ['href' => $afile.'.php?name=order&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                         [
@@ -54,12 +54,12 @@ function order(): void {
             'is_wrapless' => true,
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _IP],
-                ['content' => _DATE],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _DATE, 'is_col_date' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);
@@ -105,7 +105,7 @@ function add(): void {
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW]).$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND]).($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : ''), 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW]).$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND]).($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : ''), 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);

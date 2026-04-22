@@ -158,7 +158,8 @@ function getSqltable(array $items): string {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
         $status = $tpl->getHtmlFrag('inline-badge', [
-            'class' => $row['ok'] ? 'sl-text-success' : 'sl-text-danger',
+            'is_success' => $row['ok'],
+            'is_danger' => !$row['ok'],
             'label' => $row['ok'] ? _OK : _ERROR.' - '.$row['error'],
         ]);
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -260,8 +261,8 @@ function database(): void {
 
         // Free space display
         $freetag = $tabeng === 'InnoDB'
-            ? $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-dimmed', 'label' => filterSize($tabfree)])
-            : $tpl->getHtmlFrag('inline-badge', ['class' => $tabfree ? 'sl-text-danger' : 'sl-text-success', 'label' => filterSize($tabfree)]);
+            ? $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => filterSize($tabfree)])
+            : $tpl->getHtmlFrag('inline-badge', ['is_danger' => (bool)$tabfree, 'is_success' => !$tabfree, 'label' => filterSize($tabfree)]);
 
         // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
@@ -272,21 +273,21 @@ function database(): void {
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-danger', 'label' => _ERROR]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-success', 'label' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => true, 'label' => _OPTIMIZED]);
             } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-danger', 'label' => _ALREADYOPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _ALREADYOPTIMIZED]);
             } else {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-success', 'label' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => true, 'label' => _OPTIMIZED]);
             }
 
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-dimmed', 'label' => _NO]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_dimmed' => true, 'label' => _NO]);
             } else {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $tpl->getHtmlFrag('inline-badge', ['class' => $rresult ? 'sl-text-success' : 'sl-text-danger', 'label' => $rresult ? _OK : _ERROR]);
+                $stattag = $tpl->getHtmlFrag('inline-badge', ['is_success' => (bool)$rresult, 'is_danger' => !$rresult, 'label' => $rresult ? _OK : _ERROR]);
             }
 
         } else {
@@ -328,14 +329,14 @@ function database(): void {
         'row_attr' => 'data-sort-method="none"',
         'cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => '<strong>'.(string)$item.'</strong>'],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$item])],
                 ['content_html' => '&nbsp;'],
                 ['content_html' => '&nbsp;'],
                 ['content_html' => '&nbsp;'],
-                ['content_html' => '<strong>'.(string)$allrows.'</strong>'],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => (string)$allrows])],
                 ['content_html' => '&nbsp;'],
-                ['content_html' => '<strong>'.filterSize($total).'</strong>'],
-                ['content_html' => '<strong>'.filterSize($sumfree).'</strong>'],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => filterSize($total)])],
+                ['content_html' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => filterSize($sumfree)])],
                 ['content_html' => '&nbsp;'],
             ],
         ]),
@@ -471,8 +472,8 @@ function dump(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
     $buttons =
-        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'submit_label' => _DB_PARSE, 'class' => 'sl-but-green'])
-        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'exec', 'submit_label' => _EXECUTE, 'class' => 'sl-but-blue']);
+        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'submit_label' => _DB_PARSE, 'is_green' => true])
+        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'exec', 'submit_label' => _EXECUTE, 'is_blue' => true]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=database&amp;op=dump',
         'hidden' => [

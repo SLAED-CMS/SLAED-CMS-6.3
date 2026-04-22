@@ -23,7 +23,7 @@
             </div>
             <div class="sl-admin-main">
                 <aside class="sl-admin-sidebar">{{{ admin_blocks }}}</aside>
-                <main class="sl-admin-content">{% block content %}{% endblock %}</main>
+                <main class="sl-admin-content"><div class="sl-admin-content-inner">{% block content %}{% endblock %}</div></main>
             </div>
             <div class="footer sl-admin-footer">
                 <div class="copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>

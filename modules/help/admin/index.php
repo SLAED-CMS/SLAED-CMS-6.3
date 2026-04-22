@@ -40,7 +40,7 @@ function help(): void {
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => (string)$id],
                     ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
@@ -50,10 +50,10 @@ function help(): void {
                         'label_text' => $title,
                         'title_text' => $title,
                     ])],
-                    ['content_html' => $post],
-                    ['content_html' => (string)$comments],
-                    ['content_html' => ad_status('', $stat ? 0 : 1)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_author' => true, 'content_html' => $post],
+                    ['is_col_count' => true, 'content_html' => (string)$comments],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $stat ? 0 : 1)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
@@ -61,12 +61,12 @@ function help(): void {
             'is_wrapless' => true,
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _POSTEDBY],
-                ['content' => cutstr(_MESSAGES, 4, 1)],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _POSTEDBY, 'is_col_author' => true],
+                ['content' => cutstr(_MESSAGES, 4, 1), 'is_col_count' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => $rows,
         ]);
@@ -93,13 +93,13 @@ function view(): void {
         $text = $prs->filterContent($hometext.(($fields) ? PHP_EOL.PHP_EOL.$fields : ''), false, 'help');
         $meta = [];
         if (!$pid) {
-            $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-cat', 'label' => ($ctitle ?: _NO)]);
-            $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-views', 'label' => (string)$counter]);
+            $meta[] = $tpl->getHtmlFrag('inline-badge', ['is_category' => true, 'label' => ($ctitle ?: _NO)]);
+            $meta[] = $tpl->getHtmlFrag('inline-badge', ['is_views' => true, 'label' => (string)$counter]);
         }
-        $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-post-icon', 'label_html' => ($nick ? user_info($nick) : _ANONYM)]);
-        $meta[] = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-date', 'label' => format_time($time, _TIMESTRING)]);
+        $meta[] = $tpl->getHtmlFrag('inline-badge', ['is_post_icon' => true, 'label_html' => ($nick ? user_info($nick) : _ANONYM)]);
+        $meta[] = $tpl->getHtmlFrag('inline-badge', ['is_date' => true, 'label' => format_time($time, _TIMESTRING)]);
         if ($a) {
-            $meta[] = $tpl->getHtmlFrag('link', ['href' => '#'.$id, 'class' => 'sl-pnum', 'title' => _MESSAGE.': '.$a, 'label' => (string)$a]);
+            $meta[] = $tpl->getHtmlFrag('link', ['href' => '#'.$id, 'is_num_anchor' => true, 'title' => _MESSAGE.': '.$a, 'label' => (string)$a]);
         }
         $actions = $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
             ['href' => $afile.'.php?name=help&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
@@ -110,7 +110,7 @@ function view(): void {
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ],
         ]]);
-        $rating = ($haid && $huid != $haid) ? $tpl->getHtmlPart('div', ['class' => 'rate-box pull-right', 'content_html' => getRatingAsync(0, $id, 'help', $ratings, $score, '')]) : '';
+        $rating = ($haid && $huid != $haid) ? $tpl->getHtmlPart('div', ['is_rate_box' => true, 'content_html' => getRatingAsync(0, $id, 'help', $ratings, $score, '')]) : '';
         $body .= $tpl->getHtmlPart('preview', [
             'id' => (string)$id,
             'title' => $title,
@@ -216,7 +216,7 @@ function add(): void {
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
-        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'select_class' => 'sl-inline-gap'])
+        'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         'rows' => $rows,
     ])]);

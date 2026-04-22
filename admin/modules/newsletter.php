@@ -19,7 +19,7 @@ function newsletter(): void {
             $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => (string)$id],
                     ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
@@ -28,9 +28,9 @@ function newsletter(): void {
                         'label_text' => $title,
                         'title_text' => $title,
                     ])],
-                    ['content_html' => $sended.' '._NLUSER],
-                    ['content_html' => ad_status('', $active)],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_count' => true, 'content_html' => $sended.' '._NLUSER],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $active)],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $afile.'.php?name=newsletter&amp;op=add&amp;id='.$id,
@@ -49,11 +49,11 @@ function newsletter(): void {
         $cont .= $tpl->getHtmlFrag('table', [
             'is_fixed' => true,
             'head' => [
-                ['content' => _ID],
+                ['content' => _ID, 'is_col_id' => true],
                 ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _NLEND],
-                ['content' => _STATUS, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'nosort' => true],
+                ['content' => _NLEND, 'is_col_count' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
         ]);

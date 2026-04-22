@@ -50,7 +50,7 @@ function comments(): void {
         $list = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
         $bulk = $tpl->getHtmlPart('div', ['rows' => [[
-            'label_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-action-label', 'label' => _CHECKOP]),
+            'label_html' => $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]),
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'op',
                 'options_html' => $tpl->getHtmlFrag('select-option', [

@@ -210,7 +210,7 @@ function admininfo() {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp'));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=newuser', 'title' => _NEW_USER, 'label' => _USERS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('album') && is_admin_modul('album')) {
@@ -220,101 +220,101 @@ function admininfo() {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_faq WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=faq&status=1', 'title' => _FAQ, 'label' => _FAQ]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('files') && is_admin_modul('files')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=files&status=1', 'title' => _FILES, 'label' => _FILES]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '2'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=files&status=2', 'title' => _BROCFILES, 'label' => _BROCFILES]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('help') && is_admin_modul('help')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=help', 'title' => _HELP, 'label' => _HELP]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('jokes') && is_admin_modul('jokes')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_jokes WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=jokes&status=1', 'title' => _JOKES, 'label' => _JOKES]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('links') && is_admin_modul('links')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=links&status=1', 'title' => _LINKS, 'label' => _LINKS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '2'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=links&status=2', 'title' => _BROCLINKS, 'label' => _BROCLINKS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('media') && is_admin_modul('media')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=media&status=1', 'title' => _MEDIA, 'label' => _MEDIA]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '2'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=media&status=2', 'title' => _BROCMFILES, 'label' => _BROCMFILES]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('news') && is_admin_modul('news')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_news WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=news&status=1', 'title' => _NEWS, 'label' => _NEWS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('pages') && is_admin_modul('pages')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_pages WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=pages&status=1', 'title' => _PAGES, 'label' => _PAGES]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('shop') && is_admin_modul('shop')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_clients WHERE status = '2'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=shop&op=clients', 'title' => _CLIENTS, 'label' => _CLIENTS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_partners WHERE status = '2'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=shop&op=partners', 'title' => _PARTNERS, 'label' => _PARTNERS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
             if (is_active('whois') && is_admin_modul('whois')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_whois WHERE status = '0'"));
                 $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                     'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=whois&status=1', 'title' => _WHOIS, 'label' => _WHOIS]),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
-            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'content_html' => $tpl->getHtmlFrag('content-block', ['class' => 'sl-block-sidebar-count-list', 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
             
             $waitingRows = [];
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
             $waitingRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
                 'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=comments&status=1', 'title' => _COMMENTS, 'label' => _COMMENTS]),
-                'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['class' => ((int)$num >= 1) ? 'sl-text-danger' : 'sl-text-success', 'label' => (string)$num]) : '-',
+                'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
             ]);
-            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('content-block', ['class' => 'sl-block-sidebar-count-list', 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
+            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
             
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
@@ -389,11 +389,13 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             $ordernm = $ordern - 1;
             $ordernp = $ordern + 1;
             $active = $tpl->getHtmlFrag('inline-badge', [
-                'class' => $parentid ? 'sl-text-success' : 'sl-text-danger',
+                'is_success' => (bool)$parentid,
+                'is_danger' => !$parentid,
                 'label' => $parentid ? _YES : _NO,
             ]);
             $img = $tpl->getHtmlFrag('inline-badge', [
-                'class' => $imgcat ? 'sl-text-success' : 'sl-text-danger',
+                'is_success' => (bool)$imgcat,
+                'is_danger' => !$imgcat,
                 'label' => $imgcat ? _YES : _NO,
             ]);
             $flag = $parentid;
@@ -579,17 +581,17 @@ function getAdminBlockList(string $token = ''): string {
         }
         $tipItems[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
         if ($bpos == 'l') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => _LEFT, 'title_text' => _LEFTBLOCK]);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _LEFT, 'title_text' => _LEFTBLOCK]);
         } elseif ($bpos == 'r') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => _RIGHT, 'title_text' => _RIGHTBLOCK]);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _RIGHT, 'title_text' => _RIGHTBLOCK]);
         } elseif ($bpos == 'c') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => _CENTERUP, 'title_text' => _CENTERBLOCK]);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _CENTERUP, 'title_text' => _CENTERBLOCK]);
         } elseif ($bpos == 'd') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => _CENTERDOWN, 'title_text' => _CENTERBLOCK]);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _CENTERDOWN, 'title_text' => _CENTERBLOCK]);
         } elseif ($bpos == 'b') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => _BANNERUP, 'title_text' => _BANNER]);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _BANNERUP, 'title_text' => _BANNER]);
         } elseif ($bpos == 'f') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => _BANNERDOWN, 'title_text' => _BANNER]);
+            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _BANNERDOWN, 'title_text' => _BANNER]);
         }
         if ($bkey == '') {
             $type = ($url) ? 'RSS/RDF' : 'HTML';
@@ -740,7 +742,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string) $id],
-                        ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => $title, 'title_text' => $title])],
+                        ['content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                         ['content_html' => getModuleName($modul)],
                         ['content_html' => $uname],
                         ['content_html' => $tpl->getHtmlFrag('row-actions', [
@@ -813,7 +815,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => $title, 'title_text' => $title])],
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                     ['content_html' => $unse],
                     ['content_html' => $unre],
                     ['content_html' => $date],
@@ -904,7 +906,7 @@ function getAdminUploadFiles(): void {
                 $type = strtolower(substr(strrchr($entry[1], '.'), 1));
                 $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
                 $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type))
-                    ? $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-text-danger', 'label' => $entry[1]])
+                    ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => $entry[1]])
                     : $entry[1];
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
                     $img = $tpl->getHtmlFrag('image-preview', [
