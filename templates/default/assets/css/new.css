@@ -868,3 +868,25 @@ ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
         font-size: 14px;
     }
 }
+
+/* Frontend blocks — Wrapper und klassenspezifische Styles für block-all.html */
+.sl-block { background: #f6f8fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
+.sl-block-content { line-height: 1.4; }
+#sidebar .sl-block:last-child { margin-bottom: 0; }
+
+/* modules.php — Navigation */
+.block-modules { display: flex; flex-direction: column; gap: 4px; }
+.block-modules .sl-module { display: block; padding: 4px 2px; }
+.block-mod-section { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e3edf3; font-size: 12px; color: #888; }
+
+/* languages.php — Flag-Auswahl */
+.block-flags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.block-flags a { display: inline-flex; }
+
+/* login.php / user_info.php — Login-Formular */
+.block-login p { margin: 6px 0; }
+.block-login input { margin: 3px 0; }
+
+/* menu.php — DB-basiertes Menü */
+.block-menu ul { list-style: none; padding: 0; margin: 0; }
+.block-menu li { margin: 4px 0; }
