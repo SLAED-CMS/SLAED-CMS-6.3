@@ -1,0 +1,17 @@
+<div class="block-user-ava"><i class="ava-min" style="background-image: url({{ avatar_url }});"></i><p>{{{ greeting }}}</p></div>
+{% if audio_src %}<audio src="{{ audio_src }}" autoplay></audio>{% endif %}
+{% if is_user %}
+	{% if has_privat %}<ul class="block-pm"><li><b>{{ privat_label }}</b></li><li><a href="index.php?name=privat">{{ inbox_label }}: <b>{{ inbox_count }}</b></a></li><li>{{ outbox_label }}: <b>{{ outbox_count }}</b></li></ul>{% endif %}
+	<ul class="login-top logged">{% if has_fav %}<li><a href="index.php?name=account&amp;op=favorites">{{ favorites_label }}</a></li>{% endif %}<li><a href="index.php?name=account">{{ change_label }}</a></li><li><a href="index.php?name=account&amp;op=logout&amp;refer=1">{{ logout_label }}</a></li></ul>
+{% else %}
+	<ul class="login-top"><li><a href="index.php?name=account&amp;op=reg">{{ register_label }}</a></li><li><a href="index.php?name=account&amp;op=passfor">{{ passfor_label }}</a></li></ul>
+	<form action="index.php?name=account" method="post" class="block-login">
+		<p>{{ nickname_label }}: {{{ name_input }}}</p>
+		<p>{{ password_label }}: <input type="password" name="user_pass" maxlength="32" class="sl-field sl-field--block" required></p>
+		{% if captcha_html %}{{{ captcha_html }}}{% endif %}
+		{{{ hidden_inputs }}}
+		{% if has_network %}<p class="sl-net-login">{{ network_label }}: {{{ networks_html }}}</p>{% endif %}
+		<p><button type="submit" class="sl-but-blue sl-but--block">{{ login_label }}</button></p>
+	</form>
+{% endif %}
+{% if session_html %}<div class="block-session">{{{ session_html }}}</div>{% endif %}
