@@ -176,7 +176,7 @@ function add(): void {
 		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host, 'maxlength_num' => '255', 'placeholder_text' => _HOST])]);
 		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc, 'maxlength_num' => '255', 'placeholder_text' => _DC])]);
 		$nameField = is_user()
-			? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => $userNameValue])
+			? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => $userNameValue])
 			: $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $userNameValue, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
 		$fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('whois')])
 			.$tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField])

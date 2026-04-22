@@ -404,7 +404,7 @@ function getTplPager(array $data = []): string {
     $url = html_entity_decode($data['url'] ?? '', ENT_QUOTES, 'UTF-8');
     $targetid = (string)($data['target_id'] ?? '');
     $pushurl = !empty($data['push_url']);
-    $prefix = (string)($data['prefix'] ?? '');
+    $prefix = '';
     $wparams = (array)($data['where_params'] ?? []);
     $urlx = (array)($data['url_extra'] ?? []);
     [$cnt] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : ''), $wparams));
@@ -629,7 +629,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('content-block', ['is_radio_group' => true, 'content' => $items]);
+    return $tpl->getHtmlFrag('block-content', ['is_radio_group' => true, 'content' => $items]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup
@@ -705,7 +705,6 @@ function getTplFieldsIn(array $data = []): string {
                     $dval = $fieldin ? getConst($fieldin) : '';
                     $fhtml = $tpl->getHtmlFrag('input', [
                         'input_attr' => 'placeholder="'.$dval.'"'.$requir,
-                        'input_class' => '',
                         'itype' => 'text',
                         'name_attr' => 'field[]',
                         'value_attr' => $dval,
@@ -807,13 +806,10 @@ function getTplAjaxTextarea(array $data = []): string {
 function getTplNewGraphic(string $time): string {
     global $tpl;
     $data = time() - strtotime($time);
-    $cls = '';
-    $ttl = '';
-    if ($data < 86400) { $cls = 'sl_n_day'; $ttl = (string)_NEWTODAY; }
-    elseif ($data < 259200) { $cls = 'sl_n_days'; $ttl = (string)_NEWLAST3DAYS; }
-    elseif ($data < 604800) { $cls = 'sl_n_week'; $ttl = (string)_NEWTHISWEEK; }
-    if (!$cls) return '';
-    return $tpl->getHtmlFrag('span', ['class' => $cls, 'title' => $ttl]);
+    if ($data < 86400) return $tpl->getHtmlFrag('span', ['is_new_today' => true, 'title' => (string)_NEWTODAY]);
+    if ($data < 259200) return $tpl->getHtmlFrag('span', ['is_new_days' => true, 'title' => (string)_NEWLAST3DAYS]);
+    if ($data < 604800) return $tpl->getHtmlFrag('span', ['is_new_week' => true, 'title' => (string)_NEWTHISWEEK]);
+    return '';
 }
 
 # Format a gender value for display

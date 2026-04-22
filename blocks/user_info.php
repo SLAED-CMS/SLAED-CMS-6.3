@@ -24,7 +24,8 @@ if (is_user()) {
 	$data = [
 		'is_user' => true,
 		'avatar_url' => $conf['users']['adirectory'].'/'.$ava,
-		'greeting' => _HELLO.',<br>'.$uname,
+		'greeting_label' => _HELLO.',',
+		'greeting_name' => $uname,
 		'audio_src' => ($prin > 0) ? 'sound/privat-'.$locale.'.mp3' : '',
 		'has_privat' => $conf['privat']['act'],
 		'privat_label' => _PRIVAT,
@@ -42,14 +43,15 @@ if (is_user()) {
 	$data = [
 		'is_user' => false,
 		'avatar_url' => $conf['users']['adirectory'].'/default/0.gif',
-		'greeting' => _WELCOMETO.',<br>'._ANONYM,
+		'greeting_label' => _WELCOMETO.',',
+		'greeting_name' => _ANONYM,
 		'register_label' => _BREG,
 		'passfor_label' => _PASSFOR,
 		'nickname_label' => _NICKNAME,
 		'password_label' => _PASSWORD,
 		'name_input'     => $tpl->getHtmlFrag('input', [
 			'input_attr' => 'maxlength="25" placeholder="'._NICKNAME.'" required',
-			'input_class' => 'sl-field--block',
+			'is_block' => true,
 			'itype' => 'text',
 			'name_attr' => 'user_name',
 			'value_attr' => '',

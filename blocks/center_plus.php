@@ -18,7 +18,7 @@ while (list($jokeid, $title) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=jokes#'.$jokeid,
 		'title' => $title,
 		'label' => cutstr($title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 
@@ -30,10 +30,10 @@ while (list($fid, $title) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
 		'title' => $title,
 		'label' => cutstr($title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 
-$content = $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => _JOKES, 'class' => 'sl-col-half'], ['text' => _FAQ]]]);
+$content = $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => _JOKES, 'is_col_half' => true], ['text' => _FAQ]]]);
 $content .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $col1], ['content_html' => $col2]]]);
 $content .= $tpl->getHtmlFrag('table', []);

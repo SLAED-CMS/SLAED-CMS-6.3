@@ -182,7 +182,7 @@ function liste(): void {
             'id'            => (string)$id,
             'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
             'title_attr'    => $title,
-            'title_text'    => cutstr($title, 40),
+            'title_text'    => $title,
             'title_new'     => getTplNewGraphic($time),
             'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
             'category_attr' => $cdesc,
@@ -270,7 +270,7 @@ function view(): void {
                 'form_attr' => 'class="sl-inline-form"',
                 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'loading'])
-                    .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _DOWNLLINK, 'class' => 'sl-but-green', 'input_attr' => trim($onclick)]),
+                    .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _DOWNLLINK, 'is_legacy_green' => true, 'input_attr' => trim($onclick)]),
             ]);
         }
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
@@ -372,7 +372,7 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('links')]);
         $nameField = is_user()
-            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 100, 'placeholder_text' => _AUEMAIL, 'is_required' => true])]);

@@ -25,14 +25,13 @@ while (list($id, $uid, $uname, $title, $time, $hometext, $comments, $counter, $l
 	if (!($conf['rewrite'] ?? false)) $thref .= '&amp;last';
 	$post = ($uid) ? user_info($uname) : $uname;
 	$lposter = ($luid) ? user_info($lname) : $lname;
-	$clas = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? 'sl_hidden' : '';
 	$rows .= $tpl->getHtmlFrag('table-row', [
-		'row_class' => $clas,
+		'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
 		'cells' => [
 			['href' => $thref.'#'.$lpost, 'title' => $title, 'text' => cutstr($title, 50)],
 			['content_html' => $post],
-			['text' => $comments, 'class' => 'fl-col-stat'],
-			['text' => $counter, 'class' => 'fl-col-stat'],
+			['text' => $comments, 'is_forum_stat' => true],
+			['text' => $counter, 'is_forum_stat' => true],
 			['content_html' => $lposter],
 		],
 	]);

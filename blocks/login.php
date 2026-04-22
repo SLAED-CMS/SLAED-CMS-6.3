@@ -20,7 +20,7 @@ $content = $tpl->getHtmlFrag('block-login-form', [
 	'password_label' => _PASSWORD,
 	'name_input'     => $tpl->getHtmlFrag('input', [
 		'input_attr' => 'maxlength="25" placeholder="'._NICKNAME.'" required',
-		'input_class' => 'sl-field--block',
+		'is_block' => true,
 		'itype' => 'text',
 		'name_attr' => 'user_name',
 		'value_attr' => '',

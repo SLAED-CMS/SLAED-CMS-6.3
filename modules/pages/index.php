@@ -185,7 +185,7 @@ function liste(): void {
             'id'            => (string)$id,
             'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
             'title_attr'    => $title,
-            'title_text'    => cutstr($title, 40),
+            'title_text'    => $title,
             'title_new'     => getTplNewGraphic($time),
             'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
             'category_attr' => $cdesc,
@@ -367,7 +367,7 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('pages')]);
         $nameField = is_user()
-            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [

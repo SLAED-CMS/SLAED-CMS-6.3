@@ -172,7 +172,7 @@ function liste(): void {
             'id'            => (string)$id,
             'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
             'title_attr'    => $title,
-            'title_text'    => cutstr($title, 40),
+            'title_text'    => $title,
             'title_new'     => getTplNewGraphic($time),
             'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
             'category_attr' => $cdesc,

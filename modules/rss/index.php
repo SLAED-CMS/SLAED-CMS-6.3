@@ -64,7 +64,7 @@ function info(): void {
     ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
-        $cont .= $tpl->getHtmlFrag('content-block', ['class' => 'sl-section', 'has_hr' => true]);
+        $cont .= $tpl->getHtmlFrag('block-content', ['is_section' => true, 'has_hr' => true]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'method' => 'post',

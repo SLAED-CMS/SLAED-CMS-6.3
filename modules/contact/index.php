@@ -62,7 +62,7 @@ function contact(): void {
         'label' => _MESSAGE.':',
         'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
     ]);
-    $form = ($info ? $tpl->getHtmlFrag('content-block', ['class' => 'sl-section', 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
+    $form = ($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],
         'method' => 'post',
         'form_name' => 'post',

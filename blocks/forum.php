@@ -22,12 +22,11 @@ $rows = '';
 $result = $db->getSqlQuery('SELECT id, title, time, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);
 while (list($id, $title, $time, $luid, $lname, $lpost, $ltime, $status) = $db->getSqlRow($result)) {
 	$lposter = ($luid) ? user_info($lname) : $lname;
-	$clas = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? 'sl_hidden' : '';
 	$rows .= $tpl->getHtmlFrag('table-row', [
-		'row_class' => $clas,
+		'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
 		'cells' => [
 			['href' => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost, 'title' => $title, 'text' => cutstr($title, 50)],
-			['content_html' => _POSTEDBY.': '.$lposter.'<br>'._DATE.': '.format_time($ltime, _TIMESTRING)],
+			['primary_text' => _POSTEDBY.': '.$lposter, 'secondary_text' => _DATE.': '.format_time($ltime, _TIMESTRING)],
 		],
 	]);
 }

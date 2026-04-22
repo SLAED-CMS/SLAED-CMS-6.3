@@ -28,9 +28,9 @@ function content(): void {
             [$id, $title, $time, $counter] = $row;
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-            $tip = $tpl->getHtmlFrag('content-block', [
-                'content' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _DATE, 'text' => format_time($time), 'class' => 'sl-date'])
-                    .(($counter) ? ' '.$tpl->getHtmlFrag('span', ['title' => _READS, 'class' => 'sl-views', 'text' => (string)$counter]) : ''),
+            $tip = $tpl->getHtmlFrag('block-content', [
+                'content' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _DATE, 'text' => format_time($time)])
+                    .(($counter) ? ' '.$tpl->getHtmlFrag('span', ['title' => _READS, 'is_views' => true, 'text' => (string)$counter]) : ''),
             ]);
             $menu = '';
             if ($ismoder) {

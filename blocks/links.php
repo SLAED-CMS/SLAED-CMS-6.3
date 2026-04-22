@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db, $tpl;
+global $db, $tpl, $prs;
 $strip = 40;
 
 # Last added links
@@ -20,7 +20,7 @@ while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
 		'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
 		'label' => cutstr($l_title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 
@@ -32,10 +32,10 @@ while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
 		'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
 		'label' => cutstr($l_title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 
-$content = $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => 'Новые сайты', 'class' => 'sl-col-half'], ['text' => 'Лучшие сайты']]]);
+$content = $tpl->getHtmlFrag('table', ['open' => true, 'headers' => [['text' => 'Новые сайты', 'is_col_half' => true], ['text' => 'Лучшие сайты']]]);
 $content .= $tpl->getHtmlFrag('table-row', ['cells' => [['content_html' => $col1], ['content_html' => $col2]]]);
 $content .= $tpl->getHtmlFrag('table', []);

@@ -21,7 +21,7 @@
 {% elseif is_level_four and title %}
 <h4>{{ title }}</h4>
 {% elseif title_html %}
-<h3 class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{{{ title_html }}}</h3>
+<h3 class="{% if title_class %}{{ title_class }}{% elseif is_plain %}title{% else %}sl-title{% endif %}">{{{ title_html }}}</h3>
 {% elseif title %}
-<h3 class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{{ title }}</h3>
+<h3 class="{% if title_class %}{{ title_class }}{% elseif is_plain %}title{% else %}sl-title{% endif %}">{{ title }}</h3>
 {% endif %}

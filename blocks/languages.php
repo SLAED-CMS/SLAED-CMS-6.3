@@ -31,7 +31,7 @@ if ($conf['flags'] == 1) {
 			]);
 		}
 	}
-	$content = $tpl->getHtmlFrag('content-block', ['class' => 'block-flags', 'content' => $cont]);
+	$content = $tpl->getHtmlFrag('block-content', ['is_block_flags' => true, 'content' => $cont]);
 } else {
 	$opts = '';
 	for ($i = 0; $i < count($langlist); $i++) {

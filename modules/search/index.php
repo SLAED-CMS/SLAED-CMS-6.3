@@ -23,8 +23,8 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
     $menu = '';
     if (is_moder($mod)) {
         $items = [
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
-            $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'is_blank' => true]),
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+            $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
         ];
         $menu = $tpl->getHtmlFrag('editor-action-menu', [
             'editor_label' => _EDITOR,
@@ -103,7 +103,6 @@ function getSearchForm(array $state): string {
         'label' => _SEARCH.':',
         'field_html' => $tpl->getHtmlFrag('input', [
             'input_attr' => 'maxlength="100" placeholder="'._SEARCH.'" required',
-            'input_class' => '',
             'itype' => 'text',
             'name_attr' => 'word',
             'value_attr' => (string)$state['word'],
@@ -261,8 +260,8 @@ function getSearchAuto(array $state): array {
         $edit = '';
         if (is_moder('auto_links')) {
             $items = [
-                $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
-                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'is_blank' => true]),
+                $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
             ];
             $edit = $tpl->getHtmlFrag('editor-action-menu', [
                 'editor_label' => _EDITOR,
@@ -299,8 +298,8 @@ function getSearchForum(array $state): array {
         [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, (int)$tid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
         if (is_moder('forum')) {
             $items = [
-                $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
-                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'class' => '', 'is_blank' => true]),
+                $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
             ];
             $edit = $tpl->getHtmlFrag('editor-action-menu', [
                 'editor_label' => _EDITOR,
@@ -401,15 +400,15 @@ function getSearchList(array $rows, array $state): string {
                 .$tpl->getHtmlFrag('list-item', ['content_html' => $row['ctitle']])
                 .$tpl->getHtmlFrag('list-item', ['content_html' => $row['post']]),
         ]);
-        $cont .= $tpl->getHtmlFrag('content-block', [
+        $cont .= $tpl->getHtmlFrag('block-content', [
             'id' => (string)$numb,
-            'class' => 'sl-search-line',
-            'content' => $tpl->getHtmlFrag('content-block', [
-                    'class' => 'pull-right',
+            'is_search_line' => true,
+            'content' => $tpl->getHtmlFrag('block-content', [
+                    'is_pull_right' => true,
                     'content' => $row['edit'].$tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]),
                 ])
                 .$tpl->getHtmlFrag('title', ['title' => $row['title'], 'is_level_four' => true])
-                .$tpl->getHtmlFrag('content-block', ['class' => 'sl-search-meta', 'content' => $meta]),
+                .$tpl->getHtmlFrag('block-content', ['is_search_meta' => true, 'content' => $meta]),
         ]);
         $numb++;
     }

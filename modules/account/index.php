@@ -25,7 +25,7 @@ function account(): void {
             'label' => _PASSWORD.':',
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
         ]);
-        $after = $tpl->getHtmlFrag('content-block', [
+        $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
             'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true])
                 .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
@@ -105,7 +105,7 @@ function newuser(): void {
                     'field_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'rules', 'value_attr' => '1', 'is_required' => true]),
                 ]);
             }
-            $after = $tpl->getHtmlFrag('content-block', [
+            $after = $tpl->getHtmlFrag('block-content', [
                 'is_form_submit' => true,
                 'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
                     .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]),
@@ -681,10 +681,10 @@ function privat(): void {
             _SEND
         ];
         $text = [
-            $tpl->getHtmlFrag('content-block', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
-            $tpl->getHtmlFrag('content-block', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
-            $tpl->getHtmlFrag('content-block', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
-            $tpl->getHtmlFrag('content-block', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
+            $tpl->getHtmlFrag('block-content', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
+            $tpl->getHtmlFrag('block-content', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
+            $tpl->getHtmlFrag('block-content', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
+            $tpl->getHtmlFrag('block-content', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
         ];
         $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
@@ -700,7 +700,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('content-block', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('block-content', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
         setFoot();
     } else {
         account();
@@ -732,7 +732,7 @@ function passlost(): void {
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code ?: '', 'maxlength_num' => 10, 'placeholder_text' => _CONFIRMATIONCODE, 'is_required' => true]),
             ]);
         }
-        $after = $tpl->getHtmlFrag('content-block', [
+        $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
             'content' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),

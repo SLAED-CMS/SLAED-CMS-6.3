@@ -41,7 +41,7 @@ function voting(): void {
 			$admin = '';
 			if (is_moder($conf['name'])) {
 				$items = [
-					$tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
+					$tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
 					$tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$stitle.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
 				];
 				$admin = $tpl->getHtmlFrag('editor-action-menu', [
@@ -104,7 +104,7 @@ function view(): void {
 			'time' => $date,
 			'author' => $conf['sitename'],
 		]);
-		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('content-block', ['class' => 'post-vote', 'content' => $tpl->getHtmlFrag('content-block', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
+		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);

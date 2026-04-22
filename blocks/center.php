@@ -18,7 +18,7 @@ while (list($id, $title) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=files&amp;op=view&amp;id='.$id,
 		'title' => $title,
 		'label' => cutstr($title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 
@@ -30,7 +30,7 @@ while (list($pid, $title) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=pages&amp;op=view&amp;id='.$pid,
 		'title' => $title,
 		'label' => cutstr($title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 
@@ -42,7 +42,7 @@ while (list($fid, $title) = $db->getSqlRow($result)) {
 		'href' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
 		'title' => $title,
 		'label' => cutstr($title, $strip),
-		'suffix_html' => '<br>',
+		'is_line_break' => true,
 	]);
 }
 

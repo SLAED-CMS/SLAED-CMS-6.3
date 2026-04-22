@@ -1,0 +1,9 @@
+{% if content_html %}
+<div{% if id %} id="{{ id }}"{% endif %}{% if is_code %} class="code"{% endif %}{% if title %} title="{{ title }}"{% endif %}>{{{ content_html }}}</div>
+{% else %}
+<div>
+    {% for row in rows %}
+    <div{% if row.id %} id="{{ row.id }}"{% endif %}>{{{ row.content_html }}}</div>
+    {% endfor %}
+</div>
+{% endif %}

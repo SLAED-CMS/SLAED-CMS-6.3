@@ -31,11 +31,11 @@ function money(): void {
     ] as [$fnname, $tolbl, $tocur]) {
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label' => _MO_2.':',
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'a', 'input_class' => 'sl-calculator-field']).' EUR',
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'a', 'is_calculator' => true]).' EUR',
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => $tolbl,
-            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'total', 'input_class' => 'sl-calculator-field']).' '.$tocur,
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'total', 'is_calculator' => true]).' '.$tocur,
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => '',
@@ -45,7 +45,7 @@ function money(): void {
             'no_action' => true,
             'method' => 'post',
             'form_name' => 'form',
-            'form_attr' => 'class="sl-calculator-form"',
+            'is_calculator' => true,
             'no_enctype' => true,
             'fields' => $fields,
         ]);
@@ -60,12 +60,11 @@ function money(): void {
             'itype' => 'number',
             'name_attr' => 'sum',
             'value_attr' => (string)$sum,
-            'input_class' => '',
             'input_attr' => 'placeholder="'._MO_7.'" required',
         ])]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _MO_8.':',
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'input_class' => '', 'itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email]),
         ]);
         $form = explode(',', $conf['money']['form']);
         $i = 0;
@@ -73,7 +72,7 @@ function money(): void {
             if ($val != '') {
                 $rows .= $tpl->getHtmlFrag('form-field-row', [
                     'label' => $val.':',
-                    'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'intro[]', 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
                 ]);
                 $i++;
             }

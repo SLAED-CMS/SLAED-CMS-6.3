@@ -32,4 +32,4 @@ if ($ban !== []) {
 		]);
 	}
 }
-$content = $tpl->getHtmlFrag('content-block', ['class' => 'block-img', 'content' => $cont]);
+$content = $tpl->getHtmlFrag('block-content', ['content' => $cont]);

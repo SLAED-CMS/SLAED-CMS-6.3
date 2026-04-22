@@ -459,7 +459,7 @@ function add(): void {
                     'href' => '#',
                     'title' => _ADD,
                     'label' => _URL.' - '.$a.':',
-                    'class' => 'sl-plus',
+                    'is_plus' => true,
                     'onclick_attr' => 'onclick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500); return false;"',
                 ]),
                 'field_html' => $tpl->getHtmlFrag('input', [
@@ -484,7 +484,7 @@ function add(): void {
         $fieldsAfterText .= $linksRows;
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('media')]);
         $nameField = is_user()
-            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _MTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _MTITLE, 'is_required' => true])]);

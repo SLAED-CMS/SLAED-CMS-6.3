@@ -1876,14 +1876,14 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                         $is_hidden = false;
                         $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
                         $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
-                        $ilink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'class' => 'sl-catimg', 'img_src' => $isrc, 'img_alt' => $val[1]]);
-                        $alink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'label' => $val[1], 'class' => 'sl-catname']);
+                        $ilink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'is_cat_image' => true, 'img_src' => $isrc, 'img_alt' => $val[1]]);
+                        $alink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'label' => $val[1], 'is_cat_name' => true]);
                     } else {
                         $is_hidden = true;
                         $htitle = $val[1].' - '._CCLOSED;
                         $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
-                        $ilink = $tpl->getHtmlFrag('span', ['title' => $htitle, 'class' => 'sl-catimg', 'img_src' => $isrc, 'img_alt' => $htitle]);
-                        $alink = $tpl->getHtmlFrag('span', ['title' => $val[1], 'text' => $val[1], 'class' => 'sl-catname']);
+                        $ilink = $tpl->getHtmlFrag('span', ['title' => $htitle, 'is_cat_image' => true, 'img_src' => $isrc, 'img_alt' => $htitle]);
+                        $alink = $tpl->getHtmlFrag('span', ['title' => $val[1], 'text' => $val[1], 'is_cat_name' => true]);
                     }
                     $subcat = '';
                     foreach ($massiv as $sval) {
@@ -1893,7 +1893,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                                 $sval[1] = getConst($sval[1]);
                                 $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
                                 $sublink = is_acess($sval[6]) ? $tpl->getHtmlFrag('link', ['href' => $shref, 'title' => $sval[1], 'label' => $sval[1], 'is_category' => true]) : '';
-                                $subcat .= $tpl->getHtmlFrag('content-block', ['content' => $sublink]);
+                                $subcat .= $tpl->getHtmlFrag('block-content', ['content' => $sublink]);
                             }
                         }
                     }
@@ -2430,7 +2430,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
         ]);
         return $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
     }, $pairs));
-    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('content-block', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
+    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('block-content', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
     return $tpl->getHtmlFrag('navi-tabs-wrap', ['tabs_html' => $tlinks, 'content_html' => $cdivs, 'id' => $id]);
 }
 
@@ -2579,7 +2579,7 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
             if (is_moder('voting') && $votid == 'voting') {
                 $items = [
-                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT, 'class' => '']),
+                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
                     $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
                 ];
                 $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
@@ -3480,9 +3480,9 @@ function getEditorFiles(): void {
                 }
                 if (is_moder($dir)) {
                     if (in_array(true, checkCompress(), true)) {
-                        $show[] = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'f'.$id, 'query' => 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], 'title' => _ZIP, 'label' => _ZIP, 'class' => '']);
+                        $show[] = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'f'.$id, 'query' => 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], 'title' => _ZIP, 'label' => _ZIP]);
                     }
-                    $show[] = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'f'.$id, 'query' => 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], 'title' => _ONDELETE, 'label' => _ONDELETE, 'class' => '']);
+                    $show[] = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'f'.$id, 'query' => 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], 'title' => _ONDELETE, 'label' => _ONDELETE]);
                 }
                 $menuItems = array_values(array_filter($show, static fn($item) => $item !== ''));
                 $contents[] = $tpl->getHtmlFrag('editor-file-row', [
@@ -3597,7 +3597,7 @@ function letter(string $mod): string {
     }
     $items = '';
     foreach ($rows as $row) {
-        $items .= $tpl->getHtmlFrag('span', ['class' => 'sl-line-stack-item', 'content_html' => $row, 'is_line_break' => true]);
+        $items .= $tpl->getHtmlFrag('span', ['is_line_stack_item' => true, 'content_html' => $row, 'is_line_break' => true]);
     }
     return $items;
 }
@@ -3624,8 +3624,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
         $deact = ($text) ? _DEACTIVATE.': '.$text : _DEACTIVATE;
         $act = ($text) ? _ACTIVATE.': '.$text : _ACTIVATE;
         return ($id == 1)
-            ? $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $deact, 'class' => '', 'label' => $deact])
-            : $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $act, 'class' => '', 'label' => $act]);
+            ? $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $deact, 'label' => $deact])
+            : $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $act, 'label' => $act]);
     }
     return ($id == 1)
         ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _ACT, 'is_status_active' => true, 'label' => ''])
@@ -3762,7 +3762,7 @@ function renderFootControls(
     return $tpl->getHtmlPart('foot-controls', [
         'top_title' => $topTitle,
         'top_label' => $topLabel,
-        'top_link' => ['href' => '#', 'title' => $topTitle, 'label' => $topLabel, 'class' => 'thide', 'is_upper' => true],
+        'top_link' => ['href' => '#', 'title' => $topTitle, 'label' => $topLabel, 'is_top_hidden' => true, 'is_upper' => true],
         'time_html' => $timeHtml,
         'license_html' => $licenseHtml,
         'debug_html' => $debugHtml,
@@ -4136,7 +4136,7 @@ function addFilescanTask(): array {
     if ($conf['security']['mail_d']) {
         $mail = '';
         foreach (($log ?: [_NO]) as $line) {
-            $mail .= $tpl->getHtmlFrag('span', ['class' => 'sl-line-stack-item', 'text' => $line, 'is_line_break' => true]);
+            $mail .= $tpl->getHtmlFrag('span', ['is_line_stack_item' => true, 'text' => $line, 'is_line_break' => true]);
         }
         $subj = $conf['sitename'].' - '._SECURITY;
         $mmsg = $tpl->getHtmlPart('message-block', [
@@ -4322,13 +4322,13 @@ function encode_php(array $text): string {
         $count = 1;
         $rows = '';
         foreach ($lines as $code) {
-            $bgcolor = ($count % 2) ? 'sl-code-row-odd' : 'sl-code-row-even';
+            $odd = (bool)($count % 2);
             if (preg_match("#<\?(php)?[^[:graph:]]#", $code)) {
                 $chtml = highlight_string($code, true);
             } else {
                 $chtml = preg_replace("#&lt;\?php&nbsp;#", '', highlight_string('<?php '.$code, true));
             }
-            $rows .= $tpl->getHtmlFrag('code-row', ['row_class' => $bgcolor, 'row_num' => $count, 'code_html' => $chtml]);
+            $rows .= $tpl->getHtmlFrag('code-row', ['is_odd' => $odd, 'row_num' => $count, 'code_html' => $chtml]);
             $count++;
         }
         $format = $tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true]).str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows).$tpl->getHtmlFrag('table', []);
@@ -4368,10 +4368,10 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             if (file_exists('blocks/'.$bfile)) {
                 include('blocks/'.$bfile);
             } else {
-                $content = $tpl->getHtmlFrag('content-block', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
+                $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
             }
         }
-        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('content-block', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM2]);
+        if (!isset($content) || empty($content)) $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM2]);
         switch($side) {
             case 'b':
             $showbanners = $content;
@@ -4870,7 +4870,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $regdate = (!empty($user_regdate)) ? htmlspecialchars(_REG, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(format_time($user_regdate), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _NO_INFO;
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('content-block', ['is_signature' => true, 'content' => $user_sig]) : '';
+            $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
             $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true]) : '';
             $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'is_button_green' => true]) : '';
             $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
@@ -4891,9 +4891,9 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $edit = $tpl->getHtmlFrag('row-actions', ['editor_label' => _EDITOR, 'items' => $items]);
                 } else {
                     $items = [
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT, 'class' => '']),
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, 'title' => _FMODC, 'label' => _FMODC, 'class' => '']),
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE, 'class' => '']),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, 'title' => _FMODC, 'label' => _FMODC]),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE]),
                     ];
                     $items = array_values(array_filter($items, static fn($item) => $item !== ''));
                     $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
@@ -4902,14 +4902,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
                 if (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) {
                     $items = [
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT, 'class' => '']),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
                     ];
                     $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
                 } else {
                     $edit = '';
                 }
             }
-            $text = $tpl->getHtmlFrag('content-block', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
+            $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
             if (defined('ADMIN_FILE')) {
                 $markAll = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'markcheck',

@@ -451,7 +451,7 @@ function view(): void {
                 $gender = (!empty($gender)) ? _GENDER.': '.getGenderText($gender) : '';
                 $from = (!empty($from)) ? _FROM.': '.$from : '';
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
-                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('content-block', ['is_signature' => true, 'content' => $sig]) : '';
+                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
                 $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
                     ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'is_button_blue' => true, 'label' => _PERS])
                     : '';
@@ -489,7 +489,7 @@ function view(): void {
                     : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name']), $word);
-                $text = $tpl->getHtmlFrag('content-block', ['id' => 'repfor'.$fid, 'content' => $body_html]);
+                $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
                 if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name']), $word);
                 $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
@@ -520,7 +520,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
         ]) : '';
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1'])]);
         $rows .= getTplFieldsIn(['mod' => $conf['name']]);
@@ -661,11 +661,11 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_forum_heading' => true]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
         ]) : '';
         $rows .= ($subh) ? $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => '']) : $tpl->getHtmlFrag('form-field-row', [
             'label' => _TITLE,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'input_class' => '', 'itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject]),
         ]);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _TEXT, 'required' => '1'])]);
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);

@@ -1,4 +1,4 @@
-<form{% if not no_action %} action="{% if action %}{{{ action }}}{% else %}index.php?name={{ name }}&amp;op=add{% endif %}"{% endif %} method="{% if method %}{{ method }}{% else %}post{% endif %}" name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"{% if form_id %} id="{{ form_id }}"{% endif %}{% if not no_enctype %}{% if enctype %} enctype="{{ enctype }}"{% else %} enctype="multipart/form-data"{% endif %}{% endif %}{% if form_attr %} {{{ form_attr }}}{% endif %}>
+<form{% if not no_action %} action="{% if action %}{{{ action }}}{% else %}index.php?name={{ name }}&amp;op=add{% endif %}"{% endif %} method="{% if method %}{{ method }}{% else %}post{% endif %}" name="{% if form_name %}{{ form_name }}{% else %}post{% endif %}"{% if form_id %} id="{{ form_id }}"{% endif %}{% if is_calculator %} class="sl-calculator-form"{% endif %}{% if not no_enctype %}{% if enctype %} enctype="{{ enctype }}"{% else %} enctype="multipart/form-data"{% endif %}{% endif %}{% if form_attr %} {{{ form_attr }}}{% endif %}>
 <div class="sl-form">
 {% if extrafields %}{{{ extrafields }}}{% endif %}
 {% if fields %}{{{ fields }}}{% endif %}

@@ -35,7 +35,7 @@ foreach ($mod_list as $m_title => $info) {
         $mods_4 .= $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$m_title, 'title' => $m_title2, 'label' => $m_title2, 'is_module' => true]);
     }
 }
-$mods_2 = ($mods_2) ? $tpl->getHtmlFrag('content-block', ['class' => 'block-mod-section', 'content' => '<b>'._INVISIBLEMODULES.'</b><br>'._ACTIVEBUTNOTSEE]).$mods_2 : '';
-$mods_3 = ($mods_3) ? $tpl->getHtmlFrag('content-block', ['class' => 'block-mod-section', 'content' => '<b>'._NOACTIVEMODULES.'</b><br>'._FORADMINTESTS]).$mods_3 : '';
-$mods_4 = ($mods_4) ? $tpl->getHtmlFrag('content-block', ['class' => 'block-mod-section', 'content' => '<b>'._ADMINS.'</b><br>'._FORADMINTESTS]).$mods_4 : '';
-$content = $tpl->getHtmlFrag('content-block', ['class' => 'block-modules', 'content' => $mods_1.$mods_2.$mods_3.$mods_4]);
+$mods_2 = ($mods_2) ? $tpl->getHtmlFrag('block-content', ['is_block_module_section' => true, 'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _INVISIBLEMODULES])._ACTIVEBUTNOTSEE]).$mods_2 : '';
+$mods_3 = ($mods_3) ? $tpl->getHtmlFrag('block-content', ['is_block_module_section' => true, 'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _NOACTIVEMODULES])._FORADMINTESTS]).$mods_3 : '';
+$mods_4 = ($mods_4) ? $tpl->getHtmlFrag('block-content', ['is_block_module_section' => true, 'content' => $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_line_break' => true, 'text' => _ADMINS])._FORADMINTESTS]).$mods_4 : '';
+$content = $tpl->getHtmlFrag('block-content', ['is_block_modules' => true, 'content' => $mods_1.$mods_2.$mods_3.$mods_4]);

@@ -1,4 +1,4 @@
-<div class="block-user-ava"><i class="ava-min" style="background-image: url({{ avatar_url }});"></i><p>{{{ greeting }}}</p></div>
+<div class="block-user-ava"><i class="ava-min" style="background-image: url({{ avatar_url }});"></i><p>{{ greeting_label }}<br>{{ greeting_name }}</p></div>
 {% if audio_src %}<audio src="{{ audio_src }}" autoplay></audio>{% endif %}
 {% if is_user %}
 	{% if has_privat %}<ul class="block-pm"><li><b>{{ privat_label }}</b></li><li><a href="index.php?name=privat">{{ inbox_label }}: <b>{{ inbox_count }}</b></a></li><li>{{ outbox_label }}: <b>{{ outbox_count }}</b></li></ul>{% endif %}

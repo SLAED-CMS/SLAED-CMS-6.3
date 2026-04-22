@@ -50,7 +50,7 @@ function clients(): void {
                     ['content_html' => $acont],
                 ],
             ];
-            $conts .= $tpl->getHtmlFrag('content-block', ['id' => 'cl'.$i, 'class' => 'sl-none', 'content' => $prs->filterContent($body, false, $conf['name'])]);
+            $conts .= $tpl->getHtmlFrag('block-content', ['id' => 'cl'.$i, 'is_hidden' => true, 'content' => $prs->filterContent($body, false, $conf['name'])]);
             $i++;
             $a++;
         }

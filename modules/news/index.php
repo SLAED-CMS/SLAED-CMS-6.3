@@ -195,7 +195,7 @@ function liste(): void {
             'id'            => (string)$id,
             'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
             'title_attr'    => $title,
-            'title_text'    => cutstr($title, 40),
+            'title_text'    => $title,
             'title_new'     => getTplNewGraphic($time),
             'category_href' => $ctitle ? getSeoUrl(['name' => $conf['name'], 'cat' => $cid]) : '',
             'category_attr' => $cdesc,
@@ -288,7 +288,7 @@ function view(): void {
         $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
         $rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
-        $voting = ($vote) ? $tpl->getHtmlFrag('content-block', ['id' => 'rep'.$conf['name'], 'class' => 'sl-section', 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
+        $voting = ($vote) ? $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$conf['name'], 'is_section' => true, 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder' => is_moder($conf['name']),
@@ -404,7 +404,7 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('news')]);
         $nameField = is_user()
-            ? $tpl->getHtmlFrag('span', ['class' => 'sl-form-value', 'text' => filterText(substr($user[1], 0, 25))])
+            ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
