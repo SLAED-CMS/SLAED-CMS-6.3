@@ -595,6 +595,28 @@ to { transform: scaleX(0); }
 .sl-table-list-sort th:last-child { text-align: center; padding: 8px 16px 8px 4px; }
 .sl-table-list-sort th.sl-th-center { text-align: center; padding-right: 8px; padding-left: 8px; }
 .sl-table-list-sort th.sl-th-center input { display: block; margin: 0 auto; }
+.sl-table-fixed {
+    table-layout: fixed;
+}
+.sl-table-fixed .sl-cell-ellipsis {
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.sl-table-fixed .sl-cell-ellipsis > * {
+    max-width: 100%;
+}
+.sl-table-fixed th:first-child:not(.sl-cell-ellipsis) { width: 42px; }
+.sl-table-fixed tr:has(> th:nth-child(5):last-child) th:nth-child(3) { width: 100px; }
+.sl-table-fixed tr:has(> th:nth-child(5):last-child) th:nth-child(4) { width: 64px; }
+.sl-table-fixed tr:has(> th:nth-child(5):last-child) th:nth-child(5) { width: 102px; }
+.sl-table-fixed tr:has(> th:nth-child(6):last-child) th:nth-child(4) { width: 100px; }
+.sl-table-fixed tr:has(> th:nth-child(6):last-child) th:nth-child(5) { width: 64px; }
+.sl-table-fixed tr:has(> th:nth-child(6):last-child) th:nth-child(6) { width: 102px; }
+.sl-table-fixed tr:has(> th.sl-th-center:last-child) th:nth-last-child(3) { width: 100px; }
+.sl-table-fixed tr:has(> th.sl-th-center:last-child) th:nth-last-child(2) { width: 102px; }
+.sl-table-fixed tr:has(> th.sl-th-center:last-child) th:last-child { width: 36px; }
 
 /* Tabs */
 .sl-module-head {

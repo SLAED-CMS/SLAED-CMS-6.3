@@ -79,7 +79,7 @@ function money(): void {
                     'cells' => [
                         ['content_html' => (string)$id],
                         ['content_html' => $sum.' EUR'],
-                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).anti_spam($email)],
+                        ['is_truncate' => true, 'title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).anti_spam($email)],
                         ['content_html' => user_geo_ip($ip, 4)],
                         ['content_html' => format_time($time, _TIMESTRING)],
                         ['content_html' => ad_status('', $status)],
@@ -91,10 +91,11 @@ function money(): void {
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
                 ['content' => _SUM],
-                ['content' => _EMAIL],
+                ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _IP],
                 ['content' => _DATE],
                 ['content' => _STATUS, 'nosort' => true],

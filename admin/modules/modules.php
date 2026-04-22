@@ -181,8 +181,8 @@ function modules(): void {
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)$a],
-                ['content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
-                ['content_html' => $title],
+                ['is_truncate' => true, 'title_text' => $titlel, 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel],
+                ['is_truncate' => true, 'title_text' => $title, 'content_html' => $title],
                 ['content_html' => $who_view],
                 ['content_html' => $group_name],
                 ['content_html' => ad_status('', $active)],
@@ -192,10 +192,11 @@ function modules(): void {
         $a++;
     }
     $cont .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
         'head' => [
             ['content' => _ID],
-            ['content' => _NAME],
-            ['content' => _MODUL],
+            ['content' => _NAME, 'is_truncate' => true],
+            ['content' => _MODUL, 'is_truncate' => true],
             ['content' => _VIEW],
             ['content' => _GROUP],
             ['content' => _STATUS, 'nosort' => true],

@@ -146,30 +146,30 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
     global $tpl;
     if (!$list) return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     $head = [
-        ['content' => _MODUL],
-        ['content' => 'ID'],
+        ['content' => _MODUL, 'is_truncate' => true],
+        ['content' => 'ID', 'is_truncate' => true],
         ['content' => _SEARCHTYPE],
-        ['content' => _TABLE],
-        ['content' => _SEARCHFIELDS],
-        ['content' => _SEARCHEDIT],
-        ['content' => _SEARCHREASON],
+        ['content' => _TABLE, 'is_truncate' => true],
+        ['content' => _SEARCHFIELDS, 'is_truncate' => true],
+        ['content' => _SEARCHEDIT, 'is_truncate' => true],
+        ['content' => _SEARCHREASON, 'is_truncate' => true],
     ];
     if ($view === 'ready') $head[] = ['content' => _ADD, 'nosort' => true];
     $rows = '';
     foreach ($list as $row) {
         $cells = [
-            ['content_html' => htmlspecialchars((string)$row['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['content_html' => htmlspecialchars((string)$row['mod'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)$row['name'], 'content_html' => htmlspecialchars((string)$row['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)$row['mod'], 'content_html' => htmlspecialchars((string)$row['mod'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
             ['content_html' => htmlspecialchars((string)$row['type'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['content_html' => htmlspecialchars((string)$row['table'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['content_html' => htmlspecialchars((string)($row['fields'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['content_html' => htmlspecialchars((string)($row['edit'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['content_html' => htmlspecialchars((string)($row['reason'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)$row['table'], 'content_html' => htmlspecialchars((string)$row['table'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)($row['fields'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['fields'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)($row['edit'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['edit'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)($row['reason'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['reason'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ];
         if ($view === 'ready') $cells[] = ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
     }
-    return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+    return $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
 }
 
 function getSearchwhere(): array {
@@ -299,7 +299,7 @@ function search(): void {
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                ['is_truncate' => true, 'title_text' => (string)$word, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [
                         ['label' => _MODUL, 'value' => htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8')],
                         ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING), 'is_last' => true],
@@ -307,7 +307,7 @@ function search(): void {
                     'label_html' => $hword,
                     'title_text' => (string)$word,
                 ])],
-                ['content_html' => $hmod],
+                ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
                 ['content_html' => (string)intval($hits)],
                 ['content_html' => format_time((string)$time, _TIMESTRING)],
                 ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
@@ -323,9 +323,10 @@ function search(): void {
         }
         $html = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
-                ['content' => _SWORD],
-                ['content' => _MODUL],
+                ['content' => _SWORD, 'is_truncate' => true],
+                ['content' => _MODUL, 'is_truncate' => true],
                 ['content' => _HITS],
                 ['content' => _DATE],
                 ['content' => _FUNCTIONS, 'nosort' => true],
@@ -368,8 +369,8 @@ function toplist(): void {
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['content_html' => $tpl->getHtmlFrag('link', ['href' => 'admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', ''), 'label_html' => $hword])],
-                ['content_html' => $hmod],
+                ['is_truncate' => true, 'title_text' => (string)$word, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'admin.php?'.getSearchlink(3, 2, 1, (string)$word, '', ''), 'label_html' => $hword])],
+                ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
                 ['content_html' => (string)intval($hits)],
                 ['content_html' => format_time((string)$time, _TIMESTRING)],
                 ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
@@ -385,9 +386,10 @@ function toplist(): void {
         }
         $html = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
-                ['content' => _SWORD],
-                ['content' => _MODUL],
+                ['content' => _SWORD, 'is_truncate' => true],
+                ['content' => _MODUL, 'is_truncate' => true],
                 ['content' => _HITS],
                 ['content' => _DATE],
                 ['content' => _FUNCTIONS, 'nosort' => true],

@@ -1,1 +1,1 @@
-<th{% if class_name %} class="{{ class_name }}"{% endif %}{% if colspan %} colspan="{{ colspan }}"{% endif %}{% if nosort %} data-sort-method="none"{% endif %}>{{{ content }}}</th>
+<th{% if class_name or is_truncate %} class="{% if class_name %}{{ class_name }}{% endif %}{% if is_truncate %} sl-cell-ellipsis{% endif %}"{% endif %}{% if colspan %} colspan="{{ colspan }}"{% endif %}{% if nosort %} data-sort-method="none"{% endif %}>{{{ content }}}</th>

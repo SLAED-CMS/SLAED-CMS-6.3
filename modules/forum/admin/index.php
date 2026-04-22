@@ -35,9 +35,9 @@ function forum(): void {
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)$id],
-                ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [['label' => _DESCRIPTION, 'value' => $intro ?: _NO, 'is_last' => true]],
-                    'label_text' => cutstr($title, 60),
+                    'label_text' => $title,
                     'title_text' => $title,
                 ])],
                 ['content_html' => (string)$topics],
@@ -48,9 +48,10 @@ function forum(): void {
     }
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
         'is_wrapless' => true,
+        'is_fixed' => true,
         'head' => [
             ['content' => _ID],
-            ['content' => _FORUM],
+            ['content' => _FORUM, 'is_truncate' => true],
             ['content' => _NEWTOPICS],
             ['content' => _MESSAGES],
             ['content' => _STATUS, 'nosort' => true],

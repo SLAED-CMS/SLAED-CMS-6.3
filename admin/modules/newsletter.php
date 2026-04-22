@@ -20,7 +20,7 @@ function newsletter(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                             ['label' => _TIMENL, 'value' => getDuration($sendtime), 'is_last' => true],
@@ -47,9 +47,10 @@ function newsletter(): void {
             ])]);
         }
         $cont .= $tpl->getHtmlFrag('table', [
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _TITLE],
+                ['content' => _TITLE, 'is_truncate' => true],
                 ['content' => _NLEND],
                 ['content' => _STATUS, 'nosort' => true],
                 ['content' => _FUNCTIONS, 'nosort' => true],

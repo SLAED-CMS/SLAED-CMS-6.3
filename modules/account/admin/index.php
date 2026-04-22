@@ -108,12 +108,12 @@ function account(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => filterTextHighlight((string)$uid, $chng)],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => $titleitems,
                         'title_text' => $name,
                     ]).filterTextHighlight($name, $chng)],
                     ['content_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng)],
-                    ['content_html' => filterTextHighlight($mail, $chng)],
+                    ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
                     ['content_html' => format_time($reg, _TIMESTRING)],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
@@ -141,11 +141,12 @@ function account(): void {
             ])]);
         }
         $body .= $tpl->getHtmlFrag('table', [
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _NICKNAME],
+                ['content' => _NICKNAME, 'is_truncate' => true],
                 ['content' => _IP],
-                ['content' => _EMAIL],
+                ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _REG],
                 ['content' => _FUNCTIONS, 'nosort' => true],
             ],
@@ -581,8 +582,8 @@ function newuser(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$uid],
-                    ['content_html' => $name],
-                    ['content_html' => $mail],
+                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $name],
+                    ['is_truncate' => true, 'title_text' => $mail, 'content_html' => $mail],
                     ['content_html' => $pass],
                     ['content_html' => $reg],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', [
@@ -605,10 +606,11 @@ function newuser(): void {
             ])]);
         }
         $body .= $tpl->getHtmlFrag('table', [
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _NICKNAME],
-                ['content' => _EMAIL],
+                ['content' => _NICKNAME, 'is_truncate' => true],
+                ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _PASSWORD],
                 ['content' => _REG],
                 ['content' => _FUNCTIONS, 'nosort' => true],

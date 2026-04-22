@@ -175,8 +175,8 @@ function clients(): void {
                 'cells' => [
                     ['content_html' => (string)$cid],
                     ['content_html' => $nick],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars(cutstr((string)$ptitle, 40), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-                    ['content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
+                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ['is_truncate' => true, 'title_text' => domain($cwebsite), 'content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
                     ['content_html' => $cenddate],
                     ['content_html' => ad_status('', $cactive)],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -184,7 +184,9 @@ function clients(): void {
             ])]);
             $a++;
         }
-        $html = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $trows]);
+        $head[2]['is_truncate'] = true;
+        $head[3]['is_truncate'] = true;
+        $html = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $trows]);
         $html .= getTplPager([
             'count' => (int)$numstories,
             'pages' => $numpages,
@@ -471,10 +473,10 @@ function products(): void {
                 'cells' => [
                     ['content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
                     ['content_html' => (string)$pid],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                         ['label' => _CATEGORY, 'value' => htmlspecialchars((string)$ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _DATE, 'value' => format_time($ptime ?? '', _TIMESTRING), 'is_last' => true],
-                    ]]).htmlspecialchars(cutstr((string)$ptitle, 60), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ]]).htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
                     ['content_html' => $pprice.' '.$conf['shop']['valute']],
                     ['content_html' => ad_status('', $active)],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -503,6 +505,7 @@ function products(): void {
                 'label_text' => $ctitle,
             ]);
         }
+        $phead[2]['is_truncate'] = true;
         $html = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
@@ -511,7 +514,7 @@ function products(): void {
                 ['nameattr' => 'refer', 'valueattr' => '1'],
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ],
-            'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $phead, 'rows_html' => $prows]),
+            'content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $phead, 'rows_html' => $prows]),
             'actions_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-action-label', 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actionopts, 'select_class' => 'sl-inline-gap']).$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
         ]);
         $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_products', 'field' => 'id', 'where' => $sqlstatus]);
@@ -759,8 +762,8 @@ function partners(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $pahead = [
             ['content' => _ID],
-            ['content' => _NICKNAME],
-            ['content' => _SITE],
+            ['content' => _NICKNAME, 'is_truncate' => true],
+            ['content' => _SITE, 'is_truncate' => true],
             ['content' => _REG],
             ['content' => _PARTNERREST],
             ['content' => _PARTNERBEK],
@@ -784,13 +787,13 @@ function partners(): void {
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$paid],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                         ['label' => _CLIENTNAME, 'value' => htmlspecialchars((string)$paname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$paaddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _CLIENTPHONE, 'value' => htmlspecialchars((string)$paphone, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
                         ['label' => _EMAIL, 'value' => htmlspecialchars((string)$paemail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
                     ]]).$nick],
-                    ['content_html' => domain($pawebsite)],
+                    ['is_truncate' => true, 'title_text' => domain($pawebsite), 'content_html' => domain($pawebsite)],
                     ['content_html' => date(_TIMESTRING, $paregdate)],
                     ['content_html' => $parest.' '.$conf['shop']['valute']],
                     ['content_html' => $pabek.' '.$conf['shop']['valute']],
@@ -798,7 +801,7 @@ function partners(): void {
                 ],
             ])]);
         }
-        $html = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $pahead, 'rows_html' => $parows]);
+        $html = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $pahead, 'rows_html' => $parows]);
         $html .= getTplPager(['limit' => $conf['shop']['anum'], 'maxpg' => $conf['shop']['anump'], 'url' => $field, 'table' => '_partners', 'field' => 'id', 'where' => $sqlstatus]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
@@ -967,8 +970,8 @@ function partnerinfo(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $pihead = [
             ['content' => _ID],
-            ['content' => _NICKNAME],
-            ['content' => _PRODUCT],
+            ['content' => _NICKNAME, 'is_truncate' => true],
+            ['content' => _PRODUCT, 'is_truncate' => true],
             ['content' => _PREIS],
             ['content' => _PERCENT],
             ['content' => _SUM],
@@ -983,8 +986,8 @@ function partnerinfo(): void {
             $partsumges += $partsum;
             $pirows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['content_html' => (string)$cid],
-                ['content_html' => user_info($nick)],
-                ['content_html' => htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                ['is_truncate' => true, 'title_text' => (string)$nick, 'content_html' => user_info($nick)],
+                ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
                 ['content_html' => $pprice.' '.$conf['shop']['valute']],
                 ['content_html' => $proz.' %'],
                 ['content_html' => $partsum.' '.$conf['shop']['valute']],
@@ -992,7 +995,7 @@ function partnerinfo(): void {
             ]])]);
             $a++;
         }
-        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $pihead, 'rows_html' => $pirows])]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $pihead, 'rows_html' => $pirows])]);
     }
     $srow = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
         ['content_html' => (string)$a],

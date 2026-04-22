@@ -68,7 +68,7 @@ function security(): void {
             ]).$title;
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => $titleHtml],
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $titleHtml],
                     ['content_html' => filterSize($filesize)],
                     ['content_html' => date(_TIMESTRING, filemtime($path))],
                     ['content_html' => $acts],
@@ -76,6 +76,7 @@ function security(): void {
             ])]);
         }
     }
+    $head[0]['is_truncate'] = true;
     $cont .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
     echo $cont;
     setFoot();
@@ -153,14 +154,16 @@ function banlist(): void {
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => $reason],
-                        ['content_html' => $binfo[1]],
+                        ['is_truncate' => true, 'title_text' => $tcidr, 'content_html' => $reason],
+                        ['is_truncate' => true, 'title_text' => (string)$binfo[1], 'content_html' => $binfo[1]],
                         ['content_html' => getTimeLeft((int)$binfo[2])],
                         ['content_html' => $acts],
                     ],
                 ])]);
             }
         }
+        $head[0]['is_truncate'] = true;
+        $head[1]['is_truncate'] = true;
         $tabone .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
     }
     $iprows = [
@@ -231,14 +234,16 @@ function banlist(): void {
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => user_info($binfo[0])],
-                        ['content_html' => htmlspecialchars((string)($binfo[2] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                        ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0])],
+                        ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'content_html' => htmlspecialchars((string)($binfo[2] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
                         ['content_html' => getTimeLeft((int)($binfo[1] ?? 0))],
                         ['content_html' => $acts],
                     ],
                 ])]);
             }
         }
+        $head[0]['is_truncate'] = true;
+        $head[1]['is_truncate'] = true;
         $tabtwo .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
     }
     $name = getVar('get', 'uname', 'name');

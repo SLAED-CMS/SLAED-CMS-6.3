@@ -90,10 +90,10 @@ function referers(): void {
                             'label_text' => $massiv[$i][3],
                             'title_text' => _NICKNAME.': '.$name.' | '._DATE.': '.format_time($massiv[$i][6], _TIMESTRING),
                         ])],
-                        ['content_html' => domain($massiv[$i][5], 30)],
-                        ['content_html' => domain($massiv[$i][4], 30)],
-                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
-                            'label_text' => cutstr($words, 25),
+                        ['is_truncate' => true, 'title_text' => domain($massiv[$i][5]), 'content_html' => domain($massiv[$i][5], 30)],
+                        ['is_truncate' => true, 'title_text' => domain($massiv[$i][4]), 'content_html' => domain($massiv[$i][4], 30)],
+                        ['is_truncate' => true, 'title_text' => $words, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                            'label_text' => $words,
                             'title_text' => $words,
                         ])],
                         ['content_html' => (string)$massiv[$i][0]],
@@ -104,10 +104,10 @@ function referers(): void {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
             'head' => [
                 ['content' => _IP],
-                ['content' => _HITS],
-                ['content' => _REFERERS],
-                ['content' => _SWORD],
-                ['content' => _ID, 'nosort' => true],
+                ['content' => _IN_URL, 'is_truncate' => true],
+                ['content' => _REF_URL, 'is_truncate' => true],
+                ['content' => _SWORD, 'is_truncate' => true],
+                ['content' => _HITS, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,

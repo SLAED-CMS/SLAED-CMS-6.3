@@ -50,14 +50,14 @@ function auto_links(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$id],
-                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'items' => [
                                 ['label' => _REG, 'value' => format_time($added, _TIMESTRING), 'is_last' => true],
                             ],
-                            'label_text' => cutstr($name, 40),
+                            'label_text' => $name,
                             'title_text' => $name,
                         ])],
-                        ['content_html' => domain($url)],
+                        ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url)],
                         ['content_html' => (string)$hits],
                         ['content_html' => (string)$outs],
                         ['content_html' => $tpl->getHtmlFrag('row-actions', [
@@ -70,10 +70,11 @@ function auto_links(): void {
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _SITENAME],
-                ['content' => _SITEURL],
+                ['content' => _SITENAME, 'is_truncate' => true],
+                ['content' => _SITEURL, 'is_truncate' => true],
                 ['content' => _HITS],
                 ['content' => _OUTS],
                 ['content' => _FUNCTIONS, 'nosort' => true],
@@ -190,31 +191,34 @@ function stats(): void {
         $rows = '';
         foreach ($slice as $item) {
             $name = $item[1] ? user_info($item[2]) : $item[2];
+            $ref = domain($item[4]);
+            $url = domain($item[5]);
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$item[0]],
-                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['is_truncate' => true, 'title_text' => (string)$item[2], 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                             'items' => [
                                 ['label' => _DATE, 'value' => date(_TIMESTRING, $item[6]), 'is_last' => true],
                             ],
                         ]).$name],
                         ['content_html' => user_geo_ip($item[3], 4)],
-                        ['content_html' => domain($item[4], 35)],
-                        ['content_html' => domain($item[5], 15)],
+                        ['is_truncate' => true, 'title_text' => $ref, 'content_html' => domain($item[4], 35)],
+                        ['is_truncate' => true, 'title_text' => $url, 'content_html' => domain($item[5], 15)],
                     ],
                 ]),
             ]);
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'disable_sort' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _NICKNAME],
+                ['content' => _NICKNAME, 'is_truncate' => true],
                 ['content' => _IP],
-                ['content' => _REF_URL],
-                ['content' => _IN_URL],
+                ['content' => _REF_URL, 'is_truncate' => true],
+                ['content' => _IN_URL, 'is_truncate' => true],
             ],
             'rows_html' => $rows,
         ]);

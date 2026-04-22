@@ -26,7 +26,7 @@ function clients(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string)$id],
-                        ['content_html' => $title],
+                        ['is_truncate' => true, 'title_text' => $title, 'content_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
                         ['content_html' => $num],
                         ['content_html' => $time],
                         ['content_html' => (string)$prod],
@@ -63,9 +63,10 @@ function clients(): void {
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _CTITLE],
+                ['content' => _CTITLE, 'is_truncate' => true],
                 ['content' => _CVERSION],
                 ['content' => _CDATE],
                 ['content' => _ID],

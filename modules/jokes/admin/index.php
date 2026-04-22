@@ -46,13 +46,13 @@ function jokes(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$jokeid],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cat ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
                             ['label' => _IP, 'value' => $ip ? user_geo_ip($ip, 4) : _NO, 'is_last' => true],
                         ],
-                        'label_text' => cutstr($title, 60),
+                        'label_text' => $title,
                         'title_text' => $title,
                     ])],
                     ['content_html' => $post],
@@ -63,9 +63,10 @@ function jokes(): void {
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _TITLE],
+                ['content' => _TITLE, 'is_truncate' => true],
                 ['content' => _POSTEDBY],
                 ['content' => _STATUS, 'nosort' => true],
                 ['content' => _FUNCTIONS, 'nosort' => true],

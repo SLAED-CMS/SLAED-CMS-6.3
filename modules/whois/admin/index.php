@@ -34,19 +34,21 @@ function whois(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
             ['content' => _ID],
-            ['content' => _SITE],
-            ['content' => _HOST],
-            ['content' => _DC],
-            ['content' => _POSTEDBY],
+            ['content' => _SITE, 'is_truncate' => true],
+            ['content' => _HOST, 'is_truncate' => true],
+            ['content' => _DC, 'is_truncate' => true],
+            ['content' => _POSTEDBY, 'is_truncate' => true],
             ['content' => _FUNCTIONS, 'nosort' => true],
         ];
         $rows = '';
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
             $post = $userName ? user_info($userName) : ($uname ?: _ANONYM);
+            $postname = $userName ?: ($uname ?: _ANONYM);
             $ipSender = $ipSender ? user_geo_ip($ipSender, 4) : _NO;
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
             $dc = $dc ? domain($dc) : _NO_INFO;
+            $domain = domain($domain);
             $items = [
                 ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1&amp;token='.getSiteToken(), 'label' => _SITE, 'title' => _SITE],
                 ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1&amp;token='.getSiteToken(), 'label' => _HOST, 'title' => _HOST],
@@ -56,10 +58,10 @@ function whois(): void {
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['content_html' => (string)$id],
-                ['content_html' => domain($domain).' '.ad_status('', $statusDomain)],
-                ['content_html' => $host.' '.ad_status('', $statusHost)],
-                ['content_html' => $dc.' '.ad_status('', $statusDc)],
-                ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                ['is_truncate' => true, 'title_text' => $domain, 'content_html' => $domain.' '.ad_status('', $statusDomain)],
+                ['is_truncate' => true, 'title_text' => $host, 'content_html' => $host.' '.ad_status('', $statusHost)],
+                ['is_truncate' => true, 'title_text' => $dc, 'content_html' => $dc.' '.ad_status('', $statusDc)],
+                ['is_truncate' => true, 'title_text' => $postname, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
                     ['label' => _COMMENT, 'value' => htmlspecialchars((string)$hometext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
@@ -67,7 +69,7 @@ function whois(): void {
                 ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ]])]);
         }
-        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_whois', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {

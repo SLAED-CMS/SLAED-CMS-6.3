@@ -91,7 +91,7 @@ function admins(): void {
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => $tip],
-                ['content_html' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
+                ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => $tpl->getHtmlFrag('link', [
                     'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)$conf['sitename']),
                     'is_blank' => true,
@@ -104,7 +104,8 @@ function admins(): void {
             ],
         ])]);
     }
-    $cont .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
+    $head[1]['is_truncate'] = true;
+    $cont .= $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
     echo $cont;
     setFoot();
 }

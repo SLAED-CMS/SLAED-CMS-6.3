@@ -33,7 +33,7 @@ function messages(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$mid],
-                    ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => cutstr($title, 35), 'title_text' => $title])],
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => $title, 'title_text' => $title])],
                     ['content_html' => $exp],
                     ['content_html' => $mview],
                     ['content_html' => getLangName($lang)],
@@ -59,9 +59,10 @@ function messages(): void {
             ])]);
         }
         $cont .= $tpl->getHtmlFrag('table', [
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _TITLE],
+                ['content' => _TITLE, 'is_truncate' => true],
                 ['content' => _PURCHASED],
                 ['content' => _VIEW],
                 ['content' => _LANGUAGE],

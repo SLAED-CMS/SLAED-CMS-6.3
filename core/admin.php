@@ -430,7 +430,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => (string)$id],
                     ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => $tipItems,
-                        'label_text' => cutstr($title, 45),
+                        'label_text' => $title,
                         'title_text' => $title,
                     ])],
                     ['content_html' => (string)$pnum],
@@ -613,7 +613,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => (string) $bid],
                 ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => $tipItems,
-                    'label_text' => cutstr(getConst($title), 15),
+                    'label_text' => getConst($title),
                     'title_text' => $title,
                 ])],
                 ['content_html' => $type],
@@ -740,7 +740,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string) $id],
-                        ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => cutstr($title, 60), 'title_text' => $title])],
+                        ['content_html' => $tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => $title, 'title_text' => $title])],
                         ['content_html' => getModuleName($modul)],
                         ['content_html' => $uname],
                         ['content_html' => $tpl->getHtmlFrag('row-actions', [
@@ -813,7 +813,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => cutstr($title, 30), 'title_text' => $title])],
+                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['class' => 'sl-note', 'label' => $title, 'title_text' => $title])],
                     ['content_html' => $unse],
                     ['content_html' => $unre],
                     ['content_html' => $date],

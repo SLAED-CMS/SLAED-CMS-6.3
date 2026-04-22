@@ -55,16 +55,16 @@ function links(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
                             ['label' => _IP, 'value' => $ip ? user_geo_ip($ip, 4) : _NO, 'is_last' => true],
                         ],
-                        'label_text' => cutstr($title, 50),
+                        'label_text' => $title,
                         'title_text' => $title,
                     ])],
-                    ['content_html' => domain($url)],
+                    ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url)],
                     ['content_html' => $post],
                     ['content_html' => ad_status('', $active)],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -73,10 +73,11 @@ function links(): void {
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _TITLE],
-                ['content' => _SITEURL],
+                ['content' => _TITLE, 'is_truncate' => true],
+                ['content' => _SITEURL, 'is_truncate' => true],
                 ['content' => _POSTEDBY],
                 ['content' => _STATUS, 'nosort' => true],
                 ['content' => _FUNCTIONS, 'nosort' => true],

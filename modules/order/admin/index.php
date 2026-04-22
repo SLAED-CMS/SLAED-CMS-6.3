@@ -26,7 +26,7 @@ function order(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
                             ['label' => _COMMENT, 'value' => (string)$note],
                             ['label' => _BROWSER, 'value' => (string)$agent, 'is_last' => true],
@@ -52,9 +52,10 @@ function order(): void {
         }
         $body = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
+            'is_fixed' => true,
             'head' => [
                 ['content' => _ID],
-                ['content' => _EMAIL],
+                ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _IP],
                 ['content' => _DATE],
                 ['content' => _STATUS, 'nosort' => true],

@@ -67,8 +67,8 @@ function lang(): void {
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)$a],
-                ['content_html' => getModuleName($mod[$i])],
-                ['content_html' => $mod[$i]],
+                ['is_truncate' => true, 'title_text' => getModuleName($mod[$i]), 'content_html' => getModuleName($mod[$i])],
+                ['is_truncate' => true, 'title_text' => $mod[$i], 'content_html' => $mod[$i]],
                 ['content_html' => $view],
                 ['content_html' => ad_status('', $act)],
                 ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -76,10 +76,11 @@ function lang(): void {
         ])]);
     }
     $cont .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
         'head' => [
             ['content' => _ID],
-            ['content' => _NAME],
-            ['content' => _MODUL],
+            ['content' => _NAME, 'is_truncate' => true],
+            ['content' => _MODUL, 'is_truncate' => true],
             ['content' => _VIEW],
             ['content' => _STATUS, 'nosort' => true],
             ['content' => _FUNCTIONS, 'nosort' => true],

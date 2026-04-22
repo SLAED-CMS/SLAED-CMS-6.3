@@ -112,11 +112,11 @@ function voting(): void {
             ]);
             $cells = [
                 ['content_html' => (string)$id],
-                ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
                     ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
                     ['label' => _TYPE, 'value' => $type, 'is_last' => true],
-                ]]).htmlspecialchars(cutstr((string)$title, 60), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                ]]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
             ];
             if ($conf['multilingual'] == 1) {
                 $cells[] = ['content_html' => getLangName((!$lang) ? _ALL : $lang)];
@@ -126,7 +126,8 @@ function voting(): void {
             $cells[] = ['content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         }
-        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => $head, 'rows_html' => $rows]);
+        $head[1]['is_truncate'] = true;
+        $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
         $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=voting&amp;', 'table' => '_voting', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {

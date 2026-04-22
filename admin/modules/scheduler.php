@@ -89,10 +89,9 @@ function scheduler(): void {
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
             ];
         }
-        $label = $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars(cutstr((string)$title, 22), ENT_QUOTES, 'UTF-8');
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => $label],
+                ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => htmlspecialchars((string)$nextr, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => htmlspecialchars((string)$stat, ENT_QUOTES, 'UTF-8')],
                 ['content_html' => htmlspecialchars((string)($job['priority'] ?? '100'), ENT_QUOTES, 'UTF-8')],
@@ -101,7 +100,8 @@ function scheduler(): void {
             ],
         ])]);
     }
-    $cont .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
+    $head[0]['is_truncate'] = true;
+    $cont .= $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
     setHead();
     echo $cont;
     setFoot();
