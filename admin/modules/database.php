@@ -397,6 +397,8 @@ function database(): void {
             _TOTALSPACE.': '.filterSize($total),
             _TOTALFREE.': '.filterSize($sumfree),
         ]]);
+    } else {
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
     }
 
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $content]);
@@ -413,7 +415,7 @@ function dump(): void {
     $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
-    if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump' || $action === _DB_PARSE || $action === _EXECUTE)) {
+    if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec')) {
         if (!checkSiteToken()) {
             echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             setFoot();
@@ -429,7 +431,7 @@ function dump(): void {
                 $items[] = str_replace(array_keys($subst), array_values($subst), $query);
             }
             $reslist = [];
-            $isdump = ($action === 'dump' || $action === _EXECUTE);
+            $isdump = ($action === 'exec');
             if ($isdump) {
                 if (!checkDblock()) {
                     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
@@ -452,28 +454,28 @@ function dump(): void {
                     } finally {
                         deleteDblock();
                     }
+                    $cont .= getSqlsum($reslist, 'dump', $conf['db']['name']);
+                    $cont .= $tpl->getHtmlPart('box', ['content_html' => getSqltable($reslist)]);
                 }
             } else {
                 foreach ($items as $index => $sql) {
                     $info = getSqlinfo($sql);
                     $reslist[] = ['num' => $index + 1, 'type' => $info['type'], 'table' => $info['table'], 'ok' => true, 'error' => '', 'sql' => $sql];
                 }
+                $cont .= getSqlsum($reslist, 'parse', $conf['db']['name']);
+                $cont .= $tpl->getHtmlPart('box', ['content_html' => getSqltable($reslist)]);
             }
-            $cont .= getSqlsum($reslist, $isdump ? 'dump' : 'parse', $conf['db']['name']);
-            $cont .= $tpl->getHtmlPart('box', ['content_html' => getSqltable($reslist)]);
         }
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
     $buttons =
-        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'submit_label' => _DB_PARSE, 'class' => 'sl-but-green'])
-        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'submit_label' => _EXECUTE, 'class' => 'sl-but-blue']);
+        $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'submit_label' => _DB_PARSE, 'class' => 'sl-but-green'])
+        .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'exec', 'submit_label' => _EXECUTE, 'class' => 'sl-but-blue']);
     $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php',
+        'action_url' => $afile.'.php?name=database&amp;op=dump',
         'hidden' => [
-            ['nameattr' => 'name', 'valueattr' => 'database'],
-            ['nameattr' => 'op', 'valueattr' => 'dump'],
             ['nameattr' => 'type', 'valueattr' => 'dump'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
