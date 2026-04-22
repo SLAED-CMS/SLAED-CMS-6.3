@@ -353,7 +353,7 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 		border-right: 0;
 		border-bottom: 0;
 	}
-	.wrapper:not(.slaenter) .sl-sidebar-block {
+	.wrapper:not(.slaenter) .sl-block-sidebar {
 		width: 100%;
 	}
 	.wrapper:not(.slaenter) .sl-admin-content {

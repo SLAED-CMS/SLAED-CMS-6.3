@@ -75,7 +75,7 @@ function getAdminPanelBlocks(): string {
                     );
                 }
             }
-            $block = $tpl->getHtmlPart('sidebar-block', ['title' => _ADMIN, 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
+            $block = $tpl->getHtmlPart('block-sidebar', ['title' => _ADMIN, 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
             $cont = '';
         }
         foreach ($conf['modules'] as $name => $mod) {
@@ -95,7 +95,7 @@ function getAdminPanelBlocks(): string {
                 }
             }
         }
-        $block .= $tpl->getHtmlPart('sidebar-block', ['title' => _MODULES, 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
+        $block .= $tpl->getHtmlPart('block-sidebar', ['title' => _MODULES, 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
         return $block;
     }
     return '';
