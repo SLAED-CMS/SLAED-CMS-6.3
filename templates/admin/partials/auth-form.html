@@ -1,0 +1,10 @@
+<form action="{{ route }}.php" method="post" class="sl-admin-login-form">
+    <div class="sl-admin-login-form-frame">
+        <ul class="sl-admin-login-list">
+            {% for row in rows %}
+            <li><span>{{ row.label }}{% if row.has_colon %}:{% endif %}</span><div class="sl-admin-login-field">{{{ row.field_html }}}</div></li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="sl-admin-login-submit">{% include 'fragments/hidden.html' with hidden %}{% include 'fragments/button.html' with submit %}</div>
+</form>

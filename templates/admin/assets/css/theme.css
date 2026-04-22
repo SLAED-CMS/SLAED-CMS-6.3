@@ -19,14 +19,6 @@ body {
 	min-height: 100vh;
 	background: transparent;
 }
-body:has(.slaenter) {
-	display: grid;
-	place-items: center;
-	min-height: 100dvh;
-	padding: 16px;
-	box-sizing: border-box;
-	overflow: hidden;
-}
 body, select, input, textarea, button { font: 14px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
 
 h1, h2, h3, h4, h5 { line-height: normal; }
@@ -378,64 +370,64 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 .footer span a.thide:hover:before { color: #d9f3ff; }
 
 @media (max-width: 900px) {
-	.wrapper:not(.slaenter) {
+	.wrapper:not(.sl-admin-login-shell) {
 		width: calc(100vw - 20px);
 		margin-top: 16px;
 		margin-bottom: 18px;
 	}
-	.wrapper:not(.slaenter) .wrapmid { padding: 0 10px; }
-	.wrapper:not(.slaenter) .sl-admin-header {
+	.wrapper:not(.sl-admin-login-shell) .wrapmid { padding: 0 10px; }
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-header {
 		grid-template-columns: 1fr;
 		min-height: 0;
 	}
-	.wrapper:not(.slaenter) .header { height: auto; }
-	.wrapper:not(.slaenter) .sl-admin-brand {
+	.wrapper:not(.sl-admin-login-shell) .header { height: auto; }
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-brand {
 		height: 68px;
 		border-bottom: 1px solid #e3edf3;
 	}
-	.wrapper:not(.slaenter) .sl-admin-toolbar {
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-toolbar {
 		height: auto;
 		min-height: 42px;
 	}
-	.wrapper:not(.slaenter) .toolbar {
+	.wrapper:not(.sl-admin-login-shell) .toolbar {
 		margin: 8px;
 	}
-	.wrapper:not(.slaenter) .toolbar, .wrapper:not(.slaenter) .toolbar div {
+	.wrapper:not(.sl-admin-login-shell) .toolbar, .wrapper:not(.sl-admin-login-shell) .toolbar div {
 		height: auto;
 		min-height: 0;
 		overflow: visible;
 	}
-	.wrapper:not(.slaenter) .toolbar ul {
+	.wrapper:not(.sl-admin-login-shell) .toolbar ul {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 3px;
 	}
-	.wrapper:not(.slaenter) .toolbar li,
-	.wrapper:not(.slaenter) .toolbar li a,
-	.wrapper:not(.slaenter) .toolbar li a b {
+	.wrapper:not(.sl-admin-login-shell) .toolbar li,
+	.wrapper:not(.sl-admin-login-shell) .toolbar li a,
+	.wrapper:not(.sl-admin-login-shell) .toolbar li a b {
 		float: none;
 	}
-	.wrapper:not(.slaenter) .sl-admin-language {
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-language {
 		display: flex;
 		float: none;
 		padding: 6px 8px;
 		text-align: right;
 	}
-	.wrapper:not(.slaenter) .sl-admin-main {
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-main {
 		grid-template-columns: 1fr;
 	}
-	.wrapper:not(.slaenter) .sl-admin-sidebar {
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-sidebar {
 		border-right: 0;
 		border-bottom: 0;
 	}
-	.wrapper:not(.slaenter) .sl-block-sidebar {
+	.wrapper:not(.sl-admin-login-shell) .sl-block-sidebar {
 		width: 100%;
 	}
-	.wrapper:not(.slaenter) .sl-admin-content {
+	.wrapper:not(.sl-admin-login-shell) .sl-admin-content {
 		margin: 10px;
 		padding: 0 0 10px 0;
 	}
-	.wrapper:not(.slaenter) .footer {
+	.wrapper:not(.sl-admin-login-shell) .footer {
 		margin: 0 -10px;
 	}
 }
@@ -444,21 +436,21 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	body {
 		background: #d8edf6;
 	}
-	.wrapper:not(.slaenter) {
+	.wrapper:not(.sl-admin-login-shell) {
 		width: 100vw;
 		margin: 0;
 		border-radius: 0;
 	}
-	.wrapper:not(.slaenter):before {
+	.wrapper:not(.sl-admin-login-shell):before {
 		border-right: 0;
 		border-left: 0;
 		border-radius: 0;
 	}
-	.wrapper:not(.slaenter) .wraptop {
+	.wrapper:not(.sl-admin-login-shell) .wraptop {
 		height: 0;
 		border-radius: 0;
 	}
-	.wrapper:not(.slaenter) .footer {
+	.wrapper:not(.sl-admin-login-shell) .footer {
 		border-radius: 0;
 	}
 }
@@ -585,111 +577,7 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 .tabpad { padding: 10px 0 12px 0; }
 
 /* Скругление обьектов не для IE*/
-.entborder, .sl_warn, .sl_info, .sl_atten { border-radius: 6px; }
-
-/* Вход в админпанель */
-.slaenter {
-	width: min(420px, calc(100vw - 32px));
-	margin: 0;
-}
-.slaenter:before { display: block; }
-
-/* Окантовка и тень */
-/* Верх и низ */
-.slaenter .wraptop {
-	height: 8px;
-	background: #fff;
-	border-radius: 8px 8px 0 0;
-}
-.slaenter .wrapfoot {
-	height: 0;
-	background: none;
-}
-
-/*Текст в шапке*/
-.slaenter .sl-admin-toolbar { padding-top: 7px; color: #0069a7; box-sizing: border-box; }
-.slaenter .sl-admin-header {
-	grid-template-columns: 210px minmax(0, 1fr);
-	height: 82px;
-	min-height: 82px;
-	overflow: hidden;
-}
-.slaenter .sl-admin-brand,
-.slaenter .sl-admin-toolbar {
-	height: 82px;
-	min-height: 0;
-}
-
-/* Средняя часть */
-.slaenter .wrapmid { background: #fff; padding: 0 10px; }
-.entercont { background-color: #fff; padding: 0 18px 22px 18px; }
-
-/* Оформление формы входа */
-.entborder { border: 1px solid #dee0e2; padding: 13px 12px; margin-bottom: 12px; }
-.entborder ul li br { line-height: 1px; font-size: 1px; clear: both; }
-.entborder ul li { padding: 1px 0 3px 160px; }
-.entborder ul li span { float: left; margin-left: -160px; padding-right: 10px; width: 150px; }
-.entborder ul li .adm_login { float: right; width: 100%; }
-.entborder ul li .adm_login input { float: left; width: 240px; max-width: 100%; padding: 2px; box-sizing: border-box; }
-
-/* Нижняя часть */
-.slaenter .footer {
-	height: 34px;
-	margin: 0 -11px -1px -11px;
-	background:
-		repeating-linear-gradient(135deg, rgba(255,255,255,.08) 0, rgba(255,255,255,.08) 2px, transparent 2px, transparent 7px),
-		linear-gradient(to bottom, #32a6dc 0%, #087db9 100%);
-	border-radius: 0 0 8px 8px;
-}
-.slaenter .footer .copyright { float: none; display: block; margin: 0 auto; padding: 9px 0 0 0; text-align: center; }
-
-@media (max-width: 700px) {
-	.slaenter {
-		width: min(390px, calc(100vw - 32px));
-	}
-	.slaenter .sl-admin-header {
-		grid-template-columns: 190px minmax(0, 1fr);
-		height: 74px;
-		min-height: 74px;
-	}
-	.slaenter .sl-admin-brand,
-	.slaenter .sl-admin-toolbar {
-		height: 74px;
-	}
-	.entercont {
-		padding-right: 16px;
-		padding-left: 16px;
-	}
-}
-
-@media (max-width: 560px) {
-	.slaenter .sl-admin-header {
-		grid-template-columns: 1fr;
-		height: auto;
-	}
-	.slaenter .sl-admin-brand {
-		height: 64px;
-	}
-	.slaenter .sl-admin-toolbar {
-		height: auto;
-		min-height: 42px;
-		padding: 0 16px 10px 16px;
-		text-align: center;
-	}
-	.entborder ul li {
-		padding-left: 0;
-	}
-	.entborder ul li span {
-		float: none;
-		display: block;
-		width: auto;
-		margin-left: 0;
-		padding: 0 0 4px 0;
-	}
-	.entborder ul li .adm_login {
-		float: none;
-	}
-}
+.sl_warn, .sl_info, .sl_atten { border-radius: 6px; }
 
 
 /* Постраничная навигация, переключение страниц */
@@ -762,3 +650,4 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 .progress-info span { float: left; }
 .progress-info .pull-right { float: right; color: #6e7c8b; }
 .progress-info b { font-weight: normal; }
+

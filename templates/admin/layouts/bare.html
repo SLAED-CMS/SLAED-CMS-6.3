@@ -7,17 +7,16 @@
 {{{ scripts }}}
 </head>
 <body>
-    <div class="wrapper slaenter sl-admin-shell sl-admin-login-shell">
-        <div class="wraptop"></div>
-        <div class="wrapmid">
-            <div class="header sl-admin-header sl-admin-login-header">
+    <div class="sl-admin-shell sl-admin-login-shell">
+        <div class="sl-admin-login-top"></div>
+        <div class="sl-admin-login-card">
+            <div class="sl-admin-login-header">
                 <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" class="thide" title="SLAED CMS">SLAED CMS</a></h1></div>
-                <div class="sl-admin-toolbar"><b title="{{ login }}">{{ login }}</b></div>
             </div>
-            <div class="entercont">{% block content %}{% endblock %}</div>
-            <div class="footer sl-admin-footer"><div class="copyright">{{{ license }}}</div></div>
+            <div class="sl-admin-login-content">{% block content %}{% endblock %}</div>
+            <div class="sl-admin-login-footer"><div class="sl-admin-login-copyright">{{{ license }}}</div></div>
         </div>
-        <div class="wrapfoot"></div>
+        <div class="sl-admin-login-bottom"></div>
     </div>
 </body>
 </html>
