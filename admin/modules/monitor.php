@@ -669,7 +669,7 @@ function getDbHealth(object $db): array {
         $res = $db->getSqlQuery("SELECT CURRENT_USER() as db_user");
         if ($res && ($row = $db->getSqlRow($res)) && isset($row['db_user'])) $data['user'] = (string)$row['db_user'];
     } catch (Throwable $error) {
-        error_log('Monitor DB health read failed: '.$error->getMessage());
+        if (class_exists('Logger')) Logger::addSql('error', 'Monitor DB health read failed', ['error' => $error->getMessage()]);
     }
     return $data;
 }

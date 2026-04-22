@@ -106,6 +106,7 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
 # Editor bootstrap must load before security POST processing, because security helpers may
 # consult editor-aware functions during request analysis
 require_once BASE_DIR.'/core/classes/editor.php';
+require_once BASE_DIR.'/core/classes/logger.php';
 
 # System file include
 require_once BASE_DIR.'/core/security.php';
@@ -700,7 +701,7 @@ function addBackupTask(): array {
         preg_match("#^(\d+)\.(\d+)\.(\d+)#", $ver, $m);
         $bmysql_ver = isset($m[1]) ? sprintf('%d%02d%02d', $m[1], $m[2], $m[3]) : 0;
     } catch (Exception $e) {
-        error_log('Backup failed: Cannot get MySQL version - '.$e->getMessage());
+        if (class_exists('Logger')) Logger::addSql('error', 'Backup failed: Cannot get MySQL version', ['error' => $e->getMessage()]);
         return ['status' => 'failed', 'message' => 'Cannot get MySQL version'];
     }
 
@@ -770,7 +771,7 @@ function addBackupTask(): array {
     }
 
     if (empty($tables)) {
-        error_log('Backup failed: No tables found to backup');
+        if (class_exists('Logger')) Logger::addSql('error', 'Backup failed: No tables found to backup');
         return ['status' => 'failed', 'message' => 'No tables found to backup'];
     }
 
@@ -806,7 +807,7 @@ function addBackupTask(): array {
     $backup_dir = BACKUP_DIR.'/';
     if (!is_dir($backup_dir)) {
         if (!mkdir($backup_dir, 0750, true)) {
-            error_log('Backup failed: Cannot create backup directory');
+            if (class_exists('Logger')) Logger::addFile('error', 'Backup failed: Cannot create backup directory', ['path' => $backup_dir]);
             return ['status' => 'failed', 'message' => 'Cannot create backup directory'];
         }
     }
@@ -816,7 +817,7 @@ function addBackupTask(): array {
     // FIX: Error handling for fopen
     $fp = fopen($filepath, 'wb');
     if (!$fp) {
-        error_log('Backup failed: Cannot create file '.$filepath);
+        if (class_exists('Logger')) Logger::addFile('error', 'Backup failed: Cannot create file', ['path' => $filepath]);
         return ['status' => 'failed', 'message' => 'Cannot create backup file'];
     }
 
@@ -908,9 +909,6 @@ function addBackupTask(): array {
         return ['status' => 'failed', 'message' => 'Cannot compress backup file'];
     }
 
-    // Performance-Logging
-    $duration = round(microtime(true) - $backup_start, 2);
-    error_log("Backup completed: {$tabs} tables, ".round($bsize/1048576, 2)."MB in {$duration}s");
     $archive = $backup_dir.$name.'.sql.gz';
     return [
         'status' => 'success',
@@ -1822,30 +1820,9 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
     return true;
 }
 
-# Error logging with rotation and compression
+# Add file errors to error_file.log
 function addErrorFile(string $msg): bool {
- global $conf;
-    static $running = false;
-    if ($running) {
-        error_log('[LOG] Recursive call prevented: '.$msg);
-        return false;
-    }
-    $running = true;
-    $log = LOGS_DIR.'/error_file.log';
-    $cfg = $conf['security'] ?? [];
-    $max = $cfg['log_size'] ?? 10485760;
-    $line = '['.date('Y-m-d H:i:s').'] '.$msg.PHP_EOL;
-    if (file_put_contents($log, $line, FILE_APPEND | LOCK_EX) === false) {
-        error_log('[LOG] Write failed: '.$log.' | '.$msg);
-        $running = false;
-        return false;
-    }
-    if (filesize($log) >= $max) {
-        $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
-        addCompress(dirname($log), $log, $safe, 'auto', true, true);
-    }
-    $running = false;
-    return true;
+    return class_exists('Logger') ? Logger::addFile('error', $msg) : false;
 }
 
 # Captcha check
@@ -3262,8 +3239,8 @@ function adminblock(): string {
             'block_html' => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlPart('sidebar-block', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlPart('sidebar-block', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
+        return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
+            .$tpl->getHtmlPart('block-sidebar', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }

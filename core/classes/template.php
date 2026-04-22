@@ -243,17 +243,13 @@ class Template {
             error_log($msg);
             return;
         }
-        $log = rtrim(LOGS_DIR, '\\/').'/error_php.log';
-        $norm = preg_replace(['/\d+/', '/\s+/'], ['#', ' '], substr($msg, 0, 200));
-        $fingerprint = substr(sha1('template|'.$type.'|'.$name.'|'.$norm), 0, 8);
-        $row = [
-            'ts' => date('c'),
-            'level' => 'warning',
-            'type' => 'php',
-            'msg' => $msg,
+        if (!class_exists('Logger')) {
+            error_log($msg);
+            return;
+        }
+        Logger::addPhp('warning', $msg, [
             'php_errno' => 512,
             'php_err' => 'USER_WARNING',
-            'fingerprint' => $fingerprint,
             'ex_class' => null,
             'theme' => $this->theme,
             'template_type' => $type,
@@ -261,19 +257,7 @@ class Template {
             'template_reason' => $reason,
             'file' => null,
             'line' => null,
-            'req_id' => $_SERVER['HTTP_X_REQUEST_ID'] ?? $_SERVER['UNIQUE_ID'] ?? null,
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
-            'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
-            'url' => $_SERVER['REQUEST_URI'] ?? null,
-            'referer' => $_SERVER['HTTP_REFERER'] ?? null,
-            'ua' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-            'mem_mb' => round(memory_get_usage(true) / 1048576, 2),
-            'mem_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2),
-        ];
-        $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
-        if ($line === false || file_put_contents($log, $line.PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
-            error_log($msg);
-        }
+        ]);
     }
 
     # Return a visible dev-only template error block with one safe fallback
@@ -385,10 +369,10 @@ class Template {
         );
     }
 
-    # Parse a small safe template condition grammar: !var, var.path, joined by and/or
+    # Parse a small safe template condition grammar: !var, not var, var.path, joined by and/or
     protected function parseIfCondition(string $expr): string {
         if ($expr === '') return '';
-        if (!preg_match('/^!?[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*(?:\s+(?:and|or)\s+!?[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)*$/', $expr)) return '';
+        if (!preg_match('/^(?:!|not\s+)?[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*(?:\s+(?:and|or)\s+(?:!|not\s+)?[_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)*$/', $expr)) return '';
         $parts = preg_split('/\s+(and|or)\s+/', $expr, -1, PREG_SPLIT_DELIM_CAPTURE);
         if ($parts === false || $parts === []) return '';
         $compiled = [];
@@ -397,7 +381,12 @@ class Template {
                 $compiled[] = ($part === 'and') ? '&&' : '||';
                 continue;
             }
+            $part = trim($part);
             $neg = str_starts_with($part, '!');
+            if (str_starts_with($part, 'not ')) {
+                $neg = true;
+                $part = substr($part, 4);
+            }
             $path = explode('.', ltrim($part, '!'));
             $expr = '$'.array_shift($path);
             foreach ($path as $key) $expr .= '[\''.$key.'\']';
@@ -410,11 +399,14 @@ class Template {
     protected function filterFor(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*for\s+([_a-z][_a-z0-9]*)\s+in\s+([_a-z][_a-z0-9]*)\s*%\}|\{%\s*endfor\s*%\}/',
+            '/\{%\s*for\s+([_a-z][_a-z0-9]*)\s+in\s+([_a-z][_a-z0-9]*(?:\.[_a-z][_a-z0-9]*)*)\s*%\}|\{%\s*endfor\s*%\}/',
             function(array $data): string {
                 if (!empty($data[2])) {
                     $item = '$'.$data[1];
-                    $list = '$'.$data[2].' ?? null';
+                    $path = explode('.', $data[2]);
+                    $list = '$'.array_shift($path);
+                    foreach ($path as $key) $list .= '[\''.$key.'\']';
+                    $list = '('.$list.' ?? null)';
                     $iter = '((is_array('.$list.') || ('.$list.' instanceof Traversable)) ? '.$list.' : [])';
                     return '<?php foreach ('.$iter.' as '.$item.'): ?>';
                 }
