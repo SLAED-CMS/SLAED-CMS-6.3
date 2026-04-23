@@ -127,6 +127,13 @@ $prs = new Parser();
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
 
+# Call an optional theme hook and return only array payloads.
+function getThemeHookVars(string $hook): array {
+    if (!function_exists($hook)) return [];
+    $vars = $hook();
+    return is_array($vars) ? $vars : [];
+}
+
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
     $schedule = is_array($job) ? (string)($job['schedule'] ?? '') : (string)$job;
@@ -1314,7 +1321,7 @@ function setHead(array $seo = []): void {
             'blocks_down' => '',
             'debug_html' => '',
         ];
-        if (function_exists('getAdminHeadVars')) $adminvars = array_replace($adminvars, getAdminHeadVars());
+        $adminvars = array_replace($adminvars, getAdminLayoutVars(), getThemeHookVars('getAdminHeadVars'));
         $adminpage = isAdmin() ? 'admin' : 'login';
         ob_start();
         return;
@@ -1408,7 +1415,7 @@ function setHead(array $seo = []): void {
         'favorites' => _S_FAVORITEN,
         'homepage' => _S_STARTSEITE,
     ];
-    if (function_exists('getThemeHeadVars')) $sitevars = array_replace($sitevars, getThemeHeadVars());
+    $sitevars = array_replace($sitevars, getThemeHookVars('getThemeHeadVars'));
     $sitepage = $home ? 'home' : 'module';
     ob_start();
     update_points(1);
@@ -1469,7 +1476,7 @@ function setFoot(): void {
         'blocks_down' => $down,
         'foot_html' => $foot,
     ]);
-    if (function_exists('getThemeFootVars')) $vars = array_replace($vars, getThemeFootVars());
+    $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
     unset($sitepage, $sitevars);

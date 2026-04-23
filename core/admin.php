@@ -200,6 +200,71 @@ function setUnauthorized() {
     setExit(_LOGININCOR);
 }
 
+# Render the standard admin language switcher.
+function getAdminLanguageLinks(): string {
+    global $conf, $afile, $tpl;
+    if (($conf['multilingual'] ?? 0) != 1) return '';
+    $html = '';
+    foreach (scandir(BASE_DIR.'/lang') ?: [] as $file) {
+        if (!preg_match('#^(.+)\.php$#', $file, $matches)) continue;
+        $lang = $matches[1];
+        $label = getLangName($lang);
+        $html .= $tpl->getHtmlFrag('link', [
+            'href' => $afile.'.php?newlang='.$lang,
+            'title' => $label,
+            'img_src' => img_find('lang/'.$lang.'_mini.png'),
+            'img_alt' => $label,
+        ]);
+    }
+    return $html;
+}
+
+# Render the standard admin top menu.
+function getAdminTopMenu(): string {
+    global $admin, $afile, $tpl;
+    $items = !isAdmin(true) ? [
+        ['class' => 'sl_first', 'href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false],
+        ['class' => '', 'href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
+        ['class' => '', 'href' => 'index.php', 'label' => _SITE, 'blank' => true],
+        ['class' => '', 'href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
+        ['class' => '', 'href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+    ] : [
+        ['class' => 'sl_first', 'href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
+        ['class' => '', 'href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false],
+        ['class' => '', 'href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false],
+        ['class' => '', 'href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false],
+        ['class' => '', 'href' => 'index.php', 'label' => _SITE, 'blank' => true],
+        ['class' => '', 'href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
+        ['class' => '', 'href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+    ];
+    $html = '';
+    foreach ($items as $item) {
+        $class = ($item['class'] ?? '') !== '' ? ' class="'.htmlspecialchars((string)$item['class'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '';
+        $label = htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $html .= '<li'.$class.'>'.$tpl->getHtmlFrag('link', [
+            'href' => (string)$item['href'],
+            'title' => (string)$item['label'],
+            'label_html' => '<b>'.$label.'</b>',
+            'is_blank' => !empty($item['blank']),
+        ]).'</li>';
+    }
+    return $html;
+}
+
+# Return standard variables used by admin layouts.
+function getAdminLayoutVars(): array {
+    global $db;
+    if (!isAdmin()) {
+        $login = ($db->getSqlRowCount($db->getSqlQuery('SELECT 1 FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
+        return ['login' => $login];
+    }
+    return [
+        'admin_langs' => getAdminLanguageLinks(),
+        'menu' => getAdminTopMenu(),
+        'admin_blocks' => getAdminPanelBlocks().admininfo().adminblock(),
+    ];
+}
+
 function admininfo() {
  global $db, $admin, $afile, $conf, $panel, $tpl;
     if (isAdmin()) {
