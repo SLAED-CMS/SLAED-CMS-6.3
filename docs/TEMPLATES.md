@@ -5,8 +5,6 @@ This document describes the current template reality in the repository.
 ## Current State
 The active file-backed template runtime in the current repository is `Template` in `core/classes/template.php`.
 
-Historical legacy rendering still exists in PHP-side markup generation and fragment assembly, but the repository snapshot does not contain an active `core/template.php` runtime file.
-
 ### Template Runtime
 File:
 - `core/classes/template.php`
@@ -53,6 +51,7 @@ Themes should follow this structure:
 
 ```text
 templates/<theme>/
+  index.php        # optional theme hook
   assets/
     css/
     js/
@@ -66,6 +65,113 @@ templates/<theme>/
 `index.html` is not the main architectural entry for the active template runtime.
 
 Common active layout files in bundled themes include `layouts/app.html` and `layouts/home.html`.
+
+## Theme Hooks
+
+`templates/<theme>/index.php` is the PHP extension hook for a theme.
+
+This file name is intentional and should stay stable. Theme authors can use it
+to add small theme-specific data providers without changing core files. It is
+not a page renderer and it is not a replacement for layouts, pages, partials,
+or fragments.
+
+The core loads the active theme hook during bootstrap:
+
+```php
+if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) {
+    require_once BASE_DIR.'/templates/'.$theme.'/index.php';
+}
+```
+
+Supported hook functions:
+
+- `getThemeHeadVars(): array`
+- `getThemeFootVars(): array`
+- `getAdminHeadVars(): array`
+
+These functions are optional. If a theme does not need additional runtime
+variables, it does not need `index.php`.
+
+### `getThemeHeadVars()`
+
+Used by frontend rendering before the final page is opened.
+
+Purpose:
+- add theme-specific head-time variables
+- prepare lightweight view data for `pages/` or `layouts/`
+- enrich the default `$sitevars` array
+
+Example:
+
+```php
+function getThemeHeadVars(): array {
+    return [
+        'season' => date('n') >= 12 ? 'winter' : '',
+    ];
+}
+```
+
+### `getThemeFootVars()`
+
+Used by frontend rendering before the final page is closed.
+
+Purpose:
+- add theme-specific footer variables
+- override small footer labels or controls
+- enrich the final `$sitevars` array
+
+Example:
+
+```php
+function getThemeFootVars(): array {
+    return [
+        'upper' => _PAGETOP,
+    ];
+}
+```
+
+### `getAdminHeadVars()`
+
+Used by admin themes to enrich or override admin page variables.
+
+Purpose:
+- provide admin menu data or rendered menu HTML
+- provide language switcher data or rendered language switcher HTML
+- provide admin sidebar blocks
+- provide login screen helper text
+
+The bundled admin theme uses standard admin variables from `core/admin.php`:
+`getAdminLayoutVars()`, `getAdminTopMenu()`, and `getAdminLanguageLinks()`.
+Custom admin themes can define this hook when they need to override or enrich
+those values.
+
+### Hook Rules
+
+Theme hooks should:
+- return arrays only
+- keep logic small and theme-specific
+- prepare data for templates instead of building large page sections in PHP
+- use `$tpl->getHtmlPart()` or `$tpl->getHtmlFrag()` when a small rendered
+  fragment is still needed
+- escape dynamic raw HTML if it is built directly in PHP
+- avoid database writes and state-changing behavior
+- avoid request routing and module business logic
+- avoid defining functions that are not part of the documented hook contract
+
+Theme hooks should not:
+- output HTML directly with `echo`
+- call `setHead()` or `setFoot()`
+- start or close output buffers
+- include module controllers
+- replace layouts, pages, partials, or fragments
+- contain large HTML strings that belong in `.html` template files
+
+### Standard Implementation Direction
+
+Default SLAED behavior lives in core runtime code and template files. Theme
+hooks exist for extension and customization while keeping
+`templates/<theme>/index.php` as the stable optional extension point for SLAED
+users.
 
 ## Admin Theme Storage Hierarchy
 
@@ -186,7 +292,6 @@ New template work should:
 - avoid fallback inside completed slices
 
 Do not:
-- assume a removed legacy runtime file still exists as a valid target for new architecture work
 - add placeholder mapping helpers for new slices
 - copy theme inventories from installations or snapshots that are not present in the current repository
 

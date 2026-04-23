@@ -119,7 +119,7 @@ composer quality
 - **Backend:** PHP 8.1+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
 - **Template Runtime:** `core/classes/template.php`
-- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: bbcode, ckeditor, codemirror, plain, tinymce, toastui); additional plugins: highlightjs, htmx, tablesort, system
+- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: ckeditor, codemirror, plain, tinymce, toastui); additional plugins: highlightjs, htmx, tablesort, system
 - **Content Parsing:** `Parser` class in `core/classes/parser.php`
 - **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
 - **Languages:** 6 bundled locale files in `lang/`

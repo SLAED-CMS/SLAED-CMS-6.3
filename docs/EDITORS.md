@@ -17,7 +17,6 @@ All editor plugins must be securely encapsulated in their own subdirectories und
 
 ```text
 plugins/editors/
-├── bbcode/         # Custom BBCode editor
 ├── ckeditor/       # CKEditor (HTML)
 ├── codemirror/     # CodeMirror (Syntax/Code)
 ├── plain/          # Fallback dumb textarea
@@ -33,16 +32,16 @@ Each editor must provide a `manifest.json` file in its folder. The system uses t
 
 ```json
 {
-    "id": "bbcode",
-    "label": "BB Editor",
+    "id": "toastui",
+    "label": "TOAST UI Markdown 3",
     "type": "content",
-    "driver": "EditorBbcode",
+    "driver": "EditorToastUi",
     "entry": "driver.php",
     "enabled": true,
-    "priority": 15,
+    "priority": 50,
     "roles": ["user", "admin"],
     "profiles": ["simple", "full"],
-    "formats": ["plain"]
+    "formats": ["markdown"]
 }
 ```
 
@@ -57,7 +56,7 @@ Each editor must provide a `manifest.json` file in its folder. The system uses t
 - `priority`: *Required.* Integer sorting order for dropdown panels.
 - `roles`: *Required.* Array containing `user` and/or `admin`. Determines where it can be used.
 - `profiles`: *Required.* Array containing `simple` and/or `full`. Represents configurations.
-- `formats`: *Required for content editors.* Array containing `plain` and/or `html`. Dictates the output format logic. For code editors, this is replaced by `lang`.
+- `formats`: *Required for content editors.* Array containing values such as `plain`, `html`, or `markdown`. Dictates the output format logic. For code editors, this is replaced by `lang`.
 - `lang`: *Required for code editors.* Array of supported languages (e.g., `["php", "html", "css", "js", "json", "sql", "xml", "text"]`).
 
 ## Driver Interfaces
