@@ -144,22 +144,20 @@ class Parser {
 
     # Theme-aware local placeholder with cross-theme fallback.
     private function getFallbackImage(): string {
+        global $conf;
         static $fallback = '';
         if ($fallback !== '') return $fallback;
-        $candidates = [
-            img_find('misc/no-image.png'),
-            img_find('misc/loading.gif'),
-            'templates/default/images/misc/no-image.png',
-            'templates/default/images/misc/loading.gif',
-            'templates/lite/images/misc/no-image.png',
-            'templates/lite/images/misc/loading.gif',
-            'templates/admin/images/misc/no-image.png',
-            'templates/admin/images/misc/loading.gif',
-        ];
-        foreach ($candidates as $candidate) {
-            if (is_file($this->getRootPath().'/'.ltrim($candidate, '/'))) {
-                return $fallback = $candidate;
-            }
+        $theme = function_exists('getTheme') ? getTheme() : (string)($conf['theme'] ?? 'default');
+        $themes = array_values(array_unique(array_filter([
+            $theme,
+            (string)($conf['theme'] ?? ''),
+            'default',
+            'lite',
+            'admin',
+        ])));
+        foreach ($themes as $theme) {
+            $candidate = 'templates/'.$theme.'/images/misc/no-image.png';
+            if (is_file(BASE_DIR.'/'.ltrim($candidate, '/'))) return $fallback = $candidate;
         }
         return $fallback = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
     }
