@@ -124,7 +124,7 @@ define('_CENTERDOWN','Center Down');
 define('_CENTERUP','Center Up');
 define('_CLEAN','Clear');
 define('_CLICABLE','Convert addresses into hyperlinks?');
-define('_CLICABLEINFO','Indeed only in the case of BB Editor.');
+define('_CLICABLEINFO','Applies when processing text content.');
 define('_CLIENTSM','Clients of the module');
 define('_COLOR','Color');
 define('_COMLETTER','As much as possible admissible quantity of signs in a word');

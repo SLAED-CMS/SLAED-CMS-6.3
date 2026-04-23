@@ -124,7 +124,7 @@ define('_CENTERDOWN','Unten zentrieren');
 define('_CENTERUP','Oben zentrieren');
 define('_CLEAN','Reinigen');
 define('_CLICABLE','Adressen in Hyperlinks umwandeln?');
-define('_CLICABLEINFO','Die Option ist wirksam nur bei der Nutzung von BB Redaktor.');
+define('_CLICABLEINFO','Die Option ist wirksam bei der Verarbeitung von Textinhalten.');
 define('_CLIENTSM','Klienten des Moduls');
 define('_COLOR','Farbe');
 define('_COMLETTER','Die maximal zulässige Menge der Zeichen im Wort');

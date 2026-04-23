@@ -124,7 +124,7 @@ define('_CENTERDOWN','Centre dessous');
 define('_CENTERUP','Au centre en haut');
 define('_CLEAN','Nettoyer');
 define('_CLICABLE','Convertir des adresses de lien hypertexte?');
-define('_CLICABLEINFO',"Vraiment seulement dans le cas de l'utilisation de BB de l'Éditeur.");
+define('_CLICABLEINFO',"S'applique lors du traitement du contenu textuel.");
 define('_CLIENTSM','Les clients de module');
 define('_COLOR','Couleur');
 define('_COMLETTER','Nombre maximal de caractères dans le mot');

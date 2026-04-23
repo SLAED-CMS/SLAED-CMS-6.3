@@ -124,7 +124,7 @@ define('_CENTERDOWN','Na środku na dole');
 define('_CENTERUP','Na środku u góry');
 define('_CLEAN','Wyczyść');
 define('_CLICABLE','Konwersja adresu hiperłącza?');
-define('_CLICABLEINFO','Naprawdę tylko w przypadku korzystania z BB Edytora.');
+define('_CLICABLEINFO','Dotyczy przetwarzania treści tekstowych.');
 define('_CLIENTSM','Klienci modułu');
 define('_COLOR','Kolor');
 define('_COMLETTER','Maksymalna dozwolona liczba znaków w słowie');
