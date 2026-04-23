@@ -1,0 +1,208 @@
+.toastui-editor-defaultUI-toolbar button.toastui-editor-toolbar-icons {
+    height: 32px;
+    margin-left: 1px;
+    margin-right: 1px;
+    width: 32px;
+}
+
+.toastui-editor-defaultUI-toolbar .toastui-editor-toolbar-divider {
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.toastui-editor-toolbar-icons {
+    background-image: none !important;
+    color: #555;
+    font-size: 0;
+    position: relative;
+}
+
+.toastui-editor-toolbar-icons::before {
+    display: block;
+    font-family: bootstrap-icons, "bootstrap-icons";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400 !important;
+    left: 0;
+    line-height: 32px;
+    position: absolute;
+    speak: never;
+    text-align: center;
+    top: 0;
+    width: 32px;
+}
+
+.toastui-editor-toolbar-icons.heading::before {
+    content: "\f5f1";
+}
+
+.toastui-editor-toolbar-icons.bold::before {
+    content: "\f5f0";
+}
+
+.toastui-editor-toolbar-icons.italic::before {
+    content: "\f5f4";
+}
+
+.toastui-editor-toolbar-icons.strike::before {
+    content: "\f5f5";
+}
+
+.toastui-editor-toolbar-icons.hrline::before {
+    content: "\f63b";
+}
+
+.toastui-editor-toolbar-icons.quote::before {
+    content: "\f6b0";
+}
+
+.toastui-editor-toolbar-icons.bullet-list::before {
+    content: "\f478";
+}
+
+.toastui-editor-toolbar-icons.ordered-list::before {
+    content: "\f475";
+}
+
+.toastui-editor-toolbar-icons.task-list::before {
+    content: "\f26d";
+}
+
+.toastui-editor-toolbar-icons.indent::before {
+    content: "\f7fe";
+}
+
+.toastui-editor-toolbar-icons.outdent::before {
+    content: "\f823";
+}
+
+.toastui-editor-toolbar-icons.table::before {
+    content: "\f5aa";
+}
+
+.toastui-editor-toolbar-icons.image::before {
+    content: "\f42a";
+}
+
+.toastui-editor-toolbar-icons.link::before {
+    content: "\f470";
+}
+
+.toastui-editor-toolbar-icons.code::before {
+    content: "\f2c6";
+}
+
+.toastui-editor-toolbar-icons.codeblock::before {
+    content: "\f2c7";
+}
+
+.toastui-editor-toolbar-icons.more::before {
+    content: "\f5d4";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-quote::before {
+    content: "\f190";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-hide::before {
+    content: "\f340";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-tabs::before {
+    content: "\f52b";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-html::before {
+    content: "\f749";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-php::before {
+    content: "\f757";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-files::before {
+    content: "\f3d8";
+}
+
+.toastui-editor-toolbar-icons.slaed-bi-emoji::before {
+    content: "\f327";
+}
+
+.slaed-emoji-panel {
+    background: #fff;
+    border: 1px solid #d8dce5;
+    border-radius: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+    box-sizing: border-box;
+    max-height: 420px;
+    padding: 8px;
+    position: absolute;
+    width: min(430px, calc(100vw - 24px));
+    z-index: 10020;
+}
+
+.slaed-emoji-search {
+    border: 1px solid #cfd5df;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: 30px;
+    padding: 4px 8px;
+    width: 100%;
+}
+
+.slaed-emoji-tabs {
+    display: flex;
+    gap: 4px;
+    margin: 6px 0;
+    overflow: hidden;
+}
+
+.slaed-emoji-tab {
+    background: #f6f7f9;
+    border: 1px solid #d8dce5;
+    border-radius: 4px;
+    color: #444;
+    cursor: pointer;
+    flex: 0 0 auto;
+    height: 28px;
+    padding: 0 8px;
+}
+
+.slaed-emoji-tab.active {
+    background: #e8f2ff;
+    border-color: #86b7e8;
+    color: #165d9c;
+}
+
+.slaed-emoji-grid {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    max-height: 292px;
+    overflow: auto;
+}
+
+.slaed-emoji-item {
+    background: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 20px;
+    height: 32px;
+    line-height: 30px;
+    padding: 0;
+    text-align: center;
+    width: 32px;
+}
+
+.slaed-emoji-item:hover,
+.slaed-emoji-item:focus {
+    background: #f0f6ff;
+    border-color: #b8d7f5;
+}
+
+.slaed-emoji-empty {
+    color: #777;
+    grid-column: 1 / -1;
+    padding: 12px 4px;
+}

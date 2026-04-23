@@ -167,7 +167,13 @@ if (empty($go)) {
         $mod = (getVar('get', 'mod', 'var')) ? strtolower(getVar('get', 'mod', 'var')) : '';
         if ($mod) {
             $userid = (getVar('get', 'userid', 'num')) ? getVar('get', 'userid', 'num') : '0';
-            switch($go) {
+            switch($op) {
+                case 'editorUpload':
+                addEditorUpload();
+                break;
+                case 'editorFiles':
+                getEditorFileJson();
+                break;
                 default:
                 $con = explode('|', $conf['uploads'][$mod]);
                 upload(2, 'uploads/'.$mod, $con[0], $con[2], $mod, $con[3], $con[4], $userid);

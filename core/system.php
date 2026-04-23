@@ -3515,6 +3515,136 @@ function getEditorFiles(): void {
     echo $content;
 }
 
+# Return JSON response for Toast UI editor endpoints
+function getEditorJson(array $dat): void {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($dat, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+# Return upload configuration for a module editor endpoint
+function getEditorUploadData(string $mod): array {
+    global $conf;
+    if ($mod === '' || !isset($conf['uploads'][$mod])) return ['ok' => false, 'error' => 'Upload configuration is missing'];
+    $con = explode('|', (string)$conf['uploads'][$mod]);
+    if (!is_dir('uploads/'.$mod)) return ['ok' => false, 'error' => 'Upload directory is missing'];
+    return ['ok' => true, 'con' => $con, 'dir' => 'uploads/'.$mod];
+}
+
+# Check whether the current visitor may use the module editor upload
+function checkEditorUploadAccess(string $mod, array $con): bool {
+    if (is_moder($mod)) return true;
+    if (is_user() && (int)($con[10] ?? 0) === 1) return true;
+    return !is_user() && (int)($con[11] ?? 0) === 1;
+}
+
+# Return image metadata for an uploaded or stored editor file
+function getEditorImageData(string $file, string $ext, int $wid, int $hei): array {
+    $img = in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'], true);
+    if (!$img) return ['ok' => true, 'image' => false, 'width' => 0, 'height' => 0, 'error' => ''];
+    $inf = @getimagesize($file);
+    if (!is_array($inf)) return ['ok' => false, 'image' => true, 'width' => 0, 'height' => 0, 'error' => _ERROR_FILE];
+    $one = (int)($inf[0] ?? 0);
+    $two = (int)($inf[1] ?? 0);
+    if (($wid > 0 && $one > $wid) || ($hei > 0 && $two > $hei)) return ['ok' => false, 'image' => true, 'width' => $one, 'height' => $two, 'error' => _ERROR_SIZE];
+    return ['ok' => true, 'image' => true, 'width' => $one, 'height' => $two, 'error' => ''];
+}
+
+# Return one stored editor file row for JSON output
+function getEditorFileData(string $dir, string $file): array {
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    $img = getEditorImageData($dir.'/'.$file, $ext, 0, 0);
+    return [
+        'file' => $file,
+        'url' => $dir.'/'.$file,
+        'type' => $ext,
+        'size' => filterSize(filesize($dir.'/'.$file)),
+        'image' => (bool)($img['ok'] ?? false) && (bool)($img['image'] ?? false),
+        'width' => (int)($img['width'] ?? 0),
+        'height' => (int)($img['height'] ?? 0),
+        'time' => filemtime($dir.'/'.$file),
+    ];
+}
+
+# Upload files for the Toast UI editor and return JSON
+function addEditorUpload(): void {
+    global $user;
+    $mod = strtolower(getVar('get', 'mod', 'var', ''));
+    $dat = getEditorUploadData($mod);
+    if (!$dat['ok']) getEditorJson(['ok' => false, 'error' => $dat['error']]);
+    $con = (array)$dat['con'];
+    $dir = (string)$dat['dir'];
+    if (!checkEditorUploadAccess($mod, $con)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    $upl = $_FILES['file'] ?? [];
+    if (!$upl || empty($upl['name'])) getEditorJson(['ok' => false, 'error' => _ERROR_DOWN]);
+    $nam = is_array($upl['name']) ? $upl['name'] : [$upl['name']];
+    $tmp = is_array($upl['tmp_name']) ? $upl['tmp_name'] : [$upl['tmp_name']];
+    $siz = is_array($upl['size']) ? $upl['size'] : [$upl['size']];
+    $err = is_array($upl['error']) ? $upl['error'] : [$upl['error']];
+    $typ = (string)($con[0] ?? '');
+    $max = (int)($con[2] ?? 0);
+    $wid = (int)($con[3] ?? 0);
+    $hei = (int)($con[4] ?? 0);
+    $uid = is_user() ? (int)($user[0] ?? 0) : (int)getVar('get', 'userid', 'num', 0);
+    $out = [];
+    $bad = [];
+    foreach ($nam as $key => $old) {
+        if (($err[$key] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string)($tmp[$key] ?? ''))) {
+            $bad[] = _ERROR_DOWN;
+            continue;
+        }
+        if ($max > 0 && (int)($siz[$key] ?? 0) > $max) {
+            $bad[] = _ERROR_BIG;
+            continue;
+        }
+        $ext = strtolower(pathinfo((string)$old, PATHINFO_EXTENSION));
+        $msg = check_file($ext, $typ);
+        if ($msg !== '') {
+            $bad[] = $msg;
+            continue;
+        }
+        $img = getEditorImageData((string)$tmp[$key], $ext, $wid, $hei);
+        if (!$img['ok']) {
+            $bad[] = (string)$img['error'];
+            continue;
+        }
+        $new = $mod.'-'.getPass(10).'-'.$uid.'.'.$ext;
+        while (is_file($dir.'/'.$new)) $new = $mod.'-'.getPass(10).'-'.$uid.'.'.$ext;
+        if (!move_uploaded_file((string)$tmp[$key], $dir.'/'.$new)) {
+            $bad[] = _ERROR_UP;
+            continue;
+        }
+        $out[] = getEditorFileData($dir, $new);
+    }
+    getEditorJson(['ok' => $out !== [], 'files' => $out, 'errors' => $bad, 'error' => $out ? '' : ($bad[0] ?? _ERROR_DOWN)]);
+}
+
+# Return stored files for the Toast UI editor file panel
+function getEditorFileJson(): void {
+    global $user;
+    $mod = strtolower(getVar('get', 'mod', 'var', ''));
+    $dat = getEditorUploadData($mod);
+    if (!$dat['ok']) getEditorJson(['ok' => false, 'error' => $dat['error']]);
+    $con = (array)$dat['con'];
+    $dir = (string)$dat['dir'];
+    if (!checkEditorUploadAccess($mod, $con)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
+    if (!checkSiteToken(getVar('req', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
+    $uid = is_user() ? (int)($user[0] ?? 0) : 0;
+    $all = is_moder($mod);
+    $lim = (int)($all ? ($con[8] ?? 0) : ($con[9] ?? 0));
+    $row = [];
+    foreach (scandir($dir) ?: [] as $file) {
+        if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
+        $own = preg_match("#^[a-zA-Z0-9_]+-[a-zA-Z0-9]+-([0-9]+)\\.[a-zA-Z0-9]+$#", $file, $mat) && (int)$mat[1] === $uid;
+        if (!$all && !$own) continue;
+        $row[] = getEditorFileData($dir, $file);
+    }
+    usort($row, static fn(array $one, array $two): int => ($two['time'] ?? 0) <=> ($one['time'] ?? 0));
+    if ($lim > 0) $row = array_slice($row, 0, $lim);
+    getEditorJson(['ok' => true, 'files' => $row]);
+}
+
 # Add downloads
 function stream(string $url, string $name): void {
     header('Content-Type: application/force-download');
