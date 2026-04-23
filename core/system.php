@@ -2954,6 +2954,21 @@ function getLangName(string $con): string {
     return $map[$con] ?? $con;
 }
 
+# Resolve a language code to an existing flag image in the current theme
+function getLanguageFlagSrc(string $lang): string {
+    $map = [
+        'de' => 'germany',
+        'en' => 'england',
+        'fr' => 'france',
+        'pl' => 'poland',
+        'ru' => 'russia',
+        'uk' => 'ukraine',
+    ];
+    $image = $map[$lang] ?? $lang;
+    $path = 'lang/'.$image.'.png';
+    return file_exists(img_find($path)) ? img_find($path) : img_find('lang/white.png');
+}
+
 # Hash a user password with bcrypt
 function getPassHash(string $pass): string {
     return password_hash($pass, PASSWORD_BCRYPT);

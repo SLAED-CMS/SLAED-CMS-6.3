@@ -789,7 +789,7 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
 # Render language options from installed language files
 function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
     global $tpl;
-    $dir = opendir('lang');
+    $dir = opendir(BASE_DIR.'/lang');
     $cont = !$typ ? $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALL, 'is_selected' => false]) : '';
     while (false !== ($file = readdir($dir))) {
         if (preg_match('#^(.+)\.php#', $file, $match)) {

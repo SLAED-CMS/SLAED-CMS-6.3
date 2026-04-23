@@ -212,7 +212,7 @@ function getAdminLanguageLinks(): string {
         $html .= $tpl->getHtmlFrag('link', [
             'href' => $afile.'.php?newlang='.$lang,
             'title' => $label,
-            'img_src' => img_find('lang/'.$lang.'_mini.png'),
+            'img_src' => getLanguageFlagSrc($lang),
             'img_alt' => $label,
         ]);
     }
