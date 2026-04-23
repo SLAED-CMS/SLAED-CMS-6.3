@@ -169,20 +169,22 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	align-items: center;
 	justify-content: center;
 	min-width: 0;
-	height: 72px;
+	height: 90px;
 }
 .sl-admin-toolbar {
-	display: block;
+	display: flex;
+	align-items: center;
 	min-width: 0;
-	min-height: 72px;
+	min-height: 90px;
 }
 
 /* Логотип */
-.header h1 a { display: block; margin: 0 auto; width: 169px; padding-top: 51px; background: url(../../images/slaedcms.png) no-repeat; }
+.header h1 a { display: block; margin: 0 auto; width: 256px; padding-top: 73px; background: url(../../images/slaedcms.png) no-repeat; background-size: 256px 73px; }
 
 /* Меню и переключение языка */
 .toolbar {
-	margin: 8px 10px 0 5px;
+	width: 100%;
+	margin: 0 10px 0 5px;
 	min-height: 36px;
 	overflow: hidden;
 	background: #eef4f8;
@@ -356,6 +358,9 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	border-radius: 0;
 	box-shadow: none;
 }
+.footer span a.sl-slaed-home {
+	right: 62px;
+}
 .footer span a.thide:before {
 	position: absolute;
 	inset: 0;
@@ -372,6 +377,9 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	text-shadow: 0 1px 0 rgba(255,255,255,.25);
 	content: "\f147";
 }
+.footer span a.sl-slaed-home:before {
+	content: "\f588";
+}
 .footer span a.thide:hover:before { color: #d9f3ff; }
 
 @media (max-width: 900px) {
@@ -387,7 +395,7 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	}
 	.wrapper:not(.sl-admin-login-shell) .header { height: auto; }
 	.wrapper:not(.sl-admin-login-shell) .sl-admin-brand {
-		height: 68px;
+		height: 90px;
 		border-bottom: 1px solid #e3edf3;
 	}
 	.wrapper:not(.sl-admin-login-shell) .sl-admin-toolbar {
@@ -659,4 +667,3 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 .progress-info span { float: left; }
 .progress-info .pull-right { float: right; color: #6e7c8b; }
 .progress-info b { font-weight: normal; }
-

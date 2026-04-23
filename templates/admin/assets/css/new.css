@@ -97,7 +97,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 14px;
     align-items: start;
-    padding: 8px 10px;
+    padding: 8px 0;
     border-bottom: 1px solid #e8ebee;
     background-color: #fff;
 }
@@ -429,8 +429,8 @@
 }
 
 /* Alert boxes */
-.sl-warn { padding: 8px 10px 8px 47px; margin: 10px 0; color: #332d27; text-align: justify; min-height: 28px; background: #f8ede2 url(../../images/warn.png) no-repeat 7px 6px; border-radius: 6px; }
-.sl-info { padding: 8px 10px 8px 47px; margin: 10px 0; color: #332d27; text-align: justify; min-height: 28px; background: #e6f8e2 url(../../images/info.png) no-repeat 7px 6px; border-radius: 6px; }
+.sl-warn { padding: 8px 10px 8px 47px; margin: 8px 0; color: #332d27; text-align: justify; min-height: 28px; background: #f8ede2 url(../../images/warn.png) no-repeat 7px 6px; border-radius: 6px; }
+.sl-info { padding: 8px 10px 8px 47px; margin: 8px 0; color: #332d27; text-align: justify; min-height: 28px; background: #e6f8e2 url(../../images/info.png) no-repeat 7px 6px; border-radius: 6px; }
 .sl-alert-flash {
     position: relative;
     opacity: 1;
@@ -1607,8 +1607,8 @@ body:has(.sl-admin-login-shell):before {
     position: relative;
     display: grid;
     grid-template-columns: 1fr;
-    height: 82px;
-    min-height: 82px;
+    height: 104px;
+    min-height: 104px;
     overflow: hidden;
     background: #fff;
 }
@@ -1629,16 +1629,17 @@ body:has(.sl-admin-login-shell):before {
 
 .sl-admin-login-header h1 a {
     display: block;
-    width: 169px;
+    width: 256px;
     height: 0;
-    padding-top: 51px;
+    padding-top: 73px;
     overflow: hidden;
     background: url(../../images/slaedcms.png) no-repeat;
+    background-size: 256px 73px;
 }
 
 .sl-admin-login-shell .sl-admin-brand {
     width: 100%;
-    height: 82px;
+    height: 104px;
     min-height: 0;
 }
 
@@ -1721,12 +1722,12 @@ body:has(.sl-admin-login-shell):before {
 
     .sl-admin-login-header {
         grid-template-columns: 1fr;
-        height: 74px;
-        min-height: 74px;
+        height: 96px;
+        min-height: 96px;
     }
 
     .sl-admin-login-shell .sl-admin-brand {
-        height: 74px;
+        height: 96px;
     }
 
     .sl-admin-login-content {
@@ -1742,7 +1743,7 @@ body:has(.sl-admin-login-shell):before {
     }
 
     .sl-admin-login-shell .sl-admin-brand {
-        height: 64px;
+        height: 88px;
     }
 
     .sl-admin-login-list li {

@@ -1432,7 +1432,7 @@ function setFoot(): void {
         $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
         $vars = array_replace($vars, [
             'time_html' => ($conf['db_t'] == '1') ? getTimeLoads() : '',
-            'foot_html' => renderFootControls(_PAGETOP, _PAGETOP),
+            'foot_html' => renderFootControls(_PAGETOP, _PAGETOP, '', '', '', true),
             'debug_html' => $debug,
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
@@ -3874,31 +3874,27 @@ function rss_load(mixed $bid): void {
     echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $content]);
 }
 
-# Preview
-if (!function_exists('preview')) {
-    function preview(string $title = '', string $texta = '', string $textb = '', string $field = '', string $mod = ''): string {
-        return getTplPreviewContent([
-            'title' => $title,
-            'texta' => $texta,
-            'textb' => $textb,
-            'field' => $field,
-            'mod' => $mod,
-        ]);
-    }
-}
-
 # Render shared footer controls through a fragment
 function renderFootControls(
     string $topTitle,
     string $topLabel,
     string $timeHtml = '',
     string $licenseHtml = '',
-    string $debugHtml = ''
+    string $debugHtml = '',
+    bool $withSlaedLink = false
 ): string {
     global $tpl;
     return $tpl->getHtmlPart('foot-controls', [
         'top_title' => $topTitle,
         'top_label' => $topLabel,
+        'brand_link' => $withSlaedLink ? [
+            'href' => '//slaed.net',
+            'title' => 'SLAED CMS',
+            'label' => 'SLAED CMS',
+            'class' => 'sl-slaed-home',
+            'is_top_hidden' => true,
+            'is_blank' => true,
+        ] : [],
         'top_link' => ['href' => '#', 'title' => $topTitle, 'label' => $topLabel, 'is_top_hidden' => true, 'is_upper' => true],
         'time_html' => $timeHtml,
         'license_html' => $licenseHtml,
