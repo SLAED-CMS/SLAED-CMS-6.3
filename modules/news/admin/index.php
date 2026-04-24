@@ -70,12 +70,11 @@ function news(): void {
         while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
             $catopts .= $tpl->getHtmlFrag('select-option', [
                 'value_attr' => (string)$catid,
-                'label_text' => _MOVETO.': '.$cattitle,
+                'label_text' => $cattitle,
             ]);
         }
-        $actopts =
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _OPMOD, 'is_selected' => true])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'a1', 'label_text' => _ACTIVATE])
+        $modopts =
+            $tpl->getHtmlFrag('select-option', ['value_attr' => 'a1', 'label_text' => _ACTIVATE])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'a0', 'label_text' => _DEACTIVATE])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f1', 'label_text' => _FIXED])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'f0', 'label_text' => _LNFIX])
@@ -84,8 +83,10 @@ function news(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 't1', 'label_text' => _LADATE])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c1', 'label_text' => _APOSTMOD])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c0', 'label_text' => _APOSTNOMOD])
-            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DELETE])
-            .$catopts;
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DELETE]);
+        $actopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _OPMOD, 'is_selected' => true])
+            .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _OPMOD, 'options_html' => $modopts])
+            .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _MOVETO, 'options_html' => $catopts]);
         $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
@@ -219,7 +220,7 @@ function add(): void {
         ],
         ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'news', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'news', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1', 'autofocus' => true]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _ENDTEXT.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'news', 'rows' => 15, 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
         ['label_html' => _VOTING.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'vote', 'options_html' => $voteopts])],
