@@ -112,7 +112,7 @@ function account(): void {
                         'items' => $titleitems,
                         'title_text' => $name,
                     ]).filterTextHighlight($name, $chng)],
-                    ['content_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng)],
+                    ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng)],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
                     ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
@@ -145,7 +145,7 @@ function account(): void {
             'head' => [
                 ['content' => _ID, 'is_col_id' => true],
                 ['content' => _NICKNAME, 'is_truncate' => true],
-                ['content' => _IP],
+                ['content' => _IP, 'class_name' => 'sl-col-ip'],
                 ['content' => _EMAIL, 'is_truncate' => true],
                 ['content' => _REG, 'is_col_date' => true],
                 ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
@@ -297,7 +297,7 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SIGNATURE, 'hint' => _SIGNATURE_TEXT]),
-        'field_html' => getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '']),
+        'field_html' => getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '', 'autofocus' => true]),
     ];
     $rows[] = [
         'label_html' => _ALLOWUSERS,

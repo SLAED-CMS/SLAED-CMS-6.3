@@ -28,7 +28,7 @@ function newsletter(): void {
                         'label_text' => $title,
                         'title_text' => $title,
                     ])],
-                    ['is_col_count' => true, 'content_html' => $sended.' '._NLUSER],
+                    ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $sended.' '._NLUSER],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
@@ -51,7 +51,7 @@ function newsletter(): void {
             'head' => [
                 ['content' => _ID, 'is_col_id' => true],
                 ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _NLEND, 'is_col_count' => true],
+                ['content' => _NLEND, 'class_name' => 'sl-col-sent', 'is_col_count' => true],
                 ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
                 ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],

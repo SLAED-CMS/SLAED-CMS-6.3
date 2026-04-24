@@ -200,7 +200,7 @@ function setUnauthorized() {
     setExit(_LOGININCOR);
 }
 
-# Render the standard admin language switcher.
+# Render the standard admin language switcher
 function getAdminLanguageLinks(): string {
     global $conf, $afile, $tpl;
     if (($conf['multilingual'] ?? 0) != 1) return '';
@@ -212,8 +212,10 @@ function getAdminLanguageLinks(): string {
         $html .= $tpl->getHtmlFrag('link', [
             'href' => $afile.'.php?newlang='.$lang,
             'title' => $label,
+            'class' => 'sl-admin-language-link',
             'img_src' => getLanguageFlagSrc($lang),
             'img_alt' => $label,
+            'is_menu_list_image' => true,
         ]);
     }
     return $html;
@@ -505,7 +507,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => $img],
                     ['content_html' => (string)$ordern],
                     ['content_html' => getTplMoveControls(['target' => 'ajax_cat', 'up' => $mup, 'down' => $mdn])],
-                    ['content_html' => ad_status('', $cstatus)],
+                    ['content_html' => ad_status('', $cstatus), 'is_col_status' => true],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _EDITOR,
                         'items' => $items,
@@ -639,7 +641,7 @@ function getAdminBlockList(string $token = ''): string {
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
         $tipItems = [
-            ['label' => _NAME, 'value' => $title, 'is_last' => $lang === ''],
+            ['label' => _NAME, 'value' => $title, 'is_last' => false],
         ];
         if ($lang !== '') {
             $tipItems[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];
@@ -688,7 +690,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => $bpos],
                 ['content_html' => (string) $weight],
                 ['content_html' => getTplMoveControls(['target' => 'ajax_block', 'up' => $mup, 'down' => $mdn])],
-                ['content_html' => ad_status('', $active)],
+                ['content_html' => ad_status('', $active), 'is_col_status' => true],
                 ['content_html' => $tpl->getHtmlFrag('row-actions', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
@@ -884,7 +886,7 @@ function getAdminPrivateList(int $obj = 0): string {
                     ['content_html' => $unse],
                     ['content_html' => $unre],
                     ['content_html' => $date],
-                    ['content_html' => ad_status('', $status, 1)],
+                    ['content_html' => ad_status('', $status, 1), 'is_col_status' => true],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[

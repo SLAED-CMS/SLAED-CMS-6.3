@@ -1432,7 +1432,7 @@ function setFoot(): void {
         $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
         $vars = array_replace($vars, [
             'time_html' => ($conf['db_t'] == '1') ? getTimeLoads() : '',
-            'foot_html' => renderFootControls(_PAGETOP, _PAGETOP, '', '', '', true),
+            'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true),
             'debug_html' => $debug,
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
@@ -1447,7 +1447,7 @@ function setFoot(): void {
     $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
     getBlocks('f');
-    $foot = renderFootControls(_PAGETOP, _PAGETOP, $time, $license, $debug);
+    $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license, $debug);
     if ($blocks == '' || $blocks == '0' || $blocks == '1') {
         ob_start(); getBlocks('l'); $left = ob_get_clean();
     } else {
@@ -3889,20 +3889,13 @@ function rss_load(mixed $bid): void {
     echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $content]);
 }
 
-# Render shared footer controls through a fragment
-function renderFootControls(
-    string $topTitle,
-    string $topLabel,
-    string $timeHtml = '',
-    string $licenseHtml = '',
-    string $debugHtml = '',
-    bool $withSlaedLink = false
-): string {
+# Get shared footer controls through a fragment
+function getFootControls(string $title, string $label, string $time = '', string $lic = '', string $debug = '', bool $link = false): string {
     global $tpl;
     return $tpl->getHtmlPart('foot-controls', [
-        'top_title' => $topTitle,
-        'top_label' => $topLabel,
-        'brand_link' => $withSlaedLink ? [
+        'top_title' => $title,
+        'top_label' => $label,
+        'brand_link' => $link ? [
             'href' => '//slaed.net',
             'title' => 'SLAED CMS',
             'label' => 'SLAED CMS',
@@ -3910,10 +3903,10 @@ function renderFootControls(
             'is_top_hidden' => true,
             'is_blank' => true,
         ] : [],
-        'top_link' => ['href' => '#', 'title' => $topTitle, 'label' => $topLabel, 'is_top_hidden' => true, 'is_upper' => true],
-        'time_html' => $timeHtml,
-        'license_html' => $licenseHtml,
-        'debug_html' => $debugHtml,
+        'top_link' => ['href' => '#', 'title' => $title, 'label' => $label, 'is_top_hidden' => true, 'is_upper' => true],
+        'time_html' => $time,
+        'license_html' => $lic,
+        'debug_html' => $debug,
     ]);
 }
 
