@@ -43,8 +43,13 @@ class EditorToastUi implements ContentDriver {
         $jval = json_encode($value);
         $mode = ($profile === 'full') ? '"wysiwyg"' : '"markdown"';
         $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
-        $height = max(180, $rows * 24);
+        $high = (int)($data['height'] ?? 0);
+        if ($high <= 0) {
+            $high = ($rows >= 15) ? 500 : (($rows >= 10) ? 300 : 250);
+        }
+        $height = max(250, $high);
         $h = '"'.$height.'px"';
+        $focus = !empty($data['autofocus']) ? 'true' : 'false';
         $lang = (substr(_LOCALE, 0, 2) === 'ru') ? '"ru-RU"' : '"en-US"';
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
         $ta = $tpl->getHtmlFrag('textarea', [
@@ -114,6 +119,7 @@ class EditorToastUi implements ContentDriver {
         $js .= 'var ed=new root({el:document.getElementById('.$jid.'+"_toast"),';
         $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',height:'.$h.',language:'.$lang.',usageStatistics:false});';
         $js .= 'if(window.SlaedToastUi){window.SlaedToastUi.register('.$jid.',ed,'.$jopt.');}';
+        $js .= 'if('.$focus.'){setTimeout(function(){var box=document.getElementById('.$jid.'+"_toast");var foc=box&&box.querySelector(".toastui-editor-contents[contenteditable=true],.ProseMirror.toastui-editor-contents,.toastui-editor textarea:not(.toastui-editor-pseudo-clipboard)");if(foc){foc.focus();}else{try{ed.focus();}catch(e){}}},300);}';
         $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=ed.getMarkdown();},true);';
         $js .= '})();';
         return $ta.$panel.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);

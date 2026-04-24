@@ -564,6 +564,7 @@ function getTplTextarea(array $data = []): string {
         'rows' => $rows,
         'placeholder' => $phld,
         'required' => $required,
+        'autofocus' => !empty($data['autofocus']),
         'stloc' => $stloc,
         'mod' => $mod,
         'con' => $con,
@@ -733,6 +734,7 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
     if ($db->getSqlRowCount($res) > 0) {
         $opts = $empty;
         $mass = [];
+        $pref = str_repeat(html_entity_decode('&nbsp;', ENT_QUOTES | ENT_HTML5, 'UTF-8'), 5);
         while ([$cid, $title, $parent, $pview] = $db->getSqlRow($res)) {
             if (is_acess($pview)) $mass[$cid] = [getConst($title), $parent];
         }
@@ -740,7 +742,7 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
             $cont[$key] = $val[0];
             $flag = $val[1];
             while ($flag != 0) {
-                $cont[$key] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$cont[$key];
+                $cont[$key] = $pref.$cont[$key];
                 $flag = intval($mass[$flag][1]);
             }
             $opts .= $tpl->getHtmlFrag('select-option', [
