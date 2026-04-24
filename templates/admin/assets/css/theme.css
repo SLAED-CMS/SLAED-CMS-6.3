@@ -275,6 +275,23 @@ table.tabreset { border-collapse: collapse; border-spacing: 0; }
 	border-left: 1px solid #cbd8e0;
 	box-shadow: inset 1px 0 0 rgba(255,255,255,.75);
 }
+.sl-admin-language-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 4px;
+	border-radius: 6px;
+	transition: background-color .18s ease;
+}
+.sl-admin-language-link:hover {
+	background-color: #f7fbfd;
+}
+.sl-admin-language-link:hover .sl-menu-list-image {
+	transform: scale(0.84);
+}
+.sl-admin-language .sl-admin-language-link img {
+	margin: 0;
+}
 .language img { margin: 0 2px; }
 
 /* Выделение левой колонки */
@@ -562,7 +579,7 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 .headmodule .rcolomn h1 { float: left; margin-top: 3px; font-size: 1.7em; color: #207fb6; }
 
 /* Поиск в модуле */
-.searchbox { float: right; background-color: #f1f6f9; padding: 6px; border-radius: 6px; }
+.searchbox { float: right; background-color: #f7fbfd; padding: 6px; border-radius: 6px; }
 .searchbox .sl-but-blue { margin-top: 0; }
 
 /* Таблица поиска в модуле */

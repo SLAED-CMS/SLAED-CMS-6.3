@@ -532,9 +532,9 @@ ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
 .sl-shop-invoice{width:640px;margin:5%}
 .sl-shop-invoice-logo{width:40%}
 .sl-money-separator{border:1px solid #000}
-.sl-tip{position:relative;display:inline-block;background-image:url(../../images/misc/sprite.png);vertical-align:middle;content:'';cursor:help;width:16px;height:16px;background-position:-336px -88px;margin:-3px 6px 0 0}
-.sl-tip div{position:absolute;top:100%;left:0;z-index:100;float:left;width:max-content;max-width:520px;padding:10px;margin:2px 0 0 0;list-style:none;background-color:#fff;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:6px;box-shadow:0 6px 12px rgba(0,0,0,.175);background-clip:padding-box;opacity:0;visibility:hidden;transition:all .5s ease}
-.sl-tip:hover>div{top:0;opacity:1;visibility:visible}
+.sl-tip{position:relative;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;cursor:help;width:16px;height:16px;margin:-3px 6px 0 0;color:#2f8dbd;font-size:15px;line-height:1;transition:color .18s ease}.sl-tip>.bi{display:block;pointer-events:none;transition:transform .18s ease}.sl-tip:hover{color:#176f9d}.sl-tip:hover>.bi{transform:scale(1.08)}.sl-tip:focus-visible{outline:2px solid rgba(47,141,189,.45);outline-offset:2px;border-radius:50%}
+.sl-tip div{position:absolute;top:100%;left:0;z-index:100;float:left;min-width:180px;width:max-content;max-width:520px;padding:10px;margin:2px 0 0 0;list-style:none;white-space:normal;overflow-wrap:anywhere;line-height:1.45;background-color:#fff;border:1px solid #ccc;border:1px solid rgba(0,0,0,.15);border-radius:6px;box-shadow:0 6px 12px rgba(0,0,0,.175);background-clip:padding-box;opacity:0;visibility:hidden;transition:all .5s ease}
+.sl-tip dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 8px;margin:0}.sl-tip dt{margin:0;color:#456272;font-weight:bold}.sl-tip dd{margin:0;min-width:0}.sl-tip:hover>div,.sl-tip:focus-within>div{top:0;opacity:1;visibility:visible}
 .sl-table-block{width:100%}.sl-table-block td{padding-bottom:5px}
 .sl-generates,.sl-license{font-size:.9em;color:#6e7c8b}
 .sl-bbup-panel{background:#f9f9f9;border:1px solid #dee0e2;border-radius:4px;padding:5px;height:1%;margin:0 0 3px 0}
