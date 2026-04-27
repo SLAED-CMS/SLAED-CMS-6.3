@@ -110,7 +110,7 @@ class Database {
         $cvar = explode(',', $conf['variables']);
         if ($cvar[8]) {
             global $tpl;
-            $color = ($ttime > 0.01) ? 'sl_red' : 'sl_green';
+            $color = ($ttime > 0.01) ? 'sl-red' : 'sl-green';
             $iquery = htmlspecialchars($this->filterSqlQuery($query, $params));
             if ($tpl instanceof Template) {
                 $this->qtime .= '<span class="'.$color.'">'.$ttime.'</span> '._SEC.'. - ['.htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'] - '.$iquery.';<br>';

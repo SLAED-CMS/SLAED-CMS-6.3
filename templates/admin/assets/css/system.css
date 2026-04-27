@@ -22,9 +22,9 @@
 .sl_note { cursor: help; }
 
 /* Системные цвета */
-.sl_red { color: #ff0000; }
+.sl-red { color: #ff0000; }
 .sl_orange { color: #ff5500; }
-.sl_green { color: #008000; }
+.sl-green { color: #008000; }
 .sl_blue { color: #0000ff; }
 
 /* Вспомогательный текст */
@@ -32,9 +32,6 @@
 
 /* Оформление label в optgroup */
 .sl_label { font-weight: bold; }
-
-/* Подсветка поискового слова */
-.sl_word, .sl-highlight { color: #ff0000; background-color: #ffff00; }
 
 /* Аватар */
 .sl_avatar {
@@ -57,11 +54,11 @@
 .sl_info { padding: 8px 10px 8px 47px; margin: 10px 12px 10px 12px; color: #332d27; text-align: justify; min-height: 28px; background: #e6f8e2 url(../../images/info.png) no-repeat 7px 6px; }
 
 /* Callout-блоки (Markdown > [!TYPE]) */
-.sl_callout_note,
-.sl_callout_tip,
-.sl_callout_important,
-.sl_callout_warning,
-.sl_callout_caution {
+.sl-callout-note,
+.sl-callout-tip,
+.sl-callout-important,
+.sl-callout-warning,
+.sl-callout-caution {
 	position: relative;
 	padding: 8px 12px 8px 44px;
 	margin: 10px 12px 10px 12px;
@@ -71,11 +68,11 @@
 	border-left-width: 4px;
 	border-left-style: solid;
 }
-.sl_callout_note::before,
-.sl_callout_tip::before,
-.sl_callout_important::before,
-.sl_callout_warning::before,
-.sl_callout_caution::before {
+.sl-callout-note::before,
+.sl-callout-tip::before,
+.sl-callout-important::before,
+.sl-callout-warning::before,
+.sl-callout-caution::before {
 	position: absolute;
 	left: 12px;
 	top: 8px;
@@ -83,68 +80,29 @@
 	font-style: normal;
 	line-height: 1;
 }
-.sl_callout_note    { background: #e8f4fd; border-color: #3498db; color: #1b2c3a; }
-.sl_callout_tip     { background: #eafaf1; border-color: #27ae60; color: #1a3028; }
-.sl_callout_important { background: #fef9e7; border-color: #f0b429; color: #3a2e0a; }
-.sl_callout_warning { background: #fef0e6; border-color: #e67e22; color: #3a2010; }
-.sl_callout_caution { background: #fdecea; border-color: #e74c3c; color: #3a1010; }
-.sl_callout_note::before    { content: "\2139"; color: #2980b9; }
-.sl_callout_tip::before     { content: "\2714"; color: #219a52; }
-.sl_callout_important::before { content: "\2605"; color: #c49a00; }
-.sl_callout_warning::before { content: "\26A0"; color: #c0691a; }
-.sl_callout_caution::before { content: "\2716"; color: #c0392b; }
-
-/* Оформление таблиц с сортировкой строк */
-.sl_table_list, .sl_table_list_sort { width: 100%; margin-bottom: 10px; }
-.sl_table_list tr:hover, .sl_table_list_sort tr:hover { background-color: #f7fbfd; }
-.sl_table_list td, .sl_table_list_sort td { padding: 4px; border: 1px solid #e8ebee; border-radius: 3px; }
-.sl_table_list td:nth-last-child(-n+3), .sl_table_list_sort td:nth-last-child(-n+3) { text-align: center; }
-.sl_table_list_sort th {
-	font-weight: bold;
-	border: 1px solid #e8ebee;
-	padding: 8px 16px 8px 4px;
-	text-align: left;
-	background-color: #f8f8f8;
-	border-radius: 3px;
-}
-.sl_table_list_sort th:last-child { text-align: center; padding: 8px 16px 8px 4px; }
-.sl_table_list_sort th.sl-col-check,
-.sl_table_list_sort td.sl-col-check,
-.sl_table_list_sort th.sl_col_check,
-.sl_table_list_sort td.sl_col_check {
-    padding-right: 8px;
-    padding-left: 8px;
-    text-align: center;
-}
-.sl_table_list_sort th.sl-col-check input,
-.sl_table_list_sort td.sl-col-check input,
-.sl_table_list_sort th.sl_col_check input,
-.sl_table_list_sort td.sl_col_check input {
-    display: block;
-    margin: 0 auto;
-}
-.sl_table_list th {
-	font-weight: bold;
-	border: 1px solid #e8ebee;
-	padding: 8px 8px 8px 4px;
-	text-align: left;
-	background-color: #f8f8f8;
-	border-radius: 3px;
-}
-.sl_table_list th:last-child { text-align: right; }
+.sl-callout-note    { background: #e8f4fd; border-color: #3498db; color: #1b2c3a; }
+.sl-callout-tip     { background: #eafaf1; border-color: #27ae60; color: #1a3028; }
+.sl-callout-important { background: #fef9e7; border-color: #f0b429; color: #3a2e0a; }
+.sl-callout-warning { background: #fef0e6; border-color: #e67e22; color: #3a2010; }
+.sl-callout-caution { background: #fdecea; border-color: #e74c3c; color: #3a1010; }
+.sl-callout-note::before    { content: "\2139"; color: #2980b9; }
+.sl-callout-tip::before     { content: "\2714"; color: #219a52; }
+.sl-callout-important::before { content: "\2605"; color: #c49a00; }
+.sl-callout-warning::before { content: "\26A0"; color: #c0691a; }
+.sl-callout-caution::before { content: "\2716"; color: #c0392b; }
 
 /* Tablesort - Сортировка таблиц списка */
-thead tr .sl_sort,
-thead tr .sl_sort_asc,
-thead tr .sl_sort_desc {
+thead tr .sl-sort,
+thead tr .sl-sort-asc,
+thead tr .sl-sort-desc {
     position: relative;
     cursor: pointer;
     background-image: none;
     padding-right: 16px;
 }
-thead tr .sl_sort::after,
-thead tr .sl_sort_asc::after,
-thead tr .sl_sort_desc::after {
+thead tr .sl-sort::after,
+thead tr .sl-sort-asc::after,
+thead tr .sl-sort-desc::after {
     position: absolute;
     top: 50%;
     right: 6px;
@@ -155,9 +113,9 @@ thead tr .sl_sort_desc::after {
     opacity: 0.55;
     text-align: center;
 }
-thead tr .sl_sort::after { content: '↕'; }
-thead tr .sl_sort_asc::after { content: '▲'; }
-thead tr .sl_sort_desc::after { content: '▼'; }
+thead tr .sl-sort::after { content: '↕'; }
+thead tr .sl-sort-asc::after { content: '▲'; }
+thead tr .sl-sort-desc::after { content: '▼'; }
 thead tr th[data-sort-method="none"] {
     cursor: default;
     padding-right: 8px;

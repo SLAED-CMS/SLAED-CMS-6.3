@@ -591,7 +591,7 @@ class Parser {
             # Blockquote / GitHub callout (>)
             if (str_starts_with($trim, '>')) {
                 [$bq, $i] = $this->getBlockquote($lines, $i, $n);
-                $map  = ['note' => 'sl_callout_note', 'tip' => 'sl_callout_tip', 'important' => 'sl_callout_important', 'warning' => 'sl_callout_warning', 'caution' => 'sl_callout_caution'];
+                $map  = ['note' => 'sl-callout-note', 'tip' => 'sl-callout-tip', 'important' => 'sl-callout-important', 'warning' => 'sl-callout-warning', 'caution' => 'sl-callout-caution'];
                 $segs = [[]];
                 foreach ($bq as $ln) {
                     if ($ln === '' && end($segs) !== []) $segs[] = [];

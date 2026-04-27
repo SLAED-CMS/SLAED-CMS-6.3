@@ -116,15 +116,15 @@
         for (var i = 0; i < head.length; i++) {
             for (var j = 0; j < head[i].cells.length; j++) {
                 var cell = head[i].cells[j];
-                cell.classList.remove('sl_sort', 'sl_sort_asc', 'sl_sort_desc');
+                cell.classList.remove('sl-sort', 'sl-sort-asc', 'sl-sort-desc');
                 if (cell.getAttribute('data-sort-method') === 'none') continue;
-                cell.classList.add('sl_sort');
+                cell.classList.add('sl-sort');
                 if (cell.getAttribute('aria-sort') === 'ascending') {
-                    cell.classList.remove('sl_sort');
-                    cell.classList.add('sl_sort_asc');
+                    cell.classList.remove('sl-sort');
+                    cell.classList.add('sl-sort-asc');
                 } else if (cell.getAttribute('aria-sort') === 'descending') {
-                    cell.classList.remove('sl_sort');
-                    cell.classList.add('sl_sort_desc');
+                    cell.classList.remove('sl-sort');
+                    cell.classList.add('sl-sort-desc');
                 }
             }
         }
