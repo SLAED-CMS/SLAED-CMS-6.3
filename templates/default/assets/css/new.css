@@ -639,6 +639,9 @@ ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
     margin-bottom: 5px;
     color: var(--sl-changelog-meta);
 }
+.sl-changelog-filter-field label::after {
+    content: ":";
+}
 
 .sl-changelog-filter-field input {
     padding: 8px 12px;
