@@ -49,12 +49,9 @@ function getRobotsTemplate(): string {
 
 function getRobotsButton(string $template): string {
     global $tpl;
-    return $tpl->getHtmlFrag('input', [
-        'itype' => 'button',
-        'name_attr' => 'robots_template',
-        'value_attr' => _EROBSTD,
+    return $tpl->getHtmlFrag('editor-robots-button', [
         'label' => _EROBSTD,
-        'input_attr' => 'class="sl-but-green" data-robots-template="'.htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8').'" onclick="var src=this.getAttribute(\'data-robots-template\');var code=document.getElementById(\'code\');var view=(window.CM6&&CM6.editors)?CM6.editors[\'code\']:null;if(!code||!src)return;code.value=JSON.parse(src);if(view&&view.dispatch){view.dispatch({changes:{from:0,to:view.state.doc.length,insert:code.value}});view.focus();}"',
+        'template_json' => json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
     ]);
 }
 

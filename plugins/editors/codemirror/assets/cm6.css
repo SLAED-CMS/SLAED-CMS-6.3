@@ -1,2 +1,2 @@
-.sl_code_editor .cm-editor { height: 400px; overflow: auto; }
-.sl_code_editor .cm-editor.cm-focused { outline: none; }
+.sl-code-editor .cm-editor { height: 400px; overflow: auto; }
+.sl-code-editor .cm-editor.cm-focused { outline: none; }

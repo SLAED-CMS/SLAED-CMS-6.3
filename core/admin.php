@@ -225,25 +225,24 @@ function getAdminLanguageLinks(): string {
 function getAdminTopMenu(): string {
     global $admin, $afile, $tpl;
     $items = !isAdmin(true) ? [
-        ['class' => 'sl_first', 'href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false],
-        ['class' => '', 'href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
-        ['class' => '', 'href' => 'index.php', 'label' => _SITE, 'blank' => true],
-        ['class' => '', 'href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
-        ['class' => '', 'href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false],
+        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
+        ['href' => 'index.php', 'label' => _SITE, 'blank' => true],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
     ] : [
-        ['class' => 'sl_first', 'href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
-        ['class' => '', 'href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false],
-        ['class' => '', 'href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false],
-        ['class' => '', 'href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false],
-        ['class' => '', 'href' => 'index.php', 'label' => _SITE, 'blank' => true],
-        ['class' => '', 'href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
-        ['class' => '', 'href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
+        ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false],
+        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false],
+        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false],
+        ['href' => 'index.php', 'label' => _SITE, 'blank' => true],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
     ];
     $html = '';
     foreach ($items as $item) {
-        $class = ($item['class'] ?? '') !== '' ? ' class="'.htmlspecialchars((string)$item['class'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '';
         $label = htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $html .= '<li'.$class.'>'.$tpl->getHtmlFrag('link', [
+        $html .= '<li>'.$tpl->getHtmlFrag('link', [
             'href' => (string)$item['href'],
             'title' => (string)$item['label'],
             'label_html' => '<b>'.$label.'</b>',

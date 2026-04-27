@@ -129,7 +129,7 @@ function config(): void {
         'value_text' => (string)$conf['admininfo'],
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _STARTDATE, 'field_html' => getTplAddDateTime(['name' => 'startdate', 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'attr' => 'class="sl-select-config"'])];
+    $rows[] = ['label_html' => _STARTDATE, 'field_html' => getTplAddDateTime(['name' => 'startdate', 'time' => (string)$conf['startdate'], 'with' => true, 'max' => 16, 'is_config' => true])];
     $rows[] = ['label_html' => _ADMINEMAIL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'email',
         'name_attr' => 'adminmail',
@@ -200,7 +200,7 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => getTplModuleSelect('module', 'sl-select-config', $conf['module'], 1)];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _PUTINHOME, 'hint' => _PUTINHOMEINFO.' '._CTRLINFO]), 'field_html' => getTplModuleSelect('module', $conf['module'], 1)];
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $ival = 0;

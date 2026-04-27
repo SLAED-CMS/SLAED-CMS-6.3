@@ -89,7 +89,7 @@ function getTplAddDateTime(array $data = []): string {
     $time = $data['time'] ?? '';
     $with = $data['with'] ?? true;
     $max = $data['max'] ?? 16;
-    $attr = $data['attr'] ?? '';
+    $iscfg = !empty($data['is_config']);
     $time = $time ? substr($time, 0, $max) : ($with ? date('Y-m-d H:i') : date('Y-m-d'));
     static $fieldid = 0;
     $fieldid++;
@@ -108,7 +108,8 @@ function getTplAddDateTime(array $data = []): string {
             'value_attr' => $pvalu,
             'maxlength_num' => $max,
             'placeholder_text' => $phold,
-            'input_attr' => 'id="'.$pid.'" data-sl-datetime-target="'.$hid.'" data-sl-datetime-kind="'.$type.'"'.($attr ? ' '.$attr : ''),
+            'is_config' => $iscfg,
+            'input_attr' => 'id="'.$pid.'" data-sl-datetime-target="'.$hid.'" data-sl-datetime-kind="'.$type.'"',
         ]);
 }
 
@@ -810,7 +811,7 @@ function getTplLanguageOptions(string $lang = '', string $typ = ''): string {
 }
 
 # Render a multi-select for modules
-function getTplModuleSelect(string $name, string $clas, string $mod, string $no = '', array $allow = []): string {
+function getTplModuleSelect(string $name, string $mod, string $no = '', array $allow = []): string {
     global $tpl;
     $cont = '';
     if ($no !== '') $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => empty($mod)]);
@@ -827,7 +828,7 @@ function getTplModuleSelect(string $name, string $clas, string $mod, string $no 
         }
         $cont .= $tpl->getHtmlFrag('select-option', ['value_attr' => $file, 'label_text' => getModuleName($file), 'is_selected' => $isel]);
     }
-    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
+    return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'is_config' => true, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
 }
 
 # Render a select with category-enabled modules

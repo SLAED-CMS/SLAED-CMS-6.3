@@ -54,10 +54,8 @@ function setExit(string $msg, string $typ = ''): never {
     } elseif (is_file($basedir.'/'.$themedir.'/favicon.ico')) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $themedir.'/favicon.ico', 'type' => '', 'title' => '']);
     }
-    foreach (['theme.css', 'system.css', 'new.css', 'blocks.css'] as $asset) {
-        if (is_file($basedir.'/'.$themedir.'/'.$asset)) {
-            $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $themedir.'/'.$asset, 'type' => '', 'title' => '']);
-        }
+    foreach (getThemeCssFiles($theme) as $asset) {
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
     }
     $links = implode(PHP_EOL, $linksrc);
     die($tpl->getHtmlPage('message', [

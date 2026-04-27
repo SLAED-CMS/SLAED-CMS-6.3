@@ -1,0 +1,88 @@
+/* Общие настройки страницы */
+html, body, div, ul, ol, li, dl, dt, dd, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, input { margin: 0; padding: 0; }
+html {
+    min-height: 100%;
+    background: #c7e5f0;
+    background: linear-gradient(180deg, #8bc7dd 0%, #c7e5f0 52%, #d9eef6 100%);
+}
+
+legend { color:#207fb6; font-weight: bold; }
+fieldset {
+    padding: 3px;
+    margin: 0 0 3px 0;
+    overflow: auto;
+    border: 1px solid #dee0e2;
+    border-radius: 3px;
+}
+
+body {
+    min-height: 100vh;
+    background: transparent;
+}
+body, select, input, textarea, button { font: 14px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
+
+h1, h2, h3, h4, h5 { line-height: normal; }
+h1 { font-size: 1.8em; }
+h2 { font-size: 1.5em; color: #207fb6; }
+h3 { font-size: 1.35em; }
+h4 { font-size: 1.2em; }
+h5 { font-size: 1.1em; color: #207fb6; }
+
+/* Настройка ссылок */
+a { color: #0069a7; text-decoration: none; }
+a:hover { cursor: pointer; text-decoration: underline; }
+a img { border: 0 none; }
+
+/* Прочие стили */
+p { margin-bottom: 0.4em; }
+hr { border: 0 none; border-top: 1px solid #dee0e2; height: 1px; }
+ul { padding-left: 16px; list-style-position:outside; list-style-image:none; }
+ol { list-style-image: none; list-style-position: outside; list-style-type: decimal; margin-left: 2.2em; }
+
+input, textarea, select {
+    min-height: 28px;
+    background: #fafafa;
+    color: #777;
+    border: 1px #dee0e2 solid;
+    border-radius: 3px;
+}
+
+/* Подсветка текста */
+input[required]:valid, textarea[required]:valid { color: #008000; }
+input[required]:invalid, textarea[required]:invalid { color: #ff0000; }
+input[placeholder] { text-overflow: ellipsis; }
+
+input[type="radio"], input[type="checkbox"] { min-height: 0; margin: 0 2px 2px 0; vertical-align: middle; }
+input:focus, textarea:focus, select:focus { box-shadow: 0 0 3px #34c8ed; }
+input, textarea, select, a { outline: none; }
+select[multiple] { height: 100px; }
+
+/* Цитаты */
+blockquote {
+    background: #fff;
+    border-left: 1px solid #b8c3cd;
+    border-right: 1px solid #b8c3cd;
+    color: #798086;
+    font-family: Georgia, "Times New Roman", serif;
+    font-style: italic;
+    margin: 4px;
+    padding: 4px;
+    border-radius: 8px;
+}
+blockquote:before {
+    color: #b8c3cd;
+    content: "“";
+    font-size: 3em;
+    line-height: 0.1em;
+    margin-right: 0.2em;
+    vertical-align: -.4em;
+}
+blockquote:after {
+    color: #b8c3cd;
+    content: "”";
+    font-size: 3em;
+    line-height: 0.1em;
+    margin-left: 0.1em;
+    vertical-align: -.4em;
+}
+blockquote > p:first-child { display: inline; }

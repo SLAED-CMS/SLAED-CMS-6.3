@@ -2076,6 +2076,14 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
+# Returns ordered list of base stylesheet paths for a theme, alphabetical by filename
+function getThemeCssFiles(string $theme): array {
+    $dir = 'templates/'.$theme.'/assets/css/';
+    $out = glob($dir.'*.css') ?: [];
+    sort($out);
+    return $out;
+}
+
 # Returns list of asset files found in standard theme subdirectories
 function getThemeAssets(string $theme, string $ext): array {
     $base = 'templates/'.$theme.'/';
@@ -2733,15 +2741,15 @@ function getVariables(): string {
             $memttl = _RATE3;
         }
         $memLimit = (int)(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024);
-        $cont .= debugSection(_SYSTEM_INFO, 'system', debugStats($cputtl, $cpuState, (string)$cpu, $memttl, $memState, $memtxt, $memuse, $memLimit, getTimeLoads()));
+        $cont .= debugSection(_SYSTEM_INFO, 'info', debugStats($cputtl, $cpuState, (string)$cpu, $memttl, $memState, $memtxt, $memuse, $memLimit, getTimeLoads()));
     }
-    if ($cvar[2] && $_POST) $cont .= debugSection(_AVARIABLES.': POST', 'green', htmlspecialchars(print_r($_POST, true)));
-    if ($cvar[3] && $_GET) $cont .= debugSection(_AVARIABLES.': GET', 'blue', htmlspecialchars(print_r($_GET, true)));
-    if ($cvar[4] && $_COOKIE) $cont .= debugSection(_AVARIABLES.': COOKIE', 'orangered', print_r($_COOKIE, true));
-    if ($cvar[5] && $_FILES) $cont .= debugSection(_AVARIABLES.': FILES', 'purple', print_r($_FILES, true));
-    if ($cvar[6] && $_SESSION) $cont .= debugSection(_AVARIABLES.': SESSION', 'fuchsia', print_r($_SESSION, true));
-    if ($cvar[7] && $_SERVER) $cont .= debugSection(_AVARIABLES.': SERVER', 'red', print_r($_SERVER, true));
-    if ($cvar[8]) $cont .= debugSection(_AQUERY_DB.': MySQL', 'green', $db->qtime);
+    if ($cvar[2] && $_POST) $cont .= debugSection(_AVARIABLES.': POST', 'success', htmlspecialchars(print_r($_POST, true)));
+    if ($cvar[3] && $_GET) $cont .= debugSection(_AVARIABLES.': GET', 'info', htmlspecialchars(print_r($_GET, true)));
+    if ($cvar[4] && $_COOKIE) $cont .= debugSection(_AVARIABLES.': COOKIE', 'warn', print_r($_COOKIE, true));
+    if ($cvar[5] && $_FILES) $cont .= debugSection(_AVARIABLES.': FILES', 'accent', print_r($_FILES, true));
+    if ($cvar[6] && $_SESSION) $cont .= debugSection(_AVARIABLES.': SESSION', 'accent', print_r($_SESSION, true));
+    if ($cvar[7] && $_SERVER) $cont .= debugSection(_AVARIABLES.': SERVER', 'danger', print_r($_SERVER, true));
+    if ($cvar[8]) $cont .= debugSection(_AQUERY_DB.': MySQL', 'success', $db->qtime);
     return $cont;
 }
 

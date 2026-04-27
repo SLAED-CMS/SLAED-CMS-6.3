@@ -168,6 +168,12 @@ class Parser {
             .'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
     }
 
+    # Build the [img] bbcode HTML so parser owns markup and class names in one place.
+    private function buildBbcodeImage(string $src, string $alt, string $title, string $align, string $err): string {
+        $style = $align !== '' ? ' style="float:'.$align.';"' : '';
+        return '<img src="'.$src.'"'.$style.' alt="'.$alt.'" title="'.$title.'" class="sl-img"'.$err.'>';
+    }
+
     # Convert a local/absolute image source into a stable public path.
     private function normalizeImageSource(string $src): string {
         global $conf;
@@ -804,7 +810,7 @@ class Parser {
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" alt="'.$file.'" title="'.$file.'" class="sl-img"'.$err.'>');
+                return $this->addStash($this->buildBbcodeImage($src2, $file, $file, '', $err));
             },
             $src
         ) ?? $src;
@@ -823,7 +829,7 @@ class Parser {
                 $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$file.'" title="'.$file.'" class="sl-img"'.$err.'>');
+                return $this->addStash($this->buildBbcodeImage($src2, $file, $file, $align, $err));
             },
             $src
         ) ?? $src;
@@ -842,7 +848,7 @@ class Parser {
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl-img"'.$err.'>');
+                return $this->addStash($this->buildBbcodeImage($src2, $alt, $alt, '', $err));
             },
             $src
         ) ?? $src;
@@ -863,7 +869,7 @@ class Parser {
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
                 $src2 = $this->filterEsc($this->normalizeImageSource($src2));
                 $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl-img"'.$err.'>');
+                return $this->addStash($this->buildBbcodeImage($src2, $alt, $alt, $align, $err));
             },
             $src
         ) ?? $src;

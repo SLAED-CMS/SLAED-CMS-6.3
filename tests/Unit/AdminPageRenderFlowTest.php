@@ -76,7 +76,7 @@ namespace Tests\Unit {
                 'license' => 'License',
                 'login' => 'Message',
                 'title' => '<h2>Denied</h2>',
-                'content' => '<div class="sl_warn">Access denied</div>',
+                'content' => '<div class="sl-warn">Access denied</div>',
             ], 'bare');
 
             $this->assertNotSame('', $html);

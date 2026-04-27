@@ -677,10 +677,10 @@ function getDbHealth(object $db): array {
 
 # Shortens long text and adds escaped tooltip markup for safe compact UI presentation
 function getTooltipText(string $text, int $limit = 50): string {
+    global $tpl;
     if ($text === '' || $text === 'N/A' || mb_strlen($text, 'UTF-8') <= $limit) return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     $short = htmlspecialchars(mb_substr($text, 0, $limit, 'UTF-8'), ENT_QUOTES, 'UTF-8').'...';
-    $full = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    return $short.' <i class="bi bi-info-circle sl-monitor-info-icon" title="'.$full.'"></i>';
+    return $short.' '.$tpl->getHtmlFrag('monitor-info-icon', ['tooltip_text' => $text]);
 }
 
 # Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
