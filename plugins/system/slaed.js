@@ -1,32 +1,20 @@
 (function () {
-    function ensureLightboxStyles() {
-        if (document.getElementById('sl-lightbox-styles')) return;
-        var style = document.createElement('style');
-        style.id = 'sl-lightbox-styles';
-        style.textContent = [
-            '.sl-lightbox{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(17,24,39,.72);opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s ease;}',
-            '.sl-lightbox.is-open{opacity:1;visibility:visible;}',
-            '.sl-lightbox__dialog{position:relative;max-width:min(92vw,1280px);max-height:92vh;display:flex;align-items:center;justify-content:center;}',
-            '.sl-lightbox__surface{background:#fff;border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden;}',
-            '.sl-lightbox__image{display:block;max-width:min(92vw,1280px);max-height:calc(92vh - 48px);width:auto;height:auto;background:#fff;}',
-            '.sl-lightbox__caption{padding:10px 14px;font:14px/1.4 Arial,sans-serif;color:#44515f;background:#f7f9fb;border-top:1px solid #dbe3eb;}',
-            '.sl-lightbox__close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border:0;border-radius:18px;background:#1f2937;color:#fff;font:700 22px/36px Arial,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28);}',
-            '.sl-lightbox__close:hover{background:#111827;}'
-        ].join('');
-        document.head.appendChild(style);
-    }
-
-    function createLightbox() {
-        var root = document.createElement('div');
-        root.className = 'sl-lightbox';
-        root.setAttribute('hidden', 'hidden');
-        root.innerHTML = '<div class="sl-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Image preview"><div class="sl-lightbox__surface"><img class="sl-lightbox__image" alt=""><div class="sl-lightbox__caption" hidden></div></div><button type="button" class="sl-lightbox__close" aria-label="Close">×</button></div>';
-        document.body.appendChild(root);
-        return root;
-    }
-
-    function initLightbox() {
-        ensureLightboxStyles();
+    function setLightbox() {
+        if (!document.getElementById('sl-lightbox-styles')) {
+            var style = document.createElement('style');
+            style.id = 'sl-lightbox-styles';
+            style.textContent = [
+                '.sl-lightbox{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(17,24,39,.72);opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s ease;}',
+                '.sl-lightbox.is-open{opacity:1;visibility:visible;}',
+                '.sl-lightbox__dialog{position:relative;max-width:min(92vw,1280px);max-height:92vh;display:flex;align-items:center;justify-content:center;}',
+                '.sl-lightbox__surface{background:#fff;border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden;}',
+                '.sl-lightbox__image{display:block;max-width:min(92vw,1280px);max-height:calc(92vh - 48px);width:auto;height:auto;background:#fff;}',
+                '.sl-lightbox__caption{padding:10px 14px;font:14px/1.4 Arial,sans-serif;color:#44515f;background:#f7f9fb;border-top:1px solid #dbe3eb;}',
+                '.sl-lightbox__close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border:0;border-radius:18px;background:#1f2937;color:#fff;font:700 22px/36px Arial,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28);}',
+                '.sl-lightbox__close:hover{background:#111827;}'
+            ].join('');
+            document.head.appendChild(style);
+        }
 
         var root = null;
         var image = null;
@@ -34,20 +22,24 @@
         var closeButton = null;
         var previousOverflow = '';
 
-        function ensureLightbox() {
+        function getLightbox() {
             if (root) return;
-            root = createLightbox();
+            root = document.createElement('div');
+            root.className = 'sl-lightbox';
+            root.setAttribute('hidden', 'hidden');
+            root.innerHTML = '<div class="sl-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Image preview"><div class="sl-lightbox__surface"><img class="sl-lightbox__image" alt=""><div class="sl-lightbox__caption" hidden></div></div><button type="button" class="sl-lightbox__close" aria-label="Close">×</button></div>';
+            document.body.appendChild(root);
             image = root.querySelector('.sl-lightbox__image');
             caption = root.querySelector('.sl-lightbox__caption');
             closeButton = root.querySelector('.sl-lightbox__close');
 
-            closeButton.addEventListener('click', close);
+            closeButton.addEventListener('click', setLightboxClose);
             root.addEventListener('click', function (event) {
-                if (event.target === root) close();
+                if (event.target === root) setLightboxClose();
             });
         }
 
-        function close() {
+        function setLightboxClose() {
             if (!root || root.hidden) return;
             root.classList.remove('is-open');
             window.setTimeout(function () {
@@ -63,8 +55,8 @@
             }, 180);
         }
 
-        function open(src, title) {
-            ensureLightbox();
+        function setLightboxOpen(src, title) {
+            getLightbox();
             previousOverflow = document.documentElement.style.overflow;
             image.src = src;
             image.alt = title || '';
@@ -89,11 +81,11 @@
             var href = trigger.getAttribute('href') || '';
             if (!/\.(?:bmp|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
             event.preventDefault();
-            open(href, trigger.getAttribute('title') || '');
+            setLightboxOpen(href, trigger.getAttribute('title') || '');
         });
 
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') close();
+            if (event.key === 'Escape') setLightboxClose();
         });
     }
 
@@ -140,6 +132,21 @@
 
     function setTableSort(node) {
         if (typeof window.Tablesort === 'undefined') return;
+        if (typeof window.Tablesort.extend === 'function' && !window.Tablesort.__slaedExtensionsReady) {
+            window.Tablesort.extend('slaedNumber', function (item) {
+                return /^[-+]?[\d\s.,]+(?:\s*[%A-Za-zА-Яа-я]+)?$/.test(item.trim()) && /\d/.test(item);
+            }, function (a, b) {
+                return getTableNumber(b) - getTableNumber(a);
+            });
+
+            window.Tablesort.extend('slaedDate', function (item) {
+                return /^\d{2}\.\d{2}\.\d{4}(?:\s+\d{2}:\d{2}(?::\d{2})?)?$/.test(item.trim());
+            }, function (a, b) {
+                return getTableDate(b) - getTableDate(a);
+            });
+
+            window.Tablesort.__slaedExtensionsReady = true;
+        }
         var list = [];
         var root = node && node.nodeType ? node : document;
         var tables = root.querySelectorAll ? root.querySelectorAll('[data-sl-table-sort]') : [];
@@ -163,40 +170,21 @@
         }
     }
 
-    function initTableSortExtensions() {
-        if (typeof window.Tablesort === 'undefined' || typeof window.Tablesort.extend !== 'function') return;
-        if (!window.Tablesort.__slaedExtensionsReady) {
-            window.Tablesort.extend('slaedNumber', function (item) {
-                return /^[-+]?[\d\s.,]+(?:\s*[%A-Za-zА-Яа-я]+)?$/.test(item.trim()) && /\d/.test(item);
-            }, function (a, b) {
-                return getTableNumber(b) - getTableNumber(a);
-            });
-
-            window.Tablesort.extend('slaedDate', function (item) {
-                return /^\d{2}\.\d{2}\.\d{4}(?:\s+\d{2}:\d{2}(?::\d{2})?)?$/.test(item.trim());
-            }, function (a, b) {
-                return getTableDate(b) - getTableDate(a);
-            });
-
-            window.Tablesort.__slaedExtensionsReady = true;
-        }
-    }
-
-    function storageKey(name, scoped) {
+    function getStorageKey(name, scoped) {
         return scoped ? 'slaed-toggle:' + window.location.pathname + window.location.search + ':' + name : 'slaed-toggle:' + name;
     }
 
-    function readToggleState(name, scoped) {
+    function getToggleState(name, scoped) {
         try {
-            return window.localStorage.getItem(storageKey(name, scoped));
+            return window.localStorage.getItem(getStorageKey(name, scoped));
         } catch (err) {
             return null;
         }
     }
 
-    function writeToggleState(name, scoped, value) {
+    function setToggleState(name, scoped, value) {
         try {
-            window.localStorage.setItem(storageKey(name, scoped), value);
+            window.localStorage.setItem(getStorageKey(name, scoped), value);
         } catch (err) {
         }
     }
@@ -228,16 +216,16 @@
         setToggleControls(id, isOpen);
     }
 
-    function toggleBlock(id, scoped, isOpen) {
+    function setToggleBlock(id, scoped, isOpen) {
         var element = document.getElementById(id);
         if (!element) return;
         var isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
         var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
         setToggleBlockState(element, id, nextOpen);
-        writeToggleState(id, scoped, nextOpen ? '1' : '0');
+        setToggleState(id, scoped, nextOpen ? '1' : '0');
     }
 
-    function bindToggleControl(control) {
+    function setToggleControl(control) {
         if (control.getAttribute('data-sl-toggle-ready') === '1') return;
         var id = control.getAttribute('data-sl-toggle-control');
         if (!id) return;
@@ -251,17 +239,17 @@
         }
         var eventName = isCheckbox ? 'change' : 'click';
         control.addEventListener(eventName, function () {
-            toggleBlock(id, scoped, isCheckbox ? control.checked : undefined);
+            setToggleBlock(id, scoped, isCheckbox ? control.checked : undefined);
         });
         control.addEventListener('keydown', function (event) {
             if (isCheckbox) return;
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
-            toggleBlock(id, scoped);
+            setToggleBlock(id, scoped);
         });
     }
 
-    function animateSlide(element, show, duration) {
+    function setSlideMotion(element, show, duration) {
         var anims = element.getAnimations ? element.getAnimations() : [];
         for (var i = 0; i < anims.length; i++) anims[i].cancel();
         if (show) {
@@ -292,7 +280,7 @@
         };
     }
 
-    function animateFadeScale(element, show, duration) {
+    function setFadeScale(element, show, duration) {
         if (show) {
             element.hidden = false;
             element.style.display = 'block';
@@ -313,7 +301,7 @@
         };
     }
 
-    function fetchJson(url) {
+    function getJsonData(url) {
         return window.fetch(url, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         }).then(function (response) {
@@ -327,25 +315,50 @@
         if (field) field.value = value;
     }
 
-    function initImageReplace() {
-        var select = document.getElementById('img_replace');
-        var picture = document.getElementById('picture');
-        if (!select || !picture) return;
-        select.addEventListener('change', function () {
-            picture.setAttribute('src', this.value || '');
+    function setImageReplace() {
+        var selects = document.querySelectorAll('[data-sl-image-replace]');
+        var legacy = document.getElementById('img_replace');
+        if (!selects.length && legacy) {
+            legacy.setAttribute('data-sl-image-replace', 'picture');
+            selects = [legacy];
+        }
+        selects.forEach(function (select) {
+            var picture = document.getElementById(select.getAttribute('data-sl-image-replace') || '');
+            if (!picture) return;
+            select.addEventListener('change', function () {
+                picture.setAttribute('src', this.value || '');
+            });
         });
     }
 
-    function initToggleBlocks() {
+    function setTableCheckAll() {
+        document.addEventListener('click', function (event) {
+            var cell = event.target.closest('th[data-sl-check-all]');
+            if (!cell || event.target.matches('input[type="checkbox"]')) return;
+            var checkbox = cell.querySelector('input[type="checkbox"]');
+            if (checkbox) checkbox.click();
+        });
+        document.addEventListener('change', function (event) {
+            var master = event.target;
+            if (!master || master.type !== 'checkbox' || !master.closest('[data-sl-check-all]')) return;
+            var scope = master.closest('form') || document;
+            var items = scope.querySelectorAll('[data-sl-check-item]');
+            for (var i = 0; i < items.length; i++) {
+                if (items[i] !== master) items[i].checked = !!master.checked;
+            }
+        });
+    }
+
+    function setToggleBlocks() {
         var controls = document.querySelectorAll('[data-sl-toggle-control]');
-        for (var i = 0; i < controls.length; i++) bindToggleControl(controls[i]);
+        for (var i = 0; i < controls.length; i++) setToggleControl(controls[i]);
 
         var blocks = document.querySelectorAll('[data-sl-toggle]');
         for (var j = 0; j < blocks.length; j++) {
             var id = blocks[j].getAttribute('data-sl-toggle');
             var scoped = blocks[j].getAttribute('data-sl-toggle-scope') === 'path';
             if (!id) continue;
-            var state = readToggleState(id, scoped);
+            var state = getToggleState(id, scoped);
             var isOpen = state !== '0';
             if (state === null) {
                 var blockControls = getToggleControls(id);
@@ -366,9 +379,9 @@
         var duration = dur || 400;
         var isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
         if (eff === 'puff') {
-            animateFadeScale(element, isHidden, duration);
+            setFadeScale(element, isHidden, duration);
         } else {
-            animateSlide(element, isHidden, duration);
+            setSlideMotion(element, isHidden, duration);
         }
         return false;
     };
@@ -386,15 +399,6 @@
             target.scrollTo({ top: 0, behavior: duration > 0 ? 'smooth' : 'auto' });
         }
         return false;
-    };
-
-    window.CheckBox = function (id, clas) {
-        var master = typeof id === 'string' ? document.querySelector(id) : id;
-        if (!master) return;
-        var items = document.querySelectorAll(clas);
-        for (var i = 0; i < items.length; i++) {
-            items[i].checked = !!master.checked;
-        }
     };
 
     window.TranslateLang = function (input, output, lang, info, key) {
@@ -418,7 +422,7 @@
         var hasHTML = /<[^>]+>/.test(txt);
 
         if (!hasHTML) {
-            fetchJson(url + '?q=' + encodeURIComponent(txt) + '&langpair=' + encodeURIComponent(from + '|' + to))
+            getJsonData(url + '?q=' + encodeURIComponent(txt) + '&langpair=' + encodeURIComponent(from + '|' + to))
                 .then(function (res) {
                     var translated = ((res && res.responseData && res.responseData.translatedText) || txt)
                         .replace(/&nbsp;/g, ' ')
@@ -436,24 +440,24 @@
         div.innerHTML = txt;
         var nodes = [];
 
-        (function scan(node) {
+        (function checkScan(node) {
             if (node.nodeType === 3 && node.nodeValue.trim() !== '') {
                 nodes.push(node);
                 return;
             }
             for (var i = 0; i < node.childNodes.length; i++) {
-                scan(node.childNodes[i]);
+                checkScan(node.childNodes[i]);
             }
         })(div);
 
         var index = 0;
-        function processNext() {
+        function setProcessNext() {
             if (index >= nodes.length) {
                 setInputValueByClass(output, div.innerHTML);
                 return;
             }
             var original = nodes[index].nodeValue.trim();
-            fetchJson(url + '?q=' + encodeURIComponent(original) + '&langpair=' + encodeURIComponent(from + '|' + to))
+            getJsonData(url + '?q=' + encodeURIComponent(original) + '&langpair=' + encodeURIComponent(from + '|' + to))
                 .then(function (res) {
                     if (res && res.responseData && res.responseData.translatedText) {
                         nodes[index].nodeValue = res.responseData.translatedText;
@@ -463,19 +467,19 @@
                 })
                 .finally(function () {
                     index++;
-                    window.setTimeout(processNext, 100);
+                    window.setTimeout(setProcessNext, 100);
                 });
         }
 
-        processNext();
+        setProcessNext();
     };
 
-    function initSlaedUi() {
-        initTableSortExtensions();
+    function setSlaedUi() {
         setTableSort(document);
-        initLightbox();
-        initImageReplace();
-        initToggleBlocks();
+        setLightbox();
+        setImageReplace();
+        setTableCheckAll();
+        setToggleBlocks();
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {
@@ -483,8 +487,8 @@
     });
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSlaedUi);
+        document.addEventListener('DOMContentLoaded', setSlaedUi);
     } else {
-        initSlaedUi();
+        setSlaedUi();
     }
 })();
