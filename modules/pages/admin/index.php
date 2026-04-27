@@ -6,33 +6,92 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('pages')) die('Illegal file access');
 
+# Render pages admin search
+function getPagesSearch(): string {
+    global $afile, $tpl;
+    $search = getVar('req', 'search', 'num', 2);
+    $chng = (string)getVar('req', 'chng');
+    $stat = getVar('req', 'status', 'num', 0);
+    $search = ($search >= 1 && $search <= 5) ? $search : 2;
+    $opts =
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _TITLE, 'is_selected' => $search === 2]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _CATEGORY, 'is_selected' => $search === 4]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _IP, 'is_selected' => $search === 5]);
+    $form = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php?name=pages',
+        'hidden' => array_filter([
+            $stat === 1 ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
+        ]),
+        'content_html' =>
+            _SEARCH.': '.
+            $tpl->getHtmlFrag('select', ['name_attr' => 'search', 'options_html' => $opts]).
+            ' '.
+            $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'chng', 'value_attr' => $chng, 'maxlength_num' => 60]).
+            ' '.
+            $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+    ]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+}
+
 function pages(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
+    $search = getVar('req', 'search', 'num', 2);
+    $chng = (string)getVar('req', 'chng');
+    $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['pages']['anum'] ?? 25;
     $anump = $conf['pages']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
-    if (getVar('get', 'status', 'num', 0) == 1) {
+    $sub = getPagesSearch();
+    if (getVar('req', 'status', 'num', 0) == 1) {
         $status = '0';
-        $field = 'name=pages&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2, 'subtitle_html' => $sub]);
     } else {
         $status = '1';
-        $field = 'name=pages&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'subtitle_html' => $sub]);
     }
-    $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    $where = 'p.status = :status';
+    $wcnt = 'status = :status';
+    $pars = ['status' => $status];
+    if ($chng !== '') {
+        if ($search === 1) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND p.id LIKE :find';
+            $wcnt .= ' AND id LIKE :find';
+        } elseif ($search === 2) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND p.title LIKE :find';
+            $wcnt .= ' AND title LIKE :find';
+        } elseif ($search === 3) {
+            $pars['fnam'] = '%'.$chng.'%';
+            $pars['fusr'] = '%'.$chng.'%';
+            $where .= ' AND (p.name LIKE :fnam OR u.name LIKE :fusr)';
+            $wcnt .= ' AND (name LIKE :fnam OR uid IN (SELECT id FROM '.PREFIX_DB.'_users WHERE name LIKE :fusr))';
+        } elseif ($search === 4) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND p.cid IN (SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = \'pages\' AND title LIKE :find)';
+            $wcnt .= ' AND cid IN (SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = \'pages\' AND title LIKE :find)';
+        } elseif ($search === 5) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND p.ip LIKE :find';
+            $wcnt .= ' AND ip LIKE :find';
+        }
+    }
+    $field = 'name=pages'.($status === '0' ? '&amp;status=1' : '').'&amp;search='.$search.($chng !== '' ? '&amp;chng='.urlencode($chng) : '').'&amp;';
+    $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE '.$where.' ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = $cid ? $ctitle : _NO;
             $ip = $ip ? user_geo_ip($ip, 4) : _NO;
-            $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
+            $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
             $items = [];
             if ($status && time() >= strtotime($time)) {
                 $items[] = ['href' => 'index.php?name=pages&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
@@ -49,35 +108,71 @@ function pages(): void {
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['is_col_id' => true, 'content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
                     ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
-                            ['label' => _CATEGORY, 'value' => $ctitle],
+                            ['label' => _CATEGORY, 'value' => $cid ? filterTextHighlight($ctitle, $chng) : _NO],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
-                            ['label' => _IP, 'value' => $ip, 'is_last' => true],
+                            ['label' => _IP, 'value' => $ip ? filterTextHighlight($ip, $chng) : _NO, 'is_last' => true],
                         ],
-                        'label_text' => $title,
                         'title_text' => $title,
-                    ])],
+                    ]).filterTextHighlight($title, $chng)],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
                 ],
             ])]);
         }
-        $body = $tpl->getHtmlFrag('table', [
-            'is_wrapless' => true,
-            'is_fixed' => true,
-            'head' => [
-                ['content' => _ID, 'is_col_id' => true],
-                ['content' => _TITLE, 'is_truncate' => true],
-                ['content' => _POSTEDBY, 'is_col_author' => true],
-                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => $rows,
+        $catopts = '';
+        $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'pages\' ORDER BY ordern ASC');
+        while ([$catid, $cattitle] = $db->getSqlRow($catres)) {
+            $catopts .= $tpl->getHtmlFrag('select-option', [
+                'value_attr' => (string)$catid,
+                'label_text' => $cattitle,
+            ]);
+        }
+        $modopts =
+            $tpl->getHtmlFrag('select-option', ['value_attr' => 'a1', 'label_text' => _ACTIVATE])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'a0', 'label_text' => _DEACTIVATE])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'h1', 'label_text' => _LHOME])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'h0', 'label_text' => _LNHOME])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 't1', 'label_text' => _LADATE])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c0', 'label_text' => _DEACTIVATE])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c1', 'label_text' => _APOSTMOD])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'c2', 'label_text' => _APOSTNOMOD])
+            .$tpl->getHtmlFrag('select-option', ['value_attr' => 'd', 'label_text' => _DELETE]);
+        $actopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _OPMOD, 'is_selected' => true])
+            .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _OPMOD, 'options_html' => $modopts])
+            .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _MOVETO, 'options_html' => $catopts]);
+        $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_pages', 'field' => 'id', 'where' => $wcnt, 'where_params' => $pars]);
+        $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
+            .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
+        $body = $tpl->getHtmlPart('form', [
+            'action_url' => $afile.'.php?name=pages&amp;op=actions',
+            'hidden' => array_filter([
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                $status === '0' ? ['nameattr' => 'refer', 'valueattr' => '1'] : null,
+            ]),
+            'content_html' => $tpl->getHtmlFrag('table', [
+                'is_wrapless' => true,
+                'is_fixed' => true,
+                'head' => [
+                    ['content' => _ID, 'is_col_id' => true],
+                    ['content' => _TITLE, 'is_truncate' => true],
+                    ['content' => _POSTEDBY, 'is_col_author' => true],
+                    ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                    ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'"']), 'is_col_check' => true, 'nosort' => true],
+                ],
+                'rows_html' => $rows,
+            ]),
+            'actions_html' => $tpl->getHtmlFrag('module-foot', [
+                'is_list' => true,
+                'pager_html' => $pager,
+                'actions_html' => $actions,
+            ]),
         ]);
-        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_pages', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -91,7 +186,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $pid = $id;
     if ($pid) {
-        $result = $db->getSqlQuery('SELECT p.cid, p.name, p.title, p.time, p.intro, p.body, p.ihome, p.acomm, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE id = :pid', ['pid' => $pid]);
+        $result = $db->getSqlQuery('SELECT p.cid, p.name, p.title, p.time, p.intro, p.body, p.ihome, p.acomm, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.id = :pid', ['pid' => $pid]);
         [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
@@ -127,7 +222,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows = [
         [
-            'label_html' => _POSTEDBY.':',
+            'label_html' => _POSTEDBY,
             'field_html' => getTplUserSearchInput([
                 'input_id' => 'postname',
                 'list_id' => 'postname_list',
@@ -138,13 +233,13 @@ function add(): void {
                 'value' => $postname,
             ]),
         ],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'pages', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _ENDTEXT.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'pages', 'rows' => 15, 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'pages', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'pages', 'rows' => 15, 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=pages&amp;op=save',
@@ -198,23 +293,60 @@ function save(): void {
         return;
     }
     if ($posttype === 'delete') {
-        delete($pid);
+        updatePagesAction($pid, 'd');
         return;
     }
     setRedirect($afile.'.php?name=pages', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
 
-function delete(int $did = 0): void {
+# Apply selected page list action
+function updatePagesAction(int|array $ids = 0, string $vtyp = ''): void {
     global $db, $afile;
-    $id = $did ?: getVar('req', 'id', 'num', 0);
-    $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
-    $iswarn = !$did && !checkSiteToken();
-    if (!$iswarn && $id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'pages\'', ['id' => $id]);
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'pages\'', ['id' => $id]);
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_pages WHERE id = :id', ['id' => $id]);
+    $id = getVar('req', 'id', 'array', []);
+    $req = $id;
+    if (!is_array($req) || $req === []) {
+        $id = getVar('req', 'id', 'num', 0);
+        $single = $id;
+        $req = ($single > 0) ? [$single] : [];
     }
-    setRedirect($afile.'.php?name=pages'.$refer, false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    if (!is_array($ids)) $ids = ($ids > 0) ? [$ids] : [];
+    $all = array_unique(array_filter(array_map('intval', array_merge($req, $ids)), static fn($val): bool => $val > 0));
+    $typ = $vtyp ?: getVar('post', 'typ', 'text', getVar('get', 'typ', 'text', ''));
+    $refval = getVar('req', 'refer', 'num', 0);
+    $refer = ($refval == 1) ? '&status=1' : '';
+    $iswarn = !checkSiteToken();
+    if (!$iswarn && $all && $typ !== '') {
+        $keys = [];
+        $pars = [];
+        foreach (array_values($all) as $pos => $val) {
+            $key = 'id'.$pos;
+            $keys[] = ':'.$key;
+            $pars[$key] = $val;
+        }
+        $in = implode(', ', $keys);
+        if ($typ[0] === 'a') {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET status = :typ WHERE id IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+        } elseif ($typ[0] === 'h') {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET ihome = :typ WHERE id IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+        } elseif ($typ[0] === 't') {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET time = NOW() WHERE id IN ('.$in.')', $pars);
+        } elseif ($typ[0] === 'c') {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET acomm = :typ WHERE id IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+        } elseif ($typ[0] === 'd') {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$in.') AND modul = \'pages\'', $pars);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'pages\'', $pars);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_pages WHERE id IN ('.$in.')', $pars);
+        } elseif (is_numeric($typ)) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :typ WHERE id IN ('.$in.')', ['typ' => (int)$typ] + $pars);
+        }
+    }
+    $succ = ($typ !== '' && $typ[0] === 'd') ? _SUCCDELETE : _SUCCSTATUS;
+    setRedirect($afile.'.php?name=pages'.$refer, false, 302, $iswarn ? _TOKENMISS : $succ, $iswarn);
+}
+
+function delete(int $did = 0): void {
+    $id = $did ?: getVar('req', 'id', 'num', 0);
+    updatePagesAction($id, 'd');
 }
 
 function config(): void {
@@ -226,13 +358,13 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['pages']['defis'] ?? '')])],
-        ['label_html' => _PAGELINKNUM.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => $conf['pages']['linknum'] ?? 10])],
-        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['pages']['listnum'] ?? 10])],
-        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['pages']['num'] ?? 25])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['pages']['anum'] ?? 25])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['pages']['nump'] ?? 10])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['pages']['anump'] ?? 10])],
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['pages']['defis'] ?? '')])],
+        ['label_html' => _PAGELINKNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'linknum', 'value_attr' => $conf['pages']['linknum'] ?? 10])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['pages']['listnum'] ?? 10])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['pages']['num'] ?? 25])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['pages']['anum'] ?? 25])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['pages']['nump'] ?? 10])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['pages']['anump'] ?? 10])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['pages']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['pages']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['pages']['catdesc'] ?? 0), 'options' => $yesno])],
@@ -299,6 +431,7 @@ switch ($op) {
     default: pages(); break;
     case 'add': add(); break;
     case 'save': save(); break;
+    case 'actions': updatePagesAction(); break;
     case 'delete': delete(); break;
     case 'config': config(); break;
     case 'configsave': configsave(); break;

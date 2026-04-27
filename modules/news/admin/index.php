@@ -6,31 +6,91 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('news')) die('Illegal file access');
 
+# Render news admin search
+function getNewsSearch(): string {
+    global $afile, $tpl;
+    $search = getVar('req', 'search', 'num', 2);
+    $chng = (string)getVar('req', 'chng');
+    $stat = getVar('req', 'status', 'num', 0);
+    $search = ($search >= 1 && $search <= 5) ? $search : 2;
+    $opts =
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _TITLE, 'is_selected' => $search === 2]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _CATEGORY, 'is_selected' => $search === 4]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _IP, 'is_selected' => $search === 5]);
+    $form = $tpl->getHtmlPart('form', [
+        'action_url' => $afile.'.php?name=news',
+        'hidden' => array_filter([
+            $stat === 1 ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
+        ]),
+        'content_html' =>
+            _SEARCH.': '.
+            $tpl->getHtmlFrag('select', ['name_attr' => 'search', 'options_html' => $opts]).
+            ' '.
+            $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'chng', 'value_attr' => $chng, 'maxlength_num' => 60]).
+            ' '.
+            $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
+    ]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+}
+
 function news(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $search = getVar('req', 'search', 'num', 2);
+    $chng = (string)getVar('req', 'chng');
+    $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['news']['anum'] ?? 25;
     $anump = $conf['news']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    if (getVar('get', 'status', 'num', 0) == 1) {
+    $sub = getNewsSearch();
+    if (getVar('req', 'status', 'num', 0) == 1) {
         $status = '0';
-        $field = 'name=news&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2, 'subtitle_html' => $sub]);
     } else {
         $status = '1';
-        $field = 'name=news&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'subtitle_html' => $sub]);
     }
-    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    $where = 's.status = :status';
+    $wcnt = 'status = :status';
+    $pars = ['status' => $status];
+    if ($chng !== '') {
+        if ($search === 1) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND s.id LIKE :find';
+            $wcnt .= ' AND id LIKE :find';
+        } elseif ($search === 2) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND s.title LIKE :find';
+            $wcnt .= ' AND title LIKE :find';
+        } elseif ($search === 3) {
+            $pars['fnam'] = '%'.$chng.'%';
+            $pars['fusr'] = '%'.$chng.'%';
+            $where .= ' AND (s.name LIKE :fnam OR u.name LIKE :fusr)';
+            $wcnt .= ' AND (name LIKE :fnam OR uid IN (SELECT id FROM '.PREFIX_DB.'_users WHERE name LIKE :fusr))';
+        } elseif ($search === 4) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND s.cid IN (SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' AND title LIKE :find)';
+            $wcnt .= ' AND cid IN (SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' AND title LIKE :find)';
+        } elseif ($search === 5) {
+            $pars['find'] = '%'.$chng.'%';
+            $where .= ' AND s.ip LIKE :find';
+            $wcnt .= ' AND ip LIKE :find';
+        }
+    }
+    $field = 'name=news'.($status === '0' ? '&amp;status=1' : '').'&amp;search='.$search.($chng !== '' ? '&amp;chng='.urlencode($chng) : '').'&amp;';
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE '.$where.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
+            $ctit = $ctitle ?: _NO;
+            $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
             $items = [];
             if ($status && time() >= strtotime($time)) {
                 $items[] = ['href' => 'index.php?name=news&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
@@ -48,16 +108,15 @@ function news(): void {
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['is_col_id' => true, 'content_html' => (string)$id],
+                    ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
                     ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                         'items' => [
-                            ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
+                            ['label' => _CATEGORY, 'value' => $cid ? filterTextHighlight($ctit, $chng) : _NO],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
-                            ['label' => _IP, 'value' => $ip ? user_geo_ip($ip, 4) : _NO, 'is_last' => true],
+                            ['label' => _IP, 'value' => $ip ? filterTextHighlight(user_geo_ip($ip, 4), $chng) : _NO, 'is_last' => true],
                         ],
-                        'label_text' => $title,
                         'title_text' => $title,
-                    ])],
+                    ]).filterTextHighlight($title, $chng)],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -87,7 +146,7 @@ function news(): void {
         $actopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _OPMOD, 'is_selected' => true])
             .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _OPMOD, 'options_html' => $modopts])
             .$tpl->getHtmlFrag('select-optgroup', ['label_text' => _MOVETO, 'options_html' => $catopts]);
-        $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => 'status = \''.$status.'\'']);
+        $pager = getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => $field, 'table' => '_news', 'field' => 'id', 'where' => $wcnt, 'where_params' => $pars]);
         $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
         $body = $tpl->getHtmlPart('form', [
@@ -105,7 +164,7 @@ function news(): void {
                     ['content' => _POSTEDBY, 'is_col_author' => true],
                     ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
                     ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl-check\')"']), 'is_col_check' => true, 'nosort' => true],
+                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'"']), 'is_col_check' => true, 'nosort' => true],
                 ],
                 'rows_html' => $rows,
             ]),
@@ -207,7 +266,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows = [
         [
-            'label_html' => _POSTEDBY.':',
+            'label_html' => _POSTEDBY,
             'field_html' => getTplUserSearchInput([
                 'input_id' => 'postname',
                 'list_id' => 'postname_list',
@@ -218,14 +277,14 @@ function add(): void {
                 'value' => $postname,
             ]),
         ],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'news', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1', 'autofocus' => true]), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _ENDTEXT.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'news', 'rows' => 15, 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
-        ['label_html' => _VOTING.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'vote', 'options_html' => $voteopts])],
+        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'news', 'rows' => 5, 'placeholder' => _TEXT, 'required' => '1', 'autofocus' => true]), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'news', 'rows' => 15, 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _VOTING, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'vote', 'options_html' => $voteopts])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
         ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => (string)$fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assohtml, 'is_full' => true],
     ];
@@ -357,14 +416,14 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
-        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['news']['defis'] ?? '')])],
-        ['label_html' => _BASCOL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => $conf['news']['bascol'] ?? 1])],
-        ['label_html' => _C_11.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asocnum', 'value_attr' => $conf['news']['asocnum'] ?? 10])],
-        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['news']['listnum'] ?? 10])],
-        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['news']['num'] ?? 25])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['news']['anum'] ?? 25])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['news']['nump'] ?? 10])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['news']['anump'] ?? 10])],
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['news']['defis'] ?? '')])],
+        ['label_html' => _BASCOL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => $conf['news']['bascol'] ?? 1])],
+        ['label_html' => _C_11, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asocnum', 'value_attr' => $conf['news']['asocnum'] ?? 10])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => $conf['news']['listnum'] ?? 10])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['news']['num'] ?? 25])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => $conf['news']['anum'] ?? 25])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => $conf['news']['nump'] ?? 10])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['news']['anump'] ?? 10])],
         ['label_html' => _HOMCAT, 'field_html' => getTplRadioGroup(['name' => 'homcat', 'value' => (string)($conf['news']['homcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _VIEWCAT, 'field_html' => getTplRadioGroup(['name' => 'viewcat', 'value' => (string)($conf['news']['viewcat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_32, 'field_html' => getTplRadioGroup(['name' => 'catdesc', 'value' => (string)($conf['news']['catdesc'] ?? 0), 'options' => $yesno])],
