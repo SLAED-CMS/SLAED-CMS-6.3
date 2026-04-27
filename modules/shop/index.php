@@ -342,7 +342,7 @@ function kasse(): void {
 		[_SDOM, 'url', 'sdom', $sdom, _SDOMB, false],
 	] as [$label, $type, $name, $value, $placeholder, $required]) {
 		$fields .= $tpl->getHtmlFrag('form-field-row', [
-			'label' => $label.':',
+				'label' => $label,
 			'field_html' => $tpl->getHtmlFrag('input', [
 				'itype' => $type,
 				'name_attr' => $name,
@@ -353,7 +353,7 @@ function kasse(): void {
 		]);
 	}
 	$fields .= $tpl->getHtmlFrag('form-field-row', [
-		'label' => _C_MESSAGE.':',
+			'label' => _C_MESSAGE,
 		'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'smsg', 'rows_num' => 5, 'value_text' => $smsg, 'placeholder_text' => _C_MESSAGE]),
 	]);
 	$form = $tpl->getHtmlPart('form-add', [
@@ -669,7 +669,7 @@ function partners(): void {
 			$rows = '';
 			foreach ($fields as [$label, $type, $name, $value, $placeholder, $required]) {
 				$rows .= $tpl->getHtmlFrag('form-field-row', [
-					'label' => $label.':',
+						'label' => $label,
 					'field_html' => $tpl->getHtmlFrag('input', [
 						'itype' => $type,
 						'name_attr' => $name,

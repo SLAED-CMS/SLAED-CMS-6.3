@@ -290,7 +290,7 @@ function clientadd(): void {
         ]);
     }
     $rows[] = [
-        'label_html' => _USER_ID.':',
+        'label_html' => _USER_ID,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'uid',
@@ -307,16 +307,16 @@ function clientadd(): void {
             'is_selected' => $product == $pid,
         ]);
     }
-    $rows[] = ['label_html' => _CLIENTNAME.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cname', 'value_attr' => $cname, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _CLIENTADRES.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'caddr', 'value_attr' => $caddr, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _CLIENTPHONE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cphone', 'value_attr' => $cphone, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _EMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _CLIENTSTR.':', 'field_html' => getTplAddDateTime(['name' => 'cregdate', 'time' => $cregdate, 'with' => true, 'max' => 16])];
-    $rows[] = ['label_html' => _CLIENTEND.':', 'field_html' => getTplAddDateTime(['name' => 'cenddate', 'time' => $cenddate, 'with' => true, 'max' => 16])];
-    $rows[] = ['label_html' => _PRODUCT.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'options_html' => $prodopts])];
+    $rows[] = ['label_html' => _CLIENTNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cname', 'value_attr' => $cname, 'is_required' => true, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _CLIENTADRES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'caddr', 'value_attr' => $caddr, 'is_required' => true, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _CLIENTPHONE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cphone', 'value_attr' => $cphone, 'is_required' => true, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _CLIENTSTR, 'field_html' => getTplAddDateTime(['name' => 'cregdate', 'time' => $cregdate, 'with' => true, 'max' => 16])];
+    $rows[] = ['label_html' => _CLIENTEND, 'field_html' => getTplAddDateTime(['name' => 'cenddate', 'time' => $cenddate, 'with' => true, 'max' => 16])];
+    $rows[] = ['label_html' => _PRODUCT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'options_html' => $prodopts])];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'cactive', 'value' => $cactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_html' => _NOTE.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
+    $rows[] = ['label_html' => _NOTE, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'cinfo', 'value_text' => $cinfo, 'rows_num' => 5]), 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($cid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
@@ -591,8 +591,8 @@ function productadd(): void {
         ]);
     }
     $rows = [
-        ['label_html' => _TITLE.' / '._PRODUCT.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ptitle', 'value_attr' => $ptitle, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'pcid', 'options_html' => $catopts])],
+        ['label_html' => _TITLE.' / '._PRODUCT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ptitle', 'value_attr' => $ptitle, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
+        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'pcid', 'options_html' => $catopts])],
     ];
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
@@ -607,15 +607,15 @@ function productadd(): void {
         }
         $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
     }
-    $rows[] = ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'ptext', 'value' => $ptext, 'mod' => 'shop', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true];
-    $rows[] = ['label_html' => _ENDTEXT.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'pbodytext', 'value' => $pbodytext, 'mod' => 'shop', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true];
-    $rows[] = ['label_html' => _PREIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
+    $rows[] = ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'ptext', 'value' => $ptext, 'mod' => 'shop', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true];
+    $rows[] = ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'pbodytext', 'value' => $pbodytext, 'mod' => 'shop', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true];
+    $rows[] = ['label_html' => _PREIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pprice', 'value_attr' => $pprice, 'maxlength_num' => 10, 'placeholder_text' => _PREIS, 'is_required' => true])];
     $commopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DEACTIVATE, 'is_selected' => $acomm == 0])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
-    $rows[] = ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'ptime', 'time' => $ptime, 'with' => true, 'max' => 16])];
-    $rows[] = ['label_html' => _VOTING.':', 'field_html' => add_voting('shop', 'vote', $vote, 'sl-form-control')];
-    $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])];
+    $rows[] = ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'ptime', 'time' => $ptime, 'with' => true, 'max' => 16])];
+    $rows[] = ['label_html' => _VOTING, 'field_html' => add_voting('shop', 'vote', $vote, 'sl-form-control')];
+    $rows[] = ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])];
     $rows[] = ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => $ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _FIXED.'?', 'field_html' => getTplRadioGroup(['name' => 'fix', 'value' => $fix, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $rows[] = ['label_html' => _ACTIVATEP, 'field_html' => getTplRadioGroup(['name' => 'pactive', 'value' => $pactive, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
@@ -873,23 +873,23 @@ function partneradd(): void {
     $rows = [];
     if ($paid) {
         $nick = ($nick) ? user_info($nick) : _ANONYM;
-        $rows[] = ['label_html' => _NICKNAME.':', 'field_html' => $nick];
+        $rows[] = ['label_html' => _NICKNAME, 'field_html' => $nick];
     }
     $uidfield = ($uid == 0)
         ? $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'uid', 'value_attr' => (string)$uid, 'placeholder_text' => _USER_ID, 'is_required' => true])
         : $tpl->getHtmlFrag('hidden', ['nameattr' => 'uid', 'valueattr' => (string)$uid]).$uid;
-    $rows[] = ['label_html' => _USER_ID.':', 'field_html' => $uidfield];
-    $rows[] = ['label_html' => _CLIENTNAME.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paname', 'value_attr' => $paname, 'is_required' => true])];
-    $rows[] = ['label_html' => _CLIENTADRES.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paaddr', 'value_attr' => $paaddr, 'is_required' => true])];
-    $rows[] = ['label_html' => _CLIENTPHONE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paphone', 'value_attr' => $paphone, 'is_required' => true])];
-    $rows[] = ['label_html' => _EMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'paemail', 'value_attr' => $paemail])];
-    $rows[] = ['label_html' => _SITE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'pawebsite', 'value_attr' => $pawebsite])];
-    $rows[] = ['label_html' => _WEBMONEY.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'value_attr' => $pawebmoney])];
-    $rows[] = ['label_html' => _PAYPAL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'papaypal', 'value_attr' => $papaypal])];
-    $rows[] = ['label_html' => _REG.':', 'field_html' => getTplAddDateTime(['name' => 'paregdate', 'time' => $paregdate, 'with' => true, 'max' => 16])];
+    $rows[] = ['label_html' => _USER_ID, 'field_html' => $uidfield];
+    $rows[] = ['label_html' => _CLIENTNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paname', 'value_attr' => $paname, 'is_required' => true])];
+    $rows[] = ['label_html' => _CLIENTADRES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paaddr', 'value_attr' => $paaddr, 'is_required' => true])];
+    $rows[] = ['label_html' => _CLIENTPHONE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paphone', 'value_attr' => $paphone, 'is_required' => true])];
+    $rows[] = ['label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'paemail', 'value_attr' => $paemail])];
+    $rows[] = ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'pawebsite', 'value_attr' => $pawebsite])];
+    $rows[] = ['label_html' => _WEBMONEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'value_attr' => $pawebmoney])];
+    $rows[] = ['label_html' => _PAYPAL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'papaypal', 'value_attr' => $papaypal])];
+    $rows[] = ['label_html' => _REG, 'field_html' => getTplAddDateTime(['name' => 'paregdate', 'time' => $paregdate, 'with' => true, 'max' => 16])];
     if ($paactive != 2) {
-        $rows[] = ['label_html' => _PARTNERREST.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'parest', 'value_attr' => $parest])];
-        $rows[] = ['label_html' => _PARTNERBEK.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pabek', 'value_attr' => $pabek])];
+        $rows[] = ['label_html' => _PARTNERREST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'parest', 'value_attr' => $parest])];
+        $rows[] = ['label_html' => _PARTNERBEK, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pabek', 'value_attr' => $pabek])];
     }
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'paactive', 'value' => $paactive, 'options' => [['value' => '2', 'label' => _NEW], ['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
@@ -1106,7 +1106,7 @@ function export(): void {
                     ['nameattr' => 'token', 'valueattr' => getSiteToken()],
                 ],
                 'rows' => [[
-                    'label_html' => _DATABASE.':',
+                    'label_html' => _DATABASE,
                     'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'bd', 'options_html' => $bdopts]),
                 ]],
                 'submit_label' => _SAVE,
@@ -1137,7 +1137,7 @@ function export(): void {
                     ['nameattr' => 'token', 'valueattr' => getSiteToken()],
                 ],
                 'rows' => [[
-                    'label_html' => _FILE.':',
+                    'label_html' => _FILE,
                     'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'bd', 'options_html' => $ocont]),
                 ]],
                 'submit_label' => _SEND,
@@ -1183,24 +1183,24 @@ function config(): void {
         ],
     ]);
     $rows = [
-        ['label_html' => _CDEFIS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['shop']['defis'] ?? '')])],
-        ['label_html' => _C_0.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients', 'value_attr' => (string)$conf['shop']['clients']])],
-        ['label_html' => _C_2.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients1', 'value_attr' => (string)$conf['shop']['clients1']])],
-        ['label_html' => _C_4.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients2', 'value_attr' => (string)$conf['shop']['clients2']])],
-        ['label_html' => _C_1.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz', 'value_attr' => (string)$conf['shop']['proz']])],
-        ['label_html' => _C_3.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz1', 'value_attr' => (string)$conf['shop']['proz1']])],
-        ['label_html' => _C_5.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz2', 'value_attr' => (string)$conf['shop']['proz2']])],
-        ['label_html' => _C_6.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'valute', 'value_attr' => (string)$conf['shop']['valute']])],
-        ['label_html' => _C_7.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)$conf['shop']['mail']])],
-        ['label_html' => _C_8.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shop', 'value_attr' => (string)intval($conf['shop']['shop_t'] / 86400)])],
-        ['label_html' => _C_9.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'partdays', 'value_attr' => (string)intval($conf['shop']['part_t'] / 86400)])],
-        ['label_html' => _BASCOL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => (string)$conf['shop']['bascol']])],
-        ['label_html' => _C_11.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'assocnum', 'value_attr' => (string)$conf['shop']['assocnum']])],
-        ['label_html' => _C_13.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)$conf['shop']['listnum']])],
-        ['label_html' => _C_33.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['shop']['num']])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['shop']['anum']])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['shop']['nump']])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['shop']['anump']])],
+        ['label_html' => _CDEFIS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'defis', 'value_attr' => urldecode($conf['shop']['defis'] ?? '')])],
+        ['label_html' => _C_0, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients', 'value_attr' => (string)$conf['shop']['clients']])],
+        ['label_html' => _C_2, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients1', 'value_attr' => (string)$conf['shop']['clients1']])],
+        ['label_html' => _C_4, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'clients2', 'value_attr' => (string)$conf['shop']['clients2']])],
+        ['label_html' => _C_1, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz', 'value_attr' => (string)$conf['shop']['proz']])],
+        ['label_html' => _C_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz1', 'value_attr' => (string)$conf['shop']['proz1']])],
+        ['label_html' => _C_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'proz2', 'value_attr' => (string)$conf['shop']['proz2']])],
+        ['label_html' => _C_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'valute', 'value_attr' => (string)$conf['shop']['valute']])],
+        ['label_html' => _C_7, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)$conf['shop']['mail']])],
+        ['label_html' => _C_8, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'shop', 'value_attr' => (string)intval($conf['shop']['shop_t'] / 86400)])],
+        ['label_html' => _C_9, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'partdays', 'value_attr' => (string)intval($conf['shop']['part_t'] / 86400)])],
+        ['label_html' => _BASCOL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'bascol', 'value_attr' => (string)$conf['shop']['bascol']])],
+        ['label_html' => _C_11, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'assocnum', 'value_attr' => (string)$conf['shop']['assocnum']])],
+        ['label_html' => _C_13, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'listnum', 'value_attr' => (string)$conf['shop']['listnum']])],
+        ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['shop']['num']])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['shop']['anum']])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['shop']['nump']])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['shop']['anump']])],
         ['label_html' => _HOMCAT, 'field_html' => $yesno('homcat', $conf['shop']['homcat'])],
         ['label_html' => _VIEWCAT, 'field_html' => $yesno('viewcat', $conf['shop']['viewcat'])],
         ['label_html' => _C_32, 'field_html' => $yesno('catdesc', $conf['shop']['catdesc'])],
@@ -1214,11 +1214,11 @@ function config(): void {
         ['label_html' => _C_24, 'field_html' => $yesno('mailsend', $conf['shop']['mailsend'])],
         ['label_html' => _C_25, 'field_html' => $yesno('part', $conf['shop']['part'])],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _C_26, 'hint' => _PART_ID]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'partlink_view', 'value_attr' => (string)$conf['shop']['partlink'], 'input_attr' => ' readonly']), 'is_full' => true],
-        ['label_html' => _C_27.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'sende', 'value_text' => (string)$conf['shop']['sende'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_html' => _C_28.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'userinfo', 'value_text' => (string)$conf['shop']['userinfo'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_html' => _C_29.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo', 'value_text' => (string)$conf['shop']['partinfo'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_html' => _C_30.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
-        ['label_html' => _C_31.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'shopinfo', 'value_text' => (string)$conf['shop']['shopinfo'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_27, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'sende', 'value_text' => (string)$conf['shop']['sende'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_28, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'userinfo', 'value_text' => (string)$conf['shop']['userinfo'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_29, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo', 'value_text' => (string)$conf['shop']['partinfo'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_30, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'partinfo2', 'value_text' => (string)$conf['shop']['partinfo2'], 'rows_num' => 5]), 'is_full' => true],
+        ['label_html' => _C_31, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'shopinfo', 'value_text' => (string)$conf['shop']['shopinfo'], 'rows_num' => 5]), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',

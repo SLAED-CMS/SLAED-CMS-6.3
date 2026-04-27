@@ -189,7 +189,7 @@ function send(): void {
         $code = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedSlogan.'&quot;&gt;'.$embedSite.'&lt;/a&gt;';
         $rows = [[
             'cells' => [
-            ['text' => _A_LINKS_M.':'],
+            ['text' => _A_LINKS_M],
             ['content_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'description', 'rows_num' => 5, 'value_text' => $code])],
             ],
         ]];
@@ -202,7 +202,7 @@ function send(): void {
                 $code  = '&lt;a href=&quot;'.$embedHome.'&quot; target=&quot;_blank&quot; title=&quot;'.$embedTitle.'&quot;&gt;&lt;img src=&quot;'.$embedSrc.'&quot; alt=&quot;'.$embedTitle.'&quot; class=&quot;sl-embed-img&quot; width=&quot;'.$imgwidth.'&quot; height=&quot;'.$imgheight.'&quot;&gt;&lt;/a&gt;';
                 $rows[] = [
                     'cells' => [
-                    ['text' => _A_LINKS_IMG.':'],
+                    ['text' => _A_LINKS_IMG],
                     ['content_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'description', 'rows_num' => 5, 'value_text' => $code])],
                     ],
                 ];

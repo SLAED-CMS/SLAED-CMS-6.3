@@ -28,8 +28,8 @@ function setComShow(int $id = 0, int $cid = 0): string {
                 'value_attr' => _ANONYM,
             ]);
         }
-        $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME.':', 'field_html' => $name_field])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _COMMENT.':', 'field_html' => getTplTextarea(['id' => 1, 'name' => 'text', 'value' => '', 'mod' => $conf['name'], 'rows' => '5'])]);
+        $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $name_field])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _COMMENT, 'field_html' => getTplTextarea(['id' => 1, 'name' => 'text', 'value' => '', 'mod' => $conf['name'], 'rows' => '5'])]);
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
@@ -483,9 +483,9 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                     'maxlength' => 25,
                     'value' => $rpost,
             ]);
-            $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _PRRE.':', 'field_html' => $recipient])
-                .$tpl->getHtmlFrag('form-field-row', ['label' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $rtitle, 'maxlength_num' => 100])])
-                .$tpl->getHtmlFrag('form-field-row', ['label' => _MESSAGE.':', 'field_html' => getTplTextarea(['id' => $idp, 'name' => 'text', 'value' => $rcontent, 'mod' => $conf['name'], 'rows' => '15'])]);
+            $fields = $tpl->getHtmlFrag('form-field-row', ['label' => _PRRE, 'field_html' => $recipient])
+                .$tpl->getHtmlFrag('form-field-row', ['label' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $rtitle, 'maxlength_num' => 100])])
+                .$tpl->getHtmlFrag('form-field-row', ['label' => _MESSAGE, 'field_html' => getTplTextarea(['id' => $idp, 'name' => 'text', 'value' => $rcontent, 'mod' => $conf['name'], 'rows' => '15'])]);
             $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
                 'label' => _SEND,
                 'title' => _SEND,

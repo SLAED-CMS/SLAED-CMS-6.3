@@ -458,7 +458,7 @@ function add(): void {
                 'label_html' => $tpl->getHtmlFrag('link', [
                     'href' => '#',
                     'title' => _ADD,
-                    'label' => _URL.' - '.$a.':',
+                    'label' => _URL.' - '.$a,
                     'is_plus' => true,
                     'onclick_attr' => 'onclick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500); return false;"',
                 ]),

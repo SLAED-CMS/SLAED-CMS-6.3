@@ -19,10 +19,10 @@ function account(): void {
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
-            'label' => _NICKNAME.':',
+            'label' => _NICKNAME,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'user_name', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
         ]).$tpl->getHtmlFrag('form-field-row', [
-            'label' => _PASSWORD.':',
+            'label' => _PASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
         ]);
         $after = $tpl->getHtmlFrag('block-content', [
@@ -84,21 +84,21 @@ function newuser(): void {
             $mail = ($mail) ? filterText($mail) : '';
             $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
             $fields = $tpl->getHtmlFrag('form-field-row', [
-                'label' => _NICKNAME.':',
+                'label' => _NICKNAME,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'value_attr' => $nick, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => _EMAIL.':',
+                'label' => _EMAIL,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD.':',
+                'label' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD.':',
+                'label' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
             ]);
             if (!empty($conf['users']['rule'])) {
                 $fields .= $tpl->getHtmlFrag('form-field-row', [
-                    'label' => _RULES.':',
+                    'label' => _RULES,
                     'field_html' => $tpl->getHtmlFrag('textarea', ['rows_num' => 10, 'cols_num' => 50, 'value_text' => $conf['users']['rules'], 'is_readonly' => true]),
                 ]).$tpl->getHtmlFrag('form-field-row', [
                     'label' => _RULES_OK,
@@ -163,8 +163,8 @@ function finnewuser(): void {
             if ($conf['users']['nomail'] == 1) {
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]);
                 $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]);
-                $fields = $tpl->getHtmlFrag('field-value', ['label' => _UNICKNAME.':', 'value_text' => $nick])
-                    .$tpl->getHtmlFrag('field-value', ['label' => _UPASSWORD.':', 'value_text' => $pass]);
+                $fields = $tpl->getHtmlFrag('field-value', ['label' => _UNICKNAME, 'value_text' => $nick])
+                    .$tpl->getHtmlFrag('field-value', ['label' => _UPASSWORD, 'value_text' => $pass]);
                 $hidden = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => $conf['name']])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'activate'])
                     .$tpl->getHtmlFrag('hidden', ['name_attr' => 'user', 'value_attr' => urlencode($nick)])
@@ -723,12 +723,12 @@ function passlost(): void {
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
-            'label' => _EMAIL.':',
+            'label' => _EMAIL,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
         ]);
         if (!empty($email)) {
             $fields .= $tpl->getHtmlFrag('form-field-row', [
-                'label' => _CONFIRMATIONCODE.':',
+                'label' => _CONFIRMATIONCODE,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'code', 'value_attr' => $code ?: '', 'maxlength_num' => 10, 'placeholder_text' => _CONFIRMATIONCODE, 'is_required' => true]),
             ]);
         }
@@ -874,24 +874,24 @@ function edithome(): void {
                 'is_selected' => $key == (int)$userinfo['gender'],
             ]);
         }
-        $fields = $tpl->getHtmlFrag('field-value', ['label' => _IP.':', 'value_text' => $userinfo['ip']])
-            .$tpl->getHtmlFrag('field-value', ['label' => _REG.':', 'value_text' => format_time($userinfo['regdate'])]);
+        $fields = $tpl->getHtmlFrag('field-value', ['label' => _IP, 'value_text' => $userinfo['ip']])
+            .$tpl->getHtmlFrag('field-value', ['label' => _REG, 'value_text' => format_time($userinfo['regdate'])]);
         if (!empty($conf['users']['point'])) {
-            $fields .= $tpl->getHtmlFrag('field-value', ['label' => _POINTS.':', 'value_text' => $userinfo['points']]);
+            $fields .= $tpl->getHtmlFrag('field-value', ['label' => _POINTS, 'value_text' => $userinfo['points']]);
         }
-        $fields .= $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME.':', 'value_text' => $userinfo['name']])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _BIRTHDAY.':', 'field_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _GENDER.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_account' => true, 'options_html' => $genderOptions])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _YOUREMAIL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $userinfo['email'], 'maxlength_num' => 60, 'placeholder_text' => _YOUREMAIL, 'is_required' => true])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _SITEURL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $userinfo['website'], 'maxlength_num' => 100, 'placeholder_text' => _SITEURL])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _OCCUPATION.':', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'occ', 'value_attr' => $userinfo['occ'], 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _LOCALITYLANG.':', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'from', 'value_attr' => $userinfo['origin'], 'maxlength_num' => 100, 'placeholder_text' => _LOCALITYLANG])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _INTERESTS.':', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'inter', 'value_attr' => $userinfo['interest'], 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _SIGNATURE.':', 'field_html' => getTplTitleTip(_SIGNATURE_TEXT).getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $userinfo['sig'], 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '0'])])
+        $fields .= $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME, 'value_text' => $userinfo['name']])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _BIRTHDAY, 'field_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _GENDER, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_account' => true, 'options_html' => $genderOptions])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _YOUREMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $userinfo['email'], 'maxlength_num' => 60, 'placeholder_text' => _YOUREMAIL, 'is_required' => true])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $userinfo['website'], 'maxlength_num' => 100, 'placeholder_text' => _SITEURL])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _OCCUPATION, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'occ', 'value_attr' => $userinfo['occ'], 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _LOCALITYLANG, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'from', 'value_attr' => $userinfo['origin'], 'maxlength_num' => 100, 'placeholder_text' => _LOCALITYLANG])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _INTERESTS, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'inter', 'value_attr' => $userinfo['interest'], 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _SIGNATURE, 'field_html' => getTplTitleTip(_SIGNATURE_TEXT).getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $userinfo['sig'], 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '0'])])
             .getTplFieldsIn(['field' => $userinfo['field'], 'mod' => $conf['name']]);
         $submitExtra = $tpl->getHtmlFrag('hidden', ['name_attr' => 'user_name', 'value_attr' => $userinfo['name']]);
         if ($conf['users']['news'] == 1) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _C_12.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'story', 'options_html' => $story])]);
+            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _C_12, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'story', 'options_html' => $story])]);
         } else {
             $submitExtra .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'story', 'value_attr' => $conf['news']['num'] ?? 0]);
         }
@@ -904,9 +904,9 @@ function edithome(): void {
         }
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ALLOWUSERS, 'field_html' => getTplRadioGroup(['name' => 'view', 'value' => ((string)$userinfo['viewmail'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _ACTIVATEPERSONAL, 'field_html' => getTplRadioGroup(['name' => 'blockon', 'value' => ((string)$userinfo['blockon'] === '0') ? '0' : '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _MENUCONF.':', 'field_html' => getTplTitleTip(_MENUINFO).getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $userinfo['block'], 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _MENUCONF, 'required' => '0'])]);
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _MENUCONF, 'field_html' => getTplTitleTip(_MENUINFO).getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $userinfo['block'], 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _MENUCONF, 'required' => '0'])]);
         if ($tcount > 1) {
-            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _THEME.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'options_html' => $theme])]);
+            $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _THEME, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'options_html' => $theme])]);
         }
         $change = $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
@@ -917,7 +917,7 @@ function edithome(): void {
         $asetup = $tpl->getHtmlPart('content-list', [
             'rows' => [[
                 'cells' => [
-                    ['primary_text' => _AVATAR.':', 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
+                    ['primary_text' => _AVATAR, 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
                     ['img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
                 ],
             ]],
@@ -928,7 +928,7 @@ function edithome(): void {
             $asetup .= $tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$tpl->getHtmlFrag('form-field-row', [
-                    'label' => _AVATAR_USER.':',
+                    'label' => _AVATAR_USER,
                     'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile']),
                 ]),
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'saveavatar', 'label' => _UPLOAD]),
@@ -973,13 +973,13 @@ function edithome(): void {
         [$network] = $db->getSqlRow($db->getSqlQuery('SELECT network FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
         if (empty($network)) {
             $fields = $tpl->getHtmlFrag('form-field-row', [
-                'label' => _PASSNEW.':',
+                'label' => _PASSNEW,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'newpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => _PASSNEW2.':',
+                'label' => _PASSNEW2,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'newpass2', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW2, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => _PASSOLD.':',
+                'label' => _PASSOLD,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'oldpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSOLD, 'is_required' => true]),
             ]);
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT])

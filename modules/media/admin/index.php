@@ -186,7 +186,7 @@ function add(): void {
         $linkshtml .= $tpl->getHtmlPart('toggle-form-block', [
             'block_id' => 'med'.$i,
             'is_hidden' => $hidden,
-            'label_html' => _ADD.' '.$a.':',
+            'label_html' => _ADD.' '.$a,
             'content_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'links[]',
@@ -200,7 +200,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTMOD, 'is_selected' => $acomm == 1])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _APOSTNOMOD, 'is_selected' => $acomm == 2]);
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+        ['label_html' => _POSTEDBY, 'field_html' => getTplUserSearchInput([
             'input_id' => 'postname',
             'list_id' => 'postname_list',
             'maxlength' => 25,
@@ -209,25 +209,25 @@ function add(): void {
             'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
             'value' => $postname,
         ])],
-        ['label_html' => _MTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _MSUBTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => 255])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
-        ['label_html' => _MYEAR.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearopts])],
-        ['label_html' => _MDIRECTOR.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director])],
-        ['label_html' => _MROLES.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles])],
-        ['label_html' => _DESCRIPTION.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'media', 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _MCREATEDBY.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby])],
-        ['label_html' => _MDURATION.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration])],
-        ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langopts])],
-        ['label_html' => _NOTE.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => 'media', 'rows' => '10', 'placeholder' => _NOTE, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _MFORMAT.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $formatopts])],
-        ['label_html' => _MQUALITY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $qualityopts])],
-        ['label_html' => _MSIZE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size])],
-        ['label_html' => _MRELEASED.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released])],
+        ['label_html' => _MTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _MSUBTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => 255])],
+        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
+        ['label_html' => _MYEAR, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearopts])],
+        ['label_html' => _MDIRECTOR, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director])],
+        ['label_html' => _MROLES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles])],
+        ['label_html' => _DESCRIPTION, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'media', 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _MCREATEDBY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby])],
+        ['label_html' => _MDURATION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration])],
+        ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langopts])],
+        ['label_html' => _NOTE, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => 'media', 'rows' => '10', 'placeholder' => _NOTE, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _MFORMAT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $formatopts])],
+        ['label_html' => _MQUALITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $qualityopts])],
+        ['label_html' => _MSIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size])],
+        ['label_html' => _MRELEASED, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released])],
         ['label_html' => '', 'field_html' => $linkshtml, 'is_full' => true],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'mdate', 'time' => $mdate, 'with' => true, 'max' => 16])],
+        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'mdate', 'time' => $mdate, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _COMMENTS.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
+        ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
     ];
     $posttypeopts
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])

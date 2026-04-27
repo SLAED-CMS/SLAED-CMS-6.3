@@ -159,7 +159,7 @@ function add(): void {
     }
     $rows = [
         [
-            'label_html' => _MA_17.':',
+            'label_html' => _MA_17,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'number',
                 'name_attr' => 'sum',
@@ -168,7 +168,7 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => _MA_18.':',
+            'label_html' => _MA_18,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'email',
                 'name_attr' => 'email',
@@ -183,7 +183,7 @@ function add(): void {
     foreach ($form as $val) {
         if ($val === '') continue;
         $rows[] = [
-            'label_html' => $val.':',
+            'label_html' => $val,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'intro[]',
@@ -195,7 +195,7 @@ function add(): void {
         $i++;
     }
     $rows[] = [
-        'label_html' => _MA_19.':',
+        'label_html' => _MA_19,
         'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'note',
             'value_text' => $note,
@@ -205,7 +205,7 @@ function add(): void {
         'is_full' => true,
     ];
     $rows[] = [
-        'label_html' => _CHNGSTORY.':',
+        'label_html' => _CHNGSTORY,
         'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16]),
     ];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
@@ -349,21 +349,21 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $rows = [
-        ['label_html' => _MA_3.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'proz', 'value_attr' => (string)($conf['money']['proz'] ?? '0')])],
+        ['label_html' => _MA_3, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'proz', 'value_attr' => (string)($conf['money']['proz'] ?? '0')])],
         ['label_html' => _MA_4.': EUR > USD', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs', 'value_attr' => (string)($conf['money']['kurs'] ?? '')])],
         ['label_html' => _MA_4.': EUR > RUB', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'kurs2', 'value_attr' => (string)($conf['money']['kurs2'] ?? '')])],
-        ['label_html' => _MA_5.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'bal', 'value_attr' => (string)($conf['money']['bal'] ?? '')])],
-        ['label_html' => _MA_6.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)($conf['money']['mail'] ?? '')])],
-        ['label_html' => _MA_7.':', 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'form', 'value_text' => (string)($conf['money']['form'] ?? ''), 'rows_num' => 3]), 'is_full' => true],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['money']['anum'] ?? 25)])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['money']['anump'] ?? 10)])],
+        ['label_html' => _MA_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'bal', 'value_attr' => (string)($conf['money']['bal'] ?? '')])],
+        ['label_html' => _MA_6, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => (string)($conf['money']['mail'] ?? '')])],
+        ['label_html' => _MA_7, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'form', 'value_text' => (string)($conf['money']['form'] ?? ''), 'rows_num' => 3]), 'is_full' => true],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)($conf['money']['anum'] ?? 25)])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)($conf['money']['anump'] ?? 10)])],
         ['label_html' => _MA_8, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['money']['an'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_9, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['money']['pr'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_10, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['money']['ad'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _MA_11.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => (string)($conf['money']['text'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_11, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _MA_12.':', 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => (string)($conf['money']['info'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_12, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _MA_13.':', 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => (string)($conf['money']['sendinfo'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_13, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _MA_14.':', 'field_html' => getTplTextarea(['id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_14, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_11, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => (string)($conf['money']['text'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_11, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_12, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => (string)($conf['money']['info'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_12, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_13, 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => (string)($conf['money']['sendinfo'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_13, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_14, 'field_html' => getTplTextarea(['id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_14, 'required' => '1']), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=money&amp;op=configsave',

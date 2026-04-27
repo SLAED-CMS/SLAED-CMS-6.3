@@ -30,7 +30,7 @@ function money(): void {
         ['Rechner2', _MO_3.' E:', 'EUR'],
     ] as [$fnname, $tolbl, $tocur]) {
         $fields = $tpl->getHtmlFrag('form-field-row', [
-            'label' => _MO_2.':',
+            'label' => _MO_2,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'a', 'is_calculator' => true]).' EUR',
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
@@ -56,14 +56,14 @@ function money(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = '';
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_7.':', 'field_html' => $tpl->getHtmlFrag('input', [
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_7, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'sum',
             'value_attr' => (string)$sum,
             'input_attr' => 'placeholder="'._MO_7.'" required',
         ])]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
-            'label' => _MO_8.':',
+            'label' => _MO_8,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email]),
         ]);
         $form = explode(',', $conf['money']['form']);
@@ -71,13 +71,13 @@ function money(): void {
         foreach ($form as $val) {
             if ($val != '') {
                 $rows .= $tpl->getHtmlFrag('form-field-row', [
-                    'label' => $val.':',
+                    'label' => $val,
                     'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
                 ]);
                 $i++;
             }
         }
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_9.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_9, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9])]);
         $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_6]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha(1),

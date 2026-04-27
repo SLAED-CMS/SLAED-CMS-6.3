@@ -76,7 +76,7 @@ function getTplAddFieldRows(array $data = []): array {
         } else {
             $html = '';
         }
-        if ($html != '') $rows[] = ['label_html' => getConst($out[1]).':', 'field_html' => $html];
+        if ($html != '') $rows[] = ['label_html' => getConst($out[1]), 'field_html' => $html];
         $pos++;
     }
     return $rows;
@@ -425,6 +425,8 @@ function getTplRadioGroup(array $data = []): string {
     $name = $data['name'] ?? '';
     $value = $data['value'] ?? '';
     $options = $data['options'] ?? [];
+    $vals = array_map(static fn(array $opt): string => (string)($opt['value'] ?? ''), $options);
+    $swit = array_key_exists('switch', $data) ? (bool)$data['switch'] : count($vals) === 2 && in_array('1', $vals, true) && in_array('0', $vals, true);
     $items = '';
     foreach ($options as $option) {
         $valu = (string)($option['value'] ?? '');
@@ -436,7 +438,7 @@ function getTplRadioGroup(array $data = []): string {
             'value_attr' => $valu,
         ]);
     }
-    return $tpl->getHtmlFrag('block-content', ['is_radio_group' => true, 'content' => $items]);
+    return $tpl->getHtmlFrag('block-content', ['switch' => $swit, 'is_radio_group' => true, 'content' => $items]);
 }
 
 # Render one shared user autocomplete input with datalist-backed lookup

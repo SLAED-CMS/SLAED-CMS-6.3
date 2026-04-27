@@ -47,19 +47,19 @@ function contact(): void {
     setHead(['title' => $title]);
     $cont = $tpl->getHtmlFrag('title', ['title' => $title]);
     $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
-        'label' => _TO.':',
+        'label' => _TO,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'options_html' => $asend]),
     ]) : '';
     $fields .= $tpl->getHtmlFrag('form-field-row', [
-        'label' => _YOURNAME.':',
+        'label' => _YOURNAME,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'sname', 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
-        'label' => _YOUREMAIL.':',
+        'label' => _YOUREMAIL,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
-        'label' => _MESSAGE.':',
+        'label' => _MESSAGE,
         'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
     ]);
     $form = ($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [

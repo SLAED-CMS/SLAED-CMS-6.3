@@ -90,17 +90,17 @@ function getSearchForm(array $state): string {
     global $conf, $tpl;
     $all_opt = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false]);
     $rows = $tpl->getHtmlFrag('form-field-row', [
-        'label' => _MODUL.':',
+        'label' => _MODUL,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mod', 'options_html' => $all_opt.getSearchModList($state['mods'], (string)$state['mod']), 'select_attr' => 'onchange="submit()"']),
     ]);
     if ($state['mod'] === 'media') {
         $rows .= $tpl->getHtmlFrag('form-field-row', [
-            'label' => _SEARCHFROM.':',
+            'label' => _SEARCHFROM,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => getSearchTypeList((int)$state['typ'])]),
         ]);
     }
     $rows .= $tpl->getHtmlFrag('form-field-row', [
-        'label' => _SEARCH.':',
+        'label' => _SEARCH,
         'field_html' => $tpl->getHtmlFrag('input', [
             'input_attr' => 'maxlength="100" placeholder="'._SEARCH.'" required',
             'itype' => 'text',

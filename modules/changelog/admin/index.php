@@ -107,30 +107,30 @@ function config(): void {
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
         [
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_SOURCE.':', 'hint' => _CHLOG_SOURCE_TITLE]),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_SOURCE, 'hint' => _CHLOG_SOURCE_TITLE]),
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'source', 'options_html' => $sourceopts, 'is_config' => true]),
         ],
         [
-            'label_html' => _CHLOG_GH_OWNER.':',
+            'label_html' => _CHLOG_GH_OWNER,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghowner', 'value_attr' => chlogEsc($conf['changelog']['ghowner'] ?? ''), 'is_config' => true]),
             'is_hidden' => $source !== 'github',
         ],
         [
-            'label_html' => _CHLOG_GH_REPO.':',
+            'label_html' => _CHLOG_GH_REPO,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'ghrepo', 'value_attr' => chlogEsc($conf['changelog']['ghrepo'] ?? ''), 'is_config' => true]),
             'is_hidden' => $source !== 'github',
         ],
         [
-            'label_html' => _CHLOG_GH_TOKEN.':',
+            'label_html' => _CHLOG_GH_TOKEN,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'ghtoken', 'value_attr' => chlogEsc($conf['changelog']['ghtoken'] ?? ''), 'is_config' => true]),
             'is_hidden' => $source !== 'github',
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_LIMIT.':', 'hint' => _CHLOG_STATS_TITLE]),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_LIMIT, 'hint' => _CHLOG_STATS_TITLE]),
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50), 'is_config' => true, 'input_attr' => ' min="10" max="500"']),
         ],
-        ['label_html' => _CHLOG_PER_PAGE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true, 'input_attr' => ' min="5" max="50"'])],
-        ['label_html' => _CHLOG_CACHE_TTL.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true, 'input_attr' => ' min="0" max="3600"'])],
+        ['label_html' => _CHLOG_PER_PAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true, 'input_attr' => ' min="5" max="50"'])],
+        ['label_html' => _CHLOG_CACHE_TTL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true, 'input_attr' => ' min="0" max="3600"'])],
         ['label_html' => _CHLOG_GROUP_DATE, 'field_html' => getTplRadioGroup(['name' => 'grpdate', 'value' => (string)($conf['changelog']['grpdate'] ?? 0), 'options' => $yesno])],
         ['label_html' => _CHLOG_SHOW_FILES, 'field_html' => getTplRadioGroup(['name' => 'showfile', 'value' => (string)($conf['changelog']['showfile'] ?? 0), 'options' => $yesno])],
         ['label_html' => _CHLOG_SHOW_STATS, 'field_html' => getTplRadioGroup(['name' => 'showstat', 'value' => (string)($conf['changelog']['showstat'] ?? 0), 'options' => $yesno])],

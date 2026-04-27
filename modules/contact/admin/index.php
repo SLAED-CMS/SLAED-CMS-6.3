@@ -26,7 +26,7 @@ function contact(): void {
             ]),
         ],
         [
-            'label_html' => _CONTACTINFO.':',
+            'label_html' => _CONTACTINFO,
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'info',
                 'value_text' => $conf['contact']['info'],

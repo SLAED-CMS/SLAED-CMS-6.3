@@ -168,30 +168,30 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting')]);
     $rows = [
-        ['label_html' => _TITLE.' / '._POLLTITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
-        ['label_html' => _MODUL.':', 'field_html' => getVotingModuleSelect($modul)],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
-        ['label_html' => _ENDDATE.':', 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
+        ['label_html' => _TITLE.' / '._POLLTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
+        ['label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
+        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
+        ['label_html' => _ENDDATE, 'field_html' => getTplAddDateTime(['name' => 'enddate', 'time' => $enddate, 'with' => true, 'max' => 16])],
     ];
     if ($conf['multilingual'] == 1) {
-        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)])];
+        $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)])];
     }
-    $rows[] = ['label_html' => _COMMENTS.':', 'field_html' => getVotingCommentSelect((int)$acomm)];
+    $rows[] = ['label_html' => _COMMENTS, 'field_html' => getVotingCommentSelect((int)$acomm)];
     $rows[] = ['label_html' => _MULTI, 'field_html' => getTplRadioGroup(['name' => 'multi', 'value' => $multi, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])];
-    $rows[] = ['label_html' => _TYPE.':', 'field_html' => getVotingTypeSelect($typ)];
-    $rows[] = ['label_html' => _AFTEREXPIRATION.':', 'field_html' => getVotingStatusSelect($status)];
+    $rows[] = ['label_html' => _TYPE, 'field_html' => getVotingTypeSelect($typ)];
+    $rows[] = ['label_html' => _AFTEREXPIRATION, 'field_html' => getVotingStatusSelect($status)];
     $answ = '';
     for ($i = 0; $i < $conf['voting']['answ']; $i++) {
         $a = $i + 1;
         $qval = filterText((string)($body[$i] ?? ''));
         $aval = filterText((string)($answer[$i] ?? '0'));
         $answ .= $tpl->getHtmlPart('div', ['rows' => [[
-            'label_html' => _POLLEACH.' - '.$a.':',
+            'label_html' => _POLLEACH.' - '.$a,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
                 .$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES]),
         ]]]);
     }
-    $rows[] = ['label_html' => _ADD.':', 'field_html' => $answ, 'is_full' => true];
+    $rows[] = ['label_html' => _ADD, 'field_html' => $answ, 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])
         .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [

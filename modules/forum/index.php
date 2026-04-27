@@ -239,7 +239,7 @@ function forum(): void {
                             if ($ismod) {
                                 $itemCheck = $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_legacy_check' => true]);
                                 if (!$mark) {
-                                    $markAll = $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_plain' => true, 'is_checkall' => true]);
+                                    $markAll = $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_plain' => true]);
                                     $checkb = $tpl->getHtmlPart('compact-list', ['items' => [
                                         ['content_html' => _CHECKALL.' '.$markAll.' | '.$itemCheck, 'is_break_before' => true],
                                     ]]);

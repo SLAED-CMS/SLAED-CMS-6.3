@@ -257,42 +257,42 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = [
         [
-            'label_html' => _NICKNAME.':',
+            'label_html' => _NICKNAME,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'uname', 'value_attr' => $uname, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
         ],
         [
-            'label_html' => _URANK.':',
+            'label_html' => _URANK,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'rank', 'value_attr' => $rank, 'maxlength_num' => 25, 'placeholder_text' => _URANK]),
         ],
         [
-            'label_html' => _EMAIL.':',
+            'label_html' => _EMAIL,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
         ],
         [
-            'label_html' => _SITEURL.':',
+            'label_html' => _SITEURL,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255, 'placeholder_text' => _SITEURL]),
         ],
     ];
     if ($avatar !== '') {
         $rows[] = [
-            'label_html' => _AVATAR.':',
+            'label_html' => _AVATAR,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'avatar', 'value_attr' => $avatar, 'maxlength_num' => 255, 'placeholder_text' => _AVATAR]),
         ];
     }
     $rows[] = [
-        'label_html' => _REG.':',
+        'label_html' => _REG,
         'field_html' => getTplAddDateTime(['name' => 'reg', 'time' => (string)($reg ?? ''), 'with' => true, 'max' => 16, 'attr' => 'class="sl-select-config"']),
     ];
     $rows[] = [
-        'label_html' => _OCCUPATION.':',
+        'label_html' => _OCCUPATION,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'occ', 'value_attr' => $occ, 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION]),
     ];
     $rows[] = [
-        'label_html' => _LOCATION.':',
+        'label_html' => _LOCATION,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'from', 'value_attr' => $from, 'maxlength_num' => 100, 'placeholder_text' => _LOCATION]),
     ];
     $rows[] = [
-        'label_html' => _INTERESTS.':',
+        'label_html' => _INTERESTS,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'inter', 'value_attr' => $inter, 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS]),
     ];
     $rows[] = [
@@ -313,7 +313,7 @@ function add(): void {
             ]);
         }
         $rows[] = [
-            'label_html' => _C_12.':',
+            'label_html' => _C_12,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'story', 'options_html' => $storyopts]),
         ];
     }
@@ -340,29 +340,29 @@ function add(): void {
         }
         if ($themecount > 1) {
             $rows[] = [
-                'label_html' => _THEME.':',
+                'label_html' => _THEME,
                 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'theme', 'options_html' => $themeopts]),
             ];
         }
     }
     $rows[] = [
-        'label_html' => _RNEWSLETTER.':',
+        'label_html' => _RNEWSLETTER,
         'field_html' => getTplRadioGroup(['name' => 'news', 'value' => (string)$news, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
-            'label_html' => _LANGUAGE.':',
+            'label_html' => _LANGUAGE,
             'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($lang)]),
         ];
     }
     $rows[] = [
-        'label_html' => _POINTS.':',
+        'label_html' => _POINTS,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'point', 'value_attr' => $point, 'placeholder_text' => _POINTS]),
     ];
     for ($i = 0; $i < 5; $i++) {
         $a = $i + 1;
         $rows[] = [
-            'label_html' => _UWARN.' - '.$a.':',
+            'label_html' => _UWARN.' - '.$a,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'warn[]', 'value_attr' => empty($warn[$i]) ? '' : filterText((string)$warn[$i]), 'placeholder_text' => _UWARN.' - '.$a]),
         ];
     }
@@ -389,15 +389,15 @@ function add(): void {
         ]);
     }
     $rows[] = [
-        'label_html' => _SPEC_GROUP.':',
+        'label_html' => _SPEC_GROUP,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'options_html' => $grpopts]),
     ];
     $rows[] = [
-        'label_html' => _BIRTHDAY.':',
+        'label_html' => _BIRTHDAY,
         'field_html' => getTplAddDateTime(['name' => 'birth', 'time' => (string)$birth, 'with' => false, 'max' => 10, 'attr' => 'class="sl-select-config"']),
     ];
     $rows[] = [
-        'label_html' => _GENDER.':',
+        'label_html' => _GENDER,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_config' => true, 'options_html' => $genderopts]),
     ];
     $fieldvals = explode('|', $field);
@@ -432,17 +432,17 @@ function add(): void {
         }
         if ($fieldhtml !== '') {
             $rows[] = [
-                'label_html' => getConst((string)$out[1]).':',
+                'label_html' => getConst((string)$out[1]),
                 'field_html' => $fieldhtml,
             ];
         }
     }
     $rows[] = [
-        'label_html' => _PASSWORD.':',
+        'label_html' => _PASSWORD,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
     ];
     $rows[] = [
-        'label_html' => _RETYPEPASSWORD.':',
+        'label_html' => _RETYPEPASSWORD,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass2', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
     ];
     $rows[] = [
@@ -644,7 +644,7 @@ function pointreset(): void {
     ]);
     $rows = [
         [
-            'label_html' => _POINTS.':',
+            'label_html' => _POINTS,
             'field_html' => getTplRadioGroup([
                 'name' => 'points',
                 'value' => '0',
@@ -655,7 +655,7 @@ function pointreset(): void {
             ]),
         ],
         [
-            'label_html' => _RATINGS.':',
+            'label_html' => _RATINGS,
             'field_html' => getTplRadioGroup([
                 'name' => 'votes',
                 'value' => '0',
@@ -666,7 +666,7 @@ function pointreset(): void {
             ]),
         ],
         [
-            'label_html' => _SIGNATURE.':',
+            'label_html' => _SIGNATURE,
             'field_html' => getTplRadioGroup([
                 'name' => 'sig',
                 'value' => '0',
@@ -677,7 +677,7 @@ function pointreset(): void {
             ]),
         ],
         [
-            'label_html' => _UWARNS.':',
+            'label_html' => _UWARNS,
             'field_html' => getTplRadioGroup([
                 'name' => 'warnings',
                 'value' => '0',

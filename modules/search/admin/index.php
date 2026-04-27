@@ -438,10 +438,10 @@ function config(): void {
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SMODULE, 'hint' => _CTRLINFO]), 'field_html' => $modshtml, 'is_full' => true],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHLETMIN, 'hint' => _SEARCHLETINFO]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'slet', 'value_attr' => (string)$conf['search']['slet']])],
         ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEARCHLIMIT, 'hint' => _SEARCHLIMITINFO]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'slimit', 'value_attr' => (string)$conf['search']['slimit']])],
-        ['label_html' => _SEARCHNUM.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snum', 'value_attr' => (string)$conf['search']['snum']])],
-        ['label_html' => _C_35.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snump', 'value_attr' => (string)$conf['search']['snump']])],
-        ['label_html' => _C_34.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
-        ['label_html' => _C_36.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
+        ['label_html' => _SEARCHNUM, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snum', 'value_attr' => (string)$conf['search']['snum']])],
+        ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'snump', 'value_attr' => (string)$conf['search']['snump']])],
+        ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$anum])],
+        ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
     ];
     $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&amp;op=save',
@@ -563,10 +563,10 @@ function edit(): void {
         [$word, $mod, $time, $score] = $db->getSqlRow($result);
         $hits = max(intval($score), 1);
         $rows = [
-            ['label_html' => _SWORD.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD])],
-            ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'options_html' => getSearchmodsOpts((string)$mod)])],
-            ['label_html' => _DATE.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => (string)$time, 'with' => true, 'max' => 16])],
-            ['label_html' => _HITS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
+            ['label_html' => _SWORD, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'word', 'value_attr' => (string)$word, 'placeholder_text' => _SWORD])],
+            ['label_html' => _MODUL, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'modul', 'options_html' => getSearchmodsOpts((string)$mod)])],
+            ['label_html' => _DATE, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => (string)$time, 'with' => true, 'max' => 16])],
+            ['label_html' => _HITS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
         ];
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=search&amp;op=editsave',
@@ -622,9 +622,9 @@ function delete(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'days', 'label_text' => _SEARCHBYDAY])
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'empty', 'label_text' => _SEARCHEMPTY]);
     $rows = [
-        ['label_html' => _MODUL.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cmod', 'options_html' => getSearchmodsOpts('')])],
-        ['label_html' => _DAYS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => '30', 'placeholder_text' => _DAYS])],
-        ['label_html' => _DELETE.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
+        ['label_html' => _MODUL, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cmod', 'options_html' => getSearchmodsOpts('')])],
+        ['label_html' => _DAYS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'days', 'value_attr' => '30', 'placeholder_text' => _DAYS])],
+        ['label_html' => _DELETE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=search&amp;op=clear',

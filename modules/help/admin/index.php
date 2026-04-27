@@ -141,7 +141,7 @@ function addview(int $id): string {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'rows' => [
-            ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+            ['label_html' => _POSTEDBY, 'field_html' => getTplUserSearchInput([
                 'input_id' => 'postname',
                 'list_id' => 'postname_list',
                 'maxlength' => 25,
@@ -150,9 +150,9 @@ function addview(int $id): string {
                 'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
                 'value' => (string)($admin[1] ?? ''),
             ])],
-            ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+            ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
             ['label_html' => _HELPGLOS, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-            ['label_html' => _MAIL_SENDE.':', 'field_html' => getTplRadioGroup(['name' => 'umail', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+            ['label_html' => _MAIL_SENDE, 'field_html' => getTplRadioGroup(['name' => 'umail', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ],
         'submit_label' => _SEND,
     ])]);
@@ -190,7 +190,7 @@ function add(): void {
         ]);
     }
     $rows = [
-        ['label_html' => _POSTEDBY.':', 'field_html' => getTplUserSearchInput([
+        ['label_html' => _POSTEDBY, 'field_html' => getTplUserSearchInput([
             'input_id' => 'postname',
             'list_id' => 'postname_list',
             'maxlength' => 25,
@@ -199,10 +199,10 @@ function add(): void {
             'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
             'value' => $postname,
         ])],
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
-        ['label_html' => _CATEGORY.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
-        ['label_html' => _CHNGSTORY.':', 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
-        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
+        ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
+        ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => '', 'field_html' => getTplFieldsIn(['field' => $field, 'mod' => 'help']), 'is_full' => true],
     ];
     $posttypeopts

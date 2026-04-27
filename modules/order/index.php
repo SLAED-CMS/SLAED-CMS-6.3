@@ -25,11 +25,11 @@ function order(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = $tpl->getHtmlFrag('form-field-row', [
-            'label' => _OR_2.':',
+            'label' => _OR_2,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'._OR_2.'" required', 'itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $mail]),
         ]);
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _OR_3.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _OR_3, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _OR_3])]);
         $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _OR_1]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha(1),
