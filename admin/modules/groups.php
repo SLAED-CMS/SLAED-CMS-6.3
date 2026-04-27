@@ -103,7 +103,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = [];
     $rows[] = [
-        'label_html' => _NAME.':',
+        'label_html' => _NAME,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'grname',
@@ -114,7 +114,7 @@ function add(): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => _DESCRIPTION.':',
+        'label_html' => _DESCRIPTION,
         'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'description',
             'value_text' => $description,
@@ -133,7 +133,7 @@ function add(): void {
         }
     }
     $rows[] = [
-        'label_html' => _IMG.':',
+        'label_html' => _IMG,
         'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'rank',
             'options_html' => $pickopts,
@@ -141,11 +141,11 @@ function add(): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => _RANK.':',
+        'label_html' => _RANK,
         'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$rank, 'image_id' => 'picture', 'alt_text' => _RANK]),
     ];
     $rows[] = [
-        'label_html' => _COLOR.':',
+        'label_html' => _COLOR,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'color',
             'name_attr' => 'color',
@@ -153,7 +153,7 @@ function add(): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => _POINTSNEEDED.':',
+        'label_html' => _POINTSNEEDED,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'points',
@@ -162,7 +162,7 @@ function add(): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SPEC_GROUP.':', 'hint' => _GRSINFO]),
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SPEC_GROUP, 'hint' => _GRSINFO]),
         'field_html' => $tpl->getHtmlFrag('checkbox', [
             'name_attr' => 'grextra',
             'value_attr' => '1',

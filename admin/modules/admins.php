@@ -186,11 +186,11 @@ function add(): void {
         ]);
     $rows = [
         [
-            'label_html' => _NICKNAME.':',
+            'label_html' => _NICKNAME,
             'field_html' => $nameField,
         ],
         [
-            'label_html' => _URANK.':',
+            'label_html' => _URANK,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'maxlength_num' => 50,
@@ -200,7 +200,7 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => _EMAIL.':',
+            'label_html' => _EMAIL,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'email',
                 'is_required' => true,
@@ -211,7 +211,7 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => _URL.':',
+            'label_html' => _URL,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'maxlength_num' => 255,
@@ -222,8 +222,8 @@ function add(): void {
         ],
         [
             'label_html' => $aid
-                ? $tpl->getHtmlFrag('label-hint', ['label' => _PASSWORD.':', 'hint' => _ADMINPASSKEEP])
-                : _PASSWORD.':',
+                ? $tpl->getHtmlFrag('label-hint', ['label' => _PASSWORD, 'hint' => _ADMINPASSKEEP])
+                : _PASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'password',
                 'name_attr' => 'pwd',
@@ -233,7 +233,7 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => _RETYPEPASSWORD.':',
+            'label_html' => _RETYPEPASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'password',
                 'name_attr' => 'pwdtwo',
@@ -277,13 +277,13 @@ function add(): void {
             'is_full' => true,
         ],
         [
-            'label_html' => _EDITOR.':',
+            'label_html' => _EDITOR,
             'field_html' => Editor::getSelect('editor', (string)$editor, 'content', 'admin'),
         ],
     ];
     if ($conf['multilingual'] == 1) {
         $rows[] = [
-            'label_html' => _LANGUAGE.':',
+            'label_html' => _LANGUAGE,
             'field_html' => $langv,
         ];
     }

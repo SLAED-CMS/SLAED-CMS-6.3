@@ -168,14 +168,14 @@ function banlist(): void {
     }
     $iprows = [
         [
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _IP_CIDR.':', 'hint' => _IP_CIDR_TIP]),
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _IP_CIDR, 'hint' => _IP_CIDR_TIP]),
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'cidr',
                 'value_text' => $cidr,
             ]),
         ],
         [
-            'label_html' => _HASH.':',
+            'label_html' => _HASH,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'hash',
@@ -184,7 +184,7 @@ function banlist(): void {
             ]),
         ],
         [
-            'label_html' => _TIME.':',
+            'label_html' => _TIME,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'is_required' => true,
                 'itype' => 'number',
@@ -194,7 +194,7 @@ function banlist(): void {
             ]),
         ],
         [
-            'label_html' => _BANN_REAS.':',
+            'label_html' => _BANN_REAS,
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'info',
                 'value_text' => $info,
@@ -252,7 +252,7 @@ function banlist(): void {
     $mailtext = replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp']));
     $userrows = [
         [
-            'label_html' => _NICKNAME.':',
+            'label_html' => _NICKNAME,
             'field_html' => getTplUserSearchInput([
                 'input_id' => 'uname',
                 'list_id' => 'uname_list',
@@ -264,7 +264,7 @@ function banlist(): void {
             ]),
         ],
         [
-            'label_html' => _TIME.':',
+            'label_html' => _TIME,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'is_required' => true,
                 'itype' => 'number',
@@ -274,7 +274,7 @@ function banlist(): void {
             ]),
         ],
         [
-            'label_html' => _BANN_REAS.':',
+            'label_html' => _BANN_REAS,
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'input_attr' => 'placeholder="'._BANN_REAS.'" required',
                 'name_attr' => 'info',
@@ -405,7 +405,7 @@ function passwd(): void {
         ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_AUTH_INFO])
         : $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEC_AUTH_OK]);
     $rows = [[
-        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEC_ADMIN_IP.':', 'hint' => _IP_CIDR_TIP]),
+        'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEC_ADMIN_IP, 'hint' => _IP_CIDR_TIP]),
         'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'admin_ip',
             'value_text' => $conf['security']['admin_ip'],
@@ -413,7 +413,7 @@ function passwd(): void {
     ]];
     if (!$conf['security']['login'] || !$conf['security']['password']) {
         $rows[] = [
-            'label_html' => _SEC_LOGIN.':',
+            'label_html' => _SEC_LOGIN,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'login',
@@ -421,7 +421,7 @@ function passwd(): void {
             ]),
         ];
         $rows[] = [
-            'label_html' => _SEC_PASSWORD.':',
+            'label_html' => _SEC_PASSWORD,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'name_attr' => 'password',
@@ -501,14 +501,14 @@ function config(): void {
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _SEC_VIEW_2, 'is_selected' => $conf['security']['error'] == 2]),
     ]);
     $rows = [
-        ['label_html' => _SFLOOD.':', 'field_html' => $floodhtml],
-        ['label_html' => _SEC_VIEW.':', 'field_html' => $errorhtml],
-        ['label_html' => _SFLOD_T.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'flood_t', 'value_attr' => $conf['security']['flood_t']])],
-        ['label_html' => _SEC_COOKIE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'blocker_cookie', 'value_attr' => $conf['security']['blocker_cookie']])],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ADMIN_FILE.':', 'hint' => $ainfo]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'afile', 'value_attr' => $conf['security']['afile']])],
-        ['label_html' => _SEC_LOG_SIZE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'log_size', 'value_attr' => $conf['security']['log_size']])],
-        ['label_html' => _SEC_LOG_DS.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sess_d', 'value_attr' => intval($conf['security']['sess_d'] / 60)])],
-        ['label_html' => _SEC_LOG_DB.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sess_b', 'value_attr' => intval($conf['security']['sess_b'] / 60)])],
+        ['label_html' => _SFLOOD, 'field_html' => $floodhtml],
+        ['label_html' => _SEC_VIEW, 'field_html' => $errorhtml],
+        ['label_html' => _SFLOD_T, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'flood_t', 'value_attr' => $conf['security']['flood_t']])],
+        ['label_html' => _SEC_COOKIE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'blocker_cookie', 'value_attr' => $conf['security']['blocker_cookie']])],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ADMIN_FILE, 'hint' => $ainfo]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'afile', 'value_attr' => $conf['security']['afile']])],
+        ['label_html' => _SEC_LOG_SIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'log_size', 'value_attr' => $conf['security']['log_size']])],
+        ['label_html' => _SEC_LOG_DS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sess_d', 'value_attr' => intval($conf['security']['sess_d'] / 60)])],
+        ['label_html' => _SEC_LOG_DB, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'sess_b', 'value_attr' => intval($conf['security']['sess_b'] / 60)])],
         ['label_html' => _SEC_DB, 'field_html' => getTplRadioGroup(['name' => 'log_b', 'value' => $conf['security']['log_b'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_STAT, 'field_html' => getTplRadioGroup(['name' => 'error_log', 'value' => $conf['security']['error_log'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_URL_GET, 'field_html' => getTplRadioGroup(['name' => 'url_get', 'value' => $conf['security']['url_get'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
@@ -521,7 +521,7 @@ function config(): void {
         ['label_html' => _SEC_WARN_STAT, 'field_html' => getTplRadioGroup(['name' => 'write_w', 'value' => $conf['security']['write_w'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_LOG, 'field_html' => getTplRadioGroup(['name' => 'log', 'value' => $conf['security']['log'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_LOG_D, 'field_html' => getTplRadioGroup(['name' => 'log_d', 'value' => $conf['security']['log_d'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEC_DUMP_SKIP.':', 'hint' => _SEC_DUMP_SKIP_INFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'dump_skip', 'rows_num' => 8, 'value_text' => htmlspecialchars((string)($conf['security']['dump_skip'] ?? ''), ENT_QUOTES, 'UTF-8')]), 'is_full' => true],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEC_DUMP_SKIP, 'hint' => _SEC_DUMP_SKIP_INFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'dump_skip', 'rows_num' => 8, 'value_text' => htmlspecialchars((string)($conf['security']['dump_skip'] ?? ''), ENT_QUOTES, 'UTF-8')]), 'is_full' => true],
         ['label_html' => _SEC_LOG_A, 'field_html' => getTplRadioGroup(['name' => 'log_a', 'value' => $conf['security']['log_a'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_LOG_U, 'field_html' => getTplRadioGroup(['name' => 'log_u', 'value' => $conf['security']['log_u'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_WARN_BLOCK, 'field_html' => getTplRadioGroup(['name' => 'block', 'value' => $conf['security']['block'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],

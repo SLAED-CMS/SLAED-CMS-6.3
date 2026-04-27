@@ -129,7 +129,7 @@ function add(string $name = ''): void {
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
-        'label_html' => _SCHEDULER_JOBKEY.':',
+        'label_html' => _SCHEDULER_JOBKEY,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'job',
@@ -140,7 +140,7 @@ function add(string $name = ''): void {
             'input_attr' => $readonly,
         ]),
     ], [
-        'label_html' => _TITLE.':',
+        'label_html' => _TITLE,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'name_attr' => 'title',
@@ -150,7 +150,7 @@ function add(string $name = ''): void {
             'is_config' => true,
         ]),
     ], [
-        'label_html' => _TYPE.':',
+        'label_html' => _TYPE,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'text',
             'value_attr' => (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM,
@@ -160,7 +160,7 @@ function add(string $name = ''): void {
     ]];
     if ($iscustom) {
         $rows[] = [
-            'label_html' => _SCHEDULER_URL.':',
+            'label_html' => _SCHEDULER_URL,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'url',
                 'name_attr' => 'url',
@@ -173,7 +173,7 @@ function add(string $name = ''): void {
         ];
     } else {
         $rows[] = [
-            'label_html' => _SCHEDULER_SYSTEM.':',
+            'label_html' => _SCHEDULER_SYSTEM,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
                 'value_attr' => (string)($job['system'] ?? ''),
@@ -206,7 +206,7 @@ function add(string $name = ''): void {
         ]),
     ];
     $rows[] = [
-        'label_html' => _SCHEDULER_LOCK.':',
+        'label_html' => _SCHEDULER_LOCK,
         'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'lock_timeout',
@@ -218,7 +218,7 @@ function add(string $name = ''): void {
     ];
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$job['active'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _SCHEDULER_MANUAL.':', 'field_html' => getTplRadioGroup(['name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _SCHEDULER_MANUAL, 'field_html' => getTplRadioGroup(['name' => 'manual', 'value' => (string)(int)$job['manual'], 'options' => $yesno])];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

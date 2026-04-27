@@ -260,10 +260,10 @@ function edit(): void {
         }
     }
     $rows = [
-        ['label_html' => _LANGUAGE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'lang', 'value_attr' => $lang, 'maxlength_num' => 50, 'placeholder_text' => _LANGUAGE, 'is_config' => true])],
-        ['label_html' => _LOGO.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
-        ['label_html' => _PREVIEW.':', 'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$img, 'image_id' => 'picture', 'alt_text' => _LOGO])],
-        ['label_html' => _STATUS.':', 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'lang', 'value_attr' => $lang, 'maxlength_num' => 50, 'placeholder_text' => _LANGUAGE, 'is_config' => true])],
+        ['label_html' => _LOGO, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
+        ['label_html' => _PREVIEW, 'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$img, 'image_id' => 'picture', 'alt_text' => _LOGO])],
+        ['label_html' => _STATUS, 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
             'is_config' => true,
@@ -272,8 +272,8 @@ function edit(): void {
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1]) .
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2]),
         ])],
-        ['label_html' => _UGROUP.':', 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'options_html' => $grpopts, 'is_config' => true])],
-        ['label_html' => _BLOCKS_MOD.':', 'field_html' => $tpl->getHtmlFrag('select', [
+        ['label_html' => _UGROUP, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'group', 'options_html' => $grpopts, 'is_config' => true])],
+        ['label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'side',
             'is_config' => true,
             'options_html' =>
@@ -282,7 +282,7 @@ function edit(): void {
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _BLOCKS_MOD2, 'is_selected' => (int)$side === 2]) .
                 $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _BLOCKS_MOD3, 'is_selected' => (int)$side === 3]),
         ])],
-        ['label_html' => _BLOCKS_MOD.':', 'field_html' => $tpl->getHtmlFrag('select', [
+        ['label_html' => _BLOCKS_MOD, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'top',
             'is_config' => true,
             'options_html' =>

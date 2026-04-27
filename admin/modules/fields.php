@@ -53,7 +53,7 @@ function fields(): void {
             $next = $c + 1;
             $rows = [
                 [
-                    'label_html' => _NAME.':',
+                    'label_html' => _NAME,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field1'.$k.'[]',
@@ -64,7 +64,7 @@ function fields(): void {
                     ]),
                 ],
                 [
-                    'label_html' => _CONTENT.':',
+                    'label_html' => _CONTENT,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field2'.$k.'[]',
@@ -75,7 +75,7 @@ function fields(): void {
                     ]),
                 ],
                 [
-                    'label_html' => _TYPE.':',
+                    'label_html' => _TYPE,
                     'field_html' => $tpl->getHtmlFrag('select', [
                         'name_attr' => 'field3'.$k.'[]',
                         'options_html' => $opta,
@@ -83,7 +83,7 @@ function fields(): void {
                     ]),
                 ],
                 [
-                    'label_html' => _USES.':',
+                    'label_html' => _USES,
                     'field_html' => $tpl->getHtmlFrag('select', [
                         'name_attr' => 'field4'.$k.'[]',
                         'options_html' => $optb,

@@ -172,7 +172,7 @@ function fileedit(): void {
                 ]);
             }
             $rows[] = [
-                'label_html' => getLangName($lng_cn[$j]).':',
+                'label_html' => getLangName($lng_cn[$j]),
                 'is_lang_edit' => true,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',

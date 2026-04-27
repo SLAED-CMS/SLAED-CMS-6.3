@@ -18,7 +18,7 @@ function isRawEditorFile(string $file): bool {
     return in_array(basename($file), ['.htaccess', 'robots.txt'], true);
 }
 
-function normalizeRawEditorText(string $file, string $text): string {
+function filterRawEditorText(string $file, string $text): string {
     if (!isRawEditorFile($file)) return $text;
     $prefix = '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL;
     if (str_starts_with($text, $prefix)) $text = substr($text, strlen($prefix));
@@ -68,7 +68,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
-    $text = normalizeRawEditorText($file, $text);
+    $text = filterRawEditorText($file, $text);
     if ($text === '' && $fallback !== '') $text = $fallback;
     $cont .= checkPerms($file);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
@@ -157,7 +157,7 @@ function save(): void {
         return;
     }
     $templ = getVar('post', 'template', 'raw');
-    $templ = normalizeRawEditorText($file, $templ);
+    $templ = filterRawEditorText($file, $templ);
     $templ = isRawEditorFile($file) ? $templ : '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL.$templ.PHP_EOL;
     $saved = false;
     if ($file && $templ) $saved = file_put_contents($file, $templ, LOCK_EX) !== false;

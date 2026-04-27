@@ -114,11 +114,11 @@ function add(): void {
         $expire_text = $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'expire', 'value_attr' => '0', 'placeholder_text' => _EXPIRATION, 'is_required' => true]);
     }
     $rows = [
-        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_html' => _TEXT.':', 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true],
     ];
     if ($langsel) {
-        $rows[] = ['label_html' => _LANGUAGE.':', 'field_html' => $langsel];
+        $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $langsel];
     }
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EXPIRATION, 'hint' => _CONFINES]), 'field_html' => $expire_text];
     $rows[] = ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [

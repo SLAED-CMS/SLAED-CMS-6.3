@@ -49,7 +49,7 @@ function replace(): void {
             $next = $c + 1;
             $rows = [
                 [
-                    'label_html' => _WORD.':',
+                    'label_html' => _WORD,
                     'field_html' => $tpl->getHtmlFrag('input', [
                         'itype' => 'text',
                         'name_attr' => 'field1'.$k.'[]',

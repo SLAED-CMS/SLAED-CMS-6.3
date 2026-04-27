@@ -97,7 +97,7 @@ function edit(): void {
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
     $rows = [[
-        'label_html' => _COMMENT.':',
+        'label_html' => _COMMENT,
         'field_html' => $tpl->getHtmlFrag('textarea', [
             'name_attr' => 'comment',
             'rows_num' => 10,
