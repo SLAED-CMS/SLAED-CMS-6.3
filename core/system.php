@@ -1299,6 +1299,9 @@ function setHead(array $seo = []): void {
     }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     if (defined('ADMIN_FILE')) {
+        $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
+        $adpath = img_find('logos/'.$adlogo);
+        if (!is_file($adpath)) $adpath = img_find('logos/slaed_logo_256x73.png');
         $adminvars = [
             'theme' => getTheme(),
             'lang' => substr(_LOCALE, 0, 2),
@@ -1320,6 +1323,9 @@ function setHead(array $seo = []): void {
             'blocks_right' => '',
             'blocks_down' => '',
             'debug_html' => '',
+            'adlogo' => $adpath,
+            'adalt' => $conf['sitename'] ?? 'SLAED CMS',
+            'adtitle' => $conf['sitename'] ?? 'SLAED CMS',
         ];
         $adminvars = array_replace($adminvars, getAdminLayoutVars(), getThemeHookVars('getAdminHeadVars'));
         $adminpage = isAdmin() ? 'admin' : 'login';
@@ -5055,7 +5061,6 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $markAll = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'markcheck',
                     'input_id' => 'markcheck',
-                    'input_attr' => 'OnClick="CheckBox(\'#markcheck\', \'.sl-check\')"',
                 ]);
                 $itemCheck = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'id[]',
