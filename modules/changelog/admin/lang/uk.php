@@ -5,15 +5,15 @@
 # Website: slaed.net
 
 define('_CHLOG_FILTER', 'Фільтр і пошук');
-define('_CHLOG_SEARCH', 'Пошук:');
+define('_CHLOG_SEARCH', 'Пошук');
 define('_CHLOG_SEARCH_PH', 'Шукати в повідомленнях комітів...');
 define('_CHLOG_AUTHOR', 'Автор');
 define('_CHLOG_AUTHOR_PH', 'наприклад, Eduard Laas');
 define('_CHLOG_FILE', 'Файл');
 define('_CHLOG_FILE_PH', 'наприклад, config/config.php');
 define('_CHLOG_DATE', 'Дата');
-define('_CHLOG_DATE_FROM', 'Дата від:');
-define('_CHLOG_DATE_TO', 'Дата до:');
+define('_CHLOG_DATE_FROM', 'Дата від');
+define('_CHLOG_DATE_TO', 'Дата до');
 define('_CHLOG_FILTER_BTN', 'Фільтрувати');
 define('_CHLOG_RESET_BTN', 'Скинути');
 define('_CHLOG_TOTAL', 'Всього');

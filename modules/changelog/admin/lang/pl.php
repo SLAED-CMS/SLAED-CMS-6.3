@@ -5,15 +5,15 @@
 # Website: slaed.net
 
 define('_CHLOG_FILTER', 'Filtr i wyszukiwanie');
-define('_CHLOG_SEARCH', 'Szukaj:');
+define('_CHLOG_SEARCH', 'Szukaj');
 define('_CHLOG_SEARCH_PH', 'Przeszukaj wiadomości commitów...');
 define('_CHLOG_AUTHOR', 'Autor');
 define('_CHLOG_AUTHOR_PH', 'np. Eduard Laas');
 define('_CHLOG_FILE', 'Plik');
 define('_CHLOG_FILE_PH', 'np. config/config.php');
 define('_CHLOG_DATE', 'Data');
-define('_CHLOG_DATE_FROM', 'Data od:');
-define('_CHLOG_DATE_TO', 'Data do:');
+define('_CHLOG_DATE_FROM', 'Data od');
+define('_CHLOG_DATE_TO', 'Data do');
 define('_CHLOG_FILTER_BTN', 'Filtruj');
 define('_CHLOG_RESET_BTN', 'Resetuj');
 define('_CHLOG_TOTAL', 'Łącznie');
