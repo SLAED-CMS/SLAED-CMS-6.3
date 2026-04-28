@@ -8,10 +8,7 @@ html {
 
 legend { color:#207fb6; font-weight: bold; }
 fieldset {
-    padding: 3px;
-    margin: 0 0 3px 0;
     overflow: auto;
-    border: 1px solid #dee0e2;
     border-radius: 3px;
 }
 
