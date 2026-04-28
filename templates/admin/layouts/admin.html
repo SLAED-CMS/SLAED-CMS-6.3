@@ -7,16 +7,16 @@
 {{{ scripts }}}
 </head>
 <body>
-    <div class="wrapper sl-admin-shell">
-        <div class="wraptop"></div>
-        <div class="wrapmid">
-            <div class="header sl-admin-header">
+    <div class="sl-wrapper sl-admin-shell">
+        <div class="sl-wraptop"></div>
+        <div class="sl-wrapmid">
+            <div class="sl-header sl-admin-header">
                 <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}" title="{{ adtitle }}"></a></h1></div>
                 <div class="sl-admin-toolbar">
-                    <div class="toolbar">
+                    <div class="sl-toolbar">
                         <div>
-                            <ul class="reset">{{{ menu }}}</ul>
-                            <span class="language sl-admin-language">{{{ admin_langs }}}</span>
+                            <ul class="sl-reset">{{{ menu }}}</ul>
+                            <span class="sl-language sl-admin-language">{{{ admin_langs }}}</span>
                         </div>
                     </div>
                 </div>
@@ -25,12 +25,12 @@
                 <aside class="sl-admin-sidebar">{{{ admin_blocks }}}</aside>
                 <main class="sl-admin-content"><div class="sl-admin-content-inner">{% block content %}{% endblock %}</div></main>
             </div>
-            <div class="footer sl-admin-footer">
-                <div class="copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
+            <div class="sl-footer sl-admin-footer">
+                <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
                 <span>{{{ foot_html }}}</span>
             </div>
         </div>
-        <div class="wrapfoot"></div>
+        <div class="sl-wrapfoot"></div>
         {{{ debug_html }}}
     </div>
 </body>
