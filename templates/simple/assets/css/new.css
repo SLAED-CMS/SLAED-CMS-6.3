@@ -539,7 +539,7 @@ ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
 .sl-generates,.sl-license{font-size:.9em;color:#6e7c8b}
 .sl-bbup-panel{background:#f9f9f9;border:1px solid #dee0e2;border-radius:4px;padding:5px;height:1%;margin:0 0 3px 0}
 .sl-bbup-panel:after{display:block;content:'';clear:both}
-.sl-loading{display:block;text-align:center;margin-left:auto;margin-right:auto;width:73px;height:17px;background:url(../../images/misc/loading.gif) no-repeat}
+.sl-loading{display:flex;align-items:center;justify-content:center;width:73px;height:17px;margin-left:auto;margin-right:auto;background:none;font-size:0}.sl-loading:before{width:6px;height:6px;border-radius:50%;background:#207fb6;box-shadow:12px 0 0 #8fc5d9,24px 0 0 #8fc5d9;content:"";animation:sl-loading-dots .8s infinite linear}@keyframes sl-loading-dots{0%{box-shadow:12px 0 0 #8fc5d9,24px 0 0 #8fc5d9}33%{box-shadow:12px 0 0 #207fb6,24px 0 0 #8fc5d9}66%{box-shadow:12px 0 0 #8fc5d9,24px 0 0 #207fb6}}
 .sl-editor-area{font:12px Verdana;width:100%;height:100px;padding:5px;background-color:#fafafa;border:1px solid #dee0e2;border-radius:4px;color:#47515a;box-sizing:border-box}
 .sl-editor-area:focus{border-color:#80b7e0;box-shadow:0 1px 1px rgba(0,0,0,.075) inset;outline:none}
 .sl-plus:before{display:inline-block;background-image:url(../../images/misc/sprite.png);vertical-align:middle;content:'';width:10px;height:10px;background-position:-351px -16px;margin:-3px 6px 0 0}

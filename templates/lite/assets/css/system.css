@@ -421,17 +421,6 @@ thead tr th[data-sort-method="none"]::after { content: none; }
 /* Центрирование содержания */
 .sl_pos_center { display: block; text-align: center; margin-left: auto; margin-right: auto; }
 
-/* Шкала загрузки Ajax */
-.sl_loading {
-	display: block;
-	text-align: center;
-	margin-left: auto;
-	margin-right: auto;
-	width: 73px;
-	height: 17px;
-	background: url(../../images/misc/loading.gif) no-repeat;
-}
-
 /* Рейтинги */
 /* Стандартный рейтинг - Звездочки */
 .sl_rate { display: inline-block; cursor: pointer; }
