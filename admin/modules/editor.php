@@ -49,7 +49,10 @@ function getRobotsTemplate(): string {
 
 function getRobotsButton(string $template): string {
     global $tpl;
-    return $tpl->getHtmlFrag('editor-robots-button', [
+    return $tpl->getHtmlFrag('head-script-src', [
+        'src' => 'templates/admin/assets/js/editor-robots.js',
+        'attr' => 'defer',
+    ]).$tpl->getHtmlFrag('editor-robots-button', [
         'label' => _EROBSTD,
         'template_json' => json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
     ]);
