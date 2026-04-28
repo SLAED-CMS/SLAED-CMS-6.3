@@ -355,6 +355,12 @@ input.sl-but-blue[value="ОК"] {
 /* Debug/code output */
 .sl-debug-section { border: 1px solid #d9d9dc; margin: 10px; padding: 10px; }
 .sl-debug-section legend { font-weight: bold; }
+.sl-debug-stats { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0; }
+.sl-debug-stats dt { font-weight: bold; color: #4d5d70; }
+.sl-debug-stats dd { margin: 0; color: #59697a; }
+.sl-debug-value.sl-debug-success { color: #168a35; }
+.sl-debug-value.sl-debug-warn { color: #a56a00; }
+.sl-debug-value.sl-debug-danger { color: #c02f2f; }
 .sl-debug-section-info legend { color: #1e7bb2; }
 .sl-debug-section-success legend { color: #168a35; }
 .sl-debug-section-warn legend { color: #a56a00; }
@@ -1056,11 +1062,11 @@ input.sl-but-blue[value="ОК"] {
 .sl-warn,
 .sl-info {
     position: relative;
-    padding: 8px 10px 8px 47px;
+    padding: 8px 10px 8px 60px;
     margin: 8px 0;
     color: #332d27;
     text-align: justify;
-    min-height: 28px;
+    min-height: 40px;
     border-left: 4px solid;
     border-radius: 6px;
 }
@@ -1075,17 +1081,17 @@ input.sl-but-blue[value="ОК"] {
 .sl-warn::before,
 .sl-info::before {
     position: absolute;
-    left: 14px;
-    top: 9px;
+    left: 12px;
+    top: 50%;
     display: inline-block;
     font-family: bootstrap-icons !important;
-    font-size: 22px;
+    font-size: 32px;
     font-style: normal;
     font-weight: 400 !important;
     font-variant: normal;
     line-height: 1;
     text-transform: none;
-    vertical-align: -.125em;
+    transform: translateY(-50%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -1109,15 +1115,31 @@ input.sl-but-blue[value="ОК"] {
     position: absolute;
     left: 0;
     right: 0;
+    top: 0;
     bottom: 0;
     pointer-events: none;
-    height: 2px;
-    background: #66931c;
+    background: none;
+    color: #37a957;
     transform-origin: left center;
     animation: sl-alert-flash-frame 15s linear forwards;
 }
+.sl-alert-flash-bar::before,
+.sl-alert-flash-bar::after {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: currentColor;
+    content: "";
+}
+.sl-alert-flash-bar::before {
+    top: 0;
+}
+.sl-alert-flash-bar::after {
+    bottom: 0;
+}
 .sl-warn.sl-alert-flash .sl-alert-flash-bar {
-    background: #d6ab74;
+    color: #d68a2d;
 }
 .sl-alert-flash.sl-is-hiding {
     opacity: 0;
@@ -2328,7 +2350,19 @@ body:has(.sl-admin-login-shell):before {
     bottom: 0;
     left: 10px;
     height: 1px;
-    background: #e3edf3;
+    background: linear-gradient(
+        90deg,
+        rgba(208, 240, 254, 0) 0%,
+        rgba(208, 240, 254, 0.35) 10%,
+        rgba(138, 183, 216, 0.68) 28%,
+        rgba(79, 122, 166, 0.9) 44%,
+        #1d4876 47.5%,
+        #1d4876 52.5%,
+        rgba(79, 122, 166, 0.9) 56%,
+        rgba(138, 183, 216, 0.68) 72%,
+        rgba(208, 240, 254, 0.35) 90%,
+        rgba(208, 240, 254, 0) 100%
+    );
     content: '';
 }
 

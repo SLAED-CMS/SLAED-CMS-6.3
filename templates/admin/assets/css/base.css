@@ -38,10 +38,11 @@ ol { list-style-image: none; list-style-position: outside; list-style-type: deci
 
 input, textarea, select {
     min-height: 28px;
-    background: #fafafa;
-    color: #777;
-    border: 1px #dee0e2 solid;
+    background: #fcfeff;
+    color: #59697a;
+    border: 1px solid #d6e2ea;
     border-radius: 3px;
+    transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
 /* Подсветка текста */
