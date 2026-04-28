@@ -409,7 +409,7 @@ class Parser {
             '/\[code\](.*?)\[\/code\]/si',
             function(array $m): string {
                 $txt  = str_replace('?', '&#063;', (string)$m[1]);
-                $html = '<div class="code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
+                $html = '<div class="sl-code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
                 return $this->addStash($html);
             },
             $src
@@ -449,7 +449,7 @@ class Parser {
                 function(array $m): string {
                     $show = (defined('ADMIN_FILE') || is_user());
                     $txt  = $show ? $this->filterNest($m[1]) : (string)_HIDETEXT;
-                    $html = '<blockquote class="hide"><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
+                    $html = '<blockquote class="sl-hide"><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
                     return $this->addStash($html);
                 },
                 $src

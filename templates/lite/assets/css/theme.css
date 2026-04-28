@@ -110,12 +110,12 @@ blockquote > p:first-child { display: inline; }
 .grey, .grey a { color: #6e7c8b; }
 
 /* Скрытый текст */
-.hide { border-left: 1px solid #de6262; border-right: 1px solid #de6262; }
-.hide:before { color: #de6262; }
-.hide:after { color: #de6262; }
+.sl-hide { border-left: 1px solid #de6262; border-right: 1px solid #de6262; }
+.sl-hide:before { color: #de6262; }
+.sl-hide:after { color: #de6262; }
 
 /* Выделение кода */
-.code {
+.sl-code {
 	font-family: Georgia, "Times New Roman", serif;
 	font-style: italic;
 	font-size: .9em;
@@ -127,7 +127,7 @@ blockquote > p:first-child { display: inline; }
 	padding: 4px;
 	border-radius: 8px;
 }
-.code div { border-radius: 8px; }
+.sl-code div { border-radius: 8px; }
 
 /* Таблицы и списки */
 table { max-width: 100%; }
