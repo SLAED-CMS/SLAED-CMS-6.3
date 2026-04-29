@@ -460,7 +460,7 @@ function add(): void {
                     'title' => _ADD,
                     'label' => _URL.' - '.$a,
                     'is_plus' => true,
-                    'onclick_attr' => 'onclick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500); return false;"',
+                    'onclick_attr' => 'data-sl-toggle-control="med'.$a.'" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"',
                 ]),
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',

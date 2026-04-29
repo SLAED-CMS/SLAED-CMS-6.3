@@ -158,13 +158,13 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
     $rows = '';
     foreach ($list as $row) {
         $cells = [
-            ['is_truncate' => true, 'title_text' => (string)$row['name'], 'content_html' => htmlspecialchars((string)$row['name'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['is_truncate' => true, 'title_text' => (string)$row['mod'], 'content_html' => htmlspecialchars((string)$row['mod'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['content_html' => htmlspecialchars((string)$row['type'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['is_truncate' => true, 'title_text' => (string)$row['table'], 'content_html' => htmlspecialchars((string)$row['table'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['is_truncate' => true, 'title_text' => (string)($row['fields'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['fields'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['is_truncate' => true, 'title_text' => (string)($row['edit'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['edit'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-            ['is_truncate' => true, 'title_text' => (string)($row['reason'] ?: _NO), 'content_html' => htmlspecialchars((string)($row['reason'] ?: _NO), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+            ['is_truncate' => true, 'title_text' => (string)$row['name'], 'has_content_text' => true, 'content_text' => (string)$row['name']],
+            ['is_truncate' => true, 'title_text' => (string)$row['mod'], 'has_content_text' => true, 'content_text' => (string)$row['mod']],
+            ['has_content_text' => true, 'content_text' => (string)$row['type']],
+            ['is_truncate' => true, 'title_text' => (string)$row['table'], 'has_content_text' => true, 'content_text' => (string)$row['table']],
+            ['is_truncate' => true, 'title_text' => (string)($row['fields'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['fields'] ?: _NO)],
+            ['is_truncate' => true, 'title_text' => (string)($row['edit'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['edit'] ?: _NO)],
+            ['is_truncate' => true, 'title_text' => (string)($row['reason'] ?: _NO), 'has_content_text' => true, 'content_text' => (string)($row['reason'] ?: _NO)],
         ];
         if ($view === 'ready') $cells[] = ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'mods[]', 'value_attr' => (string)$row['mod']])];
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
@@ -301,7 +301,7 @@ function search(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_truncate' => true, 'title_text' => (string)$word, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [
-                        ['label' => _MODUL, 'value' => htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8')],
+                        ['label' => _MODUL, 'has_value_text' => true, 'value_text' => $mlab],
                         ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING), 'is_last' => true],
                     ],
                     'label_html' => $hword,

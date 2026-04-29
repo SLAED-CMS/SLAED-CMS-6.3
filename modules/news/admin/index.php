@@ -241,7 +241,7 @@ function add(): void {
             'name_attr' => 'associated[]',
             'value_attr' => (string)$cid,
             'is_checked' => in_array((string)$cid, array_map('strval', $associated), true),
-            'label_html' => htmlspecialchars($ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'label_text' => $ctitle,
         ]);
     }
     $voteopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !$vote]);

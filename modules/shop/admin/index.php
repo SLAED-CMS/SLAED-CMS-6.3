@@ -148,10 +148,10 @@ function clients(): void {
                 ['label' => _ID, 'value' => (string)$a, 'is_last' => false],
                 ['label' => _DATE, 'value' => date(_TIMESTRING, $cregdate), 'is_last' => false],
                 ['label' => _CLIENTNAME, 'value' => filterTextHighlight($cname, $csearch), 'is_last' => false],
-                ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$caddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                ['label' => _CLIENTPHONE, 'value' => htmlspecialchars((string)$cphone, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                ['label' => _EMAIL, 'value' => htmlspecialchars((string)$cemail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                ['label' => _NOTE, 'value' => htmlspecialchars((string)$cinfo, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+                ['label' => _CLIENTADRES, 'has_value_text' => true, 'value_text' => (string)$caddr, 'is_last' => false],
+                ['label' => _CLIENTPHONE, 'has_value_text' => true, 'value_text' => (string)$cphone, 'is_last' => false],
+                ['label' => _EMAIL, 'has_value_text' => true, 'value_text' => (string)$cemail, 'is_last' => false],
+                ['label' => _NOTE, 'has_value_text' => true, 'value_text' => (string)$cinfo, 'is_last' => true],
             ];
             $items = [
                 [
@@ -175,7 +175,7 @@ function clients(): void {
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$cid],
                     ['content_html' => $nick],
-                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
                     ['is_truncate' => true, 'title_text' => domain($cwebsite), 'content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
                     ['is_col_date' => true, 'content_html' => $cenddate],
                     ['is_col_status' => true, 'content_html' => ad_status('', $cactive)],
@@ -473,10 +473,10 @@ function products(): void {
                 'cells' => [
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
                     ['is_col_id' => true, 'content_html' => (string)$pid],
-                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
-                        ['label' => _CATEGORY, 'value' => htmlspecialchars((string)$ctitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
+                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                        ['label' => _CATEGORY, 'has_value_text' => true, 'value_text' => (string)$ctitle, 'is_last' => false],
                         ['label' => _DATE, 'value' => format_time($ptime ?? '', _TIMESTRING), 'is_last' => true],
-                    ]]).htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ]]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
                     ['is_col_count' => true, 'content_html' => $pprice.' '.$conf['shop']['valute']],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -602,7 +602,9 @@ function productadd(): void {
             if ($associated) foreach ((array)$associated as $val) if ($val == $id) $isch = true;
             $assoc .= $tpl->getHtmlFrag('label', [
                 'is_associated_option' => true,
-                'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                'prefix_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'associated[]', 'value_attr' => (string)$id, 'is_checked' => $isch]),
+                'has_content_text' => true,
+                'content_text' => (string)$title,
             ]);
         }
         $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _ASSOTOPIC, 'hint' => _ASSOTOPICI]), 'field_html' => $assoc, 'is_full' => true];
@@ -788,10 +790,10 @@ function partners(): void {
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$paid],
                     ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
-                        ['label' => _CLIENTNAME, 'value' => htmlspecialchars((string)$paname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                        ['label' => _CLIENTADRES, 'value' => htmlspecialchars((string)$paaddr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                        ['label' => _CLIENTPHONE, 'value' => htmlspecialchars((string)$paphone, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                        ['label' => _EMAIL, 'value' => htmlspecialchars((string)$paemail, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+                        ['label' => _CLIENTNAME, 'has_value_text' => true, 'value_text' => (string)$paname, 'is_last' => false],
+                        ['label' => _CLIENTADRES, 'has_value_text' => true, 'value_text' => (string)$paaddr, 'is_last' => false],
+                        ['label' => _CLIENTPHONE, 'has_value_text' => true, 'value_text' => (string)$paphone, 'is_last' => false],
+                        ['label' => _EMAIL, 'has_value_text' => true, 'value_text' => (string)$paemail, 'is_last' => true],
                     ]]).$nick],
                     ['is_truncate' => true, 'title_text' => domain($pawebsite), 'content_html' => domain($pawebsite)],
                     ['is_col_date' => true, 'content_html' => date(_TIMESTRING, $paregdate)],
@@ -987,7 +989,7 @@ function partnerinfo(): void {
             $pirows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$cid],
                 ['is_truncate' => true, 'title_text' => (string)$nick, 'content_html' => user_info($nick)],
-                ['is_truncate' => true, 'title_text' => (string)$ptitle, 'content_html' => htmlspecialchars((string)$ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                ['is_truncate' => true, 'title_text' => (string)$ptitle, 'has_content_text' => true, 'content_text' => (string)$ptitle],
                 ['is_col_count' => true, 'content_html' => $pprice.' '.$conf['shop']['valute']],
                 ['is_col_count' => true, 'content_html' => $proz.' %'],
                 ['is_col_count' => true, 'content_html' => $partsum.' '.$conf['shop']['valute']],
@@ -1002,8 +1004,8 @@ function partnerinfo(): void {
         ['content_html' => $pabek.' '.$conf['shop']['valute']],
         ['content_html' => $partsumges.' '.$conf['shop']['valute']],
         ['content_html' => $parest.' '.$conf['shop']['valute']],
-        ['content_html' => htmlspecialchars((string)$papaypal, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-        ['content_html' => htmlspecialchars((string)$pawebmoney, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        ['has_content_text' => true, 'content_text' => (string)$papaypal],
+        ['has_content_text' => true, 'content_text' => (string)$pawebmoney],
     ]])]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => [
         ['content' => _CLIENTEN],

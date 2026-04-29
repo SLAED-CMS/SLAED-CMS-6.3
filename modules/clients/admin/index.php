@@ -26,7 +26,7 @@ function clients(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['is_col_id' => true, 'content_html' => (string)$id],
-                        ['is_truncate' => true, 'title_text' => $title, 'content_html' => htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                        ['is_truncate' => true, 'title_text' => $title, 'has_content_text' => true, 'content_text' => (string)$title],
                         ['is_col_count' => true, 'content_html' => $num],
                         ['is_col_date' => true, 'content_html' => $time],
                         ['is_col_id' => true, 'content_html' => (string)$prod],

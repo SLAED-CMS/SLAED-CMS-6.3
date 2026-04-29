@@ -64,7 +64,7 @@ function whois(): void {
                 ['is_truncate' => true, 'title_text' => $postname, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
-                    ['label' => _COMMENT, 'value' => htmlspecialchars((string)$hometext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+                    ['label' => _COMMENT, 'has_value_text' => true, 'value_text' => (string)$hometext, 'is_last' => true],
                 ]]).$post],
                 ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ]])]);

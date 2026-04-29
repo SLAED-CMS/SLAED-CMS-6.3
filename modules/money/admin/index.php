@@ -36,19 +36,22 @@ function money(): void {
                 if ($val === '') continue;
                 $tips[] = [
                     'label' => $val,
-                    'value' => htmlspecialchars((string)($ival[$i] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                    'has_value_text' => true,
+                    'value_text' => (string)($ival[$i] ?? ''),
                     'is_last' => false,
                 ];
                 $i++;
             }
             $tips[] = [
                 'label' => _COMMENT,
-                'value' => htmlspecialchars((string)$note, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                'has_value_text' => true,
+                'value_text' => (string)$note,
                 'is_last' => false,
             ];
             $tips[] = [
                 'label' => _BROWSER,
-                'value' => htmlspecialchars((string)$agent, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                'has_value_text' => true,
+                'value_text' => (string)$agent,
                 'is_last' => true,
             ];
             $items = [

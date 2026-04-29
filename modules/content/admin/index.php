@@ -42,7 +42,7 @@ function content(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$id],
-                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tip.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                    ['is_truncate' => true, 'title_text' => $title, 'prefix_html' => $tip, 'has_content_text' => true, 'content_text' => (string)$title],
                     ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                     ['is_col_count' => true, 'content_html' => (string)$counter],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
