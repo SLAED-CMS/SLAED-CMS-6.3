@@ -131,33 +131,33 @@
             <svg class="sl-chart-svg" viewBox="0 0 100 220" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="gUp" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="#d97706" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="#d97706" stop-opacity="0" />
+                        <stop offset="0" stop-color="var(--sl-color-warning)" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="var(--sl-color-warning)" stop-opacity="0" />
                     </linearGradient>
                     <linearGradient id="gDown" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="#21c45d" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="#21c45d" stop-opacity="0" />
+                        <stop offset="0" stop-color="var(--sl-color-success)" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="var(--sl-color-success)" stop-opacity="0" />
                     </linearGradient>
                     <linearGradient id="gCpu" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="#de6262" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="#de6262" stop-opacity="0" />
+                        <stop offset="0" stop-color="var(--sl-color-danger)" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="var(--sl-color-danger)" stop-opacity="0" />
                     </linearGradient>
                     <linearGradient id="gRam" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="#64b1e1" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="#64b1e1" stop-opacity="0" />
+                        <stop offset="0" stop-color="var(--sl-color-primary-hover)" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="var(--sl-color-primary-hover)" stop-opacity="0" />
                     </linearGradient>
                     <filter id="chartSoftShadow" x="-10%" y="-10%" width="120%" height="120%">
-                        <feDropShadow dx="0" dy="1" stdDeviation="0.6" flood-color="#111827" flood-opacity="0.08" />
+                        <feDropShadow dx="0" dy="1" stdDeviation="0.6" flood-color="var(--sl-color-text)" flood-opacity="0.08" />
                     </filter>
                 </defs>
                 <path class="sl-chart-path sl-chart-area" d="{{ path_up }}" fill="url(#gUp)" />
                 <path class="sl-chart-path sl-chart-area" d="{{ path_down }}" fill="url(#gDown)" />
                 <path class="sl-chart-path sl-chart-area" d="{{ path_cpu }}" fill="url(#gCpu)" />
                 <path class="sl-chart-path sl-chart-area" d="{{ path_ram }}" fill="url(#gRam)" />
-                <path class="sl-chart-line" d="{{ path_up_line }}" stroke="#d97706" />
-                <path class="sl-chart-line" d="{{ path_down_line }}" stroke="#21c45d" />
-                <path class="sl-chart-line" d="{{ path_cpu_line }}" stroke="#de6262" />
-                <path class="sl-chart-line" d="{{ path_ram_line }}" stroke="#64b1e1" />
+                <path class="sl-chart-line" d="{{ path_up_line }}" stroke="var(--sl-color-warning)" />
+                <path class="sl-chart-line" d="{{ path_down_line }}" stroke="var(--sl-color-success)" />
+                <path class="sl-chart-line" d="{{ path_cpu_line }}" stroke="var(--sl-color-danger)" />
+                <path class="sl-chart-line" d="{{ path_ram_line }}" stroke="var(--sl-color-primary-hover)" />
                 <path class="sl-chart-hit" d="{{ path_up_line }}"><title>{{{ tip_up }}}</title></path>
                 <path class="sl-chart-hit" d="{{ path_down_line }}"><title>{{{ tip_down }}}</title></path>
                 <path class="sl-chart-hit" d="{{ path_cpu_line }}"><title>{{{ tip_cpu }}}</title></path>

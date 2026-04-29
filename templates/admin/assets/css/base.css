@@ -1,74 +1,121 @@
+/* Admin theme design tokens */
+:root {
+    --sl-color-bg: #ffffff;
+    --sl-color-bg-soft: #f7fbfd;
+    --sl-color-bg-muted: #f4f6f8;
+    --sl-color-bg-subtle: #f3f4f6;
+    --sl-color-border: #e8ebee;
+    --sl-color-border-strong: #cad2da;
+    --sl-color-text: #111827;
+    --sl-color-text-soft: #374151;
+    --sl-color-muted: #6b7280;
+    --sl-color-primary: #0877b1;
+    --sl-color-primary-hover: #207fb6;
+    --sl-color-primary-soft: #8fc5d9;
+    --sl-color-primary-tint: #d9eef6;
+    --sl-color-success: #34b94b;
+    --sl-color-success-strong: #24973a;
+    --sl-color-success-soft: #eaf7ed;
+    --sl-color-danger: #e24c4c;
+    --sl-color-danger-strong: #c73535;
+    --sl-color-danger-soft: #fdecec;
+    --sl-color-warning: #d97706;
+    --sl-color-warning-strong: #a56a00;
+    --sl-color-warning-soft: #fff4e5;
+    --sl-color-accent: #8e44ad;
+    --sl-color-accent-soft: #f6ecfa;
+    --sl-color-info-soft: #e8f4fd;
+    --sl-size-control: 28px;
+    --sl-size-pager: 30px;
+    --sl-size-head: 32px;
+    --sl-size-icon: 18px;
+    --sl-radius-control: 3px;
+    --sl-radius-panel: 4px;
+    --sl-radius-soft: 6px;
+    --sl-space-xs: 4px;
+    --sl-space-sm: 6px;
+    --sl-space-md: 8px;
+    --sl-space-lg: 12px;
+    --sl-shadow-soft: rgba(32, 75, 102, 0.18);
+    --sl-shadow-control: 0 2px 4px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(0, 0, 0, .2);
+    --sl-shadow-control-active: inset 0 1px 4px 0 rgba(0, 0, 0, .2);
+    --sl-shadow-hover-soft: 0 0 0 2px rgba(32, 127, 182, .08);
+    --sl-text-shadow-light: 0 1px 0 var(--sl-color-bg);
+    --sl-text-shadow-dark: 0 1px 0 rgba(0, 0, 0, .1);
+    --sl-focus-primary: rgba(32, 127, 182, 0.38);
+}
+
 /* Общие настройки страницы */
 html, body, div, ul, ol, li, dl, dt, dd, h1, h2, h3, h4, h5, h6, pre, form, p, blockquote, input { margin: 0; padding: 0; }
 html {
     min-height: 100%;
-    background: #c7e5f0;
-    background: linear-gradient(180deg, #8bc7dd 0%, #c7e5f0 52%, #d9eef6 100%);
+    background: var(--sl-color-primary-tint);
+    background: linear-gradient(180deg, var(--sl-color-primary-soft) 0%, var(--sl-color-primary-tint) 52%, var(--sl-color-bg-soft) 100%);
 }
 
-legend { color:#207fb6; font-weight: bold; }
+legend { color: var(--sl-color-primary-hover); font-weight: bold; }
 fieldset {
     overflow: auto;
-    border-radius: 3px;
+    border-radius: var(--sl-radius-control);
 }
 
 body {
     min-height: 100vh;
     background: transparent;
 }
-body, select, input, textarea, button { font: 14px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
-.bi { font-size: 18px; }
+body, select, input, textarea, button { font: 14px/16px Tahoma, Arial, Verdana, sans-serif; color: var(--sl-color-text); outline: none; }
+.bi { font-size: var(--sl-size-icon); }
 
 h1, h2, h3, h4, h5 { line-height: normal; }
 h1 { font-size: 1.8em; }
-h2 { font-size: 1.5em; color: #207fb6; }
+h2 { font-size: 1.5em; color: var(--sl-color-primary-hover); }
 h3 { font-size: 1.35em; }
 h4 { font-size: 1.2em; }
-h5 { font-size: 1.1em; color: #207fb6; }
+h5 { font-size: 1.1em; color: var(--sl-color-primary-hover); }
 
 /* Настройка ссылок */
-a { color: #0069a7; text-decoration: none; }
+a { color: var(--sl-color-primary); text-decoration: none; }
 a:hover { cursor: pointer; text-decoration: underline; }
 a img { border: 0 none; }
 
 /* Прочие стили */
 p { margin-bottom: 0.4em; }
-hr { border: 0 none; border-top: 1px solid #dee0e2; height: 1px; }
+hr { border: 0 none; border-top: 1px solid var(--sl-color-border); height: 1px; }
 ul { padding-left: 16px; list-style-position:outside; list-style-image:none; }
 ol { list-style-image: none; list-style-position: outside; list-style-type: decimal; margin-left: 2.2em; }
 
 input, textarea, select {
-    min-height: 28px;
-    background: #fcfeff;
-    color: #59697a;
-    border: 1px solid #d6e2ea;
-    border-radius: 3px;
+    min-height: var(--sl-size-control);
+    background: var(--sl-color-bg-soft);
+    color: var(--sl-color-muted);
+    border: 1px solid var(--sl-color-border-strong);
+    border-radius: var(--sl-radius-control);
     transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(:disabled):hover,
 textarea:not(:disabled):hover,
 select:not(:disabled):hover {
-    background-color: #fff;
-    border-color: #9dccdf;
-    box-shadow: 0 0 0 2px rgba(32, 127, 182, .08);
+    background-color: var(--sl-color-bg);
+    border-color: var(--sl-color-primary-soft);
+    box-shadow: var(--sl-shadow-hover-soft);
 }
 
 /* Подсветка текста */
-input[required]:valid, textarea[required]:valid { color: #008000; }
-input[required]:invalid, textarea[required]:invalid { color: #ff0000; }
+input[required]:valid, textarea[required]:valid { color: var(--sl-color-success); }
+input[required]:invalid, textarea[required]:invalid { color: var(--sl-color-danger); }
 input[placeholder] { text-overflow: ellipsis; }
 
 input[type="radio"], input[type="checkbox"] { min-height: 0; margin: 0 2px 2px 0; vertical-align: middle; }
-input:focus, textarea:focus, select:focus { border-color: #34c8ed; box-shadow: 0 0 3px #34c8ed; }
+input:focus, textarea:focus, select:focus { border-color: var(--sl-color-primary-hover); box-shadow: 0 0 0 2px var(--sl-focus-primary); }
 input, textarea, select, a { outline: none; }
 select[multiple] { height: 100px; }
 
 /* Цитаты */
 blockquote {
-    background: #fff;
-    border-left: 1px solid #b8c3cd;
-    border-right: 1px solid #b8c3cd;
-    color: #798086;
+    background: var(--sl-color-bg);
+    border-left: 1px solid var(--sl-color-border-strong);
+    border-right: 1px solid var(--sl-color-border-strong);
+    color: var(--sl-color-muted);
     font-family: Georgia, "Times New Roman", serif;
     font-style: italic;
     margin: 4px;
@@ -76,16 +123,16 @@ blockquote {
     border-radius: 8px;
 }
 blockquote:before {
-    color: #b8c3cd;
-    content: "“";
+    color: var(--sl-color-border-strong);
+    content: "\201c";
     font-size: 3em;
     line-height: 0.1em;
     margin-right: 0.2em;
     vertical-align: -.4em;
 }
 blockquote:after {
-    color: #b8c3cd;
-    content: "”";
+    color: var(--sl-color-border-strong);
+    content: "\201d";
     font-size: 3em;
     line-height: 0.1em;
     margin-left: 0.1em;
