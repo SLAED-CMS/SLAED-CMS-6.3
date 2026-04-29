@@ -1,0 +1,8 @@
+{% if has_form %}<form name="voting" id="{{ form_id }}" method="post">{% endif %}<section class="sl-vote-view" aria-labelledby="{{ form_id }}_title">
+	<header class="sl-vote-view-head">
+		<h4 id="{{ form_id }}_title" class="sl-vote-title">{{ title }}</h4>
+	</header>
+	<ul class="sl-vote-list">{{{ items_html }}}</ul>
+	{% if admin_html or post_html or polls_html %}<footer class="sl-vote-actions">{{{ admin_html }}}{{{ post_html }}}{{{ polls_html }}}</footer>{% endif %}
+	{% if votes_html or comm_html %}<footer class="sl-vote-links">{{{ votes_html }}} {{{ comm_html }}}</footer>{% endif %}
+</section>{% if has_form %}</form>{% endif %}
