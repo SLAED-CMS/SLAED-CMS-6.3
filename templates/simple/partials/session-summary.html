@@ -1,18 +1,18 @@
 {% if show_admins %}
-<table class="sl-session-table"><tr><td><a OnClick="HideShow('{{ admins_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl-session-toggle">{{ admins_label }}:</a></td><td class="sl-session-right">{{ admins_count }}</td></tr></table>
+<table class="sl-session-table"><tr><td><a data-sl-toggle-control="{{ admins_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{{ admins_label }}:</a></td><td class="sl-session-right">{{ admins_count }}</td></tr></table>
 <table id="{{ admins_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ admins_rows_html }}}</table>
 {% endif %}
-<table class="sl-session-table"><tr><td>{% if members_rows_html %}<a OnClick="HideShow('{{ members_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ members_label }}:{% if members_rows_html %}</a>{% endif %}</td><td class="sl-session-right">{{ members_count }}</td></tr></table>
+<table class="sl-session-table"><tr><td>{% if members_rows_html %}<a data-sl-toggle-control="{{ members_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ members_label }}:{% if members_rows_html %}</a>{% endif %}</td><td class="sl-session-right">{{ members_count }}</td></tr></table>
 {% if members_rows_html %}<table id="{{ members_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ members_rows_html }}}</table>{% endif %}
 {% if show_bots or bots_rows_html %}
-<table class="sl-session-table"><tr><td>{% if bots_rows_html %}<a OnClick="HideShow('{{ bots_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ bots_label }}:{% if bots_rows_html %}</a>{% endif %}</td><td class="sl-session-right">{{ bots_count }}</td></tr></table>
+<table class="sl-session-table"><tr><td>{% if bots_rows_html %}<a data-sl-toggle-control="{{ bots_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ bots_label }}:{% if bots_rows_html %}</a>{% endif %}</td><td class="sl-session-right">{{ bots_count }}</td></tr></table>
 {% if bots_rows_html %}<table id="{{ bots_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ bots_rows_html }}}</table>{% endif %}
 {% endif %}
-<table class="sl-session-table"><tr><td>{% if visitors_rows_html %}<a OnClick="HideShow('{{ visitors_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ visitors_label }}:{% if visitors_rows_html %}</a>{% endif %}</td><td class="sl-session-right">{{ visitors_count }}</td></tr></table>
+<table class="sl-session-table"><tr><td>{% if visitors_rows_html %}<a data-sl-toggle-control="{{ visitors_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ visitors_label }}:{% if visitors_rows_html %}</a>{% endif %}</td><td class="sl-session-right">{{ visitors_count }}</td></tr></table>
 {% if visitors_rows_html %}<table id="{{ visitors_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ visitors_rows_html }}}</table>{% endif %}
 <table class="sl-session-table"><tr><td>{{ overall_label }}:</td><td class="sl-session-right">{{ overall_count }}</td></tr></table>
 {% if has_rows %}
-<table class="sl-session-table"><tr><td class="sl-session-center"><a OnClick="HideShow('{{ toggle_id }}', 'slide', 'up', 500);" title="{{ toggle_title }}" class="sl-session-toggle">{{ toggle_label }}</a></td></tr></table>
+<table class="sl-session-table"><tr><td class="sl-session-center"><a data-sl-toggle-control="{{ toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ toggle_title }}" class="sl-session-toggle">{{ toggle_label }}</a></td></tr></table>
 <table id="{{ toggle_id }}" class="sl-session-table sl-session-hidden">{{{ rows_html }}}</table>
 {% endif %}
 <hr>

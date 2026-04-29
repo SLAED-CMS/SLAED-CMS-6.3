@@ -16,7 +16,7 @@
 			</div>
 			<div class="fp-left">
 				<div class="fp-nickname dropdown dropup">
-					<a OnClick="HideShow(&#039;{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}&#039;, &#039;blind&#039;, &#039;down&#039;, 500);"><b>{{ username }}</b></a>
+					<a href="#" data-sl-toggle-control="{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{{ username }}</b></a>
 					<div id="{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}" class="dropdown-form">
 						<ul class="list-text">
 							<li>{{{ group }}}</li>

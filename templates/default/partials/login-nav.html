@@ -1,6 +1,6 @@
 <ul class="login-top">
 	<li class="dropdown">
-		<a OnClick="HideShow('a-form', 'puff', 'up', 500);" class="ico login-btn"><b>{{ login }}</b></a>
+		<a href="#" data-sl-toggle-control="a-form" data-sl-toggle-effect="puff" data-sl-toggle-duration="500" class="ico login-btn"><b>{{ login }}</b></a>
 		<form id="a-form" action="index.php?name=account" method="post" class="dropdown-form">
 			<ul class="login-form">
 				<li>{% include 'fragments/input.html' with name_field %}</li>
