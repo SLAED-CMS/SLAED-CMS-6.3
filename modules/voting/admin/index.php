@@ -90,10 +90,10 @@ function voting(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $head = [
             ['content' => _ID, 'is_col_id' => true],
-            ['content' => _TITLE],
+            ['content' => _TITLE, 'is_col_title' => true],
         ];
-        if ($conf['multilingual'] == 1) $head[] = ['content' => _LANGUAGE];
-        $head[] = ['content' => _MODUL];
+        if ($conf['multilingual'] == 1) $head[] = ['content' => _LANGUAGE, 'class_name' => 'sl-col-lang'];
+        $head[] = ['content' => _MODUL, 'class_name' => 'sl-col-module'];
         $head[] = ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true];
         $head[] = ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true];
         $rows = '';
@@ -112,16 +112,16 @@ function voting(): void {
             ]);
             $cells = [
                 ['is_col_id' => true, 'content_html' => (string)$id],
-                ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
                     ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
                     ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
                     ['label' => _TYPE, 'value' => $type, 'is_last' => true],
-                ]]).htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                ]]), 'has_content_text' => true, 'content_text' => (string)$title],
             ];
             if ($conf['multilingual'] == 1) {
-                $cells[] = ['content_html' => getLangName((!$lang) ? _ALL : $lang)];
+                $cells[] = ['class_name' => 'sl-col-lang', 'content_html' => getLangName((!$lang) ? _ALL : $lang)];
             }
-            $cells[] = ['content_html' => $modul ? getModuleName($modul) : _NONE];
+            $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
             $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $active)];
             $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
@@ -166,7 +166,7 @@ function add(): void {
         'tab' => 1,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting')]);
+    if ($id) $cont .= $tpl->getHtmlPart('box', ['content_html' => getVotingView($id, 'voting', true)]);
     $rows = [
         ['label_html' => _TITLE.' / '._POLLTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'is_required' => true, 'maxlength_num' => 255])],
         ['label_html' => _MODUL, 'field_html' => getVotingModuleSelect($modul)],
@@ -185,11 +185,34 @@ function add(): void {
         $a = $i + 1;
         $qval = filterText((string)($body[$i] ?? ''));
         $aval = filterText((string)($answer[$i] ?? '0'));
-        $answ .= $tpl->getHtmlPart('div', ['rows' => [[
+        $answ .= $tpl->getHtmlPart('toggle-form-block', [
+            'block_id' => 'voting-answer-'.$i,
+            'is_toggle_block' => true,
+            'is_hidden' => $qval === '' && $i !== 0,
+            'toggle_target_id' => 'voting-answer-'.$a,
+            'title' => _ADD,
             'label_html' => _POLLEACH.' - '.$a,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'body[]', 'value_attr' => $qval, 'placeholder_text' => _POLLEACH.' - '.$a])
-                .$tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'answer[]', 'value_attr' => $aval, 'placeholder_text' => _VOTES]),
-        ]]]);
+            'content_html' => $tpl->getHtmlPart('div', ['rows' => [
+                [
+                    'label_html' => _POLLEACH,
+                    'field_html' => $tpl->getHtmlFrag('input', [
+                        'itype' => 'text',
+                        'name_attr' => 'body[]',
+                        'value_attr' => $qval,
+                        'placeholder_text' => _POLLEACH.' - '.$a,
+                    ]),
+                ],
+                [
+                    'label_html' => _VOTES,
+                    'field_html' => $tpl->getHtmlFrag('input', [
+                        'itype' => 'number',
+                        'name_attr' => 'answer[]',
+                        'value_attr' => $aval,
+                        'placeholder_text' => _VOTES,
+                    ]),
+                ],
+            ]]),
+        ]);
     }
     $rows[] = ['label_html' => _ADD, 'field_html' => $answ, 'is_full' => true];
     $posttypeopts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SAVECHANGES])

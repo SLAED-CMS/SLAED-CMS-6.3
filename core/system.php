@@ -2549,9 +2549,12 @@ function getCompressHtml(string $html): string {
 }
 
 # Voting view
-function getVotingView(int $id = 0, string $votid = ''): string {
+function getVotingView(int $id = 0, string $votid = '', bool $forceResult = false): string {
  global $db, $afile, $user, $locale, $conf, $tpl;
-    if ($conf['multilingual'] == 1) {
+    if ($forceResult) {
+        $querylang = '1 = 1';
+        $qlang_params = [];
+    } elseif ($conf['multilingual'] == 1) {
         $querylang = "(lang = :locale OR lang = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $qlang_params = ['locale' => $locale];
     } else {
@@ -2570,8 +2573,8 @@ function getVotingView(int $id = 0, string $votid = ''): string {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
         list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
         list($modul, $title, $body, $answer, $enddate, $multi, $comments, $acomm, $typ, $status) = $db->getSqlRow($result);
-        $rate = ($cookies == $id || $num > 0 || strtotime($enddate) <= time()) ? 1 : 0;
-        if ($typ || !$typ && !$rate) {
+        $rate = ($forceResult || $cookies == $id || $num > 0 || strtotime($enddate) <= time()) ? 1 : 0;
+        if ($forceResult || $typ || !$typ && !$rate) {
             $body = explode('|', $body);
             $answer = explode('|', $answer);
             $vote = array_sum($answer);
@@ -2598,7 +2601,7 @@ function getVotingView(int $id = 0, string $votid = ''): string {
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
-            if (is_moder('voting') && $votid == 'voting') {
+            if (!$forceResult && is_moder('voting') && $votid == 'voting') {
                 $items = [
                     $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
                     $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
@@ -2607,10 +2610,10 @@ function getVotingView(int $id = 0, string $votid = ''): string {
             } else {
                 $admin = '';
             }
-            $post = (!$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true]) : '';
-            $polls = ($vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
-            $votes = (!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]) : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
-            $comm = (!$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'is_comments' => true]) : '';
+            $post = (!$forceResult && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true]) : '';
+            $polls = (!$forceResult && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
+            $votes = $forceResult ? '' : ((!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]) : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]));
+            $comm = (!$forceResult && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'is_comments' => true]) : '';
             $cont = $tpl->getHtmlPart('voting-widget', [
                 'has_form'   => !$rate,
                 'form_id'    => 'form'.$votid,
@@ -3487,7 +3490,6 @@ function getEditorFiles(): void {
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
-                        'toggle_onclick' => "HideShow('sf-form-".$a."', 'fold', 'up', 500);",
                         'image_url' => $path.$entry[1],
                         'fallback_url' => 'templates/'.$conf['theme'].'/images/categories/no.png',
                         'image_title' => _IMG,
@@ -3502,7 +3504,6 @@ function getEditorFiles(): void {
                 } else {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
-                        'toggle_onclick' => "HideShow('sf-form-".$a."', 'fold', 'up', 500);",
                         'image_url' => '',
                         'fallback_url' => 'templates/'.$conf['theme'].'/images/categories/no.png',
                         'image_title' => _IMG,

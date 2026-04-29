@@ -977,7 +977,6 @@ function getAdminUploadFiles(): void {
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
-                        'toggle_onclick' => "HideShow('sf-form-".$a."', 'fold', 'up', 500);",
                         'image_url' => $path.$entry[1],
                         'fallback_url' => 'templates/admin/images/admin/no.png',
                         'image_title' => _IMG,
@@ -989,7 +988,6 @@ function getAdminUploadFiles(): void {
                 } else {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
-                        'toggle_onclick' => "HideShow('sf-form-".$a."', 'fold', 'up', 500);",
                         'image_url' => '',
                         'fallback_url' => 'templates/admin/images/admin/no.png',
                         'image_title' => _IMG,
