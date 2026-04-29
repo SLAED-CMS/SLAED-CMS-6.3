@@ -208,20 +208,28 @@
         }
     }
 
-    function setToggleBlockState(element, id, isOpen) {
-        element.hidden = !isOpen;
-        element.style.display = isOpen ? 'block' : 'none';
+    function setToggleBlockState(element, id, isOpen, effect, duration) {
         element.classList.toggle('sl-is-open', isOpen);
         element.classList.toggle('sl-is-closed', !isOpen);
         setToggleControls(id, isOpen);
+        if (effect === 'slide') {
+            setSlideMotion(element, isOpen, duration || 400);
+            return;
+        }
+        if (effect === 'puff') {
+            setFadeScale(element, isOpen, duration || 400);
+            return;
+        }
+        element.hidden = !isOpen;
+        element.style.display = isOpen ? 'block' : 'none';
     }
 
-    function setToggleBlock(id, scoped, isOpen) {
+    function setToggleBlock(id, scoped, isOpen, effect, duration) {
         var element = document.getElementById(id);
         if (!element) return;
         var isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
         var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
-        setToggleBlockState(element, id, nextOpen);
+        setToggleBlockState(element, id, nextOpen, effect, duration);
         setToggleState(id, scoped, nextOpen ? '1' : '0');
     }
 
@@ -238,14 +246,19 @@
             control.setAttribute('tabindex', '0');
         }
         var eventName = isCheckbox ? 'change' : 'click';
-        control.addEventListener(eventName, function () {
-            setToggleBlock(id, scoped, isCheckbox ? control.checked : undefined);
+        control.addEventListener(eventName, function (event) {
+            if (!isCheckbox) event.preventDefault();
+            var effect = control.getAttribute('data-sl-toggle-effect');
+            var duration = parseInt(control.getAttribute('data-sl-toggle-duration') || '400', 10);
+            setToggleBlock(id, scoped, isCheckbox ? control.checked : undefined, effect, duration);
         });
         control.addEventListener('keydown', function (event) {
             if (isCheckbox) return;
             if (event.key !== 'Enter' && event.key !== ' ') return;
             event.preventDefault();
-            setToggleBlock(id, scoped);
+            var effect = control.getAttribute('data-sl-toggle-effect');
+            var duration = parseInt(control.getAttribute('data-sl-toggle-duration') || '400', 10);
+            setToggleBlock(id, scoped, undefined, effect, duration);
         });
     }
 
@@ -361,6 +374,12 @@
             var state = getToggleState(id, scoped);
             var isOpen = state !== '0';
             if (state === null) {
+                var defaultState = blocks[j].getAttribute('data-sl-toggle-default');
+                if (defaultState === 'closed') {
+                    isOpen = false;
+                } else if (defaultState === 'open') {
+                    isOpen = true;
+                }
                 var blockControls = getToggleControls(id);
                 for (var k = 0; k < blockControls.length; k++) {
                     if (blockControls[k].type === 'checkbox') {
@@ -372,19 +391,6 @@
             setToggleBlockState(blocks[j], id, isOpen);
         }
     }
-
-    window.HideShow = function (obj, eff, opt, dur) {
-        var element = document.getElementById(obj);
-        if (!element) return false;
-        var duration = dur || 400;
-        var isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
-        if (eff === 'puff') {
-            setFadeScale(element, isHidden, duration);
-        } else {
-            setSlideMotion(element, isHidden, duration);
-        }
-        return false;
-    };
 
     window.Upper = function (obj, dur) {
         var duration = dur || 200;
@@ -484,6 +490,7 @@
 
     document.addEventListener('htmx:afterSwap', function (event) {
         setTableSort(event.target);
+        setToggleBlocks();
     });
 
     if (document.readyState === 'loading') {
