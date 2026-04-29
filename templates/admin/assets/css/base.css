@@ -17,6 +17,7 @@ body {
     background: transparent;
 }
 body, select, input, textarea, button { font: 14px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
+.bi { font-size: 18px; }
 
 h1, h2, h3, h4, h5 { line-height: normal; }
 h1 { font-size: 1.8em; }
@@ -44,6 +45,13 @@ input, textarea, select {
     border-radius: 3px;
     transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(:disabled):hover,
+textarea:not(:disabled):hover,
+select:not(:disabled):hover {
+    background-color: #fff;
+    border-color: #9dccdf;
+    box-shadow: 0 0 0 2px rgba(32, 127, 182, .08);
+}
 
 /* Подсветка текста */
 input[required]:valid, textarea[required]:valid { color: #008000; }
@@ -51,7 +59,7 @@ input[required]:invalid, textarea[required]:invalid { color: #ff0000; }
 input[placeholder] { text-overflow: ellipsis; }
 
 input[type="radio"], input[type="checkbox"] { min-height: 0; margin: 0 2px 2px 0; vertical-align: middle; }
-input:focus, textarea:focus, select:focus { box-shadow: 0 0 3px #34c8ed; }
+input:focus, textarea:focus, select:focus { border-color: #34c8ed; box-shadow: 0 0 3px #34c8ed; }
 input, textarea, select, a { outline: none; }
 select[multiple] { height: 100px; }
 
