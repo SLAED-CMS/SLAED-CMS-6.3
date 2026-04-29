@@ -70,8 +70,9 @@ function replace(): void {
             ];
             $blok .= $tpl->getHtmlPart('toggle-form-block', [
                 'block_id' => 'fi'.$k.$c,
+                'is_toggle_block' => true,
                 'is_hidden' => $out[0] === '' && $out[1] === '' && $c !== 0,
-                'toggle_onclick' => "HideShow('fi".$k.$next."', 'slide', 'up', 500);",
+                'toggle_target_id' => 'fi'.$k.$next,
                 'title' => _ADD,
                 'label_html' => _REPLACE_FIELD.': '.$next,
                 'content_html' => $tpl->getHtmlPart('div', ['rows' => $rows]),

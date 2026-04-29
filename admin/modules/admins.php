@@ -65,13 +65,12 @@ function admins(): void {
     );
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super] = $db->getSqlRow($result)) {
         $lang = $lang ? getLangName($lang) : _ALL;
-        $show = htmlspecialchars((string)$name, ENT_QUOTES, 'UTF-8');
         $tip = $tpl->getHtmlFrag('info-tooltip', [
             'items' => [
                 ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING), 'is_last' => false],
                 ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING), 'is_last' => true],
             ],
-        ]).$show;
+        ]);
         $acts = $tpl->getHtmlFrag('row-actions', [
             'trigger_label' => _EDITOR,
             'items' => [
@@ -90,15 +89,15 @@ function admins(): void {
         ]);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['content_html' => $tip],
-                ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
+                ['prefix_html' => $tip, 'has_content_text' => true, 'content_text' => (string)$name],
+                ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
                 ['content_html' => $tpl->getHtmlFrag('link', [
                     'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)$conf['sitename']),
                     'is_blank' => true,
                     'label' => $email,
                     'title' => $email,
                 ])],
-                ['content_html' => htmlspecialchars((string)$lang, ENT_QUOTES, 'UTF-8')],
+                ['has_content_text' => true, 'content_text' => (string)$lang],
                 ['is_col_status' => true, 'content_html' => ((int)$super === 1) ? _YES : _NO],
                 ['is_col_actions' => true, 'content_html' => $acts],
             ],

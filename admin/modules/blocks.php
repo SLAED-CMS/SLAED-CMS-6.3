@@ -397,7 +397,8 @@ function filecode(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
         $rows = [[
             'label_html' => _FILENAME,
-            'field_html' => htmlspecialchars($bf, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'has_field_text' => true,
+            'field_text' => $bf,
         ], [
             'label_html' => _CONTENT,
             'field_html' => Editor::getCode([

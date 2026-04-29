@@ -139,8 +139,8 @@ function banlist(): void {
                 [$tip] = explode('/', $tcidr, 2);
                 $reason = $tpl->getHtmlFrag('info-tooltip', [
                     'items' => [
-                        ['label' => _IP_CIDR, 'value' => htmlspecialchars($tcidr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => false],
-                        ['label' => _BANN_REAS, 'value' => htmlspecialchars((string)$binfo[3], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'is_last' => true],
+                        ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr, 'is_last' => false],
+                        ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
                     ],
                 ]).user_geo_ip($tip, 4);
                 $acts = $tpl->getHtmlFrag('row-actions', [
@@ -235,7 +235,7 @@ function banlist(): void {
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['is_truncate' => true, 'title_text' => (string)$binfo[0], 'content_html' => user_info($binfo[0])],
-                        ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'content_html' => htmlspecialchars((string)($binfo[2] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                        ['is_truncate' => true, 'title_text' => (string)($binfo[2] ?? ''), 'has_content_text' => true, 'content_text' => (string)($binfo[2] ?? '')],
                         ['content_html' => getTimeLeft((int)($binfo[1] ?? 0))],
                         ['content_html' => $acts],
                     ],
@@ -521,7 +521,7 @@ function config(): void {
         ['label_html' => _SEC_WARN_STAT, 'field_html' => getTplRadioGroup(['name' => 'write_w', 'value' => $conf['security']['write_w'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_LOG, 'field_html' => getTplRadioGroup(['name' => 'log', 'value' => $conf['security']['log'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_LOG_D, 'field_html' => getTplRadioGroup(['name' => 'log_d', 'value' => $conf['security']['log_d'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEC_DUMP_SKIP, 'hint' => _SEC_DUMP_SKIP_INFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'dump_skip', 'rows_num' => 8, 'value_text' => htmlspecialchars((string)($conf['security']['dump_skip'] ?? ''), ENT_QUOTES, 'UTF-8')]), 'is_full' => true],
+        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SEC_DUMP_SKIP, 'hint' => _SEC_DUMP_SKIP_INFO]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'dump_skip', 'rows_num' => 8, 'value_text' => (string)($conf['security']['dump_skip'] ?? '')]), 'is_full' => true],
         ['label_html' => _SEC_LOG_A, 'field_html' => getTplRadioGroup(['name' => 'log_a', 'value' => $conf['security']['log_a'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_LOG_U, 'field_html' => getTplRadioGroup(['name' => 'log_u', 'value' => $conf['security']['log_u'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_WARN_BLOCK, 'field_html' => getTplRadioGroup(['name' => 'block', 'value' => $conf['security']['block'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],

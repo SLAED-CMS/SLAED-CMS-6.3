@@ -155,8 +155,8 @@ function getSqltable(array $items): string {
     if (!$items) return '';
     $rows = [];
     foreach ($items as $row) {
-        $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
-        $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
+        $sql = cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160);
+        $tab = ($row['table'] !== '') ? (string)$row['table'] : _NO;
         $status = $tpl->getHtmlFrag('inline-badge', [
             'is_success' => $row['ok'],
             'is_danger' => !$row['ok'],
@@ -165,9 +165,9 @@ function getSqltable(array $items): string {
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string)(int)$row['num']],
-                ['content_html' => htmlspecialchars($row['type'])],
-                ['content_html' => $tab],
-                ['content_html' => $sql],
+                ['has_content_text' => true, 'content_text' => (string)$row['type']],
+                ['has_content_text' => true, 'content_text' => $tab],
+                ['has_content_text' => true, 'content_text' => $sql],
                 ['content_html' => $status],
             ],
         ])]);
@@ -425,7 +425,7 @@ function dump(): void {
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $parsed = getSqlbatch(stripslashes($string));
         if ($parsed['error'] !== '') {
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => htmlspecialchars($parsed['error'])]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $parsed['error']]);
         } else {
             $items = [];
             foreach ($parsed['statements'] as $query) {

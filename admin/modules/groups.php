@@ -58,7 +58,7 @@ function groups(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$grid],
                     ['content_html' => $tpl->getHtmlFrag('span', ['img_src' => 'templates/'.$conf['theme'].'/images/ranks/'.$rank, 'img_alt' => _RANK])],
-                    ['is_truncate' => true, 'title_text' => $grname, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['content_html' => _DESCRIPTION.': '.$description]).$tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'color_attr' => htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')])],
+                    ['is_truncate' => true, 'title_text' => $grname, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['content_html' => _DESCRIPTION.': '.$description]), 'content_html' => $tpl->getHtmlFrag('inline-badge', ['label' => $grname, 'color_attr' => $color])],
                     ['is_col_count' => true, 'content_html' => (string)$points],
                     ['is_col_count' => true, 'content_html' => (string)$users_num],
                     ['is_col_status' => true, 'content_html' => $extra],

@@ -91,10 +91,10 @@ function scheduler(): void {
         }
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['is_truncate' => true, 'title_text' => (string)$title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')],
-                ['is_col_date' => true, 'content_html' => htmlspecialchars((string)$nextr, ENT_QUOTES, 'UTF-8')],
-                ['is_col_status' => true, 'content_html' => htmlspecialchars((string)$stat, ENT_QUOTES, 'UTF-8')],
-                ['is_col_count' => true, 'content_html' => htmlspecialchars((string)($job['priority'] ?? '100'), ENT_QUOTES, 'UTF-8')],
+                ['is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$title],
+                ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$nextr],
+                ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
+                ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
                 ['is_col_status' => true, 'content_html' => ((int)$isactive === 1) ? _YES : _NO],
                 ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _EDITOR, 'items' => $acts])],
             ],
