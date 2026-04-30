@@ -3,5 +3,5 @@
 		<span title="{{ text_safe }}">{{{ text }}}</span>
 		<span class="pull-right" title="{{ text_safe }} - {{ percent }}%"><b>{{ percent }}%</b> <b>({{ votes_label }}: {{ votes }})</b></span>
 	</div>
-	<progress class="sl-vote-progress sl-vote-progress-{{ pn }}" value="{{ percent }}" max="100" title="{{ text_safe }} - {{ percent }}%">{{ percent }}%</progress>
+	<meter class="sl-vote-meter sl-vote-meter-{{ pn }}" value="{{ percent }}" min="0" max="100" title="{{ text_safe }} - {{ percent }}%">{{ percent }}%</meter>
 </li>

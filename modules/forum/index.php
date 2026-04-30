@@ -453,7 +453,7 @@ function view(): void {
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
                 $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
-                    ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'is_button_blue' => true, 'label' => _PERS])
+                    ? $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'is_button_blue' => true, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)])
                     : '';
                 $privat = ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick))
                     ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($nick), 'title' => _SENDMES, 'is_button_green' => true, 'label' => _MESSAGE])

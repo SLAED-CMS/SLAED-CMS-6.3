@@ -392,6 +392,73 @@
         }
     }
 
+    function getEditorInsertText(command, value) {
+        if (command === 'name') return '[b]' + value + '[/b], ';
+        if (command === 'attach') return '[attach=' + value + ' align=left title=title width=500 height=500 rel=rel]\n';
+        if (command === 'img') return '[img=left alt=title]' + value + '[/img]\n';
+        return value;
+    }
+
+    function syncEditorValue(id, editor) {
+        var field = document.getElementById(id);
+        if (!field || !editor || typeof editor.getMarkdown !== 'function') return;
+        field.value = editor.getMarkdown();
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function insertTextareaText(field, text) {
+        var start = typeof field.selectionStart === 'number' ? field.selectionStart : field.value.length;
+        var end = typeof field.selectionEnd === 'number' ? field.selectionEnd : start;
+        field.focus();
+        if (typeof field.setRangeText === 'function') {
+            field.setRangeText(text, start, end, 'end');
+        } else {
+            field.value = field.value.slice(0, start) + text + field.value.slice(end);
+            field.selectionStart = field.selectionEnd = start + text.length;
+        }
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function insertEditorContent(id, command, value, title) {
+        var api = window.SlaedToastUi;
+        var editor = api && typeof api.getEditor === 'function' ? api.getEditor(id) : null;
+        var text = getEditorInsertText(command, value);
+        if (editor) {
+            editor.focus();
+            if (command === 'img' && typeof editor.exec === 'function') {
+                editor.exec('addImage', { imageUrl: value, altText: title || 'image' });
+            } else if (typeof editor.insertText === 'function') {
+                editor.insertText(text);
+            } else if (api && typeof api.insertText === 'function') {
+                api.insertText(id, text);
+            }
+            syncEditorValue(id, editor);
+            return true;
+        }
+        var field = document.getElementById(id);
+        if (!field || field.tagName !== 'TEXTAREA') return false;
+        insertTextareaText(field, text);
+        return true;
+    }
+
+    function setEditorInsertHandler() {
+        if (document.documentElement.getAttribute('data-sl-editor-insert-ready') === '1') return;
+        document.documentElement.setAttribute('data-sl-editor-insert-ready', '1');
+        document.addEventListener('click', function (event) {
+            var control = event.target.closest('[data-sl-editor-insert]');
+            if (!control) return;
+            var command = control.getAttribute('data-sl-editor-insert') || '';
+            var id = control.getAttribute('data-sl-editor-id') || '1';
+            var value = control.getAttribute('data-sl-editor-value') || '';
+            var title = control.getAttribute('data-sl-editor-title') || control.getAttribute('title') || '';
+            if (!command || !id) return;
+            event.preventDefault();
+            insertEditorContent(id, command, value, title);
+        });
+    }
+
     window.Upper = function (obj, dur) {
         var duration = dur || 200;
         var target = document.scrollingElement || document.documentElement;
@@ -486,6 +553,7 @@
         setImageReplace();
         setTableCheckAll();
         setToggleBlocks();
+        setEditorInsertHandler();
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {

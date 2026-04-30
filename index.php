@@ -121,7 +121,6 @@ if (empty($go)) {
         setCache('0');
         switch($op) {
             case 'getRatingView': getRatingView(); break;
-            case 'getEditorFiles': getEditorFiles(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
             case 'getUserSessionInfo': getUserSessionInfo(); break;
             case 'getUserList': getUserList(); break;

@@ -29,7 +29,6 @@ setLang();
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
 $db = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
-if ($conf['db']['sync']) $db->getSqlQuery("SET LOCAL time_zone = '".date('P')."'");
 define('PREFIX_DB', $conf['db']['prefix']);
 
 # Security and routing aliases

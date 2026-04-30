@@ -110,13 +110,13 @@ class Template {
             $this->reportTemplateError($type, $name, 'Template file not found');
             return $this->getTemplateDebugComment($type, $name, 'template file not found');
         }
-        $code = $this->getCode($type, $name);
-        if ($code === '') return '';
         $cache = $this->getCache($file);
         if ($cache === '') return '';
         $mdir = dirname($cache);
         if (!is_dir($mdir) && !mkdir($mdir, 0777, true) && !is_dir($mdir)) return '';
         if (!is_file($cache) || filemtime($file) > filemtime($cache) || filemtime(__FILE__) > filemtime($cache)) {
+            $code = $this->getCode($type, $name);
+            if ($code === '') return '';
             $code = $this->filterCode($code);
             if (file_put_contents($cache, $code, LOCK_EX) === false) return '';
         }

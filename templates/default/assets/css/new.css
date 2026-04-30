@@ -517,9 +517,13 @@ ol.sl-sublist-two li:before{background:#b9aca6;box-shadow:15px 0 0 #cebeb1,30px 
 ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
 .sl-debug-section{border:1px solid #d9d9dc;margin:10px 0;padding:10px}
 .sl-debug-section legend{font-weight:bold}
-.sl-debug-stats{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0}
-.sl-debug-value{cursor:help}
+.sl-debug-stats{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:end;margin:0}
+.sl-debug-stats dt{font-weight:normal;align-self:end}
+.sl-debug-stats dt::after{content:":"}
+.sl-debug-stats dd{align-self:end}
+.sl-debug-value{display:inline-block;padding-bottom:4px;cursor:help}
 .sl-debug-success{color:#008000}
+.sl-debug-info{color:#06c}
 .sl-debug-warn{color:#f50}
 .sl-debug-danger{color:#f00}
 .sl-code-row-odd{background-color:#fafafa}.sl-code-row-even{background-color:#fff}.sl-code-row-num{vertical-align:top}.sl-code-row-cell{width:100%}.sl-embed-img{border:0}
@@ -558,18 +562,19 @@ ol.sl-sublist-two li:hover:before{box-shadow:none;margin-right:5px}
 .sl-vote-links{margin-top:1em;margin-bottom:-8px;font-size:.9em}
 .sl-vote-links a{margin-right:20px}
 .sl-vote-actions{display:inline-block}
-.sl-vote-progress{display:block;width:100%;height:8px;border:1px solid #d1d9e0;border-radius:4px;overflow:hidden;background:#f4f6f8}
-.sl-vote-progress::-webkit-progress-bar{background:#f4f6f8}
-.sl-vote-progress::-webkit-progress-value{border-radius:3px;background:linear-gradient(to top,#00adee 10%,#0078a5 90%)}
-.sl-vote-progress::-moz-progress-bar{border-radius:3px;background:linear-gradient(to top,#00adee 10%,#0078a5 90%)}
-.sl-vote-progress-2::-webkit-progress-value{background:linear-gradient(to top,#8fc857 10%,#5c9425 90%)}
-.sl-vote-progress-2::-moz-progress-bar{background:linear-gradient(to top,#8fc857 10%,#5c9425 90%)}
-.sl-vote-progress-3::-webkit-progress-value{background:linear-gradient(to top,#faa51a 10%,#f47a20 90%)}
-.sl-vote-progress-3::-moz-progress-bar{background:linear-gradient(to top,#faa51a 10%,#f47a20 90%)}
-.sl-vote-progress-4::-webkit-progress-value{background:linear-gradient(to top,#dd5f5f 10%,#a92c2c 90%)}
-.sl-vote-progress-4::-moz-progress-bar{background:linear-gradient(to top,#dd5f5f 10%,#a92c2c 90%)}
-.sl-vote-progress-5::-webkit-progress-value{background:linear-gradient(to top,#bf5fdd 10%,#8c2ca9 90%)}
-.sl-vote-progress-5::-moz-progress-bar{background:linear-gradient(to top,#bf5fdd 10%,#8c2ca9 90%)}
+.sl-vote-meter{display:block;width:100%;height:8px;border:1px solid #d1d9e0;border-radius:4px;overflow:hidden;background:#f4f6f8;box-shadow:none;-webkit-appearance:none;appearance:none}
+.sl-vote-meter::-webkit-meter-inner-element{display:block}
+.sl-vote-meter::-webkit-meter-bar{border:0;border-radius:4px;background:#f4f6f8;box-shadow:none}
+.sl-vote-meter::-webkit-meter-optimum-value,.sl-vote-meter::-webkit-meter-suboptimum-value,.sl-vote-meter::-webkit-meter-even-less-good-value{border:0;border-radius:3px;background:#0078a5;box-shadow:none;background-image:none}
+.sl-vote-meter:-moz-meter-optimum::-moz-meter-bar{border:0;border-radius:3px;background:#0078a5;box-shadow:none}
+.sl-vote-meter-2::-webkit-meter-optimum-value,.sl-vote-meter-2::-webkit-meter-suboptimum-value,.sl-vote-meter-2::-webkit-meter-even-less-good-value{background:#5c9425;background-image:none}
+.sl-vote-meter-2:-moz-meter-optimum::-moz-meter-bar{background:#5c9425}
+.sl-vote-meter-3::-webkit-meter-optimum-value,.sl-vote-meter-3::-webkit-meter-suboptimum-value,.sl-vote-meter-3::-webkit-meter-even-less-good-value{background:#f47a20;background-image:none}
+.sl-vote-meter-3:-moz-meter-optimum::-moz-meter-bar{background:#f47a20}
+.sl-vote-meter-4::-webkit-meter-optimum-value,.sl-vote-meter-4::-webkit-meter-suboptimum-value,.sl-vote-meter-4::-webkit-meter-even-less-good-value{background:#a92c2c;background-image:none}
+.sl-vote-meter-4:-moz-meter-optimum::-moz-meter-bar{background:#a92c2c}
+.sl-vote-meter-5::-webkit-meter-optimum-value,.sl-vote-meter-5::-webkit-meter-suboptimum-value,.sl-vote-meter-5::-webkit-meter-even-less-good-value{background:#8c2ca9;background-image:none}
+.sl-vote-meter-5:-moz-meter-optimum::-moz-meter-bar{background:#8c2ca9}
 .sl-search-line .sl-pull-right img{vertical-align:middle;margin-left:3px}
 .sl-search-meta>ul.sl-pull-right>li{margin-right:0;margin-left:20px}
 

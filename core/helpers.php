@@ -574,6 +574,12 @@ function getTplTextarea(array $data = []): string {
     ]);
 }
 
+# Build data attributes for inserting text into the active content editor
+function getTplEditorInsertAttr(string $command, string $value, string $editorId = '1'): string {
+    $esc = static fn(string $text): string => htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return 'data-sl-editor-insert="'.$esc($command).'" data-sl-editor-id="'.$esc($editorId).'" data-sl-editor-value="'.$esc($value).'"';
+}
+
 # Render an inline HTMX edit form with a textarea and save/back buttons
 function getTplAjaxTextarea(array $data = []): string {
     global $tpl;

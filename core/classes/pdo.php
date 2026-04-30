@@ -24,7 +24,7 @@ class Database {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_BOTH, PDO::ATTR_EMULATE_PREPARES => false];
             $this->sqlconnid = new PDO($dsn, $user, $pass, $opts);
         } catch (PDOException $e) {
-            $msg = _SQLERRORCON.'<br>'._ERROR.': '.$e->getCode().' - '.$e->getMessage();
+            $msg = _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage();
             setExit($msg);
         }
     }
@@ -77,24 +77,16 @@ class Database {
         return true;
     }
 
-    # Executes SQL query (raw or with parameters)
-    # Supports: Named (:name) or Positional (?) placeholders
+    # Executes SQL query (raw or with parameters). Supports: Named (:name) or Positional (?) placeholders
     function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
- global $conf;
+        global $conf, $tpl;
         $this->qresult = null;
         if (!$query) return false;
         $this->qid = uniqid('', true);
         $stime = microtime(true);
-        $type = 'PDO';
-        if (!empty($params)) {
-            if (preg_match('/:([a-zA-Z0-9_]+)/', $query)) {
-                $type .= ' with :name';
-            } elseif (strpos($query, '?') !== false) {
-                $type .= ' with ?';
-            }
-        }
+        $type = 'PDO'.(($params) ? (preg_match('/:([a-zA-Z0-9_]+)/', $query) ? ' with :name' : ((str_contains($query, '?')) ? ' with ?' : '')) : '');
         try {
-            if (!empty($params)) {
+            if ($params) {
                 $stmt = $this->sqlconnid->prepare($query);
                 $stmt->execute($params);
                 $this->qresult = $stmt;
@@ -105,40 +97,39 @@ class Database {
             $this->qresult = false;
             $this->laste = $e;
         }
-        $ttime = sprintf('%.5f', microtime(true) - $stime);
-        $this->sqltime += $ttime;
+        $etime = microtime(true) - $stime;
+        $ttime = sprintf('%.5f', $etime);
+        $this->sqltime += $etime;
         $cvar = explode(',', $conf['variables']);
-        if ($cvar[8]) {
-            global $tpl;
-            $color = ($ttime > 0.01) ? 'sl-red' : 'sl-green';
-            $iquery = htmlspecialchars($this->filterSqlQuery($query, $params));
-            if ($tpl instanceof Template) {
-                $this->qtime .= '<span class="'.$color.'">'.$ttime.'</span> '._SEC.'. - ['.htmlspecialchars($type, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'] - '.$iquery.';<br>';
-            } else {
-                $this->qtime .= '['.$color.'] '.$ttime.' '._SEC.'. - ['.$type.'] - '.$iquery.';'.PHP_EOL;
-            }
+        $debug = !empty($cvar[8]) && $tpl instanceof Template;
+        $log = !$this->qresult && $conf['security']['error_log'] && function_exists('addSqlLog');
+        $sql = ($debug || $log) ? $this->filterSqlQuery($query, $params) : '';
+        if ($debug) {
+            $this->qtime .= $tpl->getHtmlFrag('span', [
+                'text' => $ttime.' '._SEC.'.',
+                'is_success' => $etime <= 0.01,
+                'is_danger' => $etime > 0.01,
+            ]).$tpl->getHtmlFrag('span', [
+                'text' => ' - ['.$type.'] - '.$sql.';',
+                'is_line_break' => true,
+            ]);
         }
         if ($this->qresult) {
             $this->qnum++;
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);
             return $this->qresult;
-        } else {
-            if ($conf['security']['error_log']) {
-                $error = $this->getSqlError();
-                $errmsg = htmlspecialchars($error['message']);
-                $errinfo = $error['sqlstate'].' / '.$error['code'];
-                if ($tpl instanceof Template) {
-                    $this->qtime .= ' '.$tpl->getHtmlFrag('span', ['label' => _ERROR, 'content_html' => $errinfo.' - '.$errmsg, 'is_danger' => true]);
-                } else {
-                    $this->qtime .= ' '._ERROR.': '.$errinfo.' - '.$errmsg.PHP_EOL;
-                }
-                if (function_exists('addSqlLog')) {
-                    $loginfo = $ttime.' '._SEC.'. - ['.$type.'] - '.$error['sqlstate'].'/'.$error['code'];
-                    addSqlLog($loginfo, $error['message'], $this->filterSqlQuery($query, $params));
-                }
-            }
-            return false;
         }
+        if (!$conf['security']['error_log']) return false;
+        $error = $this->getSqlError();
+        $errinfo = $error['sqlstate'].' / '.$error['code'];
+        if ($tpl instanceof Template) {
+            $this->qtime .= $tpl->getHtmlFrag('span', [
+                'text' => _ERROR.': '.$errinfo.' - '.$error['message'],
+                'is_danger' => true,
+            ]);
+        }
+        if ($log) addSqlLog($ttime.' '._SEC.'. - ['.$type.'] - '.$error['sqlstate'].'/'.$error['code'], $error['message'], $sql);
+        return false;
     }
 
     # Returns the number of rows (not reliable for SELECT with MySQL)
