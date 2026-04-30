@@ -111,12 +111,6 @@ require_once BASE_DIR.'/core/classes/logger.php';
 # System file include
 require_once BASE_DIR.'/core/security.php';
 
-if (defined('MODULE_FILE')) {
-    require_once BASE_DIR.'/core/user.php';
-} elseif (defined('ADMIN_FILE')) {
-    require_once BASE_DIR.'/core/admin.php';
-}
-
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
@@ -126,6 +120,14 @@ $prs = new Parser();
 
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
+
+if ($conf['db']['sync']) $db->getSqlQuery("SET LOCAL time_zone = '".date('P')."'");
+
+if (defined('MODULE_FILE')) {
+    require_once BASE_DIR.'/core/user.php';
+} elseif (defined('ADMIN_FILE')) {
+    require_once BASE_DIR.'/core/admin.php';
+}
 
 # Call an optional theme hook and return only array payloads.
 function getThemeHookVars(string $hook): array {
@@ -2634,125 +2636,165 @@ function getVotingView(int $id = 0, string $votid = '', bool $forceResult = fals
     return $cont;
 }
 
-# CPU load analyzer with cache in seconds (Windows 10/11, Linux/macOS)
-function getCpuLoad(int $tcache = 2): array {
-    static $cache = ['time' => 0, 'cpu' => _NO_INFO, 'info' => _NO_INFO];
-    if (time() - $cache['time'] < $tcache) return [$cache['cpu'], $cache['info']];
-    $percent = null;
-    $allow = static function (string $path): bool {
-        $obase = ini_get('open_basedir');
-        if ($obase === false || $obase === '') return true;
+# Converts PHP memory_limit to bytes
+function getMemoryLimitBytes(bool $safe = false): int {
+    $limit = ini_get('memory_limit');
+    if ($limit === false || $limit === '' || $limit === '-1') return ($safe) ? max(memory_get_usage(true) * 2, 134217728) : 0;
+    $limit = trim($limit);
+    if (!preg_match('/^([0-9]+(?:\.[0-9]+)?)\s*([KMG])?$/i', $limit, $matches)) return max(0, (int)$limit);
+    $value = (float)$matches[1];
+    $unit = strtoupper($matches[2] ?? '');
+    if ($unit === 'G') return (int)($value * 1024 * 1024 * 1024);
+    if ($unit === 'M') return (int)($value * 1024 * 1024);
+    if ($unit === 'K') return (int)($value * 1024);
+    return (int)$value;
+}
 
-        $npath = str_replace('\\', '/', $path);
-        foreach (explode(PATH_SEPARATOR, $obase) as $base) {
-            $base = trim((string)$base);
-            if ($base === '' || $base === '.') continue;
-
-            $cbase = rtrim(str_replace('\\', '/', $base), '/');
-            if ($cbase === '') continue;
-
-            if ($npath === $cbase || str_starts_with($npath, $cbase.'/')) {
-                return true;
-            }
+# Returns rendered system debug information
+function getDebugSystemInfo(): string {
+    global $tpl, $db, $sgtime;
+    $max = [
+        'mem' => getMemoryLimitBytes(),
+        'gen' => 2.0,
+        'qnum' => 50,
+        'qtime' => 0.010,
+    ];
+    $metric = static function (float $value, float $max): array {
+        $percent = ($max > 0) ? ($value * 100 / $max) : 0.0;
+        $percent = min(100.0, max(0.0, $percent));
+        $state = 'info';
+        $prog = '1';
+        if ($percent <= 50) {
+            $state = 'success';
+            $prog = '2';
+        } elseif ($percent > 75 && $percent <= 95) {
+            $state = 'warn';
+            $prog = '3';
+        } elseif ($percent > 95) {
+            $state = 'danger';
+            $prog = '4';
         }
-        return false;
+        return [
+            'percent' => number_format($percent, 1, '.', ''),
+            'progress' => $prog,
+            'is_success' => $state === 'success',
+            'is_info' => $state === 'info',
+            'is_warn' => $state === 'warn',
+            'is_danger' => $state === 'danger',
+        ];
     };
-    $rfile = static function (string $path) use ($allow): string|false {
-        if (!$allow($path)) return false;
-        if (!is_file($path) || !is_readable($path)) return false;
+    $memuse = memory_get_usage();
+    $gentime = microtime(true) - $sgtime;
+    $sqltime = (float)$db->sqltime;
+    $qnum = (int)$db->qnum;
+    $avg = ($qnum > 0) ? ($sqltime / $qnum) : 0.0;
+    $mem = $metric($memuse, $max['mem']);
+    $gen = $metric($gentime, $max['gen']);
+    $queries = $metric($qnum, $max['qnum']);
+    $sql = $metric($avg, $max['qtime']);
+    $data = [
+        'lbl_meml' => _MEMUSAGE,
+        'mem_title' => ($max['mem'] > 0) ? $mem['percent'].'%' : _NO_INFO,
+        'mem_value' => filterSize($memuse),
+        'mem_limit' => ($max['mem'] > 0) ? filterSize($max['mem']) : _NO_INFO,
+        'generation_label' => _PAGETIME,
+        'generation_text' => sprintf('%.3f', $gentime).' '._SEC.'.',
+        'generation_title' => $gen['percent'].'%',
+        'db_queries_label' => _DBQUERY,
+        'db_queries_text' => $qnum,
+        'db_queries_title' => $qnum.' / '.$max['qnum'],
+        'db_time_label' => _DBQTIME,
+        'db_text' => sprintf('%.3f', $sqltime).' '._SEC.'. Ø '.sprintf('%.4f', $avg).' '._SEC.'.',
+        'db_title' => 'Ø '.sprintf('%.4f', $avg).' '._SEC.'.',
+    ];
+    foreach (['mem' => $mem, 'generation' => $gen, 'db_queries' => $queries, 'db' => $sql] as $name => $item) {
+        $data[$name.'_is_success'] = $item['is_success'];
+        $data[$name.'_is_info'] = $item['is_info'];
+        $data[$name.'_is_warn'] = $item['is_warn'];
+        $data[$name.'_is_danger'] = $item['is_danger'];
+        $data[$name.'_percent'] = $item['percent'];
+        $data[$name.'_progress'] = $item['progress'];
+    }
+    return $tpl->getHtmlFrag('debug-stats', $data);
+}
 
-        $content = file_get_contents($path);
-        return ($content === false) ? false : $content;
-    };
-    if (stristr(PHP_OS, 'WIN')) {
-        $out = [];
-        $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
-        if (function_exists('exec')) exec($cmd, $out);
-        if (!empty($out)) {
-            $val = str_replace(',', '.', trim($out[0]));
-            if (is_numeric($val)) $percent = (float)$val;
+# Returns recent PHP and SQL debug log entries
+function getDebugErrors(): string {
+    global $tpl;
+    $logs = [
+        'PHP' => LOGS_DIR.'/error_php.log',
+        'SQL' => LOGS_DIR.'/error_sql.log',
+    ];
+    $rows = [];
+    foreach ($logs as $chan => $file) {
+        if (!is_file($file) || !is_readable($file)) continue;
+        $size = filesize($file);
+        if (!$size) continue;
+        $open = fopen($file, 'rb');
+        if (!$open) continue;
+        $text = '';
+        $pos = $size;
+        while ($pos > 0 && substr_count($text, "\n") <= 4) {
+            $step = min(8192, $pos);
+            $pos -= $step;
+            if (fseek($open, $pos) !== 0) break;
+            $read = fread($open, $step);
+            if ($read === false) break;
+            $text = $read.$text;
         }
-        if ($percent === null) {
-            $out = [];
-            $cmd = 'wmic cpu get loadpercentage /all';
-            if (function_exists('exec')) exec($cmd, $out);
-            if ($out) {
-                foreach ($out as $line) {
-                    if ($line && preg_match('#^[0-9]+$#', $line)) {
-                        $percent = (float)$line;
-                        break;
-                    }
-                }
-            }
+        fclose($open);
+        $list = array_values(array_filter(array_map('trim', explode("\n", $text)), static fn($line) => $line !== ''));
+        if (!$list) continue;
+        foreach (array_slice($list, -4) as $line) {
+            $data = json_decode($line, true);
+            $time = is_array($data) ? (string)($data['ts'] ?? '') : '';
+            $msg = is_array($data) ? (string)($data['msg'] ?? $line) : $line;
+            $url = is_array($data) ? (string)($data['url'] ?? '') : '';
+            $rows[] = ['time' => $time, 'chan' => $chan, 'msg' => cutstr($msg, 180), 'url' => cutstr($url, 80)];
         }
-    } else {
-        if (function_exists('sys_getloadavg')) {
-            $tmp = sys_getloadavg();
-            if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
-        }
-        $loadavg = $rfile('/proc/loadavg');
-        if (!isset($raw) && $loadavg !== false) {
-            $tmp = explode(' ', $loadavg);
-            if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
-        }
-        $nproc = 0;
-        $info = $rfile('/proc/cpuinfo');
-        if ($info !== false) {
-            preg_match_all('/^processor\s*:/m', $info, $matches);
-            if (!empty($matches[0])) $nproc = count($matches[0]);
-        }
-        if ($nproc <= 0) $nproc = 1;
-        if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 10.0;
     }
-    if (is_numeric($percent)) {
-        $cpu = round((float)$percent, 2);
-        if ($cpu < 0) $cpu = 0.0;
-        if ($cpu > 100) $cpu = 100.0;
-        $info = _PLOAD1;
-    } else {
-        $cpu = $info = _NO_INFO;
+    if (!$rows) return '';
+    usort($rows, static fn($one, $two) => strcmp($two['time'], $one['time']));
+    $html = '';
+    foreach (array_slice($rows, 0, 4) as $row) {
+        $text = $row['time'].' '.$row['chan'].': '.$row['msg'].(($row['url'] !== '') ? ' - '.$row['url'] : '');
+        $html .= $tpl->getHtmlFrag('list-item', ['content_html' => $tpl->getHtmlFrag('span', ['text' => $text])]);
     }
-    $cache = ['time' => time(), 'cpu' => $cpu, 'info' => $info];
-    return [$cpu, $info];
+    return $tpl->getHtmlFrag('list', ['is_unordered' => true, 'items_html' => $html]);
 }
 
 # Variable analyzer
 function getVariables(): string {
- global $db, $conf;
+    global $db, $conf, $tpl;
     $cont = '';
     $cvar = explode(',', $conf['variables']);
+    $rows = [];
     if ($cvar[1]) {
-        list($cpu, $info) = getCpuLoad(4);
-        $cpuState = 'danger';
-        $cputtl = _RATE1.(($info) ? ' - '.$info : '');
-        if ($cpu <= 50) {
-            $cpuState = 'success';
-            $cputtl = _RATE5.(($info) ? ' - '.$info : '');
-        } elseif ($cpu <= 80) {
-            $cpuState = 'warn';
-            $cputtl = _RATE3.(($info) ? ' - '.$info : '');
+        $rows[] = ['legend' => _SYSTEM_INFO, 'tone' => 'info', 'content' => getDebugSystemInfo()];
+        if (isAdmin()) {
+            $errors = getDebugErrors();
+            if ($errors !== '') $rows[] = ['legend' => _ERRLOG, 'tone' => 'danger', 'content' => $errors];
         }
-        $memuse = memory_get_usage();
-        $memtxt = filterSize((string)$memuse);
-        $memState = 'danger';
-        $memttl = _RATE1;
-        if ($memuse <= 10485760) {
-            $memState = 'success';
-            $memttl = _RATE5;
-        } elseif ($memuse <= 20971520) {
-            $memState = 'warn';
-            $memttl = _RATE3;
-        }
-        $memLimit = (int)(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024);
-        $cont .= debugSection(_SYSTEM_INFO, 'info', debugStats($cputtl, $cpuState, (string)$cpu, $memttl, $memState, $memtxt, $memuse, $memLimit, getTimeLoads()));
     }
-    if ($cvar[2] && $_POST) $cont .= debugSection(_AVARIABLES.': POST', 'success', htmlspecialchars(print_r($_POST, true)));
-    if ($cvar[3] && $_GET) $cont .= debugSection(_AVARIABLES.': GET', 'info', htmlspecialchars(print_r($_GET, true)));
-    if ($cvar[4] && $_COOKIE) $cont .= debugSection(_AVARIABLES.': COOKIE', 'warn', print_r($_COOKIE, true));
-    if ($cvar[5] && $_FILES) $cont .= debugSection(_AVARIABLES.': FILES', 'accent', print_r($_FILES, true));
-    if ($cvar[6] && $_SESSION) $cont .= debugSection(_AVARIABLES.': SESSION', 'accent', print_r($_SESSION, true));
-    if ($cvar[7] && $_SERVER) $cont .= debugSection(_AVARIABLES.': SERVER', 'danger', print_r($_SERVER, true));
-    if ($cvar[8]) $cont .= debugSection(_AQUERY_DB.': MySQL', 'success', $db->qtime);
+    $vars = [
+        2 => ['POST', 'success', $_POST, true],
+        3 => ['GET', 'info', $_GET, true],
+        4 => ['COOKIE', 'warn', $_COOKIE, false],
+        5 => ['FILES', 'accent', $_FILES, false],
+        6 => ['SESSION', 'accent', $_SESSION, false],
+        7 => ['SERVER', 'danger', $_SERVER, false],
+    ];
+    foreach ($vars as $key => $var) {
+        if (!$cvar[$key] || !$var[2]) continue;
+        $text = print_r($var[2], true);
+        $rows[] = [
+            'legend' => _AVARIABLES.': '.$var[0],
+            'tone' => $var[1],
+            'content' => ($var[3]) ? htmlspecialchars($text) : $text,
+        ];
+    }
+    if ($cvar[8]) $rows[] = ['legend' => _AQUERY_DB, 'tone' => 'success', 'content' => $db->qtime];
+    foreach ($rows as $row) $cont .= $tpl->getHtmlFrag('debug-section', $row);
     return $cont;
 }
 
@@ -3150,71 +3192,32 @@ function getUserSessionAdminInfo(string $id = ''): string {
             $guest = intval($guest);
             if ($guest == 3) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => user_geo_ip($host, 3),
-                    'name_href' => $conf['ip_link'].$host,
-                    'name_title' => getDuration($time).' - '._IP.': '.$host,
-                    'name_text' => $namestrip,
-                    'name_link' => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
-                    'module_href' => $alink,
-                    'module_title' => $alink,
-                    'module_text' => $alstrip,
+                    'geo_html'    => user_geo_ip($host, 3),
+                    'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $alstrip, 'is_blank' => true],
                     'is_module_right' => true,
                 ]);
                 $a++;
             } elseif ($guest == 2) {
-                if ($lstrip != '') {
-                    $title_who = $tpl->getHtmlFrag('session-row', [
-                        'geo_html' => user_geo_ip($host, 3),
-                        'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
-                        'name_title' => getDuration($time).' - '._IP.': '.$host,
-                        'name_text' => $namestrip,
-                        'name_link' => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
-                        'module_href' => $alink,
-                        'module_title' => $alink,
-                        'module_text' => $lstrip,
-                        'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
-                        'is_module_right' => true,
-                    ]);
-                    $m++;
-                } else {
-                    $title_who = $tpl->getHtmlFrag('session-row', [
-                        'geo_html' => user_geo_ip($host, 3),
-                        'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
-                        'name_title' => getDuration($time).' - '._IP.': '.$host,
-                        'name_text' => $namestrip,
-                        'name_link' => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
-                        'module_href' => $alink,
-                        'module_title' => $alink,
-                        'module_text' => $alstrip,
-                        'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $alstrip, 'is_blank' => true],
-                        'is_module_right' => true,
-                    ]);
-                }
+                $title_who = $tpl->getHtmlFrag('session-row', [
+                    'geo_html'    => user_geo_ip($host, 3),
+                    'name_link'   => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
+                    'module_link' => ['href' => $alink, 'title' => $alink, 'label' => ($lstrip !== '' ? $lstrip : $alstrip), 'is_blank' => true],
+                    'is_module_right' => true,
+                ]);
+                $m++;
             } elseif ($guest == 1) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => user_geo_ip($host, 3),
-                    'name_href' => $conf['ip_link'].$host,
-                    'name_title' => getDuration($time).' - '._IP.': '.$host,
-                    'name_text' => $namestrip,
-                    'name_link' => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
-                    'module_href' => $alink,
-                    'module_title' => $alink,
-                    'module_text' => $lstrip,
+                    'geo_html'    => user_geo_ip($host, 3),
+                    'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                     'is_module_right' => true,
                 ]);
                 $b++;
             } else {
                 $title_who = ($u < 250) ? $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => user_geo_ip($host, 3),
-                    'name_href' => $conf['ip_link'].$host,
-                    'name_title' => getDuration($time),
-                    'name_text' => $uname,
-                    'name_link' => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time), 'label' => $uname, 'is_blank' => true],
-                    'module_href' => $alink,
-                    'module_title' => $alink,
-                    'module_text' => $lstrip,
+                    'geo_html'    => user_geo_ip($host, 3),
+                    'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time), 'label' => $uname, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                     'is_module_right' => true,
                 ]) : '';
@@ -3225,6 +3228,11 @@ function getUserSessionAdminInfo(string $id = ''): string {
         }
         $content_who .= $tpl->getHtmlPart('session-summary', [
             'show_admins' => isAdmin(true),
+            'admins_icon_name'   => 'shield-check',
+            'members_icon_name'  => 'person-check',
+            'bots_icon_name'     => 'robot',
+            'visitors_icon_name' => 'eye',
+            'overall_icon_name'  => 'people',
             'admins_label' => _ADMINS,
             'admins_count' => $a,
             'admins_rows_html' => $who_online[3],
@@ -3267,15 +3275,9 @@ function adminblock(): string {
             $block = (string)$content;
         }
         $cont = $tpl->getHtmlFrag('admin-block-links', [
-            'admin_href' => $afile.'.php',
-            'admin_title' => (string)_ADMINMENU,
-            'admin_label' => (string)_ADMINMENU,
-            'logout_href' => $afile.'.php?op=logout',
-            'logout_title' => (string)_LOGOUT,
-            'logout_label' => (string)_LOGOUT,
-            'admin_link' => ['href' => $afile.'.php', 'title' => (string)_ADMINMENU, 'label' => (string)_ADMINMENU],
-            'logout_link' => ['href' => $afile.'.php?op=logout', 'title' => (string)_LOGOUT, 'label' => (string)_LOGOUT],
-            'block_html' => $block,
+            'admin_link'  => ['href' => $afile.'.php', 'title' => (string)_ADMINMENU, 'label' => (string)_ADMINMENU, 'icon_name' => 'house-door'],
+            'logout_link' => ['href' => $afile.'.php?op=logout', 'title' => (string)_LOGOUT, 'label' => (string)_LOGOUT, 'icon_name' => 'box-arrow-right'],
+            'block_html'  => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
         return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
@@ -3422,127 +3424,6 @@ function warnings(string $warnings): string {
         return $tpl->getHtmlFrag('list', ['items_html' => $items]);
     }
     return (string)_NO;
-}
-
-function debugStats(string $cpuTitle, string $cpuState, string $cpuValue, string $memTitle, string $memState, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
- global $tpl;
-    return $tpl->getHtmlFrag('debug-stats', [
-        'lbl_pload' => _PLOAD,
-        'cpu_title' => $cpuTitle,
-        'cpu_is_success' => $cpuState === 'success',
-        'cpu_is_warn' => $cpuState === 'warn',
-        'cpu_is_danger' => $cpuState === 'danger',
-        'cpu_value' => $cpuValue,
-        'lbl_meml' => _MEML,
-        'mem_title' => $memTitle,
-        'mem_is_success' => $memState === 'success',
-        'mem_is_warn' => $memState === 'warn',
-        'mem_is_danger' => $memState === 'danger',
-        'mem_value' => $memValue,
-        'mem_use' => (string)$memUse,
-        'mem_limit' => (string)$memLimit,
-        'timeloads' => $timeLoads,
-    ]);
-}
-
-function debugSection(string $legend, string $tone, string $content): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('debug-section', ['legend' => $legend, 'tone' => $tone, 'content' => $content]);
-}
-
-# Show editor files
-function getEditorFiles(): void {
-    global $conf, $user, $tpl;
-    $id   = filterVar(getVar('get', 'id',   'text', '')) ?: 0;
-    $dir  = strtolower(getVar('get', 'dir',  'text', ''));
-    $cid = getVar('get', 'cid', 'num', 0);
-    $con = explode('|', (string)($conf['uploads'][$dir] ?? ''));
-    $connum = (isset($con[7]) && intval($con[7])) ? $con[7] : '50';
-    $eallf = (is_moder()) ? intval($con[8] ?? 0) : intval($con[9] ?? 0);
-    $file = filterText(getVar('get', 'file', 'raw', ''));
-    $num = ($cid) ? $cid : '1';
-    $uname = (is_user()) ? intval($user[0]) : 0;
-    $path = 'uploads/'.$dir.'/';
-    $files = [];
-    $contents = [];
-    $a = 0;
-    if (is_moder($dir) && $file && $dir) {
-        if (!$cid) {
-            unlink($path.$file);
-        } else {
-            addCompress($path, $path.$file, $file);
-        }
-    }
-    $dh = opendir($path);
-    while ($entry = readdir($dh)) {
-        if ($entry != '.' && $entry != '..' && $entry != 'index.html' && !is_dir($path.$entry)) $files[] = [filemtime($path.$entry), $entry];
-    }
-    closedir($dh);
-    if ($files) {
-        rsort($files);
-        foreach ($files as $entry) {
-            preg_match("#([a-zA-Z0-9]+)\-([a-zA-Z0-9]+)\-([0-9]+)\.([a-zA-Z0-9]+)#", $entry[1], $date);
-            if (($uname == $date[3] && $date[2] && $date[1]) || is_moder($dir)) {
-                $filesize = filesize($path.$entry[1]);
-                list($imgwidth, $imgheight) = getimagesize($path.$entry[1]);
-                $type = strtolower(substr(strrchr($entry[1], '.'), 1));
-                $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
-                if (in_array($type, $ftype) && $imgwidth && $imgheight) {
-                    $img = $tpl->getHtmlFrag('image-preview', [
-                        'preview_id' => 'sf-form-'.$a,
-                        'image_url' => $path.$entry[1],
-                        'fallback_url' => 'templates/'.$conf['theme'].'/images/categories/no.png',
-                        'image_title' => _IMG,
-                        'no_title' => _NO,
-                        'show_toggle' => true,
-                        'show_fallback' => false,
-                    ]);
-                    $show = [
-                        $tpl->getHtmlFrag('editor-action-insert', ['command' => 'attach', 'value' => $entry[1], 'editor_id' => (string) $id, 'title' => _INSERT.' '.$imgwidth.' x '.$imgheight, 'label' => _INSERT]),
-                        $tpl->getHtmlFrag('editor-action-insert', ['command' => 'img', 'value' => $path.$entry[1], 'editor_id' => (string) $id, 'title' => _EIMG.' '.$imgwidth.' x '.$imgheight, 'label' => _EIMG]),
-                    ];
-                } else {
-                    $img = $tpl->getHtmlFrag('image-preview', [
-                        'preview_id' => 'sf-form-'.$a,
-                        'image_url' => '',
-                        'fallback_url' => 'templates/'.$conf['theme'].'/images/categories/no.png',
-                        'image_title' => _IMG,
-                        'no_title' => _NO,
-                        'show_toggle' => false,
-                        'show_fallback' => true,
-                    ]);
-                    $show = [
-                        $tpl->getHtmlFrag('editor-action-insert', ['command' => 'attach', 'value' => $entry[1], 'editor_id' => (string) $id, 'title' => _INSERT, 'label' => _INSERT]),
-                    ];
-                }
-                if (is_moder($dir)) {
-                    if (in_array(true, checkCompress(), true)) {
-                        $show[] = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'f'.$id, 'query' => 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], 'title' => _ZIP, 'label' => _ZIP]);
-                    }
-                    $show[] = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'f'.$id, 'query' => 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], 'title' => _ONDELETE, 'label' => _ONDELETE]);
-                }
-                $menuItems = array_values(array_filter($show, static fn($item) => $item !== ''));
-                $contents[] = $tpl->getHtmlFrag('editor-file-row', [
-                    'preview_html' => $img,
-                    'file_name' => $entry[1],
-                    'size_value' => filterSize($filesize),
-                    'functions_html' => $menuItems ? $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $menuItems))]) : '',
-                ]);
-                $a++;
-            }
-            if ($eallf && $a == $eallf) break;
-        }
-    }
-    $numpages = ($a > 0) ? ceil($a / $connum) : 0;
-    $offset = ($num - 1) * $connum;
-    $tnum = ($offset) ? $connum + $offset : $connum;
-    $cont = '';
-    for ($i = $offset; $i < $tnum; $i++) {
-        if (!empty($contents[$i])) $cont .= $contents[$i];
-    }
-    $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 1, 'getEditorFiles', 'f'.$id, $id, '', $dir) : '';
-    $content = ($cont) ? $tpl->getHtmlFrag('table', ['open' => true, 'col_id' => ' ', 'col_title' => _FILE, 'col_poster' => _SIZE, 'col_func' => _FUNCTIONS]).$cont.$tpl->getHtmlFrag('table', []).$contnum : '';
-    echo $content;
 }
 
 # Return JSON response for Toast UI editor endpoints
@@ -5027,7 +4908,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true]) : '';
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true, 'link_attr' => getTplEditorInsertAttr('name', $avname)]) : '';
             $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'is_button_green' => true]) : '';
             $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
             $web = ($conf['comments']['web'] && !empty($user_website)) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_account_button' => true, 'is_blank' => true]) : '';

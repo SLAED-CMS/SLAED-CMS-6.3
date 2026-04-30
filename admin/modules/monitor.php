@@ -6,6 +6,87 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+# CPU load analyzer with cache in seconds (Windows 10/11, Linux/macOS)
+function getCpuLoad(int $tcache = 2): array {
+    static $cache = ['time' => 0, 'cpu' => _NO_INFO, 'info' => _NO_INFO];
+    if (time() - $cache['time'] < $tcache) return [$cache['cpu'], $cache['info']];
+    $percent = null;
+    $allow = static function (string $path): bool {
+        $obase = ini_get('open_basedir');
+        if ($obase === false || $obase === '') return true;
+
+        $npath = str_replace('\\', '/', $path);
+        foreach (explode(PATH_SEPARATOR, $obase) as $base) {
+            $base = trim((string)$base);
+            if ($base === '' || $base === '.') continue;
+
+            $cbase = rtrim(str_replace('\\', '/', $base), '/');
+            if ($cbase === '') continue;
+
+            if ($npath === $cbase || str_starts_with($npath, $cbase.'/')) {
+                return true;
+            }
+        }
+        return false;
+    };
+    $rfile = static function (string $path) use ($allow): string|false {
+        if (!$allow($path)) return false;
+        if (!is_file($path) || !is_readable($path)) return false;
+
+        $content = file_get_contents($path);
+        return ($content === false) ? false : $content;
+    };
+    if (stristr(PHP_OS, 'WIN')) {
+        $out = [];
+        $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
+        if (function_exists('exec')) exec($cmd, $out);
+        if (!empty($out)) {
+            $val = str_replace(',', '.', trim($out[0]));
+            if (is_numeric($val)) $percent = (float)$val;
+        }
+        if ($percent === null) {
+            $out = [];
+            $cmd = 'wmic cpu get loadpercentage /all';
+            if (function_exists('exec')) exec($cmd, $out);
+            if ($out) {
+                foreach ($out as $line) {
+                    if ($line && preg_match('#^[0-9]+$#', $line)) {
+                        $percent = (float)$line;
+                        break;
+                    }
+                }
+            }
+        }
+    } else {
+        if (function_exists('sys_getloadavg')) {
+            $tmp = sys_getloadavg();
+            if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
+        }
+        $loadavg = $rfile('/proc/loadavg');
+        if (!isset($raw) && $loadavg !== false) {
+            $tmp = explode(' ', $loadavg);
+            if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
+        }
+        $nproc = 0;
+        $info = $rfile('/proc/cpuinfo');
+        if ($info !== false) {
+            preg_match_all('/^processor\s*:/m', $info, $matches);
+            if (!empty($matches[0])) $nproc = count($matches[0]);
+        }
+        if ($nproc <= 0) $nproc = 1;
+        if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 10.0;
+    }
+    if (is_numeric($percent)) {
+        $cpu = round((float)$percent, 2);
+        if ($cpu < 0) $cpu = 0.0;
+        if ($cpu > 100) $cpu = 100.0;
+        $info = _PLOAD1;
+    } else {
+        $cpu = $info = _NO_INFO;
+    }
+    $cache = ['time' => time(), 'cpu' => $cpu, 'info' => $info];
+    return [$cpu, $info];
+}
 
 # Checks whether a filesystem path is permitted by open_basedir restrictions before any file operations
 function isPathAllowed(string $path): bool {
@@ -170,14 +251,7 @@ function getMemoryInfoLinux(): array {
 
 # Converts PHP memory_limit to bytes and returns a conservative fallback when limit is unlimited
 function getMemorySafeLimit(): int {
-    $memlim = ini_get('memory_limit');
-    if ($memlim === false || $memlim === '' || $memlim === '-1') return max(memory_get_usage(true) * 2, 134217728);
-    if (preg_match('/^(\d+)(.)$/', $memlim, $matches)) {
-        if ($matches[2] === 'M') return $matches[1] * 1024 * 1024;
-        if ($matches[2] === 'K') return $matches[1] * 1024;
-        if ($matches[2] === 'G') return $matches[1] * 1024 * 1024 * 1024;
-    }
-    return intval($memlim);
+    return getMemoryLimitBytes(true);
 }
 
 # Detects logical CPU core count across Windows and Linux with environment and command fallbacks
@@ -679,8 +753,10 @@ function getDbHealth(object $db): array {
 function getTooltipText(string $text, int $limit = 50): string {
     global $tpl;
     if ($text === '' || $text === 'N/A' || mb_strlen($text, 'UTF-8') <= $limit) return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    $short = htmlspecialchars(mb_substr($text, 0, $limit, 'UTF-8'), ENT_QUOTES, 'UTF-8').'...';
-    return $short.' '.$tpl->getHtmlFrag('monitor-info-icon', ['tooltip_text' => $text]);
+    return $tpl->getHtmlFrag('monitor-tooltip-text', [
+        'short'        => mb_substr($text, 0, $limit, 'UTF-8'),
+        'tooltip_text' => $text,
+    ]);
 }
 
 # Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
