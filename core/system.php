@@ -1444,7 +1444,7 @@ function setFoot(): void {
         $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
         $vars = array_replace($vars, [
             'time_html' => ($conf['db_t'] == '1') ? getTimeLoads() : '',
-            'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true),
+            'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true, $debug !== ''),
             'debug_html' => $debug,
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
@@ -3790,7 +3790,7 @@ function rss_load(mixed $bid): void {
 }
 
 # Get shared footer controls through a fragment
-function getFootControls(string $title, string $label, string $time = '', string $lic = '', string $debug = '', bool $link = false): string {
+function getFootControls(string $title, string $label, string $time = '', string $lic = '', string $debug = '', bool $link = false, bool $dbgtog = false): string {
     global $tpl;
     return $tpl->getHtmlPart('foot-controls', [
         'top_title' => $title,
@@ -3799,9 +3799,17 @@ function getFootControls(string $title, string $label, string $time = '', string
             'href' => '//slaed.net',
             'title' => 'SLAED CMS',
             'label' => 'SLAED CMS',
-            'class' => 'sl-slaed-home',
+            'isslaed' => true,
             'is_top_hidden' => true,
             'is_blank' => true,
+        ] : [],
+        'dbglink' => $dbgtog ? [
+            'href' => '#',
+            'title' => _DEBUGPANEL,
+            'label' => _DEBUGPANEL,
+            'is_top_hidden' => true,
+            'isdebug' => true,
+            'icon_name' => 'bug',
         ] : [],
         'top_link' => ['href' => '#', 'title' => $title, 'label' => $label, 'is_top_hidden' => true, 'is_upper' => true],
         'time_html' => $time,

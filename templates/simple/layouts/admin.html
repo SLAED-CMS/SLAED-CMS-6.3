@@ -35,7 +35,11 @@
             </div>
         </div>
         <div class="wrapfoot"></div>
+        {% if debug_html %}
+        <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
         {{{ debug_html }}}
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

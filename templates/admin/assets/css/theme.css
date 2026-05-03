@@ -2960,6 +2960,9 @@ body:has(.sl-admin-login-shell):before {
 .sl-footer span a.sl-slaed-home {
 	right: 62px;
 }
+.sl-footer span a.sl-debugger-toggle {
+	right: 102px;
+}
 .sl-footer span a.sl-thide:before {
 	position: absolute;
 	inset: 0;
@@ -2978,6 +2981,9 @@ body:has(.sl-admin-login-shell):before {
 }
 .sl-footer span a.sl-slaed-home:before {
 	content: "\f588";
+}
+.sl-footer span a.sl-debugger-toggle:before {
+	content: "\f1dc";
 }
 .sl-footer span a.sl-thide:hover:before { color: var(--sl-color-primary-tint); }
 
