@@ -108,6 +108,10 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
 require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/logger.php';
 
+# Load unified config - merges all /config/*.php into $conf, applies local.php overrides
+$conf = getConfig();
+if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
+
 # System file include
 require_once BASE_DIR.'/core/security.php';
 
