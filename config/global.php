@@ -8,7 +8,7 @@ return [
     'adesc' => '1',
     'admcol' => '6',
     'admin_c' => 'panel',
-    'admin_logo' => 'slaed_logo_256x73.png',
+    'admin_logo' => 'slaed_logo_256x79.png',
     'adminfo' => '1',
     'admininfo' => 'Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.',
     'adminmail' => 'slaedpro@mail.ru',
