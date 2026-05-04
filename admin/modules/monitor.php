@@ -749,15 +749,6 @@ function getDbHealth(object $db): array {
     return $data;
 }
 
-# Shortens long text and adds escaped tooltip markup for safe compact UI presentation
-function getTooltipText(string $text, int $limit = 50): string {
-    global $tpl;
-    if ($text === '' || $text === 'N/A' || mb_strlen($text, 'UTF-8') <= $limit) return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    return $tpl->getHtmlFrag('monitor-tooltip-text', [
-        'short'        => mb_substr($text, 0, $limit, 'UTF-8'),
-        'tooltip_text' => $text,
-    ]);
-}
 
 # Calculates the cumulative size of regular files in a readable directory tree; returns null when unavailable
 function getDirectorySizeBytes(string $path): int|null {
@@ -881,12 +872,6 @@ function getLogLineTimestamp(string $line): int|null {
     return null;
 }
 
-# Normalizes whitespace and truncates log line text for compact and safe status display
-function getLogSnippet(string $line, int $limit = 80): string {
-    $line = preg_replace('/\s+/', ' ', trim($line)) ?? '';
-    return mb_strlen($line, 'UTF-8') > $limit ? mb_substr($line, 0, $limit, 'UTF-8').'...' : $line;
-}
-
 # Returns formatted uploads directory size or N/A when directory size is unavailable
 function getUploadsSizeLabel(): string {
     $updir = defined('UPLOADS_DIR') ? (string)UPLOADS_DIR : BASE_DIR.'/uploads';
@@ -954,7 +939,7 @@ function getSecurityEventHours(int $hours = 24): string {
             if ($ts === null || $ts < $thresh) continue;
             if ($ts <= $bestts) continue;
             $bestts = $ts;
-            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.getLogSnippet($line, 70);
+            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.(string)preg_replace('/\s+/', ' ', trim($line));
             break;
         }
     }
@@ -986,7 +971,7 @@ function getDbIssueEventHours(int $hours = 24): string {
             if ($ts === null || $ts < $thresh) continue;
             if ($ts <= $bestts) continue;
             $bestts = $ts;
-            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.getLogSnippet($line, 70);
+            $besttxt = strtoupper(pathinfo($name, PATHINFO_FILENAME)).': '.(string)preg_replace('/\s+/', ' ', trim($line));
             break;
         }
     }
@@ -1083,10 +1068,10 @@ function getTrafficPanelVars(?array $snapshot = null): array {
         'path_down_line' => $snapshot['path_down_line'],
         'path_cpu_line' => $snapshot['path_cpu_line'],
         'path_ram_line' => $snapshot['path_ram_line'],
-        'tip_up' => htmlspecialchars('Upstream: '.filterSize($net['tx_total']).' ('.filterSize($net['tx_rate']).'/s)', ENT_QUOTES, 'UTF-8'),
-        'tip_down' => htmlspecialchars('Downstream: '.filterSize($net['rx_total']).' ('.filterSize($net['rx_rate']).'/s)', ENT_QUOTES, 'UTF-8'),
-        'tip_cpu' => htmlspecialchars('CPU Usage: '.round((float)$cpup, 1).'%', ENT_QUOTES, 'UTF-8'),
-        'tip_ram' => htmlspecialchars('RAM Usage: '.round((float)$mem['percent'], 1).'% ('.filterSize($mem['used']).' / '.filterSize($mem['total']).')', ENT_QUOTES, 'UTF-8'),
+        'tip_up' => 'Upstream: '.filterSize($net['tx_total']).' ('.filterSize($net['tx_rate']).'/s)',
+        'tip_down' => 'Downstream: '.filterSize($net['rx_total']).' ('.filterSize($net['rx_rate']).'/s)',
+        'tip_cpu' => 'CPU Usage: '.round((float)$cpup, 1).'%',
+        'tip_ram' => 'RAM Usage: '.round((float)$mem['percent'], 1).'% ('.filterSize($mem['used']).' / '.filterSize($mem['total']).')',
         'nettx' => filterSize($net['tx_total']),
         'netrx' => filterSize($net['rx_total']),
         'nettxrate' => filterSize($net['tx_rate']).'/s',
@@ -1226,8 +1211,9 @@ function getMonitorServerStats(): array {
         }
     }
     
-    $extlist_on = getTooltipText(implode(', ', $loaded), 25);
-    $extlist_off = !empty($off) ? getTooltipText(implode(', ', $off), 25) : 'None / N/A';
+    $exton = implode(', ', $loaded);
+    $extlist_on = $tpl->getHtmlFrag('info-tooltip', ['content' => $exton, 'label_text' => $exton]);
+    if (!empty($off)) { $extoff = implode(', ', $off); $extlist_off = $tpl->getHtmlFrag('info-tooltip', ['content' => $extoff, 'label_text' => $extoff]); } else { $extlist_off = 'None / N/A'; }
 
     return [
         'servsw' => $servsw,
@@ -1352,6 +1338,7 @@ function getMonitorRequestStats(): array {
 
 # Builds final render-ready template variables for the main monitor dashboard
 function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, object $db, string $afile): array {
+    global $tpl;
     $status = static fn(?bool $vx): string => getStatusHtml($vx);
     $dbhealth = $ctx['dbhealth'];
     $diskio = $ctx['diskio'];
@@ -1368,7 +1355,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'userson' => $ctx['userson'],
             'servsoftname' => $ctx['servname'],
             'servver' => $ctx['servver'],
-            'mysql' => htmlspecialchars((string)db_version(), ENT_QUOTES, 'UTF-8'),
+            'mysql' => (string)db_version(),
             'phpver' => PHP_VERSION,
             'opmode' => $status(!($conf['close'] ?? 0)),
             'statact' => $status(is_active('stat')),
@@ -1376,74 +1363,74 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'newslet' => $status((bool)($conf['newsletter']['active'] ?? 0)),
             'cache' => $status((bool)($conf['cache'] ?? 0)),
             'rewrite' => $status((bool)($conf['rewrite'] ?? 0)),
-            'cmsver' => htmlspecialchars((string)($conf['version'] ?? ''), ENT_QUOTES, 'UTF-8'),
-            'osname' => htmlspecialchars(php_uname('s'), ENT_QUOTES, 'UTF-8'),
-            'servfull' => htmlspecialchars((string)$ctx['servsw'], ENT_QUOTES, 'UTF-8'),
-            'serverip' => htmlspecialchars((string)$ctx['serverip'], ENT_QUOTES, 'UTF-8'),
-            'servprot' => htmlspecialchars((string)$ctx['srvprot'], ENT_QUOTES, 'UTF-8'),
-            'servname' => htmlspecialchars((string)$ctx['srvname'], ENT_QUOTES, 'UTF-8'),
-            'servport' => htmlspecialchars((string)$ctx['srvport'], ENT_QUOTES, 'UTF-8'),
-            'servroot' => getTooltipText($ctx['srvroot'], 25),
+            'cmsver' => (string)($conf['version'] ?? ''),
+            'osname' => php_uname('s'),
+            'servfull' => (string)$ctx['servsw'],
+            'serverip' => (string)$ctx['serverip'],
+            'servprot' => (string)$ctx['srvprot'],
+            'servname' => (string)$ctx['srvname'],
+            'servport' => (string)$ctx['srvport'],
+            'servroot' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['srvroot'], 'label_text' => $ctx['srvroot']]),
             'servhttps' => $ctx['srvhttps'],
-            'phpsapi' => htmlspecialchars(php_sapi_name(), ENT_QUOTES, 'UTF-8'),
-            'zend_eng' => htmlspecialchars((string)(function_exists('zend_version') ? zend_version() : 'N/A'), ENT_QUOTES, 'UTF-8'),
-            'php_char' => htmlspecialchars((string)(ini_get('default_charset') ?: 'N/A'), ENT_QUOTES, 'UTF-8'),
+            'phpsapi' => php_sapi_name(),
+            'zend_eng' => (string)(function_exists('zend_version') ? zend_version() : 'N/A'),
+            'php_char' => (string)(ini_get('default_charset') ?: 'N/A'),
             'extlist_on' => $ctx['extlist_on'],
             'extlist_off' => $ctx['extlist_off'],
-            'gdver' => htmlspecialchars((string)$ctx['gdver'], ENT_QUOTES, 'UTF-8'),
+            'gdver' => (string)$ctx['gdver'],
             'opcache_on' => $status($ctx['opcacheon']),
-            'opcache_mem' => htmlspecialchars((string)$ctx['opmem'], ENT_QUOTES, 'UTF-8'),
-            'opcache_scripts' => htmlspecialchars((string)$ctx['opscripts'], ENT_QUOTES, 'UTF-8'),
-            'opcache_hit_rate' => htmlspecialchars((string)$ctx['ophit'], ENT_QUOTES, 'UTF-8'),
-            'postmax' => htmlspecialchars((string)ini_get('post_max_size'), ENT_QUOTES, 'UTF-8'),
+            'opcache_mem' => (string)$ctx['opmem'],
+            'opcache_scripts' => (string)$ctx['opscripts'],
+            'opcache_hit_rate' => (string)$ctx['ophit'],
+            'postmax' => (string)ini_get('post_max_size'),
             'fileup' => $status((bool)ini_get('file_uploads')),
-            'maxfileup' => htmlspecialchars((string)ini_get('max_file_uploads'), ENT_QUOTES, 'UTF-8'),
-            'upmax' => htmlspecialchars((string)ini_get('upload_max_filesize'), ENT_QUOTES, 'UTF-8'),
-            'memlim' => htmlspecialchars((string)ini_get('memory_limit'), ENT_QUOTES, 'UTF-8'),
+            'maxfileup' => (string)ini_get('max_file_uploads'),
+            'upmax' => (string)ini_get('upload_max_filesize'),
+            'memlim' => (string)ini_get('memory_limit'),
             'scriptmem' => filterSize(memory_get_usage(true)),
             'mempeak' => filterSize(memory_get_peak_usage(true)),
-            'maxvars' => htmlspecialchars((string)ini_get('max_input_vars'), ENT_QUOTES, 'UTF-8'),
-            'maxtime' => htmlspecialchars((string)ini_get('max_execution_time'), ENT_QUOTES, 'UTF-8'),
+            'maxvars' => (string)ini_get('max_input_vars'),
+            'maxtime' => (string)ini_get('max_execution_time'),
             'gzipld' => $status(extension_loaded('zlib')),
             'zipld' => $status(extension_loaded('zip')),
             'bz2ld' => $status(extension_loaded('bz2')),
             'phptime' => date('H:i:s'),
-            'uptime' => htmlspecialchars((string)$ctx['uptime'], ENT_QUOTES, 'UTF-8'),
+            'uptime' => (string)$ctx['uptime'],
             'dbszfmt' => filterSize($ctx['dbsize']),
             'diskwarn' => $ctx['diskwarn'],
-            'dbconn' => htmlspecialchars((string)$dbhealth['connections'], ENT_QUOTES, 'UTF-8'),
-            'dbslow' => htmlspecialchars((string)$dbhealth['slow'], ENT_QUOTES, 'UTF-8'),
-            'dbchar' => htmlspecialchars((string)$dbhealth['charset'], ENT_QUOTES, 'UTF-8'),
-            'dbsqlmode' => getTooltipText($dbhealth['sql_mode'], 25),
-            'dbmaxpack' => htmlspecialchars((string)$dbhealth['max_packet'], ENT_QUOTES, 'UTF-8'),
-            'dbbuffpool' => htmlspecialchars((string)$dbhealth['buffer_pool'], ENT_QUOTES, 'UTF-8'),
-            'dbtz' => htmlspecialchars((string)$dbhealth['timezone'], ENT_QUOTES, 'UTF-8'),
-            'dbcurname' => htmlspecialchars((string)($conf['db']['name'] ?? 'N/A'), ENT_QUOTES, 'UTF-8'),
-            'dbuser' => htmlspecialchars((string)$dbhealth['user'], ENT_QUOTES, 'UTF-8'),
+            'dbconn' => (string)$dbhealth['connections'],
+            'dbslow' => (string)$dbhealth['slow'],
+            'dbchar' => (string)$dbhealth['charset'],
+            'dbsqlmode' => $tpl->getHtmlFrag('info-tooltip', ['content' => $dbhealth['sql_mode'], 'label_text' => $dbhealth['sql_mode']]),
+            'dbmaxpack' => (string)$dbhealth['max_packet'],
+            'dbbuffpool' => (string)$dbhealth['buffer_pool'],
+            'dbtz' => (string)$dbhealth['timezone'],
+            'dbcurname' => (string)($conf['db']['name'] ?? 'N/A'),
+            'dbuser' => (string)$dbhealth['user'],
             'dbqnum' => $db->qnum,
             'dbqtime' => $ctx['dbtime'],
             'exectime' => $ctx['exectime'],
             'diskfree' => filterSize((float)$ctx['diskfree']),
             'disktot' => filterSize((float)$ctx['disktotal']),
             'diskused' => filterSize((float)$ctx['diskused']),
-            'reqmeth' => htmlspecialchars((string)$ctx['reqmethod'], ENT_QUOTES, 'UTF-8'),
-            'reqcookie' => getTooltipText($ctx['reqcookie'], 25),
-            'requri' => getTooltipText($ctx['requri'], 25),
-            'reqquery' => getTooltipText($ctx['reqquery'], 25),
-            'reqip' => htmlspecialchars((string)$ctx['reqip'], ENT_QUOTES, 'UTF-8'),
-            'requa' => getTooltipText($ctx['requa'], 25),
-            'reqlang' => getTooltipText($ctx['reqlang'], 25),
+            'reqmeth' => (string)$ctx['reqmethod'],
+            'reqcookie' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['reqcookie'], 'label_text' => $ctx['reqcookie']]),
+            'requri' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['requri'], 'label_text' => $ctx['requri']]),
+            'reqquery' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['reqquery'], 'label_text' => $ctx['reqquery']]),
+            'reqip' => (string)$ctx['reqip'],
+            'requa' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['requa'], 'label_text' => $ctx['requa']]),
+            'reqlang' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['reqlang'], 'label_text' => $ctx['reqlang']]),
             'dskread' => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
             'dskwrite' => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
             'backupdirsz' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
             'cachedirsz' => ($storages['cache'] === null) ? 'N/A' : filterSize((int)$storages['cache']),
             'logsdirsz' => ($storages['logs'] === null) ? 'N/A' : filterSize((int)$storages['logs']),
-            'lastbackuprun' => htmlspecialchars((string)$ctx['lastbackup'], ENT_QUOTES, 'UTF-8'),
+            'lastbackuprun' => (string)$ctx['lastbackup'],
             'errorlog24h' => (string)$ctx['error24'],
-            'uploadssz' => htmlspecialchars((string)$ctx['uploadsz'], ENT_QUOTES, 'UTF-8'),
+            'uploadssz' => (string)$ctx['uploadsz'],
             'failedlogins24h' => (string)$ctx['failed24'],
-            'lastsecurityevent24h' => getTooltipText($ctx['seclast24'], 25),
-            'dbissueevent24h' => getTooltipText($ctx['dblast24'], 25),
+            'lastsecurityevent24h' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['seclast24'], 'label_text' => $ctx['seclast24']]),
+            'dbissueevent24h' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['dblast24'], 'label_text' => $ctx['dblast24']]),
             'show_layout' => true,
             'show_status' => ($snapshot !== null),
             'show_traffic' => ($snapshot !== null),
