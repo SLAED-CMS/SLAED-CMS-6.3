@@ -308,6 +308,7 @@ function getTplAdminTabs(array $data = []): string {
         ]);
     }
     return $tpl->getHtmlPart('module-head', [
+        'flash_html' => getFlashHtml(),
         'icon' => $icon,
         'is_runtime' => !empty($data['is_runtime']),
         'subtitle_html' => $subtitle,

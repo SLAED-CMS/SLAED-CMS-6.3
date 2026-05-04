@@ -1440,10 +1440,11 @@ function setFoot(): void {
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $vars['content'] = getFlashHtml().((ob_get_level() > 0) ? (string)ob_get_clean() : '');
+        $time = ($conf['db_t'] == '1') ? getTimeLoads() : '';
         $cvar = explode(',', $conf['variables']);
         $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
         $vars = array_replace($vars, [
-            'time_html' => ($conf['db_t'] == '1') ? getTimeLoads() : '',
+            'time_html' => $time,
             'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true, $debug !== ''),
             'debug_html' => $debug,
         ]);
@@ -2708,7 +2709,7 @@ function getDebugSystemInfo(): string {
         'db_queries_text' => $qnum,
         'db_queries_title' => $qnum.' / '.$max['qnum'],
         'db_time_label' => _DBQTIME,
-        'db_text' => sprintf('%.3f', $sqltime).' '._SEC.'. Ø '.sprintf('%.4f', $avg).' '._SEC.'.',
+        'db_text' => sprintf('%.3f', $sqltime).' '._SEC.'. / Ø '.sprintf('%.4f', $avg).' '._SEC.'.',
         'db_title' => 'Ø '.sprintf('%.4f', $avg).' '._SEC.'.',
     ];
     foreach (['mem' => $mem, 'generation' => $gen, 'db_queries' => $queries, 'db' => $sql] as $name => $item) {
