@@ -1,4 +1,4 @@
-{% if show_layout %}
+﻿{% if show_layout %}
 <div class="sl-monitor-wrapper">
     <div id="monitor-sync-poller" hx-get="{{{ syncurl }}}" hx-trigger="every 4s" hx-swap="none"></div>
 {% endif %}
@@ -68,15 +68,15 @@
             <div class="sl-status-compact">
                 <div class="sl-status-compact-item">
                     <div class="sl-status-compact-left"><i class="bi bi-window-stack"></i> SLAED CMS</div>
-                    <div class="sl-status-compact-right"><span>{{{ cmsver }}}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
+                    <div class="sl-status-compact-right"><span>{{ cmsver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
                 <div class="sl-status-compact-item">
                     <div class="sl-status-compact-left"><i class="bi bi-cpu"></i> PHP</div>
-                    <div class="sl-status-compact-right"><span>{{{ phpver }}}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
+                    <div class="sl-status-compact-right"><span>{{ phpver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
                 <div class="sl-status-compact-item">
                     <div class="sl-status-compact-left"><i class="bi bi-database"></i> MySQL</div>
-                    <div class="sl-status-compact-right"><span>{{{ mysql }}}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
+                    <div class="sl-status-compact-right"><span>{{ mysql }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
                 <div class="sl-status-compact-item">
                     <div class="sl-status-compact-left"><i class="bi bi-hdd-rack"></i> {{ servsoftname }}</div>
@@ -158,10 +158,10 @@
                 <path class="sl-chart-line" d="{{ path_down_line }}" stroke="var(--sl-color-success)" />
                 <path class="sl-chart-line" d="{{ path_cpu_line }}" stroke="var(--sl-color-danger)" />
                 <path class="sl-chart-line" d="{{ path_ram_line }}" stroke="var(--sl-color-primary-hover)" />
-                <path class="sl-chart-hit" d="{{ path_up_line }}"><title>{{{ tip_up }}}</title></path>
-                <path class="sl-chart-hit" d="{{ path_down_line }}"><title>{{{ tip_down }}}</title></path>
-                <path class="sl-chart-hit" d="{{ path_cpu_line }}"><title>{{{ tip_cpu }}}</title></path>
-                <path class="sl-chart-hit" d="{{ path_ram_line }}"><title>{{{ tip_ram }}}</title></path>
+                <path class="sl-chart-hit" d="{{ path_up_line }}"><title>{{ tip_up }}</title></path>
+                <path class="sl-chart-hit" d="{{ path_down_line }}"><title>{{ tip_down }}</title></path>
+                <path class="sl-chart-hit" d="{{ path_cpu_line }}"><title>{{ tip_cpu }}</title></path>
+                <path class="sl-chart-hit" d="{{ path_ram_line }}"><title>{{ tip_ram }}</title></path>
             </svg>
         </div>
     </div>
@@ -201,15 +201,15 @@
                 <table class="sl-monitor-clean-table">
                     <tr>
                         <td>Uptime</td>
-                        <td>{{{ uptime }}}</td>
+                        <td>{{ uptime }}</td>
                     </tr>
                     <tr>
                         <td>OS</td>
-                        <td>{{{ osname }}}</td>
+                        <td>{{ osname }}</td>
                     </tr>
                     <tr>
                         <td>Server</td>
-                        <td>{{{ servfull }}}</td>
+                        <td>{{ servfull }}</td>
                     </tr>
                     <tr>
                         <td>HTTPS</td>
@@ -217,19 +217,19 @@
                     </tr>
                     <tr>
                         <td>Server Protocol</td>
-                        <td>{{{ servprot }}}</td>
+                        <td>{{ servprot }}</td>
                     </tr>
                     <tr>
                         <td>Server Name</td>
-                        <td>{{{ servname }}}</td>
+                        <td>{{ servname }}</td>
                     </tr>
                     <tr>
                         <td>Server IP</td>
-                        <td>{{{ serverip }}}</td>
+                        <td>{{ serverip }}</td>
                     </tr>
                     <tr>
                         <td>Server Port</td>
-                        <td>{{{ servport }}}</td>
+                        <td>{{ servport }}</td>
                     </tr>
                     <tr>
                         <td>Document Root</td>
@@ -241,7 +241,7 @@
                     </tr>
                     <tr>
                         <td>Disk Free</td>
-                        <td>{{{ diskfree }}}</td>
+                        <td>{{ diskfree }}</td>
                     </tr>
                     <tr>
                         <td>Disk Used</td>
@@ -249,11 +249,11 @@
                     </tr>
                     <tr>
                         <td>Disk Read</td>
-                        <td>{{{ dskread }}}</td>
+                        <td>{{ dskread }}</td>
                     </tr>
                     <tr>
                         <td>Disk Write</td>
-                        <td>{{{ dskwrite }}}</td>
+                        <td>{{ dskwrite }}</td>
                     </tr>
                     <tr>
                         <td>Disk Health</td>
@@ -289,27 +289,27 @@
                     </tr>
                     <tr>
                         <td>Last Backup Run</td>
-                        <td>{{{ lastbackuprun }}}</td>
+                        <td>{{ lastbackuprun }}</td>
                     </tr>
                     <tr>
                         <td>Backup Folder</td>
-                        <td>{{{ backupdirsz }}}</td>
+                        <td>{{ backupdirsz }}</td>
                     </tr>
                     <tr>
                         <td>Cache Folder</td>
-                        <td>{{{ cachedirsz }}}</td>
+                        <td>{{ cachedirsz }}</td>
                     </tr>
                     <tr>
                         <td>Logs Folder</td>
-                        <td>{{{ logsdirsz }}}</td>
+                        <td>{{ logsdirsz }}</td>
                     </tr>
                     <tr>
                         <td>Uploads Folder</td>
-                        <td>{{{ uploadssz }}}</td>
+                        <td>{{ uploadssz }}</td>
                     </tr>
                     <tr>
                         <td>Failed Logins</td>
-                        <td>{{{ failedlogins24h }}}</td>
+                        <td>{{ failedlogins24h }}</td>
                     </tr>
                     <tr>
                         <td>Security Event</td>
@@ -321,7 +321,7 @@
                     </tr>
                     <tr>
                         <td>Error Log</td>
-                        <td>{{{ errorlog24h }}}</td>
+                        <td>{{ errorlog24h }}</td>
                     </tr>
                 </table>
             </div>
@@ -338,15 +338,15 @@
                 <table class="sl-monitor-clean-table">
                     <tr>
                         <td>PHP SAPI</td>
-                        <td>{{{ phpsapi }}}</td>
+                        <td>{{ phpsapi }}</td>
                     </tr>
                     <tr>
                         <td>Zend Engine</td>
-                        <td>{{{ zend_eng }}}</td>
+                        <td>{{ zend_eng }}</td>
                     </tr>
                     <tr>
                         <td>Default Charset</td>
-                        <td>{{{ php_char }}}</td>
+                        <td>{{ php_char }}</td>
                     </tr>
                     <tr>
                         <td>PHP Timezone</td>
@@ -354,27 +354,27 @@
                     </tr>
                     <tr>
                         <td>Memory Limit</td>
-                        <td>{{{ memlim }}}</td>
+                        <td>{{ memlim }}</td>
                     </tr>
                     <tr>
                         <td>Script Memory</td>
-                        <td>{{{ scriptmem }}}</td>
+                        <td>{{ scriptmem }}</td>
                     </tr>
                     <tr>
                         <td>Execution Time</td>
-                        <td>{{{ maxtime }}} s</td>
+                        <td>{{ maxtime }} s</td>
                     </tr>
                     <tr>
                         <td>Post Max Size</td>
-                        <td>{{{ postmax }}}</td>
+                        <td>{{ postmax }}</td>
                     </tr>
                     <tr>
                         <td>Upload Max</td>
-                        <td>{{{ upmax }}}</td>
+                        <td>{{ upmax }}</td>
                     </tr>
                     <tr>
                         <td>Max Input Vars</td>
-                        <td>{{{ maxvars }}}</td>
+                        <td>{{ maxvars }}</td>
                     </tr>
                 </table>
             </div>
@@ -382,7 +382,7 @@
                 <table class="sl-monitor-clean-table">
                     <tr>
                         <td>PHP GD</td>
-                        <td>{{{ gdver }}}</td>
+                        <td>{{ gdver }}</td>
                     </tr>
                     <tr>
                         <td>OPcache</td>
@@ -390,15 +390,15 @@
                     </tr>
                     <tr>
                         <td>OPcache Memory</td>
-                        <td>{{{ opcache_mem }}}</td>
+                        <td>{{ opcache_mem }}</td>
                     </tr>
                     <tr>
                         <td>Cached Scripts</td>
-                        <td>{{{ opcache_scripts }}}</td>
+                        <td>{{ opcache_scripts }}</td>
                     </tr>
                     <tr>
                         <td>Hit Rate</td>
-                        <td>{{{ opcache_hit_rate }}}</td>
+                        <td>{{ opcache_hit_rate }}</td>
                     </tr>
                     <tr>
                         <td>File Uploads</td>
@@ -406,7 +406,7 @@
                     </tr>
                     <tr>
                         <td>Max File Uploads</td>
-                        <td>{{{ maxfileup }}}</td>
+                        <td>{{ maxfileup }}</td>
                     </tr>
                     <tr>
                         <td>GZip</td>
@@ -443,19 +443,19 @@
                 <table class="sl-monitor-clean-table">
                     <tr>
                         <td>Connection Charset</td>
-                        <td>{{{ dbchar }}}</td>
+                        <td>{{ dbchar }}</td>
                     </tr>
                     <tr>
                         <td>DB Timezone</td>
-                        <td>{{{ dbtz }}}</td>
+                        <td>{{ dbtz }}</td>
                     </tr>
                     <tr>
                         <td>Max Allowed Packet</td>
-                        <td>{{{ dbmaxpack }}}</td>
+                        <td>{{ dbmaxpack }}</td>
                     </tr>
                     <tr>
                         <td>InnoDB Buffer Pool</td>
-                        <td>{{{ dbbuffpool }}}</td>
+                        <td>{{ dbbuffpool }}</td>
                     </tr>
                 </table>
             </div>
@@ -463,7 +463,7 @@
                 <table class="sl-monitor-clean-table">
                     <tr>
                         <td>DB Connections</td>
-                        <td>{{{ dbconn }}}</td>
+                        <td>{{ dbconn }}</td>
                     </tr>
                     <tr>
                         <td>DB Size</td>
@@ -471,11 +471,11 @@
                     </tr>
                     <tr>
                         <td>Current Database</td>
-                        <td>{{{ dbcurname }}}</td>
+                        <td>{{ dbcurname }}</td>
                     </tr>
                     <tr>
                         <td>Database User</td>
-                        <td>{{{ dbuser }}}</td>
+                        <td>{{ dbuser }}</td>
                     </tr>
                     <tr>
                         <td>SQL Mode</td>
@@ -496,7 +496,7 @@
                 <table class="sl-monitor-clean-table">
                     <tr>
                         <td>Client IP</td>
-                        <td>{{{ reqip }}}</td>
+                        <td>{{ reqip }}</td>
                     </tr>
                     <tr>
                         <td>Request URI</td>
@@ -507,18 +507,6 @@
                         <td>{{{ reqquery }}}</td>
                     </tr>
                     <tr>
-                        <td>Cookies</td>
-                        <td>{{{ reqcookie }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Accept Language</td>
-                        <td>{{{ reqlang }}}</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
                         <td>Execution Time</td>
                         <td>{{ exectime }} s</td>
                     </tr>
@@ -526,17 +514,29 @@
                         <td>DB Queries</td>
                         <td>{{ dbqnum }}</td>
                     </tr>
+                </table>
+            </div>
+            <div>
+                <table class="sl-monitor-clean-table">
+                    <tr>
+                        <td>Accept Language</td>
+                        <td>{{{ reqlang }}}</td>
+                    </tr>
+                    <tr>
+                        <td>Cookies</td>
+                        <td>{{{ reqcookie }}}</td>
+                    </tr>
+                    <tr>
+                        <td>User Agent</td>
+                        <td>{{{ requa }}}</td>
+                    </tr>
                     <tr>
                         <td>DB Time</td>
                         <td>{{ dbqtime }} ms</td>
                     </tr>
                     <tr>
                         <td>Memory Peak</td>
-                        <td>{{{ mempeak }}}</td>
-                    </tr>
-                    <tr>
-                        <td>User Agent</td>
-                        <td>{{{ requa }}}</td>
+                        <td>{{ mempeak }}</td>
                     </tr>
                 </table>
             </div>
