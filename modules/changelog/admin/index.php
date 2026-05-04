@@ -48,7 +48,7 @@ function changelog(): void {
         $compg = chlogGroupCommitsByDate($compg);
     }
 
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => checkPerms(CONFIG_DIR.'/changelog.php').$tpl->getHtmlPart('changelog', [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('changelog', [
         'action_url' => $afile.'.php',
         'reset_url' => $afile.'.php?name=changelog',
         'hidden' => ['name_attr' => 'name', 'value_attr' => 'changelog'],
@@ -136,8 +136,8 @@ function config(): void {
         ['label_html' => _CHLOG_SHOW_STATS, 'field_html' => getTplRadioGroup(['name' => 'showstat', 'value' => (string)($conf['changelog']['showstat'] ?? 0), 'options' => $yesno])],
         ['label_html' => _CHLOG_EXPORT, 'field_html' => getTplRadioGroup(['name' => 'exporten', 'value' => (string)($conf['changelog']['exporten'] ?? 0), 'options' => $yesno])],
     ];
-    $body = checkPerms(CONFIG_DIR.'/changelog.php');
-    $body .= $tpl->getHtmlPart('form', [
+    $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
+    $body = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=changelog&amp;op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken('changelog')],

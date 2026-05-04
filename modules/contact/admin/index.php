@@ -34,8 +34,8 @@ function contact(): void {
             ]),
         ],
     ];
-    $body = checkPerms(CONFIG_DIR.'/contact.php');
-    $body .= $tpl->getHtmlPart('form', [
+    $cont .= checkPerms(CONFIG_DIR.'/contact.php');
+    $body = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=contact&amp;op=save',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],

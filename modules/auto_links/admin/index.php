@@ -415,8 +415,8 @@ function config(): void {
     if (!$conf['referers']['refer']) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     }
-    $body = checkPerms(CONFIG_DIR.'/auto_links.php');
-    $body .= $tpl->getHtmlPart('form', [
+    $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
+    $body = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&amp;op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
