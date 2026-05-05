@@ -212,6 +212,7 @@
         element.classList.toggle('sl-is-open', isOpen);
         element.classList.toggle('sl-is-closed', !isOpen);
         setToggleControls(id, isOpen);
+        var display = element.getAttribute('data-sl-toggle-display') || ((element.classList.contains('sl-div-item') || element.classList.contains('sl-div-grid')) ? 'grid' : 'block');
         if (effect === 'slide') {
             setSlideMotion(element, isOpen, duration || 400);
             return;
@@ -221,7 +222,7 @@
             return;
         }
         element.hidden = !isOpen;
-        element.style.display = isOpen ? 'block' : 'none';
+        element.style.display = isOpen ? display : 'none';
     }
 
     function setToggleBlock(id, scoped, isOpen, effect, duration) {

@@ -2,7 +2,7 @@
 {% else %}
 <div class="sl-box">
 {% endif %}
-<table class="sl-table-list-sort{% if is_fixed %} sl-table-fixed{% endif %}"{% if disable_sort %}{% else %} data-sl-table-sort{% endif %}><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
+<table class="sl-table-list-sort{% if is_fixed %} sl-table-fixed{% endif %}"{% if attr %} {{{ attr }}}{% endif %}{% if disable_sort %}{% else %} data-sl-table-sort{% endif %}><thead><tr>{% if head %}{% for col in head %}{% include 'fragments/th.html' with col %}{% endfor %}{% else %}{{{ head_html }}}{% endif %}</tr></thead><tbody>{{{ rows_html }}}</tbody></table>
 {% if is_wrapless %}
 {% else %}
 </div>

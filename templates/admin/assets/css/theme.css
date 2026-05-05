@@ -590,6 +590,12 @@ input.sl-but-blue[value="ОК"] {
 .sl-div-label:not(:has(+ .sl-div-field .sl-radio-group)) .sl-div-label-main::after {
     content: ":";
 }
+.sl-div-label .sl-no-colon::after {
+    content: none;
+}
+.sl-div-label .sl-div-label-main.sl-no-colon::after {
+    content: none !important;
+}
 .sl-div-label .sl-small {
     margin: 4px 0 0 0;
 }
@@ -1072,6 +1078,15 @@ input.sl-but-blue[value="ОК"] {
 }
 .sl-div-item-full .sl-div-field textarea {
     min-height: 180px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    display: block;
+}
+.sl-div-item-full .sl-div-field > .sl-collapsible {
+    width: 100%;
+    min-width: 0;
 }
 .sl-div-actions {
     display: flex;
@@ -1133,7 +1148,10 @@ input.sl-but-blue[value="ОК"] {
 .sl-warn,
 .sl-info {
     position: relative;
-    padding: 8px 10px 8px 60px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
     margin: 8px 0;
     color: var(--sl-color-text);
     text-align: justify;
@@ -1151,10 +1169,12 @@ input.sl-but-blue[value="ОК"] {
 }
 .sl-warn::before,
 .sl-info::before {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    display: inline-block;
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    margin: 0;
     font-family: bootstrap-icons !important;
     font-size: 32px;
     font-style: normal;
@@ -1162,7 +1182,13 @@ input.sl-but-blue[value="ОК"] {
     font-variant: normal;
     line-height: 1;
     text-transform: none;
-    transform: translateY(-50%);
+}
+.sl-alert-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.sl-alert-content > div + div {
+    margin-top: 6px;
 }
 .sl-warn::before {
     color: var(--sl-color-warning-strong);
@@ -1390,12 +1416,41 @@ to { transform: scaleX(0); }
 .sl-table-list-sort td:last-child .sl-menu > ul > li.sl-float-open > ul { right: auto; left: var(--sl-float-left); }
 .sl-table-list-sort td:last-child .sl-menu > ul > li.sl-float-open > ul:after { right: auto; left: var(--sl-float-arrow, 16px); transform: translateX(-50%); }
 .sl-table-list-sort tr:hover td:last-child { z-index: 20; }
-.sl-table-list-sort th { font-weight: bold; border: 1px solid var(--sl-color-border); padding: 8px 16px 8px var(--sl-space-xs); text-align: left; background-color: var(--sl-color-bg-muted); border-radius: var(--sl-radius-control); }
-.sl-table-list-sort th:last-child { text-align: center; padding: 8px 16px 8px 4px; }
+.sl-table-list-sort th {
+    font-weight: bold;
+    border: 1px solid var(--sl-color-border);
+    padding: 0 16px 0 var(--sl-space-xs);
+    text-align: left;
+    background-color: var(--sl-color-bg-muted);
+    border-radius: var(--sl-radius-control);
+}
+.sl-table-list-sort th:last-child {
+    text-align: center;
+    padding: 0 16px 0 4px;
+}
 .sl-table-list-sort th.sl-col-status,
 .sl-table-list-sort th.sl-col-actions {
     padding-right: 4px;
     padding-left: 4px;
+}
+.sl-table-list-sort th.sl-col-status,
+.sl-table-list-sort th.sl-col-actions,
+.sl-table-list-sort td.sl-col-status,
+.sl-table-list-sort td.sl-col-actions {
+    height: 30px;
+    min-height: 30px;
+    padding-top: 0;
+    padding-bottom: 0;
+    vertical-align: middle;
+}
+.sl-table-list-sort th,
+.sl-table-list-sort td {
+    height: 30px;
+    min-height: 30px;
+    padding-top: 0;
+    padding-bottom: 0;
+    vertical-align: middle;
+    line-height: 15px;
 }
 .sl-table-list-sort th.sl-col-check,
 .sl-table-list-sort td.sl-col-check {
@@ -1460,11 +1515,16 @@ to { transform: scaleX(0); }
 .sl-table-fixed .sl-col-id { width: 42px; }
 .sl-table-fixed .sl-col-check { width: 36px; }
 .sl-table-fixed .sl-col-author { width: 100px; }
-.sl-table-fixed .sl-col-status { width: 52px; }
+.sl-table-fixed .sl-col-status { width: 80px; white-space: nowrap; }
 .sl-table-fixed .sl-col-actions { width: 72px; }
 .sl-table-fixed .sl-col-date { width: 150px; }
 .sl-table-fixed .sl-col-count { width: 64px; }
-.sl-table-fixed .sl-col-sent { width: 118px; }
+.sl-table-fixed .sl-col-sent {
+    width: 118px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 .sl-table-fixed .sl-col-ip { width: 150px; }
 .sl-table-fixed .sl-col-lang { width: 58px; }
 .sl-table-fixed .sl-col-module { width: 88px; }
