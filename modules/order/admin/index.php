@@ -31,8 +31,12 @@ function order(): void {
                             ['label' => _COMMENT, 'value' => (string)$note],
                             ['label' => _BROWSER, 'value' => (string)$agent, 'is_last' => true],
                         ],
-                        'label_text' => anti_spam($email),
                         'title_html' => $infos,
+                    ]).$tpl->getHtmlFrag('link', [
+                        'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)($conf['sitename'].' - '._ORDER)),
+                        'is_blank' => true,
+                        'label' => $email,
+                        'title' => $email,
                     ])],
                     ['content_html' => user_geo_ip($ip, 4)],
                     ['is_col_date' => true, 'content_html' => format_time($date, _TIMESTRING)],

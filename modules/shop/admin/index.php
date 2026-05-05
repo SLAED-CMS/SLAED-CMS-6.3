@@ -1007,7 +1007,8 @@ function partnerinfo(): void {
         ['has_content_text' => true, 'content_text' => (string)$papaypal],
         ['has_content_text' => true, 'content_text' => (string)$pawebmoney],
     ]])]);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'head' => [
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,'is_wrapless' => true, 'head' => [
         ['content' => _CLIENTEN],
         ['content' => _PARTNERBEK],
         ['content' => _PARTNERGES],

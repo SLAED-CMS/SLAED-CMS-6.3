@@ -82,8 +82,16 @@ function money(): void {
                     'cells' => [
                         ['is_col_id' => true, 'content_html' => (string)$id],
                         ['is_col_count' => true, 'content_html' => $sum.' EUR'],
-                        ['is_truncate' => true, 'title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]).anti_spam($email)],
-                        ['content_html' => user_geo_ip($ip, 4)],
+                        ['title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                            'items' => $tips,
+                            'title_text' => $email,
+                        ]).$tpl->getHtmlFrag('link', [
+                            'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)($conf['sitename'].' - '._MONEY)),
+                            'is_blank' => true,
+                            'label' => $email,
+                            'title' => $email,
+                        ])],
+                        ['class_name' => 'sl-col-ip', 'content_html' => user_geo_ip($ip, 4)],
                         ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                         ['is_col_status' => true, 'content_html' => ad_status('', $status)],
                         ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
@@ -98,7 +106,7 @@ function money(): void {
             'head' => [
                 ['content' => _ID, 'is_col_id' => true],
                 ['content' => _SUM, 'is_col_count' => true],
-                ['content' => _EMAIL, 'is_truncate' => true],
+                ['content' => _EMAIL],
                 ['content' => _IP],
                 ['content' => _DATE, 'is_col_date' => true],
                 ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
