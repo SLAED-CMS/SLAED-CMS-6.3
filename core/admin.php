@@ -506,15 +506,16 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => $img],
                     ['content_html' => (string)$ordern],
                     ['content_html' => getTplMoveControls(['target' => 'ajax_cat', 'up' => $mup, 'down' => $mdn])],
-                    ['content_html' => ad_status('', $cstatus), 'is_col_status' => true],
+                    ['content_html' => ad_status('', $cstatus), 'is_col_status' => true, 'attr' => 'data-sort-column-key="category-status" data-sort="'.((int)$cstatus === 1 ? '1' : '0').'"'],
                     ['content_html' => $tpl->getHtmlFrag('row-actions', [
                         'trigger_label' => _EDITOR,
                         'items' => $items,
-                    ])],
+                    ]), 'is_col_actions' => true],
                 ],
             ])]);
         }
         $cont = $tpl->getHtmlFrag('table', [
+            'attr' => 'data-sl-admin-table="categories"',
             'head' => [
             ['content' => _ID],
             ['content' => _CATEGORY],
@@ -522,8 +523,8 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             ['content' => cutstr(_SUBCATEGORY, 3, 1), 'nosort' => true],
             ['content' => cutstr(_IMG, 2, 1), 'nosort' => true],
             ['content' => _WEIGHT, 'colspan' => 2],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _STATUS, 'attr' => 'data-sort-column-key="category-status" data-sort-reverse'],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,
@@ -689,7 +690,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => $bpos],
                 ['content_html' => (string) $weight],
                 ['content_html' => getTplMoveControls(['target' => 'ajax_block', 'up' => $mup, 'down' => $mdn])],
-                ['content_html' => ad_status('', $active), 'is_col_status' => true],
+                ['content_html' => ad_status('', $active), 'is_col_status' => true, 'attr' => 'data-sort-column-key="block-status" data-sort="'.((int)$active === 1 ? '1' : '0').'"'],
                 ['content_html' => $tpl->getHtmlFrag('row-actions', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
@@ -706,11 +707,12 @@ function getAdminBlockList(string $token = ''): string {
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                     ]],
-                ])],
+                ]), 'is_col_actions' => true],
             ],
         ])]);
     }
     return $tpl->getHtmlFrag('table', [
+        'attr' => 'data-sl-admin-table="blocks"',
         'head' => [
             ['content' => _ID],
             ['content' => _TITLE],
@@ -718,8 +720,8 @@ function getAdminBlockList(string $token = ''): string {
             ['content' => _VIEW],
             ['content' => _POSITION],
             ['content' => _WEIGHT, 'colspan' => 2],
-            ['content' => _STATUS, 'nosort' => true],
-            ['content' => _FUNCTIONS, 'nosort' => true],
+            ['content' => _STATUS, 'attr' => 'data-sort-column-key="block-status" data-sort-reverse'],
+            ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
         'is_wrapless' => true,
