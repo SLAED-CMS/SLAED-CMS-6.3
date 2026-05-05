@@ -142,6 +142,7 @@ function statistic(): void {
         ]),
     ]);
     $statv .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
         'is_wrapless' => true,
         'head' => $head,
         'rows_html' => $rows,

@@ -102,6 +102,7 @@ function referers(): void {
             }
         }
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
             'head' => [
                 ['content' => _IP],
                 ['content' => _IN_URL, 'is_truncate' => true],

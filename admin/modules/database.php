@@ -173,6 +173,7 @@ function getSqltable(array $items): string {
         ])]);
     }
     return $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
         'head' => [
             ['content' => _ID],
             ['content' => _TYPE],
@@ -342,6 +343,7 @@ function database(): void {
         ]),
     ]);
     $content = $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
         'head' => [
             ['content' => _ID],
             ['content' => _TABLE],

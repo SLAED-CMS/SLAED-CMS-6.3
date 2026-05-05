@@ -31,7 +31,7 @@ function blocks(): void {
 function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $rows = [
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _TITLE, 'hint' => _ADDCONST]),
@@ -388,12 +388,10 @@ function filecode(): void {
         }
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
-        $cont .= checkPerms(BASE_DIR.'/blocks/');
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$bf]);
-        if (file_exists('blocks/'.$bf)) {
-            $cont .= checkPerms(BASE_DIR.'/blocks/'.$bf);
-            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
-        }
+        $dir = BASE_DIR.'/blocks/';
+        $path = $dir.$bf;
+        $cont .= checkPerms($dir).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$path]);
+        if (file_exists('blocks/'.$bf)) $cont .= checkPerms($path).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
         $rows = [[
             'label_html' => _FILENAME,
@@ -453,7 +451,7 @@ function filecodesave(): void {
 function edit(): void {
     global $afile, $conf, $db, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
     $bid = getVar('get', 'id', 'num');
     [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
     if ($url != '') {

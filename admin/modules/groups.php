@@ -256,6 +256,7 @@ function points(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'content_html' => $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,
             'head' => $phead,
             'rows_html' => $prows,
             'is_wrapless' => true,

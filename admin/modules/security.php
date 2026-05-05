@@ -77,7 +77,8 @@ function security(): void {
         }
     }
     $head[0]['is_truncate'] = true;
-    $cont .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
+    $cont .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
     echo $cont;
     setFoot();
 }
@@ -164,7 +165,8 @@ function banlist(): void {
         }
         $head[0]['is_truncate'] = true;
         $head[1]['is_truncate'] = true;
-        $tabone .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
+        $tabone .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
     }
     $iprows = [
         [
@@ -244,7 +246,8 @@ function banlist(): void {
         }
         $head[0]['is_truncate'] = true;
         $head[1]['is_truncate'] = true;
-        $tabtwo .= $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $rows]);
+        $tabtwo .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
     }
     $name = getVar('get', 'uname', 'name');
     $mailTextId = 'sl_form_security_mail';
