@@ -56,15 +56,17 @@ function admins(): void {
         ['content' => _URANK],
         ['content' => _EMAIL],
         ['content' => _LANGUAGE],
-        ['content' => _SUPERUSER, 'is_col_status' => true],
+        ['content' => _ACCESS, 'is_col_status' => true],
         ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
     ];
     $rows = '';
     $result = $db->getSqlQuery(
-        'SELECT id, name, title, email, lang, regdate, lastvis, super FROM '.PREFIX_DB.'_admins ORDER BY id'
+        'SELECT id, name, title, email, lang, regdate, lastvis, super, modules FROM '.PREFIX_DB.'_admins ORDER BY id'
     );
-    while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super] = $db->getSqlRow($result)) {
+    while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super, $mods] = $db->getSqlRow($result)) {
         $lang = $lang ? getLangName($lang) : _ALL;
+        $mods = filterAdminmods(getAdminModuleNames((string)$mods));
+        $stat = ((int)$super === 1) ? 2 : ($mods ? 1 : 0);
         $tip = $tpl->getHtmlFrag('info-tooltip', [
             'items' => [
                 ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING), 'is_last' => false],
@@ -92,19 +94,24 @@ function admins(): void {
                 ['prefix_html' => $tip, 'has_content_text' => true, 'content_text' => (string)$name],
                 ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title],
                 ['content_html' => $tpl->getHtmlFrag('link', [
-                    'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)$conf['sitename']),
+                    'href' => 'mailto:'.$email.'?subject='.rawurlencode((string)($conf['sitename'].' - '._MODULESADMIN)),
                     'is_blank' => true,
                     'label' => $email,
                     'title' => $email,
                 ])],
                 ['has_content_text' => true, 'content_text' => (string)$lang],
-                ['is_col_status' => true, 'content_html' => ((int)$super === 1) ? _YES : _NO],
+                ['is_col_status' => true, 'attr' => 'data-sort="'.$stat.'"', 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', [
+                    'icon_name' => 'shield-fill-check',
+                    'title_text' => ($stat === 2) ? _SUPERUSER : (($stat === 1) ? _ADMIN : _NO),
+                    'color_attr' => ($stat === 2) ? 'var(--sl-color-danger)' : (($stat === 1) ? 'var(--sl-color-success)' : 'var(--sl-color-muted)'),
+                ])],
                 ['is_col_actions' => true, 'content_html' => $acts],
             ],
         ])]);
     }
     $head[1]['is_truncate'] = true;
-    $cont .= $tpl->getHtmlFrag('table', ['is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
+    $cont .= $tpl->getHtmlFrag('table', [
+        'is_fixed' => true,'head' => $head, 'rows_html' => $rows]);
     echo $cont;
     setFoot();
 }
@@ -136,10 +143,10 @@ function add(): void {
     if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = (string)($conf['editor']['admin'] ?? 'plain');
     if (!Editor::isValidEditor((string)$editor, 'admin')) $editor = 'plain';
     $need = $aid ? '' : ' required';
-    $check = '';
+    $check = getVar('post', 'mail', 'bool', 0) ? '1' : '';
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $items = '';
     $mods = getAdminModuleNames((string)$mods);
     $allow = [];
@@ -161,7 +168,10 @@ function add(): void {
         ]);
     }
     $perm = $tpl->getHtmlPart('div', ['is_radio_group' => true, 'content_html' => $items]);
-    $mailtext = replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp']));
+    $txt = _FOLLOWINGMEM.PHP_EOL.PHP_EOL
+        ._NICKNAME.': [login]'.PHP_EOL
+        ._PASSWORD.': [pass]';
+    $mailtext = replace_break(str_replace('[text]', $txt, $conf['mtemp']));
     $langv = $conf['multilingual'] == 1
         ? $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions((string)$lang)])
         : '';
@@ -227,7 +237,7 @@ function add(): void {
                 'itype' => 'password',
                 'name_attr' => 'pwd',
                 'placeholder_text' => _PASSWORD,
-                'input_attr' => $need,
+                'input_attr' => $need.' autocomplete="new-password"',
                 'value_attr' => '',
             ]),
         ],
@@ -237,7 +247,7 @@ function add(): void {
                 'itype' => 'password',
                 'name_attr' => 'pwdtwo',
                 'placeholder_text' => _RETYPEPASSWORD,
-                'input_attr' => $need,
+                'input_attr' => $need.' autocomplete="new-password"',
                 'value_attr' => '',
             ]),
         ],
@@ -254,7 +264,10 @@ function add(): void {
             ]),
         ],
         [
-            'label_html' => _MAIL_SENDE,
+            'label_html' => $tpl->getHtmlFrag('span', [
+                'text' => _MAIL_SENDE,
+                'class' => 'sl-div-label-main sl-no-colon',
+            ]),
             'field_html' => $tpl->getHtmlFrag('checkbox', [
                 'input_attr' => 'data-sl-toggle-control="sl_form_admin_mail"',
                 'is_checked' => $check !== '',
@@ -264,15 +277,13 @@ function add(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-            'field_html' => $tpl->getHtmlPart('div', [
-                'content_html' => $tpl->getHtmlFrag('textarea', [
-                    'name_attr' => 'mailtext',
-                    'rows_num' => 10,
-                    'value_text' => $mailtext,
-                ]),
-                'id' => 'sl_form_admin_mail',
-                'is_collapsible' => true,
+            'field_html' => $tpl->getHtmlFrag('textarea', [
+                'name_attr' => 'mailtext',
+                'rows_num' => 10,
+                'value_text' => $mailtext,
             ]),
+            'id' => 'sl_form_admin_mail',
+            'attr' => 'data-sl-toggle-display="grid"'.($check === '' ? ' style="display:none"' : ''),
             'is_full' => true,
         ],
         [
@@ -325,7 +336,11 @@ function save(): void {
     $stop = [];
     if (!Editor::isValidEditor($edit, 'admin')) $edit = (string)($conf['editor']['admin'] ?? 'plain');
     if (!Editor::isValidEditor($edit, 'admin')) $edit = 'plain';
-    if (!$aid && ($pwd === '' || $ptwo === '')) $stop[] = _NOPASS;
+    $chg = ($pwd !== '' || $ptwo !== '');
+    if (!$aid || $chg) {
+        if ($pwd === '' || $ptwo === '') $stop[] = _NOPASS;
+        if ($pwd !== $ptwo) $stop[] = _ERROR_PASS;
+    }
     if ($name) {
         [$adid, $aname] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name])) ?? [0, ''];
         if ($aid != $adid && $name === $aname) $stop[] = _USEREXIST;
@@ -336,7 +351,6 @@ function save(): void {
     }
     if (!analyze_name($name)) $stop[] = _ERRORINVNICK;
     checkemail($email);
-    if ($pwd !== $ptwo) $stop[] = _ERROR_PASS;
     $self = empty($admin[0]) ? 0 : intval(substr((string)$admin[0], 0, 11));
     if ($aid && $aid === $self && !$super) $stop[] = _ADMINSELFSUPER;
     if ($aid && !$super && checkAdminlast($aid)) $stop[] = _ADMINLASTSUPER;
@@ -345,7 +359,7 @@ function save(): void {
     }
     if (!$stop) {
         if ($aid) {
-            if ($pwd !== '') {
+            if ($chg) {
                 $pass = getPassHash($pwd);
                 $db->getSqlQuery(
                     'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, password = :pass, super = :super, editor = :edit, smail = :smail, modules = :mods, lang = :lang WHERE id = :id',
@@ -364,6 +378,7 @@ function save(): void {
                 ['name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pass' => $pass, 'super' => $super, 'edit' => $edit, 'smail' => $smail, 'mods' => $mods, 'lang' => $lang]
             );
         }
+        if ($aid && !$chg) $mail = 0;
         if ($mail) {
             $subj = $conf['sitename'].' - '._USERPASSWORD.' '.$name;
             $text = getVar('post', 'mailtext', 'text', '');
