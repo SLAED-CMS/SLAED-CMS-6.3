@@ -474,6 +474,7 @@ define('_STATGR','Der Zeitplan der Besuche von Tag');
 define('_STATSHI','Die Breite der Balken');
 define('_STYLES','Stile');
 define('_SUBCATEGORY','Unter - Kategorie');
+define('_ACCESS','Zugriff');
 define('_SUPERUSER','Vollen Zugriff');
 define('_SWORD','Text der Abfrage');
 define('_SYNTAX','Syntax Code Hervorhebung');

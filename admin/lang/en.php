@@ -474,6 +474,7 @@ define('_STATGR','The schedule of visits from day');
 define('_STATSHI','The width of the bar');
 define('_STYLES','Styles');
 define('_SUBCATEGORY','Subcategory');
+define('_ACCESS','Access');
 define('_SUPERUSER','Full access');
 define('_SWORD','The text of the query');
 define('_SYNTAX','Syntax highlighting of code');

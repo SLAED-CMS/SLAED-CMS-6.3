@@ -474,6 +474,7 @@ define('_STATGR','Графік відвідин по днях');
 define('_STATSHI','Ширина балки');
 define('_STYLES','Стилі');
 define('_SUBCATEGORY','Під-категорія');
+define('_ACCESS','Доступ');
 define('_SUPERUSER','Повний доступ');
 define('_SWORD','Текст запиту');
 define('_SYNTAX','Підсвічування синтаксису коду');

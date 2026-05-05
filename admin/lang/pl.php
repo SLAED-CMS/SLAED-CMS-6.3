@@ -474,6 +474,7 @@ define('_STATGR','Harmonogram wizyt w tygodniu');
 define('_STATSHI','Szerokość belki');
 define('_STYLES','Style');
 define('_SUBCATEGORY','Pod-kategoria');
+define('_ACCESS','Dostęp');
 define('_SUPERUSER','Pełny dostęp');
 define('_SWORD','Treść zapytania');
 define('_SYNTAX','Podświetlanie składni kodu');

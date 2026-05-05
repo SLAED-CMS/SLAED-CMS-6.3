@@ -474,6 +474,7 @@ define('_STATGR','Graphique des visites par jour');
 define('_STATSHI','Largeur de la poutre');
 define('_STYLES','Styles');
 define('_SUBCATEGORY','Sous-catégories');
+define('_ACCESS','Accès');
 define('_SUPERUSER','Le plein accès');
 define('_SWORD','Le texte de la requête');
 define('_SYNTAX','La coloration syntaxique du code');
