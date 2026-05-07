@@ -3018,19 +3018,12 @@ function getLangName(string $con): string {
     return $map[$con] ?? $con;
 }
 
-# Resolve a language code to an existing flag image in the current theme
+# Resolve a language code to an existing SVG flag in the current theme
 function getLanguageFlagSrc(string $lang): string {
-    $map = [
-        'de' => 'germany',
-        'en' => 'england',
-        'fr' => 'france',
-        'pl' => 'poland',
-        'ru' => 'russia',
-        'uk' => 'ukraine',
-    ];
-    $image = $map[$lang] ?? $lang;
-    $path = 'lang/'.$image.'.png';
-    return file_exists(img_find($path)) ? img_find($path) : img_find('lang/white.png');
+    $map = ['en' => 'gb', 'uk' => 'ua'];
+    $code = $map[$lang] ?? $lang;
+    $path = 'flags/'.$code.'.svg';
+    return file_exists(img_find($path)) ? img_find($path) : img_find('flags/unknown.svg');
 }
 
 # Hash a user password with bcrypt
@@ -3100,18 +3093,15 @@ function replace_break(string $text): string {
     return '';
 }
 
-# DELETE OR MODIFY
 # User country information
 function user_geo_ip(string $ip, int $id = 4): string {
     global $conf, $tpl;
     $iplink = $tpl->getHtmlFrag('link', ['href' => $conf['ip_link'].$ip, 'title' => (string)_IP.': '.$ip, 'label' => $ip, 'is_blank' => true]);
-    if ((PHP_VERSION >= '5') && $conf['geo_ip'] && preg_match('#([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})#', $ip)) {
+    if ($conf['geo_ip'] && preg_match('#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip)) {
         if ($id == 1 || $id == 2) {
             return $ip;
         }
-        $imgf = str_replace(' ', '_', strtolower($ip));
-        $src = file_exists(img_find('lang/'.$imgf.'.png')) ? img_find('lang/'.$imgf.'.png') : img_find('lang/white.png');
-        $flag = $tpl->getHtmlFrag('span', ['img_src' => $src, 'img_alt' => $ip, 'is_geo_flag' => true]);
+        $flag = $tpl->getHtmlFrag('span', ['img_src' => img_find('flags/unknown.svg'), 'img_alt' => $ip, 'is_geo_flag' => true]);
         return ($id == 4) ? $flag.$iplink : $flag;
     }
     return ($id == 4) ? $iplink : '';

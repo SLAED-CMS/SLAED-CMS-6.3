@@ -99,7 +99,7 @@ function download(): void {
             $sourse = str_replace($input, $output, $code);
             if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IEND®B`‚');
             if (file_exists($path.'/html/templates/admin/images/admin/forum.png')) hidden($path.'/html/templates/admin/images/admin/forum.png', $ipath.'/forum.png', $code);
-            if (file_exists($path.'/html/templates/admin/images/lang/german.png')) hidden($path.'/html/templates/admin/images/lang/german.png', $ipath.'/german.png', $code);
+            if (file_exists($path.'/html/templates/admin/images/flags/de.svg')) hidden($path.'/html/templates/admin/images/flags/de.svg', $ipath.'/de.svg', $code);
             if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IEND®B`‚'.$code);
 
             if (file_exists($path.'/html/config/license.txt')) generator($path.'/html/config');
