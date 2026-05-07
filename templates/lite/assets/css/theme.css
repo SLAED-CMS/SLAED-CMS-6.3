@@ -25,6 +25,29 @@
 }
 .font { font-family: "Magistral", Arial, Tahoma, sans-serif; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 
+:root {
+	--sl-progress-track-border: #ccc;
+	--sl-progress-track-bg: #e7e7eb;
+	--sl-progress-track-radius: 2px;
+	--sl-progress-track-height: 6px;
+	--sl-progress-fill-height: 4px;
+	--sl-progress-fill-1-base: #5c9ade;
+	--sl-progress-fill-1-start: #00adee;
+	--sl-progress-fill-1-end: #0078a5;
+	--sl-progress-fill-2-base: #77af3f;
+	--sl-progress-fill-2-start: #8fc857;
+	--sl-progress-fill-2-end: #5c9425;
+	--sl-progress-fill-3-base: #faa51a;
+	--sl-progress-fill-3-start: #faa51a;
+	--sl-progress-fill-3-end: #f47a20;
+	--sl-progress-fill-4-base: #c44747;
+	--sl-progress-fill-4-start: #dd5f5f;
+	--sl-progress-fill-4-end: #a92c2c;
+	--sl-progress-fill-5-base: #9b36b9;
+	--sl-progress-fill-5-start: #bf5fdd;
+	--sl-progress-fill-5-end: #8c2ca9;
+}
+
 /* Общие стили */
 /* CSS Reset */
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td,article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video { margin: 0; padding: 0; border: 0; font-size: 100%; font: inherit; vertical-align: baseline; }
@@ -841,19 +864,19 @@ td.fl-col-stat { color: #556779; }
 
 /* Результаты опроса - Оформление прогресс бара */
 .progress-line {
-	background: #e7e7eb;
-	border: 1px solid #ccc;
-	border-radius: 2px;
-	height: 6px;
+	background: var(--sl-progress-track-bg);
+	border: 1px solid var(--sl-progress-track-border);
+	border-radius: var(--sl-progress-track-radius);
+	height: var(--sl-progress-track-height);
 	width: 100%;
 	margin: 6px 0 12px 0;
 }
-.progress-line div { height: 4px; border-radius: 2px; text-indent: -9999px; overflow: hidden; }
-.progress-1 div { border: 1px solid #0078a5; background-color: #5c9ade; background: linear-gradient(to top, #00adee 10%, #0078a5 90%); }
-.progress-2 div { border: 1px solid #5c9425; background-color: #77af3f; background: linear-gradient(to top, #8fc857 10%, #5c9425 90%); }
-.progress-3 div { border: 1px solid #f47a20; background-color: #faa51a; background: linear-gradient(to top, #faa51a 10%, #f47a20 90%); }
-.progress-4 div { border: 1px solid #a92c2c; background-color: #c44747; background: linear-gradient(to top, #dd5f5f 10%, #a92c2c 90%); }
-.progress-5 div { border: 1px solid #8c2ca9; background-color: #9b36b9; background: linear-gradient(to top, #bf5fdd 10%, #8c2ca9 90%); }
+.progress-line div { height: var(--sl-progress-fill-height); border-radius: var(--sl-progress-track-radius); text-indent: -9999px; overflow: hidden; }
+.progress-1 div { border: 1px solid var(--sl-progress-fill-1-end); background-color: var(--sl-progress-fill-1-base); background: linear-gradient(to top, var(--sl-progress-fill-1-start) 10%, var(--sl-progress-fill-1-end) 90%); }
+.progress-2 div { border: 1px solid var(--sl-progress-fill-2-end); background-color: var(--sl-progress-fill-2-base); background: linear-gradient(to top, var(--sl-progress-fill-2-start) 10%, var(--sl-progress-fill-2-end) 90%); }
+.progress-3 div { border: 1px solid var(--sl-progress-fill-3-end); background-color: var(--sl-progress-fill-3-base); background: linear-gradient(to top, var(--sl-progress-fill-3-start) 10%, var(--sl-progress-fill-3-end) 90%); }
+.progress-4 div { border: 1px solid var(--sl-progress-fill-4-end); background-color: var(--sl-progress-fill-4-base); background: linear-gradient(to top, var(--sl-progress-fill-4-start) 10%, var(--sl-progress-fill-4-end) 90%); }
+.progress-5 div { border: 1px solid var(--sl-progress-fill-5-end); background-color: var(--sl-progress-fill-5-base); background: linear-gradient(to top, var(--sl-progress-fill-5-start) 10%, var(--sl-progress-fill-5-end) 90%); }
 .progress-info:after { content: ''; clear: both; display: block; }
 .progress-info span { float: left; }
 .progress-info .pull-right { float: right; color: #6e7c8b; }

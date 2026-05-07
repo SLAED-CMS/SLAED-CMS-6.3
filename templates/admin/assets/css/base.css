@@ -54,6 +54,34 @@
     --sl-shadow-float:        0 6px 18px rgba(0, 90, 130, .18);
     --sl-shadow-sidebar:      0 2px 6px rgba(41, 86, 109, .28);
     --sl-shadow-bar:          0 1px 3px rgba(43, 87, 112, .18), inset 0 1px 0 rgba(255, 255, 255, .85);
+    --sl-vote-meter-border: var(--sl-color-border);
+    --sl-vote-meter-track: var(--sl-color-bg-muted);
+    --sl-vote-meter-fill: var(--sl-color-primary-hover);
+    --sl-vote-meter-fill-2: var(--sl-color-success-strong);
+    --sl-vote-meter-fill-3: var(--sl-color-warning-strong);
+    --sl-vote-meter-fill-4: var(--sl-color-danger-strong);
+    --sl-vote-meter-fill-5: var(--sl-color-accent);
+    --sl-vote-meter-radius: var(--sl-radius-control);
+    --sl-progress-track-border: var(--sl-color-border);
+    --sl-progress-track-bg: var(--sl-color-bg-muted);
+    --sl-progress-track-radius: 2px;
+    --sl-progress-track-height: 6px;
+    --sl-progress-fill-height: 4px;
+    --sl-progress-fill-1-base: #5c9ade;
+    --sl-progress-fill-1-start: #00adee;
+    --sl-progress-fill-1-end: #0078a5;
+    --sl-progress-fill-2-base: #77af3f;
+    --sl-progress-fill-2-start: #8fc857;
+    --sl-progress-fill-2-end: #5c9425;
+    --sl-progress-fill-3-base: #faa51a;
+    --sl-progress-fill-3-start: #faa51a;
+    --sl-progress-fill-3-end: #f47a20;
+    --sl-progress-fill-4-base: #c44747;
+    --sl-progress-fill-4-start: #dd5f5f;
+    --sl-progress-fill-4-end: #a92c2c;
+    --sl-progress-fill-5-base: #9b36b9;
+    --sl-progress-fill-5-start: #bf5fdd;
+    --sl-progress-fill-5-end: #8c2ca9;
 }
 
 /* Общие настройки страницы */
