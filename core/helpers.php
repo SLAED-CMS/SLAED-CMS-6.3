@@ -854,14 +854,17 @@ function getTplCategoryModule(string $name, string $clas = '', string $sel = '',
     return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'select_attr' => $attr, 'options_html' => $cont]);
 }
 
-# Build one query string from named params and skip empty values
-function getQueryString(array $data): string {
-    $list = [];
+# Build a query string fragment from key value pairs
+function getQueryString(array $data = [], bool $html = true, bool $tail = false, string $hash = ''): string {
+    $sep = $html ? '&amp;' : '&';
+    $qry = '';
     foreach ($data as $name => $value) {
-        if ($value === '' || $value === null) continue;
-        $list[] = $name.'='.rawurlencode((string)$value);
+        if ($value === '' || $value === null || $value === false) continue;
+        $qry .= ($qry === '' ? '' : $sep).rawurlencode((string)$name).'='.rawurlencode((string)$value);
     }
-    return implode('&amp;', $list);
+    if ($hash !== '') return $qry.'#'.ltrim($hash, '#');
+    if ($tail && $qry !== '') $qry .= $sep;
+    return $qry;
 }
 
 # Render a module navigation block from module config and optional overrides
