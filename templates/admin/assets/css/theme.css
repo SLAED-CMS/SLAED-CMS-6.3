@@ -910,7 +910,7 @@ input.sl-but-blue[value="ОК"] {
 .sl-menu-list-item { width: 100%; text-align: left; display: flex; align-items: center; gap: var(--sl-space-sm); padding: var(--sl-space-xs) var(--sl-space-xs); box-sizing: border-box; }
 .sl-menu-list-item > div:first-child { flex: 0 0 24px; }
 .sl-menu-list-item > div:last-child { min-width: 0; }
-.sl-menu-list-image { cursor: pointer; width: 24px; height: 24px; object-fit: contain; transition: transform .18s ease; }
+.sl-menu-list-image { cursor: pointer; width: 24px; height: auto; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-control); transition: transform .18s ease; }
 .sl-menu-list-item:hover .sl-menu-list-image { transform: scale(0.84); }
 .sl-dashboard-panel-head { margin-bottom: var(--sl-space-md); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1em; line-height: var(--sl-size-head); height: var(--sl-size-head); text-transform: none; color: var(--sl-color-bg); text-align: center; border-radius: var(--sl-radius-control); border: 1px solid transparent; text-shadow: var(--sl-text-shadow-dark); box-shadow: var(--sl-shadow-control); background-color: var(--sl-color-primary-hover); background: linear-gradient(to bottom, var(--sl-color-primary-hover) 0%, var(--sl-color-primary-hover) 48%, var(--sl-color-primary) 100%); box-sizing: border-box; }
 .sl-dashboard-panel-head b { display: flex; align-items: center; justify-content: center; height: 100%; margin: 0; padding: 0 var(--sl-space-lg); line-height: 1; color: var(--sl-color-bg); background: none; }
@@ -1492,6 +1492,10 @@ to { transform: scaleX(0); }
 }
 .sl-table-list-sort .sl-col-ip .sl-geo-flag img {
     display: block;
+    width: 24px;
+    height: auto;
+    border: 1px solid var(--sl-color-border-strong);
+    border-radius: var(--sl-radius-control);
 }
 .sl-table-list-sort .sl-col-ip a {
     display: inline-flex;
@@ -1894,7 +1898,7 @@ to { transform: scaleX(0); }
 .sl-block-sidebar .sl-session-row { padding: var(--sl-space-xs); }
 .sl-session-icon { display: flex; align-items: center; justify-content: center; color: var(--sl-color-primary); flex-shrink: 0; }
 .sl-session-icon .sl-geo-flag { display: flex; align-items: center; justify-content: center; }
-.sl-session-icon .sl-geo-flag img { display: block; }
+.sl-session-icon .sl-geo-flag img { display: block; width: 24px; height: auto; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-control); }
 .sl-session-name,
 .sl-session-module { min-width: 0; overflow-wrap: anywhere; }
 .sl-session-module,
@@ -2953,7 +2957,7 @@ body:has(.sl-admin-login-shell):before {
 	justify-content: center;
 	padding: 3px 4px;
 	border-radius: 6px;
-	transition: background-color .18s ease;
+	transition: background-color 0.15s;
 }
 .sl-admin-language-link:hover {
 	background-color: var(--sl-color-bg-soft);
