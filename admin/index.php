@@ -344,6 +344,6 @@ if (isAdmin()) {
     switch($op) {
         default: login(); break;
         case 'add_admin': add_admin(); break;
-        case 'check_admin'; check_admin(); break;
+        case 'check_admin': check_admin(); break;
     }
 }
