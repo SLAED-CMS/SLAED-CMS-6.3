@@ -1284,7 +1284,10 @@ function setHead(array $seo = []): void {
         if (!empty($conf['agraph']) && !empty($conf['graph'])) {
             $strmeta .= str_replace($from, $into, $conf['graph']);
         }
-        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => 'templates/'.$theme.'/favicon.png', 'type' => '', 'title' => ''])."\n";
+        $favicon = 'templates/'.$theme.'/images/favicon.svg';
+        if (is_file(BASE_DIR.'/'.$favicon)) {
+            $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
+        }
         if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => ''])."\n";
         if ($conf['rss']['act']) {
             $fieldc = explode('||', $conf['rss']['rss']);

@@ -882,8 +882,9 @@ function getOpenSearch() {
     .'<Url type="application/atom+xml" template="'.$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
     .'<Url type="application/rss+xml" template="'.$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
     .'<Url type="text/html" template="'.$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
-    .'<Image height="16" width="16" type="image/x-icon">'.$conf['homeurl'].'/templates/'.$conf['theme']."/favicon.ico</Image>\n"
-    .'<Image height="16" width="16" type="image/png">'.$conf['homeurl'].'/templates/'.$conf['theme']."/favicon.png</Image>\n"
+    .(is_file(BASE_DIR.'/templates/'.$conf['theme'].'/images/favicon.svg')
+        ? '<Image height="16" width="16" type="image/svg+xml">'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/favicon.svg</Image>\n'
+        : '')
     .'<Attribution>Copyright (c) SLAED CMS '.$conf['version']."</Attribution>\n"
     .'<Language>'.htmlspecialchars(substr(_LOCALE, 0, 2))."</Language>\n"
     ."</OpenSearchDescription>\n";

@@ -46,13 +46,10 @@ function setExit(string $msg, string $typ = ''): never {
     $meta = '<meta name="author" content="'.htmlspecialchars((string)($conf['sitename'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL
         .'<meta name="generator" content="'.htmlspecialchars('SLAED CMS '.($conf['version'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL.$jump;
     $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
-    $basedir = realpath($path) ?: $path;
-    $themedir = 'templates/'.$theme;
     $linksrc = [];
-    if (is_file($basedir.'/'.$themedir.'/favicon.png')) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $themedir.'/favicon.png', 'type' => '', 'title' => '']);
-    } elseif (is_file($basedir.'/'.$themedir.'/favicon.ico')) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $themedir.'/favicon.ico', 'type' => '', 'title' => '']);
+    $favicon = 'templates/'.$theme.'/images/favicon.svg';
+    if (is_file(BASE_DIR.'/'.$favicon)) {
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => '']);
     }
     foreach (getThemeCssFiles($theme) as $asset) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
