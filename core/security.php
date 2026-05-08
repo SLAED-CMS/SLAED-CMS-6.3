@@ -448,9 +448,9 @@ function setExit(string $msg, string $typ = ''): never {
     $theme = getTheme();
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
-    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.htmlspecialchars((string)($conf['homeurl'] ?? '').'/index.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL : '';
-    $meta = '<meta name="author" content="'.htmlspecialchars((string)($conf['sitename'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL
-        .'<meta name="generator" content="'.htmlspecialchars('SLAED CMS '.($conf['version'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.PHP_EOL.$jump;
+    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.htmlspecialchars((string)($conf['homeurl'] ?? '').'/index.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n" : '';
+    $meta = '<meta name="author" content="'.htmlspecialchars((string)($conf['sitename'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n"
+        . '<meta name="generator" content="'.htmlspecialchars('SLAED CMS '.($conf['version'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n" . $jump;
     $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
@@ -460,7 +460,7 @@ function setExit(string $msg, string $typ = ''): never {
     foreach (getThemeCssFiles($theme) as $asset) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
     }
-    $links = implode(PHP_EOL, $linksrc);
+    $links = implode("\n", $linksrc);
     die($tpl->getHtmlPage('message', [
         'lang' => substr(_LOCALE, 0, 2),
         'theme' => $theme,
