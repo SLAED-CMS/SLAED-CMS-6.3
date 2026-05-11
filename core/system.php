@@ -119,6 +119,7 @@ $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
 require_once BASE_DIR.'/core/classes/parser.php';
+require_once BASE_DIR.'/core/classes/geoip.php';
 $tpl = new Template($theme);
 $prs = new Parser();
 
@@ -138,6 +139,16 @@ function getThemeHookVars(string $hook): array {
     if (!function_exists($hook)) return [];
     $vars = $hook();
     return is_array($vars) ? $vars : [];
+}
+
+# Return GeoIP information for one IP
+function getGeoipInfo(string $ip): array {
+    return Geoip::getInfo($ip);
+}
+
+# Return GeoIP country code for one IP
+function getGeoipCountry(string $ip): string {
+    return Geoip::getCountry($ip);
 }
 
 # Returns a normalized 5-part cron schedule or an empty string when invalid
