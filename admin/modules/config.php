@@ -6,6 +6,87 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+# Render GeoIP status label
+function getGeoipBadge(bool $found): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('inline-badge', [
+        'is_success' => $found,
+        'is_danger' => !$found,
+        'label' => $found ? _FOUND : _NOTFOUND,
+    ]);
+}
+
+# Render one GeoIP database status row
+function getGeoipFileRow(string $label, string $file): string {
+    global $tpl;
+    $info = Geoip::getFileInfo($file);
+    $size = $info['found'] ? filterSize($info['size']) : _NO;
+    $date = $info['found'] ? date(_TIMESTRING, (int)$info['mtime']) : _NO;
+    return $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+        'cells' => [
+            ['content_html' => $label],
+            ['is_col_status' => true, 'content_html' => getGeoipBadge((bool)$info['found'])],
+            ['content_html' => $size],
+            ['content_html' => $date],
+            ['content_html' => (string)$info['path']],
+        ],
+    ])]);
+}
+
+# Render GeoIP result rows for test IP
+function getGeoipRows(string $test): string {
+    global $tpl;
+    $res = filter_var($test, FILTER_VALIDATE_IP) ? getGeoipInfo($test) : Geoip::getEmpty();
+    $rows = [
+        [_COUNTRY, (string)$res['country']],
+        [_GEOIP_COUNTRYNAME, (string)$res['country_name']],
+        [_GEOIP_CONTINENT, (string)$res['continent']],
+        [_GEOIP_ASN, (string)$res['asn']],
+        [_GEOIP_ORG, (string)$res['organization']],
+        [_GEOIP_PROVIDER, (string)$res['provider']],
+        [_STATUS, (string)$res['status']],
+    ];
+    $html = '';
+    foreach ($rows as $row) {
+        $html .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+            'cells' => [
+                ['content_html' => $row[0]],
+                ['content_html' => $row[1] !== '' && $row[1] !== '0' ? $row[1] : _NO],
+            ],
+        ])]);
+    }
+    return $html;
+}
+
+# Render GeoIP settings and database status
+function getGeoipPanel(): string {
+    global $conf, $tpl;
+    $cfg = $conf['geoip'] ?? [];
+    $test = getVar('req', 'testip', 'text', '');
+    $rows = [
+        ['label_html' => _GEO_IP, 'field_html' => getTplRadioGroup(['name' => 'geoipenabled', 'value' => (string)(int)($cfg['enabled'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _GEOIP_CACHE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'geoipcache', 'value_attr' => (string)($cfg['cache_ttl'] ?? 86400), 'is_config' => true])],
+        ['label_html' => _GEOIP_ANON, 'field_html' => getTplRadioGroup(['name' => 'geoipanon', 'value' => (string)(int)($cfg['anonymize_ip'] ?? 1), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _GEOIP_STORE, 'field_html' => getTplRadioGroup(['name' => 'geoipstore', 'value' => (string)(int)($cfg['store_ip'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+        ['label_html' => _GEOIP_TESTIP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'testip', 'value_attr' => $test, 'is_config' => true])],
+    ];
+    $head = [
+        ['content' => _DATABASE],
+        ['content' => _STATUS],
+        ['content' => _SIZE],
+        ['content' => _DATE],
+        ['content' => _ADIR],
+    ];
+    $body = getGeoipFileRow(_GEOIP_COUNTRYDB, (string)($cfg['country_database'] ?? 'storage/geoip/country.mmdb'));
+    $body .= getGeoipFileRow(_GEOIP_ASNDB, (string)($cfg['asn_database'] ?? 'storage/geoip/asn.mmdb'));
+    $stat = $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => $body]);
+    $head = [
+        ['content' => _PARAMETERS],
+        ['content' => _VALUE],
+    ];
+    $info = $tpl->getHtmlFrag('table', ['head' => $head, 'rows_html' => getGeoipRows($test)]);
+    return checkPerms(CONFIG_DIR.'/geoip.php').$tpl->getHtmlPart('div', ['rows' => $rows]).$stat.$info;
+}
 
 function config(): void {
     global $afile, $conf, $tpl;
@@ -13,7 +94,7 @@ function config(): void {
     $ctab = getVar('get', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab > 6) $ctab = 0;
     $links = [];
-    foreach ([_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT] as $idx => $label) {
+    foreach ([_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT] as $idx => $label) {
         $links[] = [
             'href' => '#',
             'is_active' => $ctab === $idx,
@@ -442,7 +523,7 @@ function config(): void {
     $rows[] = ['label_html' => _ACTUSEFLAGS, 'field_html' => getTplRadioGroup(['name' => 'flags', 'value' => $conf['flags'], 'options' => $yesno])];
     $rows[] = ['label_html' => _GEO_IP, 'field_html' => getTplRadioGroup(['name' => 'geo_ip', 'value' => $conf['geo_ip'], 'options' => $yesno])];
     $rows[] = ['label_html' => _ACTUSELANG, 'field_html' => getTplRadioGroup(['name' => 'alang', 'value' => $conf['alang'], 'options' => $yesno])];
-    $tabc = $tpl->getHtmlPart('div', ['rows' => $rows]);
+    $tabc = $tpl->getHtmlPart('div', ['rows' => $rows]).getGeoipPanel();
 
     $rows = [];
     $opts = $tpl->getHtmlFrag('select-option', [
@@ -729,14 +810,26 @@ function save(): void {
             'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
         ];
         setConfigFile('global.php', $cont);
+        $geo = $conf['geoip'] ?? [];
+        $cont = [
+            'enabled' => getVar('post', 'geoipenabled', 'num', 1),
+            'country_database' => (string)($geo['country_database'] ?? 'storage/geoip/country.mmdb'),
+            'asn_database' => (string)($geo['asn_database'] ?? 'storage/geoip/asn.mmdb'),
+            'cache_ttl' => getVar('post', 'geoipcache', 'num', 86400),
+            'anonymize_ip' => getVar('post', 'geoipanon', 'num', 1),
+            'store_ip' => getVar('post', 'geoipstore', 'num', 0),
+        ];
+        setConfigFile('geoip.php', $cont, $geo);
     }
-    setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    $test = getVar('post', 'testip', 'text', '');
+    $test = filter_var($test, FILTER_VALIDATE_IP) ? '&testip='.rawurlencode($test) : '';
+    setRedirect($afile.'.php?name=config&tab='.$ctab.$test, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=config&amp;tab=0', 'name=config&amp;tab=1', 'name=config&amp;tab=2', 'name=config&amp;tab=3', 'name=config&amp;tab=4', 'name=config&amp;tab=5', 'name=config&amp;tab=6', 'name=config&amp;op=info'],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO],
     ]);
 }
 
