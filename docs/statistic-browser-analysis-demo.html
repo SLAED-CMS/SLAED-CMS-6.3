@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SLAED CMS - Statistic Browser Analysis Demo</title>
+    <style>
+        :root {
+            --sl-bg: #ffffff;
+            --sl-soft: #f7fbfd;
+            --sl-muted: #f4f6f8;
+            --sl-line: #e1e7ec;
+            --sl-line-strong: #c8d3dc;
+            --sl-text: #111827;
+            --sl-text-soft: #374151;
+            --sl-dim: #6b7280;
+            --sl-blue: #0877b1;
+            --sl-blue-2: #2085bd;
+            --sl-blue-soft: #d9eef6;
+            --sl-green: #31b34a;
+            --sl-green-2: #24973a;
+            --sl-orange: #d97706;
+            --sl-red: #d94848;
+            --sl-purple: #8e44ad;
+            --sl-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+            --sl-float: 0 10px 26px rgba(0, 90, 130, .18);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            min-height: 100%;
+            background: linear-gradient(180deg, #8fc5d9 0%, #d9eef6 52%, #f7fbfd 100%);
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--sl-text);
+            font: 14px/1.35 Tahoma, Arial, Verdana, sans-serif;
+        }
+
+        a {
+            color: var(--sl-blue);
+            text-decoration: none;
+        }
+
+        .shell {
+            width: min(1440px, calc(100vw - 44px));
+            margin: 28px auto;
+            background: var(--sl-bg);
+            border: 1px solid #8fc5d9;
+            border-radius: 6px;
+            box-shadow: var(--sl-float);
+            overflow: hidden;
+        }
+
+        .header {
+            display: grid;
+            grid-template-columns: 250px minmax(0, 1fr);
+            gap: 24px;
+            align-items: center;
+            padding: 28px 34px 18px;
+        }
+
+        .logo {
+            display: block;
+            width: 240px;
+            max-width: 100%;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 42px;
+            padding: 0 12px;
+            background: linear-gradient(#fbfdfe, #f0f3f6);
+            border: 1px solid var(--sl-line-strong);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255,255,255,.5);
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-weight: 700;
+        }
+
+        .flags {
+            display: flex;
+            gap: 6px;
+            padding-left: 14px;
+            border-left: 1px solid var(--sl-line-strong);
+        }
+
+        .flags img {
+            display: block;
+            width: 24px;
+            border: 1px solid var(--sl-line);
+            border-radius: 4px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 278px minmax(0, 1fr);
+            gap: 24px;
+            padding: 0 28px 34px;
+        }
+
+        .side {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sidebox {
+            border: 1px solid var(--sl-green);
+            border-radius: 5px;
+            overflow: hidden;
+            background: var(--sl-bg);
+        }
+
+        .sidebox.is-hot {
+            border-color: var(--sl-orange);
+        }
+
+        .sidebox h2 {
+            display: flex;
+            align-items: center;
+            min-height: 32px;
+            margin: 0;
+            padding: 0 12px;
+            color: #fff;
+            font-size: 15px;
+            background: linear-gradient(var(--sl-green), var(--sl-green-2));
+        }
+
+        .sidebox.is-hot h2 {
+            background: linear-gradient(#ee8500, #d46000);
+        }
+
+        .sidebody {
+            padding: 10px;
+        }
+
+        .siderow {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+            min-height: 27px;
+            padding: 3px 4px;
+        }
+
+        .siderow a {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .siderow svg {
+            width: 17px;
+            height: 17px;
+            color: var(--sl-blue-2);
+        }
+
+        .badge {
+            display: inline-flex;
+            justify-content: center;
+            min-width: 24px;
+            padding: 1px 6px;
+            color: var(--sl-dim);
+            background: var(--sl-muted);
+            border: 1px solid var(--sl-line);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge.hot {
+            color: var(--sl-red);
+            border-color: var(--sl-line-strong);
+        }
+
+        .content {
+            min-width: 0;
+        }
+
+        .module-head {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 13px;
+        }
+
+        .module-head img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--sl-blue-2);
+            font-size: 27px;
+            line-height: 1.1;
+        }
+
+        .sub {
+            margin-top: 3px;
+            color: var(--sl-dim);
+            font-size: 12px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 12px;
+            color: #fff;
+            background: linear-gradient(var(--sl-blue-2), var(--sl-blue));
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .16);
+            font-weight: 700;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin: 0 0 14px;
+            border-bottom: 1px solid var(--sl-line-strong);
+        }
+
+        .tabs span {
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 0 13px;
+            color: var(--sl-dim);
+            background: var(--sl-muted);
+            border: 1px solid transparent;
+            border-radius: 5px 5px 0 0;
+            font-size: 13px;
+        }
+
+        .tabs .active {
+            color: var(--sl-blue);
+            background: #fff;
+            border-color: var(--sl-line-strong);
+            border-bottom-color: #fff;
+            margin-bottom: -1px;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .analysis-card {
+            background: var(--sl-bg);
+            border: 1px solid var(--sl-line);
+            border-radius: 7px;
+            box-shadow: var(--sl-shadow);
+            overflow: hidden;
+        }
+
+        .analysis-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            min-height: 42px;
+            padding: 0 14px;
+            border-bottom: 1px solid var(--sl-line);
+            font-weight: 800;
+        }
+
+        .analysis-head small {
+            color: var(--sl-dim);
+            font-weight: 700;
+        }
+
+        .analysis-body {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 12px;
+        }
+
+        .metric {
+            min-height: 70px;
+            padding: 9px;
+            background: var(--sl-soft);
+            border: 1px solid var(--sl-line);
+            border-radius: 6px;
+        }
+
+        .metric span {
+            color: var(--sl-dim);
+            font-size: 12px;
+        }
+
+        .metric b {
+            display: block;
+            margin-top: 4px;
+            font-size: 21px;
+        }
+
+        .idea {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .kpi {
+            min-height: 98px;
+            padding: 13px 14px;
+            background: #fff;
+            border: 1px solid var(--sl-line);
+            border-left: 4px solid var(--accent);
+            border-radius: 7px;
+            box-shadow: var(--sl-shadow);
+        }
+
+        .kpi span {
+            color: var(--sl-dim);
+            font-size: 12px;
+        }
+
+        .kpi b {
+            display: block;
+            margin-top: 7px;
+            font-size: 27px;
+            letter-spacing: 0;
+        }
+
+        .kpi small {
+            color: var(--sl-text-soft);
+            font-weight: 700;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1.34fr .66fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid var(--sl-line);
+            border-radius: 7px;
+            box-shadow: var(--sl-shadow);
+            overflow: hidden;
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            min-height: 45px;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--sl-line);
+            font-weight: 800;
+        }
+
+        .panel-head span:last-child {
+            color: var(--sl-dim);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .panel-body {
+            padding: 15px;
+        }
+
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mini {
+            padding: 9px 10px;
+            background: var(--sl-muted);
+            border-radius: 7px;
+            color: var(--sl-dim);
+            font-size: 12px;
+        }
+
+        .mini b {
+            display: block;
+            margin-top: 3px;
+            color: var(--sl-text);
+            font-size: 16px;
+        }
+
+        .chart {
+            display: block;
+            width: 100%;
+            min-height: 230px;
+        }
+
+        .gridline {
+            stroke: var(--sl-line);
+        }
+
+        .area {
+            fill: url(#visitsFill);
+        }
+
+        .line-main,
+        .line-human,
+        .line-bot {
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .line-main {
+            stroke: var(--sl-blue-2);
+            stroke-width: 4;
+        }
+
+        .line-human {
+            stroke: var(--sl-green);
+            stroke-width: 3;
+            stroke-dasharray: 6 8;
+        }
+
+        .line-bot {
+            stroke: var(--sl-red);
+            stroke-width: 2;
+            stroke-dasharray: 3 7;
+        }
+
+        .quality {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 11px;
+        }
+
+        .ring {
+            position: relative;
+            display: grid;
+            place-items: center;
+            min-height: 128px;
+            background: var(--sl-soft);
+            border: 1px solid var(--sl-line);
+            border-radius: 7px;
+            text-align: center;
+        }
+
+        .ring svg {
+            width: 82px;
+            height: 82px;
+            transform: rotate(-90deg);
+        }
+
+        .ring circle:first-child {
+            fill: none;
+            stroke: var(--sl-muted);
+            stroke-width: 8;
+        }
+
+        .ring circle:last-child {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+
+        .ring b {
+            position: absolute;
+            top: 45px;
+            font-size: 19px;
+        }
+
+        .ring span {
+            display: block;
+            margin-top: 5px;
+            color: var(--sl-text-soft);
+            font-weight: 800;
+        }
+
+        .ring small {
+            color: var(--sl-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 2px;
+            margin-top: 14px;
+        }
+
+        th,
+        td {
+            height: 31px;
+            padding: 0 9px;
+            border: 1px solid var(--sl-line);
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+
+        th {
+            background: var(--sl-muted);
+            text-align: left;
+        }
+
+        th:not(:first-child),
+        td:not(:first-child) {
+            text-align: right;
+        }
+
+        tfoot th {
+            text-align: center;
+        }
+
+        .foot {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 15px 28px;
+            color: #fff;
+            background: repeating-linear-gradient(-45deg, rgba(255,255,255,.06) 0 2px, transparent 2px 6px), linear-gradient(var(--sl-blue-2), var(--sl-blue));
+            font-size: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .header,
+            .layout,
+            .analysis-grid,
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .idea,
+            .analysis-body {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .shell {
+                width: calc(100vw - 16px);
+                margin: 8px auto;
+            }
+
+            .header,
+            .layout {
+                padding-right: 14px;
+                padding-left: 14px;
+            }
+
+            .topbar,
+            .module-head,
+            .foot {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .idea,
+            .analysis-body,
+            .chart-stats,
+            .quality {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <header class="header">
+        <img class="logo" src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED">
+        <nav class="topbar" aria-label="admin navigation">
+            <div class="nav">
+                <a href="#">Главная</a>
+                <a href="#">Блоки и баннеры</a>
+                <a href="#">Модули</a>
+                <a href="#">Категории</a>
+                <a href="#">Сайт</a>
+                <a href="#">Профиль</a>
+                <a href="#">Выход</a>
+            </div>
+            <div class="flags">
+                <img src="../templates/admin/images/flags/de.svg" alt="Deutsch">
+                <img src="../templates/admin/images/flags/gb.svg" alt="English">
+                <img src="../templates/admin/images/flags/fr.svg" alt="Francais">
+                <img src="../templates/admin/images/flags/ru.svg" alt="Русский">
+                <img src="../templates/admin/images/flags/ua.svg" alt="Українська">
+            </div>
+        </nav>
+    </header>
+
+    <section class="layout">
+        <aside class="side">
+            <section class="sidebox is-hot">
+                <h2>Новые</h2>
+                <div class="sidebody">
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>Пользователи</a><span class="badge hot">18</span></div>
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 17h.01"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.7 1.2-2.1 1.6-2.6 2.7"/></svg>Вопросы и ответы</a><span class="badge">0</span></div>
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Новости</a><span class="badge hot">2</span></div>
+                </div>
+            </section>
+            <section class="sidebox">
+                <h2>Администрация</h2>
+                <div class="sidebody">
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Панель администратора</a></div>
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 3v18"/></svg>Выход</a></div>
+                </div>
+            </section>
+            <section class="sidebox">
+                <h2>Наблюдение</h2>
+                <div class="sidebody">
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>Администрация:</a><span>1</span></div>
+                    <div class="siderow"><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Всего:</a><span>1</span></div>
+                </div>
+            </section>
+        </aside>
+
+        <section class="content">
+            <header class="module-head">
+                <img src="../templates/admin/images/admin/statistic.png" alt="">
+                <div>
+                    <h1>Статистика</h1>
+                    <div class="sub">Demo nach Browser-Analyse: Bild 1 Monitor + Bild 2 Statistik</div>
+                </div>
+                <a class="button" href="#">OK</a>
+            </header>
+
+            <div class="tabs">
+                <span class="active">Главная</span>
+                <span>Конфигурации</span>
+                <span>Информация</span>
+            </div>
+
+            <section class="analysis-grid" aria-label="browser analysis">
+                <article class="analysis-card">
+                    <div class="analysis-head"><span>Bild 1: Мониторинг</span><small>admin.php?name=monitor</small></div>
+                    <div class="analysis-body">
+                        <div class="metric"><span>Monitor Cards</span><b>7</b></div>
+                        <div class="metric"><span>Overview Items</span><b>4</b></div>
+                        <div class="metric"><span>Charts</span><b>1</b></div>
+                        <div class="metric"><span>Info Tables</span><b>6+</b></div>
+                    </div>
+                </article>
+                <article class="analysis-card">
+                    <div class="analysis-head"><span>Bild 2: Статистика</span><small>admin.php?name=statistic</small></div>
+                    <div class="analysis-body">
+                        <div class="metric"><span>Form Controls</span><b>6</b></div>
+                        <div class="metric"><span>Old Chart Image</span><b>1</b></div>
+                        <div class="metric"><span>Data Table</span><b>1</b></div>
+                        <div class="metric"><span>Rows</span><b>8</b></div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="idea">
+                <article class="kpi" style="--accent: var(--sl-blue-2)"><span>Уникальные</span><b>6</b><small>сумма за выбранный период</small></article>
+                <article class="kpi" style="--accent: var(--sl-green)"><span>Входы</span><b>1 440</b><small>главный показатель графика</small></article>
+                <article class="kpi" style="--accent: var(--sl-orange)"><span>Аудитория</span><b>6</b><small>уникальные минус краулеры и переходы</small></article>
+                <article class="kpi" style="--accent: var(--sl-purple)"><span>Пользователи</span><b>0</b><small>зарегистрированные визиты</small></article>
+            </section>
+
+            <section class="dashboard">
+                <article class="panel">
+                    <header class="panel-head">
+                        <span>Динамика посещаемости</span>
+                        <span>Monitor-Optik fuer Statistikdaten</span>
+                    </header>
+                    <div class="panel-body">
+                        <div class="chart-stats">
+                            <div class="mini">04.05<b>250</b></div>
+                            <div class="mini">05.05<b>616</b></div>
+                            <div class="mini">07.05<b>182</b></div>
+                            <div class="mini">12.05<b>299</b></div>
+                        </div>
+                        <svg class="chart" viewBox="0 0 860 260" role="img" aria-label="statistic demo chart">
+                            <defs>
+                                <linearGradient id="visitsFill" x1="0" x2="0" y1="0" y2="1">
+                                    <stop offset="0" stop-color="#8fc5d9" stop-opacity=".58"/>
+                                    <stop offset="1" stop-color="#8fc5d9" stop-opacity=".06"/>
+                                </linearGradient>
+                            </defs>
+                            <path class="gridline" d="M20 32H840M20 82H840M20 132H840M20 182H840M20 232H840"/>
+                            <path class="area" d="M20 210 C70 198 92 190 130 74 C174 36 195 42 238 120 C284 170 310 146 350 164 C396 184 420 212 464 220 C506 226 538 198 584 188 C628 180 646 160 690 92 C730 38 760 128 804 146 C826 154 836 146 840 140 L840 232 L20 232Z"/>
+                            <path class="line-main" d="M20 210 C70 198 92 190 130 74 C174 36 195 42 238 120 C284 170 310 146 350 164 C396 184 420 212 464 220 C506 226 538 198 584 188 C628 180 646 160 690 92 C730 38 760 128 804 146 C826 154 836 146 840 140"/>
+                            <path class="line-human" d="M20 222 C92 216 132 120 178 96 C220 74 258 150 306 158 C364 168 420 208 470 214 C524 219 572 184 616 172 C666 158 704 80 746 108 C786 134 812 152 840 146"/>
+                            <path class="line-bot" d="M20 226 C96 220 142 214 190 202 C240 188 278 210 330 204 C390 198 446 222 502 218 C558 212 612 204 666 184 C716 168 760 192 804 186 C824 184 834 178 840 176"/>
+                        </svg>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <header class="panel-head">
+                        <span>Qualitaet der Daten</span>
+                        <span>aus Statistik ableitbar</span>
+                    </header>
+                    <div class="panel-body quality">
+                        <div class="ring" style="--accent: var(--sl-green)"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38"/><circle cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="59"/></svg><b>75%</b><span>Аудитория</span><small>ohne Crawler</small></div>
+                        <div class="ring" style="--accent: var(--sl-blue-2)"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38"/><circle cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="96"/></svg><b>60%</b><span>Главная</span><small>home hits</small></div>
+                        <div class="ring" style="--accent: var(--sl-orange)"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38"/><circle cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="167"/></svg><b>30%</b><span>Переходы</span><small>referers</small></div>
+                        <div class="ring" style="--accent: var(--sl-red)"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38"/><circle cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="215"/></svg><b>10%</b><span>Краулеры</span><small>bots</small></div>
+                    </div>
+                </article>
+            </section>
+
+            <article class="panel">
+                <header class="panel-head">
+                    <span>Таблица статистики</span>
+                    <span>bestehende Inhalte bleiben lesbar</span>
+                </header>
+                <div class="panel-body">
+                    <table aria-label="statistic table demo">
+                        <thead>
+                        <tr><th>Дата</th><th>Уникальные</th><th>Входы</th><th>Главная</th><th>Переходы</th><th>Краулеры</th><th>Аудитория</th><th>Пользователи</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><td>04.05.2026</td><td>1</td><td>250</td><td>2</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                        <tr><td>05.05.2026</td><td>1</td><td>616</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                        <tr><td>07.05.2026</td><td>1</td><td>182</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                        <tr><td>08.05.2026</td><td>1</td><td>6</td><td>2</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                        <tr><td>11.05.2026</td><td>1</td><td>87</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                        <tr><td>12.05.2026</td><td>1</td><td>299</td><td>5</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                        </tbody>
+                        <tfoot>
+                        <tr><th>Все</th><th>6</th><th>1440</th><th>12</th><th>0</th><th>0</th><th>6</th><th>0</th></tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </section>
+
+    <footer class="foot">
+        <div>Browser Node CLI: monitor und statistic analysiert.</div>
+        <div>Demo-Datei fuer docs/, ohne Aenderung am PHP-Modul.</div>
+    </footer>
+</main>
+</body>
+</html>
