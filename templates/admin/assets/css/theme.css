@@ -415,7 +415,7 @@ input.sl-but-blue[value="ОК"] {
     outline-offset: 2px;
     border-radius: 50%;
 }
-.sl-tip div, .sl-menu ul ul {
+.sl-tip > div, .sl-menu ul ul {
     position: absolute;
     top: calc(100% + 8px);
     left: 50%;
@@ -441,11 +441,11 @@ input.sl-but-blue[value="ОК"] {
     transform: translateX(-50%);
     transition: opacity .18s ease, visibility .18s ease;
 }
-.sl-tip div {
+.sl-tip > div {
     font-size: 14px;
     line-height: 16px;
 }
-.sl-tip div::after, .sl-menu ul ul::after {
+.sl-tip > div::after, .sl-menu ul ul::after {
     content: '';
     position: absolute;
     left: var(--sl-float-arrow, 16px);
@@ -889,12 +889,10 @@ input.sl-but-blue[value="ОК"] {
 .sl-admin-block-link:hover,
 .sl-block-sidebar .sl-session-row:hover { background-color: var(--sl-color-bg-soft); }
 .sl-block-sidebar-count-label { overflow-wrap: anywhere; }
-.sl-block-sidebar-count-label a { display: flex; align-items: center; gap: var(--sl-space-xs); color: var(--sl-color-muted); }
-.sl-block-sidebar:has([data-sl-toggle-control="sl_block_3"]) .sl-block-sidebar-count-label a,
-.sl-block-sidebar:has([data-sl-toggle-control="sl_block_4"]) .sl-block-sidebar-count-label a { color: var(--sl-color-warning-strong); }
+.sl-block-sidebar-count-label a { display: flex; align-items: center; gap: var(--sl-space-xs); color: var(--sl-color-primary); }
 .sl-block-sidebar-count-value { display: flex; align-items: center; justify-content: center; }
-.sl-block-sidebar-count-value > span { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; padding: 1px 4px; border-radius: 9999px; font-size: 0.78em; font-weight: 700; line-height: 1.4; box-shadow: var(--sl-shadow-card); }
-.sl-block-sidebar-count-value > .sl-text-danger { background: var(--sl-color-danger-soft); color: var(--sl-color-danger-strong); border: 1px solid var(--sl-color-danger); }
+.sl-block-sidebar-count-value > span { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; padding: 1px 4px; background: var(--sl-color-bg-subtle); border: 1px solid var(--sl-color-border); border-radius: 9999px; font-size: 0.78em; font-weight: 700; line-height: 1.4; box-shadow: var(--sl-shadow-card); }
+.sl-block-sidebar-count-value > .sl-text-danger { color: var(--sl-color-warning-strong); border-color: var(--sl-color-border-strong); }
 .sl-block-sidebar-count-value > .sl-text-success { background: var(--sl-color-bg-subtle); color: var(--sl-color-muted); border: 1px solid var(--sl-color-border); }
 .sl-block-sidebar:has([data-sl-toggle-control="sl_block_3"]),
 .sl-block-sidebar:has([data-sl-toggle-control="sl_block_4"]) { border-color: var(--sl-color-warning); }
@@ -902,8 +900,8 @@ input.sl-but-blue[value="ОК"] {
 .sl-block-sidebar:has([data-sl-toggle-control="sl_block_4"]) h3 { background-color: var(--sl-color-warning); background: linear-gradient(to bottom, var(--sl-color-warning) 0%, var(--sl-color-warning) 48%, var(--sl-color-warning-strong) 100%); }
 .sl-menu-grid { display: flex; flex-wrap: wrap; gap: 7px; width: 100%; box-sizing: border-box; }
 .sl-menu-grid-item { flex: 0 0 calc((100% - 35px) / 6); max-width: calc((100% - 35px) / 6); min-width: 0; }
-.sl-menu-grid-link { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; height: 100px; padding: 7px 6px 6px; box-sizing: border-box; border: 1px solid var(--sl-color-border-strong); border-radius: 6px; background: var(--sl-color-bg-soft); color: var(--sl-color-primary-hover); font-weight: bold; line-height: 1.16; text-align: center; text-decoration: none; box-shadow: 0 1px 2px rgba(32, 75, 102, 0.08); transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }
-.sl-menu-grid-link:hover { border-color: var(--sl-color-primary-soft); background-color: var(--sl-color-primary-tint); box-shadow: 0 3px 8px rgba(32, 75, 102, 0.16); transform: translateY(-1px); }
+.sl-menu-grid-link { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 5px; height: 100px; padding: 7px 6px 6px; box-sizing: border-box; border: 1px solid var(--sl-color-border-strong); border-radius: 6px; color: var(--sl-color-primary-hover); font-weight: bold; line-height: 1.16; text-align: center; text-decoration: none; box-shadow: 0 1px 2px rgba(32, 75, 102, 0.08); transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.sl-menu-grid-link:hover { border-color: var(--sl-color-primary-soft); background-color: var(--sl-color-bg-soft); box-shadow: 0 3px 8px rgba(32, 75, 102, 0.16); transform: translateY(-1px); }
 .sl-menu-grid-link span { display: block; overflow: hidden; max-width: 100%; height: var(--sl-size-head); overflow-wrap: anywhere; }
 .sl-menu-grid-image { cursor: pointer; width: 48px; height: 48px; object-fit: contain; transition: transform .18s ease; }
 .sl-menu-grid-link:hover .sl-menu-grid-image { transform: scale(0.75); }
@@ -911,6 +909,8 @@ input.sl-but-blue[value="ОК"] {
 .sl-menu-list-item > div:first-child { flex: 0 0 24px; }
 .sl-menu-list-item > div:last-child { min-width: 0; }
 .sl-menu-list-image { cursor: pointer; width: 24px; height: auto; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-control); transition: transform .18s ease; }
+.sl-block-sidebar:has([data-sl-toggle-control="sl_block_1"]) .sl-menu-list-image,
+.sl-block-sidebar:has([data-sl-toggle-control="sl_block_2"]) .sl-menu-list-image { border: 0; border-radius: 0; }
 .sl-menu-list-item:hover .sl-menu-list-image { transform: scale(0.84); }
 .sl-dashboard-panel-head { margin-bottom: var(--sl-space-md); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1em; line-height: var(--sl-size-head); height: var(--sl-size-head); text-transform: none; color: var(--sl-color-bg); text-align: center; border-radius: var(--sl-radius-control); border: 1px solid transparent; text-shadow: var(--sl-text-shadow-dark); box-shadow: var(--sl-shadow-control); background-color: var(--sl-color-primary-hover); background: linear-gradient(to bottom, var(--sl-color-primary-hover) 0%, var(--sl-color-primary-hover) 48%, var(--sl-color-primary) 100%); box-sizing: border-box; }
 .sl-dashboard-panel-head b { display: flex; align-items: center; justify-content: center; height: 100%; margin: 0; padding: 0 var(--sl-space-lg); line-height: 1; color: var(--sl-color-bg); background: none; }
@@ -1428,6 +1428,15 @@ to { transform: scaleX(0); }
     text-align: center;
     padding: 0 16px 0 4px;
 }
+.sl-table-list-sort tbody th {
+    padding-right: var(--sl-space-xs);
+    padding-left: var(--sl-space-xs);
+    text-align: center;
+}
+.sl-table-list-sort tbody th:last-child {
+    padding-right: var(--sl-space-xs);
+    padding-left: var(--sl-space-xs);
+}
 .sl-table-list-sort th.sl-col-status,
 .sl-table-list-sort th.sl-col-actions {
     padding-right: 4px;
@@ -1479,29 +1488,30 @@ to { transform: scaleX(0); }
     white-space: normal;
     line-height: 1.2;
 }
-.sl-table-list-sort .sl-col-ip {
+.sl-col-ip {
     text-align: left;
     white-space: nowrap;
     vertical-align: middle;
 }
-.sl-table-list-sort .sl-col-ip .sl-geo-flag {
+.sl-geo-flag {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     margin: 0 6px 0 0;
     vertical-align: middle;
 }
-.sl-table-list-sort .sl-col-ip .sl-geo-flag img {
+.sl-geo-flag img {
     display: block;
     width: 24px;
     height: auto;
     border: 1px solid var(--sl-color-border-strong);
     border-radius: var(--sl-radius-control);
 }
-.sl-table-list-sort .sl-col-ip a {
+.sl-col-ip a {
     display: inline-flex;
     align-items: center;
-    min-height: 16px;
-    line-height: 16px;
+    min-height: 24px;
+    line-height: 24px;
     vertical-align: middle;
 }
 .sl-table-fixed {
@@ -2957,10 +2967,12 @@ body:has(.sl-admin-login-shell):before {
 	justify-content: center;
 	padding: 3px 4px;
 	border-radius: 6px;
-	transition: background-color 0.15s;
+	background: transparent;
+	transition: filter 0.15s;
 }
 .sl-admin-language-link:hover {
-	background-color: var(--sl-color-bg-soft);
+	background: transparent;
+	filter: brightness(1.08);
 }
 .sl-admin-language-link:hover .sl-menu-list-image {
 	transform: scale(0.84);
