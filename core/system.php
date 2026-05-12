@@ -141,16 +141,6 @@ function getThemeHookVars(string $hook): array {
     return is_array($vars) ? $vars : [];
 }
 
-# Return GeoIP information for one IP
-function getGeoipInfo(string $ip): array {
-    return Geoip::getInfo($ip);
-}
-
-# Return GeoIP country code for one IP
-function getGeoipCountry(string $ip): string {
-    return Geoip::getCountry($ip);
-}
-
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
     $schedule = is_array($job) ? (string)($job['schedule'] ?? '') : (string)$job;
@@ -3107,20 +3097,6 @@ function replace_break(string $text): string {
     return '';
 }
 
-# User country information
-function user_geo_ip(string $ip, int $id = 4): string {
-    global $conf, $tpl;
-    $iplink = $tpl->getHtmlFrag('link', ['href' => $conf['ip_link'].$ip, 'title' => (string)_IP.': '.$ip, 'label' => $ip, 'is_blank' => true]);
-    if ($conf['geo_ip'] && preg_match('#^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$#', $ip)) {
-        if ($id == 1 || $id == 2) {
-            return $ip;
-        }
-        $flag = $tpl->getHtmlFrag('span', ['img_src' => img_find('flags/unknown.svg'), 'img_alt' => $ip, 'is_geo_flag' => true]);
-        return ($id == 4) ? $flag.$iplink : $flag;
-    }
-    return ($id == 4) ? $iplink : '';
-}
-
 # User information for user
 function getUserSessionInfo(string $id = ''): string {
  global $db, $conf, $tpl;
@@ -3134,7 +3110,7 @@ function getUserSessionInfo(string $id = ''): string {
             $linkstrip = cutstr($module, 15);
             if ($guest == 2) {
                 $who_online .= $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => user_geo_ip($host, 3),
+                    'geo_html' => Geoip::getFlagHtml($host),
                     'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
                     'name_title' => getDuration($time),
                     'name_text' => $strip,
@@ -3145,7 +3121,7 @@ function getUserSessionInfo(string $id = ''): string {
                 $m++;
             } elseif ($guest == 1 && $conf['botsact']) {
                 $who_online .= $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => user_geo_ip($host, 3),
+                    'geo_html' => Geoip::getFlagHtml($host),
                     'name_title' => getDuration($time),
                     'name_text' => $strip,
                     'is_name_note' => true,
@@ -3201,7 +3177,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             $guest = intval($guest);
             if ($guest == 3) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => user_geo_ip($host, 3),
+                    'geo_html'    => Geoip::getFlagHtml($host),
                     'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $alstrip, 'is_blank' => true],
                     'is_module_right' => true,
@@ -3209,7 +3185,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                 $a++;
             } elseif ($guest == 2) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => user_geo_ip($host, 3),
+                    'geo_html'    => Geoip::getFlagHtml($host),
                     'name_link'   => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => ($lstrip !== '' ? $lstrip : $alstrip), 'is_blank' => true],
                     'is_module_right' => true,
@@ -3217,7 +3193,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                 $m++;
             } elseif ($guest == 1) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => user_geo_ip($host, 3),
+                    'geo_html'    => Geoip::getFlagHtml($host),
                     'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                     'is_module_right' => true,
@@ -3225,7 +3201,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
                 $b++;
             } else {
                 $title_who = ($u < 250) ? $tpl->getHtmlFrag('session-row', [
-                    'geo_html'    => user_geo_ip($host, 3),
+                    'geo_html'    => Geoip::getFlagHtml($host),
                     'name_link'   => ['href' => $conf['ip_link'].$host, 'title' => getDuration($time), 'label' => $uname, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => $lstrip, 'is_blank' => true],
                     'is_module_right' => true,
@@ -4911,7 +4887,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             }
             $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
             $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($com_date, _TIMESTRING), 'is_comment_date' => true]);
-            $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : '';
+            $ip = (is_moder($com_modul)) ? Geoip::getIpHtml($com_host) : '';
             $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_num_anchor' => true]);
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';

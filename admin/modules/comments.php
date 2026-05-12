@@ -135,7 +135,7 @@ function comments(): void {
             $comment = trim(strip_tags((string)$prs->filterContent($com_text, false, $com_modul)));
             $comment = cutstr($comment, 120);
             $comment = filterTextHighlight($comment, $chng);
-            $iptext = $ip ? user_geo_ip($ip, 4) : _NO;
+            $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
             $act = ((int)$com_status) ? 0 : 1;
             $items = [
                 ['href' => 'index.php?name='.$com_modul.'&amp;op=view&amp;id='.$cid.'#'.$id, 'label' => _MVIEW, 'title' => _MVIEW],
@@ -267,7 +267,7 @@ function edit(): void {
     $modname = trim((string)getModuleName((string)$com_modul));
     $modlabel = ($modname !== '') ? $modname.' - '.$com_modul : $com_modul;
     $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
-    $iptext = $ip ? user_geo_ip($ip, 4) : _NO;
+    $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
     $rows = [
         ['label_html' => _MODUL, 'field_html' => htmlspecialchars((string)$modlabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
         ['label_html' => _ID, 'field_html' => (string)$cid],

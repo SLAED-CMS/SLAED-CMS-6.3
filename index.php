@@ -19,21 +19,10 @@ $op = getVar('req', 'op', 'var');
 if (empty($go)) {
     setCache($conf['cache_b']);
     if ($conf['alang']) {
-        $userip = user_geo_ip(getip(), 2);
-        if ($userip != '?' && !is_bot() && empty(getCookies('language'))) {
-            if ($userip == 'United Kingdom' || $userip == 'United States of America' || $userip == 'Canada' || $userip == 'Australia') {
-                setRedirect('index.php?newlang=en');
-            } elseif ($userip == 'France') {
-                setRedirect('index.php?newlang=fr');
-            } elseif ($userip == 'Germany') {
-                setRedirect('index.php?newlang=de');
-            } elseif ($userip == 'Poland') {
-                setRedirect('index.php?newlang=pl');
-            } elseif ($userip == 'Russian Federation') {
-                setRedirect('index.php?newlang=ru');
-            } elseif ($userip == 'Ukraine') {
-                setRedirect('index.php?newlang=uk');
-            }
+        $coun = Geoip::getCountry(getIp());
+        if ($coun !== '' && !is_bot() && empty(getCookies('language'))) {
+            $lang = ['GB' => 'en', 'US' => 'en', 'CA' => 'en', 'AU' => 'en', 'FR' => 'fr', 'DE' => 'de', 'PL' => 'pl', 'RU' => 'ru', 'UA' => 'uk'][$coun] ?? '';
+            if ($lang !== '') setRedirect('index.php?newlang='.$lang);
         }
     }
     $file = getVar('req', 'file', 'var') ?: 'index';

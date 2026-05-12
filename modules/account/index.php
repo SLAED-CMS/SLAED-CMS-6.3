@@ -337,13 +337,15 @@ function view(): void {
                 $id = [_ID, $uid];
                 $regdate = [_REG, format_time($reg, _TIMESTRING)];
                 $lastvisit = [_LAST_VISIT, format_time($last, _TIMESTRING)];
-                $ip = [_IP, user_geo_ip($ip, 4)];
+                $ip = [_IP, Geoip::getIpHtml($ip)];
                 $agent = [_BROWSER, $agent];
             } else {
                 $id = [_ID, _HIDE];
                 $regdate = [_REG, format_time($reg)];
                 $lastvisit = [_LAST_VISIT, format_time($last)];
-                $ip = [_COUNTRY, user_geo_ip($ip, 2)];
+                $geo = Geoip::getInfo($ip);
+                $coun = (string)($geo['country_name'] ?: $geo['country']);
+                $ip = [_COUNTRY, $coun ?: _NO_INFO];
                 $agent = [_BROWSER, _HIDE];
             }
             $name = [_NICKNAME, $nick];

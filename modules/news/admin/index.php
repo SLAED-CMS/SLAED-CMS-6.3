@@ -113,7 +113,7 @@ function news(): void {
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? filterTextHighlight($ctit, $chng) : _NO],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
-                            ['label' => _IP, 'value' => $ip ? filterTextHighlight(user_geo_ip($ip, 4), $chng) : _NO, 'is_last' => true],
+                            ['label' => _IP, 'value' => $ip ? filterTextHighlight(Geoip::getIpHtml($ip), $chng) : _NO, 'is_last' => true],
                         ],
                         'title_text' => $title,
                     ]).filterTextHighlight($title, $chng)],

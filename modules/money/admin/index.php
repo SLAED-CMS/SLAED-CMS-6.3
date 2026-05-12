@@ -91,7 +91,7 @@ function money(): void {
                             'label' => $email,
                             'title' => $email,
                         ])],
-                        ['class_name' => 'sl-col-ip', 'content_html' => user_geo_ip($ip, 4)],
+                        ['class_name' => 'sl-col-ip', 'content_html' => Geoip::getIpHtml($ip)],
                         ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                         ['is_col_status' => true, 'content_html' => ad_status('', $status)],
                         ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],

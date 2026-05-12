@@ -44,7 +44,7 @@ function whois(): void {
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
             $post = $userName ? user_info($userName) : ($uname ?: _ANONYM);
             $postname = $userName ?: ($uname ?: _ANONYM);
-            $ipSender = $ipSender ? user_geo_ip($ipSender, 4) : _NO;
+            $ipSender = $ipSender ? Geoip::getIpHtml($ipSender) : _NO;
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
             $dc = $dc ? domain($dc) : _NO_INFO;

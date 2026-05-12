@@ -36,7 +36,7 @@ function files(): void {
         while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = $cid ? $ctitle : _NO;
-            $ip = $ip ? user_geo_ip($ip, 4) : _NO;
+            $ip = $ip ? Geoip::getIpHtml($ip) : _NO;
             $items = [];
             if ($st == '1' && time() >= strtotime($date)) {
                 $items[] = ['href' => 'index.php?name=files&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];

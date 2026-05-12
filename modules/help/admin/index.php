@@ -45,7 +45,7 @@ function help(): void {
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING)],
-                            ['label' => _IP, 'value' => $ip ? user_geo_ip($ip, 4) : _NO, 'is_last' => true],
+                            ['label' => _IP, 'value' => $ip ? Geoip::getIpHtml($ip) : _NO, 'is_last' => true],
                         ],
                         'label_text' => $title,
                         'title_text' => $title,

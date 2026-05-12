@@ -60,7 +60,7 @@ function media(): void {
                         'items' => [
                             ['label' => _CATEGORY, 'value' => $cid ? $ctitle : _NO],
                             ['label' => _DATE, 'value' => format_time($date, _TIMESTRING)],
-                            ['label' => _IP, 'value' => $ip ? user_geo_ip($ip, 4) : _NO, 'is_last' => true],
+                            ['label' => _IP, 'value' => $ip ? Geoip::getIpHtml($ip) : _NO, 'is_last' => true],
                         ],
                         'label_text' => $label,
                         'title_text' => $label,

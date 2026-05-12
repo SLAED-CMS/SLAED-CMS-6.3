@@ -90,7 +90,7 @@ function pages(): void {
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = $cid ? $ctitle : _NO;
-            $ip = $ip ? user_geo_ip($ip, 4) : _NO;
+            $ip = $ip ? Geoip::getIpHtml($ip) : _NO;
             $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
             $items = [];
             if ($status && time() >= strtotime($time)) {

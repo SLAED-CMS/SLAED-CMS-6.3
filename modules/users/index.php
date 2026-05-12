@@ -31,7 +31,7 @@ function users(): void {
 	                ['label' => _LAST_VISIT, 'value' => format_time($last, _TIMESTRING), 'is_last' => !$site],
 	            ];
 	            if ($site) $tipItems[] = ['label' => _SITE, 'value' => $site, 'is_last' => true];
-	                $info = (is_moder($conf['name'])) ? user_geo_ip($ip, 4) : format_time($reg);
+	                $info = (is_moder($conf['name'])) ? Geoip::getIpHtml($ip) : format_time($reg);
 	                $rating = $rate ? $tpl->getHtmlFrag('rating-box', ['content' => getRatingAsync(1, $id, 'account', $votes, $total, '', 1)]) : cutstr((string)$from, 30);
 	            $rows[] = [
                 'id' => (string)$count,

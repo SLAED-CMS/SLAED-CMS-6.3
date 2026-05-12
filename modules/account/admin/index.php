@@ -112,7 +112,7 @@ function account(): void {
                         'items' => $titleitems,
                         'title_text' => $name,
                     ]).filterTextHighlight($name, $chng)],
-                    ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng)],
+                    ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(Geoip::getIpHtml($ip), $chng)],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
                     ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [

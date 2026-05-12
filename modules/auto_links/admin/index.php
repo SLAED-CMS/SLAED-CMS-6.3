@@ -202,7 +202,7 @@ function stats(): void {
                                 ['label' => _DATE, 'value' => date(_TIMESTRING, $item[6]), 'is_last' => true],
                             ],
                         ]).$name],
-                        ['content_html' => user_geo_ip($item[3], 4)],
+                        ['content_html' => Geoip::getIpHtml($item[3])],
                         ['is_truncate' => true, 'title_text' => $ref, 'content_html' => domain($item[4], 35)],
                         ['is_truncate' => true, 'title_text' => $url, 'content_html' => domain($item[5], 15)],
                     ],

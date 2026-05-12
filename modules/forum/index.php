@@ -438,7 +438,7 @@ function view(): void {
                     $date .= $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($val[16], _TIMESTRING)]);
                 }
                 $rating = ($pos == 1) ? getRatingAsync(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
-                $ip = ($ismod && $val[13]) ? user_geo_ip($val[13], 4) : '';
+                $ip = ($ismod && $val[13]) ? Geoip::getIpHtml($val[13]) : '';
                 $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_num_anchor' => true]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;

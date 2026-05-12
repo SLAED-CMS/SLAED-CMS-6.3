@@ -29,7 +29,7 @@ function faq(): void {
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
-            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
+            $ip = ($ip) ? Geoip::getIpHtml($ip) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status == '1' && time() >= strtotime($time)) {
                 $view = 'index.php?name=faq&amp;op=view&amp;id='.$id;

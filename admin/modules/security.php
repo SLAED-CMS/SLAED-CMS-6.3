@@ -143,7 +143,7 @@ function banlist(): void {
                         ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr, 'is_last' => false],
                         ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
                     ],
-                ]).user_geo_ip($tip, 4);
+                ]).Geoip::getIpHtml($tip);
                 $acts = $tpl->getHtmlFrag('row-actions', [
                     'trigger_label' => _EDITOR,
                     'items' => [[

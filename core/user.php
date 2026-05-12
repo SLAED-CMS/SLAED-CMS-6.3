@@ -442,7 +442,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor] = $db->getSqlRow($result);
                 $avname = ($user_name) ? $user_name : $com_name.' ('._ANONYM.')';
                 $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'label' => format_time($date, _TIMESTRING), 'is_comment_date' => true]);
-                $ip = (is_moder($conf['name'])) ? user_geo_ip($ip_sender, 4) : '';
+                $ip = (is_moder($conf['name'])) ? Geoip::getIpHtml($ip_sender) : '';
                 $avatar = ($user_name) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
                 $rank = ($user_rank) ? $user_rank : '';
                 $trank = ($user_gname) ? _GROUP.': '.$user_gname : _RANK;
