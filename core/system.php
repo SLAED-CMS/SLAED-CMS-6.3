@@ -3240,7 +3240,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'update_target' => 'sainfo',
-            'update_query' => 'go=1&amp;op=getUserSessionAdminInfo',
+            'update_query' => 'go=5&amp;op=getUserSessionAdminInfo&amp;token='.getSiteToken(),
         ]);
         if ($id) { return $content_who; } else { echo $content_who; }
     }

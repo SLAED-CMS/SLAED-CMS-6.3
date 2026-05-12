@@ -185,6 +185,7 @@ if (empty($go)) {
                 case 'getAdminFavoriteList': getAdminFavoriteList(); break;
                 case 'getAdminPrivateList': getAdminPrivateList(); break;
                 case 'deleteAdminPrivate': deleteAdminPrivate(); break;
+                case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
                 case 'getAdminUploadFiles': getAdminUploadFiles(); break;
                 case 'getAdminInfo': echo getAdminInfo(); break;
             }
