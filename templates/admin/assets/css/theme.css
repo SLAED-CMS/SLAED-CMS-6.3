@@ -2633,9 +2633,9 @@ body:has(.sl-admin-login-shell):before {
 
 .sl-admin-login-header:after {
     position: absolute;
-    right: 10px;
+    right: 5px;
     bottom: 0;
-    left: 10px;
+    left: 5px;
     height: 1px;
     background: linear-gradient(
         90deg,
@@ -2643,8 +2643,8 @@ body:has(.sl-admin-login-shell):before {
         rgba(208, 240, 254, 0.35) 10%,
         rgba(138, 183, 216, 0.68) 28%,
         rgba(79, 122, 166, 0.9) 44%,
-        var(--sl-color-primary) 47.5%,
-        var(--sl-color-primary) 52.5%,
+        var(--sl-color-primary-center) 47.5%,
+        var(--sl-color-primary-center) 52.5%,
         rgba(79, 122, 166, 0.9) 56%,
         rgba(138, 183, 216, 0.68) 72%,
         rgba(208, 240, 254, 0.35) 90%,

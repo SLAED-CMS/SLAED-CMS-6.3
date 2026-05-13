@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Admin Left Blocks Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+}
+
+body {
+	color: var(--sl-color-text);
+	font: 14px/1.45 Tahoma, Arial, Verdana, sans-serif;
+	background:
+		radial-gradient(circle at top left, rgba(24, 115, 180, .18), transparent 28%),
+		linear-gradient(180deg, var(--sl-color-primary-soft) 0%, var(--sl-color-primary-tint) 34%, var(--sl-color-bg-soft) 100%);
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
+
+.demo-page {
+	width: min(1540px, calc(100vw - 28px));
+	margin: 14px auto 28px;
+}
+
+.demo-hero {
+	background: var(--sl-color-bg);
+	border: 1px solid var(--sl-color-primary-soft);
+	border-radius: 14px;
+	box-shadow: var(--sl-shadow-sidebar);
+	overflow: hidden;
+}
+
+.demo-hero-top {
+	display: grid;
+	grid-template-columns: 300px minmax(0, 1fr);
+	gap: 22px;
+	align-items: center;
+	padding: 22px 26px 18px;
+	border-bottom: 1px solid var(--sl-color-border);
+}
+
+.demo-logo {
+	width: 256px;
+	max-width: 100%;
+}
+
+.demo-hero-copy h1 {
+	margin: 0 0 8px;
+	font-size: clamp(24px, 3vw, 40px);
+	line-height: 1.05;
+}
+
+.demo-hero-copy p {
+	margin: 0;
+	max-width: 980px;
+	color: var(--sl-color-text-soft);
+}
+
+.demo-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 14px;
+}
+
+.demo-pill {
+	display: inline-flex;
+	align-items: center;
+	min-height: 30px;
+	padding: 0 11px;
+	border: 1px solid var(--sl-color-border-strong);
+	border-radius: 999px;
+	background: linear-gradient(to bottom, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+	color: var(--sl-color-primary);
+	box-shadow: 0 1px 2px rgba(32, 75, 102, 0.08);
+}
+
+.demo-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 14px 26px 20px;
+}
+
+.demo-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 28px;
+	padding: 0 10px;
+	border-radius: 999px;
+	background: var(--sl-color-bg-soft);
+	border: 1px solid var(--sl-color-border);
+}
+
+.demo-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 18px;
+	margin-top: 18px;
+}
+
+.demo-card {
+	background: var(--sl-color-bg);
+	border: 1px solid var(--sl-color-border-strong);
+	border-radius: 14px;
+	box-shadow: 0 12px 28px rgba(16, 24, 40, .08);
+	overflow: hidden;
+}
+
+.demo-card.span-2 {
+	grid-column: 1 / -1;
+}
+
+.demo-card-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px;
+	border-bottom: 1px solid var(--sl-color-border);
+	background: linear-gradient(to bottom, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+}
+
+.demo-card-head h2 {
+	margin: 0;
+	font-size: 18px;
+	line-height: 1.2;
+	color: var(--sl-color-text);
+}
+
+.demo-card-head span {
+	color: var(--sl-color-muted);
+}
+
+.demo-card-body {
+	padding: 16px;
+}
+
+.demo-block-shell {
+	--demo-frame-gap: 2px;
+	--demo-frame-radius: 4px;
+	--demo-frame-border: var(--sl-color-border-strong);
+	--demo-frame-shadow: 0 10px 24px rgba(20, 53, 78, .12);
+	--demo-inner-padding: 6px;
+	padding: var(--demo-frame-gap);
+	background: var(--sl-color-bg);
+	border: 1px solid var(--demo-frame-border);
+	border-radius: var(--demo-frame-radius);
+	box-shadow: var(--demo-frame-shadow);
+}
+
+.demo-block-shell .sl-block-sidebar {
+	margin-bottom: 0;
+	background: var(--sl-color-bg);
+	border: 0;
+	border-radius: var(--demo-frame-radius);
+	overflow: hidden;
+}
+
+.demo-block-shell .sl-block-sidebar h3 {
+	margin: 0 0 6px 0;
+	padding: var(--demo-inner-padding);
+	border-radius: var(--demo-frame-radius);
+	box-shadow: var(--sl-shadow-control);
+}
+
+.demo-block-shell .sl-block-sidebar h3 b {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0;
+}
+
+.demo-block-shell .sl-block-sidebar h3 .bi {
+	font-size: 1.05em;
+	line-height: 1;
+}
+
+.demo-block-shell .sl-block-sidebar-content {
+	margin: 0;
+	padding: 0;
+}
+
+.demo-block-shell .sl-block-sidebar-count-list {
+	gap: 2px;
+}
+
+.demo-block-shell .sl-block-sidebar-count-row {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+.variant-tight .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 4px 10px rgba(20, 53, 78, .08);
+}
+
+.variant-tight .sl-block-sidebar-count-list {
+	gap: 1px;
+}
+
+.variant-tight .sl-block-sidebar-count-row {
+	padding: 6px;
+}
+
+.variant-tight .sl-block-sidebar-count-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--sl-color-primary);
+}
+
+.variant-tight .sl-block-sidebar-count-label .bi {
+	font-size: 1em;
+	line-height: 1;
+}
+
+.variant-tight .tight-blue {
+	color: var(--sl-color-primary);
+	background: var(--sl-color-info-soft);
+	border-color: var(--sl-color-primary-soft);
+}
+
+.variant-tight .tight-green {
+	color: var(--sl-color-success-strong);
+	background: var(--sl-color-success-soft);
+	border-color: var(--sl-color-success);
+}
+
+.variant-tight .tight-orange {
+	color: var(--sl-color-warning-strong);
+	background: var(--sl-color-warning-soft);
+	border-color: var(--sl-color-warning);
+}
+
+.variant-tight .sl-block-sidebar-count-value > span {
+	min-width: 22px;
+	padding: 1px 6px;
+	border-radius: 9999px;
+	box-shadow: none;
+}
+
+.variant-classic .sl-block-sidebar h3,
+.variant-inset .sl-block-sidebar h3,
+.variant-flat .sl-block-sidebar h3,
+.variant-compact .sl-block-sidebar h3 {
+	color: var(--sl-color-bg);
+	text-shadow: var(--sl-text-shadow-dark);
+	background-color: var(--sl-color-primary-hover);
+	background: linear-gradient(to bottom, var(--sl-color-primary-hover) 0%, var(--sl-color-primary-hover) 48%, var(--sl-color-primary) 100%);
+}
+
+.variant-raised .sl-block-sidebar h3,
+.variant-double .sl-block-sidebar h3,
+.variant-rail .sl-block-sidebar h3,
+.variant-spacious .sl-block-sidebar h3 {
+	color: var(--sl-color-bg);
+	text-shadow: var(--sl-text-shadow-dark);
+	background-color: var(--sl-color-success);
+	background: linear-gradient(to bottom, var(--sl-color-success) 0%, var(--sl-color-success) 48%, var(--sl-color-success-strong) 100%);
+}
+
+.variant-tight .sl-block-sidebar h3,
+.variant-pill .sl-block-sidebar h3,
+.variant-soft .sl-block-sidebar h3 {
+	color: var(--sl-color-bg);
+	text-shadow: var(--sl-text-shadow-dark);
+	background-color: var(--sl-color-warning);
+	background: linear-gradient(to bottom, var(--sl-color-warning) 0%, var(--sl-color-warning) 48%, var(--sl-color-warning-strong) 100%);
+}
+
+.variant-raised .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 18px 34px rgba(20, 53, 78, .15);
+}
+
+.variant-inset .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-border: var(--sl-color-primary-soft);
+	--demo-frame-shadow: inset 0 1px 0 rgba(255, 255, 255, .82), 0 8px 20px rgba(20, 53, 78, .08);
+}
+
+.variant-double .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 0 0 1px rgba(255, 255, 255, .72) inset, 0 10px 22px rgba(20, 53, 78, .10);
+}
+
+.variant-pill .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 16px 30px rgba(20, 53, 78, .12);
+}
+
+.variant-flat .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: none;
+}
+
+.variant-rail .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-border: var(--sl-color-border-strong);
+	--demo-frame-shadow: 0 10px 24px rgba(20, 53, 78, .12);
+	border-left: 4px solid var(--sl-color-primary-center);
+}
+
+.variant-soft .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-border: var(--sl-color-primary-soft);
+	--demo-frame-shadow: 0 12px 26px rgba(20, 53, 78, .10);
+}
+
+.variant-compact .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 6px 14px rgba(20, 53, 78, .08);
+}
+
+.variant-spacious .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 16px 32px rgba(20, 53, 78, .11);
+}
+
+.variant-minimal .demo-block-shell {
+	--demo-frame-radius: 4px;
+	--demo-frame-shadow: 0 3px 12px rgba(20, 53, 78, .06);
+}
+
+.variant-stack .combo-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.variant-stack .demo-mini-block + .demo-mini-block {
+	margin-top: 14px;
+}
+
+.demo-mini-block .sl-block-sidebar-content {
+	padding-bottom: 12px;
+}
+
+.demo-menu-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.demo-menu-grid .sl-menu-grid-item {
+	max-width: none;
+	flex-basis: auto;
+}
+
+.demo-menu-grid .sl-menu-grid-link {
+	height: 92px;
+}
+
+.demo-list-grid {
+	display: grid;
+	gap: 6px;
+}
+
+.demo-note {
+	color: var(--sl-color-muted);
+	font-size: .95em;
+}
+
+.sl-admin-block-links {
+	display: grid;
+	gap: 8px;
+}
+
+.sl-admin-block-link a {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 34px;
+	padding: 0 10px;
+	border: 1px solid var(--sl-color-border);
+	border-radius: 8px;
+	background: linear-gradient(to bottom, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+	box-shadow: 0 1px 2px rgba(32, 75, 102, .08);
+}
+
+.sl-admin-block-link a:hover {
+	background: linear-gradient(to bottom, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+}
+
+.session-list {
+	display: grid;
+	gap: 6px;
+}
+
+.session-list .sl-session-row {
+	padding: 6px 0;
+}
+
+.session-list .sl-session-module {
+	color: var(--sl-color-muted);
+	text-align: right;
+}
+
+@media (max-width: 1280px) {
+	.demo-grid,
+	.variant-stack .combo-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 860px) {
+	.demo-page {
+		width: calc(100vw - 18px);
+		margin: 8px auto 18px;
+	}
+
+	.demo-hero-top {
+		grid-template-columns: 1fr;
+	}
+
+	.demo-card-head {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
+</style>
+</head>
+<body>
+<div class="demo-page">
+	<section class="demo-hero">
+		<div class="demo-hero-top">
+			<a href="../templates/admin/index.html" aria-label="SLAED admin demo">
+				<img class="demo-logo" src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS">
+			</a>
+			<div class="demo-hero-copy">
+				<h1>Новые левые блоки админ-панели</h1>
+				<p>Демо построено по текущей теме админки SLAED и на основе живых левых блоков из панели администратора. Акцент сделан на рамке, внутренней шапке и вариантах обрамления, а не на содержании.</p>
+				<div class="demo-pills">
+					<span class="demo-pill">Новые</span>
+					<span class="demo-pill">Ждут проверки</span>
+					<span class="demo-pill">Редактор</span>
+					<span class="demo-pill">Администрация</span>
+					<span class="demo-pill">Наблюдение</span>
+				</div>
+			</div>
+		</div>
+		<div class="demo-legend">
+			<span class="demo-legend-item"><i class="bi bi-browser-chrome"></i>Логин в админку выполнен по актуальному <code>admin.php</code></span>
+			<span class="demo-legend-item"><i class="bi bi-grid-3x3-gap"></i>Используются классы темы: <code>sl-block-sidebar</code>, <code>sl-session-row</code>, <code>sl-admin-block-links</code>, <code>sl-menu-grid</code></span>
+			<span class="demo-legend-item"><i class="bi bi-palette"></i>Синий градиент шапки сохранен</span>
+		</div>
+	</section>
+
+	<div class="demo-grid">
+		<article class="demo-card variant-classic">
+			<div class="demo-card-head">
+				<h2>01. Классика</h2>
+				<span>Базовая рамка, привычные отступы</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-stars"></i><span>Новые</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="sl-block-sidebar-count-list">
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Пользователи:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">18</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Вопросы и ответы:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Каталог файлов:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Недоступные файлы:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Каталог сайтов:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Недоступные сайты:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Новости:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">2</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Статьи:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Клиенты:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">10</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Партнеры:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">1</span></div></div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-tight">
+			<div class="demo-card-head">
+				<h2>02. Узкий кант</h2>
+				<span>Более плотная подача и контур</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-hourglass-split"></i><span>Ждут проверки</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="sl-block-sidebar-count-list">
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><i class="bi bi-file-earmark-text"></i><span>Материалы:</span></div><div class="sl-block-sidebar-count-value"><span class="tight-orange">6</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><i class="bi bi-chat-dots"></i><span>Комментарии:</span></div><div class="sl-block-sidebar-count-value"><span class="tight-blue">4</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><i class="bi bi-image"></i><span>Изображения:</span></div><div class="sl-block-sidebar-count-value"><span class="tight-green">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><i class="bi bi-folder2-open"></i><span>Файлы:</span></div><div class="sl-block-sidebar-count-value"><span class="tight-orange">3</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label"><i class="bi bi-arrow-repeat"></i><span>Запросы:</span></div><div class="sl-block-sidebar-count-value"><span class="tight-blue">0</span></div></div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-raised">
+			<div class="demo-card-head">
+				<h2>03. Высокая тень</h2>
+				<span>Сильнее отделение от фона</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-pencil-square"></i><span>Редактор</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="demo-list-grid">
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/news.png" alt=""></div>
+									<div><b>Новости</b><div class="demo-note">2 активных</div></div>
+								</div>
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/files.png" alt=""></div>
+									<div><b>Файлы</b><div class="demo-note">18 элементов</div></div>
+								</div>
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/comments.png" alt=""></div>
+									<div><b>Комментарии</b><div class="demo-note">4 на модерации</div></div>
+								</div>
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/users.png" alt=""></div>
+									<div><b>Пользователи</b><div class="demo-note">18 новых</div></div>
+								</div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-inset">
+			<div class="demo-card-head">
+				<h2>04. Внутренняя рамка</h2>
+				<span>Легкий inset-эффект</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-shield-lock"></i><span>Администрация</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="sl-admin-block-links">
+								<div class="sl-admin-block-link"><a href="#"><i class="bi bi-person-badge"></i><span>Профиль администратора</span></a></div>
+								<div class="sl-admin-block-link"><a href="#"><i class="bi bi-gear"></i><span>Настройки панели</span></a></div>
+								<div class="sl-admin-block-link"><a href="#"><i class="bi bi-shield-lock"></i><span>Права и доступ</span></a></div>
+								<div class="sl-admin-block-link"><a href="#"><i class="bi bi-box-arrow-right"></i><span>Выход</span></a></div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-double">
+			<div class="demo-card-head">
+				<h2>05. Двойной бордер</h2>
+				<span>Рамка читается как отдельный слой</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-eye"></i><span>Наблюдение</span></b></h3>
+						<div class="sl-block-sidebar-content session-list">
+							<div class="sl-session-row sl-session-row--icon">
+								<div class="sl-session-icon"><i class="bi bi-people-fill"></i></div>
+								<div class="sl-session-name">Админы</div>
+								<div class="sl-session-module sl-note">12 online</div>
+							</div>
+							<div class="sl-session-row sl-session-row--icon">
+								<div class="sl-session-icon"><i class="bi bi-person-check"></i></div>
+								<div class="sl-session-name">Пользователи</div>
+								<div class="sl-session-module sl-note">84 active</div>
+							</div>
+							<div class="sl-session-row sl-session-row--icon">
+								<div class="sl-session-icon"><i class="bi bi-bug"></i></div>
+								<div class="sl-session-name">Ошибки</div>
+								<div class="sl-session-module sl-note">2 alerts</div>
+							</div>
+							<div class="sl-session-row sl-session-row--icon">
+								<div class="sl-session-icon"><i class="bi bi-globe2"></i></div>
+								<div class="sl-session-name">Гости</div>
+								<div class="sl-session-module sl-note">147 visits</div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-pill">
+			<div class="demo-card-head">
+				<h2>06. Капсула</h2>
+				<span>Скругление и мягкое отделение</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-grid-3x3-gap"></i><span>Плитка</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="demo-menu-grid">
+								<div class="sl-menu-grid-item">
+									<a class="sl-menu-grid-link" href="#"><img class="sl-menu-grid-image" src="../templates/admin/images/admin/news.png" alt=""><span>Новости</span></a>
+								</div>
+								<div class="sl-menu-grid-item">
+									<a class="sl-menu-grid-link" href="#"><img class="sl-menu-grid-image" src="../templates/admin/images/admin/files.png" alt=""><span>Файлы</span></a>
+								</div>
+								<div class="sl-menu-grid-item">
+									<a class="sl-menu-grid-link" href="#"><img class="sl-menu-grid-image" src="../templates/admin/images/admin/users.png" alt=""><span>Пользователи</span></a>
+								</div>
+								<div class="sl-menu-grid-item">
+									<a class="sl-menu-grid-link" href="#"><img class="sl-menu-grid-image" src="../templates/admin/images/admin/comments.png" alt=""><span>Комментарии</span></a>
+								</div>
+								<div class="sl-menu-grid-item">
+									<a class="sl-menu-grid-link" href="#"><img class="sl-menu-grid-image" src="../templates/admin/images/admin/monitor.png" alt=""><span>Монитор</span></a>
+								</div>
+								<div class="sl-menu-grid-item">
+									<a class="sl-menu-grid-link" href="#"><img class="sl-menu-grid-image" src="../templates/admin/images/admin/database.png" alt=""><span>База</span></a>
+								</div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-flat">
+			<div class="demo-card-head">
+				<h2>07. Плоский лист</h2>
+				<span>Минимум тени, максимум контуров</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-list-ul"></i><span>Список</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="demo-list-grid">
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/blocks.png" alt=""></div>
+									<div><b>Блоки</b><div class="demo-note">2 новых шаблона</div></div>
+								</div>
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/template.png" alt=""></div>
+									<div><b>Шаблоны</b><div class="demo-note">в работе</div></div>
+								</div>
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/config.png" alt=""></div>
+									<div><b>Конфиг</b><div class="demo-note">текущая тема</div></div>
+								</div>
+								<div class="sl-menu-list-item">
+									<div><img class="sl-menu-list-image" src="../templates/admin/images/admin/security.png" alt=""></div>
+									<div><b>Безопасность</b><div class="demo-note">1 предупреждение</div></div>
+								</div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-rail">
+			<div class="demo-card-head">
+				<h2>08. Рубленая рамка</h2>
+				<span>Акцент на боковой направляющей</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-people"></i><span>Сессии</span></b></h3>
+						<div class="sl-block-sidebar-content session-list">
+							<div class="sl-session-row">
+								<div class="sl-session-name">Посетители</div>
+								<div class="sl-session-module">145</div>
+							</div>
+							<div class="sl-session-row">
+								<div class="sl-session-name">Боты</div>
+								<div class="sl-session-module">9</div>
+							</div>
+							<div class="sl-session-row">
+								<div class="sl-session-name">Админы</div>
+								<div class="sl-session-module">3</div>
+							</div>
+							<div class="sl-session-row">
+								<div class="sl-session-name">Гости</div>
+								<div class="sl-session-module">133</div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-soft">
+			<div class="demo-card-head">
+				<h2>09. Мягкий контур</h2>
+				<span>Чуть более воздушная оболочка</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-speedometer2"></i><span>Обзор</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="sl-block-sidebar-count-list">
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Новости:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">12</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Страницы:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Файлы:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">5</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Пользователи:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">18</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Партнеры:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">1</span></div></div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-compact">
+			<div class="demo-card-head">
+				<h2>10. Компактный блок</h2>
+				<span>Тот же каркас, но плотнее</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="demo-block-shell">
+					<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-bar-chart-line"></i><span>Сводка</span></b></h3>
+						<div class="sl-block-sidebar-content">
+							<div class="sl-block-sidebar-count-list">
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Новые:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">18</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Активные:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">10</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Ожидают:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">3</span></div></div>
+								<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Ок:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-success">0</span></div></div>
+							</div>
+						</div>
+						<div class="sl-block-sidebar-bottom"></div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<article class="demo-card variant-spacious span-2">
+			<div class="demo-card-head">
+				<h2>11. Комбинированный блок</h2>
+				<span>Два разных левых блока в одной композиции</span>
+			</div>
+			<div class="demo-card-body">
+				<div class="variant-stack">
+					<div class="combo-grid">
+						<div class="demo-mini-block">
+							<div class="demo-block-shell">
+								<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-stars"></i><span>Новые</span></b></h3>
+									<div class="sl-block-sidebar-content">
+										<div class="sl-block-sidebar-count-list">
+											<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Пользователи:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">18</span></div></div>
+											<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Новости:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">2</span></div></div>
+											<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Клиенты:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">10</span></div></div>
+											<div class="sl-block-sidebar-count-row"><div class="sl-block-sidebar-count-label">Партнеры:</div><div class="sl-block-sidebar-count-value"><span class="sl-text-danger">1</span></div></div>
+										</div>
+									</div>
+									<div class="sl-block-sidebar-bottom"></div>
+								</div>
+							</div>
+						</div>
+						<div class="demo-mini-block">
+							<div class="demo-block-shell">
+								<div class="sl-block-sidebar">
+						<h3><b><i class="bi bi-shield-lock"></i><span>Администрация</span></b></h3>
+									<div class="sl-block-sidebar-content">
+										<div class="sl-admin-block-links">
+											<div class="sl-admin-block-link"><a href="#"><i class="bi bi-person"></i><span>Мой профиль</span></a></div>
+											<div class="sl-admin-block-link"><a href="#"><i class="bi bi-key"></i><span>Сменить пароль</span></a></div>
+											<div class="sl-admin-block-link"><a href="#"><i class="bi bi-box-arrow-right"></i><span>Выйти</span></a></div>
+										</div>
+									</div>
+									<div class="sl-block-sidebar-bottom"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</article>
+	</div>
+</div>
+</body>
+</html>
