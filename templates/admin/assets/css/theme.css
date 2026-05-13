@@ -872,7 +872,7 @@ input.sl-but-blue[value="ОК"] {
     border-radius: var(--sl-radius-soft);
     box-sizing: border-box;
 }
-.sl-block-sidebar { margin-bottom: var(--sl-space-lg); background-color: var(--sl-color-bg); border: 1px solid var(--sl-color-success); border-radius: var(--sl-radius-panel); overflow: hidden; width: 275px; }
+.sl-block-sidebar { margin-bottom: var(--sl-space-lg); background-color: var(--sl-color-bg); border: 1px solid var(--sl-color-success); border-radius: var(--sl-radius-panel); overflow: hidden; }
 .sl-block-sidebar h3 { cursor: pointer; display: flex; align-items: center; font-size: 1em; height: var(--sl-size-head); line-height: var(--sl-size-head); color: var(--sl-color-bg); text-shadow: var(--sl-text-shadow-dark); background-color: var(--sl-color-success); background: linear-gradient(to bottom, var(--sl-color-success) 0%, var(--sl-color-success) 48%, var(--sl-color-success-strong) 100%); border: 0; box-shadow: var(--sl-shadow-control); box-sizing: border-box; }
 .sl-block-sidebar h3 b { display: flex; align-items: center; height: 100%; padding: 0 var(--sl-space-lg); line-height: 1; }
 .sl-block-sidebar h3:hover { opacity: 0.8; }
@@ -2874,7 +2874,7 @@ body:has(.sl-admin-login-shell):before {
 /* Меню и переключение языка */
 .sl-toolbar {
 	width: 100%;
-	margin: 0 10px 0 5px;
+	margin: 0 0 0 12px;
 	min-height: 36px;
 	overflow: hidden;
 	background: var(--sl-color-bg-muted);
@@ -2992,15 +2992,11 @@ body:has(.sl-admin-login-shell):before {
 }
 .sl-admin-sidebar {
 	min-width: 0;
-	padding: 13px 11px 15px 11px;
-	background: var(--sl-color-bg-muted);
-	background: linear-gradient(to bottom, var(--sl-color-bg-muted) 0%, var(--sl-color-bg-soft) 45%, var(--sl-color-bg) 100%);
+	padding: 8px 0px;
 	box-sizing: border-box;
 }
 .sl-admin-content {
 	min-width: 0;
-	margin: 8px 6px 15px 0;
-	padding: 0 0 15px 0;
 	overflow: visible;
 	background: var(--sl-color-bg);
 	border-radius: 6px;
@@ -3008,7 +3004,7 @@ body:has(.sl-admin-login-shell):before {
 }
 .sl-admin-content-inner {
 	min-width: 0;
-	padding: 0 var(--sl-space-lg) 15px var(--sl-space-lg);
+	padding: 0px 0px 0px 8px;
 	box-sizing: border-box;
 }
 
