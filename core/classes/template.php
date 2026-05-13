@@ -314,12 +314,26 @@ class Template {
         if ($code === '') return '';
         $code = $this->filterNote($code);
         $code = $this->filterRaw($code);
+        $code = $this->filterConst($code);
         $code = $this->filterEcho($code);
         $code = $this->filterIf($code);
         $code = $this->filterFor($code);
         $code = $this->filterComp($code);
         $code = $this->filterSlot($code);
         return $this->filterUse($code);
+    }
+
+    # Compile constant echo tags into runtime defined() checks
+    protected function filterConst(string $code): string {
+        if ($code === '' || !str_contains($code, '{{')) return $code;
+        return (string)preg_replace_callback(
+            '/(?<!\{)\{\{\s*(_[A-Z][A-Z0-9_]{0,10})\s*\}\}(?!\})/',
+            static function(array $data): string {
+                $name = $data[1];
+                return '<?= defined(\''.$name.'\') ? $this->getSafe('.$name.') : \'\'; ?>';
+            },
+            $code
+        );
     }
 
     # Compile escaped echo tags with simple variable names or array paths

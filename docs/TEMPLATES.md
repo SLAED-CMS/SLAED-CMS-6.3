@@ -258,6 +258,7 @@ Avoid for new base contracts:
 The current `Template` runtime supports:
 - escaped output: `{{ var }}`
 - raw output: `{{{ var }}}`
+- language constants: `{{ _CONST }}` (UPPER_SNAKE_CASE with `_` prefix — resolved at runtime via `defined()`, cache-safe)
 - conditions:
   - `{% if var %}`
   - `{% elseif var %}`
