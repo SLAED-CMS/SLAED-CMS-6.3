@@ -1039,6 +1039,188 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
     }
 }
 
+# Parse a key count field into a normalized map
+function getCounterField(string $field): array {
+    $vals = [];
+    if ($field === '') return $vals;
+    foreach (explode(',', $field) as $part) {
+        $part = trim($part);
+        if ($part === '') continue;
+        $bits = explode(':', $part, 2);
+        $key = trim((string)($bits[0] ?? ''));
+        if ($key === '') continue;
+        $val = (int)trim((string)($bits[1] ?? '0'));
+        $vals[$key] = ($vals[$key] ?? 0) + $val;
+    }
+    return $vals;
+}
+
+# Update one counter field with top ten keys and an overflow bucket
+function updateCounterField(string $field, string $key, int $by = 1): string {
+    if ($key === '') return $field;
+    $vals = getCounterField($field);
+    $vals[$key] = ($vals[$key] ?? 0) + $by;
+    $oth = (int)($vals['Other'] ?? 0);
+    unset($vals['Other']);
+    arsort($vals, SORT_NUMERIC);
+    $out = [];
+    $num = 0;
+    foreach ($vals as $name => $val) {
+        $val = (int)$val;
+        if ($val <= 0) continue;
+        if ($num < 10) {
+            $out[] = $name.':'.$val;
+        } else {
+            $oth += $val;
+        }
+        $num++;
+    }
+    if ($oth > 0) $out[] = 'Other:'.$oth;
+    return implode(',', $out);
+}
+
+# Update the 24 hour field with one hit
+function updateHoursField(string $field, int $hour): string {
+    $hrs = ($field === '') ? [] : explode(',', $field);
+    $hrs = array_pad(array_slice($hrs, 0, 24), 24, 0);
+    $hour = max(0, min(23, $hour));
+    $hrs[$hour] = (int)$hrs[$hour] + 1;
+    foreach ($hrs as $key => $val) {
+        $hrs[$key] = (string)((int)$val);
+    }
+    return implode(',', $hrs);
+}
+
+# Return the session depth bucket
+function getSessionDepthBucket(int $depth): string {
+    if ($depth <= 1) return '1';
+    if ($depth <= 3) return '2-3';
+    if ($depth <= 7) return '4-7';
+    return '8+';
+}
+
+# Return the session duration bucket
+function getSessionDurationBucket(int $secs): string {
+    if ($secs < 30) return '<30s';
+    if ($secs <= 180) return '30s-3m';
+    if ($secs <= 900) return '3m-15m';
+    return '15m+';
+}
+
+# Return the referral category for a visit
+function getRefCategory(string $ref): string {
+    global $conf;
+    if ($ref === '') return 'direct';
+    $home = preg_replace('#^www\.#i', '', strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST)));
+    $host = preg_replace('#^www\.#i', '', strtolower((string)parse_url($ref, PHP_URL_HOST)));
+    if ($home !== '' && $host !== '' && $home === $host) return 'direct';
+    if ($host === '') return 'direct';
+    $search = ['google', 'bing', 'yahoo', 'yandex', 'duckduckgo', 'baidu', 'ecosia', 'qwant'];
+    foreach ($search as $key) {
+        if (str_contains($host, $key)) return 'search';
+    }
+    $social = ['facebook', 'twitter', 't.co', 'instagram', 'linkedin', 'vk.com', 'reddit', 'youtube', 'telegram', 'tiktok'];
+    foreach ($social as $key) {
+        if (str_contains($host, $key)) return 'social';
+    }
+    return 'referrer';
+}
+
+# Parse the user agent into browser, operating system and device
+function getAgentInfo(string $ua, int $guest): array {
+    $bot = '#bot|crawl|spider|slurp|bingpreview|petalbot#i';
+    if ($guest === 1 || preg_match($bot, $ua)) {
+        return ['browser' => 'Bot', 'os' => 'Bot', 'device' => 'bot'];
+    }
+    $browser = 'Other';
+    if (preg_match('#(?:edg|edge)/(\d+)#i', $ua, $out)) {
+        $browser = 'Edge '.$out[1];
+    } elseif (preg_match('#opr/(\d+)#i', $ua, $out)) {
+        $browser = 'Opera '.$out[1];
+    } elseif (preg_match('#chrome/(\d+)#i', $ua, $out)) {
+        $browser = 'Chrome '.$out[1];
+    } elseif (preg_match('#firefox/(\d+)#i', $ua, $out)) {
+        $browser = 'Firefox '.$out[1];
+    } elseif (preg_match('#version/(\d+).*safari#i', $ua, $out) && !preg_match('#(?:chrome|chromium|crios|crmo|edg|edge|opr)/#i', $ua)) {
+        $browser = 'Safari '.$out[1];
+    } elseif (preg_match('#(?:msie |rv:)(\d+)#i', $ua, $out) && (stripos($ua, 'msie') !== false || stripos($ua, 'trident') !== false)) {
+        $browser = 'IE '.$out[1];
+    }
+    $os = 'Other';
+    if (preg_match('#windows nt|windows phone#i', $ua)) {
+        $os = 'Windows';
+    } elseif (preg_match('#android#i', $ua)) {
+        $os = 'Android';
+    } elseif (preg_match('#iphone|ipad|ipod#i', $ua)) {
+        $os = 'iOS';
+    } elseif (preg_match('#mac os x|macintosh#i', $ua)) {
+        $os = 'macOS';
+    } elseif (preg_match('#linux#i', $ua)) {
+        $os = 'Linux';
+    }
+    $device = 'desktop';
+    if (preg_match('#(?:iphone|ipod|windows phone|android.*mobile)#i', $ua)) {
+        $device = 'mobile';
+    } elseif (preg_match('#ipad#i', $ua) || (preg_match('#android#i', $ua) && !preg_match('#mobile#i', $ua))) {
+        $device = 'tablet';
+    }
+    return ['browser' => $browser, 'os' => $os, 'device' => $device];
+}
+
+# Update the active session state in the sliding session log
+function updateSessionState(string $sid, int $ctime): array {
+    $file = COUNTER_DIR.'/sessions.log';
+    $ret = ['is_new' => false, 'depth' => 1, 'duration' => 0];
+    $fp = fopen($file, 'c+');
+    if ($fp === false) return $ret;
+    if (!flock($fp, LOCK_EX)) {
+        fclose($fp);
+        return $ret;
+    }
+    try {
+        rewind($fp);
+        $data = stream_get_contents($fp);
+        $lim = $ctime - 1800;
+        $rows = [];
+        $found = false;
+        $lines = ($data !== false && $data !== '') ? explode("\n", trim($data)) : [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') continue;
+            $pts = array_pad(explode('|', $line, 4), 4, '');
+            $csid = (string)$pts[0];
+            $fst = (int)$pts[1];
+            $lst = (int)$pts[2];
+            $hits = (int)$pts[3];
+            if ($lst < $lim) continue;
+            if ($csid === $sid) {
+                if ($found) continue;
+                $found = true;
+                $hits = ($hits > 0) ? $hits + 1 : 1;
+                $lst = $ctime;
+                $ret['depth'] = $hits;
+                $ret['duration'] = max(0, $lst - $fst);
+                $rows[] = $csid.'|'.$fst.'|'.$lst.'|'.$hits;
+                continue;
+            }
+            $rows[] = $csid.'|'.$fst.'|'.$lst.'|'.$hits;
+        }
+        if (!$found) {
+            $ret['is_new'] = true;
+            $rows[] = $sid.'|'.$ctime.'|'.$ctime.'|1';
+        }
+        $txt = $rows !== [] ? implode(PHP_EOL, $rows).PHP_EOL : '';
+        rewind($fp);
+        ftruncate($fp, 0);
+        if ($txt !== '') fwrite($fp, $txt);
+        fflush($fp);
+    } finally {
+        flock($fp, LOCK_UN);
+        fclose($fp);
+    }
+    return $ret;
+}
+
 # Track daily statistics and rotate counter files when periods change
 function updateStatsTrack(string $request, int $guest): void {
     global $conf;
@@ -1046,6 +1228,34 @@ function updateStatsTrack(string $request, int $guest): void {
     $sreqhom = filterText($request);
     $spath = COUNTER_DIR.'/';
     $slog = $spath.'statistic.log';
+    $info = getAgentInfo(getAgent(), $guest);
+    $rcat = ($guest !== 1) ? getRefCategory($sreferer) : '';
+    $ip = getIp();
+    $cc = class_exists('Geoip') ? Geoip::getCountry($ip) : '';
+    $sid = '';
+    if ($guest !== 1 && $guest !== 3) {
+        if (isset($_COOKIE['stats_id']) && $_COOKIE['stats_id'] !== '') {
+            $sid = (string)$_COOKIE['stats_id'];
+        } elseif (!headers_sent()) {
+            try {
+                $sid = bin2hex(random_bytes(8));
+            } catch (Exception) {
+                $sid = '';
+            }
+            if ($sid !== '') {
+                setcookie('stats_id', $sid, [
+                    'expires' => time() + 31536000,
+                    'path' => '/',
+                    'httponly' => true,
+                    'samesite' => 'Lax',
+                ]);
+            }
+        }
+    }
+    $sess = null;
+    if ($guest !== 1 && $guest !== 3 && $sid !== '' && is_dir(COUNTER_DIR) && is_writable(COUNTER_DIR)) {
+        $sess = updateSessionState($sid, time());
+    }
     $safeReadLines = static function(string $file) {
         if (!is_file($file) || !is_readable($file)) return false;
         set_error_handler(static function(): bool {
@@ -1095,6 +1305,18 @@ function updateStatsTrack(string $request, int $guest): void {
             $srefer = ($sreferer) ? '1' : '0';
             $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
             $wc = date('d.m.Y').'|0|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
+            $prev = (isset($con) && ($con[0] ?? '') === date('d.m.Y')) ? $con : [];
+            $ext = explode('|', $wc);
+            $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
+            $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
+            $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
+            $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
+            $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
+            $ext[13] = updateHoursField($prev[13] ?? '', (int)date('G'));
+            $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
+            $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
+            $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
+            $wc = implode('|', $ext);
         } else {
             $check = checkUniqueIp();
             $checku = check_user();
@@ -1104,6 +1326,18 @@ function updateStatsTrack(string $request, int $guest): void {
             $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
             $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
             $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
+            $prev = (isset($con) && ($con[0] ?? '') === date('d.m.Y')) ? $con : [];
+            $ext = explode('|', $wc);
+            $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
+            $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
+            $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
+            $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
+            $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
+            $ext[13] = updateHoursField($prev[13] ?? '', (int)date('G'));
+            $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
+            $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
+            $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
+            $wc = implode('|', $ext);
         }
         $fps = $safeOpen($spath.'statistic.log', 'wb');
         if ($fps && flock($fps, LOCK_EX)) {
@@ -1122,6 +1356,18 @@ function updateStatsTrack(string $request, int $guest): void {
         $srefer = ($sreferer) ? '1' : '0';
         $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
         $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
+        $prev = [];
+        $ext = explode('|', $wc);
+        $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
+        $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
+        $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
+        $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
+        $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
+        $ext[13] = updateHoursField($prev[13] ?? '', (int)date('G'));
+        $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
+        $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
+        $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
+        $wc = implode('|', $ext);
         $fps = $safeOpen($slog, 'wb');
         if ($fps && flock($fps, LOCK_EX)) {
             fwrite($fps, $wc);
