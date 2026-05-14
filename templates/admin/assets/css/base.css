@@ -11,6 +11,7 @@
     --sl-color-muted: #6b7280;
     --sl-color-primary: #0877b1;
     --sl-color-primary-hover: #207fb6;
+    --sl-color-primary-hover-soft: #58a0c8;
     --sl-color-primary-center: #174372;
     --sl-color-primary-soft: #8fc5d9;
     --sl-color-primary-tint: #d9eef6;
@@ -115,7 +116,7 @@ h5 { font-size: 1.1em; color: var(--sl-color-primary-hover); }
 
 /* Настройка ссылок */
 a { color: var(--sl-color-primary); text-decoration: none; }
-a:hover { cursor: pointer; text-decoration: underline; }
+a:hover { cursor: pointer; color: var(--sl-color-primary-hover-soft); text-decoration: none; }
 a img { border: 0 none; }
 
 /* Прочие стили */

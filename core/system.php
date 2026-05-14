@@ -3511,8 +3511,8 @@ function adminblock(): string {
             'block_html'  => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlPart('block-sidebar', ['title' => _WHO, 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
+        return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'icon_name' => 'shield-lock', 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
+            .$tpl->getHtmlPart('block-sidebar', ['title' => _WHO, 'icon_name' => 'eye', 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }

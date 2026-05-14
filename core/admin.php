@@ -225,19 +225,19 @@ function getAdminLanguageLinks(): string {
 function getAdminTopMenu(): string {
     global $admin, $afile, $tpl;
     $items = !isAdmin(true) ? [
-        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false],
-        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
-        ['href' => 'index.php', 'label' => _SITE, 'blank' => true],
-        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
-        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+        ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-badge'],
+        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
+        ['href' => 'index.php', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person-circle'],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
     ] : [
-        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
-        ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false],
-        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false],
-        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false],
-        ['href' => 'index.php', 'label' => _SITE, 'blank' => true],
-        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
-        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+        ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
+        ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false, 'icon' => 'grid-3x3-gap'],
+        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => 'puzzle'],
+        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => 'tags'],
+        ['href' => 'index.php', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person-circle'],
+        ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
     ];
     $html = '';
     foreach ($items as $item) {
@@ -245,6 +245,7 @@ function getAdminTopMenu(): string {
         $html .= '<li>'.$tpl->getHtmlFrag('link', [
             'href' => (string)$item['href'],
             'title' => (string)$item['label'],
+            'icon_name' => (string)($item['icon'] ?? ''),
             'label_html' => '<b>'.$label.'</b>',
             'is_blank' => !empty($item['blank']),
         ]).'</li>';
@@ -372,7 +373,7 @@ function admininfo() {
                     'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
                 ]);
             }
-            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
 
             $waitingRows = [];
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
@@ -380,7 +381,7 @@ function admininfo() {
                 'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=comments&status=1', 'title' => _COMMENTS, 'label' => _COMMENTS, 'icon_name' => 'chat-dots']),
                 'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
             ]);
-            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
+            $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
             
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
@@ -393,7 +394,7 @@ function admininfo() {
             ],
             'content_html' => $edit,
         ]);
-        $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _EDITOR, 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
+        $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _EDITOR, 'icon_name' => 'pencil-square', 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
 }

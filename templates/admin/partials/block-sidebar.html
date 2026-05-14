@@ -1,5 +1,5 @@
 <div class="sl-block-sidebar">
-	<h3 title="{{ close }}" data-sl-toggle-control="sl_block_{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{{ title }}</b></h3>
+	<h3 title="{{ close }}" data-sl-toggle-control="sl_block_{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{% if icon_name %}<i class="bi bi-{{ icon_name }}"></i>{% endif %}{{ title }}</b></h3>
 	<div id="sl_block_{{ id }}" class="sl-block-sidebar-content" data-sl-toggle="sl_block_{{ id }}">{% if content_id %}<div id="{{ content_id }}">{% endif %}{{{ content_html }}}{% if content_id %}</div>{% endif %}</div>
 	<div class="sl-block-sidebar-bottom"></div>
 </div>
