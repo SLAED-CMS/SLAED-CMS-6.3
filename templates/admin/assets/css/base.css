@@ -31,6 +31,12 @@
     --sl-size-pager: 30px;
     --sl-size-head: 32px;
     --sl-size-icon: 18px;
+    --sl-hover-scale-up: 1.1;
+    --sl-hover-scale-down: 0.9;
+    --sl-hover-lift-up: -1px;
+    --sl-hover-lift-down: 1px;
+    --sl-hover-brightness-up: 1.08;
+    --sl-hover-brightness-down: 0.96;
     --sl-radius-control: 4px;
     --sl-radius-panel: 4px;
     --sl-radius-soft: 6px;
