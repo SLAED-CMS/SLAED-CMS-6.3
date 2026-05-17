@@ -264,6 +264,8 @@ The current `Template` runtime supports:
   - `{% elseif var %}`
   - `{% else %}`
   - `{% endif %}`
+  - boolean combinations with `and`, `or`, and `not`
+  - dot-path lookups such as `user.name`
 - loops:
   - `{% for item in items %}`
   - `{% endfor %}`
@@ -345,6 +347,7 @@ Behavior:
 
 ## Engine Limitations
 - no advanced expression language
+- no equality/comparison operators in `{% if %}` expressions, such as `==`, `!=`, `<`, `>`, `<=`, or `>=`
 - no complex named include arguments as a supported baseline (simple context passing like `with item` is permitted)
 - no deep inheritance chains
 

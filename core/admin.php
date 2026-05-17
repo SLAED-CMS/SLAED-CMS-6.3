@@ -212,10 +212,10 @@ function getAdminLanguageLinks(): string {
         $html .= $tpl->getHtmlFrag('link', [
             'href' => $afile.'.php?newlang='.$lang,
             'title' => $label,
-            'class' => 'sl-admin-language-link',
             'img_src' => getLanguageFlagSrc($lang),
             'img_alt' => $label,
             'is_menu_list_image' => true,
+            'is_admin_language_link' => true,
         ]);
     }
     return $html;

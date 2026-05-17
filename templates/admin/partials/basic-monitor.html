@@ -1,4 +1,4 @@
-﻿{% if show_layout %}
+{% if show_layout %}
 <div class="sl-monitor-wrapper">
     <div id="monitor-sync-poller" hx-get="{{{ syncurl }}}" hx-trigger="every 4s" hx-swap="none"></div>
 {% endif %}

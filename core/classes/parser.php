@@ -434,8 +434,15 @@ class Parser {
             $src = preg_replace_callback(
                 '/\[quote\](.*?)\[\/quote\]/si',
                 function(array $m): string {
-                    $txt  = $this->filterNest($m[1]);
-                    $html = '<blockquote><p title="'.htmlspecialchars(_QUOTE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
+                    global $tpl;
+                    $txt = $this->filterNest($m[1]);
+                    $html = (isset($tpl) && is_object($tpl) && method_exists($tpl, 'getHtmlFrag'))
+                        ? (string) $tpl->getHtmlFrag('blockquote', [
+                            'is_quote' => true,
+                            'content_html' => $txt,
+                            'title_text' => _QUOTE,
+                        ])
+                        : '<blockquote><p title="'.htmlspecialchars(_QUOTE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
                     return $this->addStash($html);
                 },
                 $src
@@ -447,9 +454,16 @@ class Parser {
             $src = preg_replace_callback(
                 '/\[hide\](.*?)\[\/hide\]/si',
                 function(array $m): string {
+                    global $tpl;
                     $show = (defined('ADMIN_FILE') || is_user());
-                    $txt  = $show ? $this->filterNest($m[1]) : (string)_HIDETEXT;
-                    $html = '<blockquote class="sl-hide"><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
+                    $txt = $show ? $this->filterNest($m[1]) : (string) _HIDETEXT;
+                    $html = (isset($tpl) && is_object($tpl) && method_exists($tpl, 'getHtmlFrag'))
+                        ? (string) $tpl->getHtmlFrag('blockquote', [
+                            'is_hide' => true,
+                            'content_html' => $txt,
+                            'title_text' => _HIDE,
+                        ])
+                        : '<blockquote><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
                     return $this->addStash($html);
                 },
                 $src
@@ -597,7 +611,6 @@ class Parser {
             # Blockquote / GitHub callout (>)
             if (str_starts_with($trim, '>')) {
                 [$bq, $i] = $this->getBlockquote($lines, $i, $n);
-                $map  = ['note' => 'sl-callout-note', 'tip' => 'sl-callout-tip', 'important' => 'sl-callout-important', 'warning' => 'sl-callout-warning', 'caution' => 'sl-callout-caution'];
                 $segs = [[]];
                 foreach ($bq as $ln) {
                     if ($ln === '' && end($segs) !== []) $segs[] = [];
@@ -607,13 +620,28 @@ class Parser {
                     if ($seg === []) continue;
                     $hd = trim($seg[0]);
                     if (preg_match('/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i', $hd, $cm)) {
-                        $cls = $map[strtolower($cm[1])];
+                        $kind = strtolower($cm[1]);
                         array_shift($seg);
                         $inner = $this->filterBlocks(implode("\n", $seg));
-                        $out .= $this->addStash('<div class="'.$cls.'">'."\n".$inner."</div>")."\n";
+                        global $tpl;
+                        $html = (isset($tpl) && is_object($tpl) && method_exists($tpl, 'getHtmlFrag'))
+                            ? (string) $tpl->getHtmlFrag('blockquote', [
+                                'is_callout' => true,
+                                'content_html' => $inner,
+                                'callout_type' => $kind,
+                            ])
+                            : '<div>'.$inner.'</div>';
+                        $out .= $this->addStash($html)."\n";
                     } else {
                         $inner = $this->filterBlocks(implode("\n", $seg));
-                        $out .= $this->addStash("<blockquote>\n".$inner."</blockquote>")."\n";
+                        global $tpl;
+                        $html = (isset($tpl) && is_object($tpl) && method_exists($tpl, 'getHtmlFrag'))
+                            ? (string) $tpl->getHtmlFrag('blockquote', [
+                                'is_plain' => true,
+                                'content_html' => $inner,
+                            ])
+                            : "<blockquote>\n".$inner."</blockquote>";
+                        $out .= $this->addStash($html)."\n";
                     }
                 }
                 continue;
@@ -947,3 +975,4 @@ class Parser {
         ) ?? $src;
     }
 }
+
