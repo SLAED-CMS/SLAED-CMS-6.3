@@ -1,0 +1,33 @@
+{
+  "name": "public",
+  "version": "1.0.0",
+  "private": true,
+  "description": "[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-slateblue.svg)](https://www.php.net/) [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/) [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/) [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE) ![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg) ![Migration](https://img.shields.io/badge/Migration-90%25_Complete-purple.svg)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "browser:audit": "node tools/browser-audit.mjs",
+    "browser:inspect": "node tools/browser-audit.mjs --inspect",
+    "browser:attach": "node tools/browser-audit.mjs --attach --current"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SLAED-CMS/SLAED-CMS-6.3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/SLAED-CMS/SLAED-CMS-6.3/issues"
+  },
+  "homepage": "https://github.com/SLAED-CMS/SLAED-CMS-6.3#readme",
+  "devDependencies": {
+    "chrome-remote-interface": "^0.34.0",
+    "playwright": "^1.60.0"
+  }
+}
