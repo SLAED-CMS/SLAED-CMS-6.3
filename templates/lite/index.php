@@ -9,8 +9,8 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Return the CSS season class based on the current date
 function setTemplateSeason(): string {
     $zdate = date('z');
-    if ($zdate > 355 || $zdate < 5) return 'newyear';
-    $seas = [0 => 'winter', 1 => 'spring', 2 => 'summer', 3 => 'autumn'];
+    if ($zdate > 355 || $zdate < 5) return 'sl-newyear';
+    $seas = [0 => 'sl-winter', 1 => 'sl-spring', 2 => 'sl-summer', 3 => 'sl-autumn'];
     return $seas[floor(date('n') / 3) % 4];
 }
 

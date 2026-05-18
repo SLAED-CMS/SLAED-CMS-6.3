@@ -1,3 +1,0 @@
-<filesmatch "\.html$">
-deny from all
-</filesmatch>

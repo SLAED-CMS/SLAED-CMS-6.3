@@ -1,5 +1,0 @@
-{% if has_form %}<form name="voting" id="{{ form_id }}" method="post">{% endif %}<h4 class="sl-vote-title">{{ title }}</h4>
-<ul class="sl-vote-list">{{{ items_html }}}</ul>
-{% if admin_html or post_html or polls_html %}<div class="sl-vote-actions">{{{ admin_html }}}{{{ post_html }}}{{{ polls_html }}}</div>{% endif %}
-<div class="sl-vote-links">{{{ votes_html }}} {{{ comm_html }}}</div>
-{% if has_form %}</form>{% endif %}

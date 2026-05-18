@@ -8,21 +8,21 @@
 </head>
 <body>
     {% if login %}
-    <div class="wrapper slaenter">
-        <div class="wraptop"></div>
-        <div class="wrapmid">
-            <div class="header">
-                <div class="lcolomn leftside"><h1><a href="//slaed.net" target="_blank" class="thide" title="SLAED CMS">SLAED CMS</a></h1></div>
-                <div class="rcolomn midside"><b title="{{ login }}">{{ login }}</b></div>
+    <div>
+        <div></div>
+        <div>
+            <div>
+                <div><h1><a href="//slaed.net" target="_blank" class="sl-thide" title="SLAED CMS">SLAED CMS</a></h1></div>
+                <div><b title="{{ login }}">{{ login }}</b></div>
             </div>
-            <div class="entercont">
+            <div>
     {% endif %}
     {% block content %}{% endblock %}
     {% if login %}
             </div>
-            <div class="footer"><div class="copyright">{{{ license }}}</div></div>
+            <div><div class="sl-copyright">{{{ license }}}</div></div>
         </div>
-        <div class="wrapfoot"></div>
+        <div></div>
     </div>
     {% endif %}
     {{{ scripts }}}

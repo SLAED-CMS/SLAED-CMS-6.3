@@ -1,22 +1,22 @@
 <div id="{{ id }}"{% if is_closed %} title="{{ closed_title }}" class="sl-hidden"{% endif %}>
-	<div class="comment">
-		<div class="com-left">
-			<div class="com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ username }}" title="{{ username }}" class="sl-avatar">{% endif %}</div>
-			<div class="min-rate">
-				<div class="rate-like-box">{{{ user_rate }}}</div>
+	<div class="sl-comment">
+		<div class="sl-com-left">
+			<div class="sl-com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ username }}" title="{{ username }}" class="sl-avatar">{% endif %}</div>
+			<div class="sl-min-rate">
+				<div class="sl-rate-like-box">{{{ user_rate }}}</div>
 			</div>
-			<ul class="fp-user-info">
+			<ul class="sl-fp-user-info">
 				<li>{{{ rank }}}</li>
 				<li>{{{ rank_link }}}</li>
 			</ul>
 		</div>
-		<div class="com-right">
-			<div class="com-top">
-				<div class="com-edit">{{{ post_count }}}</div>
-				<div class="carg dropdown">
+		<div class="sl-com-right">
+			<div class="sl-com-top">
+				<div class="sl-com-edit">{{{ post_count }}}</div>
+				<div class="sl-carg sl-dropdown">
 					<a href="#" data-sl-toggle-control="c-form-{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{{ username }}</b></a>
-					<div id="c-form-{{ id }}" class="dropdown-form">
-						<ul class="list-text">
+					<div id="c-form-{{ id }}" class="sl-dropdown-form">
+						<ul class="sl-list-text">
 							<li>{{{ group }}}</li>
 							<li>{{{ points }}}</li>
 							<li>{{{ regdate }}}</li>
@@ -26,9 +26,9 @@
 						</ul>
 					</div>
 				</div>
-				<div class="carg">{{{ btn_edit }}}{{{ btn_personal }}}{{{ btn_pm }}}{{{ btn_profile }}}{{{ btn_web }}}{{{ btn_warn }}}{{{ btn_thank }}}<span class="cargs">{{{ date }}} {{{ ip }}}</span></div>
+				<div class="sl-carg">{{{ btn_edit }}}{{{ btn_personal }}}{{{ btn_pm }}}{{{ btn_profile }}}{{{ btn_web }}}{{{ btn_warn }}}{{{ btn_thank }}}<span class="sl-cargs">{{{ date }}} {{{ ip }}}</span></div>
 			</div>
-			<div class="com-cont clrfix">{{{ text }}}<div class="sl-sig">{{{ sig }}}</div></div>
+			<div class="sl-com-cont sl-clrfix">{{{ text }}}<div class="sl-sig">{{{ sig }}}</div></div>
 		</div>
 	</div>
 </div>

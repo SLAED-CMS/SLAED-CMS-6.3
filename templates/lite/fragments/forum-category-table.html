@@ -1,6 +1,6 @@
-{% if open %}{% if heading %}<h3 class="heading2">{{{ heading }}}</h3>{% endif %}
-<table class="{% if is_topic_list %}sl-table-list ft-topics{% else %}sl-table-list-sort{% endif %}">
-	{% if is_topic_list %}<thead><tr class="forum-table-head"><th colspan="2">{{ col_topics }}</th><th class="fl-col-stat">{{ col_posts }}</th><th class="fl-col-stat">{{ col_poster }}</th><th class="fl-col-stat">{{ col_views }}</th><th>{{ col_last }}</th></tr></thead>{% else %}<thead><tr class="forum-table-head"><th colspan="2">{{ col_forum }}</th><th class="fl-col-stat">{{ col_topics }}</th><th class="fl-col-stat">{{ col_messages }}</th><th>{{ col_last }}</th></tr></thead>{% endif %}
+{% if open %}{% if heading %}<h3 class="sl-heading2">{{{ heading }}}</h3>{% endif %}
+<table class="{% if is_topic_list %}sl-table-list sl-ft-topics{% else %}sl-table-list-sort{% endif %}">
+	{% if is_topic_list %}<thead><tr class="sl-forum-table-head"><th colspan="2">{{ col_topics }}</th><th class="sl-fl-col-stat">{{ col_posts }}</th><th class="sl-fl-col-stat">{{ col_poster }}</th><th class="sl-fl-col-stat">{{ col_views }}</th><th>{{ col_last }}</th></tr></thead>{% else %}<thead><tr class="sl-forum-table-head"><th colspan="2">{{ col_forum }}</th><th class="sl-fl-col-stat">{{ col_topics }}</th><th class="sl-fl-col-stat">{{ col_messages }}</th><th>{{ col_last }}</th></tr></thead>{% endif %}
 	<tbody>
 {% else %}	</tbody>
 </table>

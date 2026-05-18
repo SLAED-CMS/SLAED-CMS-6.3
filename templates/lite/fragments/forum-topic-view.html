@@ -1,12 +1,12 @@
-{% if open %}<div class="forum-top">
-	<span class="pull-right">
+{% if open %}<div class="sl-forum-top">
+	<span class="sl-pull-right">
 		{% if button %}<b>{{{ button }}}</b>{% elseif actions_html %}{{{ actions_html }}}{% else %}<b>{{{ atopic }}}</b><b>{{{ areply }}}</b>{% endif %}
 	</span>
-	<h1 class="heading2">{% if title_html %}{{{ title_html }}}{% else %}{{{ favor }}} {{{ title }}}{% endif %}</h1>
+	<h1 class="sl-heading2">{% if title_html %}{{{ title_html }}}{% else %}{{{ favor }}} {{{ title }}}{% endif %}</h1>
 </div>
-{% else %}<div class="forum-foot clrfix">
+{% else %}<div class="sl-forum-foot sl-clrfix">
 	{{{ pager }}}
-	<span class="pull-right">
+	<span class="sl-pull-right">
 		{% if button %}<b>{{{ button }}}</b>{% elseif actions_html %}{{{ actions_html }}}{% else %}<b>{{{ atopic }}}</b><b>{{{ areply }}}</b>{% endif %}
 	</span>
 </div>

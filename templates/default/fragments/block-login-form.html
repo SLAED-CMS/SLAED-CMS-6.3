@@ -1,8 +1,0 @@
-<form action="index.php?name=account" method="post" class="block-login">
-	<p>{{ nickname_label }}: {{{ name_input }}}</p>
-	<p>{{ password_label }}: <input type="password" name="user_pass" maxlength="32" class="sl-field sl-field--block" required></p>
-	{% if captcha_html %}{{{ captcha_html }}}{% endif %}
-	{{{ hidden_inputs }}}
-	{% if network_row %}{{{ network_row }}}{% endif %}
-	<p><button type="submit" class="sl-but-blue sl-but--block">{{ login_label }}</button></p>
-</form>

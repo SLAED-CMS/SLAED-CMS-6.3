@@ -1,15 +1,15 @@
-<tr class="forum-line">
-	<td class="{% if is_topic_list %}fl-col-icon-m{% else %}fl-col-icon{% endif %}">{{{ icon }}}</td>
-	<td class="fl-col-content">
+<tr class="sl-forum-line">
+	<td class="{% if is_topic_list %}sl-fl-col-icon-m{% else %}sl-fl-col-icon{% endif %}">{{{ icon }}}</td>
+	<td class="sl-fl-col-content">
 		{% if is_topic_list %}<h3>{{{ link }}}</h3>{% else %}<h4>{{{ link }}}</h4>
-		<p class="forum-description">{{ desc }}</p>
+		<p class="sl-forum-description">{{ desc }}</p>
 		{% endif %}
 	</td>
-	<td class="fl-col-stat">{% if is_topic_list %}{{ replies }}{% else %}{{ topics }}{% endif %}</td>
-	<td class="fl-col-stat">{{ posts }}</td>
-	{% if is_topic_list %}<td class="fl-col-stat">{{ views }}</td>{% endif %}
-	<td class="fl-col-last">
-		<ul class="forum-last">
+	<td class="sl-fl-col-stat">{% if is_topic_list %}{{ replies }}{% else %}{{ topics }}{% endif %}</td>
+	<td class="sl-fl-col-stat">{{ posts }}</td>
+	{% if is_topic_list %}<td class="sl-fl-col-stat">{{ views }}</td>{% endif %}
+	<td class="sl-fl-col-last">
+		<ul class="sl-forum-last">
 			{% if is_topic_list %}
 			<li>{{ last_date }}</li>
 			<li>{{{ last_poster }}} {{{ last_link }}}</li>

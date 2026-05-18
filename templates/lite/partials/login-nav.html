@@ -1,13 +1,13 @@
-<ul class="login-top">
-	<li class="dropdown">
-		<a href="#" data-sl-toggle-control="a-form" data-sl-toggle-effect="puff" data-sl-toggle-duration="500" class="ico login-btn"><b>{{ login }}</b></a>
-		<form id="a-form" action="index.php?name=account" method="post" class="dropdown-form">
-			<ul class="login-form">
+<ul class="sl-login-top">
+	<li class="sl-dropdown">
+		<a href="#" data-sl-toggle-control="a-form" data-sl-toggle-effect="puff" data-sl-toggle-duration="500" class="sl-ico sl-login-btn"><b>{{ login }}</b></a>
+		<form id="a-form" action="index.php?name=account" method="post" class="sl-dropdown-form">
+			<ul class="sl-login-form">
 				<li>{% include 'fragments/input.html' with name_field %}</li>
 				<li>{% include 'fragments/input.html' with password_field %}</li>
 				{% if captcha %}{{{ captcha }}}{% endif %}
 				<li>{% include 'fragments/button.html' with submit_button %}</li>
-				<li class="login-links">
+				<li class="sl-login-links">
 					{% include 'fragments/link.html' with lost_link %}
 					{% include 'fragments/link.html' with register_link %}
 				</li>

@@ -6,35 +6,35 @@
 {{{ scripts }}}
 </head>
 <body>
-    <div class="wrapper">
-        <div class="wraptop"></div>
-        <div class="wrapmid">
-            <div class="header">
-                <div class="lcolomn leftside"><h1><a href="//slaed.net" target="_blank" class="thide" title="SLAED CMS">SLAED CMS</a></h1></div>
-                <div class="rcolomn midside">
-                    <div class="toolbar">
+    <div>
+        <div></div>
+        <div>
+            <div>
+                <div><h1><a href="//slaed.net" target="_blank" class="sl-thide" title="SLAED CMS">SLAED CMS</a></h1></div>
+                <div>
+                    <div>
                         <div>
-                            <ul class="reset">{{{ menu }}}</ul>
-                            <span class="rcolomn language">{{{ admin_langs }}}</span>
+                            <ul>{{{ menu }}}</ul>
+                            <span>{{{ admin_langs }}}</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="vsep">
-                <div class="vsep">
-                    <div class="container">
-                        <div class="lcolomn leftside">{{{ admin_blocks }}}</div>
-                        <div class="rcolomn midside">{% block content %}{% endblock %}</div>
-                        <div class="clr"></div>
+            <div>
+                <div>
+                    <div>
+                        <div>{{{ admin_blocks }}}</div>
+                        <div>{% block content %}{% endblock %}</div>
+                        <div class="sl-clr"></div>
                     </div>
                 </div>
             </div>
-            <div class="footer">
-                <div class="copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
+            <div>
+                <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
                 <span>{{{ foot_html }}}</span>
             </div>
         </div>
-        <div class="wrapfoot"></div>
+        <div></div>
         {% if debug_html %}
         <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
         {{{ debug_html }}}

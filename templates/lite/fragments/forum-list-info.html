@@ -1,26 +1,26 @@
 {% if is_category_info %}
-<ul class="grid_1_3 forum-cat-info">
-	<li class="grid">{{{ new }}}</li>
-	<li class="grid">{{{ nonew }}}</li>
-	<li class="grid">{{{ closed }}}</li>
+<ul class="sl-grid_1_3 sl-forum-cat-info">
+	<li class="sl-grid">{{{ new }}}</li>
+	<li class="sl-grid">{{{ nonew }}}</li>
+	<li class="sl-grid">{{{ closed }}}</li>
 </ul>
 {% else %}
-<div class="forum-list-info grid_1_2">
-	<ul class="grid">
+<div class="sl-forum-list-info sl-grid_1_2">
+	<ul class="sl-grid">
 		<li>{{{ new }}}</li>
 		<li>{{{ old }}}</li>
 		<li>{{{ popular_new }}}</li>
 		<li>{{{ popular }}}</li>
 		<li>{{{ announce }}}</li>
 	</ul>
-	<ul class="grid">
+	<ul class="sl-grid">
 		<li>{{{ hot }}}</li>
 		<li>{{{ mod }}}</li>
 		<li>{{{ admin }}}</li>
 		<li>{{{ closed }}}</li>
 		<li>{{{ pinned }}}</li>
 	</ul>
-	<!--<ul class="grid">
+	<!--<ul class="sl-grid">
 		<li>{{{ perm_view }}}</li>
 		<li>{{{ perm_read }}}</li>
 		<li>{{{ perm_topic }}}</li>

@@ -12,7 +12,7 @@
             return list.parentNode.parentNode;
         }
 
-        var wrapper = createElement('div', 'bx-wrapper');
+        var wrapper = createElement('div', 'sl-bx-wrapper');
         var viewport = createElement('div', 'bx-viewport');
         list.parentNode.insertBefore(wrapper, list);
         wrapper.appendChild(viewport);

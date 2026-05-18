@@ -1,0 +1,432 @@
+/* Fonts: Magistral bold and regular web font declarations */
+
+@font-face {
+  font-family: "Magistral";
+  src: url(fonts/magistralb-wf.eot);
+  src:
+    url(fonts/magistralb-wf.eot?#iefix) format("embedded-opentype"),
+    url(fonts/magistralb-wf.woff) format("woff"),
+    url(fonts/magistralb-wf.ttf) format("truetype"),
+    url(fonts/magistralb-wf.svg#magistralcbold) format("svg");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Magistral";
+  src: url(fonts/magistralr-wf.eot);
+  src:
+    url(fonts/magistralr-wf.eot?#iefix) format("embedded-opentype"),
+    url(fonts/magistralr-wf.woff) format("woff"),
+    url(fonts/magistralr-wf.ttf) format("truetype"),
+    url(fonts/magistralr-wf.svg#magistralcregular) format("svg");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Root variables: color palette, progress fills, vote meter tokens and control radius */
+
+:root {
+  --sl-changelog-bg: #f9fafb;
+  --sl-changelog-card: #ffffff;
+  --sl-changelog-border: #e5e7eb;
+  --sl-changelog-text: #374151;
+  --sl-changelog-meta: #6b7280;
+  --sl-changelog-code: #1f2937;
+  --sl-changelog-add: #10b981;
+  --sl-changelog-del: #ef4444;
+  --sl-changelog-header: #f3f4f6;
+  --sl-color-border: #e8ebee;
+  --sl-color-border-strong: #cad2da;
+  --sl-radius-control: 4px;
+  --sl-progress-track-border: #ccc;
+  --sl-progress-track-bg: #e7e7eb;
+  --sl-progress-track-radius: 2px;
+  --sl-progress-track-height: 6px;
+  --sl-progress-fill-height: 4px;
+  --sl-progress-fill-1-base: #5c9ade;
+  --sl-progress-fill-1-start: #00adee;
+  --sl-progress-fill-1-end: #0078a5;
+  --sl-progress-fill-2-base: #77af3f;
+  --sl-progress-fill-2-start: #8fc857;
+  --sl-progress-fill-2-end: #5c9425;
+  --sl-progress-fill-3-base: #faa51a;
+  --sl-progress-fill-3-start: #faa51a;
+  --sl-progress-fill-3-end: #f47a20;
+  --sl-progress-fill-4-base: #c44747;
+  --sl-progress-fill-4-start: #dd5f5f;
+  --sl-progress-fill-4-end: #a92c2c;
+  --sl-progress-fill-5-base: #9b36b9;
+  --sl-progress-fill-5-start: #bf5fdd;
+  --sl-progress-fill-5-end: #8c2ca9;
+  --sl-vote-meter-border: #d1d9e0;
+  --sl-vote-meter-track: #f4f6f8;
+  --sl-vote-meter-fill: #0078a5;
+  --sl-vote-meter-fill-2: #5c9425;
+  --sl-vote-meter-fill-3: #f47a20;
+  --sl-vote-meter-fill-4: #a92c2c;
+  --sl-vote-meter-fill-5: #8c2ca9;
+  --sl-vote-meter-radius: 4px;
+}
+
+/* Reset: zero margins, padding and borders on all HTML elements */
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section,
+summary {
+  display: block;
+}
+
+body {
+  line-height: 1;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Base: global element styles, typography, links and form defaults */
+
+body {
+  background: #fff;
+  min-width: 1100px;
+}
+
+body,
+select,
+input,
+textarea,
+button {
+  font:
+    14px/1.4 Arial,
+    Tahoma,
+    sans-serif;
+  color: #222;
+  outline: none;
+}
+
+a {
+  outline: none;
+  text-decoration: none;
+  color: #30a2f6;
+}
+
+a:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+a img {
+  border: 0 none;
+}
+
+a > img {
+  vertical-align: bottom;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: normal;
+  line-height: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: 26px;
+  margin: 30px 0 10px 0;
+}
+
+h2 {
+  font-size: 24px;
+  margin: 25px 0 10px;
+}
+
+h3 {
+  font-size: 22px;
+  margin: 14px 0 8px;
+}
+
+h4 {
+  font-size: 18px;
+  margin: 2px 0;
+  display: inline;
+}
+
+h5 {
+  font-size: 16px;
+}
+
+p,
+dl,
+dd,
+pre,
+ul,
+ol,
+blockquote {
+  margin-bottom: 18px;
+}
+
+legend {
+  padding: 5px;
+  border: 1px solid #dee0e2;
+  border-radius: 4px;
+}
+
+fieldset {
+  padding: 5px;
+  margin: 5px;
+  border: 1px solid #dee0e2;
+  border-radius: 4px;
+}
+
+optgroup {
+  font:
+    14px/1.4 Arial,
+    Tahoma,
+    sans-serif;
+  color: #222;
+  outline: none;
+}
+
+strong,
+b {
+  font-weight: bold;
+}
+
+em,
+cite,
+i {
+  font-style: italic;
+}
+
+caption {
+  text-align: left;
+}
+
+th,
+td {
+  vertical-align: middle;
+}
+
+small {
+  font-size: 0.9em;
+}
+
+hr {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border: 0;
+  border-top: 1px solid #e4e3e7;
+}
+
+ul {
+  padding-left: 25px;
+  list-style: disc outside;
+}
+
+ol {
+  padding-left: 25px;
+  list-style: decimal outside;
+}
+
+table {
+  max-width: 100%;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  line-height: normal;
+  margin: 4px 0 0;
+}
+
+input[type="file"],
+input[type="image"],
+input[type="submit"],
+input[type="reset"],
+input[type="button"],
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+}
+
+input[required]:valid,
+textarea[required]:valid {
+  color: #008000;
+}
+
+input[required]:invalid,
+textarea[required]:invalid {
+  color: #ff0000;
+}
+
+input[placeholder] {
+  text-overflow: ellipsis;
+}
+
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+button[disabled],
+input[disabled] {
+  cursor: default;
+}
+
+blockquote {
+  background: #fff;
+  border-left: 1px solid #b8c3cd;
+  border-right: 1px solid #b8c3cd;
+  color: #798086;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  margin: 4px;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+blockquote:before {
+  color: #b8c3cd;
+  content: "\201c";
+  font-size: 3em;
+  line-height: 0.1em;
+  margin-right: 0.2em;
+  vertical-align: -0.4em;
+}
+
+blockquote:after {
+  color: #b8c3cd;
+  content: "\201d";
+  font-size: 3em;
+  line-height: 0.1em;
+  margin-left: 0.1em;
+  vertical-align: -0.4em;
+}
+
+blockquote > p:first-child {
+  display: inline;
+}
