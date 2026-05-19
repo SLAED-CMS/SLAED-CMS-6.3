@@ -22,85 +22,65 @@ define('SITEMAP_DIR', BASE_DIR.'/storage/sitemap');
 # Uploads directory for user content
 define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
-# Load all /config/*.php into a unified $conf array; apply local.php overrides
+# Load the runtime config from cache, rebuilding it from source if needed
 function getConfig(): array {
-    $conf = [];
-    $default_files = [];
-    $files = glob(CONFIG_DIR.'/*.php');
-    if ($files === false) $files = [];
+    $local_file = CONFIG_DIR.'/local.php';
+    if (is_file($local_file) && is_readable($local_file)) {
+        $cache = require $local_file;
+        if (is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']) && (($cache['_meta']['cache_version'] ?? 0) === 1)) {
+            return $cache['_config'];
+        }
+    }
+    $files = glob(CONFIG_DIR.'/*.php') ?: [];
     sort($files);
     $skip = ['local.php', 'system.php', 'header.php', 'chmod.php'];
+    $hash = '';
+    $conf = [];
     foreach ($files as $file) {
-        if (in_array(basename($file), $skip)) continue;
+        $name = basename($file);
+        if (in_array($name, $skip, true)) continue;
         $data = require $file;
-        if (is_array($data)) {
-            $conf = array_merge($conf, $data);
-            $default_files[] = $file;
-        }
+        if (is_array($data)) $conf = array_merge($conf, $data);
+        $file_hash = sha1_file($file);
+        if ($file_hash !== false) $hash .= $name.$file_hash;
     }
     $conf['dev_mode'] ??= false;
-    $local_file = CONFIG_DIR.'/local.php';
-    $local = [];
-    if (file_exists($local_file)) {
-        $data = include $local_file;
-        if (is_array($data)) $local = $data;
-    }
-    $stored_finger = $local['_meta']['base_fingerprint'] ?? '';
-    unset($local['_meta']);
-    if ($local !== []) $conf = filterConfigMerge($conf, $local);
     unset($conf['style']);
-    $finger = getConfigFingerprint($default_files);
-    if ($conf['dev_mode'] && $finger !== $stored_finger) {
-        setConfigFingerprint($local_file, $finger);
-    }
-    return $conf;
-}
-
-# Safe recursive merge: override only existing keys with matching type; ignore unknown keys
-function filterConfigMerge(array $base, array $override): array {
-    foreach ($override as $key => $value) {
-        if (!array_key_exists($key, $base)) continue;
-        if (is_array($base[$key]) && is_array($value)) {
-            $base[$key] = filterConfigMerge($base[$key], $value);
-        } elseif (gettype($base[$key]) === gettype($value)) {
-            $base[$key] = $value;
+    $export = function (array $arr, int $dep = 0) use (&$export): string {
+        $pad = str_repeat('    ', $dep);
+        $ind = $pad.'    ';
+        $out = '['.PHP_EOL;
+        foreach ($arr as $key => $val) {
+            $out .= $ind.var_export($key, true).' => ';
+            $out .= is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
+            $out .= ','.PHP_EOL;
         }
-    }
-    return $base;
-}
-
-# Compute sha1 fingerprint over config files; includes filename to detect additions/removals
-function getConfigFingerprint(array $files): string {
-    $hash = '';
-    foreach ($files as $file) {
-        if (!is_file($file)) continue;
-        $file_hash = sha1_file($file);
-        if ($file_hash !== false) $hash .= basename($file).$file_hash;
-    }
-    return sha1($hash);
-}
-
-# Read local.php as array, update only _meta.base_fingerprint, write atomically
-function setConfigFingerprint(string $local_file, string $fingerprint): void {
-    $data = [];
-    if (file_exists($local_file)) {
-        $existing = include $local_file;
-        if (is_array($existing)) $data = $existing;
-    }
-    $data['_meta']['base_fingerprint'] = $fingerprint;
-    $exported = var_export($data, true);
-    $exported = preg_replace('/array \(/', '[', $exported);
-    $exported = preg_replace('/^(\s*)\)(,?)$/m', '$1]$2', $exported);
-    $content = "<?php\nreturn ".$exported.";\n";
+        return $out.$pad.']';
+    };
+    $data = [
+        '_meta' => [
+            'base_fingerprint' => sha1($hash),
+            'cache_version' => 1,
+            'generated_at' => time(),
+        ],
+        '_config' => $conf,
+    ];
     $tmp = $local_file.'.tmp';
     $is_new = !file_exists($local_file);
-    if (file_put_contents($tmp, $content, LOCK_EX) !== false) {
+    $cnt = '<?php'.PHP_EOL
+    .'# Author: Eduard Laas'.PHP_EOL
+    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# License: GNU GPL 3'.PHP_EOL
+    .'# Website: slaed.net'.PHP_EOL.PHP_EOL
+    .'return '.$export($data).';'.PHP_EOL;
+    if (file_put_contents($tmp, $cnt, LOCK_EX) !== false) {
         if (!rename($tmp, $local_file)) {
             unlink($tmp);
         } elseif ($is_new) {
             chmod($local_file, 0640);
         }
     }
+    return $conf;
 }
 
 # Editor bootstrap must load before security POST processing, because security helpers may
@@ -108,7 +88,7 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
 require_once BASE_DIR.'/core/classes/editor.php';
 require_once BASE_DIR.'/core/classes/logger.php';
 
-# Load unified config - merges all /config/*.php into $conf, applies local.php overrides
+# Load the generated runtime config cache
 $conf = getConfig();
 if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
 
@@ -2313,13 +2293,13 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     foreach ($arr as $key => $val) $arr[$key] = $norm($val);
     $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
-    $exp  = function (array $arr, int $dep = 0) use (&$exp): string {
+    $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
         $out = '['.PHP_EOL;
         foreach ($arr as $key => $val) {
             $out .= $ind.var_export($key, true).' => ';
-            $out .= is_array($val) ? $exp($val, $dep + 1) : var_export($val, true);
+            $out .= is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
             $out .= ','.PHP_EOL;
         }
         return $out.$pad.']';
@@ -2329,8 +2309,10 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'return '.$exp($data).';'.PHP_EOL;
+    .'return '.$export($data).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
+    @unlink(CONFIG_DIR.'/local.php');
+    getConfig();
 }
 
 # Returns ordered list of base stylesheet paths for a theme, alphabetical by filename
