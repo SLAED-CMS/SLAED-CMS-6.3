@@ -10,7 +10,8 @@ function getStatisticSearch(): string {
     global $afile, $tpl;
     $file = getVar('post', 'file', 'text');
     $files = [];
-    foreach (scandir(COUNTER_DIR.'/statistic/') as $filev) $files[] = $filev;
+    $sdir = COUNTER_DIR.'/statistic';
+    if (is_dir($sdir)) foreach (scandir($sdir) as $filev) $files[] = $filev;
     rsort($files);
     $sopts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',

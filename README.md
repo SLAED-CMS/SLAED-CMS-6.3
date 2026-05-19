@@ -139,7 +139,7 @@ composer quality
 - Prepared-statement database layer
 - Caching and logging directories under `storage/`
 - Central frontend head assembly through `setHead()` and final page rendering through `setFoot()`
-- Runtime-generated sitemap data under `config/sitemap/`
+- Runtime-generated sitemap data under `storage/sitemap/`
 
 ### Content and Modules
 

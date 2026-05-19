@@ -122,7 +122,7 @@ rm -rf storage/cache/*
 Additional runtime-generated locations present in the repository:
 
 - `storage/logs/`
-- `config/sitemap/`
+- `storage/sitemap/`
 - `storage/backup/`
 
 ### 6. Verify Entry Points

@@ -91,7 +91,7 @@ Runtime logs are stored under `storage/logs/`.
 The repository also contains runtime-generated data under:
 
 - `storage/cache/`
-- `config/sitemap/`
+- `storage/sitemap/`
 - `storage/backup/`
 
 ### Access Control

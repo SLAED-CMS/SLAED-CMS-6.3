@@ -16,7 +16,8 @@ function sitemap(): void {
     $cont = $tpl->getHtmlFrag('title', ['title' => _SITEMAP]);
     if (is_readable($path)) {
         $map = file_get_contents($path);
-        $cont .= ($map !== false ? $map : '');
+        $map = ($map !== false) ? trim($map) : '';
+        $cont .= ($map !== '') ? $tpl->getHtmlFrag('block-content', ['content' => $map]) : $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }

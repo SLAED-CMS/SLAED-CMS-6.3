@@ -162,8 +162,10 @@ function getStatistic(): void {
     imagestring($image, 1, 5, 120, 'PAGES PER VIS.: '.(($unique > 0) ? round($today / $unique, 2) : 0), $wblue);
     imagestring($image, 1, 5, 130, 'AVR. AUDIENCE: '.(($i > 0) ? round($auditory / $i) : 0), $wblue);
 
+    $sdir = COUNTER_DIR.'/statistic';
+    if ($report && !is_dir($sdir) && !mkdir($sdir, 0755, true)) $report = 0;
     if ($report) {
-        imagepng($image, COUNTER_DIR.'/statistic/'.date('m-Y').'.png');
+        imagepng($image, $sdir.'/'.date('m-Y').'.png');
     } else {
         imagepng($image);
     }

@@ -6,11 +6,7 @@
 /storage/counter/*
 /storage/backup/*
 /storage/sitemap/*
-
-# Config cache
-/config/cache/*
-/config/counter/*
-/config/logs/*
+!/storage/sitemap/sitemap.xsl
 
 # Keep directory structure
 !*/index.html

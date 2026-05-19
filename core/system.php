@@ -264,6 +264,8 @@ function setSchedulerState(string $name, array $state): bool {
     $file = LOGS_DIR.'/scheduler/'.$name.'.json';
     $json = json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($json)) return false;
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
     return file_put_contents($file, $json, LOCK_EX) !== false;
 }
 
@@ -329,6 +331,8 @@ function deleteSchedulerLock(string $name, string $stat, string $mess = '', arra
 function addSchedulerHeartbeat(string $type): void {
     $json = json_encode(['trigger' => $type, 'time' => time()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $file = LOGS_DIR.'/scheduler/heartbeat.json';
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
     if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
 }
 
@@ -363,6 +367,8 @@ function addSchedulerTrigger(): string {
     $job = getSchedulerNextJob();
     if (!$job) return '';
     $file = LOGS_DIR.'/scheduler/trigger.json';
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return '';
     $last = 0;
     if (is_file($file) && filesize($file) !== 0) {
         $json = file_get_contents($file);
@@ -1445,7 +1451,7 @@ function setHead(array $seo = []): void {
             }
         }
         if ($match && !is_user() && !isAdmin()) {
-            $cacheurl = 'config/cache/'.md5($url).'.txt';
+            $cacheurl = CACHE_DIR.'/'.md5($url).'.txt';
             if (file_exists($cacheurl) && filesize($cacheurl) != 0 && ($ctime - $conf['cache_t']) < filemtime($cacheurl)) {
                 readfile($cacheurl);
                 exit;
@@ -1724,7 +1730,7 @@ function setFoot(): void {
     echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
     unset($sitepage, $sitevars);
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
-        $dir = 'config/cache/';
+        $dir = CACHE_DIR;
         $url = str_replace('/', '', getenv('REQUEST_URI'));
         $url = (!$url) ? 'index.php' : $url;
         if ($conf['cache'] == 2) {
@@ -2231,13 +2237,13 @@ function setCache($id=''): void {
 # Set cached script file
 function setScript(): void {
     header('Content-type: text/javascript');
-    readfile('config/cache/'.md5(getTheme().'script').'.txt');
+    readfile(CACHE_DIR.'/'.md5(getTheme().'script').'.txt');
 }
 
 # Set cached CSS file
 function setCss(): void {
     header('Content-type: text/css');
-    readfile('config/cache/'.md5(getTheme().'style').'.txt');
+    readfile(CACHE_DIR.'/'.md5(getTheme().'style').'.txt');
 }
 
 # Load configuration file or directory and return chmod warning if needed
@@ -2364,7 +2370,7 @@ function getAssetFiles(array $entries, string $ext): array {
 function doScript(): string {
  global $theme, $conf, $tpl;
     $async = ($conf['script_a']) ? 'async ' : '';
-    $sfile = 'config/cache/'.md5($theme.'script').'.txt';
+    $sfile = CACHE_DIR.'/'.md5($theme.'script').'.txt';
     $entries = explode(',', $conf['script_f']);
     $entries = is_array($entries) ? $entries : [];
     $array = array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'));
@@ -2416,7 +2422,7 @@ function doCss(): string {
     $array = array_values(array_unique($array));
     if (is_array($array)) {
         if (!defined('ADMIN_FILE')) {
-            $cfile = 'config/cache/'.md5($theme.'style').'.txt';
+            $cfile = CACHE_DIR.'/'.md5($theme.'style').'.txt';
             $bundle = !empty($conf['cache_css']) || !empty($conf['css_h']);
             if ($bundle && file_exists($cfile) && filesize($cfile) != 0 && (time() - $conf['cache_t']) < filemtime($cfile)) {
                 $cont = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'index.php?go=css', 'type' => '', 'title' => '']);
@@ -2603,6 +2609,13 @@ function addSitemapTask(bool $force = false): array {
                     $bufferItems .= $tpl->getHtmlFrag('list-item', ['content_html' => $moduleLink, 'children_html' => $moduleChildren]);
                 }
                 $buffer = $tpl->getHtmlFrag('list', ['items_html' => $bufferItems]);
+                $sdir = dirname(SITEMAP_DIR.'/sitemap.txt');
+                if (!is_dir($sdir) && !mkdir($sdir, 0777, true) && !is_dir($sdir)) {
+                    return [
+                        'status' => 'failed',
+                        'message' => 'Sitemap storage directory is unavailable',
+                    ];
+                }
                 file_put_contents(SITEMAP_DIR.'/sitemap.txt', $buffer);
             }
             if ($conf['sitemap']['gen_h']) {

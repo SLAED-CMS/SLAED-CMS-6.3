@@ -893,8 +893,9 @@ function getOpenSearch() {
 # Return the processed sitemap XSL template with localized placeholder strings
 function getOpenXsl(): string {
     global $conf;
-    if (file_exists('config/sitemap/sitemap.xsl')) {
-        $file = file_get_contents('config/sitemap/sitemap.xsl');
+    $path = SITEMAP_DIR.'/sitemap.xsl';
+    if (file_exists($path)) {
+        $file = file_get_contents($path);
         $licens = str_replace('&copy;', '©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
         $title = $conf['sitename'].' - '._SITEMAP;
         $langs = ['$lan[0]' => $title, '$lan[1]' => $licens, '$lan[2]' => _SITEMAP_XML, '$lan[3]' => _URL, '$lan[4]' => _PRIORITY, '$lan[5]' => _CHANGEFREQ, '$lan[6]' => _LASTMOD];
@@ -909,7 +910,8 @@ function getOpenXsl(): string {
 switch(getVar('get', 'stat', 'num', 0)) {
     case 1:
     $img = getVar('get', 'img', 'num', 0) ? '_'.getVar('get', 'img', 'num', 0) : '';
-    $sdate = file(COUNTER_DIR.'/statistic.log');
+    $slog = COUNTER_DIR.'/statistic.log';
+    $sdate = (is_file($slog) && is_readable($slog)) ? file($slog) : [];
     $con = explode('|', trim($sdate[0]));
     $image = imagecreatefrompng(img_find('banners/stat'.$img.'.png'));
     $white = imagecolorallocate($image, 255, 255, 255);
