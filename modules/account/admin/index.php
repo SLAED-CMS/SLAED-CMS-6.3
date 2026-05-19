@@ -328,7 +328,7 @@ function add(): void {
     if ($conf['users']['theme']) {
         $themeopts = '';
         $themecount = 0;
-        foreach (scandir('templates') as $file) {
+        foreach (scandir(BASE_DIR.'/templates') as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin') {
                 $themeopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,

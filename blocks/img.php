@@ -8,7 +8,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
-$path = 'uploads/screens/thumb';
+$path = UPLOADS_DIR.'/screens/thumb';
 $ban = [];
 $dir = opendir($path);
 if ($dir) {

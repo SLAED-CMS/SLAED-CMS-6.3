@@ -77,7 +77,7 @@ function add(): void {
         ],
     ];
     $bfopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
-    $files = scandir('blocks');
+    $files = scandir(BASE_DIR.'/blocks');
     foreach ($files as $file) {
         if (preg_match('/^(.+)\.php$/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
@@ -209,7 +209,7 @@ function fileadd(): void {
     global $afile, $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
-    $cont .= checkPerms(BASE_DIR.'/blocks/');
+    $cont .= checkPerms(BASE_DIR.'/blocks');
     $rows = [
         [
             'label_html' => _FILENAME,
@@ -245,7 +245,7 @@ function fileedit(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
     $opts = '';
-    $files = scandir('blocks');
+    $files = scandir(BASE_DIR.'/blocks');
     foreach ($files as $file) {
         if (preg_match('/^(.+)\.php$/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
@@ -374,7 +374,7 @@ function filecode(): void {
                 setRedirect($afile.'.php?name=blocks&op=logview');
                 return;
             }
-            $bfstr = file_get_contents('blocks/'.$bf);
+            $bfstr = file_get_contents(BASE_DIR.'/blocks/'.$bf);
             if (strpos($bfstr, 'BLOCKHTML') === false) {
                 $flaged = 'php';
                 $code = preg_replace('/\A<\?php.*?if\s*\(\s*!defined\(\s*[\'"]BLOCK_FILE[\'"]\s*\)\s*\)\s*\{.*?\}\s*/is', '', $bfstr);
@@ -388,10 +388,10 @@ function filecode(): void {
         }
         setHead();
         $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
-        $dir = BASE_DIR.'/blocks/';
-        $path = $dir.$bf;
+        $dir = BASE_DIR.'/blocks';
+        $path = BASE_DIR.'/blocks/'.$bf;
         $cont .= checkPerms($dir).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BLOCK.': '.$path]);
-        if (file_exists('blocks/'.$bf)) $cont .= checkPerms($path).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
+        if (file_exists($path)) $cont .= checkPerms($path).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _B_FEDIT]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _EINFOPHP]);
         $rows = [[
             'label_html' => _FILENAME,
@@ -432,7 +432,7 @@ function filecodesave(): void {
     $bf = getVar('post', 'bf', 'text', '');
     $bf = preg_match('/^[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
     if (!$warn && $btext && $bf) {
-        if ($handle = fopen('blocks/'.$bf, 'wb')) {
+        if ($handle = fopen(BASE_DIR.'/blocks/'.$bf, 'wb')) {
             $htmlb = '';
             $htmle = '';
             $flag = getVar('post', 'flag', 'var', '');
@@ -475,7 +475,7 @@ function edit(): void {
     ]];
     if ($bfile != '') {
         $bfopts = '';
-        $files = scandir('blocks');
+        $files = scandir(BASE_DIR.'/blocks');
         foreach ($files as $file) {
             if (preg_match('/^(.+)\.php$/', $file, $matches)) {
                 $bfopts .= $tpl->getHtmlFrag('select-option', [

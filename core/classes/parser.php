@@ -500,20 +500,22 @@ class Parser {
             $rl  = $m[6] ?? '';
             $ext = strtolower((string)substr((string)strrchr($fn, '.'), 1));
             $file = 'uploads/'.$mod.'/'.$fn;
+            $path = BASE_DIR.'/'.ltrim(str_replace('\\', '/', $file), '/');
             $timg = $file;
             if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
             if (in_array($ext, $img, true)) {
                 $tfile = 'uploads/'.$mod.'/thumb/'.$fn;
-                $tdir  = 'uploads/'.$mod.'/thumb';
-                if ($mod !== '' && file_exists($file) && !file_exists($tfile)) {
-                    if (!file_exists($tdir)) mkdir($tdir);
-                    $ok   = create_img_gd($file, $tfile, $twd);
+                $tpath = BASE_DIR.'/'.ltrim(str_replace('\\', '/', $tfile), '/');
+                $tdir  = UPLOADS_DIR.'/'.$mod.'/thumb';
+                if ($mod !== '' && file_exists($path) && !file_exists($tpath)) {
+                    if (!file_exists($tdir)) mkdir($tdir, 0777, true);
+                    $ok   = create_img_gd($path, $tpath, $twd);
                     $timg = $ok ? $tfile : $file;
                 } else {
                     $timg = $tfile;
                 }
-                if (file_exists($file)) {
-                    [$wd, $hg] = getimagesize($file);
+                if (file_exists($path)) {
+                    [$wd, $hg] = getimagesize($path);
                 } else {
                     $file = $this->getFallbackImage();
                     $timg = $file;

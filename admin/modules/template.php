@@ -21,7 +21,7 @@ function getTemplateFiles(string $dir, string $ext): array {
 
 function getTemplateHtmlFiles(string $templ): array {
     $dirs = [];
-    $base = 'templates/'.$templ;
+    $base = BASE_DIR.'/templates/'.$templ;
     foreach (['fragments', 'partials', 'layouts', 'pages'] as $part) {
         $path = $base.'/'.$part;
         if (is_dir($path)) $dirs[] = $path;
@@ -35,7 +35,7 @@ function getTemplateHtmlFiles(string $templ): array {
 }
 
 function getTemplateCssFiles(string $templ): array {
-    $dir = 'templates/'.$templ.'/assets/css';
+    $dir = BASE_DIR.'/templates/'.$templ.'/assets/css';
     return getTemplateFiles($dir, 'css');
 }
 
@@ -50,8 +50,8 @@ function getTemplateTabsOps(string $templ): array {
 function getTemplateSearch(string $templ): string {
     global $afile, $tpl;
     $opts = '';
-    foreach (scandir('templates') as $file) {
-        if ($file === '.' || $file === '..' || !is_dir('templates/'.$file)) continue;
+    foreach (scandir(BASE_DIR.'/templates') as $file) {
+        if ($file === '.' || $file === '..' || !is_dir(BASE_DIR.'/templates/'.$file)) continue;
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
             'label_text' => $file,
@@ -128,7 +128,7 @@ function template(): void {
         'tabs' => [_TEMPLATES, _STYLES, _INFO],
         'subtitle_html' => getTemplateSearch($templ),
     ]);
-    $dir = 'templates/'.$templ;
+    $dir = BASE_DIR.'/templates/'.$templ;
     if (is_dir($dir)) {
         $conts = '';
         $files = getTemplateHtmlFiles($templ);
@@ -156,7 +156,7 @@ function style(): void {
         'tab' => 1,
         'subtitle_html' => getTemplateSearch($templ),
     ]);
-    $dir = 'templates/'.$templ.'/assets/css';
+    $dir = BASE_DIR.'/templates/'.$templ.'/assets/css';
     if (is_dir($dir)) {
         $conts = '';
         $files = getTemplateCssFiles($templ);

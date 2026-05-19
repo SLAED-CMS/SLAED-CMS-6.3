@@ -10,7 +10,7 @@ function getUploadsSearch(): string {
     global $afile, $conf, $tpl;
     $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
     $opts = '';
-    foreach (scandir('uploads') as $file) {
+    foreach (scandir(UPLOADS_DIR) as $file) {
         if (preg_match('/\./', $file)) continue;
         $opts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,
@@ -41,7 +41,7 @@ function uploads(): void {
         'subtitle_html' => getUploadsSearch(),
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $cont .= checkPerms(BASE_DIR.'/uploads/');
+    $cont .= checkPerms(UPLOADS_DIR);
     $tabone = $tpl->getHtmlFrag('alert', [
         'is_warn' => false,
         'lines' => [
@@ -79,8 +79,8 @@ function uploads(): void {
         ],
         'submit_label' => _EXECUTE,
     ])]);
-    $fdir = 'uploads/'.$dir;
-    $tabtwo = checkPerms(BASE_DIR.'/'.$fdir);
+    $fdir = UPLOADS_DIR.'/'.$dir;
+    $tabtwo = checkPerms($fdir);
     if (is_dir($fdir)) {
         $f = 0;
         $affilesize = 0;
@@ -101,8 +101,8 @@ function uploads(): void {
         $tabtwo .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     $tabtwo .= $tpl->getHtmlPart('box', ['box_id' => 'repf1']);
-    $tdir = 'uploads/'.$dir.'/thumb';
-    $tabthr = checkPerms(BASE_DIR.'/'.$tdir);
+    $tdir = $fdir.'/thumb';
+    $tabthr = checkPerms($tdir);
     if (is_dir($tdir)) {
         $t = 0;
         $atfilesize = 0;
@@ -156,7 +156,7 @@ function uploadsave(): void {
     global $afile, $stop;
     $dir = getVar('post', 'dir', 'var');
     $warn = !checkSiteToken();
-    if (!$warn) upload(3, 'uploads/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
+    if (!$warn) upload(3, UPLOADS_DIR.'/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
     if (!$warn && $stop) {
         uploads();
     } else {
@@ -233,7 +233,7 @@ function config(): void {
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $directory = '';
-    foreach (scandir('uploads') as $file) {
+    foreach (scandir(UPLOADS_DIR) as $file) {
         if (preg_match('/\./', $file)) continue;
         $directory .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $file,

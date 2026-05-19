@@ -954,7 +954,8 @@ function getAdminUploadFiles(): void {
     $connum = (!empty($con[7]) && intval($con[7])) ? $con[7] : '50';
     $file = filterText(getVar('get', 'file', 'text', ''));
     $num  = ($cid) ? $cid : '1';
-    $path = ($id == 1) ? 'uploads/'.$dir.'/' : 'uploads/'.$dir.'/thumb/';
+    $path = ($id == 1) ? UPLOADS_DIR.'/'.$dir.'/' : UPLOADS_DIR.'/'.$dir.'/thumb/';
+    $pub = ($id == 1) ? 'uploads/'.$dir.'/' : 'uploads/'.$dir.'/thumb/';
     if (is_dir($path)) {
         if ($file && $dir) {
             if (!$cid) {
@@ -982,7 +983,7 @@ function getAdminUploadFiles(): void {
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
-                        'image_url' => $path.$entry[1],
+                        'image_url' => $pub.$entry[1],
                         'fallback_url' => 'templates/admin/images/admin/no.png',
                         'image_title' => _IMG,
                         'no_title' => _NO,

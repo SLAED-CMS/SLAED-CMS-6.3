@@ -141,7 +141,8 @@ function config(): void {
         'is_config' => true,
     ])];
     $path = 'templates/'.$conf['theme'].'/images/logos/';
-    $list = is_dir($path) ? scandir($path) : [];
+    $dir = BASE_DIR.'/'.$path;
+    $list = is_dir($dir) ? scandir($dir) : [];
     $opts = '';
     if (is_array($list)) {
         foreach ($list as $entry) {
@@ -169,9 +170,10 @@ function config(): void {
         'is_popup' => true,
     ])];
     $path = 'templates/admin/images/logos/';
+    $dir = BASE_DIR.'/'.$path;
     $adlogo = $conf['admin_logo'] ?? 'slaed_logo_256x73.png';
-    if (!is_file($path.$adlogo)) $adlogo = 'slaed_logo_256x73.png';
-    $list = is_dir($path) ? scandir($path) : [];
+    if (!is_file(BASE_DIR.'/'.$path.$adlogo)) $adlogo = 'slaed_logo_256x73.png';
+    $list = is_dir($dir) ? scandir($dir) : [];
     $opts = '';
     if (is_array($list)) {
         foreach ($list as $entry) {
@@ -262,7 +264,7 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $list = is_dir('templates') ? scandir('templates') : [];
+    $list = is_dir(BASE_DIR.'/templates') ? scandir(BASE_DIR.'/templates') : [];
     $opts = '';
     if (is_array($list)) {
         foreach ($list as $file) {
@@ -697,7 +699,7 @@ function save(): void {
         $xhomeurl = ($homeurl !== '' && substr($homeurl, -1) == '/') ? substr($homeurl, 0, -1) : $homeurl;
         $xsite_logo = str_replace('templates/'.$conf['theme'].'/images/logos/', '', getVar('post', 'site_logo', 'text'));
         $xadlogo = basename(str_replace('templates/admin/images/logos/', '', getVar('post', 'admin_logo', 'text')));
-        if (!is_file('templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed_logo_256x73.png';
+        if (!is_file(BASE_DIR.'/templates/admin/images/logos/'.$xadlogo)) $xadlogo = 'slaed_logo_256x73.png';
 
         $xuser_c = getVar('post', 'user_c', 'text');
         $xadmin_c = getVar('post', 'admin_c', 'text');

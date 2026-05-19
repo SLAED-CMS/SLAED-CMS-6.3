@@ -21,7 +21,7 @@ function clients(): void {
         $rows = '';
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = $status ? 0 : 1;
-            $time = file_exists('uploads/clients/'.$url) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
+            $time = file_exists(UPLOADS_DIR.'/clients/'.$url) ? date(_TIMESTRING, filemtime(UPLOADS_DIR.'/clients/'.$url)) : _NO_INFO;
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [

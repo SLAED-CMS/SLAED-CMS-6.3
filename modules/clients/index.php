@@ -26,7 +26,7 @@ function clients(): void {
         $a = 1;
         while ($row = $db->getSqlRow($result)) {
             [$id, $title, $body, $url, $num, $hits, $prod] = $row;
-            $tpath = 'uploads/clients/thumb/'.$id.'_'.$uid;
+            $tpath = UPLOADS_DIR.'/clients/thumb/'.$id.'_'.$uid;
             if (file_exists($tpath.'.zip')) $tpath .= '.zip';
             elseif (file_exists($tpath.'.gz')) $tpath .= '.gz';
             elseif (file_exists($tpath.'.bz2')) $tpath .= '.bz2';
@@ -39,7 +39,7 @@ function clients(): void {
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
             );
-            $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
+            $time = (file_exists(UPLOADS_DIR.'/clients/'.$url)) ? date(_TIMESTRING, filemtime(UPLOADS_DIR.'/clients/'.$url)) : _NO_INFO;
             $rows[] = [
                 'id' => (string)$a,
                 'cells' => [
@@ -83,14 +83,14 @@ function download(): void {
     if (is_user() && $db->getSqlRowCount($result) > 0) {
         $id = getVar('get', 'id', 'num');
         [$pid, $url, $num] = $db->getSqlRow($db->getSqlQuery('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
-        $tpath = 'uploads/clients/thumb/'.$pid.'_'.$uid;
+        $tpath = UPLOADS_DIR.'/clients/thumb/'.$pid.'_'.$uid;
         if (file_exists($tpath.'.zip')) $tpath .= '.zip';
         elseif (file_exists($tpath.'.gz')) $tpath .= '.gz';
         elseif (file_exists($tpath.'.bz2')) $tpath .= '.bz2';
         else $tpath = '';
         if (!$tpath) {
-            $ipath = 'uploads/clients/images';
-            $path = 'uploads/clients/'.$url;
+            $ipath = UPLOADS_DIR.'/clients/images';
+            $path = UPLOADS_DIR.'/clients/'.$url;
             $code = base64_encode($uid.'-'.getip().'-'.getagent());
 
             # Шифруем файлы
@@ -105,11 +105,11 @@ function download(): void {
             if (file_exists($path.'/html/config/license.txt')) generator($path.'/html/config');
             if (file_exists($path.'/setup/config/license.txt')) generator($path.'/setup/config');
             if (file_exists($path.'/update/config/license.txt')) generator($path.'/update/config');
-            if (!addCompress('uploads/clients/thumb', $path, $pid.'_'.$uid, 'auto')) {
+            if (!addCompress(UPLOADS_DIR.'/clients/thumb', $path, $pid.'_'.$uid, 'auto')) {
                 $stop = _CLERROR2;
                 clients();
             } else {
-                $tpath = 'uploads/clients/thumb/'.$pid.'_'.$uid;
+                $tpath = UPLOADS_DIR.'/clients/thumb/'.$pid.'_'.$uid;
                 if (file_exists($tpath.'.zip')) $tpath .= '.zip';
                 elseif (file_exists($tpath.'.gz')) $tpath .= '.gz';
                 elseif (file_exists($tpath.'.bz2')) $tpath .= '.bz2';
@@ -167,7 +167,7 @@ function generator(string $path = ''): void {
         }
         $code .= md5($pass.'localhost'.$pass)."\n";
         $code .= md5($pass.'127.0.0.1'.$pass);
-        $dir = ($path) ? $path : 'uploads/clients/thumb/';
+        $dir = ($path) ? (preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $path)) ? str_replace('\\', '/', $path) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $path), '/')) : UPLOADS_DIR.'/clients/thumb/';
         $nfile = ($path) ? 'license' : $uid;
         $fp = fopen($dir.'/'.$nfile.'.txt', 'wb');
         if ($fp === false) {

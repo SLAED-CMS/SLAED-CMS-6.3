@@ -2395,9 +2395,9 @@ function doScript(): string {
                 $cont = (file_exists($sfile) && !$conf['script_h']) ? $tpl->getHtmlFrag('head-script-src', ['src' => 'index.php?go=script', 'attr' => trim($async)]) : $cont;
             }
         }
-        if (file_exists('config/header.php')) {
+        if (file_exists(CONFIG_DIR.'/header.php')) {
             ob_start();
-            include('config/header.php');
+            include CONFIG_DIR.'/header.php';
             $cont .= ob_get_clean();
         }
     } else {
@@ -2476,7 +2476,7 @@ function doCss(): string {
 function addSitemapTask(bool $force = false): array {
  global $db, $conf, $tpl;
     if ($force || defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
-        $sess_f = 'sitemap.xml';
+        $sess_f = BASE_DIR.'/sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
         $past = time() - intval($conf['sitemap']['auto_t'] ?? 0);
         if ($force || defined('ADMIN_FILE') || $sess_b < $past) {
@@ -2640,15 +2640,15 @@ function addSitemapTask(bool $force = false): array {
                     $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
                     $cont .= ($conf['sitemap']['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
                     $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
-                    $file = 'sitemap-'.$i.'.xml';
+                    $file = BASE_DIR.'/sitemap-'.$i.'.xml';
                     file_put_contents($file, $cont);
                     $i++;
                     if (strlen($cont) >= $size && checkCompress()['gz'] && file_exists($file)) {
-                        if (addCompress('.', $file, basename($file), 'gz', true)) {
+                        if (addCompress(dirname($file), $file, basename($file), 'gz', true)) {
                             $file = $file.'.gz';
                         }
                     }
-                    $links .= '<sitemap><loc>'.$conf['homeurl'].'/'.$file.'</loc><lastmod>'.$date.'</lastmod></sitemap>'."\n";
+                    $links .= '<sitemap><loc>'.$conf['homeurl'].'/'.basename($file).'</loc><lastmod>'.$date.'</lastmod></sitemap>'."\n";
                 }
                 $set = '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$links.'</sitemapindex>';
             } else {
@@ -2660,12 +2660,12 @@ function addSitemapTask(bool $force = false): array {
                 $cont = str_replace($conf['homeurl'].'/', '', $cont);
                 $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
             }
-            file_put_contents('sitemap.xml', $cont);
+            file_put_contents(BASE_DIR.'/sitemap.xml', $cont);
             return [
                 'status' => 'success',
                 'message' => 'Sitemap generation completed',
                 'extra' => [
-                    'last_map_size' => file_exists('sitemap.xml') ? (int)filesize('sitemap.xml') : 0,
+                    'last_map_size' => file_exists(BASE_DIR.'/sitemap.xml') ? (int)filesize(BASE_DIR.'/sitemap.xml') : 0,
                     'last_url_count' => count(array_filter($array, 'strlen')),
                     'last_output' => 'sitemap.xml',
                 ],
@@ -3096,7 +3096,8 @@ function getImgText(string $text, string $type = '', bool $check = true): string
     } else {
         $img = '';
     }
-    $img = empty($img) ? false : ($check ? (file_exists($img) ? $img : false) : $img);
+    $path = empty($img) ? '' : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/');
+    $img = empty($img) ? false : ($check ? (file_exists($path) ? $img : false) : $img);
     return $img;
 }
 
@@ -3664,8 +3665,10 @@ function getEditorUploadData(string $mod): array {
     global $conf;
     if ($mod === '' || !isset($conf['uploads'][$mod])) return ['ok' => false, 'error' => 'Upload configuration is missing'];
     $con = explode('|', (string)$conf['uploads'][$mod]);
-    if (!is_dir('uploads/'.$mod)) return ['ok' => false, 'error' => 'Upload directory is missing'];
-    return ['ok' => true, 'con' => $con, 'dir' => 'uploads/'.$mod];
+    $dir = 'uploads/'.$mod;
+    $path = UPLOADS_DIR.'/'.$mod;
+    if (!is_dir($path)) return ['ok' => false, 'error' => 'Upload directory is missing'];
+    return ['ok' => true, 'con' => $con, 'dir' => $dir, 'path' => $path];
 }
 
 # Check whether the current visitor may use the module editor upload
@@ -3689,11 +3692,17 @@ function getEditorImageData(string $file, string $ext, int $wid, int $hei): arra
 
 # Return one stored editor file row for JSON output
 function getEditorFileData(string $dir, string $file): array {
+    $base = str_replace('\\', '/', BASE_DIR);
+    $rel = '';
+    $dir = str_replace('\\', '/', $dir);
+    if (str_starts_with($dir, $base.'/')) {
+        $rel = substr($dir, strlen($base) + 1);
+    }
     $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
     $img = getEditorImageData($dir.'/'.$file, $ext, 0, 0);
     return [
         'file' => $file,
-        'url' => $dir.'/'.$file,
+        'url' => (($rel !== '') ? $rel : basename($dir)).'/'.$file,
         'type' => $ext,
         'size' => filterSize(filesize($dir.'/'.$file)),
         'image' => (bool)($img['ok'] ?? false) && (bool)($img['image'] ?? false),
@@ -3710,7 +3719,7 @@ function addEditorUpload(): void {
     $dat = getEditorUploadData($mod);
     if (!$dat['ok']) getEditorJson(['ok' => false, 'error' => $dat['error']]);
     $con = (array)$dat['con'];
-    $dir = (string)$dat['dir'];
+    $dir = (string)($dat['path'] ?? (BASE_DIR.'/'.ltrim(str_replace('\\', '/', (string)$dat['dir']), '/')));
     if (!checkEditorUploadAccess($mod, $con)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
     $upl = $_FILES['file'] ?? [];
@@ -3764,7 +3773,7 @@ function getEditorFileJson(): void {
     $dat = getEditorUploadData($mod);
     if (!$dat['ok']) getEditorJson(['ok' => false, 'error' => $dat['error']]);
     $con = (array)$dat['con'];
-    $dir = (string)$dat['dir'];
+    $dir = (string)($dat['path'] ?? (BASE_DIR.'/'.ltrim(str_replace('\\', '/', (string)$dat['dir']), '/')));
     if (!checkEditorUploadAccess($mod, $con)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
     if (!checkSiteToken(getVar('req', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
     $uid = is_user() ? (int)($user[0] ?? 0) : 0;
@@ -4636,8 +4645,9 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
     if ($url == '') {
         $blocktitle = getConst($blocktitle);
         if ($bfile != '') {
-            if (file_exists('blocks/'.$bfile)) {
-                include('blocks/'.$bfile);
+            $path = BASE_DIR.'/blocks/'.$bfile;
+            if (file_exists($path)) {
+                include($path);
             } else {
                 $content = $tpl->getHtmlFrag('block-content', ['is_center' => true, 'content' => (string)_BLOCKPROBLEM]);
             }
@@ -4879,6 +4889,12 @@ function check_size(string $file, int $width, int $height): string {
 # Upload file
 function upload(int $typ, string $directory, string $typefile, int $maxsize, string $namefile, int $width, int $height, string $userid = '', string $url = ''): mixed {
  global $user, $conf, $stop, $tpl;
+    $directory = str_replace('\\', '/', trim($directory));
+    if ($directory === '') {
+        $directory = BASE_DIR;
+    } elseif (!preg_match('#^(?:[A-Za-z]:/|//|/)#', $directory)) {
+        $directory = BASE_DIR.'/'.ltrim($directory, '/');
+    }
     if ($typ == 1 && !empty($_FILES['userfile']['size'])) {
         if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
             if ($_FILES['userfile']['size'] > $maxsize) {

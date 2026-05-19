@@ -16,8 +16,10 @@ function main(): void {
         'desc' => 'Система управления содержимым сайта, простая в использовании и настройке, имеющая при этом высокий уровень безопасности, высокую скорость работы, а также практически неограниченный потенциал в решении вопроса расширения функциональности.',
     ]);
     $cont = $tpl->getHtmlPart('main-slider', []);
-    $path = 'uploads/screens';
-    $path2 = 'uploads/screens/thumb';
+    $path = UPLOADS_DIR.'/screens';
+    $path2 = $path.'/thumb';
+    $pub = 'uploads/screens';
+    $pub2 = $pub.'/thumb';
     $screens = [];
     if (is_dir($path2)) {
         $dir = opendir($path2);
@@ -34,9 +36,9 @@ function main(): void {
         $sname = ucfirst(str_ireplace(['.gif', '.jpg', '.png', '.com', '.net', '.ru', '.ua', '.biz', '.info', '.su', '.in', '.org'], '', $val));
         $srat = round(filesize($path2.'/'.$val) / 20);
         $items_html .= $tpl->getHtmlFrag('main-carousel-item', [
-            'full_url'     => $path.'/'.$val,
+            'full_url'     => $pub.'/'.$val,
             'link_title'   => _SITE.': '.$sname.', '._RATING.': '.$srat,
-            'thumb_url'    => $path2.'/'.$val,
+            'thumb_url'    => $pub2.'/'.$val,
             'img_alt'      => _SITE.': '.$sname,
             'site_label'   => _SITE,
             'site_name'    => $sname,
@@ -55,7 +57,7 @@ function main(): void {
             preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
             $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
         }
-        $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
+        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'news'))), ENT_QUOTES), 60);
         $href = 'index.php?name=news&amp;op=view&amp;id='.$id;
         $cat = 'index.php?name=news&amp;cat='.$cid;
@@ -86,7 +88,7 @@ function main(): void {
             preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
             $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
         }
-        $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
+        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'files'))), ENT_QUOTES), 60);
         $href = 'index.php?name=files&amp;op=view&amp;id='.$id;
         $cat = 'index.php?name=files&amp;cat='.$cid;

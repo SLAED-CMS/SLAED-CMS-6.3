@@ -124,19 +124,20 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'files']);
     $link = $url ? $tpl->getHtmlFrag('link', ['href' => htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
-    $path = $conf['files']['path'] ?? 'uploads/files';
+    $path = (string)($conf['files']['path'] ?? 'uploads/files');
+    $pathdir = preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $path)) ? str_replace('\\', '/', $path) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $path), '/');
     $pathopts = $tpl->getHtmlFrag('select-option', [
         'value_attr' => '',
         'label_text' => _NO,
         'is_selected' => !$pathsel,
     ]);
-    if (file_exists($url)) {
+    if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) {
         $pathopts .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $path,
             'label_text' => $path,
             'is_selected' => $pathsel === $path,
         ]);
-        $entries = is_dir($path) ? scandir($path) : [];
+        $entries = is_dir($pathdir) ? scandir($pathdir) : [];
         foreach ($entries as $entry) {
             if ($entry === '.' || $entry === '..') continue;
             if (!preg_match('/\./', $entry)) {
@@ -236,7 +237,7 @@ function save(): void {
         if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
         $filename = upload(1, $conf['files']['path'] ?? 'uploads/files', $conf['files']['typefile'] ?? 'zip,rar', $conf['files']['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
         $url = $filename ? ($conf['files']['path'] ?? 'uploads/files').'/'.$filename : $url;
-        $filesize = $filename ? filesize($url) : $filesize;
+        $filesize = $filename ? filesize(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/')) : $filesize;
         if (!$stop && !$url && $posttype === 'save') {
             $stop[] = _UPLOADEROR2;
         }
@@ -246,9 +247,9 @@ function save(): void {
             if ($fid) {
                 if ($path) {
                     $filel = array_reverse(explode('/', $url));
-                    if (file_exists($url)) {
+                    if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) {
                         $newfile = $path.'/'.$filel[0];
-                        rename($url, $newfile);
+                        rename(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'), preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $newfile)) ? str_replace('\\', '/', $newfile) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $newfile), '/'));
                         $url = $newfile;
                     }
                 }
@@ -280,7 +281,7 @@ function delete(int $fid = 0): void {
     $iswarn = !$fid && !checkSiteToken();
     if (!$iswarn && $id) {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]));
-        if (file_exists($url)) unlink($url);
+        if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) unlink(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'));
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]);

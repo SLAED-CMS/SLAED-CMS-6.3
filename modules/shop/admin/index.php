@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright � 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -1045,52 +1045,148 @@ function export(): void {
         }
         if ($list) {
             $date = date('d.m.Y');
-            $fp = fopen('uploads/shop/temp/'.$date.'_'.$bd.'.csv', 'wb');
+            $fp = fopen(UPLOADS_DIR.'/shop/temp/'.$date.'_'.$bd.'.csv', 'wb');
             foreach ($list as $val) fputcsv($fp, explode('||', $val));
 
             fclose($fp);
-            stream('uploads/shop/temp/'.$date.'_'.$bd.'.csv', $date.'_'.$bd.'.csv');
+            stream(UPLOADS_DIR.'/shop/temp/'.$date.'_'.$bd.'.csv', $date.'_'.$bd.'.csv');
         } else {
             setRedirect($afile.'.php?name=shop&op=export');
         }
     } elseif (!$iswarn && $id == 2 && $bd) {
-        $handle = fopen ('uploads/shop/temp/'.$bd,'rb');
+        $handle = fopen(UPLOADS_DIR.'/shop/temp/'.$bd,'rb');
+        $q = static fn(mixed $val): string => $db->getSqlValue($val);
+        $idb = '';
         while (($data = fgetcsv($handle, 1000, ','))) {
-            if (preg_match('#(.*?)products\\.csv#', $bd)) {
-                $iid = 'id';
+            if (preg_match('#(.*?)products\.csv#', $bd)) {
                 $idb = 'products';
-                $uquery = 'cid = \''.$data[1].'\', time = \''.$data[2].'\', title = \''.$data[3].'\', intro = \''.$data[4].'\', body = \''.$data[5].'\', price = \''.$data[6].'\', vote = \''.$data[7].'\', assoc = \''.$data[7].'\', comments = \''.$data[9].'\', counter = \''.$data[10].'\', votes = \''.$data[11].'\', tvotes = \''.$data[12].'\', fix = \''.$data[13].'\', status = \''.$data[14].'\'';
-                $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\'';
-            } elseif (preg_match('#(.*?)clients\\.csv#', $bd)) {
-                $iid = 'id';
+                $sets = [
+                    'cid = '.$q($data[1] ?? ''),
+                    'time = '.$q($data[2] ?? ''),
+                    'title = '.$q($data[3] ?? ''),
+                    'intro = '.$q($data[4] ?? ''),
+                    'body = '.$q($data[5] ?? ''),
+                    'price = '.$q($data[6] ?? ''),
+                    'vote = '.$q($data[7] ?? ''),
+                    'assoc = '.$q($data[8] ?? ''),
+                    'ihome = 0',
+                    'acomm = 0',
+                    'comments = '.$q($data[9] ?? ''),
+                    'counter = '.$q($data[10] ?? ''),
+                    'votes = '.$q($data[11] ?? ''),
+                    'tvotes = '.$q($data[12] ?? ''),
+                    'fix = '.$q($data[13] ?? ''),
+                    'status = '.$q($data[14] ?? ''),
+                ];
+                $vals = [
+                    $q($data[0] ?? ''),
+                    $q($data[1] ?? ''),
+                    $q($data[2] ?? ''),
+                    $q($data[3] ?? ''),
+                    $q($data[4] ?? ''),
+                    $q($data[5] ?? ''),
+                    $q($data[6] ?? ''),
+                    $q($data[7] ?? ''),
+                    $q($data[8] ?? ''),
+                    '0',
+                    '0',
+                    $q($data[9] ?? ''),
+                    $q($data[10] ?? ''),
+                    $q($data[11] ?? ''),
+                    $q($data[12] ?? ''),
+                    $q($data[13] ?? ''),
+                    $q($data[14] ?? ''),
+                ];
+            } elseif (preg_match('#(.*?)clients\.csv#', $bd)) {
                 $idb = 'clients';
-                $uquery = 'uid = \''.$data[1].'\', prod = \''.$data[2].'\', part = \''.$data[3].'\', proz = \''.$data[4].'\', name = \''.$data[5].'\', addr = \''.$data[6].'\', phone = \''.$data[7].'\', email = \''.$data[8].'\', website = \''.$data[9].'\', regdate = \''.$data[10].'\', enddate = \''.$data[11].'\', info = \''.$data[12].'\', status = \''.$data[13].'\'';
-                $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\', \''.$data[13].'\'';
-            } elseif (preg_match('#(.*?)partners\\.csv#', $bd)) {
-                $iid = 'id';
+                $sets = [
+                    'uid = '.$q($data[1] ?? ''),
+                    'prod = '.$q($data[2] ?? ''),
+                    'part = '.$q($data[3] ?? ''),
+                    'proz = '.$q($data[4] ?? ''),
+                    'name = '.$q($data[5] ?? ''),
+                    'addr = '.$q($data[6] ?? ''),
+                    'phone = '.$q($data[7] ?? ''),
+                    'email = '.$q($data[8] ?? ''),
+                    'website = '.$q($data[9] ?? ''),
+                    'regdate = '.$q($data[10] ?? ''),
+                    'enddate = '.$q($data[11] ?? ''),
+                    'info = '.$q($data[12] ?? ''),
+                    'status = '.$q($data[13] ?? ''),
+                ];
+                $vals = [
+                    $q($data[0] ?? ''),
+                    $q($data[1] ?? ''),
+                    $q($data[2] ?? ''),
+                    $q($data[3] ?? ''),
+                    $q($data[4] ?? ''),
+                    $q($data[5] ?? ''),
+                    $q($data[6] ?? ''),
+                    $q($data[7] ?? ''),
+                    $q($data[8] ?? ''),
+                    $q($data[9] ?? ''),
+                    $q($data[10] ?? ''),
+                    $q($data[11] ?? ''),
+                    $q($data[12] ?? ''),
+                    $q($data[13] ?? ''),
+                ];
+            } elseif (preg_match('#(.*?)partners\.csv#', $bd)) {
                 $idb = 'partners';
-                $uquery = 'uid = \''.$data[1].'\', name = \''.$data[2].'\', addr = \''.$data[3].'\', phone = \''.$data[4].'\', email = \''.$data[5].'\', website = \''.$data[6].'\', webmoney = \''.$data[7].'\', paypal = \''.$data[8].'\', regdate = \''.$data[9].'\', rest = \''.$data[10].'\', bek = \''.$data[11].'\', status = \''.$data[12].'\'';
-                $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\'';
+                $sets = [
+                    'uid = '.$q($data[1] ?? ''),
+                    'name = '.$q($data[2] ?? ''),
+                    'addr = '.$q($data[3] ?? ''),
+                    'phone = '.$q($data[4] ?? ''),
+                    'email = '.$q($data[5] ?? ''),
+                    'website = '.$q($data[6] ?? ''),
+                    'webmoney = '.$q($data[7] ?? ''),
+                    'paypal = '.$q($data[8] ?? ''),
+                    'regdate = '.$q($data[9] ?? ''),
+                    'rest = '.$q($data[10] ?? ''),
+                    'bek = '.$q($data[11] ?? ''),
+                    'status = '.$q($data[12] ?? ''),
+                ];
+                $vals = [
+                    $q($data[0] ?? ''),
+                    $q($data[1] ?? ''),
+                    $q($data[2] ?? ''),
+                    $q($data[3] ?? ''),
+                    $q($data[4] ?? ''),
+                    $q($data[5] ?? ''),
+                    $q($data[6] ?? ''),
+                    $q($data[7] ?? ''),
+                    $q($data[8] ?? ''),
+                    $q($data[9] ?? ''),
+                    $q($data[10] ?? ''),
+                    $q($data[11] ?? ''),
+                    $q($data[12] ?? ''),
+                ];
+            } else {
+                continue;
             }
             $id = intval($data[0]);
             if ($id) {
-                if ($db->getSqlRowCount($db->getSqlQuery('SELECT '.$iid.' FROM '.PREFIX_DB.'_'.$idb.' WHERE '.$iid.' = :id', ['id' => $id]))) {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_'.$idb.' SET '.$uquery.' WHERE '.$iid.' = :id', ['id' => $id]);
+                if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_'.$idb.' WHERE id = :id', ['id' => $id]))) {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_'.$idb.' SET '.implode(', ', $sets).' WHERE id = :id', ['id' => $id]);
                 } else {
-                    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_'.$idb.' VALUES(:id, '.$squery.')', ['id' => $id]);
+                    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_'.$idb.' VALUES('.$id.', '.implode(', ', $vals).')');
                 }
             } else {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_'.$idb.' VALUES(NULL, '.$squery.')');
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_'.$idb.' VALUES(NULL, '.implode(', ', $vals).')');
             }
         }
-        fclose ($handle);
-        setRedirect($afile.'.php?name=shop&op='.$idb);
+        fclose($handle);
+        if ($idb !== '') {
+            setRedirect($afile.'.php?name=shop&op='.$idb);
+        } else {
+            setRedirect($afile.'.php?name=shop&op=export');
+        }
     } else {
         setHead();
         $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
         $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
         $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 3, 'subtitle_html' => buildShopSearchBox()]);
-        $cont .= checkPerms(BASE_DIR.'/uploads/shop/temp');
+        $cont .= checkPerms(UPLOADS_DIR.'/shop/temp');
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _S_NOTE]);
         [$pr] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_products'));
         [$cl] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_clients'));
@@ -1118,7 +1214,7 @@ function export(): void {
             $export = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $ocont = '';
-        $entries = scandir('uploads/shop/temp');
+        $entries = scandir(UPLOADS_DIR.'/shop/temp');
         if ($entries !== false) {
             foreach ($entries as $entry) {
                 if (preg_match('/(\\.csv)$/is', $entry) && $entry != '.' && $entry != '..') {

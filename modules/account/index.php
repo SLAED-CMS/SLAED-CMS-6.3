@@ -860,10 +860,10 @@ function edithome(): void {
         $theme = '';
         $tcount = 0;
         if ($conf['users']['theme']) {
-            $list = scandir('templates');
+            $list = scandir(BASE_DIR.'/templates');
             foreach ($list ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
-                if (!is_dir('templates/'.$file)) continue;
+                if (!is_dir(BASE_DIR.'/templates/'.$file)) continue;
                 $theme .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $userinfo['theme']]);
                 $tcount++;
             }
