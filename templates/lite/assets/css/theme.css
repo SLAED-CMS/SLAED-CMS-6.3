@@ -1,4 +1,4 @@
-/* Navi menu */
+/* Navigation menu */
 #content .sl-navi-menu {
   display: block;
 }
@@ -116,7 +116,7 @@ a .sl-letter:hover {
   color: #222;
 }
 
-/* Utility */
+/* Utilities: reusable helpers */
 .sl-pull-right {
   float: right;
 }
@@ -482,7 +482,7 @@ a .sl-letter:hover {
   background-position: -204px -253px;
 }
 
-/* List table */
+/* Tables: list layout */
 .sl-table {
   width: 100%;
   margin-bottom: 40px;
@@ -541,7 +541,7 @@ a .sl-letter:hover {
   color: inherit;
 }
 
-/* Pager */
+/* Pagination: pager controls */
 .sl-pager {
   position: relative;
   height: 40px;
@@ -573,7 +573,7 @@ a .sl-letter:hover {
   right: 0;
 }
 
-/* Page numbers */
+/* Pagination: page numbers */
 .sl-pnum {
   display: inline-block;
   height: 30px;
@@ -600,7 +600,7 @@ a.sl-pnum:hover {
   color: #888;
 }
 
-/* Prev/next arrow buttons */
+/* Pagination: previous and next arrows */
 .sl-pager-prev .sl-pnum-nav,
 .sl-pager-next .sl-pnum-nav {
   display: block;
@@ -635,7 +635,7 @@ span.sl-pnum-nav {
   background-color: transparent;
 }
 
-/* Pager info */
+/* Pagination: pager info */
 .sl-pager-info {
   margin: 0 0 4px 0;
   text-align: center;
@@ -644,24 +644,24 @@ span.sl-pnum-nav {
   color: #888;
 }
 
-/* Card title override */
+/* Cards: title override */
 .sl-card .sl-title {
   font-size: 16px;
 }
 
-/* Category breadcrumb */
+/* Breadcrumbs: category trail */
 .sl-category-nav {
   margin-bottom: 10px;
   font-size: 0.9em;
   color: #6e7c8b;
 }
 
-/* Section with HR */
+/* Section divider: horizontal rule */
 .sl-section {
   margin-bottom: 10px;
 }
 
-/* Info/warn box icon */
+/* Alerts: info and warning box icons */
 .sl-info:before,
 .sl-warn:before {
   display: block;
@@ -747,7 +747,7 @@ span.sl-pnum-nav {
   display: none;
 }
 
-/* Form controls */
+/* Forms: controls and field states */
 .sl-field--auto {
   width: auto;
   margin-right: 8px;
@@ -1110,7 +1110,7 @@ span.sl-pnum-nav {
   visibility: visible;
 }
 
-/* Legacy icon states with normalized class names */
+/* Icons: legacy states with normalized class names */
 .sl-hits:before,
 .sl-download:before,
 .sl-ed2k:before,
@@ -1264,7 +1264,7 @@ span.sl-pnum-nav {
   font-weight: bold;
 }
 
-/* Add form */
+/* Forms: add form layout */
 .sl-form {
   margin-bottom: 20px;
 }
@@ -1296,7 +1296,7 @@ span.sl-pnum-nav {
   text-align: center;
 }
 
-/* Related articles */
+/* Content cards: related articles */
 .sl-related-title {
   margin: 20px 0 10px 0;
 }
@@ -1336,7 +1336,7 @@ span.sl-pnum-nav {
   color: inherit;
 }
 
-/* News card grid */
+/* Content cards: news grid */
 .sl-grid {
   display: flex;
   flex-wrap: wrap;
@@ -1608,7 +1608,7 @@ a.sl-card-id:hover {
   visibility: visible;
 }
 
-/* List table (list-wrap / list-row) */
+/* Tables: list-wrap and list-row layouts */
 .sl-list-head th {
   padding: 13px 15px 10px 15px;
   background-color: #f1f3f5;
@@ -1633,7 +1633,7 @@ a.sl-card-id:hover {
   font-size: 0.9em;
 }
 
-/* Assoc block (assoc-wrap / assoc-item) */
+/* Associations: assoc-wrap and assoc-item layout */
 
 .sl-radio-group {
   display: flex;
@@ -2669,7 +2669,7 @@ ol.sl-sublist-two li:hover:before {
   }
 }
 
-/* Frontend blocks — Wrapper und klassenspezifische Styles für block-all.html */
+/* Frontend blocks: wrapper and class-specific styles for block-all.html */
 .sl-block {
   background: #f6f8fa;
   padding: 15px;
@@ -2683,7 +2683,7 @@ ol.sl-sublist-two li:hover:before {
   margin-bottom: 0;
 }
 
-/* modules.php — Navigation */
+/* Modules: navigation */
 .sl-block-modules {
   display: flex;
   flex-direction: column;
@@ -2701,7 +2701,7 @@ ol.sl-sublist-two li:hover:before {
   color: #888;
 }
 
-/* languages.php — Flag-Auswahl */
+/* Languages: flag selection */
 .sl-block-flags {
   display: flex;
   flex-wrap: wrap;
@@ -2718,7 +2718,7 @@ ol.sl-sublist-two li:hover:before {
   border-radius: var(--sl-radius-control);
 }
 
-/* login.php / user_info.php — Login-Formular */
+/* Login: user-info form */
 .sl-block-login p {
   margin: 6px 0;
 }
@@ -2726,7 +2726,7 @@ ol.sl-sublist-two li:hover:before {
   margin: 3px 0;
 }
 
-/* menu.php — DB-basiertes Menü */
+/* Menu: database-driven navigation */
 .sl-block-menu ul {
   list-style: none;
   padding: 0;
@@ -2736,8 +2736,7 @@ ol.sl-sublist-two li:hover:before {
   margin: 4px 0;
 }
 
-/* Блоки главной страницы */
-/* Slider head */
+/* Home page blocks: slider, advantages and examples */
 .sl-slider-head {
   height: 440px;
   width: 100%;
@@ -2794,7 +2793,7 @@ ol.sl-sublist-two li:hover:before {
   height: 5px;
 }
 
-/* Slider controls */
+/* Slider: controls */
 .bx-prev,
 .bx-next {
   z-index: 2;
@@ -2846,7 +2845,7 @@ ol.sl-sublist-two li:hover:before {
   background-position: -248px -16px;
 }
 
-/* Slide */
+/* Slider: slide content */
 .sl-slide-img {
   width: 1920px;
   height: 440px;
@@ -2880,7 +2879,7 @@ ol.sl-sublist-two li:hover:before {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Наши преимущества */
+/* Advantages: feature cards */
 .sl-advantage .sl-wrp {
   position: relative;
 }
@@ -2959,7 +2958,7 @@ ol.sl-sublist-two li:hover:before {
   background-position: 0 -420px;
 }
 
-/* Примеры внедрения */
+/* Implementation examples */
 #site-carousel {
   background-color: #e4e9ef;
   box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1);
@@ -2982,7 +2981,7 @@ ol.sl-sublist-two li:hover:before {
   margin: 50px 0 16px 0;
 }
 
-/* Блок сайта - Примеры внедрения */
+/* Site block: implementation examples */
 .sl-site-item {
   position: relative;
 }
@@ -3084,8 +3083,7 @@ ol.sl-sublist-two li:hover:before {
   opacity: 0.8;
 }
 
-/* Блоки внизу страницы */
-/* Блок форума */
+/* Bottom page blocks: forum, partners, contacts, ideas and feedback */
 .sl-list-item,
 .sl-list-item ul {
   list-style: none;
@@ -3124,7 +3122,7 @@ ol.sl-sublist-two li:hover:before {
   color: #a5b2bf;
 }
 
-/* Блок партнеры/технологии */
+/* Partners and technology block */
 .sl-partners {
   margin-right: -7px;
 }
@@ -3142,7 +3140,7 @@ ol.sl-sublist-two li:hover:before {
   border-color: #3e4552;
 }
 
-/* Блок контактов */
+/* Contacts block */
 .sl-block-contact {
   list-style: none;
   padding-left: 32px;
@@ -3170,7 +3168,7 @@ ol.sl-sublist-two li:hover:before {
   background-position: -238px -79px;
 }
 
-/* Блок идеи и предложения */
+/* Ideas and suggestions block */
 #block-idea {
   position: fixed;
   top: 475px;
@@ -3203,7 +3201,7 @@ ol.sl-sublist-two li:hover:before {
   background: linear-gradient(to top, #9fd779 0%, #96d26d 100%);
 }
 
-/* Блок обратной связи */
+/* Feedback block */
 #block-feedback {
   position: fixed;
   top: 675px;
@@ -3272,8 +3270,7 @@ ol.sl-sublist-two li:hover:before {
   resize: none;
 }
 
-/* Стандартные блоки справа */
-/* Общее оформление правых блоков */
+/* Right-side blocks: shared styling */
 .sl-block {
   background: #f6f8fa;
   height: 1%;
@@ -3281,9 +3278,7 @@ ol.sl-sublist-two li:hover:before {
   border-radius: 8px;
   margin-bottom: 25px;
 }
-/* Блок вертикального меню */
-/* Блоки по центру */
-/* Сообщения */
+/* Messages: centered message box layout */
 .sl-message-box {
   margin-bottom: 50px;
 }
@@ -3313,7 +3308,7 @@ ol.sl-sublist-two li:hover:before {
   font-size: 0.9em;
 }
 
-/* Утилиты */
+/* Utilities: shared helpers */
 .sl-font {
   font-family: "Magistral", Arial, Tahoma, sans-serif;
   text-rendering: optimizeLegibility;
@@ -3336,7 +3331,7 @@ ol.sl-sublist-two li:hover:before {
   color: #6e7c8b;
 }
 
-/* Скрытый текст */
+/* Hidden text */
 .sl-hide {
   border-left: 1px solid #de6262;
   border-right: 1px solid #de6262;
@@ -3348,7 +3343,7 @@ ol.sl-sublist-two li:hover:before {
   color: #de6262;
 }
 
-/* Выделение кода */
+/* Code highlighting */
 .sl-code {
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
@@ -3365,7 +3360,7 @@ ol.sl-sublist-two li:hover:before {
   border-radius: 8px;
 }
 
-/* Таблицы */
+/* Tables */
 .sl-table td,
 .sl-table th {
   background-color: #fff !important;
@@ -3474,7 +3469,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   display: block;
 }
 
-/* Grid System (контейнеры) */
+/* Grid system: containers */
 .sl-grid_1_2:after,
 .sl-grid_1_4:after,
 .sl-grid_1_3:after {
@@ -3547,7 +3542,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   width: 1100px;
 }
 
-/* Верхняя полоска */
+/* Top bar */
 #topbar {
   background-color: #2a303c;
   height: 50px;
@@ -3894,7 +3889,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   color: #333;
 }
 
-/* Шапка категорий */
+/* Category header */
 #head-content {
   height: 116px;
   color: #fff;
@@ -3928,7 +3923,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   text-overflow: ellipsis;
 }
 
-/* Демо полоска */
+/* Demo strip */
 #demo-line {
   background-color: #64b1e1;
   color: #fff;
@@ -4051,7 +4046,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   margin-bottom: 0;
 }
 
-/* Новости — заголовки */
+/* News: titles */
 .sl-mtl {
   font-weight: bold;
   font-size: 30px;
@@ -4071,7 +4066,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   margin-bottom: 50px;
 }
 
-/* Комментарии */
+/* Comments */
 .sl-comment {
   padding: 0 0 0 113px;
   margin-bottom: 25px;
@@ -4140,7 +4135,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   margin-left: 15px;
 }
 
-/* Форум */
+/* Forum */
 .sl-ft-topics {
   margin-bottom: 20px;
 }
@@ -4315,7 +4310,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   float: left;
 }
 
-/* Опросы */
+/* Polls */
 .sl-post-vote {
   padding: 30px 15px;
   height: 1%;
@@ -4339,7 +4334,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   font-weight: normal;
 }
 
-/* Сезонные стили */
+/* Seasonal styles */
 .sl-slide-season {
   display: block;
   background: #64b1e1 url(../../images/seasons/default.jpg);
@@ -4392,7 +4387,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   background: #5e9ad6 url(../../images/seasons/newyear-cat.jpg) no-repeat 50% 50%;
 }
 
-/* Бегущая строка */
+/* Marquee */
 .sl-head_marquee {
   width: 100%;
   white-space: nowrap;

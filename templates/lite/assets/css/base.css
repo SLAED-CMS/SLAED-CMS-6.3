@@ -1,5 +1,4 @@
 /* Fonts: Magistral bold and regular web font declarations */
-
 @font-face {
   font-family: "Magistral";
   src: url(fonts/magistralb-wf.eot);
@@ -27,7 +26,6 @@
 }
 
 /* Root variables: color palette, progress fills, vote meter tokens and control radius */
-
 :root {
   --sl-changelog-bg: #f9fafb;
   --sl-changelog-card: #ffffff;
@@ -72,7 +70,6 @@
 }
 
 /* Reset: zero margins, padding and borders on all HTML elements */
-
 html,
 body,
 div,
@@ -205,7 +202,6 @@ table {
 }
 
 /* Base: global element styles, typography, links and form defaults */
-
 body {
   background: #fff;
   min-width: 1100px;

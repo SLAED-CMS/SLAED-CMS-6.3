@@ -1,9 +1,9 @@
-/* Bootstrap Icons — font-size override */
+/* Icons: Bootstrap Icons font-size override */
 .bi {
   font-size: var(--sl-size-icon);
 }
 
-/* Form field utilities */
+/* Forms: field width utilities */
 .sl-field {
   width: auto;
 }
@@ -11,7 +11,7 @@
   width: 545px;
 }
 
-/* Color utilities */
+/* Utilities: text color helpers */
 .sl-red {
   color: var(--sl-color-danger);
 }
@@ -19,7 +19,7 @@
   color: var(--sl-color-success);
 }
 
-/* Callout blocks (Markdown > [!TYPE]) */
+/* Callouts: Markdown alert blocks */
 .sl-callout-note,
 .sl-callout-tip,
 .sl-callout-important,
@@ -95,7 +95,7 @@
   color: var(--sl-color-danger-strong);
 }
 
-/* Tablesort - Sort indicators */
+/* Tables: sort indicators */
 thead tr .sl-sort,
 thead tr .sl-sort-asc,
 thead tr .sl-sort-desc {
@@ -134,7 +134,7 @@ thead tr th[data-sort-method="none"]::after {
   content: none;
 }
 
-/* Buttons */
+/* Buttons: base component, variants and states */
 .sl-but,
 .sl-but-blue,
 .sl-but-red,
@@ -247,7 +247,7 @@ input.sl-but-blue[value="ОК"] {
   background: linear-gradient(to bottom, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-soft) 48%, var(--sl-color-primary-tint) 100%);
 }
 
-/* Preview content blocks */
+/* Preview blocks: content, title and meta */
 .sl-preview {
   background-color: var(--sl-color-bg);
   border: 1px solid var(--sl-color-border);
@@ -287,7 +287,7 @@ input.sl-but-blue[value="ОК"] {
   margin-top: 6px;
 }
 
-/* Utility */
+/* Utilities: shared helpers */
 .sl-note {
   cursor: help;
 }
@@ -349,7 +349,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Status icons */
+/* Status icons: active and inactive states */
 .sl-status-active,
 .sl-status-inactive {
   display: inline-flex;
@@ -392,7 +392,7 @@ input.sl-but-blue[value="ОК"] {
   content: "\f622";
 }
 
-/* Move controls */
+/* Move controls: ordering actions */
 .sl-move-controls {
   display: inline-flex;
   align-items: center;
@@ -447,7 +447,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-primary);
 }
 
-/* Basic controls */
+/* Basic controls: select and save actions */
 .sl-select {
   width: 100%;
 }
@@ -459,7 +459,7 @@ input.sl-but-blue[value="ОК"] {
   margin-right: 8px;
 }
 
-/* Debug/code output */
+/* Debug output: code and diagnostics */
 .sl-debug-section {
   border: 1px solid var(--sl-color-border);
   margin: 10px;
@@ -534,7 +534,7 @@ input.sl-but-blue[value="ОК"] {
   content: "\f2e5";
 }
 
-/* Tooltip */
+/* Tooltips: inline hints and popovers */
 .sl-tip {
   position: relative;
   display: inline-flex;
@@ -698,7 +698,7 @@ input.sl-but-blue[value="ОК"] {
   visibility: visible;
 }
 
-/* Div-based form layout */
+/* Forms: div-based layout */
 .sl-div-form {
   display: block;
 }
@@ -1732,7 +1732,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Alert boxes */
+/* Alerts: success, warning and error boxes */
 .sl-warn,
 .sl-info {
   position: relative;
@@ -1851,7 +1851,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Pager */
+/* Pagination: pager controls */
 .sl-pager {
   padding: 6px 10px;
 }
@@ -1976,7 +1976,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Row action menu */
+/* Row actions: contextual menu */
 .sl-menu ul {
   list-style: none;
   padding: 0;
@@ -2044,7 +2044,7 @@ input.sl-but-blue[value="ОК"] {
   visibility: visible;
 }
 
-/* List table */
+/* Tables: list view */
 .sl-table-list-sort {
   width: 100%;
 }
@@ -2231,7 +2231,7 @@ input.sl-but-blue[value="ОК"] {
   width: 88px;
 }
 
-/* Voting view */
+/* Voting view: meter and rating controls */
 .sl-vote-view {
   margin: 0;
 }
@@ -2329,7 +2329,7 @@ input.sl-but-blue[value="ОК"] {
   background: var(--sl-vote-meter-fill-5);
 }
 
-/* Tabs */
+/* Tabs: tab strip and panels */
 .sl-module-head {
   display: flex;
   align-items: center;
@@ -2970,7 +2970,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
-/* Admin monitor */
+/* Admin monitor: dashboard layout */
 .sl-monitor-wrapper {
   --sl-monitor-bg-card: var(--sl-color-bg);
   --sl-monitor-text-main: var(--sl-color-text-soft);
@@ -3029,7 +3029,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-muted);
 }
 
-/* 1. Top Section Split */
+/* Admin monitor: top section split */
 .sl-monitor-top-split {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -3122,7 +3122,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-muted);
 }
 
-/* 2. Overview Strip */
+/* Admin monitor: overview strip */
 .sl-monitor-overview-strip {
   background: var(--sl-monitor-bg-card);
   border: 1px solid var(--sl-monitor-border);
@@ -3174,7 +3174,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-muted);
 }
 
-/* 3. Bottom Grid */
+/* Admin monitor: bottom grid */
 .sl-monitor-bottom-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -3186,7 +3186,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-monitor-blue);
 }
 
-/* Compact software panel (ROW 1 right side) */
+/* Admin monitor: compact software panel */
 .sl-status-compact {
   display: flex;
   flex-direction: column;
@@ -3227,7 +3227,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-muted);
 }
 
-/* Traffic Chart */
+/* Admin monitor: traffic chart */
 .sl-traffic-stats-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(150px, 1fr));
@@ -3320,7 +3320,7 @@ input.sl-but-blue[value="ОК"] {
   cursor: help;
 }
 
-/* Detailed Table Footer */
+/* Admin monitor: detailed table footer */
 .sl-monitor-info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3373,7 +3373,7 @@ input.sl-but-blue[value="ОК"] {
   max-width: calc(100% - 26px);
 }
 
-/* Admin login */
+/* Admin login: shell, form and responsive layout */
 html:has(.sl-admin-login-shell),
 body:has(.sl-admin-login-shell) {
   height: 100%;
@@ -3578,7 +3578,7 @@ body:has(.sl-admin-login-shell):before {
   }
 }
 
-/* Скрытый текст */
+/* Hidden text */
 .sl-hide {
   border-left: 1px solid var(--sl-color-danger);
   border-right: 1px solid var(--sl-color-danger);
@@ -3590,7 +3590,7 @@ body:has(.sl-admin-login-shell):before {
   color: var(--sl-color-danger);
 }
 
-/* Выделение кода */
+/* Code highlighting */
 .sl-code {
   font-family: Verdana;
   font-size: 12px;
@@ -3606,7 +3606,7 @@ body:has(.sl-admin-login-shell):before {
   border-radius: var(--sl-radius-control);
 }
 
-/* сброс настроек списков */
+/* List reset */
 .sl-reset,
 .sl-reset li {
   list-style: none;
@@ -3614,7 +3614,7 @@ body:has(.sl-admin-login-shell):before {
   margin: 0;
 }
 
-/* Размеры страницы */
+/* Page dimensions */
 .sl-wrapper {
   position: relative;
   width: min(1440px, calc(100vw - 32px));
@@ -3631,7 +3631,7 @@ body:has(.sl-admin-login-shell):before {
   display: none;
 }
 
-/* Частовстречающиеся стили */
+/* Common styles */
 .sl-header h1,
 .sl-admin-brand,
 .sl-admin-toolbar,
@@ -3644,8 +3644,7 @@ body:has(.sl-admin-login-shell):before {
   height: 0;
 }
 
-/* Окантовка и тень */
-/* Верх и низ */
+/* Frame: top and bottom shell */
 .sl-wraptop,
 .sl-wrapfoot {
   overflow: hidden;
@@ -3661,13 +3660,13 @@ body:has(.sl-admin-login-shell):before {
   background: none;
 }
 
-/* Средняя часть */
+/* Middle section */
 .sl-wrapmid {
   padding: 0 15px;
   background: var(--sl-color-bg);
 }
 
-/* Шапка */
+/* Header */
 .sl-header {
   overflow: hidden;
   min-height: 72px;
@@ -3695,7 +3694,7 @@ body:has(.sl-admin-login-shell):before {
   min-height: 90px;
 }
 
-/* Логотип */
+/* Logo */
 .sl-header h1 a {
   display: block;
   margin: 0 auto;
@@ -3707,7 +3706,7 @@ body:has(.sl-admin-login-shell):before {
   height: auto;
 }
 
-/* Меню и переключение языка */
+/* Menu and language switcher */
 .sl-toolbar {
   width: 100%;
   margin: 0 0 0 12px;
@@ -3796,7 +3795,7 @@ body:has(.sl-admin-login-shell):before {
   background: transparent;
 }
 
-/* Переключение языков */
+/* Language switcher */
 .sl-language {
   padding: 0;
 }
@@ -3860,7 +3859,7 @@ body:has(.sl-admin-login-shell):before {
   box-sizing: border-box;
 }
 
-/* Нижняя часть footer */
+/* Footer bottom section */
 .sl-footer {
   overflow: visible;
   position: relative;
@@ -3871,7 +3870,7 @@ body:has(.sl-admin-login-shell):before {
   border-radius: 0 0 8px 8px;
 }
 
-/* Копирайты footer */
+/* Footer copyrights */
 .sl-copyright {
   display: inline;
   float: left;
@@ -3887,7 +3886,7 @@ body:has(.sl-admin-login-shell):before {
   text-decoration: none;
 }
 
-/* Кнопка перемещения наверх */
+/* Back to top button */
 .sl-footer span {
   position: absolute;
   top: 9px;
