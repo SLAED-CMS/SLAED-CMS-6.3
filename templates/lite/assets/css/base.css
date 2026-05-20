@@ -204,7 +204,7 @@ table {
 /* Base: global element styles, typography, links and form defaults */
 body {
   background: #fff;
-  min-width: 1100px;
+  min-width: 0;
 }
 
 body,

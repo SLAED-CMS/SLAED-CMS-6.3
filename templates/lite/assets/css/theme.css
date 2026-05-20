@@ -612,7 +612,10 @@ a.sl-pnum:hover {
   background-image: url(../../images/misc/sprite.png);
   text-align: left;
   overflow: hidden;
-  text-indent: -9999px;
+  text-indent: 0;
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
   white-space: nowrap;
   line-height: normal;
 }
@@ -1644,6 +1647,10 @@ a.sl-card-id:hover {
   width: 100%;
   border-collapse: collapse;
 }
+.sl-session-table td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .sl-session-right {
   text-align: right;
 }
@@ -1979,6 +1986,10 @@ ol.sl-sublist-two li:hover:before {
   border: 1px solid #d9d9dc;
   margin: 10px 0;
   padding: 10px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
 }
 .sl-debug-section legend {
   font-weight: bold;
@@ -3384,6 +3395,10 @@ ol.sl-sublist-two li:hover:before {
   width: 100%;
   border-spacing: 5px;
 }
+.sl-table-acc-info td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 /* Theme tabs */
 div[id^="sl_tabs_"] {
@@ -3525,7 +3540,10 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 .sl-thd {
   text-align: left;
   overflow: hidden;
-  text-indent: -9999px;
+  text-indent: 0;
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
   white-space: nowrap;
 }
 .sl-thide {
@@ -3540,6 +3558,16 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 .sl-wrp {
   margin: 0 auto;
   width: 1100px;
+  max-width: calc(100vw - 32px);
+}
+
+.sl-table-shell {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sl-table-shell > table {
+  min-width: 100%;
 }
 
 /* Top bar */
@@ -3851,6 +3879,11 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   opacity: 1;
   visibility: visible;
 }
+#topmenu li:focus-within ul {
+  top: 0;
+  opacity: 1;
+  visibility: visible;
+}
 
 /* Search */
 #qSearch {
@@ -4032,9 +4065,47 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   width: 100%;
 }
 #content img {
-  width: auto;
+  max-width: 100%;
   height: auto;
-  max-width: initial;
+}
+#content picture,
+#content video,
+#content canvas,
+#content svg {
+  max-width: 100%;
+  height: auto;
+}
+#content {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+#content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+}
+#content code,
+#content kbd,
+#content samp {
+  overflow-wrap: anywhere;
+}
+#content iframe,
+#content object,
+#content embed {
+  display: block;
+  max-width: 100%;
+}
+#content video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+#content blockquote {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+#content .sl-code {
+  overflow-x: auto;
 }
 #sidebar {
   float: right;
@@ -4400,5 +4471,595 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   }
   100% {
     width: 100%;
+  }
+}
+
+/* Responsive fallbacks: shell, menus and content blocks */
+@media (max-width: 900px) {
+  .sl-wrp {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+  }
+
+  #footbox > footer.sl-grid {
+    display: block;
+  }
+
+  #footbox footer.sl-grid {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  #footbox footer.sl-grid > * {
+    float: none;
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #hmenu {
+    overflow-x: clip;
+  }
+
+  .sl-changelog-filter-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sl-changelog-filter-top .sl-changelog-filter-field {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .sl-changelog-filter-actions {
+    width: 100%;
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .sl-changelog-filter-actions .sl-changelog-button {
+    flex: 1 1 160px;
+  }
+
+  #topbar {
+    height: auto;
+    padding: 12px 0 8px;
+  }
+
+  .sl-top_contact,
+  .sl-top_links,
+  .sl-top_social,
+  .sl-login-top,
+  .sl-d_pane {
+    float: none;
+  }
+
+  .sl-top_contact li,
+  .sl-top_links li {
+    float: none;
+    display: inline-block;
+    margin: 0 12px 8px 0;
+  }
+
+  .sl-top_social {
+    margin: 8px 0 0;
+  }
+
+  #header {
+    padding: 20px 0 16px;
+  }
+
+  .sl-logo,
+  .sl-slogan {
+    float: none;
+    margin-right: 0;
+  }
+
+  .sl-slogan {
+    margin-top: 12px;
+  }
+
+  .sl-login-top {
+    margin-left: 0;
+    margin-top: 12px;
+  }
+
+  .sl-login-top > li {
+    float: none;
+    display: inline-block;
+  }
+
+  #hmenu {
+    padding: 12px 0;
+  }
+
+  #topmenu,
+  #topmenu > ul,
+  #topmenu > ul > li,
+  #topmenu > ul > li > a {
+    float: none;
+  }
+
+  #topmenu > ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+  }
+
+  #topmenu ul ul {
+    min-width: min(150px, calc(100vw - 40px));
+    max-width: calc(100vw - 24px);
+  }
+
+  #qSearch {
+    float: none;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  #qSearch input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #head-content,
+  #demo-line {
+    height: auto;
+    min-height: 0;
+    padding: 18px 0;
+  }
+
+  #head-content .sl-font,
+  .sl-breadcrumbs,
+  .sl-demo-line-title {
+    float: none;
+    margin-right: 0;
+  }
+
+  .sl-breadcrumbs {
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .sl-demo-line-title {
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+
+  #demo-line .sl-d_pane {
+    margin-top: 0;
+  }
+
+  #container {
+    padding: 0 0 40px;
+    height: auto;
+  }
+
+  #leftbar,
+  #content,
+  #sidebar {
+    float: none;
+    width: auto;
+    margin-right: 0;
+    padding-left: 0;
+  }
+
+  #leftbar,
+  #sidebar {
+    margin-top: 20px;
+  }
+
+  .sl-comment,
+  .sl-forum-post-in,
+  .sl-fp-left,
+  .sl-fp-right {
+    padding-left: 0;
+  }
+
+  .sl-comment,
+  .sl-forum-post,
+  .sl-fp-meta,
+  .sl-fp-nickname {
+    height: auto;
+  }
+
+  .sl-com-left,
+  .sl-fp-left {
+    float: none;
+    width: auto;
+    margin: 0 0 15px;
+    padding-right: 0;
+    text-align: left;
+  }
+
+  .sl-com-left li {
+    width: auto;
+  }
+
+  .sl-com-right,
+  .sl-fp-right {
+    float: none;
+    width: auto;
+  }
+
+  .sl-slide-season,
+  .sl-slide-img {
+    width: 100%;
+    max-width: 1920px;
+    height: clamp(260px, 52vw, 440px);
+    margin-left: 0;
+    left: 0;
+    background-size: cover;
+  }
+
+  .sl-slide-cont {
+    width: min(450px, calc(100vw - 32px));
+    left: 16px;
+    margin-left: 0;
+    bottom: 24px;
+  }
+
+  .sl-slide-title {
+    font-size: clamp(28px, 5vw, 48px);
+  }
+
+  .sl-slide-cont p {
+    font-size: clamp(16px, 2.4vw, 18px);
+  }
+
+  .sl-table-shell {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  #topmenu > ul {
+    display: block;
+  }
+
+  #topmenu > ul > li {
+    display: block;
+    margin: 0 0 4px;
+  }
+
+  #topmenu > ul > li > a {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #topmenu ul ul {
+    position: static;
+    display: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 4px 0 8px;
+    padding: 6px 0;
+    opacity: 1;
+    visibility: visible;
+    box-shadow: none;
+  }
+
+  #topmenu li:hover > ul,
+  #topmenu li:focus-within > ul {
+    display: block;
+    top: auto;
+  }
+
+  #topmenu ul ul a {
+    white-space: normal;
+  }
+
+  .sl-login-top .sl-dropdown-form {
+    left: 0;
+    margin-left: 0;
+    max-width: calc(100vw - 24px);
+    width: min(260px, calc(100vw - 24px));
+  }
+
+  .sl-login-top .sl-dropdown-form input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #qSearch {
+    width: 100%;
+  }
+
+  #qSearch input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-wrp {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+  }
+
+  .sl-grid {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .sl-logo {
+    width: 208px;
+    height: 59px;
+    background-size: contain;
+  }
+
+  .sl-login-top > li > a {
+    padding: 5px 10px;
+  }
+
+  #topmenu > ul > li > a {
+    padding: 5px 10px;
+    font-size: 1em;
+  }
+
+  #qSearch input {
+    padding-right: 36px;
+  }
+
+  .sl-slide-cont {
+    width: calc(100vw - 16px);
+    left: 8px;
+    bottom: 16px;
+  }
+
+  .sl-slide-title {
+    font-size: clamp(24px, 6vw, 34px);
+  }
+
+  .sl-com-edit {
+    float: none;
+    margin-top: 10px;
+  }
+
+  /* Changelog filter: stack secondary fields on narrow screens */
+  .sl-changelog-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-changelog-filter-grid .sl-changelog-filter-field:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
+/* Responsive fallbacks: forum posts, comments, cards and pagination */
+@media (max-width: 768px) {
+  .sl-comment,
+  .sl-forum-post {
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+  }
+
+  .sl-com-top,
+  .sl-fp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: flex-start;
+  }
+
+  .sl-com-edit,
+  .sl-fp-moder {
+    float: none;
+    width: 100%;
+    margin: 0;
+  }
+
+  .sl-carg {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-right: 0;
+    min-width: 0;
+  }
+
+  .sl-carg > a {
+    min-width: 0;
+  }
+
+  .sl-carg > a b {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .sl-cargs {
+    display: block;
+    margin-top: 4px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .sl-meta,
+  .sl-fp-meta {
+    height: auto;
+    line-height: 1.4;
+  }
+
+  .sl-meta > ul > li,
+  .sl-meta > ul.sl-pull-right > li {
+    float: none;
+    display: inline-block;
+    margin: 0 12px 8px 0;
+  }
+
+  .sl-meta-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    align-items: center;
+  }
+
+  .sl-meta-foot .sl-rate-box {
+    float: none;
+    margin: 0 0 0 auto;
+  }
+
+  .sl-meta-foot .sl-pull-right {
+    float: none;
+    margin-left: 0;
+  }
+
+  .sl-entry-content,
+  .sl-com-cont,
+  .sl-fp-meta,
+  .sl-block-content,
+  .sl-preview-body,
+  .sl-preview-section {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .sl-card-aside {
+    float: none;
+    width: auto;
+    margin: 0 0 15px;
+  }
+
+  .sl-grid .sl-card-col-3,
+  .sl-grid .sl-card-col-4,
+  .sl-grid .sl-card-col-5,
+  .sl-grid .sl-card-col-6 {
+    flex-basis: 50%;
+    max-width: 50%;
+  }
+
+  .sl-card-menu {
+    float: none;
+    width: 100%;
+  }
+
+  .sl-card-menu > ul,
+  .sl-card-menu > ul > li,
+  .sl-card-menu > ul > li > a,
+  .sl-card-menu {
+    float: none;
+  }
+
+  .sl-card-menu ul ul {
+    position: static;
+    display: none;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 4px 0 8px;
+    padding: 6px 0;
+    opacity: 1;
+    visibility: visible;
+    box-shadow: none;
+  }
+
+  .sl-card-menu li:hover ul,
+  .sl-card-menu li:focus-within ul {
+    top: auto;
+    display: block;
+  }
+
+  .sl-card-menu ul ul a {
+    white-space: normal;
+  }
+
+  .sl-pager {
+    height: auto;
+    padding: 16px 0 0;
+  }
+
+  .sl-pager-prev,
+  .sl-pager-next {
+    position: static;
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 6px 8px 0;
+  }
+
+  .sl-pager-nextprev {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .sl-pager-pages {
+    padding-top: 0;
+  }
+
+  .sl-pnum {
+    margin-bottom: 8px;
+  }
+
+  .sl-block-feedback-form {
+    width: 100%;
+  }
+
+  #block-feedback .sl-dropdown-form {
+    width: min(410px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    box-sizing: border-box;
+  }
+
+  .sl-bff-col1,
+  .sl-bff-col2 {
+    float: none;
+    width: 100%;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-meta > ul > li,
+  .sl-meta > ul.sl-pull-right > li {
+    display: block;
+    margin: 0 0 8px;
+  }
+
+  .sl-fp-meta .sl-grey,
+  .sl-fp-meta .sl-pull-right,
+  .sl-fp-meta .sl-pull-right .sl-min-rate {
+    float: none;
+  }
+
+  .sl-fp-meta .sl-grey,
+  .sl-fp-meta .sl-pull-right {
+    width: 100%;
+  }
+
+  .sl-fp-moder {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    position: static;
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+
+  .sl-grid .sl-card,
+  .sl-grid .sl-post,
+  .sl-grid .sl-card-col-1,
+  .sl-grid .sl-card-col-2,
+  .sl-grid .sl-card-col-3,
+  .sl-grid .sl-card-col-4,
+  .sl-grid .sl-card-col-5,
+  .sl-grid .sl-card-col-6 {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+
+  .sl-preview-head,
+  .sl-preview-title,
+  .sl-preview-section {
+    padding-right: 12px;
+    padding-left: 12px;
   }
 }

@@ -9,6 +9,8 @@
 }
 .sl-form-control {
   width: 545px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Utilities: text color helpers */
@@ -501,6 +503,8 @@ input.sl-but-blue[value="ОК"] {
 }
 .sl-select-config {
   width: 350px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .sl-save-action-select {
   width: auto;
@@ -2279,6 +2283,15 @@ input.sl-but-blue[value="ОК"] {
   width: 88px;
 }
 
+.sl-table-shell {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sl-table-shell > table {
+  min-width: 100%;
+}
+
 /* Voting view: meter and rating controls */
 .sl-vote-view {
   margin: 0;
@@ -2661,12 +2674,18 @@ input.sl-but-blue[value="ОК"] {
 }
 .sl-search-sort-select {
   width: 110px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .sl-search-order-select {
   width: 165px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .sl-search-filter-field {
   width: 140px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .sl-ratings-days {
   width: auto;
@@ -3508,6 +3527,12 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   gap: 30px;
 }
 
+.sl-monitor-info-grid > div {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .sl-monitor-clean-table {
   width: 100%;
   border-collapse: collapse;
@@ -3569,9 +3594,11 @@ body:has(.sl-admin-login-shell) {
   display: grid;
   place-items: center;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 16px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body:has(.sl-admin-login-shell):before {
@@ -4226,5 +4253,45 @@ body:has(.sl-admin-login-shell):before {
   }
   .sl-wrapper:not(.sl-admin-login-shell) .sl-footer {
     border-radius: 0;
+  }
+}
+
+/* Responsive fallbacks: form widths, tables and monitor blocks */
+@media (max-width: 900px) {
+  .sl-form-control,
+  .sl-select-config,
+  .sl-search-sort-select,
+  .sl-search-order-select,
+  .sl-search-filter-field {
+    width: 100%;
+  }
+
+  .sl-inline-filter-form {
+    align-items: stretch;
+  }
+
+  .sl-inline-filter-form > * {
+    flex: 1 1 100%;
+  }
+
+  .sl-monitor-info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .sl-monitor-clean-table td:last-child {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-admin-login-shell {
+    width: min(420px, calc(100vw - 24px));
+  }
+
+  .sl-admin-login-content {
+    padding-right: 16px;
+    padding-left: 16px;
   }
 }
