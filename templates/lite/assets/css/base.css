@@ -1,4 +1,4 @@
-/* Fonts: Magistral bold and regular web font declarations */
+/* sl-fonts: Magistral bold and regular web sl-font declarations */
 @font-face {
   font-family: "Magistral";
   src: url(fonts/magistralb-wf.eot);
@@ -39,6 +39,17 @@
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-radius-control: 4px;
+  --sl-button-base-text: #2a303c;
+  --sl-button-base-bg: #f2f4f7;
+  --sl-button-base-border: #ebebee;
+  --sl-button-base-hover-border: #d9d9dc;
+  --sl-button-blue-start: #78c6fb;
+  --sl-button-blue-end: #6dbaf7;
+  --sl-button-green-start: #9fd779;
+  --sl-button-green-end: #96d26d;
+  --sl-button-red-start: #fb7878;
+  --sl-button-red-end: #f76d6d;
+  --sl-button-navi-text: #30a2f6;
   --sl-progress-track-border: #ccc;
   --sl-progress-track-bg: #e7e7eb;
   --sl-progress-track-radius: 2px;

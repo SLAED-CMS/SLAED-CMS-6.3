@@ -72,7 +72,7 @@ return [
     'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
     'ltitle' => '1',
     'message' => '1',
-    'module' => 'changelog',
+    'module' => 'news',
     'mtemp' => 'Здравствуйте!
 
 [text]
@@ -142,7 +142,7 @@ support@slaed.net',
     'sess_t' => '900',
     'session' => '1',
     'site_logo' => 'slaed-logo-mark-gradient-blue.svg',
-    'sitekey' => 'S85csc5AwUV1wSeh957IUf1Uw',
+    'sitekey' => 'v0TMunS6i6cwSstRRkAPhW3Rv',
     'sitename' => 'Название сайта',
     'slogan' => 'SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.',
     'startdate' => '2013-06-17 00:00:00',
