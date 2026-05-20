@@ -615,3 +615,5 @@ define('_SCHEDULER_CRONFMT','Format cron : minute heure jour mois semaine. Exemp
 define('_SCHEDULER_WARN_DB','La sauvegarde automatique de la base de données est désactivée, donc le job scheduler ne s\'exécutera pas.');
 define('_SCHEDULER_WARNLOG','La journalisation des scans de fichiers est désactivée, donc le job scheduler ne s\'exécutera pas.');
 define('_SCHEDULER_WARN_GO','Aller aux paramètres de sécurité');
+define('_MONITOR_TIME_AGO','il y a %d sec.');
+define('_MONITOR_TIME_NOW','Maintenant');

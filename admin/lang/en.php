@@ -615,3 +615,5 @@ define('_SCHEDULER_CRONFMT','Cron format: minute hour day month weekday. Example
 define('_SCHEDULER_WARN_DB','Automatic database backup is disabled, so the scheduler job will not run.');
 define('_SCHEDULER_WARNLOG','File scan logging is disabled, so the scheduler job will not run.');
 define('_SCHEDULER_WARN_GO','Go to Security settings');
+define('_MONITOR_TIME_AGO','%d sec. ago');
+define('_MONITOR_TIME_NOW','Now');
