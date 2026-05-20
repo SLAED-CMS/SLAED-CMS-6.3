@@ -10,7 +10,8 @@
             <div class="sl-monitor-panel-head">
                 <span class="sl-monitor-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
             </div>
-            <div class="sl-system-sub">Loading...</div>
+            <div class="sl-loading sl-loading-drift" role="status" aria-label="Loading">
+            </div>
         </div>
 {% endif %}
 {% if show_status %}
@@ -94,7 +95,8 @@
             <div class="sl-monitor-panel-head">
                 <span class="sl-monitor-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
             </div>
-            <div class="sl-system-sub">Loading...</div>
+            <div class="sl-loading sl-loading-drift" role="status" aria-label="Loading">
+            </div>
         </div>
     </div>
 {% endif %}
@@ -108,61 +110,39 @@
             </div>
             <div class="sl-traffic-stats-row">
                 <div class="sl-t-item">
-                    <div class="sl-t-label sl-t-label-up"><span></span> Upstream</div>
-                    <div class="sl-t-val">{{ nettx }}</div>
-                    <div class="sl-system-sub">{{ nettxrate }}</div>
+                    <div class="sl-t-icon sl-t-icon-cpu"><i class="bi bi-cpu-fill"></i></div>
+                    <div class="sl-t-content">
+                        <div class="sl-t-label">CPU Usage</div>
+                        <div class="sl-t-val">{{ cpuuse }}%</div>
+                        <div class="sl-system-sub sl-t-sub">{{ cpufreq }}</div>
+                    </div>
                 </div>
                 <div class="sl-t-item">
-                    <div class="sl-t-label sl-t-label-down"><span></span> Downstream</div>
-                    <div class="sl-t-val">{{ netrx }}</div>
-                    <div class="sl-system-sub">{{ netrxrate }}</div>
+                    <div class="sl-t-icon sl-t-icon-ram"><i class="bi bi-motherboard-fill"></i></div>
+                    <div class="sl-t-content">
+                        <div class="sl-t-label">RAM Usage</div>
+                        <div class="sl-t-val">{{ ram_p }}%</div>
+                        <div class="sl-system-sub sl-t-sub">{{ ramtmb }}</div>
+                    </div>
                 </div>
                 <div class="sl-t-item">
-                    <div class="sl-t-label sl-t-label-cpu"><span></span> CPU Usage</div>
-                    <div class="sl-t-val">{{ cpuuse }}%</div>
-                    <div class="sl-system-sub">{{ cpufreq }}</div>
+                    <div class="sl-t-icon sl-t-icon-up"><i class="bi bi-cloud-upload-fill"></i></div>
+                    <div class="sl-t-content">
+                        <div class="sl-t-label">Upstream</div>
+                        <div class="sl-t-val">{{ nettx }}</div>
+                        <div class="sl-system-sub sl-t-sub">{{ nettxrate }}</div>
+                    </div>
                 </div>
                 <div class="sl-t-item">
-                    <div class="sl-t-label sl-t-label-ram"><span></span> RAM Usage</div>
-                    <div class="sl-t-val">{{ ram_p }}%</div>
-                    <div class="sl-system-sub">{{ ramtmb }}</div>
+                    <div class="sl-t-icon sl-t-icon-down"><i class="bi bi-cloud-download-fill"></i></div>
+                    <div class="sl-t-content">
+                        <div class="sl-t-label">Downstream</div>
+                        <div class="sl-t-val">{{ netrx }}</div>
+                        <div class="sl-system-sub sl-t-sub">{{ netrxrate }}</div>
+                    </div>
                 </div>
             </div>
-            <svg class="sl-chart-svg" viewBox="0 0 100 220" preserveAspectRatio="none">
-                <defs>
-                    <linearGradient id="gUp" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="var(--sl-color-warning)" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="var(--sl-color-warning)" stop-opacity="0" />
-                    </linearGradient>
-                    <linearGradient id="gDown" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="var(--sl-color-success)" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="var(--sl-color-success)" stop-opacity="0" />
-                    </linearGradient>
-                    <linearGradient id="gCpu" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="var(--sl-color-danger)" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="var(--sl-color-danger)" stop-opacity="0" />
-                    </linearGradient>
-                    <linearGradient id="gRam" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="var(--sl-color-primary-hover)" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="var(--sl-color-primary-hover)" stop-opacity="0" />
-                    </linearGradient>
-                    <filter id="chartSoftShadow" x="-10%" y="-10%" width="120%" height="120%">
-                        <feDropShadow dx="0" dy="1" stdDeviation="0.6" flood-color="var(--sl-color-text)" flood-opacity="0.08" />
-                    </filter>
-                </defs>
-                <path class="sl-chart-path sl-chart-area" d="{{ path_up }}" fill="url(#gUp)" />
-                <path class="sl-chart-path sl-chart-area" d="{{ path_down }}" fill="url(#gDown)" />
-                <path class="sl-chart-path sl-chart-area" d="{{ path_cpu }}" fill="url(#gCpu)" />
-                <path class="sl-chart-path sl-chart-area" d="{{ path_ram }}" fill="url(#gRam)" />
-                <path class="sl-chart-line" d="{{ path_up_line }}" stroke="var(--sl-color-warning)" />
-                <path class="sl-chart-line" d="{{ path_down_line }}" stroke="var(--sl-color-success)" />
-                <path class="sl-chart-line" d="{{ path_cpu_line }}" stroke="var(--sl-color-danger)" />
-                <path class="sl-chart-line" d="{{ path_ram_line }}" stroke="var(--sl-color-primary-hover)" />
-                <path class="sl-chart-hit" d="{{ path_up_line }}"><title>{{ tip_up }}</title></path>
-                <path class="sl-chart-hit" d="{{ path_down_line }}"><title>{{ tip_down }}</title></path>
-                <path class="sl-chart-hit" d="{{ path_cpu_line }}"><title>{{ tip_cpu }}</title></path>
-                <path class="sl-chart-hit" d="{{ path_ram_line }}"><title>{{ tip_ram }}</title></path>
-            </svg>
+            {{{ chartsvg }}}
         </div>
     </div>
 {% endif %}
