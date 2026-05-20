@@ -3671,14 +3671,24 @@ body:has(.sl-admin-login-shell):before {
   overflow: hidden;
   min-height: 72px;
   background: var(--sl-color-bg);
-  border-bottom: 1px solid var(--sl-color-border);
 }
 .sl-admin-header {
+  position: relative;
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
   align-items: start;
   padding-left: 0;
   overflow: visible;
+}
+.sl-admin-header::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(208, 240, 254, 0) 0%, rgba(208, 240, 254, 0.18) 2%, rgba(138, 183, 216, 0.38) 4.5%, rgba(79, 122, 166, 0.72) 6.5%, var(--sl-color-primary-center) 8.8%, var(--sl-color-primary-center) 11.4%, rgba(79, 122, 166, 0.72) 13.8%, rgba(138, 183, 216, 0.38) 18%, rgba(208, 240, 254, 0.22) 34%, rgba(208, 240, 254, 0.24) 56%, rgba(208, 240, 254, 0.22) 76%, rgba(208, 240, 254, 0.2) 90%, rgba(208, 240, 254, 0.12) 96%, rgba(208, 240, 254, 0.08) 100%);
+  content: "";
+  pointer-events: none;
 }
 .sl-admin-brand {
   display: flex;
@@ -3962,7 +3972,6 @@ body:has(.sl-admin-login-shell):before {
   }
   .sl-wrapper:not(.sl-admin-login-shell) .sl-admin-brand {
     height: 90px;
-    border-bottom: 1px solid var(--sl-color-border);
   }
   .sl-wrapper:not(.sl-admin-login-shell) .sl-admin-toolbar {
     height: auto;
