@@ -415,72 +415,218 @@ function addHistory(array $history, float $value, int $max = 30): array {
 }
 
 # Builds a smooth SVG cubic-bezier line path from metric history for chart rendering
-function getSmoothLinePath(array $history, float $maxvalue, int $height = 220): string {
-    $history = array_values(array_map('floatval', $history));
-    if (!$history) return 'M0,'.$height.' L100,'.$height;
-    $count = count($history);
-    $maxvalue = max($maxvalue, 1.0);
-    $points = [];
-    foreach ($history as $ix => $val) {
-        $xx = ($count > 1) ? ($ix * (100 / ($count - 1))) : 0.0;
-        $yy = $height - (($val / $maxvalue) * ($height - 10));
-        if ($yy < 0) $yy = 0;
-        if ($yy > $height) $yy = $height;
-        $points[] = ['x' => round($xx, 2), 'y' => round($yy, 2)];
-    }
-    if (count($points) < 2) return 'M'.$points[0]['x'].','.$points[0]['y'].' L'.$points[0]['x'].','.$points[0]['y'];
-    $path = 'M'.$points[0]['x'].','.$points[0]['y'].' ';
-    $nx = count($points);
-    for ($ix = 0; $ix < $nx - 1; $ix++) {
-        $pta = ($ix > 0) ? $points[$ix - 1] : $points[$ix];
-        $ptb = $points[$ix];
-        $ptc = $points[$ix + 1];
-        $ptd = ($ix + 2 < $nx) ? $points[$ix + 2] : $ptc;
+function getSmoothLinePath(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0): string {
+    $pts = getHistoryPoints($hist, $max, $ht, $wt, $px);
+    if (!$pts) return 'M'.$px.','.$ht.' L'.($wt - $px).','.$ht;
+    if (count($pts) < 2) return 'M'.$pts[0]['x'].','.$pts[0]['y'].' L'.$pts[0]['x'].','.$pts[0]['y'];
+    $pat = 'M'.$pts[0]['x'].','.$pts[0]['y'].' ';
+    $nn = count($pts);
+    for ($ix = 0; $ix < $nn - 1; $ix++) {
+        $pta = ($ix > 0) ? $pts[$ix - 1] : $pts[$ix];
+        $ptb = $pts[$ix];
+        $ptc = $pts[$ix + 1];
+        $ptd = ($ix + 2 < $nn) ? $pts[$ix + 2] : $ptc;
         $conax = $ptb['x'] + (($ptc['x'] - $pta['x']) / 6);
         $conay = $ptb['y'] + (($ptc['y'] - $pta['y']) / 6);
         $conbx = $ptc['x'] - (($ptd['x'] - $ptb['x']) / 6);
         $conby = $ptc['y'] - (($ptd['y'] - $ptb['y']) / 6);
-        $path .= 'C'.round($conax, 2).','.round($conay, 2).' '
+        $pat .= 'C'.round($conax, 2).','.round($conay, 2).' '
             .round($conbx, 2).','.round($conby, 2).' '
             .$ptc['x'].','.$ptc['y'].' ';
     }
-    return trim($path);
+    return trim($pat);
 }
 
 # Builds a smooth closed SVG area path from metric history for filled chart rendering
-function getSmoothAreaPath(array $history, float $maxvalue, int $height = 220): string {
-    $history = array_values(array_map('floatval', $history));
-    if (!$history) return 'M0,'.$height.' L100,'.$height.' Z';
-    $count = count($history);
-    $maxvalue = max($maxvalue, 1.0);
-    $points = [];
-    foreach ($history as $ix => $val) {
-        $xx = ($count > 1) ? ($ix * (100 / ($count - 1))) : 0.0;
-        $yy = $height - (($val / $maxvalue) * ($height - 10));
-        if ($yy < 0) $yy = 0;
-        if ($yy > $height) $yy = $height;
-        $points[] = ['x' => round($xx, 2), 'y' => round($yy, 2)];
+function getSmoothAreaPath(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0): string {
+    $pts = getHistoryPoints($hist, $max, $ht, $wt, $px);
+    if (!$pts) return 'M'.$px.','.$ht.' L'.($wt - $px).','.$ht.' Z';
+    $fir = $pts[0];
+    $pat = 'M'.$px.','.$ht.' L'.$fir['x'].','.$fir['y'].' ';
+    $nn = count($pts);
+    if ($nn === 1) {
+        $pat .= 'L'.($wt - $px).','.$ht.' Z';
+        return $pat;
     }
-    $first = $points[0];
-    $path = 'M0,'.$height.' L'.$first['x'].','.$first['y'].' ';
-    $nx = count($points);
-    if ($nx === 1) {
-        $path .= 'L100,'.$height.' Z';
-        return $path;
-    }
-    for ($ix = 0; $ix < $nx - 1; $ix++) {
-        $pta = ($ix > 0) ? $points[$ix - 1] : $points[$ix];
-        $ptb = $points[$ix];
-        $ptc = $points[$ix + 1];
-        $ptd = ($ix + 2 < $nx) ? $points[$ix + 2] : $ptc;
+    for ($ix = 0; $ix < $nn - 1; $ix++) {
+        $pta = ($ix > 0) ? $pts[$ix - 1] : $pts[$ix];
+        $ptb = $pts[$ix];
+        $ptc = $pts[$ix + 1];
+        $ptd = ($ix + 2 < $nn) ? $pts[$ix + 2] : $ptc;
         $conax = $ptb['x'] + (($ptc['x'] - $pta['x']) / 6);
         $conay = $ptb['y'] + (($ptc['y'] - $pta['y']) / 6);
         $conbx = $ptc['x'] - (($ptd['x'] - $ptb['x']) / 6);
         $conby = $ptc['y'] - (($ptd['y'] - $ptb['y']) / 6);
-        $path .= 'C'.round($conax, 2).','.round($conay, 2).' '.round($conbx, 2).','.round($conby, 2).' '.$ptc['x'].','.$ptc['y'].' ';
+        $pat .= 'C'.round($conax, 2).','.round($conay, 2).' '.round($conbx, 2).','.round($conby, 2).' '.$ptc['x'].','.$ptc['y'].' ';
     }
-    $path .= 'L100,'.$height.' Z';
-    return trim($path);
+    $pat .= 'L'.($wt - $px).','.$ht.' Z';
+    return trim($pat);
+}
+
+# Builds normalized SVG points from metric history for chart lines and hover markers
+function getHistoryPoints(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0): array {
+    $hist = array_values(array_map('floatval', $hist));
+    if (!$hist) return [];
+    $cnt = count($hist);
+    $max = max($max, 1.0);
+    $iw = max($wt - ($px * 2), 1);
+    $pts = [];
+    foreach ($hist as $ix => $val) {
+        $xx = $px + (($cnt > 1) ? ($ix * ($iw / ($cnt - 1))) : 0.0);
+        $yy = $ht - (($val / $max) * ($ht - 10));
+        if ($yy < 0) $yy = 0;
+        if ($yy > $ht) $yy = $ht;
+        $pts[] = ['x' => round($xx, 2), 'y' => round($yy, 2), 'value' => round($val, 2)];
+    }
+    return $pts;
+}
+
+# Samples evenly distributed points from history for aligned hover markers and tooltips
+function getHistoryBucketPoints(array $hist, float $max, int $ht = 220, int $wt = 100, int $px = 0, int $cnt = 6): array {
+    $pts = getHistoryPoints($hist, $max, $ht, $wt, $px);
+    if (!$pts || $cnt <= 0) return [];
+    if (count($pts) === 1) return array_fill(0, $cnt, $pts[0]);
+    $last = count($pts) - 1;
+    $out = [];
+    for ($ix = 0; $ix < $cnt; $ix++) {
+        $pos = ($cnt > 1) ? ($ix * ($last / ($cnt - 1))) : 0.0;
+        $out[] = $pts[(int)round($pos)];
+    }
+    return $out;
+}
+
+# Returns the nearest point from a series for a given hover bucket index
+function getHistoryMarkerPoint(array $pts, int $ix, int $cnt = 6): array {
+    $nn = count($pts);
+    if ($nn <= 0) return [];
+    if ($nn === 1) return $pts[0];
+    $pos = ($cnt > 1) ? ($ix * (($nn - 1) / ($cnt - 1))) : 0.0;
+    return $pts[(int)round($pos)] ?? $pts[$nn - 1];
+}
+
+# Returns the localized monitor time label
+function getMonitorChartTimeLabel(int $sec, bool $now = false): string {
+    if ($now) return _MONITOR_TIME_NOW;
+    return sprintf(_MONITOR_TIME_AGO, $sec);
+}
+
+# Builds the monitor traffic chart SVG with grid, hover zones, cursor lines, and live tips
+function getMonitorChartSvg(array $snap): string {
+    $uh = is_array($snap['hist_up'] ?? null) ? $snap['hist_up'] : [];
+    $dh = is_array($snap['hist_down'] ?? null) ? $snap['hist_down'] : [];
+    $ch = is_array($snap['hist_cpu'] ?? null) ? $snap['hist_cpu'] : [];
+    $rh = is_array($snap['hist_ram'] ?? null) ? $snap['hist_ram'] : [];
+    $ww = 900;
+    $hh = 285;
+    $pb = 222;
+    $px = 8;
+    $bc = 6;
+    $tw = 148;
+    $th = 104;
+    $st = 4;
+    $xs = [];
+    for ($ix = 0; $ix < $bc; $ix++) {
+        $xs[] = round($px + ($ix * (($ww - ($px * 2)) / ($bc - 1))), 2);
+    }
+    $vals = array_map('floatval', array_merge($uh, $dh));
+    $mx = $vals ? max(1.0, max($vals)) : 1.0;
+    $up = getHistoryPoints($uh, $mx, $pb, $ww, $px);
+    $ul = getSmoothLinePath($uh, $mx, $pb, $ww, $px);
+    $dl = getSmoothLinePath($dh, $mx, $pb, $ww, $px);
+    $cl = getSmoothLinePath($ch, 100.0, $pb, $ww, $px);
+    $rl = getSmoothLinePath($rh, 100.0, $pb, $ww, $px);
+    $ua = getSmoothAreaPath($uh, $mx, $pb, $ww, $px);
+    $da = getSmoothAreaPath($dh, $mx, $pb, $ww, $px);
+    $ca = getSmoothAreaPath($ch, 100.0, $pb, $ww, $px);
+    $ra = getSmoothAreaPath($rh, 100.0, $pb, $ww, $px);
+    $upb = getHistoryBucketPoints($uh, $mx, $pb, $ww, $px, $bc);
+    $dpb = getHistoryBucketPoints($dh, $mx, $pb, $ww, $px, $bc);
+    $cpb = getHistoryBucketPoints($ch, 100.0, $pb, $ww, $px, $bc);
+    $rpb = getHistoryBucketPoints($rh, 100.0, $pb, $ww, $px, $bc);
+    $gy = [42, 82, 122, 162, 202];
+    $al = ['100', '75', '50', '25', '0'];
+    $xl = [];
+    for ($ix = 0; $ix < $bc; $ix++) {
+        $sec = (($bc - 1 - $ix) * $st);
+        $xl[] = getMonitorChartTimeLabel($sec, $sec === 0);
+    }
+    $svg = [];
+    $svg[] = '<svg class="sl-chart-svg" viewBox="0 0 '.$ww.' '.$hh.'" preserveAspectRatio="none" role="img" aria-label="Traffic monitoring chart">';
+    $svg[] = '  <defs>';
+    $svg[] = '    <linearGradient id="slMonitorAreaUp" x1="0" x2="0" y1="0" y2="1">';
+    $svg[] = '      <stop offset="0" stop-color="var(--sl-monitor-orange)" stop-opacity="0.55" />';
+    $svg[] = '      <stop offset="1" stop-color="var(--sl-monitor-orange)" stop-opacity="0.06" />';
+    $svg[] = '    </linearGradient>';
+    $svg[] = '    <linearGradient id="slMonitorAreaDown" x1="0" x2="0" y1="0" y2="1">';
+    $svg[] = '      <stop offset="0" stop-color="var(--sl-monitor-green)" stop-opacity="0.5" />';
+    $svg[] = '      <stop offset="1" stop-color="var(--sl-monitor-green)" stop-opacity="0.05" />';
+    $svg[] = '    </linearGradient>';
+    $svg[] = '    <linearGradient id="slMonitorAreaCpu" x1="0" x2="0" y1="0" y2="1">';
+    $svg[] = '      <stop offset="0" stop-color="var(--sl-monitor-red)" stop-opacity="0.34" />';
+    $svg[] = '      <stop offset="1" stop-color="var(--sl-monitor-red)" stop-opacity="0.04" />';
+    $svg[] = '    </linearGradient>';
+    $svg[] = '    <linearGradient id="slMonitorAreaRam" x1="0" x2="0" y1="0" y2="1">';
+    $svg[] = '      <stop offset="0" stop-color="var(--sl-monitor-blue)" stop-opacity="0.34" />';
+    $svg[] = '      <stop offset="1" stop-color="var(--sl-monitor-blue)" stop-opacity="0.04" />';
+    $svg[] = '    </linearGradient>';
+    $svg[] = '    <filter id="slMonitorGlow" x="-10%" y="-10%" width="120%" height="120%">';
+    $svg[] = '      <feDropShadow dx="0" dy="1" stdDeviation="0.8" flood-color="var(--sl-color-text)" flood-opacity="0.1" />';
+    $svg[] = '    </filter>';
+    $svg[] = '  </defs>';
+    $vgrid = [];
+    foreach ($xs as $xx) {
+        $vgrid[] = 'M'.$xx.' 42V222';
+    }
+    $svg[] = '  <path class="sl-chart-gridline" d="M8 42H892M8 82H892M8 122H892M8 162H892M8 202H892"/>';
+    $svg[] = '  <path class="sl-chart-vgrid" d="'.implode('', $vgrid).'"/>';
+    foreach ($gy as $ix => $y) {
+        $svg[] = '  <text class="sl-chart-value-label" x="28" y="'.((int)$y + 3).'">'.$al[$ix].'</text>';
+    }
+    $svg[] = '  <path class="sl-chart-area sl-chart-area-up" d="'.$ua.'" fill="url(#slMonitorAreaUp)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-area sl-chart-area-down" d="'.$da.'" fill="url(#slMonitorAreaDown)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-area sl-chart-area-cpu" d="'.$ca.'" fill="url(#slMonitorAreaCpu)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-area sl-chart-area-ram" d="'.$ra.'" fill="url(#slMonitorAreaRam)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-line sl-chart-line-up" d="'.$ul.'" stroke="var(--sl-monitor-orange)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-line sl-chart-line-down" d="'.$dl.'" stroke="var(--sl-monitor-green)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-line sl-chart-line-cpu" d="'.$cl.'" stroke="var(--sl-monitor-red)" filter="url(#slMonitorGlow)" />';
+    $svg[] = '  <path class="sl-chart-line sl-chart-line-ram" d="'.$rl.'" stroke="var(--sl-monitor-blue)" filter="url(#slMonitorGlow)" />';
+    for ($ix = 0; $ix < $bc; $ix++) {
+        $up = $upb[$ix] ?? null;
+        $dp = $dpb[$ix] ?? null;
+        $cp = $cpb[$ix] ?? null;
+        $rp = $rpb[$ix] ?? null;
+        $fp = getHistoryMarkerPoint($cpb, $ix, $bc);
+        $xx = (float)$xs[$ix];
+        $stt = ($ix === 0) ? $px : round((($xs[$ix - 1]) + $xx) / 2, 2);
+        $end = ($ix === $bc - 1) ? ($ww - $px) : round(($xx + ($xs[$ix + 1])) / 2, 2);
+        $wid = max($end - $stt, 1);
+        $tx = $xx + 14;
+        if ($tx + $tw > $ww - $px) $tx = $xx - $tw - 14;
+        if ($tx < $px) $tx = $px;
+        $fy = (float)($fp['y'] ?? ($cp['y'] ?? $pb));
+        $ty = (($fy + $th + 18) > ($hh - 8)) ? max($fy - $th - 16, 8) : 56;
+        $tm = time() - (($bc - 1 - $ix) * $st);
+        $lb = getMonitorChartTimeLabel((int)(($bc - 1 - $ix) * $st), $ix === $bc - 1);
+        $hd = date('H:i:s', $tm).' · '.$lb;
+        $svg[] = '  <g class="sl-chart-day">';
+        $svg[] = '    <line class="sl-chart-dayline" x1="'.$xx.'" y1="42" x2="'.$xx.'" y2="222"/>';
+        $svg[] = '    <circle class="sl-chart-focus" cx="'.$xx.'" cy="'.$fy.'" r="5"/>';
+        $svg[] = '    <g class="sl-chart-tip" transform="translate('.round($tx, 2).' '.$ty.')">';
+        $svg[] = '      <rect width="'.$tw.'" height="'.$th.'" rx="5"/>';
+        $svg[] = '      <text class="sl-chart-tip-title" x="9" y="18">'.htmlspecialchars($hd, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
+        $svg[] = '      <text class="muted" x="9" y="39">CPU: '.htmlspecialchars((string)round((float)($cp['value'] ?? 0), 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%</text>';
+        $svg[] = '      <text class="muted" x="9" y="57">RAM: '.htmlspecialchars((string)round((float)($rp['value'] ?? 0), 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%</text>';
+        $svg[] = '      <text class="muted" x="9" y="75">Upstream: '.htmlspecialchars(filterSize((float)($up['value'] ?? 0)).'/s', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
+        $svg[] = '      <text class="muted" x="9" y="93">Downstream: '.htmlspecialchars(filterSize((float)($dp['value'] ?? 0)).'/s', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
+        $svg[] = '    </g>';
+        $svg[] = '    <rect class="sl-chart-hover-zone" x="'.$stt.'" y="35" width="'.$wid.'" height="218"/>';
+        $svg[] = '  </g>';
+    }
+    foreach ($xs as $ix => $xx) {
+        $svg[] = '  <text class="sl-chart-axis-label" x="'.round($xx, 2).'" y="252">'.$xl[$ix].'</text>';
+    }
+    $svg[] = '</svg>';
+    return implode("\n", $svg);
 }
 
 # Calculates realtime network rates, updates history buffers, and persists metric snapshots
@@ -1037,6 +1183,10 @@ function getMonitorPanelSnapshot(): array {
             'rx_rate' => $live['rx_rate'],
             'tx_rate' => $live['tx_rate'],
         ],
+        'hist_down' => $live['hist_down'],
+        'hist_up' => $live['hist_up'],
+        'hist_cpu' => $live['hist_cpu'],
+        'hist_ram' => $live['hist_ram'],
         'path_up' => $pathup,
         'path_down' => $pathdown,
         'path_cpu' => $pathcpu,
@@ -1068,6 +1218,7 @@ function getTrafficPanelVars(?array $snapshot = null): array {
         'path_down_line' => $snapshot['path_down_line'],
         'path_cpu_line' => $snapshot['path_cpu_line'],
         'path_ram_line' => $snapshot['path_ram_line'],
+        'chartsvg' => getMonitorChartSvg($snapshot),
         'tip_up' => 'Upstream: '.filterSize($net['tx_total']).' ('.filterSize($net['tx_rate']).'/s)',
         'tip_down' => 'Downstream: '.filterSize($net['rx_total']).' ('.filterSize($net['rx_rate']).'/s)',
         'tip_cpu' => 'CPU Usage: '.round((float)$cpup, 1).'%',
