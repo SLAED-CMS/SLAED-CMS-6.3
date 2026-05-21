@@ -24,7 +24,7 @@
     {% if captcha_html %}{{{ captcha_html }}}{% endif %}
     {{{ hidden_inputs }}}
     {% if has_network %}<p class="sl-net-login">{{ network_label }}: {{{ networks_html }}}</p>{% endif %}
-    <p><button type="submit" class="sl-but-blue">{{ login_label }}</button></p>
+    <p><button type="submit" class="sl-but-primary">{{ login_label }}</button></p>
   </form>
 {% endif %}
 {% if session_html %}<div class="sl-block-session">{{{ session_html }}}</div>{% endif %}

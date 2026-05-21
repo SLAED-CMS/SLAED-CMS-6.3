@@ -7,11 +7,11 @@
     {% elseif class %}{{ class }}
     {% elseif is_changelog_primary %}sl-changelog-button sl-changelog-button-primary
     {% elseif is_changelog_secondary %}sl-changelog-button sl-changelog-button-secondary
-    {% elseif reload_query %}sl-but-green
+    {% elseif reload_query %}sl-but-success
     {% elseif is_navi_lower %}sl-navi-lower-action
-    {% elseif is_login_submit %}sl-but
-    {% elseif is_legacy_green %}sl-but-green
-    {% else %}sl-but-blue
+    {% elseif is_login_submit %}sl-but-primary
+    {% elseif is_legacy_green %}sl-but-success
+    {% else %}sl-but-primary
     {% endif %}
   "
   {% if title %}title="{{ title }}"{% endif %}

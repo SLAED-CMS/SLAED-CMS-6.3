@@ -12,7 +12,7 @@
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_favorite %}{% if class %} {% endif %}sl-favor{% endif %}
-    {% if is_button_blue %}{% if class or is_favorite %} {% endif %}sl-but-blue{% endif %}
+    {% if is_button_blue %}{% if class or is_favorite %} {% endif %}sl-but-primary{% endif %}
     {% if is_cart_plus %}{% if class or is_favorite or is_button_blue %} {% endif %}sl-cart-plus{% endif %}
     {% if is_cart_minus %}{% if class or is_favorite or is_button_blue or is_cart_plus %} {% endif %}sl-cart-minus{% endif %}
   "
