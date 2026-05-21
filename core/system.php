@@ -1609,7 +1609,7 @@ function setHead(array $seo = []): void {
             'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true],
             'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN, 'is_login_submit' => true],
             'lost_link' => ['href' => 'index.php?name=account&amp;op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
-            'register_link' => ['href' => 'index.php?name=account&amp;op=newuser', 'title' => _REG, 'label' => _REG],
+            'register_link' => ['href' => 'index.php?name=account&amp;op=newuser', 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
             'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],

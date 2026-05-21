@@ -5,12 +5,6 @@ function ClearForm(id) {
 	}, 100);
 }
 
-/* Mail protect from spam bots */
-String.prototype.AddMail = function (prefix, postfix) {
-	hamper = prefix+"@"+postfix;
-	document.write((hamper).link("mailto:"+hamper));
-}
-
 /* Delete check info */
 function DelCheck(form, text) {
 	check = confirm(text);
@@ -87,7 +81,9 @@ function FlyBasket(productId) {
 	flyingDiv.style.top = Math.round(currentYPos) + 'px';
 	if (moveX > 0 && currentXPos > shop_x) flyingDiv.style.display='none';
 	if (moveX < 0 && currentXPos < shop_x) flyingDiv.style.display='none';
-	if (flyingDiv.style.display=='block') setTimeout('FlyBasket("' + productId + '")', 10);
+	if (flyingDiv.style.display=='block') window.setTimeout(function () {
+		FlyBasket(productId);
+	}, 10);
 }
 
 function normalizeDateTimeValue(value, kind) {
