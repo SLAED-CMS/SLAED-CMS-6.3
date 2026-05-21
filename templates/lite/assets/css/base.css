@@ -27,6 +27,10 @@
 
 /* Root variables: color palette, progress fills, vote meter tokens and control radius */
 :root {
+  --sl-container: 1320px;
+  --sl-sidebar: 400px;
+  --sl-gutter: 24px;
+  --sl-content: 880px;
   --sl-changelog-bg: #f9fafb;
   --sl-changelog-card: #ffffff;
   --sl-changelog-border: #e5e7eb;
@@ -39,6 +43,18 @@
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-radius-control: 4px;
+  --sl-size-18: 18px;
+  --sl-size-24: 24px;
+  --sl-size-32: 32px;
+  --sl-size-34: 34px;
+  --sl-size-48: 48px;
+  --sl-icon-size-sm: var(--sl-size-18);
+  --sl-icon-size-md: var(--sl-size-24);
+  --sl-icon-size-lg: var(--sl-size-32);
+  --sl-icon-size-xl: var(--sl-size-48);
+  --sl-control-size: var(--sl-size-34);
+  --sl-nav-control-size: var(--sl-control-size);
+  --sl-circle-action-size: var(--sl-control-size);
   --sl-but-neutral-text: #2a303c;
   --sl-but-neutral-start: #f8f9fb;
   --sl-but-neutral-end: #ebedf1;
@@ -279,7 +295,7 @@ a {
 
 a:hover {
   cursor: pointer;
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 a img {

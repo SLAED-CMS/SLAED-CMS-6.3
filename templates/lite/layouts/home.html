@@ -13,14 +13,14 @@
       <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
       <div class="sl-top-right">
         <div class="sl-top-social">
-          <a class="sl-thd sl-i-gh" rel="nofollow" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
-          <a class="sl-thd sl-i-yt" rel="nofollow" target="_blank" href="https://www.youtube.com/zw8_KjhTW-g" title="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
-          <a class="sl-thd sl-i-tw" rel="nofollow" target="_blank" href="https://x.com/slaed_cms" title="Мы в Twitter"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в Twitter</a>
-          <a class="sl-thd sl-i-vk" rel="nofollow" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
-          <a class="sl-thd sl-i-rss" rel="nofollow" target="_blank" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
-          <a class="sl-thd sl-i-doc-de" rel="nofollow" target="_blank" href="https://slaed.de" title="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
-          <a class="sl-thd sl-i-doc-en" rel="nofollow" target="_blank" href="https://slaed.info" title="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
-          <a class="sl-thd sl-i-recom" rel="nofollow" href="index.php?name=recommend" title="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
+          <a class="sl-thd sl-circle-action sl-i-gh" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-circle-action sl-i-yt" rel="me noopener" target="_blank" href="https://www.youtube.com/zw8_KjhTW-g" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-circle-action sl-i-tw" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
+          <a class="sl-thd sl-circle-action sl-i-vk" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-circle-action sl-i-rss" rel="alternate" type="application/rss+xml" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS" aria-label="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-de" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-en" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-circle-action sl-i-recom" href="index.php?name=recommend" title="{{ recommend }}" aria-label="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
         </div>
       </div>
     </div>
@@ -45,10 +45,10 @@
   <div id="hmenu">
     <div class="sl-wrp sl-clrfix">
       {% include 'partials/menu.html' %}
-      <form id="qSearch" action="index.php?name=search" method="post">
+      <form class="sl-search-form" action="index.php?name=search" method="post">
         <input type="hidden" value="{{ modul }}" name="mod">
         <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" required>
-        <button type="submit" class="sl-thd" value="{{ search }}">{{ search }}</button>
+        <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>
       </form>
     </div>
   </div>
