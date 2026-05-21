@@ -350,7 +350,7 @@ function view(): void {
             }
             $name = [_NICKNAME, $nick];
             $urank = ($rank) ? [_URANK, $rank] : [_URANK, ''];
-            $mail = ((isAdmin() || $view) && $mail) ? [_EMAIL, anti_spam($mail)] : [_EMAIL, _HIDE];
+            $mail = ((isAdmin() || $view) && $mail) ? [_EMAIL, htmlspecialchars($mail, ENT_QUOTES, 'UTF-8')] : [_EMAIL, _HIDE];
             $site = ($site) ? ((isAdmin() || is_user()) ? [_SITEURL, domain($site)] : [_SITEURL, _HIDE]) : [_SITEURL, _NO_INFO];
             $avatar = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif';
             $occup = ($occ) ? [_OCCUPATION, $occ] : [_OCCUPATION, _NO_INFO];

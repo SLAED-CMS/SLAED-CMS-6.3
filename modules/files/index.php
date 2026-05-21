@@ -299,7 +299,7 @@ function view(): void {
             'favorites'     => $favorites,
             'size'          => _SIZE.': '.filterSize($fsize),
             'version'       => _VERSION.': '.$fversion,
-            'email'         => ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '',
+            'email'         => ($aemail) ? _AUEMAIL.': '.htmlspecialchars($aemail, ENT_QUOTES, 'UTF-8') : '',
             'home'          => ($awebsite) ? _SITE.': '.domain($awebsite) : '',
             'download'      => $download ?? '',
             'broken'        => $broken,

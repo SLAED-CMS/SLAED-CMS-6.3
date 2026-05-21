@@ -1660,7 +1660,6 @@ function setHead(array $seo = []): void {
         'shop' => _SHOP,
         'topusers' => _TOPUSERS,
         'voting' => _VOTING,
-        'favorites' => _S_FAVORITEN,
         'homepage' => _S_STARTSEITE,
     ];
     $sitevars = array_replace($sitevars, getThemeHookVars('getThemeHeadVars'));
@@ -3811,15 +3810,6 @@ function stream(string $url, string $name): void {
         readfile($file);
         exit;
     }*/
-}
-
-# Anti spam
-function anti_spam(string $mail): string {
-    global $tpl;
-    preg_match('#^(.*?)(@)(.*?)$#', $mail, $info);
-    $cont = $tpl->getHtmlFrag('head-script-inline', ['js' => "\"mysi\".AddMail('".$info[1]."', '".$info[3]."');"])
-        .$tpl->getHtmlFrag('email-noscript', ['local' => $info[1], 'domain' => $info[3]]);
-    return $cont;
 }
 
 # Format letter

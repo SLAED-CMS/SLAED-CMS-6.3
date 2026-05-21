@@ -274,7 +274,7 @@ function view(): void {
             ]);
         }
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
-        $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
+        $email = ($aemail) ? _AUEMAIL.': '.htmlspecialchars($aemail, ENT_QUOTES, 'UTF-8') : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
         $cont .= $tpl->getHtmlPart('view', [
             'id'            => $id,
