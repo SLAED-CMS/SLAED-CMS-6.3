@@ -49,7 +49,12 @@ function getThemeHeadVars(): array {
     $random = mt_rand(0, (int)$count);
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
     $ftitle = htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8');
-    $faq = $tpl->getHtmlFrag('lite-faq-random-link', ['url' => 'index.php?name=faq&amp;op=view&amp;id='.(int)$fid, 'title' => $ftitle, 'label' => $ftitle]);
+    $faq = $tpl->getHtmlFrag('link', [
+        'href' => 'index.php?name=faq&amp;op=view&amp;id='.(int)$fid,
+        'title' => $ftitle,
+        'icon_name' => 'stars',
+        'label' => $ftitle,
+    ]);
     $head = '';
     if ($mname !== '' || $cname !== '') {
         $head = $tpl->getHtmlFrag('lite-head-banner', ['module' => $mname, 'category' => $cname]);
