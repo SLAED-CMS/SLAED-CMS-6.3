@@ -455,7 +455,6 @@ define('_SUBMIT',"S'il vous plaît publiez vos informations en remplissant toute
 define('_SUBTEXT',"Merci pour l'information! Bientôt l'administration vérifie ajouté le matériel que Vous, et si elle répond à nos exigences, alors la publier.");
 define('_SUM','Somme');
 define('_SYSTEM_INFO','Performances du système');
-define('_S_FAVORITEN','A aimé');
 define('_S_STARTSEITE','Faire maison');
 define('_TEXT','Texte');
 define('_THEME','Thème');

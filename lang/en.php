@@ -455,7 +455,6 @@ define('_SUBMIT',"Please write your article/story filling the following form and
 define('_SUBTEXT','Thanks for your submission! We will check your submission in the next few hours, if it is interesting and relevant we will publish it soon.');
 define('_SUM','Sum');
 define('_SYSTEM_INFO','System performance');
-define('_S_FAVORITEN','Add to favorites');
 define('_S_STARTSEITE','Specify as starting side');
 define('_TEXT','Text');
 define('_THEME','Theme');

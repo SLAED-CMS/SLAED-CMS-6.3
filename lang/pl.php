@@ -455,7 +455,6 @@ define('_SUBMIT','Prosimy przesyłać swoje informacje, wypełniając wszystkie 
 define('_SUBTEXT','Dzięki za informacje! W najbliższym czasie administracja sprawdza dodanego przez Was rzeczy i jeśli odpowiada on naszym wymaganiom, to opublikuje go.');
 define('_SUM','Suma');
 define('_SYSTEM_INFO','Wydajność systemu');
-define('_S_FAVORITEN','Do ulubionych');
 define('_S_STARTSEITE','Zrobić domowej');
 define('_TEXT','Tekst');
 define('_THEME','Temat');

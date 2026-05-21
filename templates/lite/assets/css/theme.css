@@ -3683,13 +3683,6 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   height: 11px;
   background-position: 0 0;
 }
-.sl-i-fav:before,
-.sl-i-fav:before {
-  margin: -5px 4px 0 0;
-  width: 14px;
-  height: 13px;
-  background-position: -12px 0;
-}
 .sl-top-social,
 .sl-top-social {
   float: right;

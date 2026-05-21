@@ -5,15 +5,6 @@ function ClearForm(id) {
 	}, 100);
 }
 
-/* Add favorites */
-function Bookmark(sitename, homeurl) {
-	if (window.sidebar) {
-		window.sidebar.addPanel(sitename, homeurl, "");
-	} else if (document.all) {
-		window.external.AddFavorite(homeurl, sitename);
-	}
-}
-
 /* Mail protect from spam bots */
 String.prototype.AddMail = function (prefix, postfix) {
 	hamper = prefix+"@"+postfix;

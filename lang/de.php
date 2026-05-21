@@ -455,7 +455,6 @@ define('_SUBMIT','Bitte benutzen Sie dieses Formular für Ihren Artikel und übe
 define('_SUBTEXT','Herzlichen Dank für Ihren Beitrag! Ihr Artikel wurde empfangen und in Kürze von uns gesichtet und veröffentlicht werden.');
 define('_SUM','Summe');
 define('_SYSTEM_INFO','Systemleistung');
-define('_S_FAVORITEN','Zu Favoriten');
 define('_S_STARTSEITE','Als Startseite');
 define('_TEXT','Text');
 define('_THEME','Seiten Design');

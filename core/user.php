@@ -723,7 +723,6 @@ function getFavoriteList(int $obj = 0): string {
             $surl = 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid;
             $items = [
                 $tpl->getHtmlFrag('link', ['href' => $surl, 'title' => _SHOW, 'label' => _SHOW]),
-                $tpl->getHtmlFrag('link', ['href' => $surl, 'title' => $title, 'label' => _S_FAVORITEN, 'rel_attr' => 'sidebar']),
                 $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deleteFavorite&amp;id='.$id, 'target' => 'favorliste', 'title' => _DELETE, 'label' => _DELETE]),
             ];
             $rows[] = [

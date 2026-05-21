@@ -476,7 +476,6 @@ function setExit(string $msg, string $typ = ''): never {
         'search' => _SEARCH,
         'feedback' => _FEEDBACK,
         'recommend' => _RECOMMEND,
-        'favorites' => _S_FAVORITEN,
         'head_html' => '',
         'foot_html' => $license,
         'blocks_left' => '',
