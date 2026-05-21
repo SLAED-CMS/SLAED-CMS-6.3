@@ -1,25 +1,30 @@
-<form action="{{{ action_url }}}" method="{% if method %}{{ method }}{% else %}post{% endif %}" class="sl-div-form{% if form_class %} {{ form_class }}{% endif %}{% if is_inline_filter %} sl-inline-filter-form{% endif %}"{% if form_attr %} {{{ form_attr }}}{% endif %}>
-    {% for item in hidden %}
-    {% include 'fragments/hidden.html' with item %}
-    {% endfor %}
-    {% if rows %}
-    {% include 'partials/div.html' %}
+<form
+  action="{{{ action_url }}}"
+  method="{% if method %}{{ method }}{% else %}post{% endif %}"
+  class="sl-div-form{% if form_class %} {{ form_class }}{% endif %}{% if is_inline_filter %} sl-inline-filter-form{% endif %}"
+  {% if form_attr %}{{{ form_attr }}}{% endif %}
+>
+  {% for item in hidden %}
+  {% include 'fragments/hidden.html' with item %}
+  {% endfor %}
+  {% if rows %}
+  {% include 'partials/div.html' %}
+  {% endif %}
+  {% if content_html %}
+  {{{ content_html }}}
+  {% endif %}
+  {% if submit_label or actions_html or actions %}
+  <div class="sl-div-actions">
+    {% if actions %}
+    {% include 'fragments/save-action.html' with actions %}
+    {% else %}
+    {% if actions_html %}
+    {{{ actions_html }}}
     {% endif %}
-    {% if content_html %}
-    {{{ content_html }}}
+    {% if submit_label %}
+    {% include 'fragments/button.html' %}
     {% endif %}
-    {% if submit_label or actions_html or actions %}
-    <div class="sl-div-actions">
-        {% if actions %}
-        {% include 'fragments/save-action.html' with actions %}
-        {% else %}
-        {% if actions_html %}
-        {{{ actions_html }}}
-        {% endif %}
-        {% if submit_label %}
-        {% include 'fragments/button.html' %}
-        {% endif %}
-        {% endif %}
-    </div>
     {% endif %}
+  </div>
+  {% endif %}
 </form>

@@ -1,39 +1,39 @@
 <!doctype html>
 <html lang="{{ lang }}">
 <head>
-    {{{ meta }}}
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% block head %}{% endblock %}
+  {{{ meta }}}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% block head %}{% endblock %}
 </head>
 <body>
-    {% block body %}
-    <div id="sl_wrap">
-        <header id="sl_top">
-            {{{ head_html }}}
-        </header>
+  {% block body %}
+  <div id="sl_wrap">
+    <header id="sl_top">
+      {{{ head_html }}}
+    </header>
 
-        <div id="sl_main">
-            {% if blocks_left %}
-            <aside id="sl_col_left">{{{ blocks_left }}}</aside>
-            {% endif %}
+    <div id="sl_main">
+      {% if blocks_left %}
+      <aside id="sl_col_left">{{{ blocks_left }}}</aside>
+      {% endif %}
 
-            <main id="sl_content">
-                {{{ content }}}
-            </main>
+      <main id="sl_content">
+        {{{ content }}}
+      </main>
 
-            {% if blocks_right %}
-            <aside id="sl_col_right">{{{ blocks_right }}}</aside>
-            {% endif %}
-        </div>
-
-        <div id="sl_down">
-            {{{ blocks_down }}}
-        </div>
-
-        <footer id="sl_bot">
-            {{{ foot_html }}}
-        </footer>
+      {% if blocks_right %}
+      <aside id="sl_col_right">{{{ blocks_right }}}</aside>
+      {% endif %}
     </div>
-    {% endblock %}
+
+    <div id="sl_down">
+      {{{ blocks_down }}}
+    </div>
+
+    <footer id="sl_bot">
+      {{{ foot_html }}}
+    </footer>
+  </div>
+  {% endblock %}
 </body>
 </html>

@@ -1,1 +1,18 @@
-{% if label_html or label_text or code_text %}<label class="sl-radio{% if is_right %} sl-right{% endif %}">{% endif %}<input type="checkbox" name="{{ name_attr }}"{% if input_id %} id="{{ input_id }}"{% endif %} value="{{ value_attr }}"{% if input_class or is_check %} class="{% if is_check %}sl-check{% endif %}{% if input_class %}{% if is_check %} {% endif %}{{ input_class }}{% endif %}"{% endif %}{% if is_check %} data-sl-check-item{% endif %}{% if is_checked %} checked{% endif %}{% if is_required %} required{% endif %}{% if is_disabled %} disabled{% endif %}{% if input_attr %} {{{ input_attr }}}{% endif %}>{% if label_html or label_text or code_text %} {% if label_html %}{{{ label_html }}}{% else %}{{ label_text }}{% endif %}{% if code_text %} <code>{{ code_text }}</code>{% endif %}</label>{% endif %}
+{% if label_html or label_text or code_text %}<label class="sl-radio{% if is_right %} sl-right{% endif %}">{% endif %}
+<input
+  type="checkbox"
+  name="{{ name_attr }}"
+  {% if input_id %}id="{{ input_id }}"{% endif %}
+  value="{{ value_attr }}"
+  {% if input_class or is_check %}
+  class="
+    {% if is_check %}sl-check{% endif %}
+    {% if input_class %}{% if is_check %} {% endif %}{{ input_class }}{% endif %}
+  "
+  {% endif %}
+  {% if is_check %}data-sl-check-item{% endif %}
+  {% if is_checked %}checked{% endif %}
+  {% if is_required %}required{% endif %}
+  {% if is_disabled %}disabled{% endif %}
+  {% if input_attr %}{{{ input_attr }}}{% endif %}
+>{% if label_html or label_text or code_text %} {% if label_html %}{{{ label_html }}}{% else %}{{ label_text }}{% endif %}{% if code_text %} <code>{{ code_text }}</code>{% endif %}</label>{% endif %}

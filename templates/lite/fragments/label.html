@@ -1,1 +1,3 @@
-<label{% if label_class %} class="{{ label_class }}"{% else %} class="sl-form-label"{% endif %}>{% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</label>
+<label{% if label_class %} class="{{ label_class }}"{% else %} class="sl-form-label"{% endif %}>
+  {% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}
+</label>

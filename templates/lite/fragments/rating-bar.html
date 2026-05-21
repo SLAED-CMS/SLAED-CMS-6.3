@@ -1,1 +1,14 @@
-{% if not is_live %}<span class="sl-none">{{ result }}</span>{% endif %}<ul title="{{ title }}" class="sl-urating"><li class="sl-crating"><meter class="sl-rating-meter" value="{{ width }}" min="0" max="100" aria-label="{{ title }}">{{ width }}%</meter></li>{% if is_live %}<li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=1" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out1"></div></li><li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=2" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out2"></div></li><li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=3" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out3"></div></li><li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=4" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out4"></div></li><li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=5" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out5"></div></li>{% endif %}</ul><span title="{{ votes_title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ votes }}</span>
+{% if not is_live %}<span class="sl-none">{{ result }}</span>{% endif %}
+<ul title="{{ title }}" class="sl-urating">
+  <li class="sl-crating">
+    <meter class="sl-rating-meter" value="{{ width }}" min="0" max="100" aria-label="{{ title }}">{{ width }}%</meter>
+  </li>
+  {% if is_live %}
+    <li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=1" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out1"></div></li>
+    <li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=2" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out2"></div></li>
+    <li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=3" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out3"></div></li>
+    <li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=4" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out4"></div></li>
+    <li><div hx-get="index.php?{{{ hover_query }}}&amp;rate=5" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false" class="sl-out5"></div></li>
+  {% endif %}
+</ul>
+<span title="{{ votes_title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ votes }}</span>

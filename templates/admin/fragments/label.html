@@ -1,1 +1,13 @@
-<label{% if class or is_associated_option %} class="{% if class %}{{ class }}{% endif %}{% if is_associated_option %} sl-associated-option{% endif %}"{% endif %}{% if label_for %} for="{{ label_for }}"{% endif %}{% if title_text %} title="{{ title_text }}"{% endif %}>{% if prefix_html %}{{{ prefix_html }}}{% endif %}{% if has_content_text %}{{ content_text }}{% elseif content_html %}{{{ content_html }}}{% else %}{{ label }}{% endif %}</label>
+<label
+  {% if class or is_associated_option %}
+  class="
+    {% if class %}{{ class }}{% endif %}
+    {% if is_associated_option %} sl-associated-option{% endif %}
+  "
+  {% endif %}
+  {% if label_for %}for="{{ label_for }}"{% endif %}
+  {% if title_text %}title="{{ title_text }}"{% endif %}
+>
+  {% if prefix_html %}{{{ prefix_html }}}{% endif %}
+  {% if has_content_text %}{{ content_text }}{% elseif content_html %}{{{ content_html }}}{% else %}{{ label }}{% endif %}
+</label>

@@ -1,17 +1,17 @@
 <div class="sl-session-row{% if geo_html %} sl-session-row--icon{% endif %}">
-    {% if geo_html %}<div class="sl-session-icon">{{{ geo_html }}}</div>{% endif %}
-    <div class="sl-session-name">
-        {% if name_link %}
-        {% include 'fragments/link.html' with name_link %}
-        {% else %}
-        <span title="{{ name_title }}"{% if name_class %} class="{{ name_class }}"{% endif %}>{{ name_text }}</span>
-        {% endif %}
-    </div>
-    <div title="{{ module_title }}" class="{% if module_class %}{{ module_class }}{% else %}sl-session-module sl-note{% endif %}">
-        {% if module_link %}
-        {% include 'fragments/link.html' with module_link %}
-        {% else %}
-        {{ module_text }}
-        {% endif %}
-    </div>
+  {% if geo_html %}<div class="sl-session-icon">{{{ geo_html }}}</div>{% endif %}
+  <div class="sl-session-name">
+    {% if name_link %}
+    {% include 'fragments/link.html' with name_link %}
+    {% else %}
+    <span title="{{ name_title }}"{% if name_class %} class="{{ name_class }}"{% endif %}>{{ name_text }}</span>
+    {% endif %}
+  </div>
+  <div title="{{ module_title }}" class="{% if module_class %}{{ module_class }}{% else %}sl-session-module sl-note{% endif %}">
+    {% if module_link %}
+    {% include 'fragments/link.html' with module_link %}
+    {% else %}
+    {{ module_text }}
+    {% endif %}
+  </div>
 </div>

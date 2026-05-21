@@ -1,50 +1,50 @@
 <div class="sl-comment">
-	<div class="sl-com-left">
-		<div class="sl-com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}" class="sl-avatar">{% endif %}</div>
-		<div class="sl-min-rate">
-			<div class="sl-rate-like-box">{{{ rating }}}</div>
-		</div>
-		<ul class="sl-fp-user-info">
-			<li>{{ urank }}</li>
-			<li>{% if has_rank_image %}<img src="{{ rank_src }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}</li>
-		</ul>
-	</div>
-	<div class="sl-com-right">
-		<div class="sl-com-top">
-			<div class="sl-carg sl-dropdown">
-				<a href="#" data-sl-toggle-control="i-form" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{{ name }}</b></a>
-				<div id="i-form" class="sl-dropdown-form">
-					<ul class="sl-list-text">
-						<li>{{ cid }}: {{ id }}</li>
-						<li>{{ cip }}: {{{ ip }}}</li>
-					</ul>
-				</div>
-			</div>
-			<div class="sl-carg">
-				{% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}
-			{% if has_privat_button %}<a href="{{{ privat_href }}}" title="{{ privat_title }}" class="sl-but-green">{{ privat_label }}</a>{% endif %}
-			{% if has_profil_button %}<a href="{{{ profil_href }}}" title="{{ profil_title }}" class="sl-but">{{ profil_label }}</a>{% endif %}
-				{% if has_back_button %}{% include 'fragments/span.html' %}{% endif %}
-			</div>
-		</div>
-		<div class="sl-com-cont sl-clrfix">
-			<div class="sl-table-shell">
-			<table class="sl-table-acc-info">
-				<tr><td>{{ cmail }}:</td><td>{{{ mail }}}</td><td>{{ cbirth }}:</td><td>{{ birth }}</td></tr>
-				<tr><td>{{ csite }}:</td><td>{{{ site }}}</td><td>{{ cfrom }}:</td><td>{{ from }}</td></tr>
-				<tr><td>{{ cregdate }}:</td><td>{{ regdate }}</td><td>{{ cgender }}:</td><td>{{ gender }}</td></tr>
-				<tr><td>{{ clastvisit }}:</td><td>{{ lastvisit }}</td><td>{{ clang }}:</td><td>{{ lang }}</td></tr>
-				<tr><td>{{ cpoints }}:</td><td>{{ points }}</td><td>{{ csgroup }}:</td><td>{% if has_special_group %}<span class="sl-user-group-special">{{ sgroup }}</span>{% else %}{{ sgroup }}{% endif %}</td></tr>
-				<tr><td colspan="4"><hr>{{ coccup }}: {{ occup }}</td></tr>
-				<tr><td colspan="4">{{ cinter }}: {{ inter }}</td></tr>
-				<tr><td colspan="4">{{ cgroups }}: {{ groups }}</td></tr>
-				<tr><td colspan="4">{{ cwarn }}: {{{ warn }}}</td></tr>
-				{% if has_field %}<tr><td colspan="4"><hr>{{{ field }}}</td></tr>{% endif %}
-				<tr><td colspan="4">{{ cagent }}: {{ agent }}</td></tr>
-				{% if has_sign %}<tr><td colspan="4"><hr>{{{ sign }}}</td></tr>{% endif %}
-			</table>
-			</div>
-		</div>
-	</div>
+  <div class="sl-com-left">
+    <div class="sl-com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}" class="sl-avatar">{% endif %}</div>
+    <div class="sl-min-rate">
+      <div class="sl-rate-like-box">{{{ rating }}}</div>
+    </div>
+    <ul class="sl-fp-user-info">
+      <li>{{ urank }}</li>
+      <li>{% if has_rank_image %}<img src="{{ rank_src }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}</li>
+    </ul>
+  </div>
+  <div class="sl-com-right">
+    <div class="sl-com-top">
+      <div class="sl-carg sl-dropdown">
+        <a href="#" data-sl-toggle-control="i-form" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{{ name }}</b></a>
+        <div id="i-form" class="sl-dropdown-form">
+          <ul class="sl-list-text">
+            <li>{{ cid }}: {{ id }}</li>
+            <li>{{ cip }}: {{{ ip }}}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="sl-carg">
+        {% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}
+        {% if has_privat_button %}<a href="{{{ privat_href }}}" title="{{ privat_title }}" class="sl-but-green">{{ privat_label }}</a>{% endif %}
+        {% if has_profil_button %}<a href="{{{ profil_href }}}" title="{{ profil_title }}" class="sl-but">{{ profil_label }}</a>{% endif %}
+        {% if has_back_button %}{% include 'fragments/span.html' %}{% endif %}
+      </div>
+    </div>
+    <div class="sl-com-cont sl-clrfix">
+      <div class="sl-table-shell">
+        <table class="sl-table-acc-info">
+          <tr><td>{{ cmail }}:</td><td>{{{ mail }}}</td><td>{{ cbirth }}:</td><td>{{ birth }}</td></tr>
+          <tr><td>{{ csite }}:</td><td>{{{ site }}}</td><td>{{ cfrom }}:</td><td>{{ from }}</td></tr>
+          <tr><td>{{ cregdate }}:</td><td>{{ regdate }}</td><td>{{ cgender }}:</td><td>{{ gender }}</td></tr>
+          <tr><td>{{ clastvisit }}:</td><td>{{ lastvisit }}</td><td>{{ clang }}:</td><td>{{ lang }}</td></tr>
+          <tr><td>{{ cpoints }}:</td><td>{{ points }}</td><td>{{ csgroup }}:</td><td>{% if has_special_group %}<span class="sl-user-group-special">{{ sgroup }}</span>{% else %}{{ sgroup }}{% endif %}</td></tr>
+          <tr><td colspan="4"><hr>{{ coccup }}: {{ occup }}</td></tr>
+          <tr><td colspan="4">{{ cinter }}: {{ inter }}</td></tr>
+          <tr><td colspan="4">{{ cgroups }}: {{ groups }}</td></tr>
+          <tr><td colspan="4">{{ cwarn }}: {{{ warn }}}</td></tr>
+          {% if has_field %}<tr><td colspan="4"><hr>{{{ field }}}</td></tr>{% endif %}
+          <tr><td colspan="4">{{ cagent }}: {{ agent }}</td></tr>
+          {% if has_sign %}<tr><td colspan="4"><hr>{{{ sign }}}</td></tr>{% endif %}
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 {{{ tabs }}}

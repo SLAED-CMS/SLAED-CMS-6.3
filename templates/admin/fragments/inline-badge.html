@@ -1,1 +1,25 @@
-<span{% if is_pager_dots %} title="&hellip;"{% elseif title_text %} title="{{ title_text }}"{% endif %} class="{% if is_pager_dots %}sl-pnum-dots{% else %}{{ class }}{% if is_note %} sl-note{% endif %}{% if is_dimmed %} sl-dimmed{% endif %}{% if is_success %} sl-text-success{% endif %}{% if is_danger %} sl-text-danger{% endif %}{% if is_status_active %} sl-status-active{% endif %}{% if is_status_inactive %} sl-status-inactive{% endif %}{% if is_action_label %} sl-action-label{% endif %}{% if is_muted %} sl-muted{% endif %}{% if is_green %} sl-green{% endif %}{% if is_red %} sl-red{% endif %}{% if is_category %} sl-cat{% endif %}{% if is_views %} sl-views{% endif %}{% if is_post_icon %} sl-post-icon{% endif %}{% if is_date %} sl-date{% endif %}{% endif %}"{% if color_attr %} style="color: {{ color_attr }}"{% endif %}{% if badge_attr %} {{{ badge_attr }}}{% endif %}>{% if is_pager_dots %}&hellip;{% elseif label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</span>
+<span
+  {% if is_pager_dots %}title="&hellip;"{% elseif title_text %}title="{{ title_text }}"{% endif %}
+  class="
+    {% if is_pager_dots %}sl-pnum-dots
+    {% else %}
+      {{ class }}
+      {% if is_note %} sl-note{% endif %}
+      {% if is_dimmed %} sl-dimmed{% endif %}
+      {% if is_success %} sl-text-success{% endif %}
+      {% if is_danger %} sl-text-danger{% endif %}
+      {% if is_status_active %} sl-status-active{% endif %}
+      {% if is_status_inactive %} sl-status-inactive{% endif %}
+      {% if is_action_label %} sl-action-label{% endif %}
+      {% if is_muted %} sl-muted{% endif %}
+      {% if is_green %} sl-green{% endif %}
+      {% if is_red %} sl-red{% endif %}
+      {% if is_category %} sl-cat{% endif %}
+      {% if is_views %} sl-views{% endif %}
+      {% if is_post_icon %} sl-post-icon{% endif %}
+      {% if is_date %} sl-date{% endif %}
+    {% endif %}
+  "
+  {% if color_attr %}style="color: {{ color_attr }}"{% endif %}
+  {% if badge_attr %}{{{ badge_attr }}}{% endif %}
+>{% if is_pager_dots %}&hellip;{% elseif label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</span>

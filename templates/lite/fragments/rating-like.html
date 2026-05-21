@@ -1,1 +1,26 @@
-<span class="sl-none">{{ result }}</span><div class="sl-rate-like"><p{% if is_live %} hx-get="index.php?{{{ rate1_query }}}" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false"{% endif %} title="{{ rate1_title }}" class="sl-rate-minus{% if is_live %} sl-out{% endif %}"><p{% if is_live %} hx-get="index.php?{{{ rate5_query }}}" hx-trigger="click" hx-target="#{{ target_id }}" hx-swap="outerHTML" hx-push-url="false"{% endif %} title="{{ rate5_title }}" class="sl-rate-plus{% if is_live %} sl-out{% endif %}"></div><span title="{{ title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ result }}</span>
+<span class="sl-none">{{ result }}</span>
+<div class="sl-rate-like">
+  <p
+    {% if is_live %}
+      hx-get="index.php?{{{ rate1_query }}}"
+      hx-trigger="click"
+      hx-target="#{{ target_id }}"
+      hx-swap="outerHTML"
+      hx-push-url="false"
+    {% endif %}
+    title="{{ rate1_title }}"
+    class="sl-rate-minus{% if is_live %} sl-out{% endif %}"
+  >
+  <p
+    {% if is_live %}
+      hx-get="index.php?{{{ rate5_query }}}"
+      hx-trigger="click"
+      hx-target="#{{ target_id }}"
+      hx-swap="outerHTML"
+      hx-push-url="false"
+    {% endif %}
+    title="{{ rate5_title }}"
+    class="sl-rate-plus{% if is_live %} sl-out{% endif %}"
+  >
+</div>
+<span title="{{ title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ result }}</span>

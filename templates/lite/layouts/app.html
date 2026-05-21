@@ -1,132 +1,132 @@
 <!doctype html>
 <html lang="{{ lang }}">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="format-detection" content="telephone=no">
-    {{{ meta }}}
-    {{{ links }}}
-    {{{ scripts }}}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  {{{ meta }}}
+  {{{ links }}}
+  {{{ scripts }}}
 </head>
 <body{% if season %} class="{{ season }}"{% endif %}>
-    <div id="topbar">
-        <div class="sl-wrp">
-            <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
-            <div class="sl-top-social">
-                <a class="sl-thd sl-i-yt" rel="nofollow" target="_blank" href="//youtu.be/zw8_KjhTW-g" title="Мы в YouTube">Мы в YouTube</a>
-                <a class="sl-thd sl-i-tw" rel="nofollow" target="_blank" href="//twitter.com/slaed_cms" title="Мы в Twitter">Мы в Twitter</a>
-                <a class="sl-thd sl-i-vk" rel="nofollow" target="_blank" href="//vk.com/slaed_cms" title="Мы вКонтакте">Мы вКонтакте</a>
-                <a class="sl-thd sl-i-rss" rel="nofollow" target="_blank" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS">Читайте нашу RSS</a>
-            </div>
-            <ul class="sl-top-links">
-                <li><a class="sl-ico sl-i-recom" href="index.php?name=recommend" title="{{ recommend }}">{{ recommend }}</a></li>
-                <li><a class="sl-ico sl-i-fav" href="{{ homeurl }}" rel="sidebar" onclick="Bookmark('{{ sitename }}', '{{ homeurl }}');" title="{{ sitename }}">{{ favorites }}</a></li>
-            </ul>
-        </div>
-    </div>
-    <header id="header">
-        <div class="sl-wrp sl-clrfix">
-            <a href="/" class="sl-thd sl-logo" title="{{ sitename }}">{{ sitename }}</a>
-            <p class="sl-font sl-slogan">{% if slogan %}{{ slogan }}{% else %}Все великое<br>просто{% endif %}</p>
-            {{{ login }}}
-            <ul class="sl-d-pane">
-                <li class="sl-d-info">Aктуальная<br>версия</li>
-                <li class="sl-d-num sl-font">6.2</li>
-                <li class="sl-d-btns">
-                    <a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
-                    <a class="sl-but-blue" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
-                </li>
-            </ul>
-        </div>
-    </header>
-    <div id="hmenu">
-        <div class="sl-wrp sl-clrfix">
-            {% include 'partials/menu.html' %}
-            <form id="qSearch" action="index.php?name=search" method="post">
-                <input type="hidden" value="{{ modul }}" name="mod">
-                <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" required>
-                <button type="submit" class="sl-thd" value="{{ search }}">{{ search }}</button>
-            </form>
-        </div>
-    </div>
-    {% if head_html %}
-    <div id="head-content">
-        <div class="sl-wrp">{{{ head_html }}}</div>
-    </div>
-    {% endif %}
+  <div id="topbar">
     <div class="sl-wrp">
-        <div id="container" class="sl-clrfix">
-            {% if blocks_left %}
-            <aside id="leftbar">{{{ blocks_left }}}</aside>
-            {% endif %}
-            <section id="content">
-                {% block content %}{{{ content }}}{% endblock %}
-                {% if blocks_down %}{{{ blocks_down }}}{% endif %}
-            </section>
-            {% if blocks_right %}
-            <aside id="sidebar">{{{ blocks_right }}}</aside>
-            {% endif %}
-        </div>
+      <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
+      <div class="sl-top-social">
+        <a class="sl-thd sl-i-yt" rel="nofollow" target="_blank" href="//youtu.be/zw8_KjhTW-g" title="Мы в YouTube">Мы в YouTube</a>
+        <a class="sl-thd sl-i-tw" rel="nofollow" target="_blank" href="//twitter.com/slaed_cms" title="Мы в Twitter">Мы в Twitter</a>
+        <a class="sl-thd sl-i-vk" rel="nofollow" target="_blank" href="//vk.com/slaed_cms" title="Мы вКонтакте">Мы вКонтакте</a>
+        <a class="sl-thd sl-i-rss" rel="nofollow" target="_blank" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS">Читайте нашу RSS</a>
+      </div>
+      <ul class="sl-top-links">
+        <li><a href="index.php?name=recommend" title="{{ recommend }}"><i class="bi bi-chat-heart-fill" aria-hidden="true"></i>&nbsp;{{ recommend }}</a></li>
+        <li><a class="sl-ico sl-i-fav" href="{{ homeurl }}" rel="sidebar" onclick="Bookmark('{{ sitename }}', '{{ homeurl }}');" title="{{ sitename }}">{{ favorites }}</a></li>
+      </ul>
     </div>
-    <div id="demo-line">
-        <div class="sl-wrp">
-            <b class="sl-font sl-demo-line-title">Хотите опробовать SLAED CMS в действии?</b>
-            <ul class="sl-d-pane">
-                <li class="sl-d-info">Aктуальная<br>версия</li>
-                <li class="sl-d-num sl-font">6.2</li>
-                <li class="sl-d-btns">
-                    <a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
-                    <a class="sl-but-blue" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
-                </li>
-            </ul>
-        </div>
+  </div>
+  <header id="header">
+    <div class="sl-wrp sl-clrfix">
+      <a href="/" class="sl-thd sl-logo" title="{{ sitename }}">{{ sitename }}</a>
+      <p class="sl-font sl-slogan">{% if slogan %}{{ slogan }}{% else %}Все великое<br>просто{% endif %}</p>
+      {{{ login }}}
+      <ul class="sl-d-pane">
+        <li class="sl-d-info">Aктуальная<br>версия</li>
+        <li class="sl-d-num sl-font">6.2</li>
+        <li class="sl-d-btns">
+          <a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
+          <a class="sl-but-blue" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
+        </li>
+      </ul>
     </div>
-    <div id="footbox">
-        <div class="sl-wrp sl-grid-1-4">
-            <footer class="sl-grid">
-                <a href="index.php?name=content&amp;op=view&amp;id=1" id="upper" class="sl-thd" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">SLAED CMS - Все великое просто!</a>
-                {{{ foot_html }}}
-                <a class="sl-thd sl-madein" href="index.php?name=content&amp;op=view&amp;id=7" title="Официальный патент на бренд SLAED в Германии">Made in Germany</a>
-            </footer>
-            {% if forumblock %}{{{ forumblock }}}{% endif %}
-            <div class="sl-grid">
-                <p class="sl-font sl-f-title">Технологии</p>
-                <div class="sl-partners">
-                    <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP"></a>
-                    <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL"></a>
-                    <a href="index.php?name=content&amp;op=view&amp;id=18" title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5"></a>
-                    <a href="index.php?name=content&amp;op=view&amp;id=19" title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3"></a>
-                    <a href="index.php?name=content&amp;op=view&amp;id=22" title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery"></a>
-                    <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI"></a>
-                </div>
-            </div>
-            <div class="sl-grid">
-                <p class="sl-font sl-f-title">Контакты</p>
-                <ul class="sl-block-contact">
-                    <li class="sl-ico sl-i-geo">D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
-                    <li class="sl-ico sl-i-phone">+49 176 61966679</li>
-                    <li class="sl-ico sl-i-geo"><script>"mysi".AddMail('support', 'slaed.net');</script><noscript>support<!-- slaed --><span>&#64;</span><!-- slaed -->slaed.net</noscript><br><a href="//slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
-                </ul>
-            </div>
-        </div>
+  </header>
+  <div id="hmenu">
+    <div class="sl-wrp sl-clrfix">
+      {% include 'partials/menu.html' %}
+      <form id="qSearch" action="index.php?name=search" method="post">
+        <input type="hidden" value="{{ modul }}" name="mod">
+        <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" required>
+        <button type="submit" class="sl-thd" value="{{ search }}">{{ search }}</button>
+      </form>
     </div>
-    <div id="foot-menu">
-        <div class="sl-wrp sl-clrfix">
-            <nav class="sl-fmenu">
-                <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
-                <ul>
-                    <li><a href="index.php" title="{{ home }}">{{ home }}</a></li>
-                    <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта">Услуги</a></li>
-                    <li><a href="index.php?name=news" title="Новости">Новости</a></li>
-                    <li><a href="index.php?name=files" title="Каталог файлов">Файлы</a></li>
-                    <li><a href="index.php?name=faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
-                    <li><a href="index.php?name=pages" title="Центр документации">Документация</a></li>
-                    <li><a href="index.php?name=main" title="Презентационная страница системы">Портфолио</a></li>
-                    <li><a href="index.php?name=sitemap" title="Карта сайта">Карта сайта</a></li>
-                </ul>
-            </nav>
-        </div>
+  </div>
+  {% if head_html %}
+  <div id="head-content">
+    <div class="sl-wrp">{{{ head_html }}}</div>
+  </div>
+  {% endif %}
+  <div class="sl-wrp">
+    <div id="container" class="sl-clrfix">
+      {% if blocks_left %}
+      <aside id="leftbar">{{{ blocks_left }}}</aside>
+      {% endif %}
+      <section id="content">
+        {% block content %}{{{ content }}}{% endblock %}
+        {% if blocks_down %}{{{ blocks_down }}}{% endif %}
+      </section>
+      {% if blocks_right %}
+      <aside id="sidebar">{{{ blocks_right }}}</aside>
+      {% endif %}
     </div>
-    <div id="block-idea"><a href="index.php?name=forum&amp;cat=95" title="Идеи и предложения для разработки" class="sl-btn-idea"><b class="sl-font">Идеи и предложения</b></a></div>
-    {% if contactblock %}{{{ contactblock }}}{% endif %}
+  </div>
+  <div id="demo-line">
+    <div class="sl-wrp">
+      <b class="sl-font sl-demo-line-title">Хотите опробовать SLAED CMS в действии?</b>
+      <ul class="sl-d-pane">
+        <li class="sl-d-info">Aктуальная<br>версия</li>
+        <li class="sl-d-num sl-font">6.2</li>
+        <li class="sl-d-btns">
+          <a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
+          <a class="sl-but-blue" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div id="footbox">
+    <div class="sl-wrp sl-grid-1-4">
+      <footer class="sl-grid">
+        <a href="index.php?name=content&amp;op=view&amp;id=1" id="upper" class="sl-thd" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">SLAED CMS - Все великое просто!</a>
+        {{{ foot_html }}}
+        <a class="sl-thd sl-madein" href="index.php?name=content&amp;op=view&amp;id=7" title="Официальный патент на бренд SLAED в Германии">Made in Germany</a>
+      </footer>
+      {% if forumblock %}{{{ forumblock }}}{% endif %}
+      <div class="sl-grid">
+        <p class="sl-font sl-f-title">Технологии</p>
+        <div class="sl-partners">
+          <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=18" title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=19" title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=22" title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI"></a>
+        </div>
+      </div>
+      <div class="sl-grid">
+        <p class="sl-font sl-f-title">Контакты</p>
+        <ul class="sl-block-contact">
+          <li class="sl-ico sl-i-geo">D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
+          <li class="sl-ico sl-i-phone">+49 176 61966679</li>
+          <li class="sl-ico sl-i-geo"><script>"mysi".AddMail('support', 'slaed.net');</script><noscript>support<!-- slaed --><span>&#64;</span><!-- slaed -->slaed.net</noscript><br><a href="//slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div id="foot-menu">
+    <div class="sl-wrp sl-clrfix">
+      <nav class="sl-fmenu">
+        <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
+        <ul>
+          <li><a href="index.php" title="{{ home }}">{{ home }}</a></li>
+          <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта">Услуги</a></li>
+          <li><a href="index.php?name=news" title="Новости">Новости</a></li>
+          <li><a href="index.php?name=files" title="Каталог файлов">Файлы</a></li>
+          <li><a href="index.php?name=faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
+          <li><a href="index.php?name=pages" title="Центр документации">Документация</a></li>
+          <li><a href="index.php?name=main" title="Презентационная страница системы">Портфолио</a></li>
+          <li><a href="index.php?name=sitemap" title="Карта сайта">Карта сайта</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  <div id="block-idea"><a href="index.php?name=forum&amp;cat=95" title="Идеи и предложения для разработки" class="sl-btn-idea"><b class="sl-font">Идеи и предложения</b></a></div>
+  {% if contactblock %}{{{ contactblock }}}{% endif %}
 </body>
 </html>

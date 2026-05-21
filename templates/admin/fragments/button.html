@@ -1,1 +1,42 @@
-{% if value_attr %}<button type="{% if button_type %}{{ button_type }}{% elseif submit_label %}submit{% else %}button{% endif %}"{% if button_id %} id="{{ button_id }}"{% elseif input_id %} id="{{ input_id }}"{% endif %}{% if name_attr %} name="{{ name_attr }}"{% endif %} value="{{ value_attr }}" class="{% if button_class %}{{ button_class }}{% elseif class %}{{ class }}{% elseif is_green %}sl-but-green{% elseif is_blue or is_chlog_primary %}sl-but-blue{% elseif is_plain or is_chlog_secondary %}sl-but{% else %}sl-but-blue{% endif %}"{% if title_text %} title="{{ title_text }}"{% elseif title %} title="{{ title }}"{% endif %}{% if is_disabled %} disabled{% endif %}{% if button_attr %} {{{ button_attr }}}{% elseif input_attr %} {{{ input_attr }}}{% endif %}>{% if submit_label %}{{ submit_label }}{% else %}{{ label }}{% endif %}</button>{% else %}<input type="{% if button_type %}{{ button_type }}{% elseif submit_label %}submit{% else %}button{% endif %}"{% if button_id %} id="{{ button_id }}"{% elseif input_id %} id="{{ input_id }}"{% endif %}{% if name_attr %} name="{{ name_attr }}"{% endif %} value="{% if submit_label %}{{ submit_label }}{% else %}{{ label }}{% endif %}" class="{% if button_class %}{{ button_class }}{% elseif class %}{{ class }}{% elseif is_green %}sl-but-green{% elseif is_blue or is_chlog_primary %}sl-but-blue{% elseif is_plain or is_chlog_secondary %}sl-but{% else %}sl-but-blue{% endif %}"{% if title_text %} title="{{ title_text }}"{% elseif title %} title="{{ title }}"{% endif %}{% if is_disabled %} disabled{% endif %}{% if reset_url %} onclick="window.location.href='{{{ reset_url }}}'"{% endif %}{% if button_attr %} {{{ button_attr }}}{% elseif input_attr %} {{{ input_attr }}}{% endif %}>{% endif %}
+{% if value_attr %}
+<button
+  type="{% if button_type %}{{ button_type }}{% elseif submit_label %}submit{% else %}button{% endif %}"
+  {% if button_id %}id="{{ button_id }}"{% elseif input_id %}id="{{ input_id }}"{% endif %}
+  {% if name_attr %}name="{{ name_attr }}"{% endif %}
+  value="{{ value_attr }}"
+  class="
+    {% if button_class %}{{ button_class }}
+    {% elseif class %}{{ class }}
+    {% elseif is_green %}sl-but-green
+    {% elseif is_blue or is_chlog_primary %}sl-but-blue
+    {% elseif is_plain or is_chlog_secondary %}sl-but
+    {% else %}sl-but-blue
+    {% endif %}
+  "
+  {% if title_text %}title="{{ title_text }}"{% elseif title %}title="{{ title }}"{% endif %}
+  {% if is_disabled %}disabled{% endif %}
+  {% if button_attr %}{{{ button_attr }}}{% elseif input_attr %}{{{ input_attr }}}{% endif %}
+>
+  {% if submit_label %}{{ submit_label }}{% else %}{{ label }}{% endif %}
+</button>
+{% else %}
+<input
+  type="{% if button_type %}{{ button_type }}{% elseif submit_label %}submit{% else %}button{% endif %}"
+  {% if button_id %}id="{{ button_id }}"{% elseif input_id %}id="{{ input_id }}"{% endif %}
+  {% if name_attr %}name="{{ name_attr }}"{% endif %}
+  value="{% if submit_label %}{{ submit_label }}{% else %}{{ label }}{% endif %}"
+  class="
+    {% if button_class %}{{ button_class }}
+    {% elseif class %}{{ class }}
+    {% elseif is_green %}sl-but-green
+    {% elseif is_blue or is_chlog_primary %}sl-but-blue
+    {% elseif is_plain or is_chlog_secondary %}sl-but
+    {% else %}sl-but-blue
+    {% endif %}
+  "
+  {% if title_text %}title="{{ title_text }}"{% elseif title %}title="{{ title }}"{% endif %}
+  {% if is_disabled %}disabled{% endif %}
+  {% if reset_url %}onclick="window.location.href='{{{ reset_url }}}'"{% endif %}
+  {% if button_attr %}{{{ button_attr }}}{% elseif input_attr %}{{{ input_attr }}}{% endif %}
+>
+{% endif %}

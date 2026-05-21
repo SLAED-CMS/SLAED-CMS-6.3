@@ -1,12 +1,12 @@
 <tr id="{{ id }}" class="sl-forum-line">
-	<td class="sl-fl-col-num">{% if id_link %}{% include 'fragments/link.html' with id_link %}{% else %}<a href="#{{ id }}" title="{{ id }}" class="sl-pnum">{{ id }}</a>{% endif %}</td>
-	<td class="sl-fl-col-content">
-		<div class="sl-dropdown">
-			<span data-sl-toggle-control="v-form-{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ info }}" class="sl-news-info"></span><h4>{% if title_link %}{% include 'fragments/link.html' with title_link %}{% elseif title_href %}<a href="{{{ title_href }}}" title="{{{ title_attr }}}">{{ title_text }}</a>{% else %}{{ title_text }}{% endif %}{% if title_new %} {{{ title_new }}}{% endif %}</h4>
-			<div id="v-form-{{ id }}" class="sl-dropdown-form">{{{ report }}}</div>
-		</div>
-		{% if admin %}<div class="sl-mt-5">{{{ admin }}}</div>{% endif %}
-	</td>
-	<td class="sl-fl-col-stat">{{ comm }}</td>
-	<td class="sl-fl-col-stat">{{ vote }}</td>
+  <td class="sl-fl-col-num">{% if id_link %}{% include 'fragments/link.html' with id_link %}{% else %}<a href="#{{ id }}" title="{{ id }}" class="sl-pnum">{{ id }}</a>{% endif %}</td>
+  <td class="sl-fl-col-content">
+    <div class="sl-dropdown">
+      <span data-sl-toggle-control="v-form-{{ id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ info }}" class="sl-news-info"></span><h4>{% if title_link %}{% include 'fragments/link.html' with title_link %}{% elseif title_href %}<a href="{{{ title_href }}}" title="{{{ title_attr }}}">{{ title_text }}</a>{% else %}{{ title_text }}{% endif %}{% if title_new %} {{{ title_new }}}{% endif %}</h4>
+      <div id="v-form-{{ id }}" class="sl-dropdown-form">{{{ report }}}</div>
+    </div>
+    {% if admin %}<div class="sl-mt-5">{{{ admin }}}</div>{% endif %}
+  </td>
+  <td class="sl-fl-col-stat">{{ comm }}</td>
+  <td class="sl-fl-col-stat">{{ vote }}</td>
 </tr>

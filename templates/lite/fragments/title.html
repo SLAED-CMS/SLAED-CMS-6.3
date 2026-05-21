@@ -2,15 +2,15 @@
 <h1 class="sl-heading">{{ title }}</h1>
 {% elseif content or icon or subtitle %}
 <div class="sl-basecont">
-    <div class="sl-bpad">
-        <div class="sl-headmodule">
-            {% if icon %}<span class="sl-lcolomn"><img src="templates/admin/images/admin/{{ icon }}" title="{{ title }}" alt="{{ title }}"></span>{% endif %}
-            <div class="sl-rcolomn"><h1>{{ title }}</h1>{{{ subtitle }}}</div>
-            <div class="sl-clr"></div>
-        </div>
-        <br>
-        {{{ content }}}
+  <div class="sl-bpad">
+    <div class="sl-headmodule">
+      {% if icon %}<span class="sl-lcolomn"><img src="templates/admin/images/admin/{{ icon }}" title="{{ title }}" alt="{{ title }}"></span>{% endif %}
+      <div class="sl-rcolomn"><h1>{{ title }}</h1>{{{ subtitle }}}</div>
+      <div class="sl-clr"></div>
     </div>
+    <br>
+    {{{ content }}}
+  </div>
 </div>
 {% elseif is_level_two and title_html %}
 <h2>{{{ title_html }}}</h2>

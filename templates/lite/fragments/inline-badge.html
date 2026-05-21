@@ -1,1 +1,33 @@
-<span{% if is_pager_dots %} title="&hellip;"{% elseif title_text %} title="{{ title_text }}"{% endif %} class="{% if is_pager_dots %}sl-pnum-dots{% else %}{{ class }}{% if is_account_button %} sl-but{% endif %}{% if is_hidden %} sl-hidden{% endif %}{% if is_hits %} sl-hits{% endif %}{% if is_download %} sl-download{% endif %}{% if is_forum_closed %} sl-forum-closed{% endif %}{% if is_forum_new %} sl-forum-new{% endif %}{% if is_forum_old %} sl-forum-old{% endif %}{% if is_forum_last %} sl-forum-last{% endif %}{% if is_topic_moderated %} sl-topic-moderated{% endif %}{% if is_topic_admin %} sl-topic-admin{% endif %}{% if is_topic_closed %} sl-topic-closed{% endif %}{% if is_topic_popular_new %} sl-topic-popular-new{% endif %}{% if is_topic_new %} sl-topic-new{% endif %}{% if is_topic_popular_old %} sl-topic-popular-old{% endif %}{% if is_topic_old %} sl-topic-old{% endif %}{% if is_topic_pending %} sl-topic-pending{% endif %}{% if is_topic_hot %} sl-topic-hot{% endif %}{% if is_topic_announcement %} sl-topic-announcement{% endif %}{% if is_comment_date %} sl-topic-post{% endif %}{% if is_topic_edit %} sl-topic-edit{% endif %}{% if is_media_post %} sl-media-post{% endif %}{% if is_status_active %} sl-status-active{% endif %}{% if is_status_inactive %} sl-status-inactive{% endif %}{% endif %}"{% if badge_attr %} {{{ badge_attr }}}{% endif %}>{% if is_pager_dots %}&hellip;{% elseif label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</span>
+<span
+  {% if is_pager_dots %}title="&hellip;"{% elseif title_text %}title="{{ title_text }}"{% endif %}
+  class="
+    {% if is_pager_dots %}sl-pnum-dots
+    {% else %}
+      {{ class }}
+      {% if is_account_button %} sl-but{% endif %}
+      {% if is_hidden %} sl-hidden{% endif %}
+      {% if is_hits %} sl-hits{% endif %}
+      {% if is_download %} sl-download{% endif %}
+      {% if is_forum_closed %} sl-forum-closed{% endif %}
+      {% if is_forum_new %} sl-forum-new{% endif %}
+      {% if is_forum_old %} sl-forum-old{% endif %}
+      {% if is_forum_last %} sl-forum-last{% endif %}
+      {% if is_topic_moderated %} sl-topic-moderated{% endif %}
+      {% if is_topic_admin %} sl-topic-admin{% endif %}
+      {% if is_topic_closed %} sl-topic-closed{% endif %}
+      {% if is_topic_popular_new %} sl-topic-popular-new{% endif %}
+      {% if is_topic_new %} sl-topic-new{% endif %}
+      {% if is_topic_popular_old %} sl-topic-popular-old{% endif %}
+      {% if is_topic_old %} sl-topic-old{% endif %}
+      {% if is_topic_pending %} sl-topic-pending{% endif %}
+      {% if is_topic_hot %} sl-topic-hot{% endif %}
+      {% if is_topic_announcement %} sl-topic-announcement{% endif %}
+      {% if is_comment_date %} sl-topic-post{% endif %}
+      {% if is_topic_edit %} sl-topic-edit{% endif %}
+      {% if is_media_post %} sl-media-post{% endif %}
+      {% if is_status_active %} sl-status-active{% endif %}
+      {% if is_status_inactive %} sl-status-inactive{% endif %}
+    {% endif %}
+  "
+  {% if badge_attr %}{{{ badge_attr }}}{% endif %}
+>{% if is_pager_dots %}&hellip;{% elseif label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</span>

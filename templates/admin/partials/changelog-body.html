@@ -1,53 +1,53 @@
 <div class="sl-changelog">
-    <form action="{{{ action_url }}}" method="get" class="sl-changelog-filter">
-        <h3>{{ txt_filter_heading }}</h3>
-        {% include 'fragments/hidden.html' with hidden %}
+  <form action="{{{ action_url }}}" method="get" class="sl-changelog-filter">
+    <h3>{{ txt_filter_heading }}</h3>
+    {% include 'fragments/hidden.html' with hidden %}
 
-        <div class="sl-changelog-filter-top">
-            <div class="sl-changelog-filter-field">
-                <label for="search">{{ txt_search_label }}</label>
-                {% include 'fragments/input.html' with search_field %}
-            </div>
+    <div class="sl-changelog-filter-top">
+      <div class="sl-changelog-filter-field">
+        <label for="search">{{ txt_search_label }}</label>
+        {% include 'fragments/input.html' with search_field %}
+      </div>
 
-            <div class="sl-changelog-filter-actions">
-                {% include 'fragments/button.html' with filter_button %}
-                {% include 'fragments/button.html' with reset_button %}
-            </div>
-        </div>
-
-        <div class="sl-changelog-filter-grid">
-            <div class="sl-changelog-filter-field">
-                <label for="author">{{ txt_author_label }}</label>
-                {% include 'fragments/input.html' with author_field %}
-            </div>
-            <div class="sl-changelog-filter-field">
-                <label for="file">{{ txt_file_label }}</label>
-                {% include 'fragments/input.html' with file_field %}
-            </div>
-            <div class="sl-changelog-filter-field">
-                <label for="datefrom">{{ txt_datefrom_label }}</label>
-                {% include 'fragments/input.html' with datefrom_field %}
-            </div>
-            <div class="sl-changelog-filter-field">
-                <label for="dateto">{{ txt_dateto_label }}</label>
-                {% include 'fragments/input.html' with dateto_field %}
-            </div>
-        </div>
-    </form>
-
-    <div class="sl-changelog-results">
-        <div class="sl-changelog-results-info">
-            <strong>{{ txt_total }}:</strong> {{ totcount }} {{ txt_commits_repo }} |
-            <strong>{{ txt_filtered }}:</strong> {{ totcom }} {{ txt_commits }} |
-            <strong>{{ txt_page }}:</strong> {{ page }} / {{ totpage }}
-        </div>
+      <div class="sl-changelog-filter-actions">
+        {% include 'fragments/button.html' with filter_button %}
+        {% include 'fragments/button.html' with reset_button %}
+      </div>
     </div>
 
-    <div class="sl-changelog-commits">
-        {{{ commits }}}
+    <div class="sl-changelog-filter-grid">
+      <div class="sl-changelog-filter-field">
+        <label for="author">{{ txt_author_label }}</label>
+        {% include 'fragments/input.html' with author_field %}
+      </div>
+      <div class="sl-changelog-filter-field">
+        <label for="file">{{ txt_file_label }}</label>
+        {% include 'fragments/input.html' with file_field %}
+      </div>
+      <div class="sl-changelog-filter-field">
+        <label for="datefrom">{{ txt_datefrom_label }}</label>
+        {% include 'fragments/input.html' with datefrom_field %}
+      </div>
+      <div class="sl-changelog-filter-field">
+        <label for="dateto">{{ txt_dateto_label }}</label>
+        {% include 'fragments/input.html' with dateto_field %}
+      </div>
     </div>
+  </form>
 
-    <div class="sl-changelog-pagination">
-        {{{ paging }}}
+  <div class="sl-changelog-results">
+    <div class="sl-changelog-results-info">
+      <strong>{{ txt_total }}:</strong> {{ totcount }} {{ txt_commits_repo }} |
+      <strong>{{ txt_filtered }}:</strong> {{ totcom }} {{ txt_commits }} |
+      <strong>{{ txt_page }}:</strong> {{ page }} / {{ totpage }}
     </div>
+  </div>
+
+  <div class="sl-changelog-commits">
+    {{{ commits }}}
+  </div>
+
+  <div class="sl-changelog-pagination">
+    {{{ paging }}}
+  </div>
 </div>

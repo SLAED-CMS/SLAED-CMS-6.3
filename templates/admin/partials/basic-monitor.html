@@ -1,526 +1,526 @@
 {% if show_layout %}
 <div class="sl-monitor-wrapper">
-    <div id="monitor-sync-poller" hx-get="{{{ syncurl }}}" hx-trigger="every 4s" hx-swap="none"></div>
+  <div id="monitor-sync-poller" hx-get="{{{ syncurl }}}" hx-trigger="every 4s" hx-swap="none"></div>
 {% endif %}
 
 {% if show_layout %}
-    <!-- ROW 1: Sys Status + Software -->
-    <div class="sl-monitor-top-split">
-        <div id="monitor-status-panel" class="sl-monitor-card" hx-get="{{{ statusurl }}}" hx-trigger="load" hx-swap="outerHTML">
-            <div class="sl-monitor-panel-head">
-                <span class="sl-monitor-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
-            </div>
-            <div class="sl-loading sl-loading-drift" role="status" aria-label="Loading">
-            </div>
-        </div>
+  <!-- ROW 1: Sys Status + Software -->
+  <div class="sl-monitor-top-split">
+    <div id="monitor-status-panel" class="sl-monitor-card" hx-get="{{{ statusurl }}}" hx-trigger="load" hx-swap="outerHTML">
+      <div class="sl-monitor-panel-head">
+        <span class="sl-monitor-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
+      </div>
+      <div class="sl-loading sl-loading-drift" role="status" aria-label="Loading">
+      </div>
+    </div>
 {% endif %}
 {% if show_status %}
-        <div id="monitor-status-panel"{{{ status_oob }}} class="sl-monitor-card">
-            <div class="sl-monitor-panel-head">
-                <span class="sl-monitor-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
-            </div>
-            <div class="sl-monitor-sys-grid">
-                <div class="sl-monitor-sys-item">
-                    <div class="sl-knob-wrapper">
-                        <svg class="sl-knob-svg" viewBox="0 0 100 100">
-                            <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-                            <circle class="sl-knob-val{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash }}" stroke-dashoffset="{{ off }}"></circle>
-                        </svg>
-                        <div class="sl-knob-text{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ load_0 }}%</div>
-                    </div>
-                    <div class="sl-system-label">CPU Usage</div>
-                    <div class="sl-system-sub">{{ cpuphys }} / {{ cpucores }} Cores</div>
-                    <div class="sl-system-sub">{{ cpufreq }}</div>
-                </div>
-                <div class="sl-monitor-sys-item">
-                    <div class="sl-knob-wrapper">
-                        <svg class="sl-knob-svg" viewBox="0 0 100 100">
-                            <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-                            <circle class="sl-knob-val{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_r }}" stroke-dashoffset="{{ off_r }}"></circle>
-                        </svg>
-                        <div class="sl-knob-text{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ ram_p }}%</div>
-                    </div>
-                    <div class="sl-system-label">RAM Usage</div>
-                    <div class="sl-system-sub">{{ ramumb }} / {{ ramtmb }}</div>
-                    <div class="sl-system-sub">Available: {{ ramavailmb }}</div>
-                </div>
-                <div class="sl-monitor-sys-item">
-                    <div class="sl-knob-wrapper">
-                        <svg class="sl-knob-svg" viewBox="0 0 100 100">
-                            <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
-                            <circle class="sl-knob-val{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_d }}" stroke-dashoffset="{{ off_d }}"></circle>
-                        </svg>
-                        <div class="sl-knob-text{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ disk_p }}%</div>
-                    </div>
-                    <div class="sl-system-label">Disk Usage</div>
-                    <div class="sl-system-sub">Root /</div>
-                    <div class="sl-system-sub">{{ diskused }} / {{ disktot }}</div>
-                </div>
-            </div>
+    <div id="monitor-status-panel"{{{ status_oob }}} class="sl-monitor-card">
+      <div class="sl-monitor-panel-head">
+        <span class="sl-monitor-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
+      </div>
+      <div class="sl-monitor-sys-grid">
+        <div class="sl-monitor-sys-item">
+          <div class="sl-knob-wrapper">
+            <svg class="sl-knob-svg" viewBox="0 0 100 100">
+              <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="sl-knob-val{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash }}" stroke-dashoffset="{{ off }}"></circle>
+            </svg>
+            <div class="sl-knob-text{% if cpu_is_danger %} sl-knob-danger{% elseif cpu_is_warning %} sl-knob-warning{% elseif cpu_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ load_0 }}%</div>
+          </div>
+          <div class="sl-system-label">CPU Usage</div>
+          <div class="sl-system-sub">{{ cpuphys }} / {{ cpucores }} Cores</div>
+          <div class="sl-system-sub">{{ cpufreq }}</div>
         </div>
-{% endif %}
-
-{% if show_layout %}
-        <!-- SOFTWARE PANEL -->
-        <div class="sl-monitor-card">
-            <div class="sl-monitor-panel-head">
-                <span class="sl-monitor-head-left"><i class="bi bi-boxes"></i>Software</span>
-            </div>
-            <div class="sl-status-compact">
-                <div class="sl-status-compact-item">
-                    <div class="sl-status-compact-left"><i class="bi bi-window-stack"></i> SLAED CMS</div>
-                    <div class="sl-status-compact-right"><span>{{ cmsver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-                </div>
-                <div class="sl-status-compact-item">
-                    <div class="sl-status-compact-left"><i class="bi bi-cpu"></i> PHP</div>
-                    <div class="sl-status-compact-right"><span>{{ phpver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-                </div>
-                <div class="sl-status-compact-item">
-                    <div class="sl-status-compact-left"><i class="bi bi-database"></i> MySQL</div>
-                    <div class="sl-status-compact-right"><span>{{ mysql }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-                </div>
-                <div class="sl-status-compact-item">
-                    <div class="sl-status-compact-left"><i class="bi bi-hdd-rack"></i> {{ servsoftname }}</div>
-                    <div class="sl-status-compact-right"><span>{{ servver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-                </div>
-            </div>
+        <div class="sl-monitor-sys-item">
+          <div class="sl-knob-wrapper">
+            <svg class="sl-knob-svg" viewBox="0 0 100 100">
+              <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="sl-knob-val{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_r }}" stroke-dashoffset="{{ off_r }}"></circle>
+            </svg>
+            <div class="sl-knob-text{% if ram_is_danger %} sl-knob-danger{% elseif ram_is_warning %} sl-knob-warning{% elseif ram_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ ram_p }}%</div>
+          </div>
+          <div class="sl-system-label">RAM Usage</div>
+          <div class="sl-system-sub">{{ ramumb }} / {{ ramtmb }}</div>
+          <div class="sl-system-sub">Available: {{ ramavailmb }}</div>
         </div>
+        <div class="sl-monitor-sys-item">
+          <div class="sl-knob-wrapper">
+            <svg class="sl-knob-svg" viewBox="0 0 100 100">
+              <circle class="sl-knob-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="sl-knob-val{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}" cx="50" cy="50" r="45" stroke-dasharray="{{ dash_d }}" stroke-dashoffset="{{ off_d }}"></circle>
+            </svg>
+            <div class="sl-knob-text{% if disk_is_danger %} sl-knob-danger{% elseif disk_is_warning %} sl-knob-warning{% elseif disk_is_info %} sl-knob-info{% else %} sl-knob-success{% endif %}">{{ disk_p }}%</div>
+          </div>
+          <div class="sl-system-label">Disk Usage</div>
+          <div class="sl-system-sub">Root /</div>
+          <div class="sl-system-sub">{{ diskused }} / {{ disktot }}</div>
+        </div>
+      </div>
     </div>
 {% endif %}
 
 {% if show_layout %}
-    <!-- ROW 2: Traffic -->
-    <div id="monitor-traffic-panel" class="sl-monitor-bottom-grid" hx-get="{{{ trafficurl }}}" hx-trigger="load" hx-swap="outerHTML">
-        <div class="sl-monitor-card">
-            <div class="sl-monitor-panel-head">
-                <span class="sl-monitor-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
-            </div>
-            <div class="sl-loading sl-loading-drift" role="status" aria-label="Loading">
-            </div>
+    <!-- SOFTWARE PANEL -->
+    <div class="sl-monitor-card">
+      <div class="sl-monitor-panel-head">
+        <span class="sl-monitor-head-left"><i class="bi bi-boxes"></i>Software</span>
+      </div>
+      <div class="sl-status-compact">
+        <div class="sl-status-compact-item">
+          <div class="sl-status-compact-left"><i class="bi bi-window-stack"></i> SLAED CMS</div>
+          <div class="sl-status-compact-right"><span>{{ cmsver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
         </div>
+        <div class="sl-status-compact-item">
+          <div class="sl-status-compact-left"><i class="bi bi-cpu"></i> PHP</div>
+          <div class="sl-status-compact-right"><span>{{ phpver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
+        </div>
+        <div class="sl-status-compact-item">
+          <div class="sl-status-compact-left"><i class="bi bi-database"></i> MySQL</div>
+          <div class="sl-status-compact-right"><span>{{ mysql }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
+        </div>
+        <div class="sl-status-compact-item">
+          <div class="sl-status-compact-left"><i class="bi bi-hdd-rack"></i> {{ servsoftname }}</div>
+          <div class="sl-status-compact-right"><span>{{ servver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
+        </div>
+      </div>
     </div>
+  </div>
+{% endif %}
+
+{% if show_layout %}
+  <!-- ROW 2: Traffic -->
+  <div id="monitor-traffic-panel" class="sl-monitor-bottom-grid" hx-get="{{{ trafficurl }}}" hx-trigger="load" hx-swap="outerHTML">
+    <div class="sl-monitor-card">
+      <div class="sl-monitor-panel-head">
+        <span class="sl-monitor-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
+      </div>
+      <div class="sl-loading sl-loading-drift" role="status" aria-label="Loading">
+      </div>
+    </div>
+  </div>
 {% endif %}
 {% if show_traffic %}
-    <!-- ROW 2: Traffic -->
-    <div id="monitor-traffic-panel"{{{ traffic_oob }}} class="sl-monitor-bottom-grid">
-        <div class="sl-monitor-card">
-            <div class="sl-monitor-panel-head">
-                <span class="sl-monitor-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
-                <span class="sl-monitor-head-right">Net: All</span>
-            </div>
-            <div class="sl-traffic-stats-row">
-                <div class="sl-t-item">
-                    <div class="sl-t-icon sl-t-icon-cpu"><i class="bi bi-cpu-fill"></i></div>
-                    <div class="sl-t-content">
-                        <div class="sl-t-label">CPU Usage</div>
-                        <div class="sl-t-val">{{ cpuuse }}%</div>
-                        <div class="sl-system-sub sl-t-sub">{{ cpufreq }}</div>
-                    </div>
-                </div>
-                <div class="sl-t-item">
-                    <div class="sl-t-icon sl-t-icon-ram"><i class="bi bi-motherboard-fill"></i></div>
-                    <div class="sl-t-content">
-                        <div class="sl-t-label">RAM Usage</div>
-                        <div class="sl-t-val">{{ ram_p }}%</div>
-                        <div class="sl-system-sub sl-t-sub">{{ ramtmb }}</div>
-                    </div>
-                </div>
-                <div class="sl-t-item">
-                    <div class="sl-t-icon sl-t-icon-up"><i class="bi bi-cloud-upload-fill"></i></div>
-                    <div class="sl-t-content">
-                        <div class="sl-t-label">Upstream</div>
-                        <div class="sl-t-val">{{ nettx }}</div>
-                        <div class="sl-system-sub sl-t-sub">{{ nettxrate }}</div>
-                    </div>
-                </div>
-                <div class="sl-t-item">
-                    <div class="sl-t-icon sl-t-icon-down"><i class="bi bi-cloud-download-fill"></i></div>
-                    <div class="sl-t-content">
-                        <div class="sl-t-label">Downstream</div>
-                        <div class="sl-t-val">{{ netrx }}</div>
-                        <div class="sl-system-sub sl-t-sub">{{ netrxrate }}</div>
-                    </div>
-                </div>
-            </div>
-            {{{ chartsvg }}}
+  <!-- ROW 2: Traffic -->
+  <div id="monitor-traffic-panel"{{{ traffic_oob }}} class="sl-monitor-bottom-grid">
+    <div class="sl-monitor-card">
+      <div class="sl-monitor-panel-head">
+        <span class="sl-monitor-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
+        <span class="sl-monitor-head-right">Net: All</span>
+      </div>
+      <div class="sl-traffic-stats-row">
+        <div class="sl-t-item">
+          <div class="sl-t-icon sl-t-icon-cpu"><i class="bi bi-cpu-fill"></i></div>
+          <div class="sl-t-content">
+            <div class="sl-t-label">CPU Usage</div>
+            <div class="sl-t-val">{{ cpuuse }}%</div>
+            <div class="sl-system-sub sl-t-sub">{{ cpufreq }}</div>
+          </div>
         </div>
+        <div class="sl-t-item">
+          <div class="sl-t-icon sl-t-icon-ram"><i class="bi bi-motherboard-fill"></i></div>
+          <div class="sl-t-content">
+            <div class="sl-t-label">RAM Usage</div>
+            <div class="sl-t-val">{{ ram_p }}%</div>
+            <div class="sl-system-sub sl-t-sub">{{ ramtmb }}</div>
+          </div>
+        </div>
+        <div class="sl-t-item">
+          <div class="sl-t-icon sl-t-icon-up"><i class="bi bi-cloud-upload-fill"></i></div>
+          <div class="sl-t-content">
+            <div class="sl-t-label">Upstream</div>
+            <div class="sl-t-val">{{ nettx }}</div>
+            <div class="sl-system-sub sl-t-sub">{{ nettxrate }}</div>
+          </div>
+        </div>
+        <div class="sl-t-item">
+          <div class="sl-t-icon sl-t-icon-down"><i class="bi bi-cloud-download-fill"></i></div>
+          <div class="sl-t-content">
+            <div class="sl-t-label">Downstream</div>
+            <div class="sl-t-val">{{ netrx }}</div>
+            <div class="sl-system-sub sl-t-sub">{{ netrxrate }}</div>
+          </div>
+        </div>
+      </div>
+      {{{ chartsvg }}}
     </div>
+  </div>
 {% endif %}
 
 {% if show_layout %}
-    <!-- ROW 3: Overview Strip -->
-    <div class="sl-monitor-overview-strip">
-        <div class="sl-overview-item">
-            <div class="sl-overview-label">Website</div>
-            <div class="sl-overview-val">{{ cntnews }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
-            </div>
-        </div>
-        <div class="sl-overview-item">
-            <div class="sl-overview-label">Files</div>
-            <div class="sl-overview-val">{{ cntfile }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
-            </div>
-        </div>
-        <div class="sl-overview-item">
-            <div class="sl-overview-label">Database</div>
-            <div class="sl-overview-val">{{ dbtabs }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
-            </div>
-        </div>
-        <div class="sl-overview-item">
-            <div class="sl-overview-label">Users</div>
-            <div class="sl-overview-val">{{ userson }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
-            </div>
-        </div>
+  <!-- ROW 3: Overview Strip -->
+  <div class="sl-monitor-overview-strip">
+    <div class="sl-overview-item">
+      <div class="sl-overview-label">Website</div>
+      <div class="sl-overview-val">{{ cntnews }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
+      </div>
     </div>
-    <!-- Server Block -->
-    <div class="sl-monitor-card">
-        <div class="sl-monitor-panel-head">
-            <span class="sl-monitor-head-left"><i class="bi bi-hdd-network"></i>Server & CMS</span>
-        </div>
-        <div class="sl-monitor-info-grid">
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>Uptime</td>
-                        <td>{{ uptime }}</td>
-                    </tr>
-                    <tr>
-                        <td>OS</td>
-                        <td>{{ osname }}</td>
-                    </tr>
-                    <tr>
-                        <td>Server</td>
-                        <td>{{ servfull }}</td>
-                    </tr>
-                    <tr>
-                        <td>HTTPS</td>
-                        <td>{{{ servhttps }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Server Protocol</td>
-                        <td>{{ servprot }}</td>
-                    </tr>
-                    <tr>
-                        <td>Server Name</td>
-                        <td>{{ servname }}</td>
-                    </tr>
-                    <tr>
-                        <td>Server IP</td>
-                        <td>{{ serverip }}</td>
-                    </tr>
-                    <tr>
-                        <td>Server Port</td>
-                        <td>{{ servport }}</td>
-                    </tr>
-                    <tr>
-                        <td>Document Root</td>
-                        <td>{{{ servroot }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Disk Total</td>
-                        <td>{{ disktot }}</td>
-                    </tr>
-                    <tr>
-                        <td>Disk Free</td>
-                        <td>{{ diskfree }}</td>
-                    </tr>
-                    <tr>
-                        <td>Disk Used</td>
-                        <td>{{ diskused }}</td>
-                    </tr>
-                    <tr>
-                        <td>Disk Read</td>
-                        <td>{{ dskread }}</td>
-                    </tr>
-                    <tr>
-                        <td>Disk Write</td>
-                        <td>{{ dskwrite }}</td>
-                    </tr>
-                    <tr>
-                        <td>Disk Health</td>
-                        <td>{{{ diskwarn }}}</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>Operation Mode</td>
-                        <td>{{{ opmode }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Statistics</td>
-                        <td>{{{ statact }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Transitions</td>
-                        <td>{{{ referact }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Newsletter</td>
-                        <td>{{{ newslet }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Caching</td>
-                        <td>{{{ cache }}}</td>
-                    </tr>
-                    <tr>
-                        <td>SEF Rewrite</td>
-                        <td>{{{ rewrite }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Last Backup Run</td>
-                        <td>{{ lastbackuprun }}</td>
-                    </tr>
-                    <tr>
-                        <td>Backup Folder</td>
-                        <td>{{ backupdirsz }}</td>
-                    </tr>
-                    <tr>
-                        <td>Cache Folder</td>
-                        <td>{{ cachedirsz }}</td>
-                    </tr>
-                    <tr>
-                        <td>Logs Folder</td>
-                        <td>{{ logsdirsz }}</td>
-                    </tr>
-                    <tr>
-                        <td>Uploads Folder</td>
-                        <td>{{ uploadssz }}</td>
-                    </tr>
-                    <tr>
-                        <td>Failed Logins</td>
-                        <td>{{ failedlogins24h }}</td>
-                    </tr>
-                    <tr>
-                        <td>Security Event</td>
-                        <td>{{{ lastsecurityevent24h }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Database Error</td>
-                        <td>{{{ dbissueevent24h }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Error Log</td>
-                        <td>{{ errorlog24h }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+    <div class="sl-overview-item">
+      <div class="sl-overview-label">Files</div>
+      <div class="sl-overview-val">{{ cntfile }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
+      </div>
     </div>
+    <div class="sl-overview-item">
+      <div class="sl-overview-label">Database</div>
+      <div class="sl-overview-val">{{ dbtabs }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
+      </div>
+    </div>
+    <div class="sl-overview-item">
+      <div class="sl-overview-label">Users</div>
+      <div class="sl-overview-val">{{ userson }} <div class="sl-overview-icon-arr"><i class="bi bi-chevron-right"></i></div>
+      </div>
+    </div>
+  </div>
+  <!-- Server Block -->
+  <div class="sl-monitor-card">
+    <div class="sl-monitor-panel-head">
+      <span class="sl-monitor-head-left"><i class="bi bi-hdd-network"></i>Server & CMS</span>
+    </div>
+    <div class="sl-monitor-info-grid">
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>Uptime</td>
+            <td>{{ uptime }}</td>
+          </tr>
+          <tr>
+            <td>OS</td>
+            <td>{{ osname }}</td>
+          </tr>
+          <tr>
+            <td>Server</td>
+            <td>{{ servfull }}</td>
+          </tr>
+          <tr>
+            <td>HTTPS</td>
+            <td>{{{ servhttps }}}</td>
+          </tr>
+          <tr>
+            <td>Server Protocol</td>
+            <td>{{ servprot }}</td>
+          </tr>
+          <tr>
+            <td>Server Name</td>
+            <td>{{ servname }}</td>
+          </tr>
+          <tr>
+            <td>Server IP</td>
+            <td>{{ serverip }}</td>
+          </tr>
+          <tr>
+            <td>Server Port</td>
+            <td>{{ servport }}</td>
+          </tr>
+          <tr>
+            <td>Document Root</td>
+            <td>{{{ servroot }}}</td>
+          </tr>
+          <tr>
+            <td>Disk Total</td>
+            <td>{{ disktot }}</td>
+          </tr>
+          <tr>
+            <td>Disk Free</td>
+            <td>{{ diskfree }}</td>
+          </tr>
+          <tr>
+            <td>Disk Used</td>
+            <td>{{ diskused }}</td>
+          </tr>
+          <tr>
+            <td>Disk Read</td>
+            <td>{{ dskread }}</td>
+          </tr>
+          <tr>
+            <td>Disk Write</td>
+            <td>{{ dskwrite }}</td>
+          </tr>
+          <tr>
+            <td>Disk Health</td>
+            <td>{{{ diskwarn }}}</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>Operation Mode</td>
+            <td>{{{ opmode }}}</td>
+          </tr>
+          <tr>
+            <td>Statistics</td>
+            <td>{{{ statact }}}</td>
+          </tr>
+          <tr>
+            <td>Transitions</td>
+            <td>{{{ referact }}}</td>
+          </tr>
+          <tr>
+            <td>Newsletter</td>
+            <td>{{{ newslet }}}</td>
+          </tr>
+          <tr>
+            <td>Caching</td>
+            <td>{{{ cache }}}</td>
+          </tr>
+          <tr>
+            <td>SEF Rewrite</td>
+            <td>{{{ rewrite }}}</td>
+          </tr>
+          <tr>
+            <td>Last Backup Run</td>
+            <td>{{ lastbackuprun }}</td>
+          </tr>
+          <tr>
+            <td>Backup Folder</td>
+            <td>{{ backupdirsz }}</td>
+          </tr>
+          <tr>
+            <td>Cache Folder</td>
+            <td>{{ cachedirsz }}</td>
+          </tr>
+          <tr>
+            <td>Logs Folder</td>
+            <td>{{ logsdirsz }}</td>
+          </tr>
+          <tr>
+            <td>Uploads Folder</td>
+            <td>{{ uploadssz }}</td>
+          </tr>
+          <tr>
+            <td>Failed Logins</td>
+            <td>{{ failedlogins24h }}</td>
+          </tr>
+          <tr>
+            <td>Security Event</td>
+            <td>{{{ lastsecurityevent24h }}}</td>
+          </tr>
+          <tr>
+            <td>Database Error</td>
+            <td>{{{ dbissueevent24h }}}</td>
+          </tr>
+          <tr>
+            <td>Error Log</td>
+            <td>{{ errorlog24h }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
 
-    <!-- PHP Block -->
-    <div class="sl-monitor-card">
-        <div class="sl-monitor-panel-head">
-            <span class="sl-monitor-head-left"><i class="bi bi-filetype-php"></i>PHP Information</span>
-        </div>
-        <div class="sl-monitor-info-grid">
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>PHP SAPI</td>
-                        <td>{{ phpsapi }}</td>
-                    </tr>
-                    <tr>
-                        <td>Zend Engine</td>
-                        <td>{{ zend_eng }}</td>
-                    </tr>
-                    <tr>
-                        <td>Default Charset</td>
-                        <td>{{ php_char }}</td>
-                    </tr>
-                    <tr>
-                        <td>PHP Timezone</td>
-                        <td>{{ phptime }}</td>
-                    </tr>
-                    <tr>
-                        <td>Memory Limit</td>
-                        <td>{{ memlim }}</td>
-                    </tr>
-                    <tr>
-                        <td>Script Memory</td>
-                        <td>{{ scriptmem }}</td>
-                    </tr>
-                    <tr>
-                        <td>Execution Time</td>
-                        <td>{{ maxtime }} s</td>
-                    </tr>
-                    <tr>
-                        <td>Post Max Size</td>
-                        <td>{{ postmax }}</td>
-                    </tr>
-                    <tr>
-                        <td>Upload Max</td>
-                        <td>{{ upmax }}</td>
-                    </tr>
-                    <tr>
-                        <td>Max Input Vars</td>
-                        <td>{{ maxvars }}</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>PHP GD</td>
-                        <td>{{ gdver }}</td>
-                    </tr>
-                    <tr>
-                        <td>OPcache</td>
-                        <td>{{{ opcache_on }}}</td>
-                    </tr>
-                    <tr>
-                        <td>OPcache Memory</td>
-                        <td>{{ opcache_mem }}</td>
-                    </tr>
-                    <tr>
-                        <td>Cached Scripts</td>
-                        <td>{{ opcache_scripts }}</td>
-                    </tr>
-                    <tr>
-                        <td>Hit Rate</td>
-                        <td>{{ opcache_hit_rate }}</td>
-                    </tr>
-                    <tr>
-                        <td>File Uploads</td>
-                        <td>{{{ fileup }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Max File Uploads</td>
-                        <td>{{ maxfileup }}</td>
-                    </tr>
-                    <tr>
-                        <td>GZip</td>
-                        <td>{{{ gzipld }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Zip Archive</td>
-                        <td>{{{ zipld }}}</td>
-                    </tr>
-                    <tr>
-                        <td>BZip2</td>
-                        <td>{{{ bz2ld }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Extensions On</td>
-                        <td>{{{ extlist_on }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Extensions Off</td>
-                        <td>{{{ extlist_off }}}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+  <!-- PHP Block -->
+  <div class="sl-monitor-card">
+    <div class="sl-monitor-panel-head">
+      <span class="sl-monitor-head-left"><i class="bi bi-filetype-php"></i>PHP Information</span>
     </div>
+    <div class="sl-monitor-info-grid">
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>PHP SAPI</td>
+            <td>{{ phpsapi }}</td>
+          </tr>
+          <tr>
+            <td>Zend Engine</td>
+            <td>{{ zend_eng }}</td>
+          </tr>
+          <tr>
+            <td>Default Charset</td>
+            <td>{{ php_char }}</td>
+          </tr>
+          <tr>
+            <td>PHP Timezone</td>
+            <td>{{ phptime }}</td>
+          </tr>
+          <tr>
+            <td>Memory Limit</td>
+            <td>{{ memlim }}</td>
+          </tr>
+          <tr>
+            <td>Script Memory</td>
+            <td>{{ scriptmem }}</td>
+          </tr>
+          <tr>
+            <td>Execution Time</td>
+            <td>{{ maxtime }} s</td>
+          </tr>
+          <tr>
+            <td>Post Max Size</td>
+            <td>{{ postmax }}</td>
+          </tr>
+          <tr>
+            <td>Upload Max</td>
+            <td>{{ upmax }}</td>
+          </tr>
+          <tr>
+            <td>Max Input Vars</td>
+            <td>{{ maxvars }}</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>PHP GD</td>
+            <td>{{ gdver }}</td>
+          </tr>
+          <tr>
+            <td>OPcache</td>
+            <td>{{{ opcache_on }}}</td>
+          </tr>
+          <tr>
+            <td>OPcache Memory</td>
+            <td>{{ opcache_mem }}</td>
+          </tr>
+          <tr>
+            <td>Cached Scripts</td>
+            <td>{{ opcache_scripts }}</td>
+          </tr>
+          <tr>
+            <td>Hit Rate</td>
+            <td>{{ opcache_hit_rate }}</td>
+          </tr>
+          <tr>
+            <td>File Uploads</td>
+            <td>{{{ fileup }}}</td>
+          </tr>
+          <tr>
+            <td>Max File Uploads</td>
+            <td>{{ maxfileup }}</td>
+          </tr>
+          <tr>
+            <td>GZip</td>
+            <td>{{{ gzipld }}}</td>
+          </tr>
+          <tr>
+            <td>Zip Archive</td>
+            <td>{{{ zipld }}}</td>
+          </tr>
+          <tr>
+            <td>BZip2</td>
+            <td>{{{ bz2ld }}}</td>
+          </tr>
+          <tr>
+            <td>Extensions On</td>
+            <td>{{{ extlist_on }}}</td>
+          </tr>
+          <tr>
+            <td>Extensions Off</td>
+            <td>{{{ extlist_off }}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
 
-    <!-- MySQL Block -->
-    <div class="sl-monitor-card sl-monitor-card-flat">
-        <div class="sl-monitor-panel-head">
-            <span class="sl-monitor-head-left"><i class="bi bi-database"></i>MySQL Information</span>
-        </div>
-        <div class="sl-monitor-info-grid">
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>Connection Charset</td>
-                        <td>{{ dbchar }}</td>
-                    </tr>
-                    <tr>
-                        <td>DB Timezone</td>
-                        <td>{{ dbtz }}</td>
-                    </tr>
-                    <tr>
-                        <td>Max Allowed Packet</td>
-                        <td>{{ dbmaxpack }}</td>
-                    </tr>
-                    <tr>
-                        <td>InnoDB Buffer Pool</td>
-                        <td>{{ dbbuffpool }}</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>DB Connections</td>
-                        <td>{{ dbconn }}</td>
-                    </tr>
-                    <tr>
-                        <td>DB Size</td>
-                        <td>{{ dbszfmt }}</td>
-                    </tr>
-                    <tr>
-                        <td>Current Database</td>
-                        <td>{{ dbcurname }}</td>
-                    </tr>
-                    <tr>
-                        <td>Database User</td>
-                        <td>{{ dbuser }}</td>
-                    </tr>
-                    <tr>
-                        <td>SQL Mode</td>
-                        <td>{{{ dbsqlmode }}}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+  <!-- MySQL Block -->
+  <div class="sl-monitor-card sl-monitor-card-flat">
+    <div class="sl-monitor-panel-head">
+      <span class="sl-monitor-head-left"><i class="bi bi-database"></i>MySQL Information</span>
     </div>
+    <div class="sl-monitor-info-grid">
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>Connection Charset</td>
+            <td>{{ dbchar }}</td>
+          </tr>
+          <tr>
+            <td>DB Timezone</td>
+            <td>{{ dbtz }}</td>
+          </tr>
+          <tr>
+            <td>Max Allowed Packet</td>
+            <td>{{ dbmaxpack }}</td>
+          </tr>
+          <tr>
+            <td>InnoDB Buffer Pool</td>
+            <td>{{ dbbuffpool }}</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>DB Connections</td>
+            <td>{{ dbconn }}</td>
+          </tr>
+          <tr>
+            <td>DB Size</td>
+            <td>{{ dbszfmt }}</td>
+          </tr>
+          <tr>
+            <td>Current Database</td>
+            <td>{{ dbcurname }}</td>
+          </tr>
+          <tr>
+            <td>Database User</td>
+            <td>{{ dbuser }}</td>
+          </tr>
+          <tr>
+            <td>SQL Mode</td>
+            <td>{{{ dbsqlmode }}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
 
-    <!-- Request & Performance Block -->
-    <div class="sl-monitor-card sl-monitor-card-spaced-flat">
-        <div class="sl-monitor-panel-head">
-            <span class="sl-monitor-head-left"><i class="bi bi-stopwatch"></i>Request & Performance</span>
-        </div>
-        <div class="sl-monitor-info-grid">
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>Client IP</td>
-                        <td>{{ reqip }}</td>
-                    </tr>
-                    <tr>
-                        <td>Request URI</td>
-                        <td>{{{ requri }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Query String</td>
-                        <td>{{{ reqquery }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Execution Time</td>
-                        <td>{{ exectime }} s</td>
-                    </tr>
-                    <tr>
-                        <td>DB Queries</td>
-                        <td>{{ dbqnum }}</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table class="sl-monitor-clean-table">
-                    <tr>
-                        <td>Accept Language</td>
-                        <td>{{{ reqlang }}}</td>
-                    </tr>
-                    <tr>
-                        <td>Cookies</td>
-                        <td>{{{ reqcookie }}}</td>
-                    </tr>
-                    <tr>
-                        <td>User Agent</td>
-                        <td>{{{ requa }}}</td>
-                    </tr>
-                    <tr>
-                        <td>DB Time</td>
-                        <td>{{ dbqtime }} ms</td>
-                    </tr>
-                    <tr>
-                        <td>Memory Peak</td>
-                        <td>{{ mempeak }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
+  <!-- Request & Performance Block -->
+  <div class="sl-monitor-card sl-monitor-card-spaced-flat">
+    <div class="sl-monitor-panel-head">
+      <span class="sl-monitor-head-left"><i class="bi bi-stopwatch"></i>Request & Performance</span>
     </div>
+    <div class="sl-monitor-info-grid">
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>Client IP</td>
+            <td>{{ reqip }}</td>
+          </tr>
+          <tr>
+            <td>Request URI</td>
+            <td>{{{ requri }}}</td>
+          </tr>
+          <tr>
+            <td>Query String</td>
+            <td>{{{ reqquery }}}</td>
+          </tr>
+          <tr>
+            <td>Execution Time</td>
+            <td>{{ exectime }} s</td>
+          </tr>
+          <tr>
+            <td>DB Queries</td>
+            <td>{{ dbqnum }}</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <table class="sl-monitor-clean-table">
+          <tr>
+            <td>Accept Language</td>
+            <td>{{{ reqlang }}}</td>
+          </tr>
+          <tr>
+            <td>Cookies</td>
+            <td>{{{ reqcookie }}}</td>
+          </tr>
+          <tr>
+            <td>User Agent</td>
+            <td>{{{ requa }}}</td>
+          </tr>
+          <tr>
+            <td>DB Time</td>
+            <td>{{ dbqtime }} ms</td>
+          </tr>
+          <tr>
+            <td>Memory Peak</td>
+            <td>{{ mempeak }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 {% endif %}

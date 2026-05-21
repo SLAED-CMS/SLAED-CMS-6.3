@@ -1,1 +1,10 @@
-<div class="sl-catflex-box{% if is_hidden %} sl-hidden{% endif %}"><div class="sl-catflex-inbox"><div>{{{ image_html }}}</div><div>{{{ title_html }}}{% if description_text %}<br><i>{{ description_text }}</i>{% endif %}</div></div>{{{ subitems_html }}}</div>
+<div class="sl-catflex-box{% if is_hidden %} sl-hidden{% endif %}">
+  <div class="sl-catflex-inbox">
+    <div>{{{ image_html }}}</div>
+    <div>
+      {{{ title_html }}}
+      {% if description_text %}<br><i>{{ description_text }}</i>{% endif %}
+    </div>
+  </div>
+  {{{ subitems_html }}}
+</div>

@@ -1,21 +1,21 @@
 <ul class="sl-login-top">
-	<li class="sl-dropdown">
-		<a href="#" data-sl-toggle-control="a-form" data-sl-toggle-effect="puff" data-sl-toggle-duration="500" class="sl-ico sl-login-btn"><b>{{ login }}</b></a>
-		<form id="a-form" action="index.php?name=account" method="post" class="sl-dropdown-form">
-			<ul class="sl-login-form">
-				<li>{% include 'fragments/input.html' with name_field %}</li>
-				<li>{% include 'fragments/input.html' with password_field %}</li>
-				{% if captcha %}{{{ captcha }}}{% endif %}
-				<li>{% include 'fragments/button.html' with submit_button %}</li>
-				<li class="sl-login-links">
-					{% include 'fragments/link.html' with lost_link %}
-					{% include 'fragments/link.html' with register_link %}
-				</li>
-			</ul>
-			{% if token %}{% include 'fragments/hidden.html' with token_field %}{% endif %}
-			{% include 'fragments/hidden.html' with refer_field %}
-			{% include 'fragments/hidden.html' with op_field %}
-		</form>
-	</li>
-	<li>{% include 'fragments/link.html' with register_link %}</li>
+  <li class="sl-dropdown">
+    <a href="#" data-sl-toggle-control="a-form" data-sl-toggle-effect="puff" data-sl-toggle-duration="500" class="sl-ico sl-login-btn"><b>{{ login }}</b></a>
+    <form id="a-form" action="index.php?name=account" method="post" class="sl-dropdown-form">
+      <ul class="sl-login-form">
+        <li>{% include 'fragments/input.html' with name_field %}</li>
+        <li>{% include 'fragments/input.html' with password_field %}</li>
+        {% if captcha %}{{{ captcha }}}{% endif %}
+        <li>{% include 'fragments/button.html' with submit_button %}</li>
+        <li class="sl-login-links">
+          {% include 'fragments/link.html' with lost_link %}
+          {% include 'fragments/link.html' with register_link %}
+        </li>
+      </ul>
+      {% if token %}{% include 'fragments/hidden.html' with token_field %}{% endif %}
+      {% include 'fragments/hidden.html' with refer_field %}
+      {% include 'fragments/hidden.html' with op_field %}
+    </form>
+  </li>
+  <li>{% include 'fragments/link.html' with register_link %}</li>
 </ul>

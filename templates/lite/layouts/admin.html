@@ -6,40 +6,40 @@
 {{{ scripts }}}
 </head>
 <body>
+  <div>
+    <div></div>
     <div>
-        <div></div>
+      <div>
+        <div><h1><a href="//slaed.net" target="_blank" class="sl-thide" title="SLAED CMS">SLAED CMS</a></h1></div>
         <div>
+          <div>
             <div>
-                <div><h1><a href="//slaed.net" target="_blank" class="sl-thide" title="SLAED CMS">SLAED CMS</a></h1></div>
-                <div>
-                    <div>
-                        <div>
-                            <ul>{{{ menu }}}</ul>
-                            <span>{{{ admin_langs }}}</span>
-                        </div>
-                    </div>
-                </div>
+              <ul>{{{ menu }}}</ul>
+              <span>{{{ admin_langs }}}</span>
             </div>
-            <div>
-                <div>
-                    <div>
-                        <div>{{{ admin_blocks }}}</div>
-                        <div>{% block content %}{% endblock %}</div>
-                        <div class="sl-clr"></div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
-                <span>{{{ foot_html }}}</span>
-            </div>
+          </div>
         </div>
-        <div></div>
-        {% if debug_html %}
-        <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
-        {{{ debug_html }}}
+      </div>
+      <div>
+        <div>
+          <div>
+            <div>{{{ admin_blocks }}}</div>
+            <div>{% block content %}{% endblock %}</div>
+            <div class="sl-clr"></div>
+          </div>
         </div>
-        {% endif %}
+      </div>
+      <div>
+        <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
+        <span>{{{ foot_html }}}</span>
+      </div>
     </div>
+    <div></div>
+    {% if debug_html %}
+    <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
+    {{{ debug_html }}}
+    </div>
+    {% endif %}
+  </div>
 </body>
 </html>

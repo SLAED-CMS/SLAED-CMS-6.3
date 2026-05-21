@@ -7,35 +7,35 @@
 {{{ scripts }}}
 </head>
 <body>
-    <div class="sl-wrapper sl-admin-shell">
-        <div class="sl-wraptop"></div>
-        <div class="sl-wrapmid">
-            <div class="sl-header sl-admin-header">
-                <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}" title="{{ adtitle }}"></a></h1></div>
-                <div class="sl-admin-toolbar">
-                    <div class="sl-toolbar">
-                        <div>
-                            <ul class="sl-reset">{{{ menu }}}</ul>
-                            <span class="sl-language sl-admin-language">{{{ admin_langs }}}</span>
-                        </div>
-                    </div>
-                </div>
+  <div class="sl-wrapper sl-admin-shell">
+    <div class="sl-wraptop"></div>
+    <div class="sl-wrapmid">
+      <div class="sl-header sl-admin-header">
+        <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}" title="{{ adtitle }}"></a></h1></div>
+        <div class="sl-admin-toolbar">
+          <div class="sl-toolbar">
+            <div>
+              <ul class="sl-reset">{{{ menu }}}</ul>
+              <span class="sl-language sl-admin-language">{{{ admin_langs }}}</span>
             </div>
-            <div class="sl-admin-main">
-                <aside class="sl-admin-sidebar">{{{ admin_blocks }}}</aside>
-                <main class="sl-admin-content"><div class="sl-admin-content-inner">{% block content %}{% endblock %}</div></main>
-            </div>
-            <div class="sl-footer sl-admin-footer">
-                <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
-                <span>{{{ foot_html }}}</span>
-            </div>
+          </div>
         </div>
-        <div class="sl-wrapfoot"></div>
-        {% if debug_html %}
-        <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
-        {{{ debug_html }}}
-        </div>
-        {% endif %}
+      </div>
+      <div class="sl-admin-main">
+        <aside class="sl-admin-sidebar">{{{ admin_blocks }}}</aside>
+        <main class="sl-admin-content"><div class="sl-admin-content-inner">{% block content %}{% endblock %}</div></main>
+      </div>
+      <div class="sl-footer sl-admin-footer">
+        <div class="sl-copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
+        <span>{{{ foot_html }}}</span>
+      </div>
     </div>
+    <div class="sl-wrapfoot"></div>
+    {% if debug_html %}
+    <div id="sl_debugger" data-sl-toggle="sl_debugger" data-sl-toggle-default="open">
+    {{{ debug_html }}}
+    </div>
+    {% endif %}
+  </div>
 </body>
 </html>
