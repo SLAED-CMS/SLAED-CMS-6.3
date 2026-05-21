@@ -11,28 +11,33 @@
   <div id="topbar">
     <div class="sl-wrp">
       <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
-      <div class="sl-top-social">
-        <a class="sl-thd sl-i-yt" rel="nofollow" target="_blank" href="//youtu.be/zw8_KjhTW-g" title="Мы в YouTube">Мы в YouTube</a>
-        <a class="sl-thd sl-i-tw" rel="nofollow" target="_blank" href="//twitter.com/slaed_cms" title="Мы в Twitter">Мы в Twitter</a>
-        <a class="sl-thd sl-i-vk" rel="nofollow" target="_blank" href="//vk.com/slaed_cms" title="Мы вКонтакте">Мы вКонтакте</a>
-        <a class="sl-thd sl-i-rss" rel="nofollow" target="_blank" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS">Читайте нашу RSS</a>
+      <div class="sl-top-right">
+        <div class="sl-top-social">
+          <a class="sl-thd sl-i-gh" rel="nofollow" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-i-yt" rel="nofollow" target="_blank" href="https://www.youtube.com/zw8_KjhTW-g" title="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-i-tw" rel="nofollow" target="_blank" href="https://x.com/slaed_cms" title="Мы в Twitter"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в Twitter</a>
+          <a class="sl-thd sl-i-vk" rel="nofollow" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-i-rss" rel="nofollow" target="_blank" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
+          <a class="sl-thd sl-i-doc-de" rel="nofollow" target="_blank" href="https://slaed.de" title="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-i-doc-en" rel="nofollow" target="_blank" href="https://slaed.info" title="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-i-recom" rel="nofollow" href="index.php?name=recommend" title="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
+        </div>
       </div>
-      <ul class="sl-top-links">
-        <li><a href="index.php?name=recommend" title="{{ recommend }}"><i class="bi bi-chat-heart-fill" aria-hidden="true"></i>&nbsp;{{ recommend }}</a></li>
-      </ul>
     </div>
   </div>
   <header id="header">
     <div class="sl-wrp sl-clrfix">
-      <a href="/" class="sl-thd sl-logo" title="{{ sitename }}">{{ sitename }}</a>
-      <p class="sl-font sl-slogan">{% if slogan %}{{ slogan }}{% else %}Все великое<br>просто{% endif %}</p>
+      <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+        <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+      </a>
+      <p class="sl-font sl-slogan">Все великое<br>просто</p>
       {{{ login }}}
       <ul class="sl-d-pane">
         <li class="sl-d-info">Aктуальная<br>версия</li>
         <li class="sl-d-num sl-font">6.2</li>
         <li class="sl-d-btns">
-          <a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
-          <a class="sl-but-blue" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
+          <a class="sl-but-neutral" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
+          <a class="sl-but-primary" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
         </li>
       </ul>
     </div>
@@ -73,8 +78,8 @@
         <li class="sl-d-info">Aктуальная<br>версия</li>
         <li class="sl-d-num sl-font">6.2</li>
         <li class="sl-d-btns">
-          <a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
-          <a class="sl-but-blue" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
+          <a class="sl-but-neutral" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы"><b>Скачать систему</b></a>
+          <a class="sl-but-primary" href="index.php?name=files&amp;op=view&amp;id=1461" title="Скачать демо версию системы"><b>Демо</b></a>
         </li>
       </ul>
     </div>
@@ -101,9 +106,10 @@
       <div class="sl-grid">
         <p class="sl-font sl-f-title">Контакты</p>
         <ul class="sl-block-contact">
-          <li class="sl-ico sl-i-geo">D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
-          <li class="sl-ico sl-i-phone">+49 176 61966679</li>
-          <li class="sl-ico sl-i-geo"><script>"mysi".AddMail('support', 'slaed.net');</script><noscript>support<!-- slaed --><span>&#64;</span><!-- slaed -->slaed.net</noscript><br><a href="//slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
+          <li><i class="bi bi-geo-alt sl-contact-icon" aria-hidden="true"></i>D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
+          <li><i class="bi bi-telephone sl-contact-icon" aria-hidden="true"></i>+49 176 61966679</li>
+          <li><i class="bi bi-envelope sl-contact-icon" aria-hidden="true"></i><a href="mailto:support@slaed.net">support@slaed.net</a></li>
+          <li><i class="bi bi-globe sl-contact-icon" aria-hidden="true"></i><a href="//slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
         </ul>
       </div>
     </div>
