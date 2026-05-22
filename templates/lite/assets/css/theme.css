@@ -2654,7 +2654,6 @@ ol.sl-sublist-two li:hover:before {
 .sl-card-read,
 .sl-card-admin,
 .sl-back-button,
-.sl-but-login,
 .sl-navi-lower-action {
   display: inline-flex;
   align-items: center;
@@ -3731,16 +3730,15 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 /* Header */
 #header {
   width: 100%;
-  padding: 36px 0;
+  padding: 24px 0;
 }
 #header .sl-wrp {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 24px 30px;
 }
-#header .sl-login-top,
 #header .sl-d-pane {
-  margin-top: 0;
+  margin-top: 10px;
 }
 #header .sl-d-pane {
   display: flex;
@@ -3785,45 +3783,86 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   margin: 0;
   color: #677380;
 }
+#header .sl-slogan {
+  margin-top: 4px;
+}
 
 /* Login */
-.sl-login-top {
+.sl-login-top--head {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 10px 0 0 40px;
 }
-.sl-login-top > li {
+.sl-login-top--head > li {
   float: none;
+  display: block;
 }
-.sl-login-top > li > a:not(.sl-but-primary):not(.sl-but-neutral) {
+.sl-login-top--head > li + li {
+  margin-left: 0;
+}
+.sl-login-top--head > li > a {
   float: none;
-  line-height: 20px;
-  height: 20px;
-  padding: 5px 15px;
-  color: #556779;
+  display: block;
+  padding: var(--sl-login-link-pad-y) var(--sl-login-link-pad-x);
   margin-top: 5px;
+  line-height: var(--sl-login-link-line-height);
+  height: var(--sl-login-link-height);
+  color: var(--sl-login-link-color);
+  text-decoration: none !important;
+  box-sizing: border-box;
 }
-.sl-login-top > li > a:not(.sl-but-primary):not(.sl-but-neutral):hover {
-  color: #2a303c;
+.sl-login-top--head > li > .sl-login-toggle {
+  background: var(--sl-login-pill-bg);
+  border: 0;
+  border-radius: var(--sl-login-pill-radius);
+  box-shadow: none;
 }
-.sl-login-top > li > a.sl-but-primary,
-.sl-login-top > li > a.sl-but-neutral {
-  margin-top: 0;
+.sl-login-top--head > li > .sl-login-toggle .bi {
+  display: inline-block;
+  margin: -2px 5px 0 -4px;
+  vertical-align: middle;
+  font-size: var(--sl-icon-size-sm);
+  line-height: 1;
 }
-.sl-but-login {
+.sl-login-top--head > li > .sl-login-link-top {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.sl-login-top--head > li > a:hover,
+.sl-login-top--head > li > a:focus-visible,
+.sl-login-top--head .sl-login-links a:hover,
+.sl-login-top--head .sl-login-links a:focus-visible {
+  color: var(--sl-login-link-hover-color);
+}
+.sl-login-top--head .sl-login-dropdown {
   position: relative;
 }
-.sl-login-top .sl-dropdown {
-  position: relative;
+.sl-login-top--head .sl-login-dropdown-form {
+  position: absolute;
+  top: 100%;
+  left: var(--sl-login-dropdown-form-left);
+  z-index: 1000;
+  display: none;
+  float: left;
+  width: var(--sl-login-dropdown-form-width);
+  max-width: var(--sl-login-dropdown-form-max-width);
+  min-width: var(--sl-login-dropdown-min-width);
+  padding: var(--sl-login-dropdown-padding);
+  margin: 2px 0 0 var(--sl-login-dropdown-form-margin-left);
+  list-style: none;
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: var(--sl-login-dropdown-radius);
+  box-shadow: var(--sl-login-dropdown-shadow);
+  background-clip: padding-box;
 }
-.sl-login-top .sl-dropdown-form {
-  width: 160px;
-  padding: 20px;
-  left: 50%;
-  margin-left: -100px;
-}
-.sl-login-top .sl-dropdown-form:after,
-.sl-login-top .sl-dropdown-form:before {
+.sl-login-top--head .sl-login-dropdown-form:after,
+.sl-login-top--head .sl-login-dropdown-form:before {
   content: "";
   display: block;
   position: absolute;
@@ -3835,49 +3874,96 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   border-top: 0 dotted;
   border-left: 8px solid transparent;
 }
-.sl-login-top .sl-dropdown-form:after {
+.sl-login-top--head .sl-login-dropdown-form:after {
   top: -8px;
   border-bottom-color: #fff;
 }
-.sl-login-form {
+.sl-login-top--head .sl-login-form {
   list-style: none;
   padding: 0;
   margin: 0;
   text-align: center;
 }
-.sl-login-form li {
+.sl-login-top--head .sl-login-form li {
   margin-bottom: 10px;
 }
-.sl-login-form li input {
-  width: 148px;
-  height: 20px;
-  padding: 4px 6px;
-}
-.sl-login-form li.sl-login-links {
+.sl-login-top--head .sl-login-form li.sl-login-links {
   margin-bottom: 0;
-  font-size: 11px;
+  font-size: var(--sl-login-links-font-size);
 }
-.sl-logged .sl-but-login {
+.sl-login-top--head .sl-login-field {
+  width: var(--sl-login-field-width);
+  height: var(--sl-login-field-height);
+  padding: var(--sl-login-field-pad-y) var(--sl-login-field-pad-x);
+  box-sizing: border-box;
+}
+.sl-login-top--head .sl-login-submit {
+  display: inline-block;
+  white-space: nowrap;
+  padding: var(--sl-login-submit-pad-y) var(--sl-login-submit-pad-x);
+  margin: 0 var(--sl-login-submit-mr) 0 0;
+  line-height: var(--sl-login-link-line-height);
+  height: var(--sl-login-link-height);
+  color: var(--sl-login-link-color);
+  background: transparent;
+  border: 0;
+  border-radius: var(--sl-login-pill-radius);
+  box-shadow: none;
+  cursor: pointer;
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  text-decoration: none !important;
+}
+.sl-login-top--head .sl-login-submit:hover,
+.sl-login-top--head .sl-login-submit:focus-visible {
+  color: var(--sl-login-link-hover-color);
+}
+.sl-login-top--head .sl-login-links a {
+  display: inline;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  text-shadow: none;
+}
+.sl-login-top--head .sl-login-links a + a {
+  margin-left: var(--sl-login-links-gap);
+}
+.sl-login-top--head.sl-logged > li > .sl-login-profile {
   position: relative;
   padding-left: 56px;
+  background: var(--sl-login-pill-bg);
+  border: 0;
+  border-radius: var(--sl-login-pill-radius);
+  box-shadow: none;
 }
-.sl-logged .sl-ava-min,
-.sl-logged .ava-min {
+.sl-login-top--head.sl-logged > li > .sl-login-profile:hover,
+.sl-login-top--head.sl-logged > li > .sl-login-profile:focus-visible {
+  color: var(--sl-login-link-hover-color);
+  background: var(--sl-login-pill-bg);
+}
+.sl-login-avatar {
   position: absolute;
   left: 0;
-  top: -8px;
-}
-.sl-ava-min,
-.ava-min {
+  top: var(--sl-login-avatar-offset-top);
   display: inline-block;
-  width: 34px;
-  height: 34px;
-  border: 6px solid #f2f4f7;
-  border-radius: 24px;
-  background-position: 50% 50%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  box-shadow: 0 1px 2px rgba(42, 48, 60, 0.12);
+  width: var(--sl-login-avatar-size);
+  height: var(--sl-login-avatar-size);
+  border: var(--sl-login-avatar-border-width) solid var(--sl-login-avatar-border-color);
+  border-radius: 50%;
+  background-color: #fff;
+  box-sizing: content-box;
+  object-fit: cover;
+}
+.sl-login-top--head.sl-logged > li:last-child > a {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 /* Demo */
@@ -3905,7 +3991,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 #hmenu {
   border-top: 1px solid #ebebee;
   width: 100%;
-  padding: 18px 0;
+  padding: 12px 0;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
   position: relative;
   background: linear-gradient(to top, #f8f9fb 0%, #fff 50%);
@@ -4234,7 +4320,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 
 /* Content */
 #container {
-  padding: 50px calc(var(--sl-sidebar) + var(--sl-gutter)) 50px 0;
+  padding: 24px calc(var(--sl-sidebar) + var(--sl-gutter)) 24px 0;
   height: 1%;
 }
 #content {
@@ -4994,17 +5080,12 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
     white-space: normal;
   }
 
-  .sl-login-top .sl-dropdown-form {
-    left: 0;
-    margin-left: 0;
-    max-width: calc(100vw - 24px);
-    width: min(260px, calc(100vw - 24px));
-  }
-
-  .sl-login-top .sl-dropdown-form input {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+  .sl-login-top--head {
+    --sl-login-dropdown-form-left: 0;
+    --sl-login-dropdown-form-margin-left: 0;
+    --sl-login-dropdown-form-width: min(260px, calc(100vw - 24px));
+    --sl-login-dropdown-form-max-width: calc(100vw - 24px);
+    --sl-login-field-width: 100%;
   }
 
   .sl-search-form {
@@ -5083,8 +5164,8 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
     height: 59px;
   }
 
-  .sl-login-top > li > a {
-    padding: 5px 10px;
+  .sl-login-top--head {
+    --sl-login-link-pad-x: 10px;
   }
 
   #topmenu > ul > li > a {

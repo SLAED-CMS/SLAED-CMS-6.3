@@ -8,13 +8,13 @@
     <li>{{ outbox_label }}: <b>{{ outbox_count }}</b></li>
   </ul>
   {% endif %}
-  <ul class="sl-login-top sl-logged">
+  <ul class="sl-login-top sl-login-top--block sl-logged">
     {% if has_fav %}<li><a href="index.php?name=account&amp;op=favorites">{{ favorites_label }}</a></li>{% endif %}
     <li><a href="index.php?name=account">{{ change_label }}</a></li>
     <li><a href="index.php?name=account&amp;op=sl-logout&amp;refer=1">{{ logout_label }}</a></li>
   </ul>
 {% else %}
-  <ul class="sl-login-top">
+  <ul class="sl-login-top sl-login-top--block">
     <li><a href="index.php?name=account&amp;op=reg">{{ register_label }}</a></li>
     <li><a href="index.php?name=account&amp;op=passfor">{{ passfor_label }}</a></li>
   </ul>
