@@ -32,7 +32,8 @@ function setTemplateForum(): string {
             'short' => cutstr((string)$title, 50),
             'by' => _POSTEDBY,
             'poster' => $poster,
-            'when' => _DATE.': '.format_time($time, _TIMESTRING),
+            'when_label' => _DATE,
+            'when' => format_time($time, _TIMESTRING),
             'date' => format_time($time),
         ]);
     }
