@@ -1695,7 +1695,7 @@ function setFoot(): void {
     $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
     getBlocks('f');
-    $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license, $debug);
+    $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license);
     if ($blocks == '' || $blocks == '0' || $blocks == '1') {
         ob_start(); getBlocks('l'); $left = ob_get_clean();
     } else {
@@ -1723,6 +1723,7 @@ function setFoot(): void {
         'blocks_right' => $right,
         'blocks_down' => $down,
         'foot_html' => $foot,
+        'debug_html' => $debug,
     ]);
     $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');

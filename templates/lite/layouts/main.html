@@ -34,6 +34,13 @@
       {{{ foot_html }}}
     </footer>
   </div>
+  {% if debug_html %}
+  <div class="sl-advantage">
+    <div class="sl-wrp sl-clrfix">
+      {{{ debug_html }}}
+    </div>
+  </div>
+  {% endif %}
   {% endblock %}
 </body>
 </html>
