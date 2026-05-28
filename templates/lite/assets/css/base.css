@@ -1,12 +1,7 @@
 /* sl-fonts: Magistral bold and regular web sl-font declarations */
 @font-face {
   font-family: "Magistral";
-  src: url(fonts/magistralb-wf.eot);
-  src:
-    url(fonts/magistralb-wf.eot?#iefix) format("embedded-opentype"),
-    url(fonts/magistralb-wf.woff) format("woff"),
-    url(fonts/magistralb-wf.ttf) format("truetype"),
-    url(fonts/magistralb-wf.svg#magistralcbold) format("svg");
+  src: url(fonts/magistralb-wf.woff2) format("woff2");
   font-weight: bold;
   font-style: normal;
   font-display: swap;
@@ -14,12 +9,7 @@
 
 @font-face {
   font-family: "Magistral";
-  src: url(fonts/magistralr-wf.eot);
-  src:
-    url(fonts/magistralr-wf.eot?#iefix) format("embedded-opentype"),
-    url(fonts/magistralr-wf.woff) format("woff"),
-    url(fonts/magistralr-wf.ttf) format("truetype"),
-    url(fonts/magistralr-wf.svg#magistralcregular) format("svg");
+  src: url(fonts/magistralr-wf.woff2) format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -43,11 +33,13 @@
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-radius-control: 4px;
+  --sl-size-16: 16px;
   --sl-size-18: 18px;
   --sl-size-24: 24px;
   --sl-size-32: 32px;
   --sl-size-34: 34px;
   --sl-size-48: 48px;
+  --sl-icon-size-xs: var(--sl-size-16);
   --sl-icon-size-sm: var(--sl-size-18);
   --sl-icon-size-md: var(--sl-size-24);
   --sl-icon-size-lg: var(--sl-size-32);
