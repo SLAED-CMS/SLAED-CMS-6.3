@@ -71,9 +71,9 @@
     </div>
   </div>
   {% if blocks_down %}{{{ blocks_down }}}{% endif %}
-  <section id="demo-line" aria-labelledby="demo-line-title">
+  <section id="demo-line" aria-label="Хотите опробовать SLAED CMS в действии?">
     <div class="sl-wrp">
-      <h2 id="demo-line-title" class="sl-font sl-demo-line-title">Хотите опробовать SLAED CMS в действии?</h2>
+      <h2 class="sl-font sl-demo-line-title">Хотите опробовать SLAED CMS в действии?</h2>
       <ul class="sl-d-pane">
         <li class="sl-d-info">Aктуальная<br>версия</li>
         <li class="sl-d-num sl-font">6.2</li>
@@ -87,7 +87,7 @@
   <footer id="footbox">
     <div class="sl-wrp sl-grid-1-4">
       <section class="sl-grid" aria-label="SLAED CMS">
-        <a href="index.php?name=content&amp;op=view&amp;id=1" id="upper" class="sl-upper-wordmark" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">
+        <a href="index.php?name=content&amp;op=view&amp;id=1" class="sl-upper-wordmark" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">
           <img class="sl-upper-wordmark-img" src="templates/{{ theme }}/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
           <span class="sl-upper-tagline sl-font">Все великое просто</span>
         </a>
@@ -98,8 +98,8 @@
         </a>
       </section>
       {% if forumblock %}{{{ forumblock }}}{% endif %}
-      <section class="sl-grid" aria-labelledby="footer-tech-title">
-        <h2 class="sl-font sl-f-title" id="footer-tech-title">Технологии</h2>
+      <section class="sl-grid" aria-label="Технологии">
+        <h2 class="sl-font sl-f-title">Технологии</h2>
         <div class="sl-partners">
           <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP"></a>
           <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL"></a>
@@ -109,8 +109,8 @@
           <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI"></a>
         </div>
       </section>
-      <section class="sl-grid" aria-labelledby="footer-contact-title">
-        <h2 class="sl-font sl-f-title" id="footer-contact-title">Контакты</h2>
+      <section class="sl-grid" aria-label="Контакты">
+        <h2 class="sl-font sl-f-title">Контакты</h2>
         <address>
           <ul class="sl-block-contact">
             <li><i class="bi bi-geo-alt sl-contact-icon" aria-hidden="true"></i>D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
@@ -121,22 +121,20 @@
         </address>
       </section>
     </div>
-    <div id="foot-menu">
-      <div class="sl-wrp sl-clrfix">
-        <nav class="sl-fmenu" aria-label="Нижнее меню">
-          <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
-          <ul>
-            <li><a href="index.php" title="{{ home }}">{{ home }}</a></li>
-            <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта">Услуги</a></li>
-            <li><a href="index.php?name=news" title="Новости">Новости</a></li>
-            <li><a href="index.php?name=files" title="Каталог файлов">Файлы</a></li>
-            <li><a href="index.php?name=faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
-            <li><a href="index.php?name=pages" title="Центр документации">Документация</a></li>
-            <li><a href="index.php?name=main" title="Презентационная страница системы">Портфолио</a></li>
-            <li><a href="index.php?name=sitemap" title="Карта сайта">Карта сайта</a></li>
-          </ul>
-        </nav>
-      </div>
+    <div class="sl-wrp sl-clrfix">
+      <nav class="sl-fmenu" aria-label="Нижнее меню">
+        <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
+        <ul>
+          <li><a href="index.php" title="{{ home }}">{{ home }}</a></li>
+          <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта">Услуги</a></li>
+          <li><a href="index.php?name=news" title="Новости">Новости</a></li>
+          <li><a href="index.php?name=files" title="Каталог файлов">Файлы</a></li>
+          <li><a href="index.php?name=faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
+          <li><a href="index.php?name=pages" title="Центр документации">Документация</a></li>
+          <li><a href="index.php?name=main" title="Презентационная страница системы">Портфолио</a></li>
+          <li><a href="index.php?name=sitemap" title="Карта сайта">Карта сайта</a></li>
+        </ul>
+      </nav>
     </div>
   </footer>
   <div id="block-idea"><a href="index.php?name=forum&amp;cat=95" title="Идеи и предложения для разработки" class="sl-btn-idea"><b class="sl-font">Идеи и предложения</b></a></div>
