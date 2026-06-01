@@ -20,7 +20,7 @@
   {% if sortable %}data-sl-table-sort{% endif %}
 >
 {% if headers %}
-<thead class="{% if head_class %}{{ head_class }}{% else %}{% if is_voting_list %}sl-forum-table-head{% elseif is_cart %}sl-cart-head{% else %}sl-table-head{% endif %}{% endif %}">
+<thead class="{% if head_class %}{{ head_class }}{% else %}sl-table-head{% endif %}">
   <tr>
     {% for head in headers %}
     <th

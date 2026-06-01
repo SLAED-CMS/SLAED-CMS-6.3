@@ -1,10 +1,10 @@
 {% if open %}
-{% if heading %}<h3 class="sl-heading2">{{{ heading }}}</h3>{% endif %}
+{% if heading %}<h3 class="sl-heading">{{{ heading }}}</h3>{% endif %}
 <div class="sl-table-shell">
 <table class="{% if is_topic_list %}sl-table-list sl-ft-topics{% else %}sl-table-list-sort{% endif %}">
   {% if is_topic_list %}
   <thead>
-    <tr class="sl-forum-table-head">
+    <tr class="sl-table-head">
       <th colspan="2">{{ col_topics }}</th>
       <th class="sl-fl-col-stat">{{ col_posts }}</th>
       <th class="sl-fl-col-stat">{{ col_poster }}</th>
@@ -14,7 +14,7 @@
   </thead>
   {% else %}
   <thead>
-    <tr class="sl-forum-table-head">
+    <tr class="sl-table-head">
       <th colspan="2">{{ col_forum }}</th>
       <th class="sl-fl-col-stat">{{ col_topics }}</th>
       <th class="sl-fl-col-stat">{{ col_messages }}</th>
