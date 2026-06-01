@@ -4295,3 +4295,21 @@ body:has(.sl-admin-login-shell):before {
     padding-left: 16px;
   }
 }
+.sl-img-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-img-placeholder-size);
+  height: var(--sl-img-placeholder-size);
+  vertical-align: top;
+  font-size: var(--sl-img-placeholder-icon-size);
+}
+.sl-img-placeholder[hidden] {
+  display: none;
+}
+.sl-img-left {
+  float: left;
+}
+.sl-img-right {
+  float: right;
+}

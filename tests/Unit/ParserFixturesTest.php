@@ -135,5 +135,33 @@ namespace Tests\Unit {
             $got = self::$p->filterDoc($src, true, '');
             $this->assertIsString($got);
         }
+
+        #[Test]
+        public function checkParserImageFallback(): void
+        {
+            if (!class_exists('Template', false)) {
+                require_once BASE_DIR.'/core/classes/template.php';
+            }
+            $hadtpl = array_key_exists('tpl', $GLOBALS);
+            $oldtpl = $GLOBALS['tpl'] ?? null;
+            $GLOBALS['tpl'] = new \Template('lite');
+
+            try {
+                $parser = new \Parser();
+                $missing = $parser->filterContent('[img]/uploads/parser-missing.png[/img]', true, '');
+                $this->assertStringContainsString('class="bi bi-image sl-img-placeholder sl-img"', $missing);
+
+                $aligned = $parser->filterContent('[img=right]/uploads/parser-missing.png[/img]', true, '');
+                $this->assertStringContainsString('class="bi bi-image sl-img-placeholder sl-img sl-img-right"', $aligned);
+
+                $existing = $parser->filterContent('[img=right]/templates/lite/images/favicon.svg[/img]', true, '');
+                $this->assertStringContainsString('class="sl-img sl-img-right"', $existing);
+                $this->assertStringContainsString('onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"', $existing);
+                $this->assertStringNotContainsString('style=', $existing);
+            } finally {
+                if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
+                else unset($GLOBALS['tpl']);
+            }
+        }
     }
 }

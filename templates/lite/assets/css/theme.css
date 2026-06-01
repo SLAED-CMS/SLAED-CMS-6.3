@@ -1262,6 +1262,24 @@ ol.sl-sublist-two li:hover:before {
   margin: 0 5px 0 0;
   border-radius: 5px;
 }
+.sl-img-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-img-placeholder-size);
+  height: var(--sl-img-placeholder-size);
+  vertical-align: top;
+  font-size: var(--sl-img-placeholder-icon-size);
+}
+.sl-img-placeholder[hidden] {
+  display: none;
+}
+.sl-img-left {
+  float: left;
+}
+.sl-img-right {
+  float: right;
+}
 .sl-home {
   min-height: 100%;
 }
@@ -3365,7 +3383,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 #head-content {
   height: 116px;
   color: var(--sl-color-on-dark);
-  background: var(--sl-color-brand-banner) url(../../images/misc/head-bg.jpg) no-repeat 50% 0;
+  background: var(--sl-color-brand-banner) url(../../images/seasons/head-bg.jpg) no-repeat 50% 0;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   background-size: cover;
 }

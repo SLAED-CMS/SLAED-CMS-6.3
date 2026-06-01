@@ -142,40 +142,24 @@ class Parser {
         return $root;
     }
 
-    # Theme-aware local placeholder with cross-theme fallback.
-    private function getFallbackImage(): string {
-        global $conf;
-        static $fallback = '';
-        if ($fallback !== '') return $fallback;
-        $theme = function_exists('getTheme') ? getTheme() : (string)($conf['theme'] ?? 'default');
-        $themes = array_values(array_unique(array_filter([
-            $theme,
-            (string)($conf['theme'] ?? ''),
-            'default',
-            'lite',
-            'admin',
-        ])));
-        foreach ($themes as $theme) {
-            $candidate = 'templates/'.$theme.'/images/misc/no-image.png';
-            if (is_file(BASE_DIR.'/'.ltrim($candidate, '/'))) return $fallback = $candidate;
-        }
-        return $fallback = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
-    }
-
-    # Build the resilient onerror fallback used across parser-generated images.
-    private function buildImageError(string $file): string {
-        return ' onerror="this.onerror=null;this.src=\''.$this->getFallbackImage()
-            .'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
-    }
-
-    # Build the [img] bbcode HTML so parser owns markup and class names in one place.
-    private function buildBbcodeImage(string $src, string $alt, string $title, string $align, string $err): string {
-        $style = $align !== '' ? ' style="float:'.$align.';"' : '';
-        return '<img src="'.$src.'"'.$style.' alt="'.$alt.'" title="'.$title.'" class="sl-img"'.$err.'>';
+    # Render parser images through the theme fragment so markup stays out of PHP
+    private function getParserImage(?string $src, string $alt, string $title = '', string $align = '', bool $isbb = false): string {
+        global $tpl;
+        if (!isset($tpl) || !is_object($tpl) || !method_exists($tpl, 'getHtmlFrag')) return $this->filterEsc($alt);
+        return (string) $tpl->getHtmlFrag('parser-image', [
+            'src' => $src ?? '',
+            'alt' => $alt,
+            'title' => $title,
+            'missing' => $src === null,
+            'fallback' => $src !== null,
+            'bbcode' => $isbb,
+            'left' => $align === 'left',
+            'right' => $align === 'right',
+        ]);
     }
 
     # Convert a local/absolute image source into a stable public path.
-    private function normalizeImageSource(string $src): string {
+    private function normalizeImageSource(string $src): ?string {
         global $conf;
         $raw = trim($this->filterDec($src));
         if ($raw === '' || str_starts_with($raw, 'data:') || str_starts_with($raw, '#')) return $raw;
@@ -202,7 +186,7 @@ class Parser {
             if (is_file($this->getRootPath().'/'.$thumb)) return $thumb;
         }
 
-        return $this->getFallbackImage();
+        return null;
     }
 
     # Repair persisted raw HTML img tags so broken local sources do not emit frontend 404 placeholders.
@@ -212,14 +196,11 @@ class Parser {
             function(array $m): string {
                 $tag = $m[0];
                 if (!preg_match('#\bsrc\s*=\s*(["\'])(.*?)\1#i', $tag, $sm)) return $tag;
-                $file = $this->filterEsc(
-                    basename(rawurldecode((string)(parse_url($sm[2], PHP_URL_PATH) ?: $sm[2]))) ?: 'image'
-                );
-                $resolved = $this->filterEsc($this->normalizeImageSource($sm[2]));
+                $file = basename(rawurldecode((string)(parse_url($sm[2], PHP_URL_PATH) ?: $sm[2]))) ?: 'image';
+                $resolved = $this->normalizeImageSource($sm[2]);
+                if ($resolved === null) return $this->getParserImage(null, $file, $file);
+                $resolved = $this->filterEsc($resolved);
                 $tag = preg_replace('#\bsrc\s*=\s*(["\']).*?\1#i', 'src="'.$resolved.'"', $tag, 1) ?? $tag;
-                if (!preg_match('#\bonerror\s*=#i', $tag)) {
-                    $tag = rtrim($tag, ' >').$this->buildImageError($file).'>';
-                }
                 return $tag;
             },
             $src
@@ -517,8 +498,8 @@ class Parser {
                 if (file_exists($path)) {
                     [$wd, $hg] = getimagesize($path);
                 } else {
-                    $file = $this->getFallbackImage();
-                    $timg = $file;
+                    $src = str_replace($m[0], $this->addStash($this->getParserImage(null, $tl, $tl)), $src);
+                    continue;
                 }
             }
             $tmp = $conf['filetype'][$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
@@ -834,13 +815,12 @@ class Parser {
             function(array $m): string {
                 $url  = trim($this->filterDec($m[1]));
                 if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                $src2 = $this->filterEsc($this->safe ? $this->filterUrl($url) : $url);
+                $src2 = $this->safe ? $this->filterUrl($url) : $url;
                 $path = parse_url($url, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $url;
-                $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
-                $err  = $this->buildImageError($file);
-                return $this->addStash($this->buildBbcodeImage($src2, $file, $file, '', $err));
+                $file = basename(rawurldecode($path)) ?: 'image';
+                $src2 = $this->normalizeImageSource($src2);
+                return $this->addStash($this->getParserImage($src2, $file, $file, '', true));
             },
             $src
         ) ?? $src;
@@ -853,13 +833,12 @@ class Parser {
                 if (!in_array($align, ['left', 'right'], true)) $align = 'left';
                 $url  = trim($this->filterDec($m[2]));
                 if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                $src2 = $this->filterEsc($this->safe ? $this->filterUrl($url) : $url);
+                $src2 = $this->safe ? $this->filterUrl($url) : $url;
                 $path = parse_url($url, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $url;
-                $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
-                $err  = $this->buildImageError($file);
-                return $this->addStash($this->buildBbcodeImage($src2, $file, $file, $align, $err));
+                $file = basename(rawurldecode($path)) ?: 'image';
+                $src2 = $this->normalizeImageSource($src2);
+                return $this->addStash($this->getParserImage($src2, $file, $file, $align, true));
             },
             $src
         ) ?? $src;
@@ -871,14 +850,13 @@ class Parser {
                 $alt  = trim($this->filterDec($m[1]));
                 $url  = trim($this->filterDec($m[2]));
                 if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                $src2 = $this->filterEsc($this->safe ? $this->filterUrl($url) : $url);
+                $src2 = $this->safe ? $this->filterUrl($url) : $url;
                 $path = parse_url($url, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $url;
-                $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
-                $err  = $this->buildImageError($file);
-                return $this->addStash($this->buildBbcodeImage($src2, $alt, $alt, '', $err));
+                $file = basename(rawurldecode($path)) ?: 'image';
+                $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $alt;
+                $src2 = $this->normalizeImageSource($src2);
+                return $this->addStash($this->getParserImage($src2, $alt, $alt, '', true));
             },
             $src
         ) ?? $src;
@@ -892,14 +870,13 @@ class Parser {
                 $alt  = trim($this->filterDec($m[2]));
                 $url  = trim($this->filterDec($m[3]));
                 if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-                $src2 = $this->filterEsc($this->safe ? $this->filterUrl($url) : $url);
+                $src2 = $this->safe ? $this->filterUrl($url) : $url;
                 $path = parse_url($url, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $url;
-                $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
-                $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
-                $src2 = $this->filterEsc($this->normalizeImageSource($src2));
-                $err  = $this->buildImageError($file);
-                return $this->addStash($this->buildBbcodeImage($src2, $alt, $alt, $align, $err));
+                $file = basename(rawurldecode($path)) ?: 'image';
+                $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $alt;
+                $src2 = $this->normalizeImageSource($src2);
+                return $this->addStash($this->getParserImage($src2, $alt, $alt, $align, true));
             },
             $src
         ) ?? $src;
@@ -909,17 +886,16 @@ class Parser {
             '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
             function(array $m): string {
                 $raw  = $this->filterDec($m[2]);
-                $url  = $this->filterEsc($this->safe ? $this->filterUrl($raw) : $raw);
+                $url  = $this->safe ? $this->filterUrl($raw) : $raw;
                 $path = parse_url($raw, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $raw;
-                $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
+                $file = basename(rawurldecode($path)) ?: 'image';
                 $alt  = trim($this->filterDec($m[1]));
-                $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
+                $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $alt;
                 $ttl  = isset($m[3]) ? trim($this->filterDec($m[3])) : '';
-                $url  = $this->filterEsc($this->normalizeImageSource($url));
-                $ttl  = ($ttl === '' || strtolower($ttl) === 'title' || strtolower($ttl) === 'alt') ? ' title="'.$file.'"' : ' title="'.$this->filterEsc($ttl).'"';
-                $err  = $this->buildImageError($file);
-                return $this->addStash('<img src="'.$url.'" alt="'.$alt.'"'.$ttl.$err.'>');
+                $url  = $this->normalizeImageSource($url);
+                $ttl  = ($ttl === '' || strtolower($ttl) === 'title' || strtolower($ttl) === 'alt') ? $file : $ttl;
+                return $this->addStash($this->getParserImage($url, $alt, $ttl));
             },
             $src
         ) ?? $src;
@@ -977,4 +953,3 @@ class Parser {
         ) ?? $src;
     }
 }
-

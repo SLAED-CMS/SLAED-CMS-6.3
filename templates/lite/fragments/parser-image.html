@@ -1,0 +1,14 @@
+{% if missing %}
+<i class="bi bi-image sl-img-placeholder{% if bbcode %} sl-img{% endif %}{% if left %} sl-img-left{% elseif right %} sl-img-right{% endif %}" role="img" aria-label="{{ alt }}"{% if title %} title="{{ title }}"{% endif %}></i>
+{% else %}
+<img
+  src="{{ src }}"
+  alt="{{ alt }}"
+  {% if title %}title="{{ title }}"{% endif %}
+  {% if bbcode or left or right %}
+  class="{% if bbcode %}sl-img{% endif %}{% if left %}{% if bbcode %} {% endif %}sl-img-left{% elseif right %}{% if bbcode %} {% endif %}sl-img-right{% endif %}"
+  {% endif %}
+  {% if fallback %}onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"{% endif %}
+>
+{% if fallback %}<i class="bi bi-image sl-img-placeholder{% if bbcode %} sl-img{% endif %}{% if left %} sl-img-left{% elseif right %} sl-img-right{% endif %}" role="img" aria-label="{{ alt }}"{% if title %} title="{{ title }}"{% endif %} hidden></i>{% endif %}
+{% endif %}

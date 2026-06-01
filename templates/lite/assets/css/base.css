@@ -75,6 +75,8 @@
   --sl-icon-size-md: var(--sl-size-24);
   --sl-icon-size-lg: var(--sl-size-32);
   --sl-icon-size-xl: var(--sl-size-48);
+  --sl-img-placeholder-size: 64px;
+  --sl-img-placeholder-icon-size: var(--sl-icon-size-xl);
   --sl-control-size: var(--sl-size-34);
   --sl-nav-control-size: var(--sl-control-size);
   --sl-circle-action-size: var(--sl-control-size);
