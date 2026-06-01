@@ -1730,7 +1730,7 @@ function setFoot(): void {
     echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
     unset($sitepage, $sitevars);
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
-        $dir = CACHE_DIR;
+        $dir = CACHE_DIR.'/';
         $url = str_replace('/', '', getenv('REQUEST_URI'));
         $url = (!$url) ? 'index.php' : $url;
         if ($conf['cache'] == 2) {
@@ -1759,7 +1759,7 @@ function setFoot(): void {
             if (is_dir($dir)) {
                 if ($dh = opendir($dir)) {
                     while (($file = readdir($dh)) !== false) {
-                        if ($file != '.' && $file != '..' && $file != '.htaccess' && $file != 'index.html') {
+                        if ($file != '.' && $file != '..' && $file != '.htaccess' && $file != 'index.html' && is_file($dir.$file)) {
                             $ftime = $time - filemtime($dir.$file);
                             if ($ftime >= $expire) unlink($dir.$file);
                         }
@@ -2778,7 +2778,7 @@ function getCompressCode(string $code): string {
     # Remove tabs and extra spaces
     $code = str_replace(["\t", '  ', '   ', '    '], ' ', $code);
     # Remove other spaces before/after )
-    $code = preg_replace(['#( )+\]#', '#\)( )+#'], ')', $code);
+    $code = preg_replace(['#( )+\)#', '#\)( )+#'], ')', $code);
     # Remove spaces that can be removed
     $code = preg_replace('#\s?([\{\=-])\s?#', '\\1', $code);
     return $code;
