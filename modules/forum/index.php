@@ -439,7 +439,7 @@ function view(): void {
                 }
                 $rating = ($pos == 1) ? getRatingAsync(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
                 $ip = ($ismod && $val[13]) ? Geoip::getIpHtml($val[13]) : '';
-                $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_num_anchor' => true]);
+                $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_card_id' => true]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
                 $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$grank), 'alt' => $trank, 'title' => $trank]) : '';

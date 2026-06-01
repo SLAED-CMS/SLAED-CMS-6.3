@@ -255,11 +255,13 @@ a .sl-letter:hover {
 .sl-rate-like {
   float: left;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .sl-rate-like p {
   display: inline-flex;
   align-items: center;
-  float: left;
   margin: 0;
 }
 .sl-rate-like p .bi {
@@ -274,13 +276,8 @@ a .sl-letter:hover {
 .sl-rate-minus.sl-out:hover .bi {
   color: var(--sl-color-danger);
 }
-.sl-rate-like-box .sl-rate-num {
-  margin-left: 6px;
-}
 .sl-min-rate .sl-rate-like {
   float: none;
-  display: inline-flex;
-  align-items: center;
 }
 .sl-min-rate .sl-rate-like p .bi {
   font-size: var(--sl-icon-size-sm);
@@ -290,7 +287,7 @@ a .sl-letter:hover {
   height: 17px;
   text-align: center;
   padding: 0 2px;
-  margin: 0 4px;
+  margin: 0;
   font-size: 11px;
 }
 .sl-min-rate .sl-rate-like-box .sl-rate-num:before,
@@ -606,14 +603,16 @@ span.sl-pnum-nav {
   object-fit: cover;
 }
 .sl-com-ava .sl-avatar {
-  width: 64px;
-  height: 64px;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
 }
-.sl-fp-left .sl-avatar {
+.sl-fp-left .sl-com-ava {
   width: 100px;
   height: 100px;
-  vertical-align: bottom;
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
 }
 .sl-check {
   margin: 0 4px 0 0;
@@ -823,6 +822,38 @@ span.sl-pnum-nav {
   visibility: visible;
 }
 
+/* Editor/admin action menu: gear-icon trigger (system-wide) */
+.sl-editor-menu,
+.sl-editor-menu > ul,
+.sl-editor-menu > ul > li {
+  float: none;
+  display: inline-block;
+  position: relative;
+}
+.sl-editor-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-24);
+  height: var(--sl-size-24);
+  border-radius: 50%;
+  background-color: var(--sl-color-border-strong);
+  color: var(--sl-color-on-dark);
+  cursor: pointer;
+  line-height: 1;
+  vertical-align: middle;
+  transition: background-color 0.2s ease;
+}
+.sl-editor-gear .bi {
+  color: inherit;
+  font-size: var(--sl-icon-size-xs);
+  line-height: 1;
+}
+.sl-editor-menu:hover .sl-editor-gear,
+.sl-editor-gear:focus-visible {
+  background-color: var(--sl-color-brand-link);
+}
+
 .sl-forum-last:hover {
   opacity: 0.8;
 }
@@ -864,7 +895,10 @@ span.sl-pnum-nav {
 
 /* Content cards: related articles */
 .sl-related-title {
-  margin: 20px 0 10px 0;
+  font-weight: bold;
+  font-size: 30px;
+  color: var(--sl-login-link-color);
+  margin: 45px 0 15px 0;
 }
 .sl-related-list {
   list-style: none;
@@ -873,7 +907,8 @@ span.sl-pnum-nav {
 }
 .sl-related-item {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
   padding: 8px 0;
   border-bottom: 1px solid var(--sl-color-border-subtle);
 }
@@ -882,8 +917,13 @@ span.sl-pnum-nav {
   width: 60px;
   height: 60px;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: var(--sl-color-surface-alt);
   background-size: cover;
   background-position: center;
+  font-size: 0;
+  color: transparent;
 }
 .sl-related-img-inner {
   display: block;
@@ -3672,11 +3712,12 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   height: 1%;
 }
 .sl-com-ava {
-  border-radius: 40px;
+  border-radius: 50%;
   border: 2px solid var(--sl-login-link-color);
   padding: 6px;
   width: 64px;
   height: 64px;
+  box-sizing: content-box;
   display: block;
 }
 .sl-com-left {
@@ -3721,11 +3762,14 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 }
 .sl-com-edit {
   float: right;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 2px 0 0 0;
 }
-.sl-com-edit a {
-  float: left;
-  margin-left: 15px;
+.sl-com-edit .sl-card-id {
+  float: none;
+  margin: 0;
 }
 
 /* Forum */
@@ -3733,8 +3777,14 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   margin-bottom: 20px;
 }
 .sl-fl-col-icon {
-  width: 32px;
+  width: var(--sl-size-64);
   padding-right: 0 !important;
+}
+.sl-fl-col-icon img {
+  display: block;
+  width: var(--sl-size-64);
+  height: var(--sl-size-64);
+  object-fit: contain;
 }
 .sl-fl-col-icon-m {
   width: 16px;
@@ -3773,6 +3823,19 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   vertical-align: middle;
   margin-top: -4px;
 }
+.sl-forum-cat-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.sl-forum-cat-info .sl-grid {
+  display: block;
+  float: none;
+  width: auto;
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 0;
+}
 .sl-forum-cat-info img {
   vertical-align: middle;
   margin: -1px 5px 0 0;
@@ -3782,6 +3845,18 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 }
 .sl-forum-foot {
   margin-bottom: 50px;
+}
+.sl-forum-list-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 40px;
+}
+.sl-forum-list-info .sl-grid {
+  display: block;
+  float: none;
+  width: auto;
+  margin: 0;
+  flex: 1 1 280px;
 }
 .sl-forum-list-info ul {
   list-style: none;
@@ -3874,8 +3949,16 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   font-size: 12px;
   float: left;
 }
+.sl-fp-meta .sl-pull-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .sl-fp-meta .sl-pull-right .sl-min-rate {
-  float: left;
+  float: none;
+}
+.sl-fp-meta .sl-pull-right .sl-card-id {
+  margin: 0;
 }
 
 /* Polls */
@@ -3994,6 +4077,18 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   vertical-align: middle;
   position: relative;
   top: -1px;
+}
+/* Forum/topic state icon colors (match etalon): grey read, orange warning, green review */
+.sl-forum-old .bi, .sl-topic-old .bi,
+.sl-topic-popular-old .bi, .sl-topic-closed .bi,
+.sl-forum-closed .bi {
+  color: var(--sl-color-text-subtle);
+}
+.sl-topic-hot .bi, .sl-topic-admin .bi {
+  color: var(--sl-color-warning-soft);
+}
+.sl-topic-moderated .bi {
+  color: var(--sl-color-success-soft);
 }
 
 /* Bootstrap Icons migration (phase 2): rating stars via bi half-stars */

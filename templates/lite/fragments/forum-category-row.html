@@ -6,7 +6,7 @@
     {% endif %}
   </td>
   <td class="sl-fl-col-stat">{% if is_topic_list %}{{ replies }}{% else %}{{ topics }}{% endif %}</td>
-  <td class="sl-fl-col-stat">{{ posts }}</td>
+  <td class="sl-fl-col-stat">{% if is_topic_list %}{{{ posts }}}{% else %}{{ posts }}{% endif %}</td>
   {% if is_topic_list %}<td class="sl-fl-col-stat">{{ views }}</td>{% endif %}
   <td class="sl-fl-col-last">
     <ul class="sl-forum-last">

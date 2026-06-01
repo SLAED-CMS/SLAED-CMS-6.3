@@ -1,9 +1,7 @@
-<nav class="sl-menu">
+<nav class="sl-menu sl-editor-menu">
   <ul>
     <li>
-      <span class="sl-but-danger">
-        {% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}
-      </span>
+      <span class="sl-editor-gear" role="button" tabindex="0" title="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}" aria-label="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}"><i class="bi bi-gear-fill" aria-hidden="true"></i></span>
       <ul>
         {% if items_html %}
           {{{ items_html }}}
