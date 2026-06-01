@@ -71,12 +71,16 @@
             showSlide((activeIndex - 1 + slides.length) % slides.length);
         }
 
-        var prev = createElement('a', 'bx-prev', 'Prev');
+        var prev = createElement('a', 'bx-prev');
         prev.href = '#';
+        prev.setAttribute('aria-label', 'Prev');
+        prev.innerHTML = '<i class="bi bi-chevron-left" aria-hidden="true"></i>';
         prev.addEventListener('click', goPrev);
 
-        var next = createElement('a', 'bx-next', 'Next');
+        var next = createElement('a', 'bx-next');
         next.href = '#';
+        next.setAttribute('aria-label', 'Next');
+        next.innerHTML = '<i class="bi bi-chevron-right" aria-hidden="true"></i>';
         next.addEventListener('click', goNext);
 
         wrapper.appendChild(prev);
@@ -163,8 +167,10 @@
 
         prev.className = 'bx-prev';
         next.className = 'bx-next';
-        prev.textContent = 'Prev';
-        next.textContent = 'Next';
+        prev.setAttribute('aria-label', 'Prev');
+        next.setAttribute('aria-label', 'Next');
+        prev.innerHTML = '<i class="bi bi-chevron-left" aria-hidden="true"></i>';
+        next.innerHTML = '<i class="bi bi-chevron-right" aria-hidden="true"></i>';
 
         if (!prev.parentNode) wrapper.appendChild(prev);
         if (!next.parentNode) wrapper.appendChild(next);

@@ -32,6 +32,7 @@
           title="{{ cell.title }}"
           class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_avatar_link %}sl-avatar-link{% elseif cell.is_cart_id %}sl-cart-id{% elseif cell.is_faq_link %}sl-faq{% else %}sl-table-num-link{% endif %}"
         >
+          {% if cell.is_faq_link %}<i class="bi bi-question-circle" aria-hidden="true"></i> {% endif %}
           {% if cell.link_label_html %}
             {{{ cell.link_label_html }}}
           {% elseif cell.img_src %}

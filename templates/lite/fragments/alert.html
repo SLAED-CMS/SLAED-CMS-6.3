@@ -1,18 +1,18 @@
 {% if messages %}
   {% if is_warn %}
-    <div class="sl-warn">
+    <div class="sl-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
       {% for message in messages %}{{ message }}<br>{% endfor %}
     </div>
   {% else %}
-    <div class="sl-info">
+    <div class="sl-info"><i class="bi bi-info-circle" aria-hidden="true"></i>
       {% for message in messages %}{{ message }}<br>{% endfor %}
     </div>
   {% endif %}
 {% elseif text %}
   {% if is_warn %}
-    <div class="sl-warn">{{{ text }}}</div>
+    <div class="sl-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{{ text }}}</div>
   {% else %}
-    <div class="sl-info">{{{ text }}}</div>
+    <div class="sl-info"><i class="bi bi-info-circle" aria-hidden="true"></i> {{{ text }}}</div>
   {% endif %}
 {% endif %}
 {% if meta %}{{{ meta }}}{% endif %}

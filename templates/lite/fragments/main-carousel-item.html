@@ -1,11 +1,12 @@
 <li>
   <div class="sl-site-item">
     <a href="{{ full_url }}" rel="alternate" title="{{ link_title }}" class="sl-site-link">
-      <div class="sl-site-img sl-ico">
+      <div class="sl-site-img">
         <img src="{{ thumb_url }}" alt="{{ img_alt }}" title="{{ img_alt }}">
+        <i class="bi bi-zoom-in sl-site-zoom" aria-hidden="true"></i>
       </div>
       <p class="sl-site-title">{{ site_label }}: {{ site_name }}</p>
     </a>
-    <b class="sl-ico sl-rate-sites" title="{{ rating_label }}">{{ rating }}</b>
+    <b class="sl-rate-sites" title="{{ rating_label }}"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> {{ rating }}</b>
   </div>
 </li>

@@ -228,8 +228,8 @@ function getTplPager(array $data = []): string {
         $params[$n] = $i;
         return getSeoUrl($params).$anchor;
     };
-    $link = static function(string $lh, string $label, bool $cur = false, bool $nav = false) use ($tpl, $targetid, $pushurl, $prefix): string {
-        $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav];
+    $link = static function(string $lh, string $label, bool $cur = false, bool $nav = false, string $icon = '') use ($tpl, $targetid, $pushurl, $prefix): string {
+        $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav, 'icon_name' => $icon];
         if ($targetid && !$cur && $lh !== '') {
             $opt['query'] = $lh;
             $opt['target_id'] = $targetid;
@@ -240,7 +240,7 @@ function getTplPager(array $data = []): string {
         return $tpl->getHtmlFrag($prefix.'pager-link', $opt);
     };
     $dots = $tpl->getHtmlFrag($prefix.'inline-badge', ['is_pager_dots' => true]);
-    $prev = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true) : $link('', _BACK, true, true);
+    $prev = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true, 'chevron-left') : $link('', _BACK, true, true, 'chevron-left');
     $items = '';
     for ($i = 1; $i <= $pages; $i++) {
         if ($i === $num) {
@@ -253,7 +253,7 @@ function getTplPager(array $data = []): string {
             if (($num < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
         }
     }
-    $next = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true) : $link('', _NEXT, true, true);
+    $next = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true, 'chevron-right') : $link('', _NEXT, true, true, 'chevron-right');
     return $tpl->getHtmlFrag($prefix.'pager', [
         'count' => $cnt,
         'pages' => $pages,
@@ -653,6 +653,20 @@ function getTplTitleTip(mixed $data): string {
     return $tpl->getHtmlFrag('info-tooltip', ['items' => $items]);
 }
 
+# Build the five star states from a 0-100 fill width, rounded to half stars
+function getRatingStars(int $width): array {
+    $half = round($width / 10) / 2;
+    $stars = [];
+    for ($i = 1; $i <= 5; $i++) {
+        $stars[] = [
+            'value' => $i,
+            'is_full' => $half >= $i,
+            'is_half' => $half >= $i - 0.5 && $half < $i,
+        ];
+    }
+    return $stars;
+}
+
 # Render the shared ajax rating block
 function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
     global $conf, $tpl;
@@ -700,6 +714,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
             'title' => $title,
             'has_score' => $has_score,
             'width' => (string)$width,
+            'stars' => getRatingStars($width),
             'votes' => (string)$votnum,
             'votes_title' => _VOTES,
             'target_id' => '',
@@ -710,6 +725,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
             'title' => $title,
             'has_score' => $has_score,
             'width' => (string)$width,
+            'stars' => getRatingStars($width),
             'votes' => (string)$votnum,
             'votes_title' => _VOTES,
             'target_id' => $id.$obj,
@@ -718,12 +734,12 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         ]);
         $is_like = false;
     }
-    if ($typ == 2) return $tpl->getHtmlPart('div', ['content_html' => $img]);
+    if ($typ == 2) return $tpl->getHtmlPart('div', ['is_rate' => true, 'content_html' => $img]);
     $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
     if ((($con[1] ?? '') && $id && $mod) || ($rat && $scor)) {
         return ((($con[1] ?? '') && $typ) || (($con[1] ?? '') && !($con[2] ?? '') && !$typ))
-            ? $tpl->getHtmlPart('div', ['id' => 'rep'.$id.$obj, 'content_html' => $imgr])
-            : $tpl->getHtmlPart('div', ['content_html' => $img]);
+            ? $tpl->getHtmlPart('div', ['id' => 'rep'.$id.$obj, 'is_rate' => true, 'content_html' => $imgr])
+            : $tpl->getHtmlPart('div', ['is_rate' => true, 'content_html' => $img]);
     }
     return '';
 }
@@ -907,26 +923,28 @@ function getPageNumbers(string $mod, int $count, int $pages, int $limit, string 
     $nnum = $maxpg + 1;
     $url = html_entity_decode($url, ENT_QUOTES, 'UTF-8');
     if ($pages <= 1) return '';
-    $pagerLink = static fn(string $href, string $title, string $label, bool $isNav = false): string => $tpl->getHtmlFrag('pager-link', [
+    $pagerLink = static fn(string $href, string $title, string $label, bool $isNav = false, string $icon = ''): string => $tpl->getHtmlFrag('pager-link', [
         'href' => $href,
         'title' => $title,
         'label' => $label,
         'is_nav' => $isNav,
+        'icon_name' => $icon,
     ]);
-    $pagerCurrent = static fn(string $title, string $label, bool $isNav = false): string => $tpl->getHtmlFrag('pager-link', [
+    $pagerCurrent = static fn(string $title, string $label, bool $isNav = false, string $icon = ''): string => $tpl->getHtmlFrag('pager-link', [
         'title' => $title,
         'label' => $label,
         'is_cur' => true,
         'is_nav' => $isNav,
+        'icon_name' => $icon,
     ]);
     $pagerDots = static fn(): string => $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
     $cont = '';
     if ($num > 1) {
         $prev  = $num - 1;
         $prevHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor : $afile.'.php?'.$url.$n.'='.$prev.$anchor;
-        $cprev = $pagerLink($prevHref, _BACK, _BACK, true);
+        $cprev = $pagerLink($prevHref, _BACK, _BACK, true, 'chevron-left');
     } else {
-        $cprev = $pagerCurrent(_BACK, _BACK, true);
+        $cprev = $pagerCurrent(_BACK, _BACK, true, 'chevron-left');
     }
     for ($i = 1; $i < $pages + 1; $i++) {
         if ($i == $num) {
@@ -944,9 +962,9 @@ function getPageNumbers(string $mod, int $count, int $pages, int $limit, string 
     if ($num < $pages) {
         $next  = $num + 1;
         $nextHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor : $afile.'.php?'.$url.$n.'='.$next.$anchor;
-        $cnext = $pagerLink($nextHref, _NEXT, _NEXT, true);
+        $cnext = $pagerLink($nextHref, _NEXT, _NEXT, true, 'chevron-right');
     } else {
-        $cnext = $pagerCurrent(_NEXT, _NEXT, true);
+        $cnext = $pagerCurrent(_NEXT, _NEXT, true, 'chevron-right');
     }
     return $tpl->getHtmlFrag('pager', ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'limit' => $limit, 'perpage' => _PERPAGE, 'items' => $cont, 'prev' => $cprev, 'next' => $cnext]);
 }

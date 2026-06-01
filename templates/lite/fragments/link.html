@@ -78,6 +78,17 @@
       {% endif %}
     >
   {% endif %}
+  {% if is_comments or is_card_comment %}<i class="bi bi-chat" aria-hidden="true"></i> {% endif %}
+  {% if is_comment %}<i class="bi bi-chat-dots" aria-hidden="true"></i> {% endif %}
+  {% if is_category or is_card_category %}<i class="bi bi-folder" aria-hidden="true"></i> {% endif %}
+  {% if is_votes %}<i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> {% endif %}
+  {% if is_module %}<i class="bi bi-eye" aria-hidden="true"></i> {% endif %}
+  {% if is_media_ed2k %}<i class="bi bi-eye" aria-hidden="true"></i> {% endif %}
+  {% if is_media_http %}<i class="bi bi-link-45deg" aria-hidden="true"></i> {% endif %}
+  {% if is_last %}<i class="bi bi-box-arrow-up-right" aria-hidden="true"></i> {% endif %}
+  {% if is_cart_checkout or is_shop_checkout %}<i class="bi bi-cart-check" aria-hidden="true"></i> {% endif %}
+  {% if is_shop_add %}<i class="bi bi-cart-plus" aria-hidden="true"></i> {% endif %}
+  {% if is_plus %}<i class="bi bi-plus-lg" aria-hidden="true"></i> {% endif %}
   {% if label_html %}{{{ label_html }}}{% endif %}
   {% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>&nbsp;{% endif %}
   {% if label %}

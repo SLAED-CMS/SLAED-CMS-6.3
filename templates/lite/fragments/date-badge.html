@@ -2,4 +2,4 @@
   datetime="{{ iso }}"
   title="{{ title }}"
   class="{% if class %}{{ class }}{% elseif is_related_date %}sl-related-date{% else %}sl-date{% endif %}"
->{{ text }}</time>
+>{% if not class and not is_related_date %}<i class="bi bi-calendar3" aria-hidden="true"></i> {% endif %}{{ text }}</time>

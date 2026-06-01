@@ -10,7 +10,7 @@
     {% endif %}
     title="{{ rate1_title }}"
     class="sl-rate-minus{% if is_live %} sl-out{% endif %}"
-  >
+  ><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></p>
   <p
     {% if is_live %}
       hx-get="index.php?{{{ rate5_query }}}"
@@ -21,6 +21,6 @@
     {% endif %}
     title="{{ rate5_title }}"
     class="sl-rate-plus{% if is_live %} sl-out{% endif %}"
-  >
+  ><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></p>
 </div>
 <span title="{{ title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ result }}</span>

@@ -17,4 +17,4 @@
     {% if is_cart_minus %}{% if class or is_favorite or is_button_blue or is_cart_plus %} {% endif %}sl-cart-minus{% endif %}
   "
   {% endif %}
->{{ label }}</a>
+>{% if is_favorite %}<i class="bi bi-heart" aria-hidden="true"></i> {% endif %}{% if is_cart_plus %}<i class="bi bi-cart-plus" aria-hidden="true"></i> {% endif %}{% if is_cart_minus %}<i class="bi bi-dash-lg" aria-hidden="true"></i> {% endif %}{{ label }}</a>
