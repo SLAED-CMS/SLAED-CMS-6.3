@@ -60,7 +60,7 @@ if (!function_exists('getUserInfo')) {
 }
 
 if (!function_exists('getCaptcha')) {
-    function getCaptcha(int $mode = 0): string
+    function getCaptcha(string $act = ''): string
     {
         return $GLOBALS['__test_captcha'] ?? '';
     }

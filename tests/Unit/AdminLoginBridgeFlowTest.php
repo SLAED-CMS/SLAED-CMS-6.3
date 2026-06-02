@@ -68,7 +68,6 @@ namespace Tests\Unit {
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
                 'site_logo' => 'logo.png',
-                'gfx_chk' => 1,
                 'users' => [
                     'adirectory' => 'uploads/avatars',
                 ],
