@@ -4313,3 +4313,16 @@ body:has(.sl-admin-login-shell):before {
 .sl-img-right {
   float: right;
 }
+
+/* Captcha widget */
+.sl-captcha {
+  margin-top: var(--sl-space-lg);
+}
+.sl-captcha-hp {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

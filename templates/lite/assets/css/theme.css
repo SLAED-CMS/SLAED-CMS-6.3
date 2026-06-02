@@ -3683,7 +3683,6 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 #sidebar {
   float: right;
   width: var(--sl-sidebar);
-  padding-left: var(--sl-gutter);
   margin-right: calc((var(--sl-sidebar) + var(--sl-gutter)) * -1);
 }
 
@@ -4841,4 +4840,17 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
     padding-left: 12px;
   }
 
+}
+
+/* Captcha widget */
+.sl-captcha {
+  margin-top: var(--sl-gutter);
+}
+.sl-captcha-hp {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
