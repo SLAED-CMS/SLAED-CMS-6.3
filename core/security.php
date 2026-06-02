@@ -867,7 +867,7 @@ function filterNum(mixed $var): int {
 
 # Strip chars outside [Unicode letters, digits, whitespace, %&/|.:;&_+-=]
 function filterWord(string $var): string {
-    return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var);
+    return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var) ?? '';
 }
 
 # Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor
