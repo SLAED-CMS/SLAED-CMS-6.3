@@ -9,6 +9,10 @@
 !/storage/sitemap/sitemap.xsl
 /storage/captcha/*
 
+# Vendored ALTCHA meta files (kept on disk, not tracked)
+/plugins/altcha/LICENSE
+/plugins/altcha/VERSION
+
 # Keep directory structure
 !*/index.html
 !*/.htaccess
