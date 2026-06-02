@@ -5,7 +5,7 @@
       <li>{{{ hits }}}</li>
       <li>{% if reads_text %}<span title="{{ reads_label }}" class="sl-views"><i class="bi bi-eye" aria-hidden="true"></i> {{ reads_text }}</span>{% endif %}</li>
       <li>{% if post_text %}<span title="{{ post_label }}" class="sl-post-icon"><i class="bi bi-chat-square-text" aria-hidden="true"></i> {{{ post_text }}}</span>{% endif %}</li>
-      {% if id %}<li><a href="#{{ id }}" title="{{ id }}" class="sl-pnum">{{ id }}</a></li>{% endif %}
+      {% if id %}<li><a href="#{{ id }}" title="{{ id }}" class="sl-card-id">{{ id }}</a></li>{% endif %}
     </ul>
     <ul>
       {% if date_text %}<li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date_text }}</time></li>{% endif %}

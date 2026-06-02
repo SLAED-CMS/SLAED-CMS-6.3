@@ -161,17 +161,6 @@ a .sl-letter:hover {
   margin-right: 0;
   margin-left: 20px;
 }
-.sl-card-comment,
-.sl-card-reads,
-.sl-card-post,
-.sl-card-date,
-.sl-card-category,
-.sl-card-id,
-.sl-rate-num {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1.1;
-}
 
 /* Article body */
 .sl-entry-content {
