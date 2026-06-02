@@ -104,6 +104,8 @@ bezpieczenstwa), jesli strona dziala w normalnym trybie. Jesli strona dziala w t
 [li] [b][i]Pokazywac komunikaty o bledach JavaScripts?[/i][/b] – analogicznie do bledow PHP (patrz punkt powyzej).<br>
 [li] [b][i]Blokowac atakujacych?[/i][/b] – uzytkownik lub IP automatycznie trafia na liste zablokowanych, po czym dostep do strony jest niemozliwy.<br>
 <br>
+[li] [b][i]Captcha (ALTCHA)[/i][/b] – samodzielnie hostowana ochrona przed spamem oparta na proof-of-work, bez usług zewnętrznych, CDN i Google. Włączana osobno dla rejestracji, formularza kontaktowego, komentarzy oraz logowania użytkownika i administratora (nigdy / po nieudanych próbach / przy każdym logowaniu).<br>
+[li] [b][i]Trudność, czas życia i klucz tajny[/i][/b] – trudność (niska / normalna / wysoka) określa koszt proof-of-work; czas życia ogranicza ważność wyzwania. Główny klucz witryny jest przechowywany w [i]config/security.php[/i] (wspólny dla tokenów CSRF, captcha i zaciemniania nazw pól); przełącznik generuje nowy. Dane efemeryczne (znaczniki jednorazowe i liczniki) znajdują się w [i]storage/captcha[/i].<br>
 [color=green][b]Mozliwe problemy i ich rozwiazania[/b][/color]<br>
 [li] Zarzadzanie bezpieczenstwem moze byc zablokowane w wyniku nadmiernego wzrostu rozmiaru plikow logu. Zaleca sie okresowe czyszczenie dziennikow z przestarzalych wiadomosci. <br>
 [li] Dodatkowy login i haslo nie pasuja – usun dodatkowy login i haslo z pliku: config/security.php, wyszukaj wedlug kluczy login i password<br>

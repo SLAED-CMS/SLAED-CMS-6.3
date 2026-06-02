@@ -104,6 +104,8 @@ securite) si le site fonctionne en mode normal. Si le site fonctionne en mode de
 [li] [b][i]Afficher les messages d'erreur JavaScripts ?[/i][/b] – par analogie avec les erreurs PHP (voir le point ci-dessus).<br>
 [li] [b][i]Bloquer les attaquants ?[/i][/b] – l'utilisateur ou l'IP est automatiquement ajoute a la liste de blocage, apres quoi l'acces au site est impossible.<br>
 <br>
+[li] [b][i]Captcha (ALTCHA)[/i][/b] – protection anti-spam auto-hébergée basée sur la preuve de travail, sans services externes, CDN ni Google. Activable séparément pour l’inscription, le formulaire de contact, les commentaires, ainsi que la connexion utilisateur et administrateur (jamais / après des échecs / à chaque connexion).<br>
+[li] [b][i]Difficulté, durée de vie et clé secrète[/i][/b] – la difficulté (faible / normale / élevée) définit le coût de la preuve de travail ; la durée de vie limite la validité d’un défi. La clé maître du site est stockée dans [i]config/security.php[/i] (partagée par les jetons CSRF, le captcha et l’obscurcissement des noms de champs) ; le bouton la régénère. Les données éphémères (marqueurs à usage unique et compteurs) se trouvent dans [i]storage/captcha[/i].<br>
 [color=green][b]Problemes possibles et leurs solutions[/b][/color]<br>
 [li] La gestion de la securite peut etre bloquee en raison d'une augmentation excessive de la taille des fichiers journaux. Il est recommande de purger periodiquement les journaux des messages obsoletes. <br>
 [li] L'identifiant et le mot de passe supplementaires ne fonctionnent pas – supprimez l'identifiant et le mot de passe supplementaires du fichier : config/security.php, recherche par les cles login et password<br>

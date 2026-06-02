@@ -99,20 +99,6 @@ define('_CACHETIME','Час збереження статистичного ке
 define('_CACHE_1','Всіх відділів сайту');
 define('_CACHE_2','Тільки головної сторінки');
 define('_CAN','Можуть');
-define('_CAPKEY','Ключ сайту');
-define('_CAPKEYI','Рекомендуємо встановити свій, отримати ключ безкоштовно на даному сайті: https://www.google.com/recaptcha/admin');
-define('_CAPQUALITY','Якість перевірки на реального користувача');
-define('_CAPQUALITYI','Чим більше значення, тим вище ймовірність, що запит надсилає реальна людина.');
-define('_CAPSEC0','Не використовувати');
-define('_CAPSEC1','При авторизації адміністратора');
-define('_CAPSEC2','При авторизації користувача');
-define('_CAPSEC3','При реєстрації нового користувача');
-define('_CAPSEC4','Разом, при реєстрації та авторизації користувача');
-define('_CAPSEC5','Авторизація адміністратора та користувача');
-define('_CAPSEC6','Адміністратор та реєстрація нового користувача');
-define('_CAPSEC7','Завжди, для адміністратора та користувача');
-define('_CAPSECKEY','Секретний ключ');
-define('_CAPTCHA','Захист від спамерських ботів, працює у фоновому режимі');
 define('_CDEFIS','Символ, що відокремлює категорії');
 define('_CEDITT','Період редагування повідомлення користувачем, у хвилинах');
 define('_CENSOR','Заборонені слова');
@@ -617,3 +603,27 @@ define('_SCHEDULER_WARNLOG','Ведення журналу сканування 
 define('_SCHEDULER_WARN_GO','Перейти до налаштувань безпеки');
 define('_MONITOR_TIME_AGO','%d с.');
 define('_MONITOR_TIME_NOW','Зараз');
+
+# Captcha (ALTCHA)
+define('_CAPTCHA','Капча');
+define('_CAPTCHA_ACTIVE','Увімкнути капчу');
+define('_CAPTCHA_PROVIDER','Постачальник капчі');
+define('_CAPTCHA_REGISTER','Захищати реєстрацію');
+define('_CAPTCHA_CONTACT','Захищати форму контактів');
+define('_CAPTCHA_COMMENTS','Захищати коментарі та форми контенту');
+define('_CAPTCHA_LOGIN_USER','Капча при вході користувача');
+define('_CAPTCHA_LOGIN_ADMIN','Капча при вході адміністратора');
+define('_CAPTCHA_LOGIN_HINT','Коли капча зʼявляється у формі входу: ніколи, лише після кількох невдалих спроб або за кожного входу.');
+define('_CAPTCHA_NEVER','Ніколи');
+define('_CAPTCHA_AFTERFAIL','Після невдалих спроб');
+define('_CAPTCHA_ALWAYS','Завжди');
+define('_CAPTCHA_DIFFICULTY','Складність');
+define('_CAPTCHA_DIFFICULTY_HINT','Вища складність збільшує вартість доказу роботи для відвідувача.');
+define('_CAPTCHA_LOW','Низька');
+define('_CAPTCHA_NORMAL','Звичайна');
+define('_CAPTCHA_HIGH','Висока');
+define('_CAPTCHA_TTL','Час життя завдання (секунди)');
+define('_CAPTCHA_TTL_HINT','Як довго видане завдання лишається дійсним.');
+define('_SECRET_REGEN','Перегенерувати ключ безпеки');
+define('_SECRET_REGEN_HINT','Створює новий загальний ключ під час збереження та анулює всі CSRF-токени, завдання капчі та обфусковані назви полів.');
+define('_CAPTCHA_STORE_WARN','Каталог storage/captcha недоступний для запису. ALTCHA не може створити секрет або перевіряти рішення.');

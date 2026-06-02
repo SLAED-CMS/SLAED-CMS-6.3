@@ -99,20 +99,6 @@ define('_CACHETIME','Время сохранения статистическо�
 define('_CACHE_1','Всех отделов сайта');
 define('_CACHE_2','Только главной страницы');
 define('_CAN','Могут');
-define('_CAPKEY','Ключ сайта');
-define('_CAPKEYI','Рекомендуем установить свой, получить ключ бесплатно можно на данном сайте: https://www.google.com/recaptcha/admin');
-define('_CAPQUALITY','Качество проверки на реального пользователя');
-define('_CAPQUALITYI','Чем больше значение, тем выше вероятность что запрос отправляет реальный человек.');
-define('_CAPSEC0','Не использовать');
-define('_CAPSEC1','При авторизации администратора');
-define('_CAPSEC2','При авторизации пользователя');
-define('_CAPSEC3','При регистрации нового пользователя');
-define('_CAPSEC4','Вместе, при регистрации и при авторизации пользователя');
-define('_CAPSEC5','Авторизация администратора и пользователя');
-define('_CAPSEC6','Администратор и регистрация нового пользователя');
-define('_CAPSEC7','Всегда, для администратора и пользователя');
-define('_CAPSECKEY','Секретный ключ');
-define('_CAPTCHA','Защита от спамерских ботов, работает в фоновом режиме');
 define('_CDEFIS','Символ, отделяющий категории');
 define('_CEDITT','Период редактирования сообщения пользователем, в минутах');
 define('_CENSOR','Запрещённые слова');
@@ -617,3 +603,27 @@ define('_SCHEDULER_WARNLOG','Ведение журнала сканирован�
 define('_SCHEDULER_WARN_GO','Перейти к настройкам безопасности');
 define('_MONITOR_TIME_AGO','%d сек.');
 define('_MONITOR_TIME_NOW','Сейчас');
+
+# Captcha (ALTCHA)
+define('_CAPTCHA','Капча');
+define('_CAPTCHA_ACTIVE','Включить капчу');
+define('_CAPTCHA_PROVIDER','Поставщик капчи');
+define('_CAPTCHA_REGISTER','Защищать регистрацию');
+define('_CAPTCHA_CONTACT','Защищать форму контактов');
+define('_CAPTCHA_COMMENTS','Защищать комментарии и формы контента');
+define('_CAPTCHA_LOGIN_USER','Капча при входе пользователя');
+define('_CAPTCHA_LOGIN_ADMIN','Капча при входе администратора');
+define('_CAPTCHA_LOGIN_HINT','Когда капча появляется в форме входа: никогда, только после нескольких неудачных попыток или при каждом входе.');
+define('_CAPTCHA_NEVER','Никогда');
+define('_CAPTCHA_AFTERFAIL','После неудачных попыток');
+define('_CAPTCHA_ALWAYS','Всегда');
+define('_CAPTCHA_DIFFICULTY','Сложность');
+define('_CAPTCHA_DIFFICULTY_HINT','Более высокая сложность увеличивает стоимость доказательства работы для посетителя.');
+define('_CAPTCHA_LOW','Низкая');
+define('_CAPTCHA_NORMAL','Обычная');
+define('_CAPTCHA_HIGH','Высокая');
+define('_CAPTCHA_TTL','Время жизни задачи (секунды)');
+define('_CAPTCHA_TTL_HINT','Как долго выданная задача остаётся действительной.');
+define('_SECRET_REGEN','Перегенерировать ключ безопасности');
+define('_SECRET_REGEN_HINT','Создаёт новый общий ключ при сохранении и аннулирует все CSRF-токены, задачи капчи и обфусцированные имена полей.');
+define('_CAPTCHA_STORE_WARN','Каталог storage/captcha недоступен для записи. ALTCHA не может создать секрет или проверять решения.');

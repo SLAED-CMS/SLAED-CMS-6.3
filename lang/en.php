@@ -516,3 +516,10 @@ define('_ERR_NOCOMP','No compression method available');
 define('_ERR_INVMODE','Invalid compression mode');
 define('_ERR_GZNA','GZIP unavailable on server');
 define('_ERR_BZ2NA','BZIP2 unavailable on server');
+
+# Captcha widget (ALTCHA)
+define('_CAPTCHA_LABEL','I am not a robot');
+define('_CAPTCHA_VERIFYING','Verifying…');
+define('_CAPTCHA_VERIFIED','Verified');
+define('_CAPTCHA_ERROR','Verification failed. Please try again.');
+define('_CAPTCHA_EXPIRED','Verification expired. Please verify again.');

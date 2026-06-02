@@ -516,3 +516,10 @@ define('_ERR_FILE','La source doit être un fichier pour gzip/bzip2');
 define('_ERR_OPEN','Impossible d\'ouvrir le fichier source');
 define('_ERR_GZIP','Impossible de créer l\'archive gzip');
 define('_ERR_BZIP','Impossible de créer l\'archive bzip2');
+
+# Captcha widget (ALTCHA)
+define('_CAPTCHA_LABEL','Je ne suis pas un robot');
+define('_CAPTCHA_VERIFYING','Vérification…');
+define('_CAPTCHA_VERIFIED','Vérifié');
+define('_CAPTCHA_ERROR','Échec de la vérification. Veuillez réessayer.');
+define('_CAPTCHA_EXPIRED','Vérification expirée. Veuillez vérifier à nouveau.');

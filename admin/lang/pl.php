@@ -99,20 +99,6 @@ define('_CACHETIME','Czas zachowania danych statystycznych bufora (w sekundach)'
 define('_CACHE_1','Wszystkich działów strony');
 define('_CACHE_2','Tylko strony głównej');
 define('_CAN','Mogą');
-define('_CAPKEY','Kluczem Strona');
-define('_CAPKEYI','Zalecamy zainstalowanie własnego, klucz można otrzymać za darmo na tej stronie: https://www.google.com/recaptcha/admin');
-define('_CAPQUALITY','Jakość weryfikacji dla prawdziwego użytkownika');
-define('_CAPQUALITYI','Im wyższa wartość, tym większe prawdopodobieństwo, że żądanie zostanie wysłane przez prawdziwą osobę.');
-define('_CAPSEC0','Nie używać');
-define('_CAPSEC1','Podczas autoryzacji administratora');
-define('_CAPSEC2','Podczas autoryzacji użytkownika');
-define('_CAPSEC3','Podczas rejestracji nowego użytkownika');
-define('_CAPSEC4','Razem przy rejestracji i autoryzacji użytkownika');
-define('_CAPSEC5','Autoryzacja administratora i użytkownika');
-define('_CAPSEC6','Rejestracja administratora i nowego użytkownika');
-define('_CAPSEC7','Zawsze dla administratora i użytkownika');
-define('_CAPSECKEY','Sekretny klucz');
-define('_CAPTCHA','Ochrona przed spamerami, działa w tle');
 define('_CDEFIS','Symbol rozdzielający kategorii');
 define('_CEDITT','Okres jej edycji przez użytkownika, w minutach');
 define('_CENSOR','Zakazane słowa');
@@ -617,3 +603,27 @@ define('_SCHEDULER_WARNLOG','Rejestrowanie skanowania plików jest wyłączone, 
 define('_SCHEDULER_WARN_GO','Przejdź do ustawień bezpieczeństwa');
 define('_MONITOR_TIME_AGO','%d sek.');
 define('_MONITOR_TIME_NOW','Teraz');
+
+# Captcha (ALTCHA)
+define('_CAPTCHA','Captcha');
+define('_CAPTCHA_ACTIVE','Włącz captcha');
+define('_CAPTCHA_PROVIDER','Dostawca captcha');
+define('_CAPTCHA_REGISTER','Chroń rejestrację');
+define('_CAPTCHA_CONTACT','Chroń formularz kontaktowy');
+define('_CAPTCHA_COMMENTS','Chroń komentarze i formularze treści');
+define('_CAPTCHA_LOGIN_USER','Captcha przy logowaniu użytkownika');
+define('_CAPTCHA_LOGIN_ADMIN','Captcha przy logowaniu administratora');
+define('_CAPTCHA_LOGIN_HINT','Kiedy captcha pojawia się w formularzu logowania: nigdy, dopiero po kilku nieudanych próbach lub przy każdym logowaniu.');
+define('_CAPTCHA_NEVER','Nigdy');
+define('_CAPTCHA_AFTERFAIL','Po nieudanych próbach');
+define('_CAPTCHA_ALWAYS','Zawsze');
+define('_CAPTCHA_DIFFICULTY','Trudność');
+define('_CAPTCHA_DIFFICULTY_HINT','Wyższa trudność zwiększa koszt proof-of-work dla odwiedzającego.');
+define('_CAPTCHA_LOW','Niska');
+define('_CAPTCHA_NORMAL','Normalna');
+define('_CAPTCHA_HIGH','Wysoka');
+define('_CAPTCHA_TTL','Czas życia wyzwania (sekundy)');
+define('_CAPTCHA_TTL_HINT','Jak długo wydane wyzwanie pozostaje ważne.');
+define('_SECRET_REGEN','Wygeneruj nowy klucz bezpieczeństwa');
+define('_SECRET_REGEN_HINT','Generuje nowy globalny klucz przy zapisie i unieważnia wszystkie tokeny CSRF, wyzwania captcha oraz zaciemnione nazwy pól.');
+define('_CAPTCHA_STORE_WARN','Katalog storage/captcha nie jest zapisywalny. ALTCHA nie może wygenerować sekretu ani weryfikować rozwiązań.');

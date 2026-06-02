@@ -104,6 +104,8 @@ wenn die Website im Normalbetrieb laeuft. Wenn die Website im Debug-Modus laeuft
 [li] [b][i]JavaScript-Fehlermeldungen anzeigen?[/i][/b] – analog zu PHP-Fehlern (siehe Punkt oben).<br>
 [li] [b][i]Angreifer blockieren?[/i][/b] – der Benutzer oder die IP wird automatisch in die Sperrliste aufgenommen, danach ist der Zugang zur Website nicht mehr moeglich.<br>
 <br>
+[li] [b][i]Captcha (ALTCHA)[/i][/b] – selbst gehosteter Spam-Schutz auf Proof-of-Work-Basis, ohne externe Dienste, CDN oder Google. Separat aktivierbar für Registrierung, Kontaktformular, Kommentare sowie Benutzer- und Administrator-Login (nie / nach Fehlversuchen / bei jedem Login).<br>
+[li] [b][i]Schwierigkeit, Gültigkeitsdauer und Geheimschlüssel[/i][/b] – die Schwierigkeit (niedrig / normal / hoch) bestimmt den Proof-of-Work-Aufwand; die Gültigkeitsdauer begrenzt die Lebensdauer einer Challenge. Der site-weite Master-Schlüssel liegt in [i]config/security.php[/i] (gemeinsam für CSRF-Tokens, Captcha und Feldnamen-Obfuskierung); der Schalter erzeugt ihn neu. Ephemere Daten (Einmal-Marker und Zähler) liegen in [i]storage/captcha[/i].<br>
 [color=green][b]Moegliche Probleme und ihre Loesungen[/b][/color]<br>
 [li] Die Sicherheitsverwaltung kann durch uebermaessiges Anwachsen der Logdateien blockiert werden. Es wird empfohlen, die Protokolle regelmaessig von veralteten Nachrichten zu bereinigen. <br>
 [li] Zusaetzlicher Login und Passwort passen nicht – loeschen Sie den zusaetzlichen Login und das Passwort aus der Datei: config/security.php, Suche nach den Schluesseln login und password<br>

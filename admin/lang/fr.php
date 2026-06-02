@@ -99,20 +99,6 @@ define('_CACHETIME','Le temps de rétention des statistiques de cache en seconde
 define('_CACHE_1','Tous les divisions du site');
 define('_CACHE_2','Seulement la page principale');
 define('_CAN','Peut');
-define('_CAPKEY','Clé du site');
-define('_CAPKEYI',"Nous vous recommandons d'installer la vôtre, vous pouvez obtenir la clé gratuitement sur ce site: https://www.google.com/recaptcha/admin");
-define('_CAPQUALITY','La qualité de la vérification pour un vrai utilisateur');
-define('_CAPQUALITYI','Plus la valeur est élevée, plus la probabilité que la demande soit envoyée par une personne réelle est élevée.');
-define('_CAPSEC0','Ne pas utiliser');
-define('_CAPSEC1',"Lors de l'autorisation d'un administrateur");
-define('_CAPSEC2',"Lors de l'autorisation d'un utilisateur");
-define('_CAPSEC3',"Lors de l'enregistrement d'un nouvel utilisateur");
-define('_CAPSEC4',"Ensemble, lors de l'inscription et lors de l'autorisation d'un utilisateur");
-define('_CAPSEC5','Autorisation administrateur et utilisateur');
-define('_CAPSEC6',"Administrateur et nouvel enregistrement d'utilisateur");
-define('_CAPSEC7',"Toujours, pour l'administrateur et l'utilisateur");
-define('_CAPSECKEY','La clé secrète');
-define('_CAPTCHA','Protection contre les robots spammeurs, fonctionne en arrière-plan');
 define('_CDEFIS','Le symbole, qui sépare les catégories');
 define('_CEDITT',"La période de l'édition de messages de l'utilisateur, en quelques minutes");
 define('_CENSOR','Mots interdits');
@@ -617,3 +603,27 @@ define('_SCHEDULER_WARNLOG','La journalisation des scans de fichiers est désact
 define('_SCHEDULER_WARN_GO','Aller aux paramètres de sécurité');
 define('_MONITOR_TIME_AGO','il y a %d sec.');
 define('_MONITOR_TIME_NOW','Maintenant');
+
+# Captcha (ALTCHA)
+define('_CAPTCHA','Captcha');
+define('_CAPTCHA_ACTIVE','Activer le captcha');
+define('_CAPTCHA_PROVIDER','Fournisseur de captcha');
+define('_CAPTCHA_REGISTER','Protéger l’inscription');
+define('_CAPTCHA_CONTACT','Protéger le formulaire de contact');
+define('_CAPTCHA_COMMENTS','Protéger les commentaires et formulaires de contenu');
+define('_CAPTCHA_LOGIN_USER','Captcha à la connexion utilisateur');
+define('_CAPTCHA_LOGIN_ADMIN','Captcha à la connexion administrateur');
+define('_CAPTCHA_LOGIN_HINT','Quand le captcha apparaît sur le formulaire de connexion : jamais, seulement après plusieurs échecs, ou à chaque connexion.');
+define('_CAPTCHA_NEVER','Jamais');
+define('_CAPTCHA_AFTERFAIL','Après des échecs');
+define('_CAPTCHA_ALWAYS','Toujours');
+define('_CAPTCHA_DIFFICULTY','Difficulté');
+define('_CAPTCHA_DIFFICULTY_HINT','Une difficulté plus élevée augmente le coût de la preuve de travail pour le visiteur.');
+define('_CAPTCHA_LOW','Faible');
+define('_CAPTCHA_NORMAL','Normale');
+define('_CAPTCHA_HIGH','Élevée');
+define('_CAPTCHA_TTL','Durée de vie du défi (secondes)');
+define('_CAPTCHA_TTL_HINT','Durée pendant laquelle un défi émis reste valide.');
+define('_SECRET_REGEN','Régénérer la clé secrète du site');
+define('_SECRET_REGEN_HINT','Génère une nouvelle clé secrète globale à l’enregistrement et invalide tous les jetons CSRF, défis captcha et noms de champs obfusqués.');
+define('_CAPTCHA_STORE_WARN','Le répertoire storage/captcha n’est pas accessible en écriture. ALTCHA ne peut pas générer de secret ni vérifier les solutions.');

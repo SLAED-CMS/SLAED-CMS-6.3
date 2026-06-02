@@ -103,6 +103,8 @@ if the website is running in normal mode. If the website is running in debug mod
 [li] [b][i]Show JavaScript error messages?[/i][/b] – similar to PHP errors (see the point above).<br>
 [li] [b][i]Block attackers?[/i][/b] – the user or IP is automatically added to the blocked list, after which access to the website is not possible.<br>
 <br>
+[li] [b][i]Captcha (ALTCHA)[/i][/b] – self-hosted, proof-of-work spam protection without external services, CDN or Google. Enable it separately for registration, the contact form, comments, and for user and administrator login (never / after failed attempts / on every login).<br>
+[li] [b][i]Difficulty, lifetime and secret key[/i][/b] – difficulty (low / normal / high) sets the proof-of-work cost; the lifetime limits how long an issued challenge stays valid. The site master secret is stored in [i]config/security.php[/i] (shared by CSRF tokens, captcha and field-name obfuscation); the regenerate switch creates a new one. Ephemeral data (one-time markers and counters) lives in [i]storage/captcha[/i].<br>
 [color=green][b]Possible problems and their solutions[/b][/color]<br>
 [li] Security management may be blocked as a result of excessive growth of log files. It is recommended to periodically clear logs of outdated messages. <br>
 [li] Additional login and password do not work – delete the additional login and password from the file: config/security.php, search by keys login and password<br>
