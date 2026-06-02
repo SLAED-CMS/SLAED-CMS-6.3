@@ -4798,56 +4798,11 @@ function getRatingView(): void {
 
 # Format nummer page for Ajax
 function getAsyncPager(string $frag, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', string $id = '', int $cid = 0, string $typ = '', string $mod = ''): string {
-    global $tpl;
-    $nnum = $mnum + 1;
-    $pagerLink = static function(string $query, string $target, string $title, string $label, bool $isNav = false, string $icon = '') use ($tpl): string {
-        return $tpl->getHtmlFrag('pager-link', [
-            'query' => $query ? 'index.php?'.$query : '',
-            'target_id' => $target,
-            'title' => $title,
-            'label' => $label,
-            'is_nav' => $isNav,
-            'icon_name' => $icon,
-        ]);
-    };
-    $pagerCurrent = static fn(string $title, string $label, bool $isNav = false, string $icon = ''): string => $tpl->getHtmlFrag('pager-link', [
-        'title' => $title,
-        'label' => $label,
-        'is_cur' => true,
-        'is_nav' => $isNav,
-        'icon_name' => $icon,
-    ]);
-    $pagerDots = static fn(): string => $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-    if ($pages > 1) {
-        $cont = '';
-        if ($num > 1) {
-            $prev = $num - 1;
-            $cprev = $pagerLink(getQueryString(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $prev, 'typ' => $typ, 'dir' => $mod]), $id, _BACK, _BACK, true, 'chevron-left');
-        } else {
-            $cprev = $pagerCurrent(_BACK, _BACK, true, 'chevron-left');
-        }
-        for ($i = 1; $i < $pages+1; $i++) {
-            if ($i == $num) {
-                $cont .= $pagerCurrent((string)$i, (string)$i);
-            } else {
-                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= $pagerLink(getQueryString(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $i, 'typ' => $typ, 'dir' => $mod]), $id, (string)$i, (string)$i);
-            }
-            if ($i < $pages) {
-                if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= ' ';
-                if (($num > $nnum) && ($i == 1)) $cont .= $pagerDots();
-                if (($num < ($pages - $mnum)) && ($i == ($pages - 1))) $cont .= $pagerDots();
-            }
-        }
-        if ($num < $pages) {
-            $next = $num + 1;
-            $cnext = $pagerLink(getQueryString(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $next, 'typ' => $typ, 'dir' => $mod]), $id, _NEXT, _NEXT, true, 'chevron-right');
-        } else {
-            $cnext = $pagerCurrent(_NEXT, _NEXT, true, 'chevron-right');
-        }
-        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'limit' => $page, 'perpage' => _PERPAGE, 'items' => $cont, 'prev' => $cprev, 'next' => $cnext];
-        return $tpl->getHtmlFrag('pager', $data);
-    }
-    return '';
+    $target = static fn(int $i): array => [
+        'query' => 'index.php?'.getQueryString(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $i, 'typ' => $typ, 'dir' => $mod]),
+        'target_id' => $id,
+    ];
+    return getTplPagerView($num, $pages, $mnum, $target, ['count' => $count, 'limit' => $page]);
 }
 
 # Check type upload file

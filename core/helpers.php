@@ -199,8 +199,45 @@ function getTplPreviewContent(array $data = []): string {
 }
 
 # Universal pager — works in both admin and front-end contexts
+# Single source of truth for rendering a pager: prev/next nav, numbered links and dots,
+# wrapped in the 'pager' fragment. $target(int $page): array yields the link target for a
+# page — ['href' => ...] for URL navigation, or ['query' => ..., 'target_id' => ...,
+# 'push_url' => ...] for HTMX navigation. Renders via $tpl->getHtmlFrag(), so each theme
+# keeps its own pager fragments (admin and lite stay independent).
+function getTplPagerView(int $num, int $pages, int $maxpg, callable $target, array $meta = []): string {
+    global $tpl;
+    if ($pages <= 1) return '';
+    $num  = max(1, min($num, $pages));
+    $nnum = $maxpg + 1;
+    $link = static function(int $page, string $label, bool $cur, bool $nav, string $icon) use ($tpl, $target): string {
+        $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav, 'icon_name' => $icon];
+        if (!$cur) $opt += $target($page);
+        return $tpl->getHtmlFrag('pager-link', $opt);
+    };
+    $dots = $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
+    $prev = ($num > 1) ? $link($num - 1, _BACK, false, true, 'chevron-left') : $link(0, _BACK, true, true, 'chevron-left');
+    $items = '';
+    for ($i = 1; $i <= $pages; $i++) {
+        if ($i === $num) {
+            $items .= $link($i, (string)$i, true, false, '').' ';
+        } elseif ($i === 1 || $i === $pages || (($i > ($num - $maxpg)) && ($i < ($num + $maxpg)))) {
+            $items .= $link($i, (string)$i, false, false, '').' ';
+        }
+        if ($i < $pages) {
+            if (($num > $nnum) && ($i === 1)) $items .= $dots;
+            if (($num < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
+        }
+    }
+    $next = ($num < $pages) ? $link($num + 1, _NEXT, false, true, 'chevron-right') : $link(0, _NEXT, true, true, 'chevron-right');
+    return $tpl->getHtmlFrag('pager', array_merge([
+        'overall' => _OVERALL, 'by' => _BY, 'page_s' => _PAGE_S, 'perpage' => _PERPAGE,
+        'pages' => $pages, 'prev' => $prev, 'items' => $items, 'next' => $next,
+    ], $meta));
+}
+
+# Build a pager from a table COUNT query, reading the current page from the request.
 function getTplPager(array $data = []): string {
-    global $db, $afile, $tpl;
+    global $db, $afile;
     $limit = (int)($data['limit'] ?? 10);
     $maxpg = (int)($data['maxpg'] ?? 10);
     $table = $data['table'] ?? '';
@@ -212,7 +249,6 @@ function getTplPager(array $data = []): string {
     $url = html_entity_decode($data['url'] ?? '', ENT_QUOTES, 'UTF-8');
     $targetid = (string)($data['target_id'] ?? '');
     $pushurl = !empty($data['push_url']);
-    $prefix = '';
     $wparams = (array)($data['where_params'] ?? []);
     $urlx = (array)($data['url_extra'] ?? []);
     [$cnt] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT('.$field.') FROM '.PREFIX_DB.$table.($where ? ' WHERE '.$where : ''), $wparams));
@@ -220,7 +256,6 @@ function getTplPager(array $data = []): string {
     if ($cnt <= $limit) return '';
     $pages = (int)ceil($cnt / $limit);
     $num = max(1, min(getVar('get', $n, 'num', 1), $pages));
-    $nnum = $maxpg + 1;
     $mkurl = static function(int $i) use ($mod, $url, $n, $anchor, $afile, $urlx): string {
         if (defined('ADMIN_FILE')) return $afile.'.php?'.$url.$n.'='.$i.$anchor;
         $params = $mod ? ['name' => $mod] : [];
@@ -228,45 +263,12 @@ function getTplPager(array $data = []): string {
         $params[$n] = $i;
         return getSeoUrl($params).$anchor;
     };
-    $link = static function(string $lh, string $label, bool $cur = false, bool $nav = false, string $icon = '') use ($tpl, $targetid, $pushurl, $prefix): string {
-        $opt = ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav, 'icon_name' => $icon];
-        if ($targetid && !$cur && $lh !== '') {
-            $opt['query'] = $lh;
-            $opt['target_id'] = $targetid;
-            $opt['push_url'] = $pushurl ? 'true' : 'false';
-        } else {
-            $opt['href'] = $lh;
-        }
-        return $tpl->getHtmlFrag($prefix.'pager-link', $opt);
+    $target = static function(int $i) use ($mkurl, $targetid, $pushurl): array {
+        return $targetid !== ''
+            ? ['query' => $mkurl($i), 'target_id' => $targetid, 'push_url' => $pushurl ? 'true' : 'false']
+            : ['href' => $mkurl($i)];
     };
-    $dots = $tpl->getHtmlFrag($prefix.'inline-badge', ['is_pager_dots' => true]);
-    $prev = ($num > 1) ? $link($mkurl($num - 1), _BACK, false, true, 'chevron-left') : $link('', _BACK, true, true, 'chevron-left');
-    $items = '';
-    for ($i = 1; $i <= $pages; $i++) {
-        if ($i === $num) {
-            $items .= $link('', (string)$i, true).' ';
-        } elseif ($i === 1 || $i === $pages || (($i > ($num - $maxpg)) && ($i < ($num + $maxpg)))) {
-            $items .= $link($mkurl($i), (string)$i).' ';
-        }
-        if ($i < $pages) {
-            if (($num > $nnum) && ($i === 1)) $items .= $dots;
-            if (($num < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
-        }
-    }
-    $next = ($num < $pages) ? $link($mkurl($num + 1), _NEXT, false, true, 'chevron-right') : $link('', _NEXT, true, true, 'chevron-right');
-    return $tpl->getHtmlFrag($prefix.'pager', [
-        'count' => $cnt,
-        'pages' => $pages,
-        'limit' => $limit,
-        'page' => $limit,
-        'overall' => _OVERALL,
-        'by' => _BY,
-        'page_s' => _PAGE_S,
-        'perpage' => _PERPAGE,
-        'prev' => $prev,
-        'items' => $items,
-        'next' => $next,
-    ]);
+    return getTplPagerView($num, $pages, $maxpg, $target, ['count' => $cnt, 'limit' => $limit, 'page' => $limit]);
 }
 
 # Render one full admin module header with title, icon and top-level tabs
@@ -918,55 +920,14 @@ function getModuleNavi(array $p): string {
 
 # Render page numbers from known counters
 function getPageNumbers(string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
-    global $afile, $tpl;
-    $num  = $num ?: getVar('get', $n, 'num', 1);
-    $nnum = $maxpg + 1;
+    global $afile;
+    $num = $num ?: getVar('get', $n, 'num', 1);
     $url = html_entity_decode($url, ENT_QUOTES, 'UTF-8');
-    if ($pages <= 1) return '';
-    $pagerLink = static fn(string $href, string $title, string $label, bool $isNav = false, string $icon = ''): string => $tpl->getHtmlFrag('pager-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-        'is_nav' => $isNav,
-        'icon_name' => $icon,
-    ]);
-    $pagerCurrent = static fn(string $title, string $label, bool $isNav = false, string $icon = ''): string => $tpl->getHtmlFrag('pager-link', [
-        'title' => $title,
-        'label' => $label,
-        'is_cur' => true,
-        'is_nav' => $isNav,
-        'icon_name' => $icon,
-    ]);
-    $pagerDots = static fn(): string => $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-    $cont = '';
-    if ($num > 1) {
-        $prev  = $num - 1;
-        $prevHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor : $afile.'.php?'.$url.$n.'='.$prev.$anchor;
-        $cprev = $pagerLink($prevHref, _BACK, _BACK, true, 'chevron-left');
-    } else {
-        $cprev = $pagerCurrent(_BACK, _BACK, true, 'chevron-left');
-    }
-    for ($i = 1; $i < $pages + 1; $i++) {
-        if ($i == $num) {
-            $cont .= $pagerCurrent((string)$i, (string)$i);
-        } elseif ((($i > ($num - $maxpg)) && ($i < ($num + $maxpg))) || ($i == $pages) || ($i == 1)) {
-            $href = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor : $afile.'.php?'.$url.$n.'='.$i.$anchor;
-            $cont .= $pagerLink($href, (string)$i, (string)$i);
-        }
-        if ($i < $pages) {
-            if (($i > ($num - $nnum)) && ($i < ($num + $maxpg))) $cont .= ' ';
-            if (($num > $nnum) && ($i == 1)) $cont .= $pagerDots();
-            if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= $pagerDots();
-        }
-    }
-    if ($num < $pages) {
-        $next  = $num + 1;
-        $nextHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor : $afile.'.php?'.$url.$n.'='.$next.$anchor;
-        $cnext = $pagerLink($nextHref, _NEXT, _NEXT, true, 'chevron-right');
-    } else {
-        $cnext = $pagerCurrent(_NEXT, _NEXT, true, 'chevron-right');
-    }
-    return $tpl->getHtmlFrag('pager', ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'limit' => $limit, 'perpage' => _PERPAGE, 'items' => $cont, 'prev' => $cprev, 'next' => $cnext]);
+    $target = static function(int $i) use ($mod, $url, $n, $anchor, $afile): array {
+        $href = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor : $afile.'.php?'.$url.$n.'='.$i.$anchor;
+        return ['href' => $href];
+    };
+    return getTplPagerView((int)$num, $pages, $maxpg, $target, ['count' => $count, 'limit' => $limit]);
 }
 
 # End of stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates

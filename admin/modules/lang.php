@@ -186,36 +186,7 @@ function fileedit(): void {
         }
         $groups[] = $tpl->getHtmlPart('div', ['rows' => $rows]);
     }
-    $pager = '';
-    if ($total_pages > 1) {
-        $prev = ($page > 1)
-            ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
-            : $tpl->getHtmlFrag('pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
-        $next = ($page < $total_pages)
-            ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
-            : $tpl->getHtmlFrag('pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
-        $items = '';
-        for ($i = 1; $i <= $total_pages; $i++) {
-            if ($i === $page) {
-                $items .= $tpl->getHtmlFrag('pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
-            } else {
-                $items .= $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$i, 'label' => (string)$i, 'title' => (string)$i]);
-            }
-        }
-        $pager = $tpl->getHtmlFrag('pager', [
-            'count' => $total,
-            'pages' => $total_pages,
-            'limit' => $per_page,
-            'page' => $per_page,
-            'overall' => _OVERALL,
-            'by' => _BY,
-            'page_s' => _PAGE_S,
-            'perpage' => _PERPAGE,
-            'prev' => $prev,
-            'items' => $items,
-            'next' => $next,
-        ]);
-    }
+    $pager = getPageNumbers('', $total, $total_pages, $per_page, 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&', $total_pages, $page, '', 'page');
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => array_merge(

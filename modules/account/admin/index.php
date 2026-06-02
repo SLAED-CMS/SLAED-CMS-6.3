@@ -155,37 +155,7 @@ function account(): void {
         ]);
         [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_users WHERE '.$wcnt, $pars));
         $count = (int)$count;
-        if ($count > (int)$conf['users']['anum']) {
-            $pages = (int)ceil($count / (int)$conf['users']['anum']);
-            $curr = max(1, min($num, $pages));
-            $maxpg = (int)$conf['users']['anump'];
-            $dots = $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-            $base = $afile.'.php?name=account'.($search ? '&search='.$search : '').($chng !== '' ? '&chng='.urlencode($chng) : '').'&num=';
-            $link = static function(string $href, string $label, bool $cur = false, bool $nav = false) use ($tpl): string {
-                return $tpl->getHtmlFrag('pager-link', $href !== ''
-                    ? ['href' => $href, 'label' => $label, 'title' => $label, 'is_nav' => $nav]
-                    : ['label' => $label, 'title' => $label, 'is_cur' => $cur, 'is_nav' => $nav]
-                );
-            };
-            $items = '';
-            $nnum = $maxpg + 1;
-            for ($i = 1; $i <= $pages; $i++) {
-                if ($i === $curr) {
-                    $items .= $link('', (string)$i, true);
-                } elseif ($i === 1 || $i === $pages || (($i > ($curr - $maxpg)) && ($i < ($curr + $maxpg)))) {
-                    $items .= $link($base.$i, (string)$i).' ';
-                }
-                if ($i < $pages) {
-                    if (($curr > $nnum) && ($i === 1)) $items .= $dots;
-                    if (($curr < ($pages - $maxpg)) && ($i === ($pages - 1))) $items .= $dots;
-                }
-            }
-            $body .= $tpl->getHtmlFrag('pager', [
-                'prev' => ($curr > 1) ? $link($base.($curr - 1), _BACK, false, true) : $link('', _BACK, true, true),
-                'items' => $items,
-                'next' => ($curr < $pages) ? $link($base.($curr + 1), _NEXT, false, true) : $link('', _NEXT, true, true),
-            ]);
-        }
+        $body .= getPageNumbers('', $count, (int)ceil($count / (int)$conf['users']['anum']), (int)$conf['users']['anum'], 'name=account'.($search ? '&search='.$search : '').($chng !== '' ? '&chng='.urlencode($chng) : '').'&', (int)$conf['users']['anump'], $num, '', 'num');
     } else {
         $body .= $tpl->getHtmlFrag('alert', ['text' => _USERNOEXIST]);
     }

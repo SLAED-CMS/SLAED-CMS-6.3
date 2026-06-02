@@ -200,10 +200,6 @@ function info(): void {
 
 
 function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
-    global $afile, $tpl;
-    if ($totcom <= $perpage || $totpage <= 1) {
-        return '';
-    }
     $query = http_build_query(array_filter([
         'name' => 'changelog',
         'author' => $filters['author'],
@@ -212,32 +208,7 @@ function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $fil
         'datefrom' => $filters['since'],
         'dateto' => $filters['until']
     ]));
-    $base = $afile.'.php?'.($query ? $query.'&' : 'name=changelog&').'page=';
-    $maxpg = 10;
-    $nnum = $maxpg + 1;
-    $prev = $page > 1
-        ? $tpl->getHtmlFrag('pager-link', ['href' => $base.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
-        : $tpl->getHtmlFrag('pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
-    $items = '';
-    for ($i = 1; $i <= $totpage; $i++) {
-        if ($i === $page) {
-            $items .= $tpl->getHtmlFrag('pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
-        } elseif ($i === 1 || $i === $totpage || ($i > ($page - $maxpg) && $i < ($page + $maxpg))) {
-            $items .= $tpl->getHtmlFrag('pager-link', ['href' => $base.$i, 'label' => (string)$i, 'title' => (string)$i]).' ';
-        }
-        if ($i < $totpage) {
-            if (($page > $nnum) && ($i === 1)) $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-            if (($page < ($totpage - $maxpg)) && ($i === ($totpage - 1))) $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-        }
-    }
-    $next = $page < $totpage
-        ? $tpl->getHtmlFrag('pager-link', ['href' => $base.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
-        : $tpl->getHtmlFrag('pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
-    return $tpl->getHtmlFrag('pager', [
-        'items' => $items,
-        'prev' => $prev,
-        'next' => $next,
-    ]);
+    return getPageNumbers('', $totcom, $totpage, $perpage, ($query ? $query.'&' : 'name=changelog&'), 10, $page, '', 'page');
 }
 
 switch ($op) {

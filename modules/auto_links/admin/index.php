@@ -222,41 +222,7 @@ function stats(): void {
             ],
             'rows_html' => $rows,
         ]);
-        if ($countall > (int)$conf['auto_links']['anum']) {
-            $prev = $page > 1
-                ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.($page - 1), 'label' => _BACK, 'title' => _BACK, 'is_nav' => true])
-                : $tpl->getHtmlFrag('pager-link', ['label' => _BACK, 'title' => _BACK, 'is_cur' => true, 'is_nav' => true]);
-            $items = '';
-            $maxpg = (int)$conf['auto_links']['anump'];
-            $nnum = $maxpg + 1;
-            for ($i = 1; $i <= $pages; $i++) {
-                if ($i === $page) {
-                    $items .= $tpl->getHtmlFrag('pager-link', ['label' => (string)$i, 'title' => (string)$i, 'is_cur' => true]);
-                } elseif ($i === 1 || $i === $pages || ($i > ($page - $maxpg) && $i < ($page + $maxpg))) {
-                    $items .= $tpl->getHtmlFrag('pager-link', [
-                        'href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$i,
-                        'label' => (string)$i,
-                        'title' => (string)$i,
-                    ]).' ';
-                }
-                if ($i < $pages) {
-                    if (($page > $nnum) && ($i === 1)) {
-                        $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-                    }
-                    if (($page < ($pages - $maxpg)) && ($i === ($pages - 1))) {
-                        $items .= $tpl->getHtmlFrag('inline-badge', ['is_pager_dots' => true]);
-                    }
-                }
-            }
-            $next = $page < $pages
-                ? $tpl->getHtmlFrag('pager-link', ['href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.($page + 1), 'label' => _NEXT, 'title' => _NEXT, 'is_nav' => true])
-                : $tpl->getHtmlFrag('pager-link', ['label' => _NEXT, 'title' => _NEXT, 'is_cur' => true, 'is_nav' => true]);
-            $body .= $tpl->getHtmlFrag('pager', [
-                'items' => $items,
-                'prev' => $prev,
-                'next' => $next,
-            ]);
-        }
+        $body .= getPageNumbers('', $countall, $pages, (int)$conf['auto_links']['anum'], 'name=auto_links&op=stats&id='.$id.'&sort='.$sort.'&order='.$order.'&', (int)$conf['auto_links']['anump'], $page, '', 'num');
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
