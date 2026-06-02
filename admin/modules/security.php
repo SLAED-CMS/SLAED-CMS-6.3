@@ -485,7 +485,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
+    $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getRandomString('10')));
     $floodhtml = $tpl->getHtmlFrag('select', [
         'name_attr' => 'flood',
         'is_config' => true,
@@ -529,6 +529,29 @@ function config(): void {
         ['label_html' => _SEC_LOG_U, 'field_html' => getTplRadioGroup(['name' => 'log_u', 'value' => $conf['security']['log_u'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_WARN_BLOCK, 'field_html' => getTplRadioGroup(['name' => 'block', 'value' => $conf['security']['block'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
+    $cap = is_array($conf['security']['captcha'] ?? null) ? $conf['security']['captcha'] : [];
+    $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
+    if (!Captcha::isStoreWritable()) {
+        $rows[] = ['label_html' => _CAPTCHA, 'field_html' => $tpl->getHtmlFrag('alert', ['text' => _CAPTCHA_STORE_WARN, 'meta' => '', 'type' => 'warn', 'is_warn' => true])];
+    }
+    $rows[] = ['label_html' => _CAPTCHA_ACTIVE, 'field_html' => getTplRadioGroup(['name' => 'cap_active', 'value' => (string)(int)!empty($cap['active']), 'options' => $yesno])];
+    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => 'altcha', 'label_text' => 'ALTCHA', 'is_selected' => (string)($cap['provider'] ?? 'altcha') === 'altcha']);
+    $rows[] = ['label_html' => _CAPTCHA_PROVIDER, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_provider', 'options_html' => $opts, 'is_config' => true])];
+    $rows[] = ['label_html' => _CAPTCHA_REGISTER, 'field_html' => getTplRadioGroup(['name' => 'cap_register', 'value' => (string)(int)!empty($cap['register']), 'options' => $yesno])];
+    $rows[] = ['label_html' => _CAPTCHA_CONTACT, 'field_html' => getTplRadioGroup(['name' => 'cap_contact', 'value' => (string)(int)!empty($cap['contact']), 'options' => $yesno])];
+    $rows[] = ['label_html' => _CAPTCHA_COMMENTS, 'field_html' => getTplRadioGroup(['name' => 'cap_comments', 'value' => (string)(int)!empty($cap['comments']), 'options' => $yesno])];
+    $capmode = [['value' => 'never', 'label' => _CAPTCHA_NEVER], ['value' => 'after-fail', 'label' => _CAPTCHA_AFTERFAIL], ['value' => 'always', 'label' => _CAPTCHA_ALWAYS]];
+    $opts = '';
+    foreach ($capmode as $item) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $item['value'], 'label_text' => $item['label'], 'is_selected' => (string)($cap['login_user'] ?? 'after-fail') === $item['value']]);
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPTCHA_LOGIN_USER, 'hint' => _CAPTCHA_LOGIN_HINT]), 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_login_user', 'options_html' => $opts, 'is_config' => true])];
+    $opts = '';
+    foreach ($capmode as $item) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $item['value'], 'label_text' => $item['label'], 'is_selected' => (string)($cap['login_admin'] ?? 'always') === $item['value']]);
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPTCHA_LOGIN_ADMIN, 'hint' => _CAPTCHA_LOGIN_HINT]), 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_login_admin', 'options_html' => $opts, 'is_config' => true])];
+    $opts = '';
+    foreach ([['low', _CAPTCHA_LOW], ['normal', _CAPTCHA_NORMAL], ['high', _CAPTCHA_HIGH]] as $item) $opts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $item[0], 'label_text' => $item[1], 'is_selected' => (string)($cap['difficulty'] ?? 'normal') === $item[0]]);
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPTCHA_DIFFICULTY, 'hint' => _CAPTCHA_DIFFICULTY_HINT]), 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cap_difficulty', 'options_html' => $opts, 'is_config' => true])];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPTCHA_TTL, 'hint' => _CAPTCHA_TTL_HINT]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'cap_ttl', 'value_attr' => (string)($cap['ttl'] ?? 600), 'is_config' => true])];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SECRET_REGEN, 'hint' => _SECRET_REGEN_HINT]), 'field_html' => getTplRadioGroup(['name' => 'secret_regen', 'value' => '0', 'options' => $yesno])];
     $confv = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -600,6 +623,20 @@ function configsave(): void {
         $cont['admin_ip'] = $conf['security']['admin_ip'];
         $cont['login'] = $conf['security']['login'];
         $cont['password'] = $conf['security']['password'];
+        $master = (string)($conf['security']['secret'] ?? '');
+        $cont['secret'] = ($master === '' || getVar('post', 'secret_regen', 'num', 0)) ? bin2hex(random_bytes(32)) : $master;
+        $cont['captcha'] = [
+            'active' => getVar('post', 'cap_active', 'num', 0),
+            'provider' => getVar('post', 'cap_provider', 'var', 'altcha'),
+            'register' => getVar('post', 'cap_register', 'num', 0),
+            'contact' => getVar('post', 'cap_contact', 'num', 0),
+            'comments' => getVar('post', 'cap_comments', 'num', 0),
+            'login_user' => getVar('post', 'cap_login_user', 'var', 'after-fail'),
+            'login_admin' => getVar('post', 'cap_login_admin', 'var', 'always'),
+            'ttl' => getVar('post', 'cap_ttl', 'num', 600),
+            'difficulty' => getVar('post', 'cap_difficulty', 'var', 'normal'),
+            'storage' => 'file',
+        ];
         setConfigFile('security.php', $cont);
     }
     setRedirect($afile.'.php?name=security&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);

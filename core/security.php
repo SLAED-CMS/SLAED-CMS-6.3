@@ -614,13 +614,27 @@ function getHost(): string {
     return getenv('HTTP_HOST') ?: getenv('SERVER_NAME') ?: '';
 }
 
-# Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context.
-# Token is valid for the lifetime of the PHP session; invalidated when sitekey changes.
-function getSiteToken(string $scope = 'ajax'): string {
+# Return a purpose-scoped key derived from the site master secret.
+# The master is a 256-bit CSPRNG value, generated and persisted on first use (lazy bootstrap).
+function getSecret(string $purpose): string {
     global $conf;
+    $master = (string)($conf['security']['secret'] ?? '');
+    if ($master === '') {
+        $master = bin2hex(random_bytes(32));
+        $sec = is_array($conf['security'] ?? null) ? $conf['security'] : [];
+        $sec['secret'] = $master;
+        $conf['security'] = $sec;
+        if (function_exists('setConfigFile')) setConfigFile('security.php', $sec);
+    }
+    return hash_hmac('sha256', $purpose, $master);
+}
+
+# Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context.
+# Token is valid for the lifetime of the PHP session; invalidated when the master secret changes.
+function getSiteToken(string $scope = 'ajax'): string {
     $sid  = session_id();
     $data = $sid !== '' ? $scope.'|'.$sid : $scope;
-    return hash_hmac('sha256', $data, (string)($conf['sitekey'] ?? ''));
+    return hash_hmac('sha256', $data, getSecret('csrf'));
 }
 
 # Return CSRF token from request context:

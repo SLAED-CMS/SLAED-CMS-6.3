@@ -152,7 +152,7 @@ function add(): void {
     $cont .= $tpl->getHtmlPart('form-add', [
         'name'      => $conf['name'],
         'fields'    => $fields,
-        'captcha'   => getCaptcha(1),
+        'captcha'   => getCaptcha('comment'),
         'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
     ]);
     echo $cont;
@@ -171,7 +171,7 @@ function send(): void {
     if (!$desc) $stop[] = _CERROR11;
     if (!$site) $stop[] = _CERROR4;
     checkemail($email);
-    if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
+    if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
         setHead(['title' => _ADD]);

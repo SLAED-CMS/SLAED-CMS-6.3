@@ -304,59 +304,6 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $opts = '';
-    foreach ([
-        ['0', _CAPSEC0],
-        ['1', _CAPSEC1],
-        ['2', _CAPSEC2],
-        ['3', _CAPSEC3],
-        ['4', _CAPSEC4],
-        ['5', _CAPSEC5],
-        ['6', _CAPSEC6],
-        ['7', _CAPSEC7],
-    ] as $item) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $item[0],
-            'label_text' => $item[1],
-            'is_selected' => $conf['gfx_chk'] == $item[0],
-        ]);
-    }
-    $rows[] = ['label_html' => _CAPTCHA, 'field_html' => $tpl->getHtmlFrag('select', [
-        'name_attr' => 'gfx_chk',
-        'options_html' => $opts,
-        'is_config' => true,
-    ])];
-    $opts = '';
-    $ival = 1;
-    while ($ival <= 9) {
-        $opts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => (string)$ival,
-            'label_text' => '0.'.$ival,
-            'is_selected' => $ival == $conf['quality'],
-        ]);
-        $ival++;
-    }
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPQUALITY, 'hint' => _CAPQUALITYI]), 'field_html' => $tpl->getHtmlFrag('select', [
-        'name_attr' => 'quality',
-        'options_html' => $opts,
-        'is_config' => true,
-    ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPKEY, 'hint' => _CAPKEYI]), 'field_html' => $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'capkey',
-        'value_attr' => (string)$conf['capkey'],
-        'maxlength_num' => 255,
-        'placeholder_text' => _CAPKEY,
-        'is_config' => true,
-    ])];
-    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CAPSECKEY, 'hint' => _CAPKEYI]), 'field_html' => $tpl->getHtmlFrag('input', [
-        'itype' => 'text',
-        'name_attr' => 'capsec',
-        'value_attr' => (string)$conf['capsec'],
-        'maxlength_num' => 255,
-        'placeholder_text' => _CAPSECKEY,
-        'is_config' => true,
-    ])];
     $rows[] = ['label_html' => _EDITOR.' user:', 'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user')];
     $rows[] = ['label_html' => _EDITOR.' admin:', 'field_html' => Editor::getSelect('editor_admin', (string)($conf['editor']['admin'] ?? 'plain'), 'content', 'admin')];
     $list = timezone_identifiers_list();
@@ -744,10 +691,6 @@ function save(): void {
             'theme' => getVar('post', 'theme', 'var'),
             'module' => $xmodule,
             'amod' => getVar('post', 'amod', 'var'),
-            'gfx_chk' => getVar('post', 'gfx_chk', 'num'),
-            'quality' => getVar('post', 'quality', 'num'),
-            'capkey' => getVar('post', 'capkey', 'text'),
-            'capsec' => getVar('post', 'capsec', 'text'),
             'editor' => [
                 'user' => $eduser,
                 'admin' => $edadmin,
@@ -813,7 +756,6 @@ function save(): void {
             'script_b' => getVar('post', 'script_b', 'num'),
             'mtemp' => getVar('post', 'mtemp', 'raw'),
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
-            'sitekey' => getPass(25),
             'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
             'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
         ];

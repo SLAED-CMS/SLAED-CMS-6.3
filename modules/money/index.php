@@ -80,7 +80,7 @@ function money(): void {
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_9, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9])]);
         $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_6]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'captcha' => getCaptcha(1),
+            'captcha' => getCaptcha('comment'),
             'extrafields' => $rows,
             'name' => $conf['name'],
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _MO_10]),
@@ -114,7 +114,7 @@ function send(): void {
         $note = getVar('post', 'note', 'text');
         if (!$sum) $stop[] = _MO_SERROR;
         checkemail($email);
-        if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
+        if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['money']['pr']) ? '0' : '1';
             $db->getSqlQuery(

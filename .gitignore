@@ -7,6 +7,7 @@
 /storage/backup/*
 /storage/sitemap/*
 !/storage/sitemap/sitemap.xsl
+/storage/captcha/*
 
 # Keep directory structure
 !*/index.html

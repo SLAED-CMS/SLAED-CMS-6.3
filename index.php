@@ -210,4 +210,7 @@ if (empty($go)) {
 } elseif ($go == 'script') {
     setCache('1');
     setScript();
+} elseif ($go == 'captcha') {
+    setCache('0');
+    getCaptchaChallenge(getVar('req', 'act', 'var') ?: 'default');
 }

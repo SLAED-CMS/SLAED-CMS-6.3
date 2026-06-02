@@ -10,7 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $tpl;
-$captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
+$captcha = getCaptcha('login');
 $network_row = ($conf['users']['network']) ? $tpl->getHtmlFrag('block-network-row', [
 	'network_label' => _LOGINNETWORK,
 	'networks_html' => getNetworks(),

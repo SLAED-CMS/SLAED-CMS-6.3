@@ -194,7 +194,7 @@ function add_admin() {
 
 function check_admin() {
     global $db, $afile, $conf, $stop;
-    if (($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop = _SECCODEINCOR;
+    if (checkCaptcha('adminlogin')) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'] ?? '', 0, 25)));
     $pwd  = htmlspecialchars(trim(substr($_POST['pwd'] ?? '', 0, 25)));
     if (!$name || !$pwd) $stop = _LOGININCOR;
@@ -218,9 +218,11 @@ function check_admin() {
         $ip = getip();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :ip', ['ip' => $ip]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET ip = :ip, lastvis = now() WHERE id = :id', ['ip' => $ip, 'id' => $aid]);
+        Captcha::clearLoginFailures('admin');
         login_report(1, 1, $name, '');
         setRedirect($afile.'.php');
     } else {
+        Captcha::registerLoginFailure('admin');
         login_report(1, 0, $name, $pwd);
         login();
     }
@@ -246,7 +248,7 @@ function login() {
         ]);
     } else {
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
-        $capt = in_array((int)($conf['gfx_chk'] ?? 0), [1, 5, 6, 7], true) ? getCaptcha(2) : '';
+        $capt = getCaptcha('adminlogin');
         $rows = [
             ['has_colon' => true, 'label' => _NICKNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'autocomplete_attr' => 'username', 'is_required' => true])],
             ['has_colon' => true, 'label' => _PASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'current-password', 'is_required' => true])],

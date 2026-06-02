@@ -25,8 +25,6 @@ return [
     'cache_d' => '7',
     'cache_script' => '0',
     'cache_t' => '600',
-    'capkey' => '6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI',
-    'capsec' => '6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9',
     'censor' => '1',
     'censor_l' => 'antislaed,netlevel,sunvas',
     'censor_r' => '***',
@@ -56,7 +54,6 @@ return [
     'geoip_enabled' => '1',
     'geoip_store' => '0',
     'geoip_test' => '217.50.80.228',
-    'gfx_chk' => '0',
     'graph' => '<meta property="og:site_name" content="[site]">
 <meta property="og:locale" content="[loc]">
 <meta property="og:title" content="[title]">
@@ -83,7 +80,6 @@ SLAED CMS - Support
 https://slaed.net
 support@slaed.net',
     'multilingual' => '1',
-    'quality' => '4',
     'rewrite' => '0',
     'schema' => '<script type="application/ld+json">
 {
@@ -142,7 +138,6 @@ support@slaed.net',
     'sess_t' => '900',
     'session' => '1',
     'site_logo' => 'slaed-logo-wordmark-gradient-blue.svg',
-    'sitekey' => 'D1SAAuAAcztDHSI7OBwM76Wya',
     'sitename' => 'Название сайта',
     'slogan' => 'SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.',
     'startdate' => '2013-06-17 00:00:00',

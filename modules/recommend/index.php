@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 
 function recommend(): void {
     global $conf, $stop, $tpl;
-    $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
+    $unkey = substr(getSecret('field'), 0, 32);
     if (is_user()) {
         $userinfo = getUserInfo();
         $sname = getVar('post', $unkey, 'name', $userinfo['name']);
@@ -47,7 +47,7 @@ function recommend(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('recommend')]).$fields,
-        'captcha' => getCaptcha(2),
+        'captcha' => getCaptcha('comment'),
         'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'label' => _SEND]),
     ]);
     echo $cont;
@@ -56,7 +56,7 @@ function recommend(): void {
 
 function send(): void {
     global $conf, $stop, $tpl;
-    $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
+    $unkey = substr(getSecret('field'), 0, 32);
     $sname = getVar('post', $unkey, 'name');
     $semail = getVar('post', 'semail', 'text');
     $fname = getVar('post', 'fname', 'name');
@@ -66,7 +66,7 @@ function send(): void {
     if (!$sname || !$fname) $stop[] = _ERROR_ALL;
     checkemail($semail);
     checkemail($femail);
-    if (checkCaptcha(2)) $stop[] = _SECCODEINCOR;
+    if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
     if (!$stop) {
         $subject = $conf['sitename'].' - '._INTSITE;
         $siteLink = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'], 'title' => $conf['sitename'], 'label' => $conf['homeurl'], 'is_blank' => true]);

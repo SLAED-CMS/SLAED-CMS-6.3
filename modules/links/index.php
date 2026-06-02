@@ -384,7 +384,7 @@ function add(): void {
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'      => $conf['name'],
             'fields'    => $fields,
-            'captcha'   => getCaptcha(1),
+            'captcha'   => getCaptcha('comment'),
             'submit'    => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
@@ -411,7 +411,7 @@ function send(): void {
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if (!$site) $stop[] = _CERROR4;
         checkemail($mail);
-        if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
+        if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_links WHERE url = :site', ['site' => $site])) > 0) $stop[] = _LINKEXIST;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (is_user()) ? (int)$user[0] : '';

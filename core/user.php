@@ -41,7 +41,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
             'form_name' => 'post',
             'no_enctype' => true,
             'fields' => $fields,
-            'captcha' => getCaptcha(1),
+            'captcha' => getCaptcha('comment'),
             'submit' => $submit,
         ]);
     }
@@ -208,7 +208,7 @@ function addComment() {
     if ($stime > time()) $stop = sprintf(_CERROR5, $conf['comments']['send']);
     if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($comment, 'http://') !== false) $stop = _CERROR9;
     $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
-    if (checkCaptcha(1)) $stop = _SECCODEINCOR;
+    if (checkCaptcha('comment')) $stop = _SECCODEINCOR;
     if (!$stop && $id && $mod) {
         $comment = filterHtml($comment, $urlclick);
         if (is_user()) {

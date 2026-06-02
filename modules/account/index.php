@@ -15,7 +15,7 @@ function account(): void {
         profil();
     } else {
         setHead(['title' => _USERREGLOGIN]);
-        $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
+        $captcha = getCaptcha('login');
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
@@ -77,12 +77,12 @@ function newuser(): void {
         if (!$conf['users']['reg']) {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
         } else {
-            $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
+            $unkey = substr(getSecret('field'), 0, 32);
             $nick = getVar('post', $unkey, 'text');
             $nick = ($nick) ? filterText(substr($nick, 0, 25)) : '';
             $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? filterText($mail) : '';
-            $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
+            $captcha = getCaptcha('register');
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label' => _NICKNAME,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'value_attr' => $nick, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
@@ -133,7 +133,7 @@ function finnewuser(): void {
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
         setFoot();
     } else {
-        $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
+        $unkey = substr(getSecret('field'), 0, 32);
         $nick = getVar('post', $unkey, 'name');
         $mail = getVar('post', 'mail', 'text');
         $rules = getVar('post', 'rules', 'num');
@@ -141,16 +141,16 @@ function finnewuser(): void {
         checkuser($nick, $mail, $rules);
         $pass = htmlspecialchars(substr(getVar('post', 'user_password', 'text'), 0, 40));
         $pass2 = htmlspecialchars(substr(getVar('post', 'user_password2', 'text'), 0, 40));
-        if (($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop[] = _SECCODEINCOR;
+        if (checkCaptcha('register')) $stop[] = _SECCODEINCOR;
         if ($pass == '' && $pass2 == '') {
-            $pass = getPass($conf['users']['minpass']);
+            $pass = getRandomString($conf['users']['minpass']);
         } elseif ($pass != $pass2) {
             $stop[] = _ERROR_PASS;
         } elseif ($pass == $pass2 && strlen($pass) < $conf['users']['minpass']) {
             $stop[] = _CHARMIN.': '.$conf['users']['minpass'];
         }
         if (!$stop) {
-            $check = md5(getPass(10));
+            $check = md5(getRandomString(10));
             $time = time();
             $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=activate&amp;user='.urlencode($nick).'&amp;num='.$check;
             $nick = filterText($nick);
@@ -222,7 +222,7 @@ function network(): void {
             }
             $variants[] = substr($first, 0, 20).'-'.date('Y');
             $variants[] = substr($first, 0, 22).'-'.rand(1, 99);
-            $variants[] = substr($first, 0, 20).'-'.getPass(4);
+            $variants[] = substr($first, 0, 20).'-'.getRandomString(4);
             foreach ($variants as $var) {
                 if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $var])) == 0) {
                     $uname = $var;
@@ -242,7 +242,7 @@ function network(): void {
                 setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
             } else {
                 $uemail = isset($ulog['email']) ? mb_strtolower($ulog['email']) : '';
-                $upass = getPassHash(getPass(32));
+                $upass = getPassHash(getRandomString(32));
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, ip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :ip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => 'default/00.gif', 'password' => $upass, 'ip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
                 [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]));
                 setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
@@ -771,7 +771,7 @@ function passmail(): void {
     if (!$stop) {
         $subpass = substr(md5($pass), 0, 10);
         if ($code && $subpass == $code) {
-            $newpass = getPass($conf['users']['minpass']);
+            $newpass = getRandomString($conf['users']['minpass']);
             $chash = getPassHash($newpass);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
             $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
@@ -799,7 +799,7 @@ function passmail(): void {
 function login(): void {
     global $db, $conf, $stop;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
-    if (($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop[] = _SECCODEINCOR;
+    if (checkCaptcha('login')) $stop[] = _SECCODEINCOR;
     $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
     $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
     if (!$uname || !$upass) $stop[] = _LOGININCOR;
@@ -819,9 +819,11 @@ function login(): void {
         $uagent = getAgent();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => $uagent, 'id' => $uid]);
+        Captcha::clearLoginFailures('user');
         login_report(0, 1, $uname, '');
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
+        Captcha::registerLoginFailure('user');
         login_report(0, 0, $uname, $upass);
         account();
     }

@@ -68,7 +68,7 @@ function contact(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')]).$fields,
-        'captcha' => getCaptcha(1),
+        'captcha' => getCaptcha('contact'),
         'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
             'op' => 'contact',
@@ -85,7 +85,7 @@ function contact(): void {
         if (!$sname) $stop[] = _CERROR3;
         if (!$message) $stop[] = _CERROR1;
         checkemail($semail);
-        if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
+        if (checkCaptcha('contact')) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             if ($conf['contact']['admins'] && $id) {
                 [$adminmail] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = :id AND smail = \'1\'', ['id' => $id]));

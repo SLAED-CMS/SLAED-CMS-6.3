@@ -89,10 +89,10 @@ function getProtocol(): string {
     return $proto;
 }
 
-function getPass(int $m): string {
+function getRandomString(int $m): string {
     $pass = '';
     for ($ix = 0; $ix < $m; $ix++) {
-        $te = mt_rand(48, 122);
+        $te = random_int(48, 122);
         if (($te > 57 && $te < 65) || ($te > 90 && $te < 97)) $te = $te - 9;
         $pass .= chr($te);
     }
@@ -328,9 +328,9 @@ function config(): void {
     $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
     $xpass = ($conf['db']['pass']) ? $conf['db']['pass'] : '';
     $xname = ($conf['db']['name']) ? $conf['db']['name'] : '';
-    $xprefix = ($conf['db']['prefix']) ? $conf['db']['prefix'] : getPass('10');
-    $xafile = ($conf['security']['afile']) ? $conf['security']['afile'] : strtolower(getPass('10'));
-    $info = sprintf(_CONF_10_INFO, strtolower(getPass('10')));
+    $xprefix = ($conf['db']['prefix']) ? $conf['db']['prefix'] : getRandomString('10');
+    $xafile = ($conf['security']['afile']) ? $conf['security']['afile'] : strtolower(getRandomString('10'));
+    $info = sprintf(_CONF_10_INFO, strtolower(getRandomString('10')));
     setHead();
     echo '<form action="setup.php" method="post">'
     .'<table class="sl_table">'

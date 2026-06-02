@@ -410,7 +410,7 @@ function add(): void {
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'        => $conf['name'],
             'fields'      => $fields,
-            'captcha'     => getCaptcha(1),
+            'captcha'     => getCaptcha('comment'),
             'submit'      => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]),
         ]);
         echo $cont;
@@ -439,7 +439,7 @@ function send(): void {
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         checkemail($mail);
-        if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
+        if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
         $userid = isset($user[0]) ? (int)$user[0] : 0;
         $filename = upload(1, $conf['files']['temp'], $conf['files']['typefile'], $conf['files']['max_size'], 'files', '1600', '1600', $userid);
@@ -492,7 +492,7 @@ function loading(): void {
         update_points(11);
         if ($conf['files']['stream'] == 2) {
             $type = strtolower(substr(strrchr($url, '.'), 1));
-            stream($url, getPass(10).'.'.$type);
+            stream($url, getRandomString(10).'.'.$type);
         } elseif ($conf['files']['stream'] == '1') {
             stream($url, preg_replace('#(.*?)\/#i', '', $url));
         } else {

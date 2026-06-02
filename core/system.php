@@ -18,6 +18,7 @@ define('CACHE_DIR', BASE_DIR.'/storage/cache');
 define('COUNTER_DIR', BASE_DIR.'/storage/counter');
 define('LOGS_DIR', BASE_DIR.'/storage/logs');
 define('SITEMAP_DIR', BASE_DIR.'/storage/sitemap');
+define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 
 # Uploads directory for user content
 define('UPLOADS_DIR', BASE_DIR.'/uploads');
@@ -100,6 +101,7 @@ if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'
 require_once BASE_DIR.'/core/classes/template.php';
 require_once BASE_DIR.'/core/classes/parser.php';
 require_once BASE_DIR.'/core/classes/geoip.php';
+require_once BASE_DIR.'/core/classes/captcha.php';
 $tpl = new Template($theme);
 $prs = new Parser();
 
@@ -1594,8 +1596,7 @@ function setHead(array $seo = []): void {
         }
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'is_logged' => true, 'items_html' => $html]);
     } elseif ($conf['users']['enter']) {
-        $gfx = (int)($conf['gfx_chk'] ?? 0);
-        $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
+        $captcha = getCaptcha('login');
         $atok = htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8');
         $login = $tpl->getHtmlPart('login-nav', [
             'login'    => _LOGIN,
@@ -2081,22 +2082,9 @@ function addErrorFile(string $msg): bool {
     return class_exists('Logger') ? Logger::addFile('error', $msg) : false;
 }
 
-# Captcha check
-function checkCaptcha(int $id): bool {
- global $conf;
-    if ($conf['gfx_chk'] >= '1' && ($id == 2 || ($id == 1 && !is_user()))) {
-        $recaptcha = getVar('post', 'recaptcha', 'text');
-        if ($recaptcha) {
-            $url = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$conf['capsec'].'&response='.$recaptcha.'&remoteip='.getIp());
-            $ret = json_decode($url, true);
-            $cont = ($ret['success'] == 1 && substr($ret['score'], 2) >= $conf['quality']) ? false : true;
-        } else {
-            $cont = true;
-        }
-    } else {
-        $cont = false;
-    }
-    return $cont;
+# Verify a captcha submission for the given action; true means the request must be blocked
+function checkCaptcha(string $act): bool {
+    return Captcha::check($act);
 }
 
 # Generating categories for modules
@@ -2729,17 +2717,14 @@ function getNetworks(): string {
     return $cont;
 }
 
-# Get captcha
-function getCaptcha(int $id): string {
- global $conf, $tpl;
-    if ($conf['gfx_chk'] >= '1' && ($id == 2 || ($id == 1 && !is_user()))) {
-        $cont = $tpl->getHtmlFrag('head-script-src', ['src' => 'https://www.google.com/recaptcha/api.js?render='.$conf['capkey'], 'attr' => ''])
-            ."\n        ".$tpl->getHtmlFrag('head-script-inline', ['js' => 'grecaptcha.ready(function() { grecaptcha.execute("'.$conf['capkey'].'", { action: "homepage" }) .then(function(token) { document.getElementById("recaptcha").value = token; }); });']);
-        $cont .= $tpl->getHtmlFrag('hidden', ['name_attr' => 'recaptcha', 'value_attr' => '', 'input_attr' => 'id="recaptcha"']);
-    } else {
-        $cont = '';
-    }
-    return $cont;
+# Render the captcha block for a form action (empty when not required)
+function getCaptcha(string $act): string {
+    return Captcha::html($act);
+}
+
+# Serve a captcha challenge as JSON for the given action
+function getCaptchaChallenge(string $act): void {
+    Captcha::challenge($act);
 }
 
 # Convert image to base64
@@ -3056,11 +3041,11 @@ function getUserNews(int $num): int {
 }
 
 # Random password generation
-function getPass(int $m): string {
+function getRandomString(int $m): string {
     $m = intval($m);
     $pass = '';
     for ($i = 0; $i < $m; $i++) {
-        $te = mt_rand(48, 122);
+        $te = random_int(48, 122);
         if (($te > 57 && $te < 65) || ($te > 90 && $te < 97)) $te = $te - 9;
         $pass .= chr($te);
     }
@@ -3755,8 +3740,8 @@ function addEditorUpload(): void {
             $bad[] = (string)$img['error'];
             continue;
         }
-        $new = $mod.'-'.getPass(10).'-'.$uid.'.'.$ext;
-        while (is_file($dir.'/'.$new)) $new = $mod.'-'.getPass(10).'-'.$uid.'.'.$ext;
+        $new = $mod.'-'.getRandomString(10).'-'.$uid.'.'.$ext;
+        while (is_file($dir.'/'.$new)) $new = $mod.'-'.getRandomString(10).'-'.$uid.'.'.$ext;
         if (!move_uploaded_file((string)$tmp[$key], $dir.'/'.$new)) {
             $bad[] = _ERROR_UP;
             continue;
@@ -4898,10 +4883,10 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
                 $type = strtolower(substr(strrchr($_FILES['userfile']['name'], '.'), 1));
                 if (!check_file($type, $typefile) && !check_size($_FILES['userfile']['tmp_name'], $width, $height)) {
                     if (isAdmin() && !is_user()) {
-                        $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
+                        $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
                     } else {
                         $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-                        $newname = ($namefile) ? $namefile.'-'.getPass(10).'-'.$uname.'.'.$type : getPass(15).'.'.$type;
+                        $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
                     }
                     if (file_exists($directory.'/'.$newname)) {
                         $stop = _ERROR_EXIST;
@@ -4934,10 +4919,10 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
                     $type = strtolower(substr(strrchr($_FILES['file']['name'][$i], '.'), 1));
                     if (!check_file($type, $typefile) && !check_size($_FILES['file']['tmp_name'][$i], $width, $height)) {
                         if (isAdmin() && !is_user()) {
-                            $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
+                            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
                         } else {
                             $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-                            $newname = ($namefile) ? $namefile.'-'.getPass(10).'-'.$uname.'.'.$type : getPass(15).'.'.$type;
+                            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
                         }
                         if (file_exists($directory.'/'.$newname)) {
                             echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_EXIST]);
@@ -4970,10 +4955,10 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
                 return 0;
             } else {
                 if (isAdmin() && !is_user()) {
-                    $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
+                    $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
                 } else {
                     $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-                    $newname = ($namefile) ? $namefile.'-'.getPass(10).'-'.$uname.'.'.$type : getPass(15).'.'.$type;
+                    $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
                 }
                 $dir = $directory.'/'.$newname;
                 if (file_exists($dir)) {
@@ -5017,10 +5002,10 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
         preg_match('#Content-Type: \w+(\/)(?<value>\w+)#', $result, $value);
         $type = ($value['value'] == 'jpeg') ? 'jpg' : $value['value'];
         if (isAdmin() && !is_user()) {
-            $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
+            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
         } else {
             $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-            $newname = ($namefile) ? $namefile.'-'.getPass(10).'-'.$uname.'.'.$type : getPass(15).'.'.$type;
+            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
         }
         $dir = $directory.'/'.$newname;
         $from = file_get_contents($url);

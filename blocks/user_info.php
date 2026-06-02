@@ -39,7 +39,7 @@ if (is_user()) {
 		'logout_label' => _LOGOUT,
 	];
 } else {
-	$captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
+	$captcha = getCaptcha('login');
 	$data = [
 		'is_user' => false,
 		'avatar_url' => $conf['users']['adirectory'].'/default/0.gif',
