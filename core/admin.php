@@ -1088,10 +1088,7 @@ function getAdminInfo(): string {
     $id   = getVar('post', 'id', 'num', 0);
     $cont = '';
     $fdoc = static function(string $base): string {
-        foreach (['.html', '.md'] as $ext) {
-            if (file_exists($base.$ext)) return $base.$ext;
-        }
-        return '';
+        return file_exists($base.'.md') ? $base.'.md' : '';
     };
     if ($conf['adminfo'] && $id) {
         $type    = getVar('post', 'type', 'num', 0);
@@ -1100,7 +1097,7 @@ function getAdminInfo(): string {
         $base    = $type
             ? "modules/{$name}/admin/info/{$locale}"
             : "admin/info/{$name}/{$locale}";
-        $fpdir   = $fdoc($base) ?: $base.'.html';
+        $fpdir   = $fdoc($base) ?: $base.'.md';
         if ($content) {
             $dir = dirname($fpdir);
             if (!is_dir($dir)) mkdir($dir, 0777, true);
