@@ -669,10 +669,12 @@ class Parser {
                 continue;
             }
 
-            # Paragraph — collect until blank line or heading/HR
+            # Paragraph — collect until blank line, heading/HR, or a list that interrupts it
+            # (CommonMark: unordered markers and an ordered list starting at 1 break a paragraph)
             $para = [];
             while ($i < $n && trim($lines[$i]) !== ''
                 && !preg_match('/^#{1,6}\s|^(?:\*{3,}|-{3,}|_{3,})\s*$/', ltrim($lines[$i]))
+                && !preg_match('/^[ \t]*(?:[*+\-]|1\.)\s+/', $lines[$i])
             ) {
                 $para[] = $lines[$i++];
             }

@@ -65,7 +65,7 @@ namespace Tests\Unit {
                 'ul basic' => ["- a\n- b\n- c", true, '', "<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n</ul>"],
                 'ol basic' => ["1. a\n2. b",     true, '', "<ol>\n<li>a</li>\n<li>b</li>\n</ol>"],
                 'ul nested' => ["- item1\n  - nested\n- item2", true, '',
-                    "<ul>\n<li><p>item1\n  - nested</p>\n</li>\n<li>item2</li>\n</ul>"],
+                    "<ul>\n<li><p>item1</p>\n<ul>\n<li>nested</li>\n</ul>\n</li>\n<li>item2</li>\n</ul>"],
 
                 # Fenced code — NOT wrapped in <p>
                 'fenced code php'     => ["```php\necho 1;\n```", true, '', '<pre><code class="language-php">echo 1;</code></pre>'],
