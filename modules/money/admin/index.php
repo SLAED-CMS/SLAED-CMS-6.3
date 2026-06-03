@@ -141,7 +141,7 @@ function add(): void {
         $mid = getVar('post', 'mid', 'num', 0);
         $sum = getVar('post', 'sum', 'num', 0);
         $email = getVar('post', 'email', 'text', '');
-        $intro = getVar('post', 'intro', 'array', []);
+        $intro = getVar('post', 'intro[]', '', []);
         $intro = is_array($intro) ? $intro : [];
         $note = getVar('post', 'note', 'text', '');
         $time = getVar('req', 'time', 'time');
@@ -241,7 +241,7 @@ function save(): void {
     $mid = getVar('post', 'mid', 'num', 0);
     $sum = getVar('post', 'sum', 'num', 0);
     $email = getVar('post', 'email', 'text', '');
-    $intro = getVar('post', 'intro', 'array', []);
+    $intro = getVar('post', 'intro[]', '', []);
     $intro = is_array($intro) ? $intro : [];
     $list = $intro ? filterText(implode('|', $intro)) : '';
     $note = getVar('post', 'note', 'text', '');

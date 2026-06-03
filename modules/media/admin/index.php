@@ -120,7 +120,7 @@ function add(): void {
         $quality = getVar('post', 'quality', 'text', '');
         $size = getVar('post', 'size', 'text', '');
         $released = getVar('post', 'released', 'text', '');
-        $links = getVar('post', 'links', 'array', []);
+        $links = getVar('post', 'links[]', '', []);
         $links = ($links && is_array($links)) ? $links : [];
         $mdate = getVar('req', 'mdate', 'time');
         $ihome = getVar('post', 'ihome', 'num', 0);
@@ -266,7 +266,7 @@ function save(): void {
     $quality = getVar('post', 'quality', 'text', '');
     $size = getVar('post', 'size', 'text', '');
     $released = getVar('post', 'released', 'text', '');
-    $links = getVar('post', 'links', 'array', []);
+    $links = getVar('post', 'links[]', '', []);
     $links = filterText(implode(',', str_replace(',', '.', is_array($links) ? $links : [])));
     $mdate = getVar('req', 'mdate', 'time');
     $ihome = getVar('post', 'ihome', 'num', 0);

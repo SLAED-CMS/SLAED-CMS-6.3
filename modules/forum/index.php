@@ -548,7 +548,7 @@ function move(): void {
     if ($conf['forum']['add'] && $catid) {
         [$authm] = $db->getSqlRow($db->getSqlQuery('SELECT pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $ismod = is_acess($authm);
-        $id = getVar('post', 'id', 'array', []);
+        $id = getVar('post', 'id[]', '', []);
         $tmove = getVar('post', 'tmove', 'text');
         $move = (is_numeric($tmove[0])) ? (int)$tmove : (int)substr($tmove, 1);
         if ($ismod && is_array($id) && $tmove[0]) {

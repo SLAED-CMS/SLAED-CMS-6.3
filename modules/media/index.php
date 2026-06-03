@@ -420,7 +420,7 @@ function add(): void {
         $quality     = getVar('post', 'quality', 'text');
         $size        = getVar('post', 'size', 'text');
         $released    = getVar('post', 'released', 'text');
-        $links       = getVar('post', 'links', 'array');
+        $links       = getVar('post', 'links[]', '');
         if (!$links || !is_array($links)) $links = [];
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
@@ -525,7 +525,7 @@ function send(): void {
         $quality     = getVar('post', 'quality', 'text');
         $size        = getVar('post', 'size', 'text');
         $released    = getVar('post', 'released', 'text');
-        $links       = getVar('post', 'links', 'array');
+        $links       = getVar('post', 'links[]', '');
         $links = ($links) ? filterText(implode(',', str_replace(',', '.', $links))) : '';
         $stop = [];
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'media')) $stop[] = _ERROR;

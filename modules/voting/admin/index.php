@@ -149,8 +149,8 @@ function add(): void {
     } else {
         $modul = getVar('post', 'modul', 'text', '');
         $title = getVar('post', 'title', 'text', '');
-        $body = getVar('post', 'body', 'array', []);
-        $answer = getVar('post', 'answer', 'array', []);
+        $body = getVar('post', 'body[]', '', []);
+        $answer = getVar('post', 'answer[]', '', []);
         $date = getVar('req', 'date', 'time');
         $enddate = getVar('req', 'enddate', 'time');
         $multi = getVar('post', 'multi', 'num', 0);
@@ -239,8 +239,8 @@ function save(): void {
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
     $title = getVar('post', 'title', 'text', '');
-    $body = getVar('post', 'body', 'array', []);
-    $answer = getVar('post', 'answer', 'array', []);
+    $body = getVar('post', 'body[]', '', []);
+    $answer = getVar('post', 'answer[]', '', []);
     $quest = [];
     $answ = [];
     for ($q = 0; $q < count($body); $q++) {

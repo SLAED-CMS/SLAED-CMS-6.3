@@ -206,7 +206,7 @@ function add(): void {
         $id = getVar('post', 'id', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
         $subject = getVar('post', 'subject', 'title', '');
-        $associated = getVar('post', 'associated', 'array', []);
+        $associated = getVar('post', 'associated[]', '', []);
         $associated = is_array($associated) ? $associated : [];
         $cat = getVar('post', 'cat', 'num', 0);
         $hometext = getVar('post', 'hometext', 'raw', '');
@@ -312,7 +312,7 @@ function save(): void {
     $id = getVar('post', 'id', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
     $subject = getVar('post', 'subject', 'title', '');
-    $associated = getVar('post', 'associated', 'array', []);
+    $associated = getVar('post', 'associated[]', '', []);
     $associated = implode(',', is_array($associated) ? $associated : []);
     $cat = getVar('post', 'cat', 'num', 0);
     $hometext = getVar('post', 'hometext', 'text', '');
@@ -359,7 +359,7 @@ function save(): void {
 
 function actions(int|array $ids = 0, string $vtyp = ''): void {
     global $db, $afile;
-    $id = getVar('req', 'id', 'array', []);
+    $id = getVar('req', 'id[]', '', []);
     $req = $id;
     if (!is_array($req) || $req === []) {
         $id = getVar('req', 'id', 'num', 0);

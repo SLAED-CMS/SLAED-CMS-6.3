@@ -542,7 +542,7 @@ function productadd(): void {
         $pprice = getVar('post', 'pprice', 'text');
         $vote = getVar('post', 'vote', 'num');
         $ptime = getVar('req', 'ptime', 'time');
-        $associated = getVar('post', 'associated', 'array');
+        $associated = getVar('post', 'associated[]', '');
         $ihome = getVar('post', 'ihome', 'num');
         $acomm = getVar('post', 'acomm', 'num');
         $fix = getVar('post', 'fix', 'num');
@@ -646,7 +646,7 @@ function productsave(): void {
     $pid = getVar('post', 'pid', 'num');
     $pcid = getVar('post', 'pcid', 'num');
     $ptitle = getVar('post', 'ptitle', 'title');
-    $associated = implode(',', getVar('post', 'associated', 'array', []));
+    $associated = implode(',', getVar('post', 'associated[]', '', []));
     $ptext = getVar('post', 'ptext', 'text');
     $pbodytext = getVar('post', 'pbodytext', 'text');
     $pprice = getVar('post', 'pprice', 'text');
@@ -678,7 +678,7 @@ function productsave(): void {
 function productops(int|array $id = 0, string $vtyp = ''): void {
     global $db, $afile;
     $iswarn = !checkSiteToken();
-    $id = getVar('req', 'id', 'array', []);
+    $id = getVar('req', 'id[]', '', []);
     $arg = $id;
     if (!is_array($arg) || $arg === []) {
         $id = getVar('req', 'id', 'num', 0);

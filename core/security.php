@@ -752,6 +752,7 @@ function getLang(string $module = '', bool $admin = false): string {
 }
 
 # Clean access to POST, GET or Request parameters
+# A 'key[]' name returns the whole array value; 'key[n]' returns one element; other keys return a filtered scalar
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
     $arridx = null;
     $allarr = false;

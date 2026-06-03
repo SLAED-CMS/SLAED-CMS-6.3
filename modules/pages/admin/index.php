@@ -302,7 +302,7 @@ function save(): void {
 # Apply selected page list action
 function updatePagesAction(int|array $ids = 0, string $vtyp = ''): void {
     global $db, $afile;
-    $id = getVar('req', 'id', 'array', []);
+    $id = getVar('req', 'id[]', '', []);
     $req = $id;
     if (!is_array($req) || $req === []) {
         $id = getVar('req', 'id', 'num', 0);

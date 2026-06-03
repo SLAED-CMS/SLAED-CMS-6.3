@@ -52,7 +52,7 @@ function money(): void {
     }
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
-        $intro = getVar('post', 'intro', 'array', []);
+        $intro = getVar('post', 'intro[]', '', []);
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = '';
@@ -95,7 +95,7 @@ function send(): void {
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $email = getVar('post', 'email', 'text');
-        $intro = getVar('post', 'intro', 'array', []);
+        $intro = getVar('post', 'intro[]', '', []);
         $introText = '';
         $stop = [];
         $i = 0;
