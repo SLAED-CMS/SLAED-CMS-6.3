@@ -90,10 +90,10 @@ function newuser(): void {
                 'label' => _EMAIL,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD,
+                'label_html' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
             ]).$tpl->getHtmlFrag('form-field-row', [
-                'label' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
+                'label_html' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
             ]);
             if (!empty($conf['users']['rule'])) {
