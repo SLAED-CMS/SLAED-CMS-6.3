@@ -4843,3 +4843,29 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   opacity: 0;
   pointer-events: none;
 }
+/* Captcha checkbox: match the form inputs, single centered success (green) check */
+.sl-captcha .altcha-checkbox {
+  --altcha-checkbox-size: 18px;
+}
+.sl-captcha .altcha-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: var(--altcha-checkbox-size);
+  height: var(--altcha-checkbox-size);
+  min-width: var(--altcha-checkbox-size);
+  min-height: var(--altcha-checkbox-size);
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--sl-color-border-strong);
+  border-radius: var(--sl-radius-control);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-input, inset 0 1px 2px rgba(0, 0, 0, 0.06));
+}
+.sl-captcha .altcha-checkbox input[type="checkbox"]:checked {
+  background: var(--sl-color-success);
+  border-color: var(--sl-color-success);
+}
+.sl-captcha .altcha-checkbox input[type="checkbox"]:checked + svg {
+  color: #fff;
+}
