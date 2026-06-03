@@ -1,7 +1,7 @@
 <a
   href="index.php?{{{ query }}}"
 
-  hx-get="index.php?{{{ query }}}"
+  {% if is_post %}hx-post="index.php?{{{ query }}}"{% else %}hx-get="index.php?{{{ query }}}"{% endif %}
   hx-target="{% if target_id %}#{{ target_id }}{% else %}#rep{{ target }}{% endif %}"
   hx-swap="{% if swap %}{{ swap }}{% else %}innerHTML{% endif %}"
   hx-push-url="false"

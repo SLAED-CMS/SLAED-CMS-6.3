@@ -2866,13 +2866,15 @@ function getVotingView(int $id = 0, string $votid = '', bool $forceResult = fals
             } else {
                 $admin = '';
             }
-            $post = (!$forceResult && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true]) : '';
+            $post = (!$forceResult && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true]) : '';
             $polls = (!$forceResult && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
             $votes = $forceResult ? '' : ((!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]) : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]));
             $comm = (!$forceResult && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'is_comments' => true]) : '';
             $cont = $tpl->getHtmlPart('voting-widget', [
                 'has_form'   => !$rate,
                 'form_id'    => 'form'.$votid,
+                'poll_id'    => $id,
+                'token'      => getSiteToken(),
                 'title'      => $title,
                 'items_html' => $items,
                 'admin_html' => $admin,
