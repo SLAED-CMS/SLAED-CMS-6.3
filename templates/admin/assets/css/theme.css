@@ -908,6 +908,11 @@ input.sl-but-blue[value="ОК"] {
   height: 16px;
   min-height: 16px;
 }
+/* ALTCHA renders its own SVG check mark; suppress the admin checkbox glyph so it is not drawn twice */
+.sl-admin-shell .altcha-checkbox input[type="checkbox"]:checked,
+.sl-admin-shell .altcha-checkbox input[type="checkbox"]:indeterminate {
+  background-image: none;
+}
 .sl-div-item-full .sl-div-field {
   display: block;
   width: 100%;
