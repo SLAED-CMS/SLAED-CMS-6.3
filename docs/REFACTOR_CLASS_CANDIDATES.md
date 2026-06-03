@@ -1,126 +1,124 @@
-# Class Candidates Analysis
+# Анализ кандидатов на инкапсуляцию в классы
 
-Analysis of procedural subsystems in SLAED core that would benefit more from being
-encapsulated as classes than the scheduler family (which is intentionally kept
-procedural — it is stateless).
+Анализ процедурных подсистем ядра SLAED, которым класс подошёл бы больше, чем
+семейству планировщика (оно намеренно оставлено процедурным — оно без состояния).
 
-## Methodology
+## Методология
 
-A subsystem is a "class candidate" when it shows at least one of:
+Подсистема — «кандидат на класс», если у неё есть хотя бы одно из:
 
-- **State / resource** threaded through several functions, or through one mega-function
-- **Invariants** that should be protected behind a private boundary
-- **Lifecycle / dependency injection** (built once, reused)
-- **Shared private machinery** repeated across related functions
+- **Состояние / ресурс**, протянутый через несколько функций или через одну
+  мега-функцию
+- **Инварианты**, которые стоит спрятать за приватной границей
+- **Жизненный цикл / внедрение зависимостей** (собирается один раз, переиспользуется)
+- **Общий приватный аппарат**, повторяющийся в связанных функциях
 
-Source: full inventory of `core/system.php` (165 functions, ~248 KB), cross-checked
-against the existing service classes in `core/classes/`.
+Источник: полная инвентаризация `core/system.php` (165 функций, ~248 КБ), сверенная
+с существующими сервис-классами в `core/classes/`.
 
-## Background
+## Контекст
 
-`core/system.php` is a god-file with **165 functions**. Every existing class
-(`pdo`, `template`, `parser`, `logger`, `geoip`, `captcha`, `editor`) is a
-**stateful service or resource wrapper**. That is the bar for "make it a class":
-real state, not just a namespace. A static-only utility class would be an
-anti-pattern relative to how SLAED classes are built.
+`core/system.php` — god-файл со **165 функциями**. Каждый существующий класс
+(`pdo`, `template`, `parser`, `logger`, `geoip`, `captcha`, `editor`) — это
+**stateful-сервис или обёртка над ресурсом**. Это и есть планка для «делать классом»:
+реальное состояние, а не просто неймспейс. Static-only утилитарный класс был бы
+анти-паттерном относительно того, как построены классы SLAED.
 
 ---
 
-## Tier 1 — strong candidates (real resource/state through a mega-function)
+## Tier 1 — сильные кандидаты (реальный ресурс/состояние через мега-функцию)
 
-### 1. Backup + Integrity-Dump — top candidate
+### 1. Backup + Integrity-Dump — топ-кандидат
 
-- Functions: `addBackupTask()` (`core/system.php`, ~275 lines), `addFilescanTask()`,
+- Функции: `addBackupTask()` (`core/system.php`, ~275 строк), `addFilescanTask()`,
   `create_dump()`, `write_dump()`, `diff_dump()`, `write_log()`
-- **State via locals**: file handle `$fp`, table cursor, `$charset` / `$last_charset`,
-  `$tab_type` / `$tab_charset` / `$tabsize`, counters `$bsize` / `$tabinfo`.
-  `create_dump(..., array &$log, ...)` threads state **by reference** — a classic
-  OOP smell.
-- **Why a class**: a single 275-line procedure carrying ~10 locals is a textbook
-  "replace long method with object". A `Backup` service encapsulates handle +
-  config + progress with methods like `dumpTable()`, `compress()`, `finalize()`.
+- **Состояние через локалы**: файловый хэндл `$fp`, курсор таблиц,
+  `$charset` / `$last_charset`, `$tab_type` / `$tab_charset` / `$tabsize`,
+  счётчики `$bsize` / `$tabinfo`. В `create_dump(..., array &$log, ...)` состояние
+  тянется **по ссылке** — классический OOP-smell.
+- **Почему класс**: одна процедура на 275 строк, несущая ~10 локальных переменных —
+  учебниковый «replace long method with object». Сервис `Backup` инкапсулирует
+  хэндл + конфиг + прогресс с методами `dumpTable()`, `compress()`, `finalize()`.
 
 ### 2. Sitemap
 
-- `addSitemapTask()` (`core/system.php`, ~204 lines)
-- **State**: accumulators `$map_h` / `$map_m` / `$map_c` / `$map_p`, nested maps
-  `$info` / `$htm` / `$cd`, chunking at 50k URLs / 10 MB.
-- **Why a class**: four buffers plus three maps live across the whole function.
-  A `Sitemap` class with `collectModules()`, `buildUrls()`, `writeChunks()` would
-  read far cleaner. The recent `count(null)` fatal here was a direct symptom of
-  function length.
+- `addSitemapTask()` (`core/system.php`, ~204 строки)
+- **Состояние**: аккумуляторы `$map_h` / `$map_m` / `$map_c` / `$map_p`, вложенные
+  карты `$info` / `$htm` / `$cd`, чанкинг по 50k URL / 10 МБ.
+- **Почему класс**: четыре буфера плюс три карты живут через всю функцию. Класс
+  `Sitemap` с `collectModules()`, `buildUrls()`, `writeChunks()` читался бы намного
+  чище. Недавний фатал `count(null)` здесь — прямое следствие длины функции.
 
-### 3. Stats / Tracking / Counter — a subsystem, not a function
+### 3. Stats / Tracking / Counter — подсистема, а не функция
 
 - `updateSessionTrack()`, `updateRefererTrack()`, `updateSessionState()`,
   `updateStatsTrack()`, `getCounterField()`, `updateCounterField()`,
-  `updateHoursField()`, plus bucket helpers
-- **Shared resource**: counter log files (`COUNTER_DIR/*.log`) and the session DB
-  table, read/written across all of them.
-- **Why a class**: ~10 functions share one resource set and `$ctime`. This is a
-  `Tracker($db, $conf)` service, not scattered free functions.
+  `updateHoursField()`, плюс bucket-хелперы
+- **Общий ресурс**: counter-лог-файлы (`COUNTER_DIR/*.log`) и сессионная таблица БД,
+  читаются/пишутся во всех них.
+- **Почему класс**: ~10 функций делят один набор ресурсов и `$ctime`. Это сервис
+  `Tracker($db, $conf)`, а не разрозненные свободные функции.
 
 ---
 
-## Tier 2 — moderate
+## Tier 2 — умеренные
 
-### 4. Editor upload → fold into the existing class, not a new one
+### 4. Editor-upload → доложить в существующий класс, а не новый
 
-- Procedural: `getEditorKey()`, `checkHtmlEditor()`, `getEditorMode()`,
+- Процедурные: `getEditorKey()`, `checkHtmlEditor()`, `getEditorMode()`,
   `getEditorJson()`, `getEditorUploadData()`, `checkEditorUploadAccess()`,
   `getEditorImageData()`, `getEditorFileData()`, `addEditorUpload()`,
   `getEditorFileJson()`
-- A `class Editor` **already exists** (static, with manifests and drivers,
-  `core/classes/editor.php`). These ~10 functions are the same domain, orphaned in
+- Класс `Editor` **уже существует** (статический, с манифестами и драйверами,
+  `core/classes/editor.php`). Эти ~10 функций — тот же домен, осиротевший в
   `system.php`.
-- **Action**: move them in as `Editor::*` methods — removes a split domain without
-  introducing a new name.
+- **Действие**: перенести как методы `Editor::*` — устранит расщеплённый домен
+  без нового имени.
 
-### 5. Asset / Compress pipeline
+### 5. Asset / Compress-пайплайн
 
 - `checkCompress()`, `addCompress()`, `getCompressCss/Code/Html()`,
   `doScript()`, `doCss()`, `getThemeCssFiles/Assets()`, `getAssetFiles()`,
   `setScript()`, `setCss()`
-- An `AssetBundler` service (theme + minification + cache). State is weaker
-  (mostly transforms), hence Tier 2.
+- Сервис `AssetBundler` (тема + минификация + кэш). Состояние слабее (в основном
+  трансформации), поэтому Tier 2.
 
-### 6. Comments and 7. Voting / Rating
+### 6. Comments и 7. Voting / Rating
 
 - Comments: `ashowcom()`, `updateComment()`, `updateCommentStatus()`, `numcom()`
 - Voting: `getVotingView()`, `updateVotingResult()`, `getRatingView()`,
   `update_points()`
-- DB-backed subsystems with cohesive logic — medium-weight candidates.
+- БД-подсистемы со связной логикой — кандидаты среднего веса.
 
 ---
 
-## Tier 3 — weak (keep as functions)
+## Tier 3 — слабо (оставить функциями)
 
-- **Cart** (`getCartSummary()`, `addCartItem()`, `deleteCartItem()`) — little state
-  (session), small.
-- **RSS** (`rss_select/read/load`) — small feed fetch.
-- **SEO / Head** (`setHead()` ~250 lines, `setFoot()`, `getSeoUrl()`,
-  `getPublicUrl()`) — long, but rendering, not state; class payoff is low.
+- **Cart** (`getCartSummary()`, `addCartItem()`, `deleteCartItem()`) — мало
+  состояния (сессия), мелко.
+- **RSS** (`rss_select/read/load`) — мелкая выборка фидов.
+- **SEO / Head** (`setHead()` ~250 строк, `setFoot()`, `getSeoUrl()`,
+  `getPublicUrl()`) — длинно, но это рендеринг, не состояние; выгода от класса низкая.
 
-## Not candidates (correct as functions)
+## Не кандидаты (правильно как функции)
 
-- **Scheduler** — stateless (see scheduler hardening work).
-- Pure utilities: `format_time()`, `filterSlug()`, `getRandomString()`,
-  `getConst()`, `is_user()`, `cutstr()`, `getProtocol()`, etc. — deterministic
-  input → output; a class would be an anti-pattern.
+- **Scheduler** — без состояния (см. работу по härtung планировщика).
+- Чистые утилиты: `format_time()`, `filterSlug()`, `getRandomString()`,
+  `getConst()`, `is_user()`, `cutstr()`, `getProtocol()` и пр. — детерминированный
+  вход → выход; класс был бы анти-паттерном.
 
 ---
 
-## Recommendation (priority)
+## Рекомендация (приоритет)
 
-1. **Backup** — best benefit/risk ratio (long procedure + resource); indirectly
-   reduces bugs like the recent sitemap fatal.
-2. **Stats / Tracker** — tidies the most spread-out subsystem.
-3. **Sitemap** — as a side effect makes the code resistant to null bugs.
-4. **Editor functions → `class Editor`** — cheap, no new names, fixes an orphaned
-   domain.
+1. **Backup** — наилучшее отношение выгода/риск (длинная процедура + ресурс);
+   косвенно снижает баги вроде недавнего sitemap-фатала.
+2. **Stats / Tracker** — наводит порядок в самой размазанной подсистеме.
+3. **Sitemap** — как побочный эффект делает код устойчивым к null-багам.
+4. **Editor-функции → `class Editor`** — дёшево, без новых имён, чинит осиротевший
+   домен.
 
-**Constraints (per project rules):** each is a separate, deliberate refactor on its
-own branch/commit; an instance service with DI (`new Backup($db, $conf)`, like
-`$db` / `$tpl`), **not** a static bag; all call sites migrated in one pass; and only
-after current hotfixes reach production. This is a direction, not a local
-optimization.
+**Ограничения (по правилам проекта):** каждый — отдельный осознанный рефактор своей
+веткой/коммитом; инстанс-сервис с DI (`new Backup($db, $conf)`, как `$db` / `$tpl`),
+а **не** static-мешок; миграция всех call-site одним проходом; и только после того,
+как текущие хотфиксы уедут на прод. Это направление, а не локальная оптимизация.
