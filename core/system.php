@@ -232,13 +232,29 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
     return 0;
 }
 
+# Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
+function getSchedulerJob(string $name, ?array $job = null): array {
+    global $conf;
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap'];
+    $read = $job === null;
+    if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
+    if (!is_array($job)) $job = [];
+    unset($job['handler']);
+    if (isset($map[$name])) {
+        $job['type'] = 'system';
+        $job['system'] = $map[$name];
+    }
+    if ($read) $job += ['name' => $name];
+    return $job;
+}
+
 # Returns all scheduler jobs normalized and sorted by priority and key
 function getSchedulerJobs(): array {
     global $conf;
     $arr = [];
     foreach ($conf['scheduler']['jobs'] ?? [] as $key => $val) {
-        if (!is_string($key) || $key === '') continue;
-        $arr[$key] = $val + ['name' => $key];
+        if (!is_string($key) || $key === '' || !is_array($val)) continue;
+        $arr[$key] = getSchedulerJob($key);
     }
     uasort($arr, static function (array $aaa, array $bbb): int {
         $one = (int)($aaa['priority'] ?? 100);
@@ -273,8 +289,7 @@ function setSchedulerState(string $name, array $state): bool {
 
 # Returns whether the scheduler job lock is still valid
 function checkSchedulerLock(string $name, array $job = [], array $state = []): bool {
-    global $conf;
-    if ($job === []) $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
+    if ($job === []) $job = getSchedulerJob($name);
     if ($state === []) $state = getSchedulerState($name);
     if (empty($state['running']) || empty($state['started_at'])) return false;
     $time = max(60, (int)($job['lock_timeout'] ?? 0));
@@ -283,8 +298,7 @@ function checkSchedulerLock(string $name, array $job = [], array $state = []): b
 
 # Returns whether the scheduler job is due for execution
 function checkSchedulerDue(string $name, array $job = [], array $state = []): bool {
-    global $conf;
-    if ($job === []) $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
+    if ($job === []) $job = getSchedulerJob($name);
     if ($state === []) $state = getSchedulerState($name);
     if ((int)($job['active'] ?? 0) !== 1) return false;
     if (checkSchedulerLock($name, $job, $state)) return false;
@@ -294,8 +308,7 @@ function checkSchedulerDue(string $name, array $job = [], array $state = []): bo
 
 # Acquires the scheduler lock for a named job and persists trigger metadata
 function addSchedulerLock(string $name, string $type): bool {
-    global $conf;
-    $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
+    $job = getSchedulerJob($name);
     $state = getSchedulerState($name);
     if (checkSchedulerLock($name, $job, $state)) return false;
     $state['running'] = 1;
@@ -359,7 +372,6 @@ function checkSchedulerAccess(string $type, string $stok): bool {
     $tkok = ($stkn !== '' && hash_equals($stkn, $stok));
     return $psok || $tkok;
 }
-
 
 # Returns a signed pseudo-trigger URL when the next due job should be started asynchronously
 function addSchedulerTrigger(): string {
@@ -449,9 +461,8 @@ function addSchedulerCustom(array $job): array {
 
 # Returns the next due scheduler job or null when nothing can run
 function getSchedulerNextJob(?string $name = null): ?array {
-    global $conf;
     if ($name !== null && $name !== '') {
-        $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
+        $job = getSchedulerJob($name);
         if (($job['type'] ?? '') !== 'custom' && ($job['system'] ?? '') === '') return null;
         return checkSchedulerDue($name, $job) ? $job : null;
     }
@@ -479,7 +490,7 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
     if ($name !== null && $name !== '' && $type === 'manual') {
-        $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
+        $job = getSchedulerJob($name);
         if (($job['system'] ?? '') === '' && ($job['type'] ?? '') !== 'custom') $job = null;
     } else {
         $job = getSchedulerNextJob($name);
@@ -911,13 +922,20 @@ function addBackupTask(): array {
         return ['status' => 'failed', 'message' => 'Cannot compress backup file'];
     }
 
-    $archive = $backup_dir.$name.'.sql.gz';
+    # addCompress('auto') picks zip > gz > bz2; resolve the file actually produced
+    $archive = $filepath;
+    foreach (['.zip', '.gz', '.bz2'] as $ext) {
+        if (is_file($backup_dir.$name.$ext)) {
+            $archive = $backup_dir.$name.$ext;
+            break;
+        }
+    }
     return [
         'status' => 'success',
         'message' => 'Database backup completed',
         'extra' => [
-            'last_backup_file' => basename(file_exists($archive) ? $archive : $filepath),
-            'last_backup_size' => file_exists($archive) ? (int)filesize($archive) : (file_exists($filepath) ? (int)filesize($filepath) : 0),
+            'last_backup_file' => basename($archive),
+            'last_backup_size' => is_file($archive) ? (int)filesize($archive) : 0,
             'last_table_count' => $tabs,
         ],
     ];
@@ -2469,6 +2487,7 @@ function addSitemapTask(bool $force = false): array {
         $past = time() - intval($conf['sitemap']['auto_t'] ?? 0);
         if ($force || defined('ADMIN_FILE') || $sess_b < $past) {
             $date = date('Y-m-d');
+            $info = $htm = $cd = [];
             $modules_raw = (string)($conf['sitemap']['mod'] ?? '');
             $mod = ($modules_raw === '') ? ['0'] : explode(',', $modules_raw);
             for ($i = 0; $i < count($mod); $i++) {

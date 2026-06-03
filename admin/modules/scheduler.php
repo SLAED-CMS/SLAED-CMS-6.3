@@ -249,7 +249,7 @@ function save(): void {
         $schedcfg = is_array($cfg) && isset($cfg['scheduler']) && is_array($cfg['scheduler']) ? $cfg['scheduler'] : ($conf['scheduler'] ?? []);
         $jobs = $schedcfg['jobs'] ?? [];
         $curr = $jobs[$name] ?? [];
-        $issys = isset($curr['type']) && $curr['type'] === 'system';
+        $issys = (getSchedulerJob($name, $curr)['type'] ?? '') === 'system';
         if ($name === '' || $title === '' || (!$issys && ($type !== 'custom' || $url === ''))) {
             setRedirect($afile.'.php?name=scheduler&op=add&job='.$name);
             return;
@@ -270,7 +270,7 @@ function save(): void {
             'title' => $title,
             'type' => $issys ? 'system' : 'custom',
             'active' => getVar('post', 'active', 'num', 0),
-            'system' => $issys ? ($curr['system'] ?? '') : '',
+            'system' => $issys ? (string)($curr['system'] ?? '') : '',
             'schedule' => $sched,
             'priority' => $priority,
             'lock_timeout' => getVar('post', 'lock_timeout', 'num', 1800),
@@ -279,6 +279,10 @@ function save(): void {
         ];
         $data = $schedcfg;
         $data['jobs'][$name] = $item;
+        # Self-heal every job so legacy keys and drifted system handlers cannot survive a save
+        foreach ($data['jobs'] as $jkey => $jval) {
+            if (is_array($jval)) $data['jobs'][$jkey] = getSchedulerJob((string)$jkey, $jval);
+        }
         ksort($data['jobs']);
         setConfigFile('scheduler.php', $data);
     }
@@ -289,15 +293,21 @@ function run(): void {
     global $afile;
     $warn = !checkSiteToken();
     $name = preg_replace('#[^a-z]#', '', strtolower(getVar('req', 'job', 'var', '')));
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $jobs = getSchedulerJobs();
         if ($name === '' || !isset($jobs[$name]) || (int)($jobs[$name]['manual'] ?? 0) !== 1) {
             setRedirect($afile.'.php?name=scheduler');
             return;
         }
-        addSchedulerRun($name, 'manual');
+        $result = addSchedulerRun($name, 'manual');
+        if (($result['status'] ?? '') !== 'success') {
+            $warn = true;
+            $mess = trim((string)($result['message'] ?? ''));
+            $text = ($mess !== '') ? $mess : (string)($result['status'] ?? '');
+        }
     }
-    setRedirect($afile.'.php?name=scheduler', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=scheduler', false, 302, $text, $warn);
 }
 
 function unlock(): void {
