@@ -57,7 +57,7 @@ function modules(): void {
         }
     }
     foreach (scandir('modules') as $file) {
-        if ($file !== '.' && $file !== '..' && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
+        if ($file !== '.' && $file !== '..' && is_dir('modules/'.$file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
             $modlist[] = $file;
             if (!isset($conf['modules'][$file])) {
                 $conf['modules'][$file] = [
