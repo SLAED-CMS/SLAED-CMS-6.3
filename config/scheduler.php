@@ -48,7 +48,7 @@ return [
             'sitemap' => [
                 'title' => 'Sitemap',
                 'type' => 'system',
-                'active' => '0',
+                'active' => '1',
                 'system' => 'sitemap',
                 'schedule' => '15 3 * * *',
                 'priority' => '3',
