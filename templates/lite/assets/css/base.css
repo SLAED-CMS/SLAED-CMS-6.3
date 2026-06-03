@@ -165,9 +165,9 @@
   --sl-bg-hover-gloss: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
   --sl-progress-track-border: #ccc;
   --sl-progress-track-bg: #e7e7eb;
-  --sl-progress-track-radius: 2px;
-  --sl-progress-track-height: 6px;
-  --sl-progress-fill-height: 4px;
+  --sl-progress-track-radius: 3px;
+  --sl-progress-track-height: 10px;
+  --sl-progress-fill-height: 8px;
   --sl-progress-fill-1-base: #5c9ade;
   --sl-progress-fill-1-start: #00adee;
   --sl-progress-fill-1-end: #0078a5;
@@ -183,14 +183,6 @@
   --sl-progress-fill-5-base: #9b36b9;
   --sl-progress-fill-5-start: #bf5fdd;
   --sl-progress-fill-5-end: #8c2ca9;
-  --sl-vote-meter-border: #d1d9e0;
-  --sl-vote-meter-track: #f4f6f8;
-  --sl-vote-meter-fill: #0078a5;
-  --sl-vote-meter-fill-2: #5c9425;
-  --sl-vote-meter-fill-3: #f47a20;
-  --sl-vote-meter-fill-4: #a92c2c;
-  --sl-vote-meter-fill-5: #8c2ca9;
-  --sl-vote-meter-radius: 4px;
 }
 
 /* Reset: zero margins, padding and borders on all HTML elements */

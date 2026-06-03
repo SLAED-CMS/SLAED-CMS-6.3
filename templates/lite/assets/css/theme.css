@@ -1551,79 +1551,48 @@ ol.sl-sublist-two li:hover:before {
 .sl-vote-actions {
   display: inline-block;
 }
-.sl-vote-meter {
-  display: block;
+.sl-progress-line {
+  box-sizing: content-box;
   width: 100%;
-  height: 8px;
-  border: 1px solid var(--sl-vote-meter-border);
-  border-radius: var(--sl-vote-meter-radius);
+  height: var(--sl-progress-track-height);
+  background: var(--sl-progress-track-bg);
+  border: 1px solid var(--sl-progress-track-border);
+  border-radius: var(--sl-progress-track-radius);
+}
+.sl-progress-line div {
+  box-sizing: content-box;
+  height: var(--sl-progress-fill-height);
+  border-radius: calc(var(--sl-progress-track-radius) - 1px);
   overflow: hidden;
-  background: var(--sl-vote-meter-track);
-  box-shadow: none;
-  -webkit-appearance: none;
-  appearance: none;
+  text-indent: -9999px;
 }
-.sl-vote-meter::-webkit-meter-inner-element {
-  display: block;
+.sl-progress-1 div {
+  border: 1px solid var(--sl-progress-fill-1-end);
+  background: var(--sl-progress-fill-1-base);
+  background: linear-gradient(to top, var(--sl-progress-fill-1-start) 10%, var(--sl-progress-fill-1-end) 90%);
 }
-.sl-vote-meter::-webkit-meter-bar {
-  border: 0;
-  border-radius: var(--sl-vote-meter-radius);
-  background: var(--sl-vote-meter-track);
-  box-shadow: none;
+.sl-progress-2 div {
+  border: 1px solid var(--sl-progress-fill-2-end);
+  background: var(--sl-progress-fill-2-base);
+  background: linear-gradient(to top, var(--sl-progress-fill-2-start) 10%, var(--sl-progress-fill-2-end) 90%);
 }
-.sl-vote-meter::-webkit-meter-optimum-value,
-.sl-vote-meter::-webkit-meter-suboptimum-value,
-.sl-vote-meter::-webkit-meter-even-less-good-value {
-  border: 0;
-  border-radius: var(--sl-vote-meter-radius);
-  background: var(--sl-vote-meter-fill);
-  box-shadow: none;
-  background-image: none;
-  background-clip: padding-box;
+.sl-progress-3 div {
+  border: 1px solid var(--sl-progress-fill-3-end);
+  background: var(--sl-progress-fill-3-base);
+  background: linear-gradient(to top, var(--sl-progress-fill-3-start) 10%, var(--sl-progress-fill-3-end) 90%);
 }
-.sl-vote-meter:-moz-meter-optimum::-moz-meter-bar {
-  border: 0;
-  border-radius: var(--sl-vote-meter-radius);
-  background: var(--sl-vote-meter-fill);
-  box-shadow: none;
-  background-clip: padding-box;
+.sl-progress-4 div {
+  border: 1px solid var(--sl-progress-fill-4-end);
+  background: var(--sl-progress-fill-4-base);
+  background: linear-gradient(to top, var(--sl-progress-fill-4-start) 10%, var(--sl-progress-fill-4-end) 90%);
 }
-.sl-vote-meter-2::-webkit-meter-optimum-value,
-.sl-vote-meter-2::-webkit-meter-suboptimum-value,
-.sl-vote-meter-2::-webkit-meter-even-less-good-value {
-  background: var(--sl-vote-meter-fill-2);
-  background-image: none;
+.sl-progress-5 div {
+  border: 1px solid var(--sl-progress-fill-5-end);
+  background: var(--sl-progress-fill-5-base);
+  background: linear-gradient(to top, var(--sl-progress-fill-5-start) 10%, var(--sl-progress-fill-5-end) 90%);
 }
-.sl-vote-meter-2:-moz-meter-optimum::-moz-meter-bar {
-  background: var(--sl-vote-meter-fill-2);
-}
-.sl-vote-meter-3::-webkit-meter-optimum-value,
-.sl-vote-meter-3::-webkit-meter-suboptimum-value,
-.sl-vote-meter-3::-webkit-meter-even-less-good-value {
-  background: var(--sl-vote-meter-fill-3);
-  background-image: none;
-}
-.sl-vote-meter-3:-moz-meter-optimum::-moz-meter-bar {
-  background: var(--sl-vote-meter-fill-3);
-}
-.sl-vote-meter-4::-webkit-meter-optimum-value,
-.sl-vote-meter-4::-webkit-meter-suboptimum-value,
-.sl-vote-meter-4::-webkit-meter-even-less-good-value {
-  background: var(--sl-vote-meter-fill-4);
-  background-image: none;
-}
-.sl-vote-meter-4:-moz-meter-optimum::-moz-meter-bar {
-  background: var(--sl-vote-meter-fill-4);
-}
-.sl-vote-meter-5::-webkit-meter-optimum-value,
-.sl-vote-meter-5::-webkit-meter-suboptimum-value,
-.sl-vote-meter-5::-webkit-meter-even-less-good-value {
-  background: var(--sl-vote-meter-fill-5);
-  background-image: none;
-}
-.sl-vote-meter-5:-moz-meter-optimum::-moz-meter-bar {
-  background: var(--sl-vote-meter-fill-5);
+.sl-vote-list .sl-progress-line {
+  margin: 6px 0 12px 0;
 }
 .sl-search-line .sl-pull-right img {
   vertical-align: middle;
