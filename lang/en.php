@@ -523,3 +523,6 @@ define('_CAPTCHA_VERIFYING','Verifying…');
 define('_CAPTCHA_VERIFIED','Verified');
 define('_CAPTCHA_ERROR','Verification failed. Please try again.');
 define('_CAPTCHA_EXPIRED','Verification expired. Please verify again.');
+define('_CAPTCHA_LOADING','Loading…');
+define('_CAPTCHA_REQUIRED','Verification required!');
+define('_CAPTCHA_WAIT','Verifying… please wait.');

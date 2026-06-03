@@ -523,3 +523,6 @@ define('_CAPTCHA_VERIFYING','Перевірка…');
 define('_CAPTCHA_VERIFIED','Перевірено');
 define('_CAPTCHA_ERROR','Перевірку не пройдено. Спробуйте ще раз.');
 define('_CAPTCHA_EXPIRED','Термін перевірки минув. Підтвердьте ще раз.');
+define('_CAPTCHA_LOADING','Завантаження…');
+define('_CAPTCHA_REQUIRED','Потрібна перевірка!');
+define('_CAPTCHA_WAIT','Триває перевірка… будь ласка, зачекайте.');

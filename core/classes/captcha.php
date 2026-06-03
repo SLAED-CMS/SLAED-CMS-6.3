@@ -24,20 +24,24 @@ class NullCaptchaProvider implements CaptchaProvider {
 }
 
 # Self-hosted ALTCHA provider: proof-of-work challenge with HMAC signature, verified without external services
+# Targets ALTCHA widget v3.x (verified against 3.0.11): the widget reads the `challenge` attribute (was `challengeurl` in v2),
+# hides footer/logo via the `configuration` attribute, and is localized through plugins/altcha/altcha-init.js (the `strings` attribute is ignored in v3)
 class AltchaCaptchaProvider implements CaptchaProvider {
     private const ALGO = 'SHA-256';
     private const FIELD = 'altcha';
 
     # Render the widget bundle for the given action
     public function html(string $act): string {
-        global $tpl;
+        global $tpl, $conf, $locale;
         $url = 'index.php?go=captcha&act='.rawurlencode($act);
         return $tpl->getHtmlFrag('captcha-altcha', [
-            'script_attr'   => 'type="module" async defer',
-            'script_src'    => 'plugins/altcha/altcha.min.js',
-            'challengeurl'  => $url,
+            'script_attr'   => 'type="module"',
+            'script_src'    => 'plugins/altcha/altcha-init.js',
+            'challenge'     => $url,
             'field_name'    => self::FIELD,
-            'strings_attr'  => $this->strings(),
+            'lang_code'     => (string)($locale ?: ($conf['language'] ?? 'en')),
+            'strings_json'  => $this->strings(),
+            'config_attr'   => '{"hideFooter":true,"hideLogo":true}',
             'hp_name'       => Captcha::honeypotField(),
             'ts_name'       => Captcha::timeField(),
             'ts_value'      => Captcha::timeToken(),
@@ -108,13 +112,16 @@ class AltchaCaptchaProvider implements CaptchaProvider {
     # Build the localized widget strings as a JSON attribute value
     private function strings(): string {
         $map = [
-            'label'     => defined('_CAPTCHA_LABEL') ? _CAPTCHA_LABEL : 'I am human',
-            'verifying' => defined('_CAPTCHA_VERIFYING') ? _CAPTCHA_VERIFYING : 'Verifying...',
-            'verified'  => defined('_CAPTCHA_VERIFIED') ? _CAPTCHA_VERIFIED : 'Verified',
-            'error'     => defined('_CAPTCHA_ERROR') ? _CAPTCHA_ERROR : 'Verification failed',
-            'expired'   => defined('_CAPTCHA_EXPIRED') ? _CAPTCHA_EXPIRED : 'Verification expired',
+            'label'                => defined('_CAPTCHA_LABEL') ? _CAPTCHA_LABEL : 'I am human',
+            'verifying'            => defined('_CAPTCHA_VERIFYING') ? _CAPTCHA_VERIFYING : 'Verifying...',
+            'verified'             => defined('_CAPTCHA_VERIFIED') ? _CAPTCHA_VERIFIED : 'Verified',
+            'error'                => defined('_CAPTCHA_ERROR') ? _CAPTCHA_ERROR : 'Verification failed',
+            'expired'              => defined('_CAPTCHA_EXPIRED') ? _CAPTCHA_EXPIRED : 'Verification expired',
+            'loading'              => defined('_CAPTCHA_LOADING') ? _CAPTCHA_LOADING : 'Loading…',
+            'verificationRequired' => defined('_CAPTCHA_REQUIRED') ? _CAPTCHA_REQUIRED : 'Verification required!',
+            'waitAlert'            => defined('_CAPTCHA_WAIT') ? _CAPTCHA_WAIT : 'Verifying… please wait.',
         ];
-        return (string)json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return (string)json_encode($map, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     }
 }
 
