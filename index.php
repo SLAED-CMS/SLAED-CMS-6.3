@@ -101,8 +101,7 @@ if (empty($go)) {
 } elseif (is_numeric($go)) {
     if ($go != 3) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);
-        $tok    = getVar('req', 'token', 'raw', '')
-            ?: getVar('req', 'upload_token', 'raw', '')
+        $tok = getVar('req', 'token', 'raw', '')
             ?: ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
         if (!$fdsize && !checkSiteToken($tok)) die('Illegal file access');
     }
