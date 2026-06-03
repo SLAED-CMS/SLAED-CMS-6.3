@@ -24,8 +24,10 @@ class NullCaptchaProvider implements CaptchaProvider {
 }
 
 # Self-hosted ALTCHA provider: proof-of-work challenge with HMAC signature, verified without external services
-# Targets ALTCHA widget v3.x (verified against 3.0.11): the widget reads the `challenge` attribute (was `challengeurl` in v2),
-# hides footer/logo via the `configuration` attribute, and is localized through plugins/altcha/altcha-init.js (the `strings` attribute is ignored in v3)
+# Targets ALTCHA widget v3.x (verified against 3.0.11) via the external build: the proof-of-work runs in a self-hosted
+# same-origin Worker (plugins/altcha/altcha-sha.js), so the captcha works under a strict CSP (default-src 'self') without blob:
+# The widget reads the `challenge` attribute (was `challengeurl` in v2), hides footer/logo via `configuration`, and is
+# localized through plugins/altcha/altcha-init.js (the `strings` attribute is ignored in v3)
 class AltchaCaptchaProvider implements CaptchaProvider {
     private const ALGO = 'SHA-256';
     private const FIELD = 'altcha';
