@@ -520,7 +520,7 @@ define('_ERR_BZIP','Неможливо створити bzip2-архів');
 # Captcha widget (ALTCHA)
 define('_CAPTCHA_LABEL','Я не робот');
 define('_CAPTCHA_VERIFYING','Перевірка…');
-define('_CAPTCHA_VERIFIED','Перевірено');
+define('_CAPTCHA_VERIFIED','Перевірку успішно завершено!');
 define('_CAPTCHA_ERROR','Перевірку не пройдено. Спробуйте ще раз.');
 define('_CAPTCHA_EXPIRED','Термін перевірки минув. Підтвердьте ще раз.');
 define('_CAPTCHA_LOADING','Завантаження…');
