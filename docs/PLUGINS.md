@@ -1,31 +1,31 @@
-# Plugin Architecture Analysis
+# Анализ архитектуры плагинов
 
-Analysis of how SLAED extends itself today and how an admin-managed plugin layer
-could be built — without turning the admin panel into a remote-code installer.
+Анализ того, как SLAED расширяется сегодня и как можно построить управляемый из
+админки слой плагинов — не превращая админ-панель в установщик произвольного кода.
 
-## Summary
+## Кратко
 
-SLAED already has working extension mechanisms; they are just not unified. The
-strongest one (the editor plugins) should be generalized rather than replaced. An
-admin **management** page (enable / disable / configure) is worthwhile and
-low-risk. Admin-side **installation** of arbitrary PHP is not — it is the classic
-CMS compromise vector and must stay out.
+В SLAED уже есть рабочие механизмы расширения, просто они не унифицированы. Самый
+сильный из них (плагины редакторов) стоит обобщить, а не заменять. Страница
+**управления** в админке (включить / выключить / настроить) полезна и низкорискова.
+**Установка** произвольного PHP через админку — нет: это классический вектор
+компрометации CMS, и его быть не должно.
 
-## Current state
+## Текущее состояние
 
-| Mechanism | Location | Discovery | Quality |
-|-----------|----------|-----------|---------|
-| Feature modules | `modules/` + `admin/modules/`, managed via `admin.php?name=modules` | directory scan, flags persisted in `config/modules.php` (active/menu/side/top/type) | solid |
-| Editor plugins | `plugins/editors/*/` with `manifest.json` + `driver.php`, registry in `core/classes/editor.php` | manifest scan + driver class load | **best pattern** |
-| Captcha provider | `CaptchaProvider` interface + `AltchaCaptchaProvider` / `NullCaptchaProvider` | config-selected provider | clean strategy pattern |
-| Vendored libraries | `plugins/highlightjs`, `plugins/htmx`, `plugins/tablesort`, `plugins/system` | hardcoded references | no plugin contract |
+| Механизм | Расположение | Обнаружение | Качество |
+|----------|--------------|-------------|----------|
+| Модули (функции) | `modules/` + `admin/modules/`, управление через `admin.php?name=modules` | скан каталога, флаги в `config/modules.php` (active/menu/side/top/type) | надёжно |
+| Плагины редакторов | `plugins/editors/*/` с `manifest.json` + `driver.php`, реестр в `core/classes/editor.php` | скан манифестов + загрузка класса-драйвера | **лучший паттерн** |
+| Провайдер капчи | интерфейс `CaptchaProvider` + `AltchaCaptchaProvider` / `NullCaptchaProvider` | провайдер выбирается из конфига | чистый паттерн «стратегия» |
+| Vendored-библиотеки | `plugins/highlightjs`, `plugins/htmx`, `plugins/tablesort`, `plugins/system` | жёстко прописанные ссылки | нет контракта плагина |
 
-So there is no single "plugin" concept — there are modules (features), driver-based
-editor plugins, a captcha strategy, and a set of hardcoded vendor libraries.
+То есть единого понятия «плагин» нет: есть модули (функции), плагины редакторов на
+драйверах, стратегия капчи и набор жёстко подключённых vendor-библиотек.
 
-## The pattern worth generalizing
+## Паттерн, который стоит обобщить
 
-The editor system already defines a clean plugin descriptor
+Система редакторов уже определяет чистый дескриптор плагина
 (`plugins/editors/tinymce/manifest.json`):
 
 ```json
@@ -43,43 +43,44 @@ The editor system already defines a clean plugin descriptor
 }
 ```
 
-A registry scans these manifests, loads the named driver from `entry`, and selects
-by `type` / `priority` / `roles`. This is exactly what a generic plugin needs:
-self-describing metadata + a typed entry point + a registry.
+Реестр сканирует эти манифесты, загружает указанный драйвер из `entry` и выбирает
+по `type` / `priority` / `roles`. Это ровно то, что нужно обобщённому плагину:
+самоописывающие метаданные + типизированная точка входа + реестр.
 
-## Recommendation
+## Рекомендация
 
-1. **Generalize the manifest + driver + registry pattern.** A single registry scans
-   `plugins/*/manifest.json`; the admin page renders from those manifests, the same
-   way `admin.php?name=modules` renders from a directory scan. Editors, captcha and
-   future capabilities then share one contract.
+1. **Обобщить паттерн манифест + драйвер + реестр.** Единый реестр сканирует
+   `plugins/*/manifest.json`; страница админки рендерится из этих манифестов — так
+   же, как `admin.php?name=modules` рендерится из скана каталога. Тогда редакторы,
+   капча и будущие возможности используют один контракт.
 
-2. **Keep modules and plugins distinct.** Modules are content/feature subsystems;
-   plugins are capability providers (editors, captcha, syntax highlighting). Do not
-   merge them into one list — it blurs the architecture.
+2. **Держать модули и плагины раздельно.** Модули — это контентные/функциональные
+   подсистемы; плагины — поставщики возможностей (редакторы, капча, подсветка кода).
+   Не сливать их в один список — это размывает архитектуру.
 
-3. **Manage, do not install.** An admin "Plugins" page should enable / disable /
-   configure plugins (status, version, roles from the manifest) and persist flags to
-   config — exactly like the module manager. It must not upload or execute new PHP.
+3. **Управлять, а не устанавливать.** Страница «Плагины» в админке должна
+   включать / выключать / настраивать плагины (статус, версия, роли из манифеста) и
+   сохранять флаги в конфиг — ровно как менеджер модулей. Она не должна загружать
+   или исполнять новый PHP.
 
-## Security boundary (critical for a widely deployed CMS)
+## Граница безопасности (критично для широко распространённой CMS)
 
-Do **not** add "upload a zip → run PHP" plugin installation in the admin. For a CMS
-with many installations this is the primary compromise vector. Plugins are installed
-at the filesystem / deploy level (Git, FTP, package); the admin only **manages** the
-already-present code by reading manifests and writing config flags. This matches the
-existing module manager and the project security baseline.
+**Не** добавлять установку плагинов через админку по схеме «загрузить zip → выполнить
+PHP». Для CMS со множеством инсталляций это основной вектор компрометации. Плагины
+устанавливаются на уровне файловой системы / деплоя (Git, FTP, пакет); админка лишь
+**управляет** уже присутствующим кодом — читает манифесты и пишет флаги в конфиг. Это
+совпадает с существующим менеджером модулей и базовыми правилами безопасности проекта.
 
-## Effort vs. benefit
+## Трудозатраты против пользы
 
-- **Low / worthwhile:** a read-only "Plugins" overview built from manifests
-  (what is installed, version, active state) plus enable/disable. Surfaces the
-  editor and captcha plugins that already exist.
-- **Medium:** a `config` schema in the manifest plus a generic settings UI.
-- **High / risky:** a hook/event API, dependency resolution and version
-  compatibility. Only with a deliberate design — and never with remote install.
+- **Низкие / оправданные:** read-only обзор «Плагины» из манифестов (что установлено,
+  версия, активность) плюс включение/выключение. Делает видимыми уже существующие
+  плагины редакторов и капчи.
+- **Средние:** схема `config` в манифесте плюс универсальная форма настроек.
+- **Высокие / рискованные:** API хуков/событий, разрешение зависимостей и
+  совместимость версий. Только с осознанным дизайном — и никогда с удалённой установкой.
 
-## Proposed generalized manifest (direction, not final)
+## Предлагаемый обобщённый манифест (направление, не финал)
 
 ```json
 {
@@ -96,21 +97,25 @@ existing module manager and the project security baseline.
 }
 ```
 
-- `type` / `provides` let the registry group capabilities (editor, captcha, …).
-- `requires` enables a compatibility check at scan time (warn, do not auto-install).
-- `config` drives a generic settings form and maps to the existing config files.
+- `type` / `provides` позволяют реестру группировать возможности (editor, captcha, …).
+- `requires` включает проверку совместимости на этапе скана (предупреждать, не
+  устанавливать автоматически).
+- `config` управляет универсальной формой настроек и маппится на существующие
+  файлы конфигурации.
 
-## Conclusion
+## Вывод
 
-SLAED does not need a new plugin system — it needs to unify the good one it already
-has (editors). The sensible next step is a manifest-driven registry plus a
-**managing** (not installing) Plugins admin page modeled on `admin.php?name=modules`.
-That keeps SLAED consistent, extensible and safe.
+SLAED не нужна новая система плагинов — нужно унифицировать ту хорошую, что уже есть
+(редакторы). Разумный следующий шаг — реестр на основе манифестов плюс
+**управляющая** (не устанавливающая) страница «Плагины», построенная по образцу
+`admin.php?name=modules`. Так SLAED остаётся последовательной, расширяемой и безопасной.
 
-## Next steps
+## Дальнейшие шаги
 
-1. Extract the manifest scan/registry from `Editor` into a small reusable resolver
-   keyed by manifest `type`.
-2. Add manifests to the remaining `plugins/*` that should be manageable.
-3. Build a read-only Plugins admin page from the manifests; add enable/disable next.
-4. Defer any hook/event API until there is a concrete need and a written design.
+1. Вынести скан манифестов/реестр из `Editor` в небольшой переиспользуемый резолвер,
+   ключуемый по `type` манифеста.
+2. Добавить манифесты в остальные `plugins/*`, которые должны быть управляемыми.
+3. Построить read-only страницу «Плагины» из манифестов; затем добавить
+   включение/выключение.
+4. Отложить любой API хуков/событий до появления конкретной потребности и
+   письменного дизайна.
