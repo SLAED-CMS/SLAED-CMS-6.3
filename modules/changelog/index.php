@@ -15,7 +15,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
     $query = http_build_query(array_filter([
         'author' => $filters['author'] ?? '',
         'file' => $filters['file'] ?? '',
-        'search' => $filters['search'] ?? '',
+        'word' => $filters['search'] ?? '',
         'datefrom' => $filters['since'] ?? '',
         'dateto' => $filters['until'] ?? ''
     ]));
@@ -31,6 +31,7 @@ function changelog(): void {
 
     $page = max(1, getVar('get', 'page', 'num', 1));
     $filters = chlogReadFilters('get');
+    chlogCanonicalRedirect('index.php', $conf['name'], $filters, $page);
     $config = chlogGetConfig($conf);
     $loaded = chlogLoadCommits($conf, $filters, defined('BASE_DIR') ? (string)BASE_DIR : getcwd());
     $commits = $loaded['commits'];
@@ -58,7 +59,7 @@ function changelog(): void {
     $cont = $tpl->getHtmlPart('changelog', [
         'action_url' => 'index.php?name='.$conf['name'],
         'hidden' => ['name_attr' => 'name', 'value_attr' => $conf['name']],
-        'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'search', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
+        'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'word', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
         'author_field' => ['itype' => 'text', 'input_id' => 'author', 'name_attr' => 'author', 'value_attr' => chlogEsc($filters['author']), 'placeholder_text' => _CHLOG_AUTHOR_PH],
         'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
         'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
@@ -71,11 +72,12 @@ function changelog(): void {
         'datefrom' => chlogEsc($filters['since']),
         'dateto' => chlogEsc($filters['until']),
         'reset_url' => 'index.php?name='.$conf['name'],
+        'show_file' => $config['source'] !== 'github',
         'totcount' => $totcount,
         'totcom' => $totcom,
         'page' => $page,
         'totpage' => $totpage,
-        'commits' => chlogRenderCommits($compg, $config),
+        'commits' => chlogRenderCommits($compg, $config + ['highlight' => $filters['search']]),
         'paging' => chlogRenderPaging($conf['name'], $totcom, $totpage, $config['perpage'], $page, $filters),
         'txt_filter_heading' => _CHLOG_FILTER,
         'txt_search_label' => _CHLOG_SEARCH,

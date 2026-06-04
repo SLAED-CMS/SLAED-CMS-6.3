@@ -23,6 +23,7 @@ function changelog(): void {
 
     $page = max(1, getVar('get', 'page', 'num', 1));
     $filters = chlogReadFilters('get');
+    chlogCanonicalRedirect($afile.'.php', 'changelog', $filters, $page);
     $config = chlogGetConfig($conf);
     $loaded = chlogLoadCommits($conf, $filters, __DIR__.'/../../../');
     $commits = $loaded['commits'];
@@ -52,18 +53,19 @@ function changelog(): void {
         'action_url' => $afile.'.php',
         'reset_url' => $afile.'.php?name=changelog',
         'hidden' => ['name_attr' => 'name', 'value_attr' => 'changelog'],
-        'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'search', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
+        'search_field' => ['itype' => 'text', 'input_id' => 'search', 'name_attr' => 'word', 'value_attr' => chlogEsc($filters['search']), 'placeholder_text' => _CHLOG_SEARCH_PH],
         'author_field' => ['itype' => 'text', 'input_id' => 'author', 'name_attr' => 'author', 'value_attr' => chlogEsc($filters['author']), 'placeholder_text' => _CHLOG_AUTHOR_PH],
         'file_field' => ['itype' => 'text', 'input_id' => 'file', 'name_attr' => 'file', 'value_attr' => chlogEsc($filters['file']), 'placeholder_text' => _CHLOG_FILE_PH],
         'datefrom_field' => ['itype' => 'date', 'input_id' => 'datefrom', 'name_attr' => 'datefrom', 'value_attr' => chlogEsc($filters['since'])],
         'dateto_field' => ['itype' => 'date', 'input_id' => 'dateto', 'name_attr' => 'dateto', 'value_attr' => chlogEsc($filters['until'])],
         'filter_button' => ['button_type' => 'submit', 'submit_label' => _CHLOG_FILTER_BTN, 'is_chlog_primary' => true],
         'reset_button' => ['button_type' => 'button', 'submit_label' => _CHLOG_RESET_BTN, 'is_chlog_secondary' => true, 'reset_url' => $afile.'.php?name=changelog'],
+        'show_file' => $config['source'] !== 'github',
         'totcount' => $totcount,
         'totcom' => $totcom,
         'page' => $page,
         'totpage' => $totpage,
-        'commits' => chlogRenderCommits($compg, $config),
+        'commits' => chlogRenderCommits($compg, $config + ['highlight' => $filters['search']]),
         'paging' => rendpage($totcom, $totpage, $config['perpage'], $page, $filters),
         'txt_filter_heading' => _CHLOG_FILTER,
         'txt_search_label' => _CHLOG_SEARCH,
@@ -204,7 +206,7 @@ function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $fil
         'name' => 'changelog',
         'author' => $filters['author'],
         'file' => $filters['file'],
-        'search' => $filters['search'],
+        'word' => $filters['search'],
         'datefrom' => $filters['since'],
         'dateto' => $filters['until']
     ]));

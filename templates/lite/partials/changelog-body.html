@@ -20,10 +20,12 @@
         <label for="author">{{ txt_author_label }}</label>
         {% include 'fragments/input.html' with author_field %}
       </div>
+      {% if show_file %}
       <div class="sl-changelog-filter-field">
         <label for="file">{{ txt_file_label }}</label>
         {% include 'fragments/input.html' with file_field %}
       </div>
+      {% endif %}
       <div class="sl-changelog-filter-field">
         <label for="datefrom">{{ txt_datefrom_label }}</label>
         {% include 'fragments/input.html' with datefrom_field %}

@@ -50,7 +50,7 @@ function chlogReadFilters(string $scope = 'get'): array {
     return chlogNormalizeFilters([
         'author' => strip_tags(getVar($scope, 'author', 'var', '')),
         'file' => strip_tags(getVar($scope, 'file', 'var', '')),
-        'search' => strip_tags(getVar($scope, 'search', 'var', '')),
+        'search' => strip_tags(getVar($scope, 'word', 'var', '')),
         'since' => getVar($scope, 'datefrom', 'var', ''),
         'until' => getVar($scope, 'dateto', 'var', '')
     ]);
@@ -72,11 +72,55 @@ function chlogGetConfig(array $conf): array {
     ];
 }
 
+function chlogCanonicalRedirect(string $base, string $name, array $filters, int $page): void {
+    $cur = (string)($_SERVER['QUERY_STRING'] ?? '');
+    if ($cur === '') return;
+
+    parse_str($cur, $parsed);
+    $empty = false;
+    foreach ($parsed as $val) {
+        if ($val === '') { $empty = true; break; }
+    }
+    if (!$empty) return;
+
+    $want = array_filter([
+        'name' => $name,
+        'word' => (string)($filters['search'] ?? ''),
+        'author' => (string)($filters['author'] ?? ''),
+        'file' => (string)($filters['file'] ?? ''),
+        'datefrom' => (string)($filters['since'] ?? ''),
+        'dateto' => (string)($filters['until'] ?? ''),
+        'page' => $page > 1 ? (string)$page : ''
+    ], static fn(string $val): bool => $val !== '');
+
+    setRedirect($base.'?'.http_build_query($want));
+}
+
+function chlogFilterCommits(array $commits, array $filters): array {
+    $search = (string)($filters['search'] ?? '');
+    $author = (string)($filters['author'] ?? '');
+    $since = (string)($filters['since'] ?? '');
+    $until = (string)($filters['until'] ?? '');
+    if ($search === '' && $author === '' && $since === '' && $until === '') return $commits;
+
+    $out = [];
+    foreach ($commits as $c) {
+        if ($search !== '' && stripos((string)($c['subject'] ?? '').' '.(string)($c['body'] ?? ''), $search) === false) continue;
+        if ($author !== '' && stripos((string)($c['author'] ?? '').' '.(string)($c['email'] ?? ''), $author) === false) continue;
+        $date = substr((string)($c['date'] ?? ''), 0, 10);
+        if ($since !== '' && chlogValdate($since) && $date < $since) continue;
+        if ($until !== '' && chlogValdate($until) && $date > $until) continue;
+        $out[] = $c;
+    }
+    return $out;
+}
+
 function chlogLoadCommits(array $conf, array $filters, string $gitdir = ''): array {
     $config = chlogGetConfig($conf);
     $filters = chlogNormalizeFilters($filters);
     $error = '';
     $commits = [];
+    $total = 0;
 
     if ($config['source'] === 'github') {
         if ($config['owner'] === '' || $config['repo'] === '') {
@@ -91,21 +135,24 @@ function chlogLoadCommits(array $conf, array $filters, string $gitdir = ''): arr
         $commits = chlogGhFetch(
             $config['owner'],
             $config['repo'],
-            $filters,
+            [],
             $config['limit'],
             $config['token'],
             $error
         );
+        $total = count($commits);
+        $commits = chlogFilterCommits($commits, $filters);
     } else {
         $repoRoot = $gitdir !== '' ? $gitdir : ((defined('BASE_DIR') && is_string(BASE_DIR)) ? BASE_DIR : getcwd());
         $repoRoot = realpath($repoRoot) ?: $repoRoot;
         $commits = chlogGitFetch((string)$repoRoot, $filters, $config['limit'], $error);
+        $total = count($commits);
     }
 
     return [
         'source' => $config['source'],
         'commits' => $commits,
-        'total' => count($commits),
+        'total' => $total,
         'error' => $error
     ];
 }
@@ -208,6 +255,7 @@ function chlogRenderCommits(array $commits, array $options = []): string {
     global $tpl, $prs;
     $showStats = !empty($options['showstat']);
     $showFiles = !empty($options['showfile']);
+    $word = (string)($options['highlight'] ?? '');
     $html = '';
     $i = 0;
 
@@ -220,11 +268,15 @@ function chlogRenderCommits(array $commits, array $options = []): string {
         $bodyHtml = '';
         if (!empty($commit['body']) && $commit['body'] !== CHLOG_COMMIT_END) {
             $bodyHtml = $prs->filterDoc((string)$commit['body'], true, 'changelog');
+            if ($word !== '') $bodyHtml = filterTextHighlight($bodyHtml, $word);
         }
+
+        $subject = chlogEsc((string)($commit['subject'] ?? ''));
+        if ($word !== '') $subject = filterTextHighlight($subject, $word);
 
         $html .= $tpl->getHtmlFrag('changelog-commit', [
             'is_alt' => (bool)($i % 2),
-            'subject' => chlogEsc((string)($commit['subject'] ?? '')),
+            'subject' => $subject,
             'hash' => chlogEsc((string)($commit['hash'] ?? '')),
             'author' => chlogEsc((string)($commit['author'] ?? '')),
             'email' => chlogEsc((string)($commit['email'] ?? '')),

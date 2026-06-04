@@ -1,5 +1,5 @@
 <div class="sl-changelog-commit{% if is_alt %} sl-changelog-commit-alt{% endif %}">
-  <div class="sl-changelog-commit-header"><strong>{{ subject }}</strong><code>{{ hash }}</code></div>
+  <div class="sl-changelog-commit-header"><strong>{{{ subject }}}</strong><code>{{ hash }}</code></div>
   <div class="sl-changelog-commit-meta"><strong>{{ label_author }}:</strong> {{ author }} &lt;{{ email }}&gt; | <strong>{{ label_date }}:</strong> {{ date }}</div>
   {% if body_html %}<div class="sl-changelog-commit-body">{{{ body_html }}}</div>{% endif %}
   {{{ stats_html }}}
