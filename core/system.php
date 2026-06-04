@@ -3013,7 +3013,9 @@ function getDebugErrors(): string {
     usort($rows, static fn($one, $two) => strcmp($two['time'], $one['time']));
     $html = '';
     foreach (array_slice($rows, 0, 4) as $row) {
-        $text = $row['time'].' '.$row['chan'].': '.$row['msg'].(($row['url'] !== '') ? ' - '.$row['url'] : '');
+        $dt = ($row['time'] !== '') ? date_create($row['time']) : false;
+        $time = $dt ? $dt->format(_TIMESTRING) : '';
+        $text = (($time !== '') ? $time.' ' : '').$row['chan'].': '.$row['msg'].(($row['url'] !== '') ? ' - '.$row['url'] : '');
         $html .= $tpl->getHtmlFrag('list-item', ['content_html' => $tpl->getHtmlFrag('span', ['text' => $text])]);
     }
     return $tpl->getHtmlFrag('list', ['is_unordered' => true, 'items_html' => $html]);
