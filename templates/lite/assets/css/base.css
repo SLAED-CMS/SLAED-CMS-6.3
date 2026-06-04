@@ -21,6 +21,10 @@
   --sl-sidebar: 400px;
   --sl-gutter: 24px;
   --sl-content: 880px;
+  --sl-space-xs: 4px;
+  --sl-space-sm: 6px;
+  --sl-space-md: 8px;
+  --sl-space-lg: 12px;
   --sl-changelog-bg: #f9fafb;
   --sl-changelog-card: #ffffff;
   --sl-changelog-border: #e5e7eb;
@@ -57,7 +61,6 @@
   --sl-color-danger: #a92c2c;
   --sl-color-danger-soft: #fb7878;
   --sl-color-accent: #8c2ca9;
-  --sl-color-accent-soft: #b15ee5;
   --sl-shadow-soft: 0 1px 2px rgba(42, 48, 60, 0.12);
   --sl-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.2);
   --sl-shadow-strong: 0 6px 12px rgba(0, 0, 0, 0.175);
@@ -80,7 +83,6 @@
   --sl-img-placeholder-icon-size: var(--sl-icon-size-xl);
   --sl-control-size: var(--sl-size-34);
   --sl-nav-control-size: var(--sl-control-size);
-  --sl-circle-action-size: var(--sl-control-size);
   --sl-login-link-color: #556779;
   --sl-login-link-hover-color: #2a303c;
   --sl-login-pill-bg: #f2f4f7;
@@ -153,7 +155,6 @@
   --sl-but-border-dark: rgba(202, 210, 218, 0.85);
   --sl-but-shadow-control: 0 2px 4px rgba(42, 48, 60, 0.16);
   --sl-but-border-shadow: inset 0 0 0 1px var(--sl-but-border-light), 0 0 0 1px var(--sl-but-border-dark), var(--sl-but-shadow-control);
-  --sl-shadow-control: 0 1px 2px rgba(42, 48, 60, 0.12);
   --sl-color-on-dark: #ffffff;
   --sl-color-tone-neutral: #6b7280;
   --sl-color-tone-danger: #fd3b3b;
@@ -402,16 +403,18 @@ blockquote {
 }
 
 legend {
-  padding: 5px;
-  border: 1px solid #dee0e2;
-  border-radius: 4px;
+  color: var(--sl-color-brand-link);
+  font-weight: bold;
+  padding: var(--sl-space-sm);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-control);
 }
 
 fieldset {
-  padding: 5px;
-  margin: 5px;
-  border: 1px solid #dee0e2;
-  border-radius: 4px;
+  padding: var(--sl-space-sm);
+  margin: var(--sl-space-sm);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-control);
 }
 
 optgroup {

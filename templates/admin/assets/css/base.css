@@ -25,9 +25,7 @@
   --sl-color-warning-strong: #c2410c;
   --sl-color-warning-soft: #fff4e5;
   --sl-color-accent: #8e44ad;
-  --sl-color-accent-soft: #f6ecfa;
   --sl-color-info-soft: #e8f4fd;
-  --sl-changelog-bg: #f4f6f8;
   --sl-changelog-card: #ffffff;
   --sl-changelog-text: #374151;
   --sl-changelog-meta: #6b7280;
@@ -46,9 +44,7 @@
   --sl-hover-scale-up: 1.1;
   --sl-hover-scale-down: 0.9;
   --sl-hover-lift-up: -1px;
-  --sl-hover-lift-down: 1px;
   --sl-hover-brightness-up: 1.08;
-  --sl-hover-brightness-down: 0.96;
   --sl-hover-bg-soft: #f7fbfd;
   --sl-hover-bg-muted: #f4f6f8;
   --sl-hover-bg-primary: #207fb6;
@@ -79,20 +75,18 @@
   --sl-text-shadow-dark: 0 1px 0 rgba(0, 0, 0, 0.1);
   --sl-focus-primary: rgba(32, 127, 182, 0.38);
   --sl-shadow-input: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
-  --sl-shadow-input-focus: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(11, 135, 201, 0.08);
   --sl-shadow-input-active: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
   --sl-focus-primary-ring: 0 0 0 2px rgba(11, 135, 201, 0.22);
   --sl-focus-success-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
   --sl-shadow-card: 0 1px 1px rgba(35, 52, 70, 0.08);
-  --sl-shadow-card-hover: 0 2px 6px rgba(35, 52, 70, 0.12);
   --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
   --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);
   --sl-shadow-bar: 0 1px 3px rgba(43, 87, 112, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --sl-progress-track-border: #e8ebee;
   --sl-progress-track-bg: #f4f6f8;
-  --sl-progress-track-radius: 2px;
-  --sl-progress-track-height: 6px;
-  --sl-progress-fill-height: 4px;
+  --sl-progress-track-radius: 3px;
+  --sl-progress-track-height: 10px;
+  --sl-progress-fill-height: 8px;
   --sl-progress-fill-1-base: #5c9ade;
   --sl-progress-fill-1-start: #00adee;
   --sl-progress-fill-1-end: #0078a5;
@@ -216,10 +210,16 @@ ol {
 legend {
   color: var(--sl-color-primary-hover);
   font-weight: bold;
+  padding: var(--sl-space-sm);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-control);
 }
 
 fieldset {
   overflow: auto;
+  padding: var(--sl-space-sm);
+  margin: var(--sl-space-sm);
+  border: 1px solid var(--sl-color-border);
   border-radius: var(--sl-radius-control);
 }
 

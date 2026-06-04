@@ -1,4 +1,4 @@
-<fieldset class="sl-debug-section">
+<fieldset class="sl-debug-section{% if tone %} sl-debug-section-{{ tone }}{% endif %}">
   <legend>{{ legend }}</legend>
   {{{ content }}}
 </fieldset>

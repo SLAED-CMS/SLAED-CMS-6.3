@@ -315,7 +315,6 @@ input.sl-but-blue[value="ОК"] {
 .sl-loading {
   --sl-loading-core: var(--sl-color-success);
   --sl-loading-soft: var(--sl-color-success-soft);
-  --sl-loading-center: var(--sl-color-success-strong);
   --sl-loading-width: 73px;
   --sl-loading-height: 17px;
   --sl-loading-size: 6px;
@@ -516,9 +515,34 @@ input.sl-but-blue[value="ОК"] {
   border: 1px solid var(--sl-color-border);
   margin: 10px;
   padding: 10px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+}
+/* Tone palette shared by the section legend and the metric values */
+.sl-debug-section-info,
+.sl-debug-info {
+  --sl-debug-tone: var(--sl-color-primary-hover);
+}
+.sl-debug-section-success,
+.sl-debug-success {
+  --sl-debug-tone: var(--sl-color-success-strong);
+}
+.sl-debug-section-warn,
+.sl-debug-warn {
+  --sl-debug-tone: var(--sl-color-warning-strong);
+}
+.sl-debug-section-danger,
+.sl-debug-danger {
+  --sl-debug-tone: var(--sl-color-danger-strong);
+}
+.sl-debug-section-accent {
+  --sl-debug-tone: var(--sl-color-accent);
 }
 .sl-debug-section legend {
   font-weight: bold;
+  color: var(--sl-debug-tone);
 }
 .sl-debug-stats {
   margin: 0;
@@ -542,33 +566,29 @@ input.sl-but-blue[value="ОК"] {
 .sl-debug-value {
   display: inline-block;
   padding-bottom: 4px;
+  color: var(--sl-debug-tone);
 }
-.sl-debug-value.sl-debug-success {
-  color: var(--sl-color-success-strong);
+.sl-debug-section-danger ul {
+  margin: 0;
+  padding-left: 0;
 }
-.sl-debug-value.sl-debug-info {
-  color: var(--sl-color-primary-hover);
+.sl-debug-section-danger li {
+  display: flex;
+  align-items: center;
+  list-style: none;
 }
-.sl-debug-value.sl-debug-warn {
-  color: var(--sl-color-warning-strong);
+.sl-debug-section-danger li::before {
+  content: "\f1db";
+  font-family: bootstrap-icons;
+  font-weight: normal;
+  font-size: 1em;
+  min-width: 0;
+  padding: 0;
+  margin-right: 4px;
+  color: var(--sl-debug-tone);
 }
-.sl-debug-value.sl-debug-danger {
-  color: var(--sl-color-danger-strong);
-}
-.sl-debug-section-info legend {
-  color: var(--sl-color-primary-hover);
-}
-.sl-debug-section-success legend {
-  color: var(--sl-color-success-strong);
-}
-.sl-debug-section-warn legend {
-  color: var(--sl-color-warning-strong);
-}
-.sl-debug-section-danger legend {
-  color: var(--sl-color-danger-strong);
-}
-.sl-debug-section-accent legend {
-  color: var(--sl-color-accent);
+.sl-debug-section-danger li .sl-debug-value {
+  padding-bottom: 0;
 }
 .sl-code-row-num {
   vertical-align: top;
@@ -1213,13 +1233,11 @@ input.sl-but-blue[value="ОК"] {
 }
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar {
   --sl-admin-tight-shell-pad: 4px;
-  --sl-admin-tight-shell-border: 1px solid var(--sl-color-border-strong);
   --sl-admin-tight-title-gap: 6px;
   --sl-admin-tight-title-pad: 6px;
   --sl-admin-tight-title-radius: 4px;
   --sl-admin-tight-item-gap: 1px;
   --sl-admin-tight-row-pad: 6px;
-  --sl-admin-tight-mini-pad: 4px;
   --sl-admin-tight-radius: 6px;
   --sl-admin-tight-line-height: 20.3px;
   --sl-admin-tight-icon-size: 18px;
@@ -3028,15 +3046,12 @@ input.sl-but-blue[value="ОК"] {
   --sl-monitor-red: var(--sl-color-danger);
   --sl-monitor-orange: var(--sl-color-warning);
   --sl-monitor-green: var(--sl-color-success);
-  --sl-monitor-gray: var(--sl-color-muted);
   --sl-monitor-border: var(--sl-color-border);
   --sl-monitor-font: Tahoma, Arial, Verdana, sans-serif;
   --sl-monitor-size-sm: 12px;
   --sl-monitor-size-md: 14px;
   --sl-monitor-size-lg: 16px;
   --sl-monitor-size-kpi: 18px;
-  --sl-monitor-size-xl: 24px;
-
   font-family: var(--sl-monitor-font);
   color: var(--sl-monitor-text-main);
 }
