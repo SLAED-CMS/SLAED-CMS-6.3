@@ -527,13 +527,21 @@ function config(): void {
 
     $cnt = 0;
     $size = 0;
+    $dirs = [];
     if (is_dir(CACHE_DIR)) {
+        $base = str_replace('\\', '/', CACHE_DIR);
         $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CACHE_DIR, FilesystemIterator::SKIP_DOTS));
         foreach ($iter as $file) {
             if (!$file->isFile()) continue;
+            $fname = $file->getFilename();
+            if ($fname === '.htaccess' || $fname === 'index.html') continue;
             $size += (int)$file->getSize();
             $cnt++;
+            $rel = substr(str_replace('\\', '/', $file->getPath()), strlen($base) + 1);
+            if ($rel === '' || $rel === false) $rel = '.';
+            $dirs[$rel] = ($dirs[$rel] ?? 0) + 1;
         }
+        ksort($dirs);
     }
     $rows = [];
     $opts = $tpl->getHtmlFrag('select-option', [
@@ -562,6 +570,8 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
+    $rows[] = ['label_html' => _CACHECOMP, 'field_html' => getTplRadioGroup(['name' => 'cache_c', 'value' => $conf['cache_c'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _CACHEBROW, 'field_html' => getTplRadioGroup(['name' => 'cache_b', 'value' => $conf['cache_b'], 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHEDEL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'cache_d',
@@ -570,8 +580,6 @@ function config(): void {
         'is_required' => true,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _CACHECOMP, 'field_html' => getTplRadioGroup(['name' => 'cache_c', 'value' => $conf['cache_c'], 'options' => $yesno])];
-    $rows[] = ['label_html' => _CACHEBROW, 'field_html' => getTplRadioGroup(['name' => 'cache_b', 'value' => $conf['cache_b'], 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHECSS, 'field_html' => getTplRadioGroup(['name' => 'cache_css', 'value' => $conf['cache_css'], 'options' => $yesno])];
     $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CSSDIR, 'hint' => _CSSDIRINFO.' '._NOKOMA]), 'field_html' => $tpl->getHtmlFrag('textarea', [
         'name_attr' => 'css_f',
@@ -593,11 +601,11 @@ function config(): void {
     $rows[] = ['label_html' => _SCRIPTCOMP, 'field_html' => getTplRadioGroup(['name' => 'script_c', 'value' => $conf['script_c'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SCRIPTASIN, 'field_html' => getTplRadioGroup(['name' => 'script_a', 'value' => $conf['script_a'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SCRIPTBOT, 'field_html' => getTplRadioGroup(['name' => 'script_b', 'value' => $conf['script_b'], 'options' => $yesno])];
-    $html = $tpl->getHtmlFrag('alert', ['lines' => [
-        _DIR.': storage/cache',
-        _FILE_M.': '.$cnt,
-        _FILE_S.': '.filterSize($size),
-    ]]);
+    $lines = [_DIR.': storage/cache'];
+    foreach ($dirs as $dk => $dv) $lines[] = $dk.': '.$dv;
+    $lines[] = _FILE_M.': '.$cnt;
+    $lines[] = _FILE_S.': '.filterSize($size);
+    $html = $tpl->getHtmlFrag('alert', ['lines' => $lines]);
     $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $rows = [];
@@ -627,6 +635,12 @@ function config(): void {
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
+        'actions_html' => $tpl->getHtmlFrag('button', [
+            'label' => _CACHECLEAR,
+            'is_green' => true,
+            'reset_url' => $afile.'.php?name=config&op=clearcache&tab='.$ctab.'&token='.getSiteToken(),
+            'input_attr' => ' data-sl-tab-show="5" data-sl-tab-group="config-main" style="display:none"',
+        ]),
         'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
@@ -764,6 +778,15 @@ function save(): void {
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
+function clearcache(): void {
+    global $afile;
+    $ctab = getVar('req', 'tab', 'num', 0);
+    if ($ctab < 0 || $ctab > 6) $ctab = 0;
+    $warn = !checkSiteToken();
+    if (!$warn) Cache::deleteAll();
+    setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
+}
+
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=config&amp;tab=0', 'name=config&amp;tab=1', 'name=config&amp;tab=2', 'name=config&amp;tab=3', 'name=config&amp;tab=4', 'name=config&amp;tab=5', 'name=config&amp;tab=6', 'name=config&amp;op=info'],
@@ -774,5 +797,6 @@ function info(): void {
 switch ($op) {
     default: config(); break;
     case 'save': save(); break;
+    case 'clearcache': clearcache(); break;
     case 'info': info(); break;
 }

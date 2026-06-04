@@ -29,6 +29,10 @@ function setAdminTabs(group) {
                 pane.setAttribute('aria-hidden', show ? 'false' : 'true');
             }
         }
+        var shows = document.querySelectorAll('[data-sl-tab-show][data-sl-tab-group="' + saveGroup + '"]');
+        for (var s = 0; s < shows.length; s++) {
+            shows[s].style.display = (shows[s].getAttribute('data-sl-tab-show') === String(index)) ? '' : 'none';
+        }
         try {
             window.sessionStorage.setItem(save, String(index));
         } catch (err) {

@@ -9,6 +9,18 @@ return [
         'active' => '1',
         'cron_timeout' => '600',
         'jobs' => [
+            'cachegc' => [
+                'title' => 'Page cache cleanup',
+                'type' => 'system',
+                'active' => '0',
+                'system' => 'cachegc',
+                'schedule' => '45 3 * * *',
+                'priority' => '5',
+                'lock_timeout' => '600',
+                'manual' => '1',
+                'settings' => [
+                ],
+            ],
             'dbbackup' => [
                 'title' => 'Database backup',
                 'type' => 'system',
