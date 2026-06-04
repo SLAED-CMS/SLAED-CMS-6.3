@@ -2805,91 +2805,92 @@ function getCompressHtml(string $html): string {
 }
 
 # Voting view
-function getVotingView(int $id = 0, string $votid = '', bool $forceResult = false): string {
- global $db, $afile, $user, $locale, $conf, $tpl;
-    if ($forceResult) {
-        $querylang = '1 = 1';
-        $qlang_params = [];
-    } elseif ($conf['multilingual'] == 1) {
-        $querylang = "(lang = :locale OR lang = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-        $qlang_params = ['locale' => $locale];
-    } else {
-        $querylang = "time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-        $qlang_params = [];
-    }
-    if (!$id)    $id    = getVar('get', 'id', 'num', 0);
+function getVotingView(int $id = 0, string $votid = '', bool $force = false): string {
+    global $db, $afile, $user, $locale, $conf, $tpl;
+    if (!$id) $id = getVar('get', 'id', 'num', 0);
     if (!$votid) $votid = filterVar(getVar('post', 'votid', 'text', 'voting')) ?: 'voting';
-    $result = $db->getSqlQuery('SELECT modul, title, body, answer, enddate, multi, comments, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
-    if ($db->getSqlRowCount($result) > 0) {
-        $ip = getIp();
-        $past = time() - intval($conf['voting']['voting_t']);
-        $cmod = substr('voting', 0, 2).'-'.$id;
-        $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : '';
-        $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
-        list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
-        list($modul, $title, $body, $answer, $enddate, $multi, $comments, $acomm, $typ, $status) = $db->getSqlRow($result);
-        $rate = ($forceResult || $cookies == $id || $num > 0 || strtotime($enddate) <= time()) ? 1 : 0;
-        if ($forceResult || $typ || !$typ && !$rate) {
-            $body = explode('|', $body);
-            $answer = explode('|', $answer);
-            $vote = array_sum($answer);
-            $items = '';
-            $pn = 0;
-            for ($i = 0; $i < count($body); $i++) {
-                $pn++;
-                if ($pn > 5) $pn = 1;
-                $n = $i + 1;
-                if ($vote > 0) {
-                    $proc = 100 * $answer[$i] / $vote;
-                    $procent = number_format($proc, 2);
-                } else {
-                    $procent = '0.00';
-                }
-                if (!$rate) {
-                    $itype = ($multi) ? 'checkbox' : 'radio';
-                    $voteField = ($itype === 'checkbox')
-                        ? $tpl->getHtmlFrag('checkbox', ['name_attr' => 'body[]', 'value_attr' => (string)$n, 'label_html' => $body[$i], 'is_plain' => true])
-                        : $tpl->getHtmlFrag('radio', ['name_attr' => 'body[]', 'value_attr' => (string)$n, 'label_html' => $body[$i]]);
-                    $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $voteField]);
-                } else {
-                    $items .= $tpl->getHtmlFrag('voting-view', ['text' => $body[$i], 'text_safe' => filterText($body[$i]), 'n' => $n, 'pn' => $pn, 'percent' => $procent, 'votes_label' => _VOTES, 'votes' => $answer[$i]]);
-                }
-            }
-            list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
-            if (!$forceResult && is_moder('voting') && $votid == 'voting') {
-                $items = [
-                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
-                ];
-                $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
-            } else {
-                $admin = '';
-            }
-            $post = (!$forceResult && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true]) : '';
-            $polls = (!$forceResult && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
-            $votes = $forceResult ? '' : ((!$modul && $votid != 'voting') ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]) : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]));
-            $comm = (!$forceResult && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comments, 'is_comments' => true]) : '';
-            $cont = $tpl->getHtmlPart('voting-widget', [
-                'has_form'   => !$rate,
-                'form_id'    => 'form'.$votid,
-                'poll_id'    => $id,
-                'token'      => getSiteToken(),
-                'title'      => $title,
-                'items_html' => $items,
-                'admin_html' => $admin,
-                'post_html'  => $post,
-                'polls_html' => $polls,
-                'votes_html' => $votes,
-                'comm_html'  => $comm,
-            ]);
-        } else {
-            $cont = $tpl->getHtmlFrag('alert', ['text' => _VCLINFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-        }
+
+    if ($force) {
+        $qwhere = '1 = 1';
+        $qpars = [];
     } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+        $qwhere = "time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $qpars = [];
+        if ($conf['multilingual'] == 1) {
+            $qwhere = "(lang = :locale OR lang = '') AND ".$qwhere;
+            $qpars = ['locale' => $locale];
+        }
     }
-    return $cont;
+
+    $result = $db->getSqlQuery('SELECT modul, title, body, answer, enddate, multi, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$qwhere, array_merge(['id' => $id], $qpars));
+    if ($db->getSqlRowCount($result) < 1) {
+        return $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+    }
+
+    [$modul, $title, $body, $answer, $end, $multi, $comm, $acomm, $typ] = $db->getSqlRow($result);
+    $cmod = substr('voting', 0, 2).'-'.$id;
+    $cook = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : 0;
+    $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
+
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => time() - intval($conf['voting']['voting_t'])]);
+    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => getIp(), 'id2' => $id, 'uid' => $uid]));
+    $rate = $force || $cook == $id || $num > 0 || strtotime($end) <= time();
+    if (!$force && !$typ && $rate) {
+        return $tpl->getHtmlFrag('alert', ['text' => _VCLINFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+    }
+
+    $body = explode('|', $body);
+    $answer = explode('|', $answer);
+    $vote = array_sum($answer);
+    $items = '';
+    foreach ($body as $idx => $text) {
+        $ord = $idx + 1;
+        $pn = $idx % 5 + 1;
+        $cnt = intval($answer[$idx] ?? 0);
+        $perc = ($vote > 0) ? number_format(100 * $cnt / $vote, 2) : '0.00';
+
+        if ($rate) {
+            $items .= $tpl->getHtmlFrag('voting-view', ['text' => $text, 'text_safe' => filterText($text), 'n' => $ord, 'pn' => $pn, 'percent' => $perc, 'votes_label' => _VOTES, 'votes' => $cnt]);
+            continue;
+        }
+
+        $field = $multi
+            ? $tpl->getHtmlFrag('checkbox', ['name_attr' => 'body[]', 'value_attr' => (string)$ord, 'label_html' => $text, 'is_plain' => true])
+            : $tpl->getHtmlFrag('radio', ['name_attr' => 'body[]', 'value_attr' => (string)$ord, 'label_html' => $text]);
+        $items .= $tpl->getHtmlFrag('list-item', ['content_html' => $field]);
+    }
+
+    [$vnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$qwhere, $qpars));
+    $admin = '';
+    if (!$force && is_moder('voting') && $votid == 'voting') {
+        $links = [
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
+        ];
+        $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $links))]);
+    }
+
+    $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true]) : '';
+    $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
+    $votes = $force ? '' : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
+    if (!$force && !$modul && $votid != 'voting') {
+        $votes = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
+    }
+    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comm, 'is_comments' => true]) : '';
+
+    return $tpl->getHtmlPart('voting-widget', [
+        'has_form'   => !$rate,
+        'form_id'    => 'form'.$votid,
+        'poll_id'    => $id,
+        'token'      => getSiteToken(),
+        'title'      => $title,
+        'items_html' => $items,
+        'admin_html' => $admin,
+        'post_html'  => $post,
+        'polls_html' => $polls,
+        'votes_html' => $votes,
+        'comm_html'  => $com,
+    ]);
 }
 
 # Converts PHP memory_limit to bytes
