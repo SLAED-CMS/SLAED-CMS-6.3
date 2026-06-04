@@ -2300,11 +2300,6 @@ input.sl-but-blue[value="ОК"] {
   width: 88px;
 }
 
-.sl-table-shell {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
 .sl-table-shell > table {
   min-width: 100%;
 }
