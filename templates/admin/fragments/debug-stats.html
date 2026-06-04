@@ -1,22 +1,30 @@
 <dl class="sl-debug-stats">
-  <dt>{{ lbl_meml }}</dt>
-  <dd>
+  <dt>
+    <span>{{ lbl_meml }}</span>
     <span class="sl-debug-value{% if mem_is_success %} sl-debug-success{% endif %}{% if mem_is_info %} sl-debug-info{% endif %}{% if mem_is_warn %} sl-debug-warn{% endif %}{% if mem_is_danger %} sl-debug-danger{% endif %}">{{ mem_value }} / {{ mem_limit }} ({{ mem_percent }}%)</span>
+  </dt>
+  <dd>
     <div class="sl-progress-line sl-progress-{{ mem_progress }}"><div style="width: {{ mem_percent }}%;">{{ mem_percent }}%</div></div>
   </dd>
-  <dt>{{ generation_label }}</dt>
-  <dd>
+  <dt>
+    <span>{{ generation_label }}</span>
     <span class="sl-debug-value{% if generation_is_success %} sl-debug-success{% endif %}{% if generation_is_info %} sl-debug-info{% endif %}{% if generation_is_warn %} sl-debug-warn{% endif %}{% if generation_is_danger %} sl-debug-danger{% endif %}">{{ generation_text }}</span>
+  </dt>
+  <dd>
     <div class="sl-progress-line sl-progress-{{ generation_progress }}"><div style="width: {{ generation_percent }}%;">{{ generation_percent }}%</div></div>
   </dd>
-  <dt>{{ db_queries_label }}</dt>
-  <dd>
+  <dt>
+    <span>{{ db_queries_label }}</span>
     <span class="sl-debug-value{% if db_queries_is_success %} sl-debug-success{% endif %}{% if db_queries_is_info %} sl-debug-info{% endif %}{% if db_queries_is_warn %} sl-debug-warn{% endif %}{% if db_queries_is_danger %} sl-debug-danger{% endif %}">{{ db_queries_text }}</span>
+  </dt>
+  <dd>
     <div class="sl-progress-line sl-progress-{{ db_queries_progress }}"><div style="width: {{ db_queries_percent }}%;">{{ db_queries_percent }}%</div></div>
   </dd>
-  <dt>{{ db_time_label }}</dt>
-  <dd>
+  <dt>
+    <span>{{ db_time_label }}</span>
     <span class="sl-debug-value{% if db_is_success %} sl-debug-success{% endif %}{% if db_is_info %} sl-debug-info{% endif %}{% if db_is_warn %} sl-debug-warn{% endif %}{% if db_is_danger %} sl-debug-danger{% endif %}">{{ db_text }}</span>
+  </dt>
+  <dd>
     <div class="sl-progress-line sl-progress-{{ db_progress }}"><div style="width: {{ db_percent }}%;">{{ db_percent }}%</div></div>
   </dd>
 </dl>

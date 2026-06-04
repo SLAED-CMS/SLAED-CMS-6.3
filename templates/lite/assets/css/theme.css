@@ -1231,21 +1231,21 @@ ol.sl-sublist-two li:hover:before {
   font-weight: bold;
 }
 .sl-debug-stats {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 10px;
-  align-items: end;
   margin: 0;
 }
 .sl-debug-stats dt {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 8px;
   font-weight: normal;
-  align-self: end;
 }
-.sl-debug-stats dt::after {
-  content: ":";
+.sl-debug-stats dt:first-of-type {
+  margin-top: 0;
 }
 .sl-debug-stats dd {
-  align-self: end;
+  margin: 0;
 }
 .sl-debug-value {
   display: inline-block;
