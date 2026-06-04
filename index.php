@@ -17,7 +17,7 @@ $name = getVar('req', 'name', 'var');
 $op = getVar('req', 'op', 'var');
 
 if (empty($go)) {
-    setCache($conf['cache_b']);
+    Cache::setHeaders($conf['cache_b'] === '1', $conf['cache_d']);
     if ($conf['alang']) {
         $coun = Geoip::getCountry(getIp());
         if ($coun !== '' && !is_bot() && empty(getCookies('language'))) {
@@ -106,7 +106,7 @@ if (empty($go)) {
         if (!$fdsize && !checkSiteToken($tok)) die('Illegal file access');
     }
     if ($go == 1) {
-        setCache('0');
+        Cache::setHeaders(false);
         switch($op) {
             case 'getRatingView': getRatingView(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
@@ -128,14 +128,14 @@ if (empty($go)) {
         }
     } elseif ($go == 2) {
         getLang('shop');
-        setCache('0');
+        Cache::setHeaders(false);
         switch($op) {
             default: getCartSummary(); break;
             case 'addCartItem': addCartItem(); break;
             case 'deleteCartItem': deleteCartItem(); break;
         }
     } elseif ($go == 3) {
-        setCache('0');
+        Cache::setHeaders(false);
         switch($op) {
             case 'scheduler':
             $name = getVar('req', 'job', 'var');
@@ -150,7 +150,7 @@ if (empty($go)) {
             exit;
         }
     } elseif ($go == 4) {
-        setCache('0');
+        Cache::setHeaders(false);
         $mod = (getVar('get', 'mod', 'var')) ? strtolower(getVar('get', 'mod', 'var')) : '';
         if ($mod) {
             $userid = (getVar('get', 'userid', 'num')) ? getVar('get', 'userid', 'num') : '0';
@@ -173,7 +173,7 @@ if (empty($go)) {
         if (isAdmin(true)) {
             define('ADMIN_FILE', true);
             getLang('admin');
-            setCache('0');
+            Cache::setHeaders(false);
             require_once BASE_DIR.'/core/admin.php';
             $tpl = new Template('admin');
             switch($op) {
@@ -195,21 +195,23 @@ if (empty($go)) {
     $cvar = explode(',', $conf['variables']);
     if (!$cvar[0] && is_moder()) echo getVariables();
 } elseif ($go == 'rss') {
-    setCache('0');
+    Cache::setHeaders(false);
     echo getRssChannel();
 } elseif ($go == 'search') {
-    setCache('1');
+    Cache::setHeaders(true, $conf['cache_d']);
     echo getOpenSearch();
 } elseif ($go == 'xsl') {
-    setCache('1');
+    Cache::setHeaders(true, $conf['cache_d']);
     echo getOpenXsl();
-} elseif ($go == 'css') {
-    setCache('1');
-    setCss();
-} elseif ($go == 'script') {
-    setCache('1');
-    setScript();
+} elseif ($go == 'asset') {
+    $hash = getVar('req', 'file', 'var');
+    $type = getVar('req', 'type', 'var');
+    if (!in_array($type, ['css', 'js'], true)) die('Illegal file access');
+    $afile = Cache::getPath('assets', $hash, $type);
+    if ($afile === '' || !is_file($afile)) die('Illegal file access');
+    Cache::setHeaders(true, $conf['cache_d'], ($type === 'css') ? 'text/css' : 'text/javascript');
+    echo Cache::getBody($afile);
 } elseif ($go == 'captcha') {
-    setCache('0');
+    Cache::setHeaders(false);
     getCaptchaChallenge(getVar('req', 'act', 'var') ?: 'default');
 }

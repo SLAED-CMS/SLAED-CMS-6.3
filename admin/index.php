@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE')) die('Illegal file access');
 require_once BASE_DIR.'/core/system.php';
 getLang('admin');
-setCache('0');
+Cache::setHeaders(false);
 checkAccess();
 
 function getAdminMenu(string $url, string $title, string $image, string $class = ''): string {

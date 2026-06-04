@@ -102,6 +102,7 @@ require_once BASE_DIR.'/core/classes/template.php';
 require_once BASE_DIR.'/core/classes/parser.php';
 require_once BASE_DIR.'/core/classes/geoip.php';
 require_once BASE_DIR.'/core/classes/captcha.php';
+require_once BASE_DIR.'/core/classes/cache.php';
 $tpl = new Template($theme);
 $prs = new Parser();
 
@@ -235,7 +236,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 # Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
-    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap'];
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -481,6 +482,7 @@ function addSchedulerSystemJob(string $name): array {
         'filescan' => addFilescanTask(),
         'sitemap' => addSitemapTask(),
         'newsletter' => updateNewsletter(true),
+        'cachegc' => addCacheGcTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }
@@ -1437,6 +1439,37 @@ function getSeoRoute(array $seo = []): array {
     ];
 }
 
+# Decide whether the current frontend request may be served from or stored into the page cache
+function checkPageCache(): bool {
+    global $conf, $home, $name;
+    if (defined('ADMIN_FILE')) return false;
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return false;
+    if (empty($conf['cache'])) return false;
+    if ($conf['cache'] == 2 && !$home) return false;
+    if (is_user() || isAdmin()) return false;
+    if (!empty($_SESSION['slaed_flash'])) return false;
+    $url = str_replace('/', '', $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '');
+    $url = $url ?: 'index.php';
+    if ($conf['cache'] == 2) {
+        return ($conf['rewrite']) ? ($url == 'index.php' || $url == 'index.html') : ($url == 'index.php');
+    }
+    return ($conf['rewrite']) ? ($url == 'index.php' || $url == 'index.html' || strstr($url, 'index.php?name='.$name) || strstr($url, $name)) : ($url == 'index.php' || strstr($url, 'index.php?name='.$name));
+}
+
+# Build the page cache hash from host, scheme, theme, locale, and request URI
+function getPageHash(): string {
+    global $theme, $locale;
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
+    return Cache::getHash(['pages-v1', getHost(), $scheme, $theme, $locale, $url]);
+}
+
+# Run the full cache wipe as a scheduler job and report the removed file count
+function addCacheGcTask(): array {
+    $num = Cache::deleteAll();
+    return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
+}
+
 # Format head
 function setHead(array $seo = []): void {
     global $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
@@ -1453,30 +1486,13 @@ function setHead(array $seo = []): void {
     }
     if ($conf['referers']['refer']) updateRefererTrack($ctime, $request, $uname);
     if ($conf['statistic']['stat']) updateStatsTrack($request, $guest);
-    if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
+    if (checkPageCache()) {
+        $file = Cache::getPath('html', getPageHash(), 'html');
+        if (Cache::isFresh($file, $conf['cache_t'])) {
+            echo Cache::getBody($file);
+            exit;
+        }
         ob_start();
-        $url = str_replace('/', '', $request);
-        $url = (!$url) ? 'index.php' : $url;
-        if ($conf['cache'] == 2) {
-            if ($conf['rewrite']) {
-                $match = ($url == 'index.php' || $url == 'index.html') ? 1 : 0;
-            } else {
-                $match = ($url == 'index.php') ? 1 : 0;
-            }
-        } else {
-            if ($conf['rewrite']) {
-                $match = ($url == 'index.php' || $url == 'index.html' || strstr($url, 'index.php?name='.$name) || strstr($url, $name)) ? 1 : 0;
-            } else {
-                $match = ($url == 'index.php' || strstr($url, 'index.php?name='.$name)) ? 1 : 0;
-            }
-        }
-        if ($match && !is_user() && !isAdmin()) {
-            $cacheurl = CACHE_DIR.'/'.md5($url).'.txt';
-            if (file_exists($cacheurl) && filesize($cacheurl) != 0 && ($ctime - $conf['cache_t']) < filemtime($cacheurl)) {
-                readfile($cacheurl);
-                exit;
-            }
-        }
     }
     if (defined('ADMIN_FILE') && ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==')) setExit(_NO_LICENSE);
     $licens = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
@@ -1709,9 +1725,10 @@ function setFoot(): void {
     }
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
-    $time = ($conf['db_t'] == '1') ? getTimeLoads() : '';
+    $docache = checkPageCache();
+    $time = ($conf['db_t'] == '1' && !$docache) ? getTimeLoads() : '';
     $cvar = explode(',', $conf['variables']);
-    $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
+    $debug = (!$cvar[0] && !$docache && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
     getBlocks('f');
     $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license);
@@ -1748,44 +1765,11 @@ function setFoot(): void {
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
     unset($sitepage, $sitevars);
-    if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
-        $dir = CACHE_DIR.'/';
-        $url = str_replace('/', '', getenv('REQUEST_URI'));
-        $url = (!$url) ? 'index.php' : $url;
-        if ($conf['cache'] == 2) {
-            if ($conf['rewrite']) {
-                $match = ($url == 'index.php' || $url == 'index.html') ? 1 : 0;
-            } else {
-                $match = ($url == 'index.php') ? 1 : 0;
-            }
-        } else {
-            if ($conf['rewrite']) {
-                $match = ($url == 'index.php' || $url == 'index.html' || strstr($url, 'index.php?name='.$name) || strstr($url, $name)) ? 1 : 0;
-            } else {
-                $match = ($url == 'index.php' || strstr($url, 'index.php?name='.$name)) ? 1 : 0;
-            }
-        }
+    if ($docache) {
         $cont = ob_get_contents();
-        if ($cont && $match && !is_user() && !isAdmin()) {
+        if ($cont !== false && $cont !== '') {
             $cont = ($conf['cache_c']) ? getCompressHtml($cont) : $cont;
-            $fp = fopen($dir.md5($url).'.txt', 'wb');
-            fwrite($fp, $cont);
-            fclose($fp);
-        }
-        if (!empty($conf['cache_d'])) {
-            $time = time();
-            $expire = $conf['cache_d'] * 86400;
-            if (is_dir($dir)) {
-                if ($dh = opendir($dir)) {
-                    while (($file = readdir($dh)) !== false) {
-                        if ($file != '.' && $file != '..' && $file != '.htaccess' && $file != 'index.html' && is_file($dir.$file)) {
-                            $ftime = $time - filemtime($dir.$file);
-                            if ($ftime >= $expire) unlink($dir.$file);
-                        }
-                    }
-                    closedir($dh);
-                }
-            }
+            Cache::setBody(Cache::getPath('html', getPageHash(), 'html'), $cont);
         }
     }
     while (ob_get_level() > 0) ob_end_flush();
@@ -2216,41 +2200,6 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
     }
     return '';
 }
-# Browser caching
-function setCache($id=''): void {
-    header('Content-Type: text/html; charset='._CHARSET);
-    if ($id === '1') {
- global $conf;
-        $cached = (int) ($conf['cache_d'] ?? 7);
-        $max = $cached * 86400;
-        $expires = time() + $max;
-        header('Cache-Control: public, max-age='.$max);
-        header('Expires: '.gmdate('D, d M Y H:i:s', $expires).' GMT');
-        header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
-    } else {
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        header('Pragma: no-cache');
-        header('Expires: '.gmdate('D, d M Y H:i:s', time() - 3600).' GMT');
-        header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
-    }
-    header('X-Powered-By: SLAED CMS');
-    header('X-Powered-CMS: SLAED CMS');
-    header('X-Content-Type-Options: nosniff');
-    header('X-Frame-Options: SAMEORIGIN');
-    header('Referrer-Policy: strict-origin-when-cross-origin');
-}
-
-# Set cached script file
-function setScript(): void {
-    header('Content-type: text/javascript');
-    readfile(CACHE_DIR.'/'.md5(getTheme().'script').'.txt');
-}
-
-# Set cached CSS file
-function setCss(): void {
-    header('Content-type: text/css');
-    readfile(CACHE_DIR.'/'.md5(getTheme().'style').'.txt');
-}
 
 # Load configuration file or directory and return chmod warning if needed
 function checkPerms(string $fp): string {
@@ -2374,16 +2323,22 @@ function getAssetFiles(array $entries, string $ext): array {
 
 # Definition and processing of header scripts files
 function doScript(): string {
- global $theme, $conf, $tpl;
+    global $theme, $conf, $tpl;
     $async = ($conf['script_a']) ? 'async ' : '';
-    $sfile = CACHE_DIR.'/'.md5($theme.'script').'.txt';
     $entries = explode(',', $conf['script_f']);
     $entries = is_array($entries) ? $entries : [];
     $array = array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'));
     $array = array_values(array_unique($array));
+    $arr = [];
+    $cont = '';
     if (!defined('ADMIN_FILE')) {
-        if ($conf['cache_script'] && file_exists($sfile) && filesize($sfile) != 0 && (time() - $conf['cache_t']) < filemtime($sfile)) {
-            $cont = ($conf['script_h']) ? file_get_contents($sfile) : $tpl->getHtmlFrag('head-script-src', ['src' => 'index.php?go=script', 'attr' => trim($async)]);
+        $mtimes = array_map(fn($file) => is_file($file) ? filemtime($file) : 0, $array);
+        $bits = array_merge(['assets-v1', $theme, 'js'], $array, $mtimes, [$conf['script_c'], $conf['script_h'], $conf['script_a']]);
+        $hash = Cache::getHash($bits);
+        $sfile = Cache::getPath('assets', $hash, 'js');
+        $route = 'index.php?go=asset&file='.$hash.'&type=js';
+        if ($conf['cache_script'] && Cache::isFresh($sfile, $conf['cache_t'])) {
+            $cont = ($conf['script_h']) ? Cache::getBody($sfile) : $tpl->getHtmlFrag('head-script-src', ['src' => $route, 'attr' => trim($async)]);
         } else {
             foreach ($array as $file) {
                 if (file_exists($file)) {
@@ -2397,8 +2352,8 @@ function doScript(): string {
             }
             $cont = ($conf['script_h']) ? $tpl->getHtmlFrag('head-script-inline', ['js' => implode(' ', $arr)]) : (($conf['cache_script']) ? implode(' ', $arr) : implode("\n", $arr));
             if ($conf['cache_script']) {
-                file_put_contents($sfile, $cont);
-                $cont = (file_exists($sfile) && !$conf['script_h']) ? $tpl->getHtmlFrag('head-script-src', ['src' => 'index.php?go=script', 'attr' => trim($async)]) : $cont;
+                Cache::setBody($sfile, $cont);
+                $cont = (is_file($sfile) && !$conf['script_h']) ? $tpl->getHtmlFrag('head-script-src', ['src' => $route, 'attr' => trim($async)]) : $cont;
             }
         }
         if (file_exists(CONFIG_DIR.'/header.php')) {
@@ -2419,61 +2374,63 @@ function doScript(): string {
 
 # Definition and processing of CSS files
 function doCss(): string {
- global $theme, $conf, $tpl;
+    global $theme, $conf, $tpl;
     $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
     $array = array_merge(
         getAssetFiles(is_array($entries) ? $entries : [], 'css'),
         getThemeAssets($theme, 'css')
     );
     $array = array_values(array_unique($array));
-    if (is_array($array)) {
-        if (!defined('ADMIN_FILE')) {
-            $cfile = CACHE_DIR.'/'.md5($theme.'style').'.txt';
-            $bundle = !empty($conf['cache_css']) || !empty($conf['css_h']);
-            if ($bundle && file_exists($cfile) && filesize($cfile) != 0 && (time() - $conf['cache_t']) < filemtime($cfile)) {
-                $cont = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'index.php?go=css', 'type' => '', 'title' => '']);
-            } else {
-                foreach ($array as $file) {
-                    if (file_exists($file)) {
-                        if ($bundle) {
-                            $dir = rtrim(str_replace('\\', '/', dirname($file)), '/').'/';
-                            $cont = file_get_contents($file);
-                            $cont = preg_replace_callback(
-                                '#url\((\'|"|)((?!data:|https?:|//|/).*?)(\'|"|)\)#i',
-                                function(array $m) use ($dir): string {
-                                    $parts = explode('/', $dir.$m[2]);
-                                    $out = [];
-                                    foreach ($parts as $part) {
-                                        if ($part === '..') array_pop($out);
-                                        elseif ($part !== '' && $part !== '.') $out[] = $part;
-                                    }
-                                    return 'url('.$m[1].implode('/', $out).$m[3].')';
-                                },
-                                $cont
-                            );
-                            if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
-                            $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
-                        } else {
-                            $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
-                        }
-                    }
-                }
-                $cont = $bundle ? implode(' ', $arr) : implode("\n", $arr);
-                if ($bundle) {
-                    file_put_contents($cfile, $cont);
-                    $cont = file_exists($cfile) ? $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'index.php?go=css', 'type' => '', 'title' => '']) : '';
-                }
-            }
+    $arr = [];
+    $cont = '';
+    if (!defined('ADMIN_FILE')) {
+        $bundle = !empty($conf['cache_css']) || !empty($conf['css_h']);
+        $mtimes = array_map(fn($file) => is_file($file) ? filemtime($file) : 0, $array);
+        $bits = array_merge(['assets-v1', $theme, 'css'], $array, $mtimes, [$conf['css_c'], $conf['css_h'], $conf['css_e']]);
+        $hash = Cache::getHash($bits);
+        $cfile = Cache::getPath('assets', $hash, 'css');
+        $route = 'index.php?go=asset&file='.$hash.'&type=css';
+        if ($bundle && Cache::isFresh($cfile, $conf['cache_t'])) {
+            $cont = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $route, 'type' => '', 'title' => '']);
         } else {
             foreach ($array as $file) {
                 if (file_exists($file)) {
-                    $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
+                    if ($bundle) {
+                        $dir = rtrim(str_replace('\\', '/', dirname($file)), '/').'/';
+                        $cont = file_get_contents($file);
+                        $cont = preg_replace_callback(
+                            '#url\((\'|"|)((?!data:|https?:|//|/).*?)(\'|"|)\)#i',
+                            function(array $m) use ($dir): string {
+                                $parts = explode('/', $dir.$m[2]);
+                                $out = [];
+                                foreach ($parts as $part) {
+                                    if ($part === '..') array_pop($out);
+                                    elseif ($part !== '' && $part !== '.') $out[] = $part;
+                                }
+                                return 'url('.$m[1].implode('/', $out).$m[3].')';
+                            },
+                            $cont
+                        );
+                        if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
+                        $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
+                    } else {
+                        $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
+                    }
                 }
             }
-            $cont = implode("\n", $arr);
+            $cont = $bundle ? implode(' ', $arr) : implode("\n", $arr);
+            if ($bundle) {
+                Cache::setBody($cfile, $cont);
+                $cont = is_file($cfile) ? $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $route, 'type' => '', 'title' => '']) : '';
+            }
         }
     } else {
-        $cont = '';
+        foreach ($array as $file) {
+            if (file_exists($file)) {
+                $arr[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $file, 'type' => '', 'title' => '']);
+            }
+        }
+        $cont = implode("\n", $arr);
     }
     return $cont;
 }
