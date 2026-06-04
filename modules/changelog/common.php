@@ -274,7 +274,7 @@ function chlogBuildExport(array $commits, string $format): string {
 }
 
 function chlogGetCache(string $key): ?array {
-    $file = CACHE_DIR.'/'.sha1($key).'.json';
+    $file = CACHE_DIR.'/changelog/'.sha1($key).'.json';
     if (!is_file($file)) return null;
 
     $json = file_get_contents($file);
@@ -292,9 +292,10 @@ function chlogGetCache(string $key): ?array {
 }
 
 function chlogSetCache(string $key, mixed $data, string $url = '', string $etag = '', string $lastmod = ''): void {
-    if (!is_dir(CACHE_DIR) && !mkdir(CACHE_DIR, 0755, true) && !is_dir(CACHE_DIR)) return;
+    $dir = CACHE_DIR.'/changelog';
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) return;
 
-    $file = CACHE_DIR.'/'.sha1($key).'.json';
+    $file = $dir.'/'.sha1($key).'.json';
     $tmpfile = $file.'.tmp';
     $ttl = CHLOG_DEFAULT_CACHE_TTL;
 
