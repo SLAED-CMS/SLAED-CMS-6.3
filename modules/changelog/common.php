@@ -7,6 +7,7 @@ const CHLOG_GIT_LOG_DELIM = '||';
 const CHLOG_COMMIT_START = 'COMMIT_START';
 const CHLOG_COMMIT_END = 'COMMIT_END';
 const CHLOG_DEFAULT_CACHE_TTL = 900;
+const CHLOG_MAX_LIMIT = 2000;
 
 function chlogEsc(string $str): string {
     return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
@@ -62,7 +63,7 @@ function chlogGetConfig(array $conf): array {
         'owner' => trim((string)($cfg['ghowner'] ?? '')),
         'repo' => trim((string)($cfg['ghrepo'] ?? '')),
         'token' => trim((string)($cfg['ghtoken'] ?? '')),
-        'limit' => chlogClamp((int)($cfg['limit'] ?? 50), 10, 500),
+        'limit' => chlogClamp((int)($cfg['limit'] ?? 50), 10, CHLOG_MAX_LIMIT),
         'perpage' => chlogClamp((int)($cfg['perpage'] ?? 10), 1, 50),
         'grpdate' => !empty($cfg['grpdate']),
         'showfile' => !empty($cfg['showfile']),
@@ -273,7 +274,7 @@ function chlogBuildExport(array $commits, string $format): string {
     return $out;
 }
 
-function chlogGetCache(string $key): ?array {
+function chlogReadCache(string $key): ?array {
     $file = CACHE_DIR.'/changelog/'.sha1($key).'.json';
     if (!is_file($file)) return null;
 
@@ -282,7 +283,14 @@ function chlogGetCache(string $key): ?array {
 
     $cache = json_decode($json, true);
     if (!$cache || !isset($cache['meta'], $cache['data'])) return null;
-    if (time() > ($cache['meta']['expires_at'] ?? 0)) return null;
+
+    return $cache;
+}
+
+function chlogGetCache(string $key): ?array {
+    $cache = chlogReadCache($key);
+    if ($cache === null) return null;
+    if (time() > (int)($cache['meta']['expires_at'] ?? 0)) return null;
 
     return [
         'data' => $cache['data'],
@@ -329,38 +337,112 @@ function chlogSetCache(string $key, mixed $data, string $url = '', string $etag 
     }
 }
 
+function chlogPlainFilters(array $filters): bool {
+    return empty($filters['author']) && empty($filters['since']) && empty($filters['until']) && (string)($filters['search'] ?? '') === '';
+}
+
+function chlogHashSet(array $commits): array {
+    $set = [];
+    foreach ($commits as $c) {
+        $hash = (string)($c['fullhash'] ?? '');
+        if ($hash !== '') $set[$hash] = true;
+    }
+    return $set;
+}
+
 function chlogGhFetch(string $owner, string $repo, array $filters, int $limit, string $token, string &$error): array {
     $cachekey = "ghfetch_$owner/$repo/$limit/".md5(json_encode($filters));
-    $cached = chlogGetCache($cachekey);
-    if ($cached !== null) return $cached['data'];
+    $wanted = chlogClamp($limit, 1, CHLOG_MAX_LIMIT);
+    $raw = chlogReadCache($cachekey);
 
+    if ($raw !== null && time() <= (int)($raw['meta']['expires_at'] ?? 0)) return $raw['data'];
+    if ($raw !== null && !empty($raw['data']) && chlogPlainFilters($filters)) {
+        return chlogGhRefresh($owner, $repo, $filters, $wanted, $token, $cachekey, $raw, $error);
+    }
+
+    return chlogGhRebuild($owner, $repo, $filters, $wanted, $token, $cachekey, $error);
+}
+
+function chlogGhRebuild(string $owner, string $repo, array $filters, int $wanted, string $token, string $cachekey, string &$error): array {
     $allcom = [];
-    $wanted = chlogClamp($limit, 1, 500);
+    $maxpages = (int)ceil($wanted / 100);
+    $etag = '';
     $page = 1;
 
-    while (count($allcom) < $wanted && $page <= 10) {
+    while (count($allcom) < $wanted && $page <= $maxpages) {
         $perpage = min(100, $wanted - count($allcom));
-        $commits = chlogGhPage($owner, $repo, $filters, $perpage, $page, $token, $error);
+        $resp = chlogGhRequest(chlogGhUrl($owner, $repo, $filters, $perpage, $page), $token, '', $error);
+        if ($error !== '' || $resp === []) break;
+        if ($page === 1) $etag = (string)$resp['etag'];
+        $commits = chlogGhResult($resp, $filters, $error);
         if (empty($commits)) break;
         $allcom = array_merge($allcom, $commits);
         $page++;
     }
 
-    chlogSetCache($cachekey, $allcom, "https://api.github.com/repos/$owner/$repo/commits");
+    if ($allcom !== [] || $error === '') {
+        chlogSetCache($cachekey, $allcom, "https://api.github.com/repos/$owner/$repo/commits", $etag);
+    }
     return $allcom;
 }
 
-function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, int $page, string $token, string &$error): array {
+function chlogGhRefresh(string $owner, string $repo, array $filters, int $wanted, string $token, string $cachekey, array $raw, string &$error): array {
+    $base = "https://api.github.com/repos/$owner/$repo/commits";
+    $etag = (string)($raw['meta']['etag'] ?? '');
+    $resp = chlogGhRequest(chlogGhUrl($owner, $repo, $filters, min(100, $wanted), 1), $token, $etag, $error);
+    if ($error !== '' || $resp === []) return $raw['data'];
+
+    if ((int)$resp['code'] === 304) {
+        chlogSetCache($cachekey, $raw['data'], $base, $etag);
+        return $raw['data'];
+    }
+
+    $first = chlogGhResult($resp, $filters, $error);
+    if ($error !== '' || $first === []) return $raw['data'];
+
+    $known = chlogHashSet($raw['data']);
+    $fresh = chlogGhCollectNew($owner, $repo, $filters, $wanted, $token, $first, $known, $error);
+    $merged = array_slice(array_merge($fresh, $raw['data']), 0, $wanted);
+    chlogSetCache($cachekey, $merged, $base, (string)$resp['etag']);
+    return $merged;
+}
+
+function chlogGhCollectNew(string $owner, string $repo, array $filters, int $wanted, string $token, array $first, array $known, string &$error): array {
+    $fresh = [];
+    $maxpages = (int)ceil($wanted / 100);
+    $cur = $first;
+    $page = 1;
+
+    while ($cur !== []) {
+        foreach ($cur as $c) {
+            if (isset($known[(string)($c['fullhash'] ?? '')])) return $fresh;
+            $fresh[] = $c;
+            if (count($fresh) >= $wanted) return $fresh;
+        }
+        $page++;
+        if ($page > $maxpages) break;
+        $cur = chlogGhPage($owner, $repo, $filters, 100, $page, $token, $error);
+        if ($error !== '') break;
+    }
+
+    return $fresh;
+}
+
+function chlogGhUrl(string $owner, string $repo, array $filters, int $perpage, int $page): string {
     $url = "https://api.github.com/repos/$owner/$repo/commits?per_page=$perpage&page=$page";
     if (!empty($filters['author'])) $url .= '&author='.urlencode($filters['author']);
     if (!empty($filters['since']) && chlogValdate($filters['since'])) $url .= '&since='.urlencode($filters['since'].'T00:00:00Z');
     if (!empty($filters['until']) && chlogValdate($filters['until'])) $url .= '&until='.urlencode($filters['until'].'T23:59:59Z');
+    return $url;
+}
 
+function chlogGhRequest(string $url, string $token, string $etag, string &$error): array {
     $headers = [
         'User-Agent: SLAED-CMS-Changelog',
         'Accept: application/vnd.github.v3+json'
     ];
     if ($token !== '') $headers[] = 'Authorization: token '.$token;
+    if ($etag !== '') $headers[] = 'If-None-Match: '.$etag;
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -371,8 +453,8 @@ function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, 
     curl_setopt($ch, CURLOPT_HEADER, true);
 
     $response = curl_exec($ch);
-    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $headerz = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $hsize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
     curl_close($ch);
 
     if ($response === false) {
@@ -380,21 +462,28 @@ function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, 
         return [];
     }
 
-    $header = substr($response, 0, $headerz);
-    $body = substr($response, $headerz);
+    $head = substr($response, 0, $hsize);
+    $tag = preg_match('/^ETag:\s*(.+)$/im', $head, $m) ? trim($m[1]) : '';
+    return ['code' => $code, 'etag' => $tag, 'head' => $head, 'body' => substr($response, $hsize)];
+}
 
-    if ($httpcode !== 200) {
+function chlogGhResult(array $resp, array $filters, string &$error): array {
+    $code = (int)($resp['code'] ?? 0);
+    $body = (string)($resp['body'] ?? '');
+    $head = (string)($resp['head'] ?? '');
+
+    if ($code !== 200) {
         $errdata = json_decode($body, true);
         if (defined('_CHLOG_ERR_GH_API')) {
             $msg = $errdata['message'] ?? '';
-            $error = trim(sprintf(_CHLOG_ERR_GH_API, $httpcode).' '.chlogEsc((string)$msg));
+            $error = trim(sprintf(_CHLOG_ERR_GH_API, $code).' '.chlogEsc((string)$msg));
         } else {
-            $error = 'GitHub API Fehler: HTTP Status '.$httpcode.'.';
-            if ($httpcode === 403) {
-                if (preg_match('/X-RateLimit-Remaining: (\d+)/i', $header, $m)) {
+            $error = 'GitHub API Fehler: HTTP Status '.$code.'.';
+            if ($code === 403) {
+                if (preg_match('/X-RateLimit-Remaining: (\d+)/i', $head, $m)) {
                     $error .= ' Rate Limit verbleibend: '.$m[1].'.';
                 }
-                if (preg_match('/X-RateLimit-Reset: (\d+)/i', $header, $m)) {
+                if (preg_match('/X-RateLimit-Reset: (\d+)/i', $head, $m)) {
                     $error .= ' Reset um: '.date('H:i:s', intval($m[1])).'.';
                 }
             }
@@ -414,6 +503,12 @@ function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, 
     }
 
     return chlogGhParse($data, $filters);
+}
+
+function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, int $page, string $token, string &$error): array {
+    $resp = chlogGhRequest(chlogGhUrl($owner, $repo, $filters, $perpage, $page), $token, '', $error);
+    if ($error !== '' || $resp === []) return [];
+    return chlogGhResult($resp, $filters, $error);
 }
 
 function chlogGhParse(array $data, array $filters): array {
@@ -475,7 +570,7 @@ function chlogGitFetch(string $gitdir, array $filters, int $limit, string &$erro
     if (!empty($filters['until']) && chlogValdate($filters['until'])) $gitfilt .= ' --until='.escapeshellarg($filters['until']);
     if (!empty($filters['file'])) $gitfilt .= ' -- '.escapeshellarg($filters['file']);
 
-    $limit = chlogClamp($limit, 1, 500);
+    $limit = chlogClamp($limit, 1, CHLOG_MAX_LIMIT);
     $format = CHLOG_COMMIT_START.CHLOG_GIT_LOG_DELIM.'%H'.CHLOG_GIT_LOG_DELIM.'%h'.CHLOG_GIT_LOG_DELIM;
     $format .= '%ad'.CHLOG_GIT_LOG_DELIM.'%an'.CHLOG_GIT_LOG_DELIM.'%ae'.CHLOG_GIT_LOG_DELIM;
     $format .= '%s'.CHLOG_GIT_LOG_DELIM.'%b'.CHLOG_GIT_LOG_DELIM.CHLOG_COMMIT_END;

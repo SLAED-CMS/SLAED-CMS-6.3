@@ -127,7 +127,7 @@ function config(): void {
         ],
         [
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CHLOG_LIMIT, 'hint' => _CHLOG_STATS_TITLE]),
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50), 'is_config' => true, 'input_attr' => ' min="10" max="500"']),
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'limit', 'value_attr' => (string)($conf['changelog']['limit'] ?? 50), 'is_config' => true, 'input_attr' => ' min="10" max="'.CHLOG_MAX_LIMIT.'"']),
         ],
         ['label_html' => _CHLOG_PER_PAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'perpage', 'value_attr' => (string)($conf['changelog']['perpage'] ?? 10), 'is_config' => true, 'input_attr' => ' min="5" max="50"'])],
         ['label_html' => _CHLOG_CACHE_TTL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'cachettl', 'value_attr' => (string)($conf['changelog']['cachettl'] ?? 900), 'is_config' => true, 'input_attr' => ' min="0" max="3600"'])],
@@ -159,7 +159,7 @@ function configsave(): void {
             'ghowner' => trim(getVar('post', 'ghowner', 'text', '')),
             'ghrepo' => trim(getVar('post', 'ghrepo', 'text', '')),
             'ghtoken' => trim(getVar('post', 'ghtoken', 'text', '')),
-            'limit' => chlogClamp(getVar('post', 'limit', 'num', 50), 10, 500),
+            'limit' => chlogClamp(getVar('post', 'limit', 'num', 50), 10, CHLOG_MAX_LIMIT),
             'perpage' => chlogClamp(getVar('post', 'perpage', 'num', 10), 5, 50),
             'cachettl' => chlogClamp(getVar('post', 'cachettl', 'num', 900), 0, 3600),
             'grpdate' => getVar('post', 'grpdate', 'num', 0),
