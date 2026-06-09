@@ -1,6 +1,7 @@
+{% if items_html or trigger_label or editor_label or editor or view_link or edit_link or edit_href or delete_link or delete_href %}
 <nav class="sl-menu">
   <ul>
-    <li>
+    <li class="sl-float">
       <span
         class="sl-row-actions-trigger"
         title="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}"
@@ -8,7 +9,7 @@
         role="button"
         tabindex="0"
       ><i class="bi bi-menu-button-wide-fill" aria-hidden="true"></i></span>
-      <ul>
+      <ul class="sl-float-panel">
         {% if items_html %}
           {{{ items_html }}}
         {% else %}
@@ -29,3 +30,25 @@
     </li>
   </ul>
 </nav>
+{% else %}
+{% if content_html %}
+<nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">{{{ content_html }}}</div></nav>
+{% endif %}
+{% if content %}
+<nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">{{{ content }}}</div></nav>
+{% endif %}
+{% if items %}
+<nav class="sl-float sl-tip" tabindex="0">
+  <i class="bi bi-info-circle-fill"></i>
+  <div class="sl-float-panel">
+    <dl>
+      {% for item in items %}
+      <dt>{{ item.label }}</dt>
+      <dd>{% if item.has_value_text %}{{ item.value_text }}{% else %}{{{ item.value }}}{% endif %}</dd>
+      {% endfor %}
+    </dl>
+  </div>
+</nav>
+{% endif %}
+{% if label_text %}<span class="sl-note">{{ label_text }}</span>{% endif %}
+{% endif %}

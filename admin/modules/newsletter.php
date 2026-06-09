@@ -20,7 +20,7 @@ function newsletter(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$id],
-                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $title, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'items' => [
                             ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                             ['label' => _TIMENL, 'value' => getDuration($sendtime), 'is_last' => true],
@@ -30,7 +30,7 @@ function newsletter(): void {
                     ])],
                     ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $sended.' '._NLUSER],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $afile.'.php?name=newsletter&amp;op=add&amp;id='.$id,

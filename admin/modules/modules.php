@@ -129,7 +129,7 @@ function modules(): void {
         }
         $typel = ($type == 0) ? 'tools' : 'people-fill';
         $titlel = ($menu == 0)
-            ? $tpl->getHtmlFrag('info-tooltip', [
+            ? $tpl->getHtmlFrag('popover', [
                 'items' => [
                     ['label' => _INFO, 'value' => _NO_SICHT, 'is_last' => true],
                 ],
@@ -186,7 +186,7 @@ function modules(): void {
                 ['content_html' => $who_view],
                 ['content_html' => $group_name],
                 ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ],
         ])]);
         $a++;

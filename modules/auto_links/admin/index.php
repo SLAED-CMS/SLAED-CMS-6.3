@@ -50,7 +50,7 @@ function auto_links(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['is_col_id' => true, 'content_html' => (string)$id],
-                        ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('popover', [
                             'items' => [
                                 ['label' => _REG, 'value' => format_time($added, _TIMESTRING), 'is_last' => true],
                             ],
@@ -60,7 +60,7 @@ function auto_links(): void {
                         ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url)],
                         ['is_col_count' => true, 'content_html' => (string)$hits],
                         ['is_col_count' => true, 'content_html' => (string)$outs],
-                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => $items,
                         ])],
@@ -197,7 +197,7 @@ function stats(): void {
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['is_col_id' => true, 'content_html' => (string)$item[0]],
-                        ['is_truncate' => true, 'title_text' => (string)$item[2], 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['is_truncate' => true, 'title_text' => (string)$item[2], 'content_html' => $tpl->getHtmlFrag('popover', [
                             'items' => [
                                 ['label' => _DATE, 'value' => date(_TIMESTRING, $item[6]), 'is_last' => true],
                             ],

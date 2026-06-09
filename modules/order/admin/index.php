@@ -26,7 +26,7 @@ function order(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$id],
-                    ['is_truncate' => true, 'title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $email, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'items' => [
                             ['label' => _COMMENT, 'value' => (string)$note],
                             ['label' => _BROWSER, 'value' => (string)$agent, 'is_last' => true],
@@ -41,7 +41,7 @@ function order(): void {
                     ['content_html' => Geoip::getIpHtml($ip)],
                     ['is_col_date' => true, 'content_html' => format_time($date, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $status)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
                         ['href' => $afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
                         ['href' => $afile.'.php?name=order&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                         [

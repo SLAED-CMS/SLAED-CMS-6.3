@@ -156,7 +156,7 @@ function comments(): void {
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
-                    ['is_truncate' => true, 'title_text' => $comment, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $comment, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'items' => [
                             ['label' => _MODUL, 'value' => $modlabel],
                             ['label' => 'CID', 'value' => (string)$cid],
@@ -169,7 +169,7 @@ function comments(): void {
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $com_status)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
                 ],
             ])]);

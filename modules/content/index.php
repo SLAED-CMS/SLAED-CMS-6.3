@@ -42,7 +42,7 @@ function content(): void {
                     'confirm_text' => $ask,
                     'is_delete' => true,
                 ]);
-                $menu = $tpl->getHtmlFrag('editor-action-menu', [
+                $menu = $tpl->getHtmlFrag('popover', [
                     'editor_label' => _EDITOR,
                     'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $edit]).$tpl->getHtmlFrag('list-item', ['content_html' => $delete]),
                 ]);

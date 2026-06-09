@@ -91,12 +91,12 @@ function scheduler(): void {
         }
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$title],
+                ['is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$title],
                 ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$nextr],
                 ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
                 ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
                 ['is_col_status' => true, 'content_html' => ((int)$isactive === 1) ? _YES : _NO],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _EDITOR, 'items' => $acts])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _EDITOR, 'items' => $acts])],
             ],
         ])]);
     }

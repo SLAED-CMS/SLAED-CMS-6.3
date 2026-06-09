@@ -652,7 +652,7 @@ function getTplTitleTip(mixed $data): string {
             'is_last' => $idx === $last,
         ];
     }
-    return $tpl->getHtmlFrag('info-tooltip', ['items' => $items]);
+    return $tpl->getHtmlFrag('popover', ['items' => $items]);
 }
 
 # Build the five star states from a 0-100 fill width, rounded to half stars

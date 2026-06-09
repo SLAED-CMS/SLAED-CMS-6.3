@@ -175,11 +175,11 @@ function clients(): void {
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$cid],
                     ['content_html' => $nick],
-                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
+                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
                     ['is_truncate' => true, 'title_text' => domain($cwebsite), 'content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
                     ['is_col_date' => true, 'content_html' => $cenddate],
                     ['is_col_status' => true, 'content_html' => ad_status('', $cactive)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
             $a++;
@@ -473,13 +473,13 @@ function products(): void {
                 'cells' => [
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
                     ['is_col_id' => true, 'content_html' => (string)$pid],
-                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                    ['is_truncate' => true, 'title_text' => (string)$ptitle, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
                         ['label' => _CATEGORY, 'has_value_text' => true, 'value_text' => (string)$ctitle, 'is_last' => false],
                         ['label' => _DATE, 'value' => format_time($ptime ?? '', _TIMESTRING), 'is_last' => true],
                     ]]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
                     ['is_col_count' => true, 'content_html' => $pprice.' '.$conf['shop']['valute']],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }
@@ -789,7 +789,7 @@ function partners(): void {
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$paid],
-                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('popover', ['items' => [
                         ['label' => _CLIENTNAME, 'has_value_text' => true, 'value_text' => (string)$paname, 'is_last' => false],
                         ['label' => _CLIENTADRES, 'has_value_text' => true, 'value_text' => (string)$paaddr, 'is_last' => false],
                         ['label' => _CLIENTPHONE, 'has_value_text' => true, 'value_text' => (string)$paphone, 'is_last' => false],
@@ -799,7 +799,7 @@ function partners(): void {
                     ['is_col_date' => true, 'content_html' => date(_TIMESTRING, $paregdate)],
                     ['is_col_count' => true, 'content_html' => $parest.' '.$conf['shop']['valute']],
                     ['is_col_count' => true, 'content_html' => $pabek.' '.$conf['shop']['valute']],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                 ],
             ])]);
         }

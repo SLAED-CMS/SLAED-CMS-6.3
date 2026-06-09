@@ -112,7 +112,7 @@ function voting(): void {
             ]);
             $cells = [
                 ['is_col_id' => true, 'content_html' => (string)$id],
-                ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                ['is_col_title' => true, 'is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => [
                     ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
                     ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
                     ['label' => _TYPE, 'value' => $type, 'is_last' => true],
@@ -123,7 +123,7 @@ function voting(): void {
             }
             $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
             $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $active)];
-            $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
+            $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         }
         $head[1]['is_truncate'] = true;

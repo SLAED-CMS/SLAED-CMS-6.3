@@ -67,13 +67,13 @@ function admins(): void {
         $lang = $lang ? getLangName($lang) : _ALL;
         $mods = filterAdminmods(getAdminModuleNames((string)$mods));
         $stat = ((int)$super === 1) ? 2 : ($mods ? 1 : 0);
-        $tip = $tpl->getHtmlFrag('info-tooltip', [
+        $tip = $tpl->getHtmlFrag('popover', [
             'items' => [
                 ['label' => _REG, 'value' => format_time((string)$rdate, _TIMESTRING), 'is_last' => false],
                 ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING), 'is_last' => true],
             ],
         ]);
-        $acts = $tpl->getHtmlFrag('row-actions', [
+        $acts = $tpl->getHtmlFrag('popover', [
             'trigger_label' => _EDITOR,
             'items' => [
                 [
@@ -161,7 +161,7 @@ function add(): void {
             'is_checked' => in_array($mod, $mods, true),
             'name_attr' => 'modules[]',
             'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('info-tooltip', [
+            'label_html' => $tpl->getHtmlFrag('popover', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),

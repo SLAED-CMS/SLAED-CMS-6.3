@@ -98,7 +98,7 @@ function add(): void {
         $items .= $tpl->getHtmlFrag('checkbox', [
             'name_attr' => 'blockwhere[]',
             'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('info-tooltip', [
+            'label_html' => $tpl->getHtmlFrag('popover', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),
@@ -548,7 +548,7 @@ function edit(): void {
             'is_checked' => in_array($mod, $where),
             'name_attr' => 'blockwhere[]',
             'value_attr' => $mod,
-            'label_html' => $tpl->getHtmlFrag('info-tooltip', [
+            'label_html' => $tpl->getHtmlFrag('popover', [
                 'label_text' => getModuleName($mod),
                 'title_text' => _MODUL.': '.$mod,
             ]),

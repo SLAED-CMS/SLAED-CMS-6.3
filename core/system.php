@@ -2824,7 +2824,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
         ];
-        $admin = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $links))]);
+        $admin = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $links))]);
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true]) : '';
@@ -3848,7 +3848,7 @@ function add_menu(string $links): string {
     if ($links) {
         $items = explode('||', $links);
         $html = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $v]) : '', $items));
-        return $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => (string)_EDITOR, 'items_html' => $html]);
+        return $tpl->getHtmlFrag('popover', ['editor_label' => (string)_EDITOR, 'items_html' => $html]);
     }
     return '';
 }
@@ -5090,7 +5090,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                         ['href' => $afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), 'title' => $acttxt, 'label' => $acttxt],
                         ['href' => $afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), 'title' => _ONDELETE, 'label' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'&quot;?\');"'],
                     ];
-                    $edit = $tpl->getHtmlFrag('row-actions', ['editor_label' => _EDITOR, 'items' => $items]);
+                    $edit = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items' => $items]);
                 } else {
                     $items = [
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
@@ -5098,7 +5098,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE]),
                     ];
                     $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-                    $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
+                    $edit = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
                 }
             } else {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
@@ -5106,7 +5106,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $items = [
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
                     ];
-                    $edit = $tpl->getHtmlFrag('editor-action-menu', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
+                    $edit = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
                 } else {
                     $edit = '';
                 }
@@ -5127,7 +5127,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             } else {
                 $checkb = '';
             }
-            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('info-tooltip', [
+            $metatip = (defined('ADMIN_FILE')) ? $tpl->getHtmlFrag('popover', [
                 'items' => [
                     ['label' => _DATE, 'value' => $date, 'is_last' => false],
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],

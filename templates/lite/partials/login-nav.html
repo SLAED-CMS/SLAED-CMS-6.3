@@ -1,7 +1,7 @@
 <ul class="sl-login-top sl-login-top--head">
-  <li class="sl-login-dropdown">
-    <a href="#" data-sl-toggle-control="a-form" data-sl-toggle-effect="puff" data-sl-toggle-duration="500" class="sl-login-toggle"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><b>{{ login }}</b></a>
-    <form id="a-form" action="index.php?name=account" method="post" class="sl-login-dropdown-form">
+  <li class="sl-login-dropdown sl-float" data-sl-float-event="click">
+    <a href="#" data-sl-toggle-control="a-form" class="sl-login-toggle"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><b>{{ login }}</b></a>
+    <form id="a-form" action="index.php?name=account" method="post" class="sl-login-dropdown-form sl-float-panel">
       <ul class="sl-login-form">
         <li>
           <input type="{{ name_field.itype }}" name="{{ name_field.name_attr }}" value="{{ name_field.value_attr }}" class="sl-field sl-login-field" maxlength="{{ name_field.maxlength_num }}" placeholder="{{ name_field.placeholder_text }}" autocomplete="username" required>

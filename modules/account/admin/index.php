@@ -108,14 +108,14 @@ function account(): void {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
-                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['is_truncate' => true, 'title_text' => $name, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'items' => $titleitems,
                         'title_text' => $name,
                     ]).filterTextHighlight($name, $chng)],
                     ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(Geoip::getIpHtml($ip), $chng)],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
                     ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [
                             [
@@ -556,7 +556,7 @@ function newuser(): void {
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => $mail],
                     ['content_html' => $pass],
                     ['is_col_date' => true, 'content_html' => $reg],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [
                             [

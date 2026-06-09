@@ -33,7 +33,7 @@ function content(): void {
                     'is_delete' => true,
                 ],
             ]);
-            $tip = $tpl->getHtmlFrag('info-tooltip', [
+            $tip = $tpl->getHtmlFrag('popover', [
                 'items' => [
                     ['label' => _URL, 'value' => $conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id, 'is_last' => false],
                     ['label' => _ORTYPEURL, 'value' => $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, 'is_last' => true],

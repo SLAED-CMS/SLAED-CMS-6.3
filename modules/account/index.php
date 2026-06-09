@@ -424,7 +424,7 @@ function view(): void {
                 $text[] = last($uid, 'pages');
             }
             $tabs = getNaviTabs(0, 'tab', $title, $text);
-            $acts = isAdmin() ? $tpl->getHtmlFrag('editor-action-menu', [
+            $acts = isAdmin() ? $tpl->getHtmlFrag('popover', [
                 'editor_label' => _EDITOR,
                 'items_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_add&amp;id='.$uid, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
                     .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw, 'confirm_text' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?', 'title' => _BANIPSENDER, 'label' => _BANIPSENDER, 'is_delete' => true])

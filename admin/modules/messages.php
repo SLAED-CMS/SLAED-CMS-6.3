@@ -38,7 +38,7 @@ function messages(): void {
                     ['content_html' => $mview],
                     ['content_html' => getLangName($lang)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.($active ? '0' : '1').'&amp;token='.getSiteToken(),

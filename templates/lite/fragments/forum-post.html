@@ -18,9 +18,9 @@
         <div class="sl-fp-moder">{{{ btn_personal }}}{{{ btn_pm }}}{{{ btn_profile }}}{{{ btn_web }}}{{{ btn_warn }}}{{{ btn_thank }}}{{{ btn_reply }}}</div>
       </div>
       <div class="sl-fp-left">
-        <div class="sl-fp-nickname sl-dropdown sl-dropup">
-          <a href="#" data-sl-toggle-control="{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"><b>{{ username }}</b></a>
-          <div id="{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}" class="sl-dropdown-form">
+        <div class="sl-fp-nickname sl-dropdown sl-dropup sl-float" data-sl-float-event="click">
+          <a href="#" data-sl-toggle-control="{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}"><b>{{ username }}</b></a>
+          <div id="{% if dropdown_id %}{{ dropdown_id }}{% else %}f-form-{{ id }}{% endif %}" class="sl-dropdown-form sl-float-panel">
             <ul class="sl-list-text">
               <li>{{{ group }}}</li>
               <li>{{ points }}</li>

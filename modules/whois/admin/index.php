@@ -61,12 +61,12 @@ function whois(): void {
                 ['is_truncate' => true, 'title_text' => $domain, 'content_html' => $domain.' '.ad_status('', $statusDomain)],
                 ['is_truncate' => true, 'title_text' => $host, 'content_html' => $host.' '.ad_status('', $statusHost)],
                 ['is_truncate' => true, 'title_text' => $dc, 'content_html' => $dc.' '.ad_status('', $statusDc)],
-                ['is_truncate' => true, 'title_text' => $postname, 'content_html' => $tpl->getHtmlFrag('info-tooltip', ['items' => [
+                ['is_truncate' => true, 'title_text' => $postname, 'content_html' => $tpl->getHtmlFrag('popover', ['items' => [
                     ['label' => _DATE, 'value' => format_time($time, _TIMESTRING), 'is_last' => false],
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
                     ['label' => _COMMENT, 'has_value_text' => true, 'value_text' => (string)$hometext, 'is_last' => true],
                 ]]).$post],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ]])]);
         }
         $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);

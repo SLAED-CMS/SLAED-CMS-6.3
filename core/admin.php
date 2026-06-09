@@ -499,7 +499,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                    ['content_html' => $tpl->getHtmlFrag('popover', [
                         'items' => $tipItems,
                         'label_text' => $title,
                         'title_text' => $title,
@@ -510,7 +510,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     ['content_html' => (string)$ordern],
                     ['content_html' => getTplMoveControls(['target' => 'ajax_cat', 'up' => $mup, 'down' => $mdn])],
                     ['content_html' => ad_status('', $cstatus), 'is_col_status' => true, 'attr' => 'data-sort-column-key="category-status" data-sort="'.((int)$cstatus === 1 ? '1' : '0').'"'],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _EDITOR,
                         'items' => $items,
                     ]), 'is_col_actions' => true],
@@ -683,7 +683,7 @@ function getAdminBlockList(string $token = ''): string {
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string) $bid],
-                ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                ['content_html' => $tpl->getHtmlFrag('popover', [
                     'items' => $tipItems,
                     'label_text' => getConst($title),
                     'title_text' => $title,
@@ -694,7 +694,7 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => (string) $weight],
                 ['content_html' => getTplMoveControls(['target' => 'ajax_block', 'up' => $mup, 'down' => $mdn])],
                 ['content_html' => ad_status('', $active), 'is_col_status' => true, 'attr' => 'data-sort-column-key="block-status" data-sort="'.((int)$active === 1 ? '1' : '0').'"'],
-                ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                ['content_html' => $tpl->getHtmlFrag('popover', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
                         'href' => $afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active.'&amp;token='.getSiteToken(),
@@ -816,7 +816,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                         ['content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                         ['content_html' => getModuleName($modul)],
                         ['content_html' => $uname],
-                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                        ['content_html' => $tpl->getHtmlFrag('popover', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => [[
                                 'href' => 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid,
@@ -886,12 +886,12 @@ function getAdminPrivateList(int $obj = 0): string {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
-                    ['content_html' => $tpl->getHtmlFrag('info-tooltip', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
+                    ['content_html' => $tpl->getHtmlFrag('popover', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                     ['content_html' => $unse],
                     ['content_html' => $unre],
                     ['content_html' => $date],
                     ['content_html' => ad_status('', $status, 1), 'is_col_status' => true],
-                    ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                    ['content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
                             'href' => $delhref,
@@ -1025,7 +1025,7 @@ function getAdminUploadFiles(): void {
                         ['content_html' => date(_TIMESTRING, $entry[0])],
                         ['content_html' => filterSize($filesize)],
                         ['content_html' => $isize],
-                        ['content_html' => $tpl->getHtmlFrag('row-actions', [
+                        ['content_html' => $tpl->getHtmlFrag('popover', [
                             'trigger_label' => _EDITOR,
                             'items' => $show,
                         ])],

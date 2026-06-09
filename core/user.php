@@ -301,7 +301,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
     $offset = intval($offset);
     $conf['name'] = 'account';
     $cont = '';
-    $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('editor-action-menu', [
+    $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('popover', [
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
     ]);
@@ -711,7 +711,7 @@ function getFavoriteList(int $obj = 0): string {
     $cont = $tpl->getHtmlFrag('alert', ['text' => $favinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
     if ($ffmassiv) {
         $rows = [];
-        $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('editor-action-menu', [
+        $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('popover', [
             'editor_label' => _EDITOR,
             'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
         ]);

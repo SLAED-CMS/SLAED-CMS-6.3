@@ -40,7 +40,7 @@ function security(): void {
             $title = $labels[$name] ?? $name;
             $path = LOGS_DIR.'/'.$file;
             $filesize = filesize($path);
-            $acts = $tpl->getHtmlFrag('row-actions', [
+            $acts = $tpl->getHtmlFrag('popover', [
                 'trigger_label' => _EDITOR,
                 'items' => [
                     [
@@ -61,7 +61,7 @@ function security(): void {
                     ],
                 ],
             ]);
-            $titleHtml = $tpl->getHtmlFrag('info-tooltip', [
+            $titleHtml = $tpl->getHtmlFrag('popover', [
                 'items' => [
                     ['label' => _FILE, 'value' => 'storage/logs/'.$file, 'is_last' => true],
                 ],
@@ -138,13 +138,13 @@ function banlist(): void {
                 $tcidr = getIpCidr($binfo[0]);
                 if ($tcidr === false) continue;
                 [$tip] = explode('/', $tcidr, 2);
-                $reason = $tpl->getHtmlFrag('info-tooltip', [
+                $reason = $tpl->getHtmlFrag('popover', [
                     'items' => [
                         ['label' => _IP_CIDR, 'has_value_text' => true, 'value_text' => $tcidr, 'is_last' => false],
                         ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
                     ],
                 ]).Geoip::getIpHtml($tip);
-                $acts = $tpl->getHtmlFrag('row-actions', [
+                $acts = $tpl->getHtmlFrag('popover', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
                         'href' => $afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1&amp;token='.getSiteToken(),
@@ -225,7 +225,7 @@ function banlist(): void {
         foreach ($busers as $val) {
             if ($val != '') {
                 $binfo = explode('|', $val);
-                $acts = $tpl->getHtmlFrag('row-actions', [
+                $acts = $tpl->getHtmlFrag('popover', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
                         'href' => $afile.'.php?name=security&amp;op=bansave&amp;name='.urlencode((string)$binfo[0]).'&amp;time='.(int)($binfo[1] ?? 0).'&amp;id=3&amp;token='.getSiteToken(),

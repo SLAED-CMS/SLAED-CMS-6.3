@@ -26,7 +26,7 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
             $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
         ];
-        $menu = $tpl->getHtmlFrag('editor-action-menu', [
+        $menu = $tpl->getHtmlFrag('popover', [
             'editor_label' => _EDITOR,
             'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
         ]);
@@ -263,7 +263,7 @@ function getSearchAuto(array $state): array {
                 $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
                 $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
             ];
-            $edit = $tpl->getHtmlFrag('editor-action-menu', [
+            $edit = $tpl->getHtmlFrag('popover', [
                 'editor_label' => _EDITOR,
                 'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
             ]);
@@ -301,7 +301,7 @@ function getSearchForum(array $state): array {
                 $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
                 $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
             ];
-            $edit = $tpl->getHtmlFrag('editor-action-menu', [
+            $edit = $tpl->getHtmlFrag('popover', [
                 'editor_label' => _EDITOR,
                 'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
             ]);

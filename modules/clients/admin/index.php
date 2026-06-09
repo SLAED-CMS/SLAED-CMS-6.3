@@ -37,7 +37,7 @@ function clients(): void {
                             'label' => $status ? _YES : _NO,
                             'title' => _STATUS,
                         ])],
-                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => [
                                 [

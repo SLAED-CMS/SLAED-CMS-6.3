@@ -293,7 +293,7 @@ function database(): void {
 
         } else {
             // Default view with actions
-            $stattag = $tpl->getHtmlFrag('row-actions', [
+            $stattag = $tpl->getHtmlFrag('popover', [
                 'trigger_label' => _EDITOR,
                 'items' => [[
                     'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1&amp;token='.getSiteToken(),

@@ -86,13 +86,13 @@ function referers(): void {
                 $words = engines_word($massiv[$i][4]) ?: _NO;
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
-                        ['content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['content_html' => $tpl->getHtmlFrag('popover', [
                             'label_text' => $massiv[$i][3],
                             'title_text' => _NICKNAME.': '.$name.' | '._DATE.': '.format_time($massiv[$i][6], _TIMESTRING),
                         ])],
                         ['is_truncate' => true, 'title_text' => domain($massiv[$i][5]), 'content_html' => domain($massiv[$i][5], 30)],
                         ['is_truncate' => true, 'title_text' => domain($massiv[$i][4]), 'content_html' => domain($massiv[$i][4], 30)],
-                        ['is_truncate' => true, 'title_text' => $words, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['is_truncate' => true, 'title_text' => $words, 'content_html' => $tpl->getHtmlFrag('popover', [
                             'label_text' => $words,
                             'title_text' => $words,
                         ])],

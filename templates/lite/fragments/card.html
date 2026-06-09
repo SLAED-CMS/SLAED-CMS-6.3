@@ -70,13 +70,13 @@
     {% if is_moder %}
       <nav class="sl-card-menu">
         <ul>
-          <li>
+          <li class="sl-float">
             {% if editor_span %}
               {% include 'fragments/span.html' with editor_span %}
             {% else %}
               <span class="sl-card-admin">{{ editor }}</span>
             {% endif %}
-            <ul>
+            <ul class="sl-float-panel">
               <li>
                 {% if edit_link %}
                   {% include 'fragments/link.html' with edit_link %}

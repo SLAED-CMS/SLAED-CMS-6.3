@@ -44,7 +44,7 @@ function voting(): void {
 					$tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
 					$tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$stitle.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
 				];
-				$admin = $tpl->getHtmlFrag('editor-action-menu', [
+				$admin = $tpl->getHtmlFrag('popover', [
 					'editor_label' => _EDITOR,
 					'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
 				]);

@@ -40,7 +40,7 @@ function lang(): void {
             ['content_html' => _ALL],
             ['content_html' => _MVALL],
             ['is_col_status' => true, 'content_html' => ad_status('', 1)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', [
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                 'trigger_label' => _FUNCTIONS,
                 'items' => [
                     ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
@@ -71,7 +71,7 @@ function lang(): void {
                 ['is_truncate' => true, 'title_text' => $mod[$i], 'content_html' => $mod[$i]],
                 ['content_html' => $view],
                 ['is_col_status' => true, 'content_html' => ad_status('', $act)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
             ],
         ])]);
     }

@@ -299,7 +299,7 @@ function search(): void {
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
-                ['is_truncate' => true, 'title_text' => (string)$word, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                ['is_truncate' => true, 'title_text' => (string)$word, 'content_html' => $tpl->getHtmlFrag('popover', [
                     'items' => [
                         ['label' => _MODUL, 'has_value_text' => true, 'value_text' => $mlab],
                         ['label' => _DATE, 'value' => format_time((string)$time, _TIMESTRING), 'is_last' => true],
@@ -310,7 +310,7 @@ function search(): void {
                 ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
                 ['is_col_count' => true, 'content_html' => (string)intval($hits)],
                 ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
                     ['href' => $afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
@@ -373,7 +373,7 @@ function toplist(): void {
                 ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
                 ['is_col_count' => true, 'content_html' => (string)intval($hits)],
                 ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => [
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
                     ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),

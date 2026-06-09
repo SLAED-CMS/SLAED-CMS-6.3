@@ -82,7 +82,7 @@ function money(): void {
                     'cells' => [
                         ['is_col_id' => true, 'content_html' => (string)$id],
                         ['is_col_count' => true, 'content_html' => $sum.' EUR'],
-                        ['title_text' => $email, 'content_html' => $tpl->getHtmlFrag('info-tooltip', [
+                        ['title_text' => $email, 'content_html' => $tpl->getHtmlFrag('popover', [
                             'items' => $tips,
                             'title_text' => $email,
                         ]).$tpl->getHtmlFrag('link', [
@@ -94,7 +94,7 @@ function money(): void {
                         ['class_name' => 'sl-col-ip', 'content_html' => Geoip::getIpHtml($ip)],
                         ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                         ['is_col_status' => true, 'content_html' => ad_status('', $status)],
-                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('row-actions', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
                     ],
                 ]),
             ]);
