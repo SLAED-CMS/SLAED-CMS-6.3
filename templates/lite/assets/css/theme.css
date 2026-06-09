@@ -764,8 +764,8 @@ span.sl-pnum-nav {
 .sl-menu > ul > li:hover > a {
   background-color: var(--sl-color-surface-alt);
 }
-.sl-menu ul ul,
-.sl-card-menu ul ul {
+.sl-menu .sl-float-panel,
+.sl-card-menu .sl-float-panel {
   position: absolute;
   top: 10px;
   margin-top: 30px;
@@ -779,34 +779,35 @@ span.sl-pnum-nav {
   box-shadow: var(--sl-shadow-medium);
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
 }
-.sl-menu ul ul:after,
-.sl-card-menu ul ul:after {
+.sl-menu .sl-float-panel:after,
+.sl-card-menu .sl-float-panel:after {
   content: "";
   border-bottom: 8px solid var(--sl-color-surface-dark);
   border-right: 8px solid transparent;
   border-top: 0 dotted;
   border-left: 8px solid transparent;
   position: absolute;
-  left: 15px;
+  left: var(--sl-float-arrow, 15px);
   top: -8px;
 }
-.sl-menu ul ul a,
-.sl-card-menu ul ul a {
+.sl-menu .sl-float-panel a,
+.sl-card-menu .sl-float-panel a {
   white-space: nowrap;
   display: block;
   color: var(--sl-color-on-dark);
   padding: 3px 15px;
   text-decoration: none !important;
 }
-.sl-menu ul ul a:hover,
-.sl-card-menu ul ul a:hover {
+.sl-menu .sl-float-panel a:hover,
+.sl-card-menu .sl-float-panel a:hover {
   background-color: var(--sl-color-brand-link);
 }
-.sl-menu li:hover ul,
-.sl-card-menu li:hover ul {
-  top: 0;
+.sl-menu .sl-float:hover > .sl-float-panel,
+.sl-card-menu .sl-float:hover > .sl-float-panel {
   opacity: 1;
   visibility: visible;
 }
@@ -834,6 +835,11 @@ span.sl-pnum-nav {
   transition: background-color 0.2s ease;
 }
 .sl-editor-gear .bi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
   color: inherit;
   font-size: var(--sl-icon-size-xs);
   line-height: 1;
@@ -989,11 +995,16 @@ span.sl-pnum-nav {
 .sl-card-id,
 .sl-cart-id {
   float: left;
-  border-radius: 10px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0 var(--sl-space-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: var(--sl-size-24);
+  height: var(--sl-size-24);
+  padding: 0 var(--sl-space-sm);
   margin-left: 10px;
+  border-radius: 999px;
+  white-space: nowrap;
   color: var(--sl-color-on-dark);
   font-weight: bold;
   text-decoration: none !important;
@@ -1391,7 +1402,7 @@ ol.sl-sublist-two li:hover:before {
   outline-offset: 2px;
   border-radius: 50%;
 }
-.sl-tip div {
+.sl-tip > .sl-float-panel {
   position: absolute;
   top: 100%;
   left: 0;
@@ -1413,7 +1424,9 @@ ol.sl-sublist-two li:hover:before {
   background-clip: padding-box;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.5s ease;
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s ease;
 }
 .sl-tip dl {
   display: grid;
@@ -1430,11 +1443,24 @@ ol.sl-sublist-two li:hover:before {
   margin: 0;
   min-width: 0;
 }
-.sl-tip:hover > div,
-.sl-tip:focus-within > div {
-  top: 0;
+.sl-tip:hover > .sl-float-panel,
+.sl-tip:focus-within > .sl-float-panel {
   opacity: 1;
   visibility: visible;
+}
+
+/* Floating popovers: JS-driven viewport-fixed placement (shared by tip, menu, dropdowns) */
+.sl-float.sl-is-open > .sl-float-panel {
+  position: fixed;
+  top: var(--sl-float-top);
+  left: var(--sl-float-left);
+  right: auto;
+  bottom: auto;
+  margin: 0;
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  z-index: 3000;
 }
 .sl-table-block {
   width: 100%;
@@ -2480,86 +2506,64 @@ ol.sl-sublist-two li:hover:before {
 }
 
 /* Ideas and feedback floating tabs */
+/* Side tabs: pinned to the left edge, stacked around the vertical center.
+   No transform on the blocks themselves so the feedback float panel keeps a
+   correct fixed-positioning containing block. */
 #block-idea,
 #block-feedback {
   position: fixed;
-  right: 0;
+  left: 0;
   z-index: 2005;
-  margin-top: -85px;
-  width: 34px;
 }
 #block-idea {
-  top: 475px;
-  height: 190px;
+  bottom: calc(50% + 4px);
 }
 #block-feedback {
-  top: 675px;
-  height: 170px;
+  top: calc(50% + 4px);
 }
 .sl-btn-idea,
 .sl-btn-feedback {
-  position: absolute;
-  bottom: 0;
-  width: 34px;
-  height: 34px;
-  transform: rotate(-90deg);
+  display: flex;
 }
 .sl-btn-idea b,
 .sl-btn-feedback b {
-  position: absolute;
-  border-radius: 6px 6px 0 0;
-  height: 18px;
-  line-height: 18px;
-  padding: var(--sl-space-md) 0;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  min-height: 190px;
+  padding: var(--sl-space-md) 7px;
+  border-radius: 0 8px 8px 0;
   color: var(--sl-color-on-dark);
+  font-weight: bold;
   white-space: nowrap;
   text-transform: uppercase;
+  letter-spacing: 0.4px;
   text-decoration: none !important;
+  box-shadow: var(--sl-shadow-medium);
+  transition: transform 0.18s ease;
+}
+.sl-btn-idea b:hover,
+.sl-btn-feedback b:hover,
+.sl-btn-idea:focus-visible b,
+.sl-btn-feedback:focus-visible b {
+  transform: translateX(7px);
 }
 .sl-btn-idea b {
-  width: 190px;
-  background: linear-gradient(to top, var(--sl-but-success-start) 0%, var(--sl-but-success-end) 100%);
+  background: linear-gradient(to right, var(--sl-but-success-start) 0%, var(--sl-but-success-end) 100%);
 }
 .sl-btn-feedback b {
-  width: 170px;
-  background: linear-gradient(to top, var(--sl-but-primary-start) 0%, var(--sl-but-primary-end) 100%);
+  background: linear-gradient(to right, var(--sl-but-primary-start) 0%, var(--sl-but-primary-end) 100%);
 }
-#block-feedback .sl-dropdown-form {
-  left: auto;
-  right: 36px;
-  top: 0;
-  margin: 0;
-  padding: 25px;
-  background: linear-gradient(to top, var(--sl-color-bg) 0%, var(--sl-color-surface-alt) 100%);
+/* Hover/focus: slide out to the right; a same-colour left shadow keeps the
+   screen edge covered (no see-through strip). */
+.sl-btn-idea b:hover,
+.sl-btn-idea:focus-visible b {
+  box-shadow: var(--sl-shadow-medium), -8px 0 0 0 var(--sl-but-success-start);
 }
-.sl-block-feedback-form {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  width: 410px;
-}
-.sl-bff-col2 {
-  float: left;
-  width: 170px;
-}
-.sl-bff-col1 {
-  float: left;
-  width: 225px;
-  margin-right: 15px;
-}
-.sl-block-feedback-form input,
-.sl-block-feedback-form textarea {
-  width: 100%;
-  box-sizing: border-box;
-}
-.sl-block-feedback-form input {
-  height: 30px;
-  margin-bottom: 15px;
-}
-.sl-block-feedback-form textarea {
-  height: 136px;
-  resize: none;
+.sl-btn-feedback b:hover,
+.sl-btn-feedback:focus-visible b {
+  box-shadow: var(--sl-shadow-medium), -8px 0 0 0 var(--sl-but-primary-start);
 }
 
 /* Messages: centered message box layout */
@@ -2788,8 +2792,10 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   top: 100%;
   left: 0;
   z-index: 1000;
-  display: none;
   float: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
   min-width: 180px;
   padding: 15px;
   margin: 2px 0 0;
@@ -3073,8 +3079,10 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   top: 100%;
   left: var(--sl-login-dropdown-form-left);
   z-index: 1000;
-  display: none;
   float: left;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
   width: var(--sl-login-dropdown-form-width);
   max-width: var(--sl-login-dropdown-form-max-width);
   min-width: var(--sl-login-dropdown-min-width);
@@ -3093,7 +3101,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   display: block;
   position: absolute;
   top: -9px;
-  left: 50%;
+  left: var(--sl-float-arrow, 50%);
   margin-left: -8px;
   border-bottom: 8px solid rgba(0, 0, 0, 0.15);
   border-right: 8px solid transparent;
@@ -4698,7 +4706,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
     float: none;
   }
 
-  .sl-card-menu ul ul {
+  .sl-card-menu .sl-float-panel {
     position: static;
     display: none;
     width: 100%;
@@ -4711,13 +4719,13 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
     box-shadow: none;
   }
 
-  .sl-card-menu li:hover ul,
-  .sl-card-menu li:focus-within ul {
+  .sl-card-menu .sl-float:hover > .sl-float-panel,
+  .sl-card-menu .sl-float:focus-within > .sl-float-panel {
     top: auto;
     display: block;
   }
 
-  .sl-card-menu ul ul a {
+  .sl-card-menu .sl-float-panel a {
     white-space: normal;
   }
 
@@ -4747,23 +4755,6 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 
   .sl-pnum {
     margin-bottom: var(--sl-space-md);
-  }
-
-  .sl-block-feedback-form {
-    width: 100%;
-  }
-
-  #block-feedback .sl-dropdown-form {
-    width: min(410px, calc(100vw - 24px));
-    max-width: calc(100vw - 24px);
-    box-sizing: border-box;
-  }
-
-  .sl-bff-col1,
-  .sl-bff-col2 {
-    float: none;
-    width: 100%;
-    margin-right: 0;
   }
 
 }
