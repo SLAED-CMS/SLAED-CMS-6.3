@@ -212,6 +212,16 @@
         element.classList.toggle('sl-is-open', isOpen);
         element.classList.toggle('sl-is-closed', !isOpen);
         setToggleControls(id, isOpen);
+        if (element.classList.contains('sl-float-panel')) {
+            // Float dropdowns share the sl-tip visibility model: opacity/visibility
+            // via CSS, viewport-fixed placement via placeFloat. Skip the legacy
+            // display/slide/puff path so there is no positioning jump on open/close.
+            var floatHost = element.closest('.sl-float');
+            if (floatHost) {
+                if (isOpen) placeFloat(floatHost); else clearFloatState(floatHost);
+            }
+            return;
+        }
         var display = element.getAttribute('data-sl-toggle-display') || ((element.classList.contains('sl-div-item') || element.classList.contains('sl-div-grid')) ? 'grid' : 'block');
         if (effect === 'slide') {
             setSlideMotion(element, isOpen, duration || 400);
@@ -228,7 +238,13 @@
     function setToggleBlock(id, scoped, isOpen, effect, duration) {
         var element = document.getElementById(id);
         if (!element) return;
-        var isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
+        var isHidden;
+        if (element.classList.contains('sl-float-panel')) {
+            var fh = element.closest('.sl-float');
+            isHidden = !(fh && fh.classList.contains('sl-is-open'));
+        } else {
+            isHidden = window.getComputedStyle(element).display === 'none' || element.hidden;
+        }
         var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
         setToggleBlockState(element, id, nextOpen, effect, duration);
         setToggleState(id, scoped, nextOpen ? '1' : '0');
@@ -548,19 +564,108 @@
         setProcessNext();
     };
 
+    var floatEdge = 12;
+    var floatGap = 8;
+    var floatStates = ['sl-float-left', 'sl-float-right', 'sl-float-up', 'sl-is-open'];
+
+    function clearFloatState(node) {
+        // Only drop the state classes. The panel keeps its inline fixed position
+        // so it fades out in place on close (hover and click) with no jump back
+        // to the static CSS spot.
+        for (var i = 0; i < floatStates.length; i++) node.classList.remove(floatStates[i]);
+    }
+
+    function getFloatPanel(node) {
+        return node.querySelector(':scope > .sl-float-panel');
+    }
+
+    function placeFloat(node) {
+        var panel = getFloatPanel(node);
+        if (!panel) return;
+
+        clearFloatState(node);
+        node.classList.add('sl-is-open');
+
+        // Position is written inline on the panel (both hover and click) so it
+        // overrides any tuned/id-scoped theme CSS and, crucially, survives the
+        // close transition (sl-is-open is removed, but the panel keeps these
+        // styles and just fades out in place).
+        panel.style.position = 'fixed';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+        panel.style.margin = '0';
+        panel.style.transform = 'none';
+        panel.style.zIndex = '3000';
+        panel.style.left = '-9999px';
+        panel.style.top = '-9999px';
+
+        window.requestAnimationFrame(function () {
+            var rect = panel.getBoundingClientRect();
+            var host = node.getBoundingClientRect();
+            var width = rect.width;
+            var height = rect.height;
+            var left = host.left + (host.width / 2) - (width / 2);
+            var top = host.bottom + floatGap;
+            var center = host.left + (host.width / 2);
+
+            if (left + width > window.innerWidth - floatEdge) {
+                left = Math.max(floatEdge, window.innerWidth - width - floatEdge);
+                node.classList.add('sl-float-right');
+            } else if (left < floatEdge) {
+                left = floatEdge;
+                node.classList.add('sl-float-left');
+            }
+
+            if (top + height > window.innerHeight - floatEdge && host.top > height + floatEdge) {
+                top = host.top - height - floatGap;
+                node.classList.add('sl-float-up');
+            }
+
+            var arrow = Math.max(14, Math.min(width - 14, center - left));
+            panel.style.left = left + 'px';
+            panel.style.top = top + 'px';
+            panel.style.setProperty('--sl-float-arrow', arrow + 'px');
+        });
+    }
+
+    function refitFloating() {
+        var list = document.querySelectorAll('.sl-float.sl-is-open');
+        for (var i = 0; i < list.length; i++) placeFloat(list[i]);
+    }
+
+    function setFloating(node) {
+        var root = node && node.nodeType ? node : document;
+        var list = root.querySelectorAll ? root.querySelectorAll('.sl-float:not([data-sl-float-event="click"])') : [];
+        for (var i = 0; i < list.length; i++) {
+            (function (item) {
+                if (item.getAttribute('data-sl-float-ready') === '1') return;
+                item.setAttribute('data-sl-float-ready', '1');
+                item.addEventListener('mouseenter', function () { placeFloat(item); });
+                item.addEventListener('focusin', function () { placeFloat(item); });
+                item.addEventListener('mouseleave', function () { clearFloatState(item); });
+                item.addEventListener('focusout', function () { clearFloatState(item); });
+            }(list[i]));
+        }
+    }
+
     function setSlaedUi() {
         setTableSort(document);
         setLightbox();
         setImageReplace();
         setTableCheckAll();
         setToggleBlocks();
+        setFloating(document);
         setEditorInsertHandler();
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {
         setTableSort(event.target);
         setToggleBlocks();
+        setFloating(event.target);
     });
+
+    window.addEventListener('resize', refitFloating);
+    window.addEventListener('scroll', refitFloating, true);
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setSlaedUi);
