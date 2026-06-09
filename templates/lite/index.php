@@ -73,19 +73,6 @@ function getThemeFootVars(): array {
     global $tpl;
     $contact = $tpl->getHtmlPart('contact-block', [
         'feedback' => _FEEDBACK,
-        'text' => _MESSAGE,
-        'pname' => _YOURNAME,
-        'email' => _YOUREMAIL,
-        'captcha' => getCaptcha(1),
-        'token' => getSiteToken('contact'),
-        'send' => _SEND,
-        'message_field' => ['name_attr' => 'message', 'rows_num' => 5, 'cols_num' => 65, 'placeholder_text' => _MESSAGE, 'is_required' => true],
-        'name_field' => ['itype' => 'text', 'name_attr' => 'sname', 'value_attr' => '', 'placeholder_text' => _YOURNAME, 'is_required' => true],
-        'email_field' => ['itype' => 'email', 'name_attr' => 'semail', 'value_attr' => '', 'placeholder_text' => _YOUREMAIL, 'is_required' => true],
-        'token_field' => ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')],
-        'op_field' => ['name_attr' => 'op', 'value_attr' => 'contact'],
-        'send_field' => ['name_attr' => 'send', 'value_attr' => '1'],
-        'submit_button' => ['button_type' => 'submit', 'label' => _SEND],
     ]);
     return [
         'forumblock' => setTemplateForum(),
