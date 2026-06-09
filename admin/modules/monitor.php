@@ -612,7 +612,7 @@ function getMonitorChartSvg(array $snap): string {
         $svg[] = '    <line class="sl-chart-dayline" x1="'.$xx.'" y1="42" x2="'.$xx.'" y2="222"/>';
         $svg[] = '    <circle class="sl-chart-focus" cx="'.$xx.'" cy="'.$fy.'" r="5"/>';
         $svg[] = '    <g class="sl-chart-tip" transform="translate('.round($tx, 2).' '.$ty.')">';
-        $svg[] = '      <rect width="'.$tw.'" height="'.$th.'" rx="5"/>';
+        $svg[] = '      <rect width="'.$tw.'" height="'.$th.'" rx="6"/>';
         $svg[] = '      <text class="sl-chart-tip-title" x="9" y="18">'.htmlspecialchars($hd, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</text>';
         $svg[] = '      <text class="muted" x="9" y="39">CPU: '.htmlspecialchars((string)round((float)($cp['value'] ?? 0), 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%</text>';
         $svg[] = '      <text class="muted" x="9" y="57">RAM: '.htmlspecialchars((string)round((float)($rp['value'] ?? 0), 1), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'%</text>';
@@ -1363,8 +1363,8 @@ function getMonitorServerStats(): array {
     }
     
     $exton = implode(', ', $loaded);
-    $extlist_on = $tpl->getHtmlFrag('info-tooltip', ['content' => $exton, 'label_text' => $exton]);
-    if (!empty($off)) { $extoff = implode(', ', $off); $extlist_off = $tpl->getHtmlFrag('info-tooltip', ['content' => $extoff, 'label_text' => $extoff]); } else { $extlist_off = 'None / N/A'; }
+    $extlist_on = $tpl->getHtmlFrag('popover', ['content' => $exton, 'label_text' => $exton]);
+    if (!empty($off)) { $extoff = implode(', ', $off); $extlist_off = $tpl->getHtmlFrag('popover', ['content' => $extoff, 'label_text' => $extoff]); } else { $extlist_off = 'None / N/A'; }
 
     return [
         'servsw' => $servsw,
@@ -1521,7 +1521,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'servprot' => (string)$ctx['srvprot'],
             'servname' => (string)$ctx['srvname'],
             'servport' => (string)$ctx['srvport'],
-            'servroot' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['srvroot'], 'label_text' => $ctx['srvroot']]),
+            'servroot' => $tpl->getHtmlFrag('popover', ['content' => $ctx['srvroot'], 'label_text' => $ctx['srvroot']]),
             'servhttps' => $ctx['srvhttps'],
             'phpsapi' => php_sapi_name(),
             'zend_eng' => (string)(function_exists('zend_version') ? zend_version() : 'N/A'),
@@ -1552,7 +1552,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'dbconn' => (string)$dbhealth['connections'],
             'dbslow' => (string)$dbhealth['slow'],
             'dbchar' => (string)$dbhealth['charset'],
-            'dbsqlmode' => $tpl->getHtmlFrag('info-tooltip', ['content' => $dbhealth['sql_mode'], 'label_text' => $dbhealth['sql_mode']]),
+            'dbsqlmode' => $tpl->getHtmlFrag('popover', ['content' => $dbhealth['sql_mode'], 'label_text' => $dbhealth['sql_mode']]),
             'dbmaxpack' => (string)$dbhealth['max_packet'],
             'dbbuffpool' => (string)$dbhealth['buffer_pool'],
             'dbtz' => (string)$dbhealth['timezone'],
@@ -1565,12 +1565,12 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'disktot' => filterSize((float)$ctx['disktotal']),
             'diskused' => filterSize((float)$ctx['diskused']),
             'reqmeth' => (string)$ctx['reqmethod'],
-            'reqcookie' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['reqcookie'], 'label_text' => $ctx['reqcookie']]),
-            'requri' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['requri'], 'label_text' => $ctx['requri']]),
-            'reqquery' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['reqquery'], 'label_text' => $ctx['reqquery']]),
+            'reqcookie' => $tpl->getHtmlFrag('popover', ['content' => $ctx['reqcookie'], 'label_text' => $ctx['reqcookie']]),
+            'requri' => $tpl->getHtmlFrag('popover', ['content' => $ctx['requri'], 'label_text' => $ctx['requri']]),
+            'reqquery' => $tpl->getHtmlFrag('popover', ['content' => $ctx['reqquery'], 'label_text' => $ctx['reqquery']]),
             'reqip' => (string)$ctx['reqip'],
-            'requa' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['requa'], 'label_text' => $ctx['requa']]),
-            'reqlang' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['reqlang'], 'label_text' => $ctx['reqlang']]),
+            'requa' => $tpl->getHtmlFrag('popover', ['content' => $ctx['requa'], 'label_text' => $ctx['requa']]),
+            'reqlang' => $tpl->getHtmlFrag('popover', ['content' => $ctx['reqlang'], 'label_text' => $ctx['reqlang']]),
             'dskread' => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
             'dskwrite' => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
             'backupdirsz' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
@@ -1580,8 +1580,8 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'errorlog24h' => (string)$ctx['error24'],
             'uploadssz' => (string)$ctx['uploadsz'],
             'failedlogins24h' => (string)$ctx['failed24'],
-            'lastsecurityevent24h' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['seclast24'], 'label_text' => $ctx['seclast24']]),
-            'dbissueevent24h' => $tpl->getHtmlFrag('info-tooltip', ['content' => $ctx['dblast24'], 'label_text' => $ctx['dblast24']]),
+            'lastsecurityevent24h' => $tpl->getHtmlFrag('popover', ['content' => $ctx['seclast24'], 'label_text' => $ctx['seclast24']]),
+            'dbissueevent24h' => $tpl->getHtmlFrag('popover', ['content' => $ctx['dblast24'], 'label_text' => $ctx['dblast24']]),
             'show_layout' => true,
             'show_status' => ($snapshot !== null),
             'show_traffic' => ($snapshot !== null),

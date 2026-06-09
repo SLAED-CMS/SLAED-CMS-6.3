@@ -67,22 +67,22 @@
         <span class="sl-monitor-head-left"><i class="bi bi-boxes"></i>Software</span>
       </div>
       <div class="sl-status-compact">
-        <div class="sl-status-compact-item">
+        <a href="#monitor-server" class="sl-status-compact-item">
           <div class="sl-status-compact-left"><i class="bi bi-window-stack"></i> SLAED CMS</div>
           <div class="sl-status-compact-right"><span>{{ cmsver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-        </div>
-        <div class="sl-status-compact-item">
+        </a>
+        <a href="#monitor-php" class="sl-status-compact-item">
           <div class="sl-status-compact-left"><i class="bi bi-cpu"></i> PHP</div>
           <div class="sl-status-compact-right"><span>{{ phpver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-        </div>
-        <div class="sl-status-compact-item">
+        </a>
+        <a href="#monitor-mysql" class="sl-status-compact-item">
           <div class="sl-status-compact-left"><i class="bi bi-database"></i> MySQL</div>
           <div class="sl-status-compact-right"><span>{{ mysql }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-        </div>
-        <div class="sl-status-compact-item">
+        </a>
+        <a href="#monitor-server" class="sl-status-compact-item">
           <div class="sl-status-compact-left"><i class="bi bi-hdd-rack"></i> {{ servsoftname }}</div>
           <div class="sl-status-compact-right"><span>{{ servver }}</span> <span class="sl-status-blue"><i class="bi bi-play-fill"></i></span></div>
-        </div>
+        </a>
       </div>
     </div>
   </div>
@@ -172,7 +172,7 @@
     </div>
   </div>
   <!-- Server Block -->
-  <div class="sl-monitor-card">
+  <div class="sl-monitor-card" id="monitor-server">
     <div class="sl-monitor-panel-head">
       <span class="sl-monitor-head-left"><i class="bi bi-hdd-network"></i>Server & CMS</span>
     </div>
@@ -309,7 +309,7 @@
   </div>
 
   <!-- PHP Block -->
-  <div class="sl-monitor-card">
+  <div class="sl-monitor-card" id="monitor-php">
     <div class="sl-monitor-panel-head">
       <span class="sl-monitor-head-left"><i class="bi bi-filetype-php"></i>PHP Information</span>
     </div>
@@ -414,7 +414,7 @@
   </div>
 
   <!-- MySQL Block -->
-  <div class="sl-monitor-card sl-monitor-card-flat">
+  <div class="sl-monitor-card sl-monitor-card-flat" id="monitor-mysql">
     <div class="sl-monitor-panel-head">
       <span class="sl-monitor-head-left"><i class="bi bi-database"></i>MySQL Information</span>
     </div>
