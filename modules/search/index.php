@@ -389,8 +389,11 @@ function getSearchList(array $rows, array $state): string {
     global $conf, $tpl;
     $cont = '';
     $anum = count($rows);
-    $from = ($state['num'] - 1) * $state['snum'];
-    $slice = array_slice($rows, $from, $state['snum']);
+    $snum = max(1, (int)$state['snum']);
+    $pnum = max(1, (int)ceil($anum / $snum));
+    $page = min(max(1, (int)$state['num']), $pnum);
+    $from = ($page - 1) * $snum;
+    $slice = array_slice($rows, $from, $snum);
     $numb = $from + 1;
     foreach ($slice as $row) {
         $meta = $tpl->getHtmlFrag('list', [
@@ -413,9 +416,8 @@ function getSearchList(array $rows, array $state): string {
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
-    $pnum = ceil($anum / $state['snum']);
     $tail = $state['typ'] ? '&typ='.$state['typ'] : '';
-    $cont .= ($anum > $state['snum']) ? getPageNumbers($conf['name'], $anum, $pnum, $state['snum'], 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump']) : $tpl->getHtmlPart('navi-lower', [
+    $cont .= ($anum > $snum) ? getPageNumbers($conf['name'], $anum, $pnum, $snum, 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump'], $page) : $tpl->getHtmlPart('navi-lower', [
         'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],
         'home_link' => ['href' => 'index.php?name='.$conf['name'], 'title' => _PAGEHOME, 'label' => _PAGEHOME, 'is_navi_lower' => true],
         'top_link' => ['href' => '#top', 'title' => _PAGETOP, 'label' => _PAGETOP, 'is_navi_lower' => true],

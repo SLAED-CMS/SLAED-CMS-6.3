@@ -41,10 +41,14 @@ class Cache {
     public static function setBody(string $file, string $body): bool {
         $dir = dirname($file);
         if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
-        $tmp = $file.'.tmp';
-        if (file_put_contents($tmp, $body, LOCK_EX) === false) return false;
+        $tmp = tempnam($dir, basename($file).'.');
+        if ($tmp === false) return false;
+        if (file_put_contents($tmp, $body, LOCK_EX) === false) {
+            @unlink($tmp);
+            return false;
+        }
         if (!rename($tmp, $file)) {
-            unlink($tmp);
+            @unlink($tmp);
             return false;
         }
         return true;

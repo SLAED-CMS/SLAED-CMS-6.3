@@ -342,10 +342,11 @@ function view(): void {
     $opars = ['id1' => $topic, 'id2' => $topic];
     [$numfor] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum '.$ordern, $opars));
     if ($topic && $numfor > 0) {
-        $fornum = (int)getUserNews($conf['forum']['num']);
-        $numpages = ceil($numfor / $fornum);
-        $num = getVar('req', 'num', 'num') ?: 1;
+        $fornum = max(1, (int)getUserNews($conf['forum']['num']));
+        $numpages = max(1, (int)ceil($numfor / $fornum));
+        $num = (int)(getVar('req', 'num', 'num') ?: 1);
         $num = ($last && $conf['forum']['sort']) ? $numpages : $num;
+        $num = min(max(1, $num), $numpages);
         $offset = ($num-1) * $fornum;
         if ($conf['forum']['sort']) {
             $sort = 'ASC';
@@ -364,6 +365,13 @@ function view(): void {
             if ($uid) $where[] = $uid;
             unset($id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
         }
+        if (!$rows) {
+            setHead(['title' => _FORUM]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
+            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO, 'meta' => $meta]);
+            setFoot();
+            return;
+        }
         if ($where) {
             $query = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
             while ([$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor] = $db->getSqlRow($query)) {
@@ -376,12 +384,12 @@ function view(): void {
         } else {
             [$tstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $topic]));
         }
-        $isread = is_acess($rows[0][19]);
-        $istopic = is_acess($rows[0][20]);
-        $isreply = is_acess($rows[0][21]);
-        $isedit = is_acess($rows[0][22]);
-        $isdelete = is_acess($rows[0][23]);
-        $ismod = is_acess($rows[0][24]);
+        $isread = is_acess((string)($rows[0][19] ?? ''));
+        $istopic = is_acess((string)($rows[0][20] ?? ''));
+        $isreply = is_acess((string)($rows[0][21] ?? ''));
+        $isedit = is_acess((string)($rows[0][22] ?? ''));
+        $isdelete = is_acess((string)($rows[0][23] ?? ''));
+        $ismod = is_acess((string)($rows[0][24] ?? ''));
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], false, $conf['name']))), 160);
         $seoimg = getImgText($rows[0][7], '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
