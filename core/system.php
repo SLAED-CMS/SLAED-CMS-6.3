@@ -1763,15 +1763,10 @@ function setFoot(): void {
     ]);
     $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
-    echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
+    $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
     unset($sitepage, $sitevars);
-    if ($docache) {
-        $cont = ob_get_contents();
-        if ($cont !== false && $cont !== '') {
-            $cont = ($conf['cache_c']) ? getCompressHtml($cont) : $cont;
-            Cache::setBody(Cache::getPath('html', getPageHash(), 'html'), $cont);
-        }
-    }
+    if ($docache && $html !== '') Cache::setBody(Cache::getPath('html', getPageHash(), 'html'), !empty($conf['cache_c']) ? getOutputHtml($html, true) : $html);
+    echo $html;
     while (ob_get_level() > 0) ob_end_flush();
     exit;
 }
@@ -2745,20 +2740,61 @@ function getCompressCode(string $code): string {
     return $code;
 }
 
-# Compress HTML
-function getCompressHtml(string $html): string {
-    preg_match_all('#(<(?:code|pre|textarea|script|style)[^>]+>.*?</(?:code|pre|textarea|script|style)>)#si', $html, $pre);
-    $html = preg_replace('#<(?:code|pre|textarea|script|style)[^>]+>.*?</(?:code|pre|textarea|script|style)>#si', '%pre%', $html);
-    $html = preg_replace('#<!--[^\[].+-->#', '', $html);
-    $html = preg_replace('#[\r\n\t]+#', ' ', $html);
-    $html = preg_replace('#>[\s]+<#', '><', $html);
-    $html = preg_replace('#[\s]+#', ' ', $html);
-    if (!empty($pre[0])) {
-        foreach ($pre[0] as $tag) {
-            $html = preg_replace('#%pre%#', $tag, $html, 1);
+# Normalize final HTML output while keeping the template's own indentation, doing heavy work only on the few multiline matches
+# Raw bodies of script/style/pre/code/textarea and comments are protected first
+# Then multiline class lists and multiline tags are squeezed to a single line
+# full=false drops blank lines but keeps each line leading indent and leaves all other template whitespace untouched
+# full=true compresses everything to a single line and strips non-conditional comments
+function getOutputHtml(string $html, bool $full = false): string {
+    if ($html === '') return '';
+    $keep = [];
+    $html = (string)preg_replace_callback('#<(script|style|pre|code|textarea)\b[^>]*>.*?</\1>|<!--.*?-->#si', static function(array $dat) use (&$keep, $full): string {
+        if ($dat[0][1] === '!') {
+            if ($full && !str_starts_with($dat[0], '<!--[')) return '';
+            $key = "\x01".count($keep)."\x01";
+            $keep[$key] = $dat[0];
+            return $key;
         }
+        $gt = strpos($dat[0], '>');
+        $key = "\x01".count($keep)."\x01";
+        $keep[$key] = substr($dat[0], $gt + 1);
+        return substr($dat[0], 0, $gt + 1).$key;
+    }, $html);
+    $html = (string)preg_replace_callback('#\sclass\s*=\s*(["\'])([^"\']*[\r\n][^"\']*)\1#', static function(array $cls): string {
+        return ' class='.$cls[1].trim((string)preg_replace('#\s+#', ' ', $cls[2])).$cls[1];
+    }, $html);
+    $html = (string)preg_replace_callback('#<[a-zA-Z][^>]*[\r\n][^>]*>#s', static function(array $dat): string {
+        $tag = $dat[0];
+        $out = '';
+        $quot = '';
+        $space = false;
+        $len = strlen($tag);
+        for ($pos = 0; $pos < $len; $pos++) {
+            $chr = $tag[$pos];
+            if ($quot !== '') {
+                $out .= $chr;
+                if ($chr === $quot) $quot = '';
+            } elseif ($chr === '"' || $chr === "'") {
+                $quot = $chr;
+                $out .= $chr;
+            } elseif (ctype_space($chr)) {
+                $space = $out !== '' && substr($out, -1) !== '<';
+            } else {
+                if ($space && $chr !== '>' && substr($out, -1) !== '<') $out .= ' ';
+                $space = false;
+                $out .= $chr;
+            }
+        }
+        return $out;
+    }, $html);
+    if ($full) {
+        $html = (string)preg_replace('#>[\s]+<#', '><', $html);
+        $html = (string)preg_replace('#[\r\n\t]+#', ' ', $html);
+        $html = (string)preg_replace('#\s{2,}#', ' ', $html);
+    } else {
+        $html = (string)preg_replace('#\n[ \t\r]*(?=\n)#', '', $html);
     }
-    return $html;
+    return strtr($html, $keep);
 }
 
 # Voting view
