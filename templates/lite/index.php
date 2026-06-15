@@ -70,12 +70,7 @@ function getThemeHeadVars(): array {
 
 # Provide foot-time variables for the lite theme layout
 function getThemeFootVars(): array {
-    global $tpl;
-    $contact = $tpl->getHtmlPart('contact-block', [
-        'feedback' => _FEEDBACK,
-    ]);
     return [
         'forumblock' => setTemplateForum(),
-        'contactblock' => $contact,
     ];
 }
