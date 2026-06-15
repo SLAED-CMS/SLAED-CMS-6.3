@@ -669,7 +669,7 @@ function getRatingStars(int $width): array {
     return $stars;
 }
 
-# Render the shared ajax rating block
+# Render the shared ajax rating block for stars or like-style controls
 function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
     global $conf, $tpl;
     if (intval($rat)) {
@@ -679,71 +679,33 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         $votnum = 0;
         $votes = 1;
     }
-    $width = (int) max(0, min(100, round(($scor / $votes) * 20)));
+    $width = (int)max(0, min(100, round(($scor / $votes) * 20)));
     $result = substr($scor / $votes, 0, 4);
     if (intval($votes) && intval($scor)) {
         $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
-        $has_score = true;
+        $scored = true;
     } else {
         $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
-        $has_score = false;
+        $scored = false;
     }
-    if ($stl == '1') {
-        $img = $tpl->getHtmlFrag('rating-like', [
-            'result' => $result,
-            'title' => $title,
-            'has_score' => $has_score,
-            'rate1_title' => _RATE1,
-            'rate5_title' => _RATE5,
-            'target_id' => '',
-            'is_live' => false,
-        ]);
-        $imgr = $tpl->getHtmlFrag('rating-like', [
-            'result' => $result,
-            'title' => $title,
-            'has_score' => $has_score,
-            'target_id' => $id.$obj,
-            'rate1_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1&amp;rate=1',
-            'rate5_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1&amp;rate=5',
-            'rate1_title' => _RATE1,
-            'rate5_title' => _RATE5,
-            'is_live' => true,
-        ]);
-        $is_like = true;
-    } else {
-        $img = $tpl->getHtmlFrag('rating-bar', [
-            'result' => $result,
-            'title' => $title,
-            'has_score' => $has_score,
-            'width' => (string)$width,
-            'stars' => getRatingStars($width),
-            'votes' => (string)$votnum,
-            'votes_title' => _VOTES,
-            'target_id' => '',
-            'is_live' => false,
-        ]);
-        $imgr = $tpl->getHtmlFrag('rating-bar', [
-            'result' => $result,
-            'title' => $title,
-            'has_score' => $has_score,
-            'width' => (string)$width,
-            'stars' => getRatingStars($width),
-            'votes' => (string)$votnum,
-            'votes_title' => _VOTES,
-            'target_id' => $id.$obj,
-            'hover_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod,
-            'is_live' => true,
-        ]);
-        $is_like = false;
-    }
-    if ($typ == 2) return $tpl->getHtmlPart('div', ['is_rate' => true, 'content_html' => $img]);
     $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
-    if ((($con[1] ?? '') && $id && $mod) || ($rat && $scor)) {
-        return ((($con[1] ?? '') && $typ) || (($con[1] ?? '') && !($con[2] ?? '') && !$typ))
-            ? $tpl->getHtmlPart('div', ['id' => 'rep'.$id.$obj, 'is_rate' => true, 'content_html' => $imgr])
-            : $tpl->getHtmlPart('div', ['is_rate' => true, 'content_html' => $img]);
-    }
-    return '';
+    if ($typ != 2 && !((($con[1] ?? '') && $id && $mod) || ($rat && $scor))) return '';
+    $live = $typ != 2 && ($con[1] ?? '') && ($typ || !($con[2] ?? ''));
+    $vote = 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod;
+    $part = $stl == '1'
+        ? ['rate1_title' => _RATE1, 'rate5_title' => _RATE5]
+        : ['width' => (string)$width, 'stars' => getRatingStars($width), 'votes' => (string)$votnum, 'votes_title' => _VOTES];
+    $body = $tpl->getHtmlFrag($stl == '1' ? 'rating-like' : 'rating-bar', [
+        'result' => $result,
+        'title' => $title,
+        'has_score' => $scored,
+        'target_id' => 'rep'.$id.$obj,
+        'vote_query' => $vote,
+        'token' => $live ? getSiteToken() : '',
+        'is_live' => $live,
+    ] + $part);
+    $wrap = $live || $typ == 2 ? ['id' => 'rep'.$id.$obj] : [];
+    return $tpl->getHtmlPart('div', $wrap + ['is_rate' => true, 'content_html' => $body]);
 }
 
 # Render the shared category select from database categories

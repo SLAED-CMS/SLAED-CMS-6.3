@@ -4636,145 +4636,50 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
     return '';
 }
 
-# Format rating
+# Handle an ajax rating request: enforce one vote per user or ip, persist the vote, and echo the refreshed rating block
 function getRatingView(): void {
- global $db, $conf, $user, $tpl;
-    $id   = getVar('get', 'id',   'num',  0);
-    $typ  = filterVar(getVar('get', 'typ',  'text', ''));
-    $mod  = filterVar(getVar('get', 'mod',  'text', ''));
+    global $db, $conf, $user;
+    $id = getVar('get', 'id', 'num', 0);
+    $typ = filterVar(getVar('get', 'typ', 'text', ''));
+    $mod = filterVar(getVar('get', 'mod', 'text', ''));
     $rate = min(5, getVar('get', 'rate', 'num', 0));
-    $stl  = getVar('get', 'stl',  'num',  0);
-    $con = explode('|', $conf['ratings'][strtolower($mod)]);
-    if ($id && $mod) {
-        $query = '';
-        if ($mod == 'account') {
-            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_users WHERE id = :id';
-        } elseif ($mod == 'faq') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_faq WHERE id = :id';
-        } elseif ($mod == 'files') {
-            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_files WHERE id = :id';
-        } elseif ($mod == 'forum') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_forum WHERE id = :id';
-        } elseif ($mod == 'help') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_help WHERE id = :id';
-        } elseif ($mod == 'jokes') {
-            $query = 'SELECT ratetot, rating FROM '.PREFIX_DB.'_jokes WHERE id = :id';
-        } elseif ($mod == 'links') {
-            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_links WHERE id = :id';
-        } elseif ($mod == 'media') {
-            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_media WHERE id = :id';
-        } elseif ($mod == 'news') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_news WHERE id = :id';
-        } elseif ($mod == 'pages') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_pages WHERE id = :id';
-        } elseif ($mod == 'shop') {
-            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_products WHERE id = :id';
+    $stl = getVar('get', 'stl', 'num', 0);
+    $con = explode('|', $conf['ratings'][strtolower($mod)] ?? '');
+    $map = [
+        'account' => ['_users', 'votes', 'tvotes', 2],
+        'faq' => ['_faq', 'ratings', 'score', 8],
+        'files' => ['_files', 'votes', 'tvotes', 12],
+        'forum' => ['_forum', 'ratings', 'score', 15],
+        'help' => ['_help', 'ratings', 'score', 0],
+        'jokes' => ['_jokes', 'ratetot', 'rating', 20],
+        'links' => ['_links', 'votes', 'tvotes', 24],
+        'media' => ['_media', 'votes', 'tvotes', 27],
+        'news' => ['_news', 'ratings', 'score', 33],
+        'pages' => ['_pages', 'ratings', 'score', 37],
+        'shop' => ['_products', 'votes', 'tvotes', 41],
+    ];
+    if (!$id || !$mod || !isset($map[$mod])) return;
+    [$tab, $cnt, $scr, $pts] = $map[$mod];
+    $ip = getIp();
+    $cmod = substr($mod, 0, 2).'-'.$id;
+    $cook = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : 0;
+    $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :mod', ['past' => time() - intval($con[0]), 'mod' => $mod]);
+    $cq = 'SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND ip = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')";
+    [$num] = $db->getSqlRow($db->getSqlQuery($cq, ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
+    $voted = $cook == $id || $num > 0;
+    if (!$voted && $rate) {
+        setcookie($cmod, $id, time() + intval($con[0]));
+        $ins = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :modul, :time, :uid, :ip)', ['mid' => $id, 'modul' => $mod, 'time' => time(), 'uid' => $uid, 'ip' => $ip]);
+        if ($ins) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = '.$cnt.' + 1, '.$scr.' = '.$scr.' + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
+            if ($pts) update_points($pts);
         }
-        if ($query == '') {
-            return;
-        }
-        $ip = getIp();
-        $past = time() - intval($con[0]);
-        $cmod = substr($mod, 0, 2).'-'.$id;
-        $cookies = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : '';
-        $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :mod', ['past' => $past, 'mod' => $mod]);
-        list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND ip = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')", ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
-        if ($cookies == $id || $num > 0) {
-            list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
-            echo getRatingAsync(2, '', '', $votes, $totalvotes, '', $stl);
-        } elseif (!$cookies && !$num && !$rate) {
-            list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
-            if (intval($votes)) {
-                $votnum = $votes;
-                $votes = $votes;
-            } else {
-                $votnum = 0;
-                $votes = 1;
-            }
-            $width = (int) max(0, min(100, round(($totalvotes / $votes) * 20)));
-            $result = substr($totalvotes / $votes, 0, 4);
-            if (intval($votes) && intval($totalvotes)) {
-                $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
-                $has_score = true;
-            } else {
-                $title = _RATING.': 0/0 '._AVERAGESCORE.': 0';
-                $has_score = false;
-            }
-            if ($stl == 1) {
-                echo $tpl->getHtmlFrag('rating-like', [
-                    'result' => $result,
-                    'title' => $title,
-                    'has_score' => $has_score,
-                    'target_id' => $id.$typ,
-                    'rate1_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=1&amp;stl=1',
-                    'rate5_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=5&amp;stl=1',
-                    'rate1_title' => _RATE1,
-                    'rate5_title' => _RATE5,
-                    'is_live' => true,
-                ]);
-            } else {
-                echo $tpl->getHtmlFrag('rating-bar', [
-                    'title' => $title,
-                    'width' => (string) $width,
-                    'stars' => getRatingStars($width),
-                    'target_id' => $id.$typ,
-                    'hover_query' => 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod,
-                    'has_score' => $has_score,
-                    'votes' => (string)$votnum,
-                    'votes_title' => _VOTES,
-                    'is_live' => true,
-                ]);
-            }
-        } elseif (!$cookies && !$num && $rate) {
-            setcookie(substr($mod, 0, 2).'-'.$id, $id, time() + intval($con[0]));
-            $new = time();
-            $inserted = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :modul, :time, :uid, :ip)', ['mid' => $id, 'modul' => $mod, 'time' => $new, 'uid' => $uid, 'ip' => $ip]);
-            if ($inserted) {
-                if ($mod == 'account' || $mod == 'members') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(2);
-                } elseif ($mod == 'faq') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(8);
-                } elseif ($mod == 'files') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(12);
-                } elseif ($mod == 'forum') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(15);
-                } elseif ($mod == 'help') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                } elseif ($mod == 'gallery') {
-                    #$db->getSqlQuery("UPDATE ".PREFIX_DB."_gallery SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
-                    update_points(18);
-                } elseif ($mod == 'jokes') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET rating = rating + :rate, ratetot = ratetot + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(20);
-                } elseif ($mod == 'links') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(24);
-                } elseif ($mod == 'media') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(27);
-                } elseif ($mod == 'multimedia') {
-                    #$db->getSqlQuery("UPDATE ".PREFIX_DB."_multimedia SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
-                    update_points(30);
-                } elseif ($mod == 'news') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(33);
-                } elseif ($mod == 'pages') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(37);
-                } elseif ($mod == 'shop') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-                    update_points(41);
-                }
-            }
-            list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
-            echo getRatingAsync(2, '', '', $votes, $totalvotes, '', $stl);
-        }
+        $voted = true;
     }
+    if (!$voted) return;
+    [$votes, $total] = $db->getSqlRow($db->getSqlQuery('SELECT '.$cnt.', '.$scr.' FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $id]));
+    echo getRatingAsync(2, $id, $mod, $votes, $total, $typ, $stl);
 }
 
 # Format nummer page for Ajax
