@@ -460,25 +460,26 @@ function view(): void {
                 $from = (!empty($from)) ? _FROM.': '.$from : '';
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
-                $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
-                    ? $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'is_button_blue' => true, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)])
-                    : '';
-                $privat = ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick))
-                    ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($nick), 'title' => _SENDMES, 'is_button_green' => true, 'label' => _MESSAGE])
-                    : '';
-                $profil = ($conf['forum']['profil'] && !empty($nick))
-                    ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($nick), 'title' => _PERSONALINFO, 'is_account_button' => true, 'label' => _ACCOUNT])
-                    : '';
-                $web = ($conf['forum']['web'] && !empty($site))
-                    ? $tpl->getHtmlFrag('link', ['href' => $site, 'title' => _DOWNLLINK, 'is_account_button' => true, 'label' => _SITE, 'is_blank' => true])
-                    : '';
-
+                $uitems = [];
+                if (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply'])) {
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)]);
+                }
+                if ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick)) {
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($nick), 'title' => _SENDMES, 'label' => _MESSAGE]);
+                }
+                if ($conf['forum']['profil'] && !empty($nick)) {
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($nick), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+                }
+                if ($conf['forum']['web'] && !empty($site)) {
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => $site, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
+                }
+                if (is_moder($conf['name']) || ($isreply && $tstatus)) {
+                    $qhref = 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid;
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => $qhref, 'title' => _QREPLY, 'label' => _REPLY]);
+                }
+                $usermenu = getActionMenu($uitems, true);
                 $warn = '';
                 $thank = '';
-
-                $qreply = (is_moder($conf['name']) || ($isreply && $tstatus))
-                    ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid, 'title' => _QREPLY, 'is_button_blue' => true, 'label' => _REPLY])
-                    : '';
                 $edit_href = 'index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'];
                 $edit = ($ismod || ($isedit && $val[3] == (int)$user[0] && $tstatus))
                     ? $tpl->getHtmlFrag('link', ['href' => $edit_href, 'hx_target' => '#repfor'.$fid, 'title' => _ONEDIT, 'label' => _ONEDIT, 'is_htmx' => true])
@@ -495,11 +496,11 @@ function view(): void {
                         'is_delete'    => true,
                       ])
                     : '';
-                $edit = ($edit) ? add_menu($edit) : '';
+                $edit = ($edit) ? getActionMenu(explode('||', $edit)) : '';
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name']), $word);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
                 if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name']), $word);
-                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
+                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);

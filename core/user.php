@@ -301,10 +301,6 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
     $offset = intval($offset);
     $conf['name'] = 'account';
     $cont = '';
-    $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('popover', [
-        'editor_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
-    ]);
     $messageList = static fn(array $rows, array $headers): string => $tpl->getHtmlPart('content-list', [
         'rows' => $rows,
         'table_open' => ['open' => true, 'headers' => $headers],
@@ -346,7 +342,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 ['content_html' => $title_html],
                 ['content_html' => $post_html],
                 ['text' => format_time($date, _TIMESTRING)],
-                ['content_html' => $actionMenu($items)],
+                ['content_html' => getActionMenu($items)],
             ]];
         }
         $cont .= $messageList($rows, [['text' => _TITLE], ['text' => _PRSE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]);
@@ -368,7 +364,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 ['content_html' => $title_html],
                 ['content_html' => $post_html],
                 ['text' => format_time($date, _TIMESTRING)],
-                ['content_html' => $actionMenu($items)],
+                ['content_html' => getActionMenu($items)],
             ]];
         }
         $cont .= $messageList($rows, [['text' => _TITLE], ['text' => _PRRE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]);
@@ -403,7 +399,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 ['content_html' => $title_html],
                 ['content_html' => $post_html],
                 ['text' => format_time($date, _TIMESTRING)],
-                ['content_html' => $actionMenu($items)],
+                ['content_html' => getActionMenu($items)],
             ]];
         }
         $cont .= $messageList($rows, [['text' => _TITLE], ['text' => _PRSE], ['text' => _DATE], ['text' => _FUNCTIONS, 'no_sort' => true]]);
@@ -455,14 +451,17 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $gender = ($user_gender) ? _GENDER.': '.getGenderText($user_gender) : '';
                 $from = ($user_from) ? _FROM.': '.$user_from : '';
                 $sig = ($user_sig) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
-                $profil = ($conf['privat']['profil'] && $user_name) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
-                $web = ($conf['privat']['web'] && $user_website) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true, 'is_account_button' => true]) : '';
-
-
-
-                $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? $actionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE])]) : '';
+                $uitems = [];
+                if ($conf['privat']['profil'] && $user_name) {
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+                }
+                if ($conf['privat']['web'] && $user_website) {
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
+                }
+                $usermenu = getActionMenu($uitems, true);
+                $edit =(($uidin == $uid) || ($uidout == $uid && !$status)) ? getActionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE])]) : '';
                 $rankHtml = ($rank) ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $rank]) : '';
-                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'dropdown_id' => 'm-form-'.$idp, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit, 'is_private_message' => true]);
+                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'dropdown_id' => 'm-form-'.$idp, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_edit' => $edit, 'is_private_message' => true]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -711,10 +710,6 @@ function getFavoriteList(int $obj = 0): string {
     $cont = $tpl->getHtmlFrag('alert', ['text' => $favinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
     if ($ffmassiv) {
         $rows = [];
-        $actionMenu = static fn(array $items): string => $tpl->getHtmlFrag('popover', [
-            'editor_label' => _EDITOR,
-            'items_html' => implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items)),
-        ]);
         foreach ($ffmassiv as $key => $val) {
             $id = $val[0];
             $fid = $val[1];
@@ -730,7 +725,7 @@ function getFavoriteList(int $obj = 0): string {
                 'cells' => [
                     ['is_num' => true, 'href' => '#'.$a, 'title' => (string)$a, 'text' => (string)$a],
                     ['href' => $surl, 'title' => $title, 'text' => cutstr($title, 100)],
-                    ['content_html' => $actionMenu($items)],
+                    ['content_html' => getActionMenu($items)],
                 ],
             ];
             $a++;

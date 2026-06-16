@@ -2860,7 +2860,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
         ];
-        $admin = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $links))]);
+        $admin = getActionMenu($links);
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true]) : '';
@@ -3878,15 +3878,14 @@ function letter(string $mod): string {
     return $items;
 }
 
-# Format admin menu
-function add_menu(string $links): string {
+# Build a popover action menu from prepared HTML item rows; editor gear by default, user menu when $user is true
+function getActionMenu(array $items, bool $user = false): string {
     global $tpl;
-    if ($links) {
-        $items = explode('||', $links);
-        $html = implode('', array_map(fn($v) => $v !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $v]) : '', $items));
-        return $tpl->getHtmlFrag('popover', ['editor_label' => (string)_EDITOR, 'items_html' => $html]);
-    }
-    return '';
+    $html = implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items));
+    if ($html === '') return '';
+    $opts = $user ? ['is_user_menu' => true, 'trigger_label' => (string)_USER] : ['editor_label' => (string)_EDITOR];
+    $opts['items_html'] = $html;
+    return $tpl->getHtmlFrag('popover', $opts);
 }
 
 # Admin status
@@ -5014,10 +5013,20 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
             $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'is_button_blue' => true, 'link_attr' => getTplEditorInsertAttr('name', $avname)]) : '';
-            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE, 'is_button_green' => true]) : '';
-            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'is_account_button' => true]) : '';
-            $web = ($conf['comments']['web'] && !empty($user_website)) ? $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_account_button' => true, 'is_blank' => true]) : '';
+            $uitems = [];
+            if (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) {
+                $uitems[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)]);
+            }
+            if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) {
+                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE]);
+            }
+            if ($conf['comments']['profil'] && !empty($user_name)) {
+                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+            }
+            if ($conf['comments']['web'] && !empty($user_website)) {
+                $uitems[] = $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
+            }
+            $usermenu = getActionMenu($uitems, true);
             $warn = '';
             $thank = '';
 
@@ -5031,15 +5040,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                         ['href' => $afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), 'title' => $acttxt, 'label' => $acttxt],
                         ['href' => $afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), 'title' => _ONDELETE, 'label' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'&quot;?\');"'],
                     ];
-                    $edit = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items' => $items]);
+                    $edit = getActionMenu(array_map(fn($item) => $tpl->getHtmlFrag('link', $item), $items));
                 } else {
                     $items = [
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, 'title' => _FMODC, 'label' => _FMODC]),
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE]),
                     ];
-                    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-                    $edit = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
+                    $edit = getActionMenu($items);
                 }
             } else {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
@@ -5047,7 +5055,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $items = [
                         $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
                     ];
-                    $edit = $tpl->getHtmlFrag('popover', ['editor_label' => _EDITOR, 'items_html' => implode('', array_map(fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items))]);
+                    $edit = getActionMenu($items);
                 } else {
                     $edit = '';
                 }
@@ -5074,7 +5082,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],
                 ],
             ]) : '';
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {

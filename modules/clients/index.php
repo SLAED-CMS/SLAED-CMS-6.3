@@ -33,12 +33,12 @@ function clients(): void {
             else $tpath = '';
             $dtitle = $tpath ? _CDOWN : _GZIPGEN;
             $moder = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=clients_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]).'||' : '';
-            $acont = add_menu(
+            $acont = getActionMenu(explode('||',
                 $moder
                 .$tpl->getHtmlFrag('link', ['href' => '#', 'title' => _CINFO, 'label' => _CINFO, 'onclick_attr' => 'data-sl-toggle-control="cl'.$i.'" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"']).'||'
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
                 .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
-            );
+            ));
             $time = (file_exists(UPLOADS_DIR.'/clients/'.$url)) ? date(_TIMESTRING, filemtime(UPLOADS_DIR.'/clients/'.$url)) : _NO_INFO;
             $rows[] = [
                 'id' => (string)$a,
