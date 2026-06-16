@@ -3,11 +3,12 @@
     <div class="sl-forum-post-in sl-clrfix">
       <div class="sl-fp-right">
         <div class="sl-fp-meta">
-          {% if rating or post_count or btn_edit %}
+          {% if rating or post_count or btn_edit or btn_user %}
           <div class="sl-pull-right">
             <div class="sl-min-rate">
               <div class="sl-rate-like-box">{{{ rating }}}</div>
             </div>
+            {{{ btn_user }}}
             {{{ btn_edit }}}
             {{{ post_count }}}
           </div>
@@ -15,7 +16,7 @@
           <span class="sl-grey">{{{ date }}} {{{ ip }}} {{ meta_title }}</span>
         </div>
         <div class="sl-entry-content">{{{ text }}}{% if is_private_message %}<small>{{{ sig }}}</small>{% else %}<div class="sl-sig">{{{ sig }}}</div>{% endif %}</div>
-        <div class="sl-fp-moder">{{{ btn_personal }}}{{{ btn_pm }}}{{{ btn_profile }}}{{{ btn_web }}}{{{ btn_warn }}}{{{ btn_thank }}}{{{ btn_reply }}}</div>
+        {% if btn_warn or btn_thank %}<div class="sl-fp-moder">{{{ btn_warn }}}{{{ btn_thank }}}</div>{% endif %}
       </div>
       <div class="sl-fp-left">
         <div class="sl-fp-nickname sl-dropdown sl-dropup sl-float" data-sl-float-event="click">

@@ -33,10 +33,8 @@
   background-color: #ffff00;
 }
 .sl-geo-flag img {
-  width: 24px;
-  height: auto;
-  vertical-align: middle;
-  margin-right: var(--sl-space-xs);
+  width: 18px;
+  vertical-align: center;
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-control);
 }
@@ -94,11 +92,11 @@ a .sl-letter:hover {
 
 /* Article container */
 .sl-post {
-  margin-bottom: 50px;
+  margin-bottom: 12px;
 }
 .sl-fullview {
   max-width: var(--sl-content);
-  padding-bottom: 25px;
+  padding-bottom: 12px;
 }
 .sl-title {
   font-size: 22px;
@@ -132,7 +130,6 @@ a .sl-letter:hover {
 .sl-grid-1-3:after,
 #head-content .sl-wrp:after,
 .sl-comment:after,
-.sl-com-top:after,
 .sl-progress-info:after {
   content: "";
   display: block;
@@ -890,10 +887,9 @@ span.sl-pnum-nav {
 
 /* Content cards: related articles */
 .sl-related-title {
-  font-weight: bold;
-  font-size: 30px;
+  font-size: 24px;
   color: var(--sl-login-link-color);
-  margin: 45px 0 15px 0;
+  margin: 12px 0;
 }
 .sl-related-list {
   list-style: none;
@@ -951,8 +947,7 @@ span.sl-pnum-nav {
 }
 .sl-grid .sl-post {
   flex: 0 0 100%;
-  max-width: 100%;
-  padding: 0 var(--sl-grid-gap) 20px var(--sl-grid-gap);
+  padding: 0;
   box-sizing: border-box;
 }
 .sl-grid .sl-card-col-1 {
@@ -3676,7 +3671,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 }
 .sl-heading {
   font-size: 22px;
-  margin: 0 0 20px 0;
+  margin: 0 0 12px 0;
 }
 .sl-heading a {
   color: var(--sl-color-text);
@@ -3738,14 +3733,36 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   font-size: 12px;
 }
 .sl-com-top {
+  display: grid;
+  grid-template-columns: 130px auto 1fr;
+  align-items: center;
+  gap: var(--sl-space-md);
   margin-bottom: 0.6em;
 }
+.sl-com-top > .sl-carg {
+  margin-right: 0;
+  min-width: 0;
+}
+.sl-com-top > .sl-carg.sl-dropdown {
+  justify-self: start;
+  overflow: hidden;
+}
+.sl-com-top > .sl-carg.sl-dropdown > a {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.sl-com-top > .sl-carg:not(.sl-dropdown) {
+  justify-self: start;
+}
 .sl-com-edit {
-  float: right;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--sl-space-sm);
-  margin: 2px 0 0 0;
+  margin: 0;
 }
 .sl-com-edit .sl-card-id {
   float: none;
@@ -3858,9 +3875,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 }
 .sl-forum-post {
   position: relative;
-  border-bottom: 1px solid var(--sl-color-border-stronger);
-  padding-bottom: 25px;
-  margin-bottom: 25px;
+  padding: 12px 0;
   width: 100%;
 }
 .sl-forum-post-in {
@@ -3870,15 +3885,17 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   float: left;
   width: 160px;
   text-align: center;
-  padding-right: 15px;
   margin-left: -175px;
 }
 .sl-fp-nickname {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
   position: relative;
-  height: 20px;
-  padding: 9px 14px;
-  margin-bottom: 20px;
+  min-height: 20px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
   border: 1px solid var(--sl-color-border-stronger);
 }
 .sl-fp-nickname b {
@@ -3920,19 +3937,24 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 .sl-fp-meta {
   background-color: var(--sl-color-surface-alt);
   border-radius: 8px;
-  height: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-sm) var(--sl-space-md);
   line-height: 20px;
-  padding: 10px 15px;
-  margin-bottom: 20px;
+  padding: 8px;
+  margin-bottom: 12px;
 }
 .sl-fp-meta .sl-grey {
   font-size: 12px;
-  float: left;
+  order: 0;
 }
 .sl-fp-meta .sl-pull-right {
   display: flex;
   align-items: center;
   gap: var(--sl-space-md);
+  order: 1;
 }
 .sl-fp-meta .sl-pull-right .sl-min-rate {
   float: none;
@@ -4120,11 +4142,6 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
 }
 
 @media (min-width: 901px) {
-  .sl-post,
-  .sl-card {
-    margin-bottom: 40px;
-  }
-
   .sl-meta {
     margin-bottom: 14px;
     padding-bottom: 16px;
@@ -4615,6 +4632,7 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
     flex-wrap: wrap;
     gap: var(--sl-space-md) var(--sl-space-lg);
     align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .sl-com-edit,
