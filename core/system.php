@@ -9,6 +9,9 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) die('Illegal file access'
 define('BLOCK_FILE', true);
 define('FUNC_FILE', true);
 
+# Sentinel baked into cached HTML and replaced with live generation timing right before output
+define('GEN_MARK', "\x02SLGEN\x02");
+
 # Configuration directory
 define('CONFIG_DIR', BASE_DIR.'/config');
 
@@ -1461,12 +1464,14 @@ function getPageHash(): string {
     global $theme, $locale;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    return Cache::getHash(['pages-v1', getHost(), $scheme, $theme, $locale, $url]);
+    return Cache::getHash(['pages-v1', Cache::getEpoch(), getHost(), $scheme, $theme, $locale, Cache::filterCacheUrl($url)]);
 }
 
-# Run the full cache wipe as a scheduler job and report the removed file count
+# Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
 function addCacheGcTask(): array {
-    $num = Cache::deleteAll();
+    global $conf;
+    $ttl = max((int)$conf['cache_t'] * 24, 86400);
+    $num = Cache::deleteStale('html', $ttl);
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
 }
 
@@ -1487,9 +1492,19 @@ function setHead(array $seo = []): void {
     if ($conf['referers']['refer']) updateRefererTrack($ctime, $request, $uname);
     if ($conf['statistic']['stat']) updateStatsTrack($request, $guest);
     if (checkPageCache()) {
-        $file = Cache::getPath('html', getPageHash(), 'html');
+        $hash = getPageHash();
+        $file = Cache::getPath('html', $hash, 'html');
         if (Cache::isFresh($file, $conf['cache_t'])) {
-            echo Cache::getBody($file);
+            if ($conf['cache_b'] === '1' && $conf['db_t'] != '1') {
+                $mtime = filemtime($file);
+                Cache::setHeaders(true, $conf['cache_d'], 'text/html', $mtime);
+                if (Cache::checkNotModified($mtime)) exit;
+            }
+            echo getTimedHtml(Cache::getBody($file));
+            exit;
+        }
+        if (!empty($conf['cache_l']) && is_file($file) && !Cache::getRebuildLock($hash)) {
+            echo getTimedHtml(Cache::getBody($file));
             exit;
         }
         ob_start();
@@ -1726,7 +1741,7 @@ function setFoot(): void {
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
     $docache = checkPageCache();
-    $time = ($conf['db_t'] == '1' && !$docache) ? getTimeLoads() : '';
+    $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
     $cvar = explode(',', $conf['variables']);
     $debug = (!$cvar[0] && !$docache && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
@@ -1765,8 +1780,16 @@ function setFoot(): void {
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
     unset($sitepage, $sitevars);
-    if ($docache && $html !== '') Cache::setBody(Cache::getPath('html', getPageHash(), 'html'), !empty($conf['cache_c']) ? getOutputHtml($html, true) : $html);
-    echo $html;
+    if ($docache && $html !== '') {
+        $file = Cache::getPath('html', getPageHash(), 'html');
+        $done = Cache::setBody($file, !empty($conf['cache_c']) ? getOutputHtml($html, true) : $html);
+        if ($done && $conf['cache_b'] === '1' && $conf['db_t'] != '1') {
+            clearstatcache(true, $file);
+            Cache::setHeaders(true, $conf['cache_d'], 'text/html', filemtime($file));
+        }
+    }
+    Cache::setRebuildFree();
+    echo getTimedHtml($html);
     while (ob_get_level() > 0) ob_end_flush();
     exit;
 }
@@ -3168,6 +3191,13 @@ function getTimeLoads(): string {
     $sqltime = sprintf('%.3f', $db->sqltime);
     $cont = _GENERATION.': '.$ttime.' '._SEC.'. '._AND.' '.$qnums.' '._GENERATION_DB.' '.$sqltime.' '._SEC.'.';
     return $cont;
+}
+
+# Replace the generation marker with live timing for this request, or strip it when generation timing is disabled
+function getTimedHtml(string $html): string {
+    global $conf;
+    if (!str_contains($html, GEN_MARK)) return $html;
+    return str_replace(GEN_MARK, ($conf['db_t'] == '1') ? getTimeLoads() : '', $html);
 }
 
 # Notify subscribed admins by email on new content or comment submission

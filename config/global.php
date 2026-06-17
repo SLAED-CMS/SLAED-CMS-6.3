@@ -23,6 +23,7 @@ return [
     'cache_c' => '0',
     'cache_css' => '0',
     'cache_d' => '7',
+    'cache_l' => '0',
     'cache_script' => '0',
     'cache_t' => '600',
     'censor' => '1',

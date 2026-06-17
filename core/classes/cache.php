@@ -9,6 +9,9 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 class Cache {
     private const TYPES = ['html', 'assets', 'data'];
     private const EXTS = ['html', 'css', 'js', 'json'];
+    private const DROP = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'yclid', 'fbclid', '_openstat'];
+    private static bool $bumped = false;
+    private static $hold = null;
 
     # Build a validated cache path inside storage/cache/pages and reject anything outside the whitelist
     public static function getPath(string $type, string $hash, string $ext): string {
@@ -21,6 +24,30 @@ class Cache {
     # Build a stable cache hash from ordered identity parts
     public static function getHash(array $parts): string {
         return sha1(implode('|', $parts));
+    }
+
+    # Drop tracking parameters and order query groups so equivalent URLs map to one cache key
+    public static function filterCacheUrl(string $url): string {
+        $cut = strpos($url, '?');
+        if ($cut === false) return $url;
+        $path = substr($url, 0, $cut);
+        $query = substr($url, $cut + 1);
+        if ($query === '') return $path;
+        $groups = [];
+        foreach (explode('&', $query) as $pair) {
+            if ($pair === '') continue;
+            $eq = strpos($pair, '=');
+            $key = urldecode(($eq === false) ? $pair : substr($pair, 0, $eq));
+            if (in_array($key, self::DROP, true)) continue;
+            $groups[$key][] = $pair;
+        }
+        if ($groups === []) return $path;
+        ksort($groups);
+        $out = [];
+        foreach ($groups as $pairs) {
+            foreach ($pairs as $pair) $out[] = $pair;
+        }
+        return $path.'?'.implode('&', $out);
     }
 
     # Report whether a cache file exists, is not empty, and is still within the TTL window
@@ -68,8 +95,76 @@ class Cache {
         return $num;
     }
 
+    # Remove cached files of one type older than the retention window, keeping protected markers
+    public static function deleteStale(string $type, int $ttl): int {
+        if (!in_array($type, self::TYPES, true) || $ttl < 1) return 0;
+        $dir = CACHE_DIR.'/pages/'.$type;
+        if (!is_dir($dir)) return 0;
+        $num = 0;
+        $edge = time() - $ttl;
+        foreach (scandir($dir) ?: [] as $name) {
+            if ($name === '.' || $name === '..' || $name === '.htaccess' || $name === 'index.html') continue;
+            $file = $dir.'/'.$name;
+            if (!is_file($file)) continue;
+            $when = filemtime($file);
+            if ($when !== false && $when < $edge && unlink($file)) $num++;
+        }
+        return $num;
+    }
+
+    # Read the current page-cache generation counter, returning zero when it is missing
+    public static function getEpoch(): int {
+        $file = CACHE_DIR.'/pages/epoch';
+        if (!is_file($file)) return 0;
+        $val = file_get_contents($file);
+        return ($val !== false) ? (int)$val : 0;
+    }
+
+    # Bump the page-cache generation counter once per request through an exclusive lock to invalidate every cached page
+    public static function addEpoch(): void {
+        if (self::$bumped) return;
+        self::$bumped = true;
+        $dir = CACHE_DIR.'/pages';
+        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
+        $hand = fopen($dir.'/epoch', 'c+');
+        if ($hand === false) return;
+        if (flock($hand, LOCK_EX)) {
+            $val = (int)stream_get_contents($hand);
+            ftruncate($hand, 0);
+            rewind($hand);
+            fwrite($hand, (string)($val + 1));
+            fflush($hand);
+            flock($hand, LOCK_UN);
+        }
+        fclose($hand);
+    }
+
+    # Try to grab the single-flight rebuild lock for one page; true means rebuild here, false means another worker already rebuilds it
+    public static function getRebuildLock(string $hash): bool {
+        if (!preg_match('/^[a-f0-9]{40}$|^[a-f0-9]{64}$/', $hash)) return true;
+        $dir = CACHE_DIR.'/pages/locks';
+        if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return true;
+        $hand = fopen($dir.'/'.$hash, 'c');
+        if ($hand === false) return true;
+        if (!flock($hand, LOCK_EX | LOCK_NB)) {
+            fclose($hand);
+            return false;
+        }
+        self::$hold = $hand;
+        register_shutdown_function([self::class, 'setRebuildFree']);
+        return true;
+    }
+
+    # Release the single-flight rebuild lock held by this request
+    public static function setRebuildFree(): void {
+        if (self::$hold === null) return;
+        flock(self::$hold, LOCK_UN);
+        fclose(self::$hold);
+        self::$hold = null;
+    }
+
     # Emit browser cache, content type, and security headers for public or no-store responses
-    public static function setHeaders(bool $public, int $days = 0, string $type = 'text/html'): void {
+    public static function setHeaders(bool $public, int $days = 0, string $type = 'text/html', int $mtime = 0): void {
         $ctype = ($type === 'text/html') ? $type.'; charset='._CHARSET : $type;
         header('Content-Type: '.$ctype);
         if ($public) {
@@ -81,11 +176,22 @@ class Cache {
             header('Pragma: no-cache');
             header('Expires: '.gmdate('D, d M Y H:i:s', time() - 3600).' GMT');
         }
-        header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
+        header('Last-Modified: '.gmdate('D, d M Y H:i:s', ($mtime > 0) ? $mtime : time()).' GMT');
         header('X-Powered-By: SLAED CMS');
         header('X-Powered-CMS: SLAED CMS');
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: SAMEORIGIN');
         header('Referrer-Policy: strict-origin-when-cross-origin');
+    }
+
+    # Send a 304 status and report a match when the client cached copy is not older than the stored file
+    public static function checkNotModified(int $mtime): bool {
+        if ($mtime <= 0) return false;
+        $since = $_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '';
+        if ($since === '') return false;
+        $stamp = strtotime($since);
+        if ($stamp === false || $stamp < $mtime) return false;
+        http_response_code(304);
+        return true;
     }
 }

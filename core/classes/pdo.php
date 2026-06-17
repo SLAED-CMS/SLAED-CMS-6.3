@@ -117,6 +117,7 @@ class Database {
         if ($this->qresult) {
             $this->qnum++;
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);
+            if (defined('ADMIN_FILE') && preg_match('/^\s*(INSERT|UPDATE|DELETE|REPLACE|TRUNCATE)\b/i', $query)) Cache::addEpoch();
             return $this->qresult;
         }
         if (!$conf['security']['error_log']) return false;

@@ -17,7 +17,7 @@ $name = getVar('req', 'name', 'var');
 $op = getVar('req', 'op', 'var');
 
 if (empty($go)) {
-    Cache::setHeaders($conf['cache_b'] === '1', $conf['cache_d']);
+    Cache::setHeaders(false);
     if ($conf['alang']) {
         $coun = Geoip::getCountry(getIp());
         if ($coun !== '' && !is_bot() && empty(getCookies('language'))) {
@@ -126,6 +126,7 @@ if (empty($go)) {
             case 'getVotingView': getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
         }
+        if (in_array($op, ['addComment', 'updateComment', 'updateCommentStatus', 'updatePost', 'updateVotingResult'], true)) Cache::addEpoch();
     } elseif ($go == 2) {
         getLang('shop');
         Cache::setHeaders(false);
