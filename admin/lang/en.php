@@ -91,6 +91,8 @@ define('_B_FEDIT','A file with this name already exists in the system. Note that
 define('_CACESSI','The rights of the forum should be set up only in case if produced by category belongs to the module of the forum, otherwise, leave the default.');
 define('_CACHE','Сache');
 define('_CACHEBROW','Activate the browser caching?');
+define('_CACHELOCK','Single-flight cache rebuild?');
+define('_CACHELOCKINFO','When a cached page expires only one worker rebuilds it; others briefly receive the previous version. Reduces peak load under high traffic. Recommended for high-traffic projects.');
 define('_CACHECOMP','Compress cached files?');
 define('_CACHECSS','To cache the styles of the theme?');
 define('_CACHEDEL','Browser cache duration, in days');

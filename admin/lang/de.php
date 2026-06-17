@@ -91,6 +91,8 @@ define('_B_FEDIT','Datei mit diesem Namen ist bereits auf dem System vorhanden i
 define('_CACESSI','Rechte Forum zu installieren, nur falls die Kategorie gehört das Forum, andernfalls lassen Sie die Standardeinstellung.');
 define('_CACHE','Caching');
 define('_CACHEBROW','Browser-Caching aktivieren?');
+define('_CACHELOCK','Cache-Neuaufbau durch einen Prozess?');
+define('_CACHELOCKINFO','Beim Ablauf des Cache baut nur ein Prozess die Seite neu auf; andere erhalten kurzzeitig die vorherige Version. Reduziert die Spitzenlast bei hohem Traffic. Empfohlen für stark frequentierte Projekte.');
 define('_CACHECOMP','Zwischengespeicherte Cache Dateien komprimieren?');
 define('_CACHECSS','Stile zwischenspeichern?');
 define('_CACHEDEL','Browser-Cache-Dauer, in Tagen');

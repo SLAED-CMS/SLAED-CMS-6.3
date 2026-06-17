@@ -91,6 +91,8 @@ define('_B_FEDIT',"Un fichier de ce nom existe déjà dans le système. Noter qu
 define('_CACESSI','Les droits du forum devriez installer uniquement si créée catégories appartient le module forum, dans le cas contraire, laissez la valeur par défaut.');
 define('_CACHE','La mise en cache');
 define('_CACHEBROW','Activer la mise en cache du navigateur?');
+define('_CACHELOCK','Reconstruction du cache par un seul processus ?');
+define('_CACHELOCKINFO','À l’expiration du cache, un seul processus reconstruit la page ; les autres reçoivent brièvement la version précédente. Réduit la charge de pointe en cas de trafic élevé. Recommandé pour les projets à fort trafic.');
 define('_CACHECOMP','Compresser le cache des fichiers?');
 define('_CACHECSS',"Mettre en cache les styles d'habillage?");
 define('_CACHEDEL','Durée du cache navigateur, en jours');

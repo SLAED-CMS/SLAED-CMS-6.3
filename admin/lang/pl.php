@@ -91,6 +91,8 @@ define('_B_FEDIT','Plik o tej nazwie już istnieje w systemie. Zwróć uwagę, p
 define('_CACESSI','Prawa forum należy zainstalować tylko w przypadku jeśli tworzona kategoria należy do części forum, w przeciwnym razie pozostaw domyślne.');
 define('_CACHE','Buforowanie');
 define('_CACHEBROW','Włączyć buforowanie przeglądarki?');
+define('_CACHELOCK','Przebudowa cache przez jeden proces?');
+define('_CACHELOCKINFO','Po wygaśnięciu cache tylko jeden proces przebudowuje stronę; pozostałe chwilowo otrzymują poprzednią wersję. Zmniejsza szczytowe obciążenie przy dużym ruchu. Zalecane dla projektów o dużym ruchu.');
 define('_CACHECOMP','Kompresji buforowane pliki?');
 define('_CACHECSS','Buforować style motywy?');
 define('_CACHEDEL','Czas pamięci podręcznej przeglądarki, w dniach');

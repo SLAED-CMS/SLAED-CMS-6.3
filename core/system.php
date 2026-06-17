@@ -1471,7 +1471,7 @@ function getPageHash(): string {
 function addCacheGcTask(): array {
     global $conf;
     $ttl = max((int)$conf['cache_t'] * 24, 86400);
-    $num = Cache::deleteStale('html', $ttl);
+    $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl);
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
 }
 
@@ -1504,8 +1504,11 @@ function setHead(array $seo = []): void {
             exit;
         }
         if (!empty($conf['cache_l']) && is_file($file) && !Cache::getRebuildLock($hash)) {
-            echo getTimedHtml(Cache::getBody($file));
-            exit;
+            $body = Cache::getBody($file);
+            if ($body !== '') {
+                echo getTimedHtml($body);
+                exit;
+            }
         }
         ob_start();
     }

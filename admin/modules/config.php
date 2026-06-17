@@ -572,6 +572,7 @@ function config(): void {
     ])];
     $rows[] = ['label_html' => _CACHECOMP, 'field_html' => getTplRadioGroup(['name' => 'cache_c', 'value' => $conf['cache_c'], 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHEBROW, 'field_html' => getTplRadioGroup(['name' => 'cache_b', 'value' => $conf['cache_b'], 'options' => $yesno])];
+    $rows[] = ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _CACHELOCK, 'hint' => _CACHELOCKINFO]), 'field_html' => getTplRadioGroup(['name' => 'cache_l', 'value' => $conf['cache_l'] ?? '0', 'options' => $yesno])];
     $rows[] = ['label_html' => _CACHEDEL, 'field_html' => $tpl->getHtmlFrag('input', [
         'itype' => 'number',
         'name_attr' => 'cache_d',
@@ -757,6 +758,7 @@ function save(): void {
             'cache_d' => getVar('post', 'cache_d', 'num', 30),
             'cache_c' => getVar('post', 'cache_c', 'num'),
             'cache_b' => getVar('post', 'cache_b', 'num'),
+            'cache_l' => getVar('post', 'cache_l', 'num'),
             'cache_css' => getVar('post', 'cache_css', 'num'),
             'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/highlightjs/slaed-theme.css'), $kprotect),
             'css_h' => getVar('post', 'css_h', 'num'),

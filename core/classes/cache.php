@@ -9,6 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 class Cache {
     private const TYPES = ['html', 'assets', 'data'];
     private const EXTS = ['html', 'css', 'js', 'json'];
+    private const SWEEP = ['html', 'assets', 'data', 'locks'];
     private const DROP = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'yclid', 'fbclid', '_openstat'];
     private static bool $bumped = false;
     private static $hold = null;
@@ -97,7 +98,7 @@ class Cache {
 
     # Remove cached files of one type older than the retention window, keeping protected markers
     public static function deleteStale(string $type, int $ttl): int {
-        if (!in_array($type, self::TYPES, true) || $ttl < 1) return 0;
+        if (!in_array($type, self::SWEEP, true) || $ttl < 1) return 0;
         $dir = CACHE_DIR.'/pages/'.$type;
         if (!is_dir($dir)) return 0;
         $num = 0;
@@ -144,12 +145,14 @@ class Cache {
         if (!preg_match('/^[a-f0-9]{40}$|^[a-f0-9]{64}$/', $hash)) return true;
         $dir = CACHE_DIR.'/pages/locks';
         if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return true;
-        $hand = fopen($dir.'/'.$hash, 'c');
+        $path = $dir.'/'.$hash;
+        $hand = fopen($path, 'c');
         if ($hand === false) return true;
         if (!flock($hand, LOCK_EX | LOCK_NB)) {
             fclose($hand);
             return false;
         }
+        touch($path);
         self::$hold = $hand;
         register_shutdown_function([self::class, 'setRebuildFree']);
         return true;
