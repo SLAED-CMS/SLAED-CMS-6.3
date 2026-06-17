@@ -1459,12 +1459,12 @@ function checkPageCache(): bool {
     return ($conf['rewrite']) ? ($url == 'index.php' || $url == 'index.html' || strstr($url, 'index.php?name='.$name) || strstr($url, $name)) : ($url == 'index.php' || strstr($url, 'index.php?name='.$name));
 }
 
-# Build the page cache hash from host, scheme, theme, locale, and request URI
+# Build the page cache hash from CMS version, content epoch, host, scheme, theme, locale, and the normalized request URI
 function getPageHash(): string {
-    global $theme, $locale;
+    global $theme, $locale, $conf;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    return Cache::getHash(['pages-v1', Cache::getEpoch(), getHost(), $scheme, $theme, $locale, Cache::filterCacheUrl($url)]);
+    return Cache::getHash([$conf['version'] ?? '', Cache::getEpoch(), getHost(), $scheme, $theme, $locale, Cache::filterCacheUrl($url)]);
 }
 
 # Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
