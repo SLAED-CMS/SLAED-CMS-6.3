@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_ADDFNOTE','Tous les sites avant de poster passent un ch&#232;que! Soyez attentif en remplissant le formulaire.');

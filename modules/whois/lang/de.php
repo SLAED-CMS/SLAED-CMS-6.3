@@ -1,5 +1,5 @@
 <?php
-# Copyright © 2005 - 2014 SLAED
+# 2005 - 2026 SLAED
 # Website: http://www.slaed.net
 
 define('_ABMIT','In dieser Abteilung k&#246;nnen Sie die F&#252;hrung des Projekts &#252;ber die Website illegal benutzen Sie unsere Software-Produkt. Dazu f&#252;llen Sie bitte ein und senden Sie das folgende Formular.');

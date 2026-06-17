@@ -1,5 +1,5 @@
 <?php
-# Copyright © 2005 - 2014 SLAED
+# 2005 - 2026 SLAED
 # Website: http://www.slaed.net
 
 define('_ABMIT','In this Department You can inform the management of the project on the site of illegally using our software product. To do this, fill and send the following form.');

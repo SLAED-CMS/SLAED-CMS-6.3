@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_ADDNOTEM','All media files before the publication pass check! Be close at filling the form. Consider, what not all fields are obligatory to filling. Fill only those fields which correspond to type of a file which you wish to place.');

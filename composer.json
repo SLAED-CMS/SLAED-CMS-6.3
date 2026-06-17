@@ -2,7 +2,7 @@
     "name": "slaed/cms",
     "description": "SLAED CMS - Modern, Secure, High-Performance Content Management System",
     "type": "project",
-    "license": "GPL-3.0-or-later",
+    "license": "MIT",
     "authors": [
         {
             "name": "Eduard Laas",

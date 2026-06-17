@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_ADDNOTEM','Wszystkie pliki przed wys&#322;aniem s&#261; sprawdzane! Nale&#380;y zachowa&#263; ostro&#380;no&#347;&#263; podczas wype&#322;niania formularza. Nale&#380;y pami&#281;ta&#263;, &#380;e nie wszystkie pola s&#261; wymagane. Prosz&#281; wype&#322;ni&#263; tylko te pola, kt&#243;re odpowiadaj&#261; typowi pliku, kt&#243;ry chcesz wys&#322;a&#263;.');

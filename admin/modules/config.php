@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
@@ -772,8 +772,6 @@ function save(): void {
             'script_b' => getVar('post', 'script_b', 'num'),
             'mtemp' => getVar('post', 'mtemp', 'raw'),
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
-            'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
-            'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
         ];
         setConfigFile('global.php', $cont);
     }

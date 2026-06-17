@@ -110,4 +110,4 @@ Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcem
 
 ---
 
-*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*
+*SLAED CMS © 2005 - 2026 Eduard Laas. Released under MIT License.*

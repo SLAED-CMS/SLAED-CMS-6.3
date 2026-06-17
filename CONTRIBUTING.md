@@ -397,8 +397,8 @@ For new PHP files:
 ```php
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 ```
 
@@ -421,4 +421,4 @@ When updating public documentation:
 
 ---
 
-*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*
+*SLAED CMS © 2005 - 2026 Eduard Laas. Released under MIT License.*

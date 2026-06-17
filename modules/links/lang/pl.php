@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_ADDFNOTE','Wszystkie strony przed zamieszczeniem s&#261; sprawdzane! Nale&#380;y zachowa&#263; ostro&#380;no&#347;&#263; podczas wype&#322;niania formularza.');

@@ -1,5 +1,5 @@
 <?php
-# Copyright © 2005 - 2015 SLAED
+# 2005 - 2026 SLAED
 # Website: http://www.slaed.net
 
 if (!defined('BLOCK_FILE')) {

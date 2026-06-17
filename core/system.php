@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) die('Illegal file access');
@@ -11,6 +11,9 @@ define('FUNC_FILE', true);
 
 # Sentinel baked into cached HTML and replaced with live generation timing right before output
 define('GEN_MARK', "\x02SLGEN\x02");
+
+# Frozen salt for verifying legacy md5 password hashes; never change it or stored legacy hashes stop matching
+define('PASS_SALT', 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==');
 
 # Configuration directory
 define('CONFIG_DIR', BASE_DIR.'/config');
@@ -73,8 +76,8 @@ function getConfig(): array {
     $is_new = !file_exists($local_file);
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
-    .'# License: GNU GPL 3'.PHP_EOL
+    .'# 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# License: MIT'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$export($data).';'.PHP_EOL;
     if (file_put_contents($tmp, $cnt, LOCK_EX) !== false) {
@@ -1512,8 +1515,7 @@ function setHead(array $seo = []): void {
         }
         ob_start();
     }
-    if (defined('ADMIN_FILE') && ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==')) setExit(_NO_LICENSE);
-    $licens = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
+    $licens = getLicenseHtml();
     $strmeta = '<meta charset="'._CHARSET.'">'."\n";
     $strlink = $stscript = '';
     $sep = urldecode($conf['defis']);
@@ -2288,8 +2290,8 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
-    .'# License: GNU GPL 3'.PHP_EOL
+    .'# 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# License: MIT'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$export($data).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
@@ -3315,9 +3317,8 @@ function getPassHash(string $pass): string {
 # Verify a user password; supports current bcrypt and legacy md5 hashes transparently.
 # Legacy branch will be removed once all stored hashes have been upgraded via transparent rehashing.
 function checkPassHash(string $pass, string $hash): bool {
-    global $conf;
     if (password_verify($pass, $hash)) return true;
-    if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5(md5((string)($conf['lic_f'] ?? '')).md5($pass)) === $hash;
+    if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5(md5(PASS_SALT).md5($pass)) === $hash;
     return false;
 }
 
@@ -4043,6 +4044,11 @@ function rss_load(mixed $bid): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => $btime, 'bid' => $bid]);
     }
     echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $content]);
+}
+
+# Build the project copyright and license line shown in page footers
+function getLicenseHtml(): string {
+    return '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 }
 
 # Get shared footer controls through a fragment

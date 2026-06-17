@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
@@ -890,7 +890,7 @@ function getOpenXsl(): string {
     $path = SITEMAP_DIR.'/sitemap.xsl';
     if (file_exists($path)) {
         $file = file_get_contents($path);
-        $licens = str_replace('&copy;', '©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
+        $licens = getLicenseHtml();
         $title = $conf['sitename'].' - '._SITEMAP;
         $langs = ['$lan[0]' => $title, '$lan[1]' => $licens, '$lan[2]' => _SITEMAP_XML, '$lan[3]' => _URL, '$lan[4]' => _PRIORITY, '$lan[5]' => _CHANGEFREQ, '$lan[6]' => _LASTMOD];
         $cont = strtr($file, $langs);

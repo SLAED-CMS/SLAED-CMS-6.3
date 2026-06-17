@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_ACCESSDENIED','Dostęp zabroniony');
@@ -288,7 +288,6 @@ define('_NONE','Nie');
 define('_NOPASS','Nie podałeś i nie powtarzać hasło!');
 define('_NOTE','Uwaga');
 define('_NO_INFO','Brak informacji');
-define('_NO_LICENSE','Nielegalne usuwanie praw autorskich systemu, łamiesz licencję użytkowania!');
 define('_OCCUPATION','Zawód');
 define('_OK','OK');
 define('_ONDELETE','Usuwanie obiektu');

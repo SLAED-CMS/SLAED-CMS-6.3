@@ -3,7 +3,7 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-slateblue.svg)](https://www.php.net/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
-[![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg)
 ![Migration](https://img.shields.io/badge/Migration-90%25_Complete-purple.svg)
 
@@ -263,7 +263,7 @@ For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md]
 
 ## License
 
-GNU General Public License v3.0
+MIT License
 
 See [LICENSE](LICENSE) for details.
 
@@ -279,4 +279,4 @@ See [LICENSE](LICENSE) for details.
 
 ---
 
-*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*
+*SLAED CMS © 2005 - 2026 Eduard Laas. Released under MIT License.*

@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_L_1','Wy&#347;wietli&#263; liczb&#281; przej&#347;&#263; na stron&#281; internetow&#261;?');

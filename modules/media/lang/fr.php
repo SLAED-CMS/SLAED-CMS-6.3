@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 define('_ADDNOTEM',"Tous les fichiers m&#233;dia avant de poster passent un ch&#232;que! Soyez attentif en remplissant le formulaire. Gardez &#224; l'esprit que tous les champs sont obligatoires. Remplissez seuls les champs qui correspondent au type de fichier que Vous voulez placer.");

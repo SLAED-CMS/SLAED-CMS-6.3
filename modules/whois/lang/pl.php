@@ -1,5 +1,5 @@
 <?php
-# Copyright © 2005 - 2014 SLAED
+# 2005 - 2026 SLAED
 # Website: http://www.slaed.net
 
 define('_ABMIT','W tym dziale mo&#380;na zg&#322;asza&#263; kierownictwu projektu na stronie internetowej nielegalnie opartego na nasz produkt. Do tego wype&#322;nij i wy&#347;lij poni&#380;szy formularz.');

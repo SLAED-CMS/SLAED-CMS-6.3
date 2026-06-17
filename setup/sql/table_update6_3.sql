@@ -1,6 +1,6 @@
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 # Compatible: MySQL 8.0+ & MariaDB 10.5+
 #

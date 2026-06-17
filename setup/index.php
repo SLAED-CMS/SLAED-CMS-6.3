@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 if (!defined('SETUP_FILE')) die('Illegal File Access');
@@ -32,8 +32,7 @@ require_once BASE_DIR.'/lang/'.$clang.'.php';
 require_once BASE_DIR.'/setup/lang/'.$clang.'.php';
 
 if (version_compare(PHP_VERSION, '8.1.0', '<')) setExit(_PHPSETUP);
-if ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==') setExit(_NO_LICENSE);
-$copy = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
+$copy = '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 
 # Saving configurations to a file
 function setConfigFile(string $fp, array $arr, array $act = []): void {
@@ -67,8 +66,8 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
-    .'# License: GNU GPL 3'.PHP_EOL
+    .'# 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# License: MIT'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$exp($data).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);

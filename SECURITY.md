@@ -200,4 +200,4 @@ See also [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*
+*SLAED CMS © 2005 - 2026 Eduard Laas. Released under MIT License.*

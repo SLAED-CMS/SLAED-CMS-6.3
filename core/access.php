@@ -1,7 +1,7 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
-# License: GNU GPL 3
+# 2005 - 2026 SLAED
+# License: MIT
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE')) die('Illegal file access');
@@ -45,7 +45,7 @@ function setExit(string $msg, string $typ = ''): never {
     $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.htmlspecialchars((string)($conf['homeurl'] ?? '').'/index.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n" : '';
     $meta = '<meta name="author" content="'.htmlspecialchars((string)($conf['sitename'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n"
         . '<meta name="generator" content="'.htmlspecialchars('SLAED CMS '.($conf['version'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n" . $jump;
-    $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
+    $license = getLicenseHtml();
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
     if (is_file(BASE_DIR.'/'.$favicon)) {

@@ -1,5 +1,5 @@
 <?php
-# Copyright © 2005 - 2014 SLAED
+# 2005 - 2026 SLAED
 # Website: http://www.slaed.net
 
 define('_ABMIT','Dans cette section, Vous pouvez informer la direction de projet de site de terre qui utilise notre produit logiciel. Pour ce faire, veuillez remplir et envoyer le formulaire ci-dessous.');
