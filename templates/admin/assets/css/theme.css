@@ -3736,6 +3736,7 @@ body:has(.sl-admin-login-shell):before {
   padding: 9px 0 0;
   color: var(--sl-color-bg);
   text-align: center;
+  font-size: 0.85em;
 }
 
 .sl-admin-login-copyright a {

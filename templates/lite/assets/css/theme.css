@@ -3527,11 +3527,13 @@ div[id^="sl_tabs_"] > .sl-tabs-panel {
   display: block;
   margin-bottom: 20px;
   color: var(--sl-color-on-dark);
+  text-wrap: balance;
 }
 .sl-generates {
   display: block;
   margin-bottom: 20px;
   color: var(--sl-color-text-subtle);
+  text-wrap: balance;
 }
 .sl-copyright a,
 .sl-license a {
