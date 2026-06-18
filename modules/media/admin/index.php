@@ -18,17 +18,17 @@ function media(): void {
         $status = '0';
         $field = 'name=media&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
     } elseif ($status == 2) {
         $status = '2';
         $field = 'name=media&amp;status=2&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
     } else {
         $status = '1';
         $field = 'name=media&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, m.ip, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.status = :status ORDER BY m.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -128,7 +128,7 @@ function add(): void {
     }
     $mtitle = $subtitle ? $title.' '.urldecode($conf['media']['mdefis'] ?? '%7C').' '.$subtitle : $title;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $mtitle, 'texta' => $description, 'mod' => 'media']);
     $yearopts = '';
@@ -328,7 +328,7 @@ function approve(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -415,7 +415,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS],
     ]);
 }
 

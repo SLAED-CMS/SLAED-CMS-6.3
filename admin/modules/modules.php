@@ -29,7 +29,7 @@ function modules(): void {
         ]),
     ]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'subtitle_html' => $search]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
     if (!empty($infos)) $cont .= $tpl->getHtmlFrag('alert', ['text' => $infos]);
     $config = false;
     $modlist = [];
@@ -131,7 +131,7 @@ function modules(): void {
         $titlel = ($menu == 0)
             ? $tpl->getHtmlFrag('popover', [
                 'items' => [
-                    ['label' => _INFO, 'value' => _NO_SICHT, 'is_last' => true],
+                    ['label' => _DOCS, 'value' => _NO_SICHT, 'is_last' => true],
                 ],
                 'label_text' => $lang,
                 'title_text' => $lang,
@@ -242,7 +242,7 @@ function edit(): void {
         ]),
     ]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&amp;type='.$mtype : ''), 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'subtitle_html' => $search]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&amp;type='.$mtype : ''), 'name=modules&amp;op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
     $path = 'templates/admin/images/admin/';
     $entries = is_dir($path) ? scandir($path) : [];
     $pickopts = '';
@@ -385,7 +385,7 @@ function add(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=modules', 'name=modules&amp;op=info'],
-        'tabs' => [_HOME, _INFO],
+        'tabs' => [_HOME, _DOCS],
     ]);
 }
 

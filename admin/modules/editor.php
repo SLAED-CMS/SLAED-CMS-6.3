@@ -65,7 +65,7 @@ function isHtmxReq(): bool {
 function getEditbox(string $file, string $info, string $warn, string $mtype, string $edit, int $tab, bool $trim = false, string $extra = '', string $fallback = '', string $note = '', string $type = 'info'): string {
     global $afile, $tpl;
     $ops = ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
-    $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO];
+    $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
     $text = filterRawEditorText($file, $text);
@@ -149,7 +149,7 @@ function save(): void {
         setHead();
         $cont = getTplAdminTabs([
             'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
-            'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO],
+            'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS],
             'tab' => $edit === 'editheader' ? 1 : ($edit === 'htaccess' ? 2 : ($edit === 'robots' ? 3 : 0)),
         ]);
         echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
@@ -172,7 +172,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
-        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO],
+        'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS],
     ]);
 }
 

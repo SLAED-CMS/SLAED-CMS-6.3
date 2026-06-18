@@ -11,7 +11,7 @@ function money(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
     if (getVar('get', 'send', 'num', 0)) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MA_15]);
@@ -149,7 +149,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
     if ($stop) {
@@ -355,7 +355,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 2,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
@@ -418,7 +418,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }
 

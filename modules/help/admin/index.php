@@ -17,12 +17,12 @@ function help(): void {
         $status = '1';
         $field = 'name=help&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 1]);
+        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS], 'tab' => 1]);
     } else {
         $status = '0';
         $field = 'name=help&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -84,7 +84,7 @@ function view(): void {
     $vid = (int)(getVar('get', 'id', 'num', 0) ?? 0);
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $vid, 'id2' => $vid]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
     $body = '';
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
@@ -177,7 +177,7 @@ function add(): void {
     }
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'field' => $field, 'mod' => 'help']);
     $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
@@ -296,7 +296,7 @@ function delete(int $fid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -351,7 +351,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'],
-        'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS],
     ]);
 }
 

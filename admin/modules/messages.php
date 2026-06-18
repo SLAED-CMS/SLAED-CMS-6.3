@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function messages(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $rows = [];
@@ -96,7 +96,7 @@ function add(): void {
     }
     $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
@@ -206,7 +206,7 @@ function delete(int $mid = 0): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _INFO],
+        'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }
 

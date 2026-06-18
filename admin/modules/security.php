@@ -24,7 +24,7 @@ $labels = [
 function security(): void {
     global $afile, $labels, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS]]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $head = [
         ['content' => _TITLE],
@@ -45,8 +45,8 @@ function security(): void {
                 'items' => [
                     [
                         'href' => $afile.'.php?name=security&amp;op=logview&amp;file='.urlencode($name),
-                        'label' => _INFO,
-                        'title' => _INFO,
+                        'label' => _DOCS,
+                        'title' => _DOCS,
                     ],
                     [
                         'href' => $afile.'.php?name=security&amp;op=download&amp;file='.urlencode($name),
@@ -86,7 +86,7 @@ function security(): void {
 function logview(): void {
     global $labels, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS]]);
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file] ?? $file;
@@ -118,7 +118,7 @@ function banlist(): void {
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text');
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $tabone = '';
@@ -402,7 +402,7 @@ function bansave(): void {
 function passwd(): void {
     global $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password'])
         ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_AUTH_INFO])
@@ -483,7 +483,7 @@ function passsave(): void {
 function config(): void {
     global $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getRandomString('10')));
     $floodhtml = $tpl->getHtmlFrag('select', [
@@ -645,7 +645,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'],
-        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
     ]);
 }
 

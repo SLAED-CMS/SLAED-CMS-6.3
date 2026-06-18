@@ -39,7 +39,7 @@ function news(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
-    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $search = getVar('req', 'search', 'num', 2);
     $chng = (string)getVar('req', 'chng');
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
@@ -221,7 +221,7 @@ function add(): void {
     }
     setHead();
     $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
-    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $homepre = ($vote) ? $tpl->getHtmlFrag('block-content', ['id' => 'repnews', 'is_section' => true, 'content' => getVotingView($vote, 'news'), 'has_hr' => true]).$hometext : $hometext;
@@ -411,7 +411,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
-    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
@@ -483,7 +483,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }
 

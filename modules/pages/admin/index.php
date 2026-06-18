@@ -46,7 +46,7 @@ function pages(): void {
     $anump = $conf['pages']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
-    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $sub = getPagesSearch();
     if (getVar('req', 'status', 'num', 0) == 1) {
         $status = '0';
@@ -202,7 +202,7 @@ function add(): void {
     }
     setHead();
     $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
-    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'textb' => $bodytext, 'mod' => 'pages']);
@@ -353,7 +353,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
-    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
@@ -423,7 +423,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }
 

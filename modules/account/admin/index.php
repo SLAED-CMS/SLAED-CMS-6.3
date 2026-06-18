@@ -39,7 +39,7 @@ function account(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
     ]);
     $where = '1 = 1';
@@ -220,7 +220,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 1,
     ]);
@@ -537,7 +537,7 @@ function newuser(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 2,
     ]);
@@ -608,7 +608,7 @@ function pointreset(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 3,
     ]);
@@ -693,7 +693,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 4,
     ]);
@@ -889,7 +889,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
     ]);
 }

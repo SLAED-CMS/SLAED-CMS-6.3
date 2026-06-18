@@ -104,9 +104,9 @@ function config(): void {
     }
     $links[] = [
         'href' => $afile.'.php?name=config&amp;op=info&amp;tab='.$ctab,
-        'label' => _INFO,
+        'label' => _DOCS,
         'link_attr' => 'data-sl-tab-info-link="config-main"',
-        'title' => _INFO,
+        'title' => _DOCS,
     ];
     $cont = getTplAdminTabs([
         'is_runtime' => true,
@@ -790,7 +790,7 @@ function clearcache(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=config&amp;tab=0', 'name=config&amp;tab=1', 'name=config&amp;tab=2', 'name=config&amp;tab=3', 'name=config&amp;tab=4', 'name=config&amp;tab=5', 'name=config&amp;tab=6', 'name=config&amp;op=info'],
-        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO],
+        'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _DOCS],
     ]);
 }
 

@@ -26,9 +26,9 @@ function replace(): void {
     }
     $links[] = [
         'href' => $afile.'.php?name=replace&amp;op=info&amp;tab='.$ctab,
-        'label' => _INFO,
+        'label' => _DOCS,
         'link_attr' => 'data-sl-tab-info-link="replace-main"',
-        'title' => _INFO,
+        'title' => _DOCS,
     ];
     $cont = getTplAdminTabs([
         'is_runtime' => true,
@@ -126,7 +126,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=replace&amp;tab=0', 'name=replace&amp;tab=1', 'name=replace&amp;op=info'],
-        'tabs' => [_CONTENT, _NEWS, _INFO],
+        'tabs' => [_CONTENT, _NEWS, _DOCS],
     ]);
 }
 

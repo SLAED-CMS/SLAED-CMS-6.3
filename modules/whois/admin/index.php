@@ -19,7 +19,7 @@ function whois(): void {
         $field = 'name=whois&amp;status=1&amp;';
         $cont = getTplAdminTabs([
             'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
-            'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+            'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
             'tab' => 2,
         ]);
     } else {
@@ -27,7 +27,7 @@ function whois(): void {
         $field = 'name=whois&amp;';
         $cont = getTplAdminTabs([
             'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
-            'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+            'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         ]);
     }
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
@@ -118,7 +118,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
@@ -195,7 +195,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         'tab' => 3,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
@@ -239,7 +239,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }
 

@@ -18,17 +18,17 @@ function links(): void {
         $status = '0';
         $field = 'name=links&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS], 'tab' => 2]);
     } elseif ($status == 2) {
         $status = '2';
         $field = 'name=links&amp;status=2&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS], 'tab' => 3]);
     } else {
         $status = '1';
         $field = 'name=links&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT l.id, l.cid, l.name, l.title, l.url, l.time, l.ip, c.title, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.status = :status ORDER BY l.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -115,7 +115,7 @@ function add(): void {
         $email = getVar('post', 'email', 'text', '');
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'links']);
     $link = ($site && $site !== 'http://') ? $tpl->getHtmlFrag('link', ['href' => $site, 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
@@ -241,7 +241,7 @@ function delete(int $dfid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -316,7 +316,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS],
     ]);
 }
 

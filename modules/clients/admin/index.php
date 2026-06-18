@@ -11,7 +11,7 @@ function clients(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _INFO],
+        'tabs' => [_HOME, _ADD, _DOCS],
     ]);
     if ($stop) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
@@ -106,7 +106,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _INFO],
+        'tabs' => [_HOME, _ADD, _DOCS],
         'tab' => 1,
     ]);
     if ($stop) {
@@ -191,7 +191,7 @@ function status(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _INFO],
+        'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }
 

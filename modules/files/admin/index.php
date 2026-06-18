@@ -18,17 +18,17 @@ function files(): void {
         $st = '0';
         $field = 'name=files&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
     } elseif ($status == 2) {
         $st = '2';
         $field = 'name=files&amp;status=2&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
     } else {
         $st = '1';
         $field = 'name=files&amp;';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -120,7 +120,7 @@ function add(): void {
         $website = getVar('post', 'website', 'url', 'http://');
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'files']);
     $link = $url ? $tpl->getHtmlFrag('link', ['href' => htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
@@ -303,7 +303,7 @@ function approve(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $streamopts =
         $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']) .
@@ -396,7 +396,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]
+        'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS]
     ]);
 }
 

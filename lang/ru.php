@@ -224,6 +224,7 @@ define('_HOUR','час');
 define('_ID','№');
 define('_IMG','Изображение');
 define('_INFO','Информация');
+define('_DOCS','Справка');
 define('_INPUT','Вход');
 define('_INSERT','Вставить объект');
 define('_INTERESTS','Интересы');

@@ -72,7 +72,7 @@ function clients(): void {
     $offset = ($num - 1) * $conf['shop']['anum'];
     $a = ($num) ? $offset+1 : 1;
     $_ops = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $subtabs = [
         ['href' => $afile.'.php?name=shop&amp;op=clients', 'label' => _NEW, 'title' => _NEW],
         ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=1', 'label' => _AKTIVE, 'title' => _AKTIVE],
@@ -239,7 +239,7 @@ function clientadd(): void {
     }
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
         'tabs' => $_lang,
@@ -411,7 +411,7 @@ function products(): void {
     $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $subtabs = [
         ['href' => $afile.'.php?name=shop&amp;op=products', 'label' => _AKTIVE],
         ['href' => $afile.'.php?name=shop&amp;op=products&amp;status=1', 'label' => _DEAKTIVE],
@@ -550,7 +550,7 @@ function productadd(): void {
     }
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
         'tabs' => $_lang,
@@ -721,7 +721,7 @@ function partners(): void {
     $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $subtabs = [
         ['href' => $afile.'.php?name=shop&amp;op=partners', 'label' => _NEW],
         ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=1', 'label' => _AKTIVE],
@@ -849,7 +849,7 @@ function partneradd(): void {
     }
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
         'tabs' => $_lang,
@@ -964,7 +964,7 @@ function partnerinfo(): void {
     $partsumges = 0;
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 2, 'subtitle_html' => buildShopSearchBox()]);
     $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
     [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
@@ -1184,7 +1184,7 @@ function export(): void {
     } else {
         setHead();
         $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-        $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+        $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
         $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 3, 'subtitle_html' => buildShopSearchBox()]);
         $cont .= checkPerms(UPLOADS_DIR.'/shop/temp');
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _S_NOTE]);
@@ -1265,7 +1265,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $_ops = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
-    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
+    $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
         'tabs' => $_lang,
@@ -1391,7 +1391,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'],
-        'tabs' => [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO],
+        'tabs' => [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS],
         'subtitle_html' => buildShopSearchBox(),
     ]);
 }

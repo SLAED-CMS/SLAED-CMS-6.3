@@ -10,7 +10,7 @@ function content(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
-    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS]]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['content']['anum'] ?? 10;
     $anump = $conf['content']['anump'] ?? 10;
@@ -92,7 +92,7 @@ function add(): void {
     }
     setHead();
     $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
-    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $prev = [
         'title' => $title,
@@ -213,7 +213,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
-    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => $conf['content']['num']])],
@@ -249,7 +249,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }
 

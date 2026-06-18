@@ -69,7 +69,7 @@ function referers(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete&amp;token='.getSiteToken(), 'name=referers&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
         'subtitle_html' => getRefererSearch(),
     ]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -125,7 +125,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete&amp;token='.getSiteToken(), 'name=referers&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
         'tab' => 1,
         'subtitle_html' => getRefererSearch(),
     ]);
@@ -179,7 +179,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete&amp;token='.getSiteToken(), 'name=referers&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
     ]);
 }
 

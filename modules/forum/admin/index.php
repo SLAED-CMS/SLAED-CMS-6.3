@@ -27,7 +27,7 @@ function forum(): void {
         }
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _DOCS]]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHIN]);
     $rows = '';
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
@@ -65,7 +65,7 @@ function forum(): void {
 function config(): void {
     global $afile, $conf, $db, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sortopts =
@@ -142,7 +142,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'],
-        'tabs' => [_SYNCH, _PREFERENCES, _INFO],
+        'tabs' => [_SYNCH, _PREFERENCES, _DOCS],
     ]);
 }
 

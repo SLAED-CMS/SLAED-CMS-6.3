@@ -224,6 +224,7 @@ define('_HOUR','godzina');
 define('_ID','Nr');
 define('_IMG','Obraz');
 define('_INFO','Informacje');
+define('_DOCS','Dokumentacja');
 define('_INPUT','Wejście');
 define('_INSERT','Wstaw obiekt');
 define('_INTERESTS','Interesy');

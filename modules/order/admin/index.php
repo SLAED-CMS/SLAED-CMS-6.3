@@ -10,7 +10,7 @@ function order(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
-    $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
     if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OR_8])]);
     $num = getVar('get', 'num', 'num', 1);
@@ -93,7 +93,7 @@ function add(): void {
     }
     setHead();
     $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
-    $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
@@ -188,7 +188,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
-    $tabs = [_HOME, _ADD, _PREFERENCES, _INFO];
+    $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
@@ -236,7 +236,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }
 

@@ -110,9 +110,9 @@ function fields(): void {
     }
     $links[] = [
         'href' => $afile.'.php?name=fields&amp;op=info&amp;tab='.$ctab,
-        'label' => _INFO,
+        'label' => _DOCS,
         'link_attr' => 'data-sl-tab-info-link="fields-main"',
-        'title' => _INFO,
+        'title' => _DOCS,
     ];
     $cont = getTplAdminTabs([
         'is_runtime' => true,
@@ -177,7 +177,7 @@ function info(): void {
             'name=fields&amp;tab=5',
             'name=fields&amp;op=info',
         ],
-        'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO],
+        'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _DOCS],
     ]);
 }
 

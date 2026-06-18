@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
-    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
     $wargo = $tpl->getHtmlFrag('link', [
         'href' => $afile.'.php?name=security&amp;op=config',
         'label' => _SCHEDULER_WARN_GO,
@@ -125,7 +125,7 @@ function add(string $name = ''): void {
     $schedule = (string)($job['schedule'] ?? '');
     $info = $iscustom ? _SCHEDULER_URLINFO : _SCHEDULER_SYSINFO;
     $readonly = $isnew ? '' : ' readonly';
-    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
@@ -344,7 +344,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _INFO],
+        'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }
 

@@ -12,7 +12,7 @@ function rss(): void {
     $tab = getVar('get', 'tab', 'num', 0);
     if ($tab < 0 || $tab > 1) $tab = 0;
     $ops = ['name=rss&amp;tab=0', 'name=rss&amp;tab=1', 'name=rss&amp;op=info'];
-    $tabs = [_RSS, _PREFERENCES, _INFO];
+    $tabs = [_RSS, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
     $rows = [];
@@ -96,7 +96,7 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=rss&amp;tab=0', 'name=rss&amp;tab=1', 'name=rss&amp;op=info'],
-        'tabs' => [_RSS, _PREFERENCES, _INFO],
+        'tabs' => [_RSS, _PREFERENCES, _DOCS],
     ]);
 }
 

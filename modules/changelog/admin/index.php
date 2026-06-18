@@ -14,10 +14,10 @@ function changelog(): void {
     $exporten = $conf['changelog']['exporten'] ?? true;
     $cont = getTplAdminTabs($exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _DOCS],
     ] : [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
 
@@ -95,11 +95,11 @@ function config(): void {
     $exporten = $conf['changelog']['exporten'] ?? true;
     $cont = getTplAdminTabs($exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _DOCS],
         'tab'  => 1,
     ] : [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'tab'  => 1,
     ]);
     $source = chlogSource((string) ($conf['changelog']['source'] ?? 'local'));
@@ -193,10 +193,10 @@ function info(): void {
     $exporten = $conf['changelog']['exporten'] ?? true;
     setTplAdminInfoPage($exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _DOCS],
     ] : [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
 }
 

@@ -15,7 +15,7 @@ function auto_links(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
     ]);
     if (!$conf['referers']['refer']) {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
@@ -172,7 +172,7 @@ function stats(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
         'subtitle_html' => $subtitle,
     ]);
     if (!$conf['referers']['refer']) {
@@ -253,7 +253,7 @@ function add(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
     if ($stop) {
@@ -375,7 +375,7 @@ function config(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
         'tab' => 4,
     ]);
     if (!$conf['referers']['refer']) {
@@ -417,7 +417,7 @@ function configsave(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
-        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
     ]);
 }
 

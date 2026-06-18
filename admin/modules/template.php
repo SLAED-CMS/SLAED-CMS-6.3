@@ -125,7 +125,7 @@ function template(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => getTemplateTabsOps($templ),
-        'tabs' => [_TEMPLATES, _STYLES, _INFO],
+        'tabs' => [_TEMPLATES, _STYLES, _DOCS],
         'subtitle_html' => getTemplateSearch($templ),
     ]);
     $dir = BASE_DIR.'/templates/'.$templ;
@@ -152,7 +152,7 @@ function style(): void {
     setHead();
     $cont = getTplAdminTabs([
         'ops' => getTemplateTabsOps($templ),
-        'tabs' => [_TEMPLATES, _STYLES, _INFO],
+        'tabs' => [_TEMPLATES, _STYLES, _DOCS],
         'tab' => 1,
         'subtitle_html' => getTemplateSearch($templ),
     ]);
@@ -219,7 +219,7 @@ function info(): void {
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
     setTplAdminInfoPage([
         'ops' => getTemplateTabsOps($templ),
-        'tabs' => [_TEMPLATES, _STYLES, _INFO],
+        'tabs' => [_TEMPLATES, _STYLES, _DOCS],
         'subtitle_html' => getTemplateSearch($templ),
     ]);
 }

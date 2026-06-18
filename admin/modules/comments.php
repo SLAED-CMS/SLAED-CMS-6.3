@@ -84,7 +84,7 @@ function comments(): void {
             $curq.'&amp;op=config',
             $curq.'&amp;op=info',
         ],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
         'tab' => $status,
         'subtitle_html' => $subtitle,
     ]);
@@ -258,7 +258,7 @@ function edit(): void {
             $curq.'&amp;op=config',
             $curq.'&amp;op=info',
         ],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
         'tab' => $status,
         'subtitle_html' => getCommentsSearch(),
     ]);
@@ -371,7 +371,7 @@ function actions(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['comments']['num']])],
@@ -512,7 +512,7 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'],
-        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO],
+        'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
     ]);
 }
 
