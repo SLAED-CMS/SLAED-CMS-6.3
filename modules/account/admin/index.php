@@ -236,11 +236,11 @@ function add(): void {
         ],
         [
             'label_html' => _EMAIL,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
         ],
         [
             'label_html' => _SITEURL,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255, 'placeholder_text' => _SITEURL]),
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 255, 'placeholder_text' => _SITEURL]),
         ],
     ];
     if ($avatar !== '') {
@@ -409,11 +409,11 @@ function add(): void {
     }
     $rows[] = [
         'label_html' => _PASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
     ];
     $rows[] = [
         'label_html' => _RETYPEPASSWORD,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pass2', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pass2', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
     ];
     $rows[] = [
         'label_html' => _MAIL_SENDE,

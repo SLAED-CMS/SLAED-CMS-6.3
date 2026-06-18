@@ -56,7 +56,7 @@ function contact(): void {
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOUREMAIL,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _MESSAGE,

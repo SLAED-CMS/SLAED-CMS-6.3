@@ -98,7 +98,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
     $rows = [
-        ['label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],
+        ['label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_html' => _OR_10, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'note', 'value_text' => $note, 'placeholder_text' => _OR_10]), 'is_full' => true],
     ];

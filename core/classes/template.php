@@ -56,9 +56,25 @@ class Template {
             $this->reportTemplateError('fragments', $name, 'Invalid fragment name');
             return $this->getTemplateDebugComment('fragments', $name, 'invalid fragment name');
         }
+        if ($name === 'input') $data['itype'] = $this->getInputType($data);
         $this->assets = ['css' => [], 'js' => []];
         $html = $this->getHtml('fragments', $name, $data);
         return $this->getAssetMarkup().$html;
+    }
+
+    # Derive the input control type from the field name when no explicit type is provided
+    protected function getInputType(array $data): string {
+        if (!empty($data['itype'])) return $data['itype'];
+        $name = rtrim(strtolower((string)($data['name_attr'] ?? '')), '[]');
+        $mail = ['mail', 'email', 'aemail', 'semail', 'femail', 'cemail', 'paemail', 'adminmail'];
+        $link = ['url', 'home', 'website', 'aurl', 'site', 'cwebsite', 'pawebsite'];
+        $pass = ['pwd', 'apwd', 'apwd2', 'pwdtwo', 'user_pass', 'user_password', 'user_password2', 'pass', 'pass2', 'newpass', 'newpass2', 'oldpass'];
+        return match (true) {
+            in_array($name, $mail, true) => 'email',
+            in_array($name, $link, true) => 'url',
+            in_array($name, $pass, true) => 'password',
+            default => 'text',
+        };
     }
 
     /**

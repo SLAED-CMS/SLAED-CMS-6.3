@@ -138,7 +138,7 @@ function add(): void {
     $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('auto_links')]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _A_LINKS_E,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_E, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_E, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _SITENAME,

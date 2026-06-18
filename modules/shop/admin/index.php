@@ -310,8 +310,8 @@ function clientadd(): void {
     $rows[] = ['label_html' => _CLIENTNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cname', 'value_attr' => $cname, 'is_required' => true, 'maxlength_num' => 255])];
     $rows[] = ['label_html' => _CLIENTADRES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'caddr', 'value_attr' => $caddr, 'is_required' => true, 'maxlength_num' => 255])];
     $rows[] = ['label_html' => _CLIENTPHONE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'cphone', 'value_attr' => $cphone, 'is_required' => true, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
-    $rows[] = ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'cemail', 'value_attr' => $cemail, 'maxlength_num' => 255])];
+    $rows[] = ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'cwebsite', 'value_attr' => $cwebsite, 'maxlength_num' => 255])];
     $rows[] = ['label_html' => _CLIENTSTR, 'field_html' => getTplAddDateTime(['name' => 'cregdate', 'time' => $cregdate, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _CLIENTEND, 'field_html' => getTplAddDateTime(['name' => 'cenddate', 'time' => $cenddate, 'with' => true, 'max' => 16])];
     $rows[] = ['label_html' => _PRODUCT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'product', 'options_html' => $prodopts])];
@@ -884,8 +884,8 @@ function partneradd(): void {
     $rows[] = ['label_html' => _CLIENTNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paname', 'value_attr' => $paname, 'is_required' => true])];
     $rows[] = ['label_html' => _CLIENTADRES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paaddr', 'value_attr' => $paaddr, 'is_required' => true])];
     $rows[] = ['label_html' => _CLIENTPHONE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'paphone', 'value_attr' => $paphone, 'is_required' => true])];
-    $rows[] = ['label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'paemail', 'value_attr' => $paemail])];
-    $rows[] = ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'pawebsite', 'value_attr' => $pawebsite])];
+    $rows[] = ['label_html' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'paemail', 'value_attr' => $paemail])];
+    $rows[] = ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pawebsite', 'value_attr' => $pawebsite])];
     $rows[] = ['label_html' => _WEBMONEY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'pawebmoney', 'value_attr' => $pawebmoney])];
     $rows[] = ['label_html' => _PAYPAL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'papaypal', 'value_attr' => $papaypal])];
     $rows[] = ['label_html' => _REG, 'field_html' => getTplAddDateTime(['name' => 'paregdate', 'time' => $paregdate, 'with' => true, 'max' => 16])];

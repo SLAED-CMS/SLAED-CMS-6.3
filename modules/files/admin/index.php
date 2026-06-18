@@ -187,8 +187,8 @@ function add(): void {
         ['label_html' => _FILE_DIR, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'path', 'options_html' => $pathopts])],
         ['label_html' => _SIZENOTE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'filesize', 'value_attr' => (string)$filesize])],
         ['label_html' => _VERSION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'version', 'value_attr' => $version])],
-        ['label_html' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email])],
-        ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'website', 'value_attr' => $website])],
+        ['label_html' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email])],
+        ['label_html' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'website', 'value_attr' => $website])],
         ['label_html' => _FILE_SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'file', 'name_attr' => 'filesite'])],
     ];
     $posttypeopts

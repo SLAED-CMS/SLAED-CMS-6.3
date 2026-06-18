@@ -237,10 +237,10 @@ function login() {
             'route' => $afile,
             'rows' => [
                 ['has_colon' => true, 'label' => _NICKNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => getVar('post', 'aname', 'var'), 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true])],
-                ['has_colon' => true, 'label' => _HOMEPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'aurl', 'value_attr' => 'http://'.getHost(), 'maxlength_num' => 255, 'placeholder_text' => _HOMEPAGE, 'is_required' => true])],
-                ['has_colon' => true, 'label' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'aemail', 'value_attr' => getVar('post', 'aemail', 'text'), 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true])],
-                ['has_colon' => true, 'label' => _PASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'apwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true])],
-                ['has_colon' => true, 'label' => _RETYPEPASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'apwd2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true])],
+                ['has_colon' => true, 'label' => _HOMEPAGE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aurl', 'value_attr' => 'http://'.getHost(), 'maxlength_num' => 255, 'placeholder_text' => _HOMEPAGE, 'is_required' => true])],
+                ['has_colon' => true, 'label' => _EMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aemail', 'value_attr' => getVar('post', 'aemail', 'text'), 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true])],
+                ['has_colon' => true, 'label' => _PASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true])],
+                ['has_colon' => true, 'label' => _RETYPEPASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'apwd2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD, 'is_required' => true])],
                 ['label' => _CREATEUSERDATA, 'field_html' => $tpl->getHtmlFrag('radio', ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => _YES, 'is_checked' => true]).' '.$tpl->getHtmlFrag('radio', ['name_attr' => 'auser_new', 'value_attr' => '0', 'label_text' => _NO])],
             ],
             'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
@@ -251,7 +251,7 @@ function login() {
         $capt = getCaptcha('adminlogin');
         $rows = [
             ['has_colon' => true, 'label' => _NICKNAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'autocomplete_attr' => 'username', 'is_required' => true])],
-            ['has_colon' => true, 'label' => _PASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'pwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'current-password', 'is_required' => true])],
+            ['has_colon' => true, 'label' => _PASSWORD, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pwd', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'autocomplete_attr' => 'current-password', 'is_required' => true])],
         ];
         if ($capt) $rows[] = ['field_html' => $capt];
         $cont .= $tpl->getHtmlPart('auth-form', [

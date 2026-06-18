@@ -31,7 +31,7 @@ function recommend(): void {
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOUREMAIL,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _FFRIENDNAME,
@@ -39,7 +39,7 @@ function recommend(): void {
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _FFRIENDEMAIL,
-        'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
+        'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [
         'action' => 'index.php?name='.$conf['name'],

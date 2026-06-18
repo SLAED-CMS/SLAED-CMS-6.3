@@ -145,7 +145,7 @@ function add(): void {
         ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
         ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'links', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'links', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => $link, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $site, 'placeholder_text' => _URL])],
+        ['label_html' => $link, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'value_attr' => $site, 'placeholder_text' => _URL])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],

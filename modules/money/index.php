@@ -64,7 +64,7 @@ function money(): void {
         ])]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _MO_8,
-            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email]),
+            'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'name_attr' => 'email', 'value_attr' => $email]),
         ]);
         $form = explode(',', $conf['money']['form']);
         $i = 0;

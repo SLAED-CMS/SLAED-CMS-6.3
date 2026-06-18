@@ -23,7 +23,7 @@ function account(): void {
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'user_name', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
         ]).$tpl->getHtmlFrag('form-field-row', [
             'label' => _PASSWORD,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true]),
         ]);
         $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
@@ -88,13 +88,13 @@ function newuser(): void {
                 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'value_attr' => $nick, 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label' => _EMAIL,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._PASSWORD,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
+                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label_html' => getTplTitleTip(_BLANKFORAUTO)._RETYPEPASSWORD,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'user_password2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
+                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'user_password2', 'maxlength_num' => 25, 'placeholder_text' => _RETYPEPASSWORD]),
             ]);
             if (!empty($conf['users']['rule'])) {
                 $fields .= $tpl->getHtmlFrag('form-field-row', [
@@ -576,7 +576,7 @@ function profil(): void {
                 'action' => 'index.php?name='.$conf['name'],
                 'fields' => $tpl->getHtmlFrag('form-field-row', [
                     'label' => _ORTYPEURL,
-                    'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
+                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
                 ]),
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
             ])
@@ -726,7 +726,7 @@ function passlost(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label' => _EMAIL,
-            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
+            'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email, 'maxlength_num' => 255, 'placeholder_text' => _EMAIL, 'is_required' => true]),
         ]);
         if (!empty($email)) {
             $fields .= $tpl->getHtmlFrag('form-field-row', [
@@ -886,8 +886,8 @@ function edithome(): void {
         $fields .= $tpl->getHtmlFrag('field-value', ['label' => _YOURNAME, 'value_text' => $userinfo['name']])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _BIRTHDAY, 'field_html' => getTplAddDateTime(['name' => 'user_birthday', 'time' => $birthday, 'with' => false, 'max' => 10])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _GENDER, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'gender', 'is_account' => true, 'options_html' => $genderOptions])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _YOUREMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'email', 'name_attr' => 'mail', 'value_attr' => $userinfo['email'], 'maxlength_num' => 60, 'placeholder_text' => _YOUREMAIL, 'is_required' => true])])
-            .$tpl->getHtmlFrag('form-field-row', ['label' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'site', 'value_attr' => $userinfo['website'], 'maxlength_num' => 100, 'placeholder_text' => _SITEURL])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _YOUREMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'value_attr' => $userinfo['email'], 'maxlength_num' => 60, 'placeholder_text' => _YOUREMAIL, 'is_required' => true])])
+            .$tpl->getHtmlFrag('form-field-row', ['label' => _SITEURL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'value_attr' => $userinfo['website'], 'maxlength_num' => 100, 'placeholder_text' => _SITEURL])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _OCCUPATION, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'occ', 'value_attr' => $userinfo['occ'], 'maxlength_num' => 100, 'placeholder_text' => _OCCUPATION])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _LOCALITYLANG, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'from', 'value_attr' => $userinfo['origin'], 'maxlength_num' => 100, 'placeholder_text' => _LOCALITYLANG])])
             .$tpl->getHtmlFrag('form-field-row', ['label' => _INTERESTS, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'inter', 'value_attr' => $userinfo['interest'], 'maxlength_num' => 150, 'placeholder_text' => _INTERESTS])])
@@ -978,13 +978,13 @@ function edithome(): void {
         if (empty($network)) {
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label' => _PASSNEW,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'newpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'newpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label' => _PASSNEW2,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'newpass2', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW2, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'newpass2', 'maxlength_num' => 25, 'placeholder_text' => _PASSNEW2, 'is_required' => true]),
             ]).$tpl->getHtmlFrag('form-field-row', [
                 'label' => _PASSOLD,
-                'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'password', 'name_attr' => 'oldpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSOLD, 'is_required' => true]),
+                'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'oldpass', 'maxlength_num' => 25, 'placeholder_text' => _PASSOLD, 'is_required' => true]),
             ]);
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT])
                 .$tpl->getHtmlPart('form-add', [
