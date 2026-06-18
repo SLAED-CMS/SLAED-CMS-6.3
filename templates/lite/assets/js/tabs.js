@@ -7,7 +7,6 @@
         if (!list.length) return;
         var tablist = root.querySelector('ul');
 
-        root.classList.add('sl-tabs');
         if (tablist) {
             tablist.classList.add('sl-tabs-nav');
             tablist.setAttribute('role', 'tablist');
@@ -92,11 +91,11 @@
     }
 
     function initSiteTabs() {
-        var roots = document.querySelectorAll('div[id^="sl_tabs_"]');
+        var roots = document.querySelectorAll('[data-sl-tabs]');
         for (var i = 0; i < roots.length; i++) {
             setSiteTabs(roots[i].id);
         }
-        var lists = document.querySelectorAll('div[id^="sl_tabs_"]');
+        var lists = document.querySelectorAll('[data-sl-tabs]');
         for (var j = 0; j < lists.length; j++) {
             lists[j].addEventListener('wheel', function (event) {
                 if (this.scrollWidth <= this.clientWidth) return;

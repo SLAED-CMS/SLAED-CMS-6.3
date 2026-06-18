@@ -5,7 +5,7 @@
   {% if value_attr %}value="{{ value_attr }}"{% endif %}
   {% if input_id %}id="{{ input_id }}"{% endif %}
   {% if !is_plain %}
-  class="{% if is_legacy_check or is_check %}sl-check{% else %}sl-field{% if input_class %} {{ input_class }}{% endif %}{% endif %}"
+  class="{% if is_legacy_check or is_check %}sl-check{% else %}sl-check{% if input_class %} {{ input_class }}{% endif %}{% endif %}"
   {% endif %}
   {% if is_legacy_check or is_check %}data-sl-check-item{% endif %}
   {% if is_checked %}checked{% endif %}

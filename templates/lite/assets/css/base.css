@@ -62,12 +62,37 @@
   --sl-color-danger: #a92c2c;
   --sl-color-danger-soft: #fb7878;
   --sl-color-accent: #8c2ca9;
+  --sl-season-winter: #4c8cc9;
+  --sl-season-autumn: #be8a7c;
+  --sl-season-summer: #98c781;
+  --sl-season-spring: #5d82b7;
+  --sl-season-newyear: #5e9ad6;
   --sl-shadow-soft: 0 1px 2px rgba(42, 48, 60, 0.12);
   --sl-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.2);
   --sl-shadow-strong: 0 6px 12px rgba(0, 0, 0, 0.175);
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-radius-control: 4px;
+  /* Form field tokens: shared look for input, textarea, select and file controls */
+  --sl-shadow-input: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  --sl-field-height: 30px;
+  --sl-field-pad-x: var(--sl-space-lg);
+  --sl-field-pad-y: var(--sl-space-sm);
+  --sl-field-bg: var(--sl-color-bg);
+  --sl-field-border: var(--sl-color-border-strong);
+  --sl-field-radius: var(--sl-radius-control);
+  --sl-field-focus: var(--sl-color-brand-link);
+  --sl-field-focus-ring: rgba(48, 162, 246, 0.18);
+  --sl-field-placeholder: var(--sl-color-text-subtle);
+  --sl-field-disabled-bg: var(--sl-color-surface-alt);
+  --sl-field-invalid: var(--sl-color-danger);
+  --sl-field-invalid-ring: rgba(169, 44, 44, 0.16);
+  --sl-field-valid: var(--sl-color-success);
+  --sl-field-valid-ring: rgba(92, 148, 37, 0.16);
+  --sl-check-size: 16px;
+  --sl-check-checked: var(--sl-color-brand-link);
+  --sl-switch-width: 58px;
+  --sl-switch-height: 24px;
   --sl-size-16: 16px;
   --sl-size-18: 18px;
   --sl-size-24: 24px;
@@ -476,6 +501,7 @@ input[type="radio"],
 input[type="checkbox"] {
   line-height: normal;
   margin: 4px 0 0;
+  accent-color: var(--sl-color-brand-link);
 }
 
 input[type="file"],
@@ -486,16 +512,6 @@ input[type="button"],
 input[type="radio"],
 input[type="checkbox"] {
   width: auto;
-}
-
-input[required]:valid,
-textarea[required]:valid {
-  color: #008000;
-}
-
-input[required]:invalid,
-textarea[required]:invalid {
-  color: #ff0000;
 }
 
 input[placeholder] {

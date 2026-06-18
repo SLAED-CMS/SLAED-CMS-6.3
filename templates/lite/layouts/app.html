@@ -47,7 +47,7 @@
       {% include 'partials/menu.html' %}
       <form class="sl-search-form" role="search" action="index.php?name=search" method="post">
         <input type="hidden" value="{{ modul }}" name="mod">
-        <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" required>
+        <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" class="sl-field" required>
         <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>
       </form>
     </div>
