@@ -78,6 +78,8 @@
   --sl-shadow-input-active: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
   --sl-focus-primary-ring: 0 0 0 2px rgba(11, 135, 201, 0.22);
   --sl-focus-success-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
+  --sl-focus-danger: rgba(226, 76, 76, 0.3);
+  --sl-focus-success: rgba(52, 185, 75, 0.3);
   --sl-shadow-card: 0 1px 1px rgba(35, 52, 70, 0.08);
   --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
   --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);
@@ -254,22 +256,32 @@ select {
     box-shadow 0.2s ease;
 }
 
-input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(:disabled):hover,
-textarea:not(:disabled):hover,
-select:not(:disabled):hover {
+input:where(:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(:disabled)):hover,
+textarea:where(:not(:disabled)):hover,
+select:where(:not(:disabled)):hover {
   background-color: var(--sl-color-bg);
   border-color: var(--sl-color-primary-soft);
   box-shadow: var(--sl-shadow-hover-soft);
 }
 
-input[required]:valid,
-textarea[required]:valid {
-  color: var(--sl-color-success);
+input:user-invalid,
+textarea:user-invalid,
+select:user-invalid {
+  border-color: var(--sl-color-danger);
 }
 
-input[required]:invalid,
-textarea[required]:invalid {
-  color: var(--sl-color-danger);
+input:user-invalid:focus,
+textarea:user-invalid:focus,
+select:user-invalid:focus {
+  border-color: var(--sl-color-danger);
+  box-shadow: 0 0 0 2px var(--sl-focus-danger);
+}
+
+input:user-valid:required:focus,
+textarea:user-valid:required:focus,
+select:user-valid:required:focus {
+  border-color: var(--sl-color-success);
+  box-shadow: 0 0 0 2px var(--sl-focus-success);
 }
 
 input[placeholder] {
