@@ -187,7 +187,6 @@ if (empty($go)) {
                 case 'deleteAdminPrivate': deleteAdminPrivate(); break;
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
                 case 'getAdminUploadFiles': getAdminUploadFiles(); break;
-                case 'getAdminInfo': echo getAdminInfo(); break;
             }
         } else {
             die('Illegal file access');
