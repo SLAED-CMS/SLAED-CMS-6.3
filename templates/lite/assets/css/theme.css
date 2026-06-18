@@ -5054,3 +5054,103 @@ ol.sl-sublist-two li:hover:before {
 .sl-captcha .altcha-checkbox input[type="checkbox"]:checked + svg {
   color: var(--sl-color-on-dark);
 }
+
+/* Message / error page (404, access, ban) shared by setExit */
+.sl-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  background: linear-gradient(160deg, var(--sl-color-surface) 0%, var(--sl-color-surface-alt) 100%);
+}
+.sl-msg-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 32px 28px 22px;
+  text-align: center;
+  background: var(--sl-color-bg);
+  border: 1px solid var(--sl-color-border);
+  border-radius: 12px;
+  box-shadow: var(--sl-shadow-medium);
+}
+.sl-msg-brand {
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.sl-msg-brand img {
+  max-width: 240px;
+  height: auto;
+}
+.sl-msg-line {
+  height: 1px;
+  margin: 0 0 22px;
+  background: var(--sl-line-gradient);
+}
+.sl-msg-brand-text {
+  font: bold 26px/1 "Magistral", Arial, sans-serif;
+  letter-spacing: 0.5px;
+  color: var(--sl-color-brand-strong);
+}
+.sl-msg-title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  color: var(--sl-color-text-heading);
+}
+.sl-msg-body {
+  margin-bottom: 22px;
+}
+.sl-msg-body .sl-warn,
+.sl-msg-body .sl-info {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: justify;
+  text-align-last: center;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--sl-color-text);
+}
+.sl-msg-body .sl-warn .bi,
+.sl-msg-body .sl-info .bi {
+  display: block;
+  margin-bottom: 12px;
+  text-align: center;
+  font-size: 52px;
+  line-height: 1;
+}
+.sl-msg-body .sl-warn .bi {
+  color: var(--sl-color-warning);
+}
+.sl-msg-body .sl-info .bi {
+  color: var(--sl-color-brand-link);
+}
+.sl-msg-search {
+  float: none;
+  width: auto;
+  max-width: 300px;
+  margin: 0 auto 20px;
+}
+.sl-msg-search .sl-home-link {
+  flex: 0 0 var(--sl-nav-control-size);
+  height: var(--sl-nav-control-size);
+  border-radius: 50%;
+  color: var(--sl-login-link-color);
+}
+.sl-msg-search .sl-home-link .bi {
+  font-size: var(--sl-icon-size-sm);
+}
+.sl-msg-search .sl-home-link:hover,
+.sl-msg-search .sl-home-link:focus-visible {
+  color: var(--sl-color-on-dark);
+  background: var(--sl-color-tone-neutral);
+}
+.sl-msg-foot {
+  padding-top: 16px;
+  border-top: 1px solid var(--sl-color-border-subtle);
+  font-size: 12px;
+  color: var(--sl-color-text-muted);
+}

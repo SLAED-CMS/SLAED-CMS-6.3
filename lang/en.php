@@ -161,7 +161,7 @@ define('_ERROR1','Error, E-Mail address invalid!');
 define('_ERROR2','Please use the standard format');
 define('_ERROR3','Please remove the beginning');
 define('_ERROR4','Please do not use spaces');
-define('_ERROR404','Error %1$s, page not found! Most likely the page does not exist or it is temporarily not available. Perhaps you have followed an outdated link or have the wrong address. Now you will be redirected to the home page, if this does not happen, use this <a href="%2$s">link</a>.');
+define('_ERROR_PAGE','Error %1$s occurred. The requested page is unavailable or does not exist. You may have followed an outdated link, mistyped the address, or a server error occurred. You will now be redirected to the home page.');
 define('_ERRORINVNICK','Invalid Nickname!');
 define('_ERRORTR','Not found the text for translation!');
 define('_ERROR_ALL','Please fill in the necessary fields!');

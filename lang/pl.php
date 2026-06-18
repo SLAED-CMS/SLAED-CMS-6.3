@@ -161,7 +161,7 @@ define('_ERROR1','Błąd, źle podany E-Mail!');
 define('_ERROR2','Proszę używać standardowego formatu');
 define('_ERROR3','Proszę, nie należy podawać na początku adresu');
 define('_ERROR4','Proszę nie używaj spacji');
-define('_ERROR404','Błąd %1$s, nie znaleziono strony! Prawdopodobnie strona nie istnieje lub jest tymczasowo niedostępna. Być może przeszli na przestarzałej link lub przypadkowo pomyłka. Teraz zostaniesz przekierowany na stronę główną, jeśli do tego nie dojdzie, skorzystaj z tej <a href="%2$s">link</a>.');
+define('_ERROR_PAGE','Wystąpił błąd %1$s. Żądana strona jest niedostępna lub nie istnieje. Być może skorzystałeś z nieaktualnego linku, wpisałeś błędny adres lub wystąpił błąd serwera. Za chwilę zostaniesz przekierowany na stronę główną.');
 define('_ERRORINVNICK','W loginie zawiera nie dopuszczalne do używania znaków!');
 define('_ERRORTR','Nie wykryto tekst do tłumaczenia!');
 define('_ERROR_ALL','Wypełnij wszystkie wymagane pola!');

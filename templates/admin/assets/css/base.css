@@ -80,6 +80,7 @@
   --sl-focus-success-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
   --sl-focus-danger: rgba(226, 76, 76, 0.3);
   --sl-focus-success: rgba(52, 185, 75, 0.3);
+  --sl-line-gradient: linear-gradient(90deg, rgba(208, 240, 254, 0) 0%, rgba(208, 240, 254, 0.35) 10%, rgba(138, 183, 216, 0.68) 28%, rgba(79, 122, 166, 0.9) 44%, var(--sl-color-primary-center) 47.5%, var(--sl-color-primary-center) 52.5%, rgba(79, 122, 166, 0.9) 56%, rgba(138, 183, 216, 0.68) 72%, rgba(208, 240, 254, 0.35) 90%, rgba(208, 240, 254, 0) 100%);
   --sl-shadow-card: 0 1px 1px rgba(35, 52, 70, 0.08);
   --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
   --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);

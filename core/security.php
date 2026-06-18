@@ -201,7 +201,7 @@ if ($conf['security']['error_log'] && isset($_GET['error'])) {
         ]);
     }
     unset($http, $httpmsg);
-    setExit('Error '.$error, 1);
+    setExit(sprintf(_ERROR_PAGE, $error), 1);
 }
 
 # Add PHP errors to error_php.log
@@ -439,8 +439,8 @@ function isAdmin(bool $super = false): bool {
     return $cache[0] = $cache[1] = false;
 }
 
-# Format exit and displaying information
-function setExit(string $msg, string $typ = ''): never {
+# Format exit and displaying information with an optional page heading
+function setExit(string $msg, string $typ = '', string $title = ''): never {
     global $conf;
     $file = defined('BASE_DIR') ? BASE_DIR.'/core/classes/template.php' : '';
     if (!class_exists('Template') && $file !== '' && is_file($file)) require_once $file;
@@ -448,10 +448,15 @@ function setExit(string $msg, string $typ = ''): never {
     $theme = getTheme();
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
-    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.htmlspecialchars((string)($conf['homeurl'] ?? '').'/index.php', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n" : '';
-    $meta = '<meta name="author" content="'.htmlspecialchars((string)($conf['sitename'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n"
-        . '<meta name="generator" content="'.htmlspecialchars('SLAED CMS '.($conf['version'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">' . "\n" . $jump;
+    $jump = ($typ !== '') ? $tpl->getHtmlFrag('meta-refresh', ['secs' => 5, 'url' => (string)($conf['homeurl'] ?? '').'/index.php']) . "\n" : '';
+    $base = rtrim((string)($conf['homeurl'] ?? ''), '/').'/';
+    $meta = $tpl->getHtmlFrag('head-base', ['href' => $base]) . "\n"
+        . $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => (string)($conf['sitename'] ?? '')]) . "\n"
+        . $tpl->getHtmlFrag('head-meta', ['name' => 'generator', 'content' => 'SLAED CMS '.($conf['version'] ?? '')]) . "\n" . $jump;
     $license = getLicenseHtml();
+    $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
+    $adpath = img_find('logos/'.$adlogo);
+    if (!is_file($adpath)) $adpath = img_find('logos/slaed_logo_256x73.png');
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
     if (is_file(BASE_DIR.'/'.$favicon)) {
@@ -459,6 +464,10 @@ function setExit(string $msg, string $typ = ''): never {
     }
     foreach (getThemeCssFiles($theme) as $asset) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
+    }
+    $iconcss = 'templates/'.$theme.'/assets/vendor/bootstrap/css/bootstrap-icons.min.css';
+    if (is_file(BASE_DIR.'/'.$iconcss)) {
+        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $iconcss, 'type' => '', 'title' => '']);
     }
     $links = implode("\n", $linksrc);
     die($tpl->getHtmlPage('message', [
@@ -471,9 +480,10 @@ function setExit(string $msg, string $typ = ''): never {
         'links' => $links,
         'scripts' => '',
         'login' => '',
+        'is_bare' => true,
         'license' => $license,
-        'home' => _HOME,
-        'search' => _SEARCH,
+        'home' => ($typ !== '') ? _HOME : '',
+        'search' => ($typ !== '') ? _SEARCH : '',
         'feedback' => _FEEDBACK,
         'recommend' => _RECOMMEND,
         'head_html' => '',
@@ -481,7 +491,11 @@ function setExit(string $msg, string $typ = ''): never {
         'blocks_left' => '',
         'blocks_right' => '',
         'blocks_down' => '',
-        'title' => _MESSAGE,
+        'adlogo' => $adpath,
+        'adalt' => $conf['sitename'] ?? 'SLAED CMS',
+        'adtitle' => $conf['sitename'] ?? 'SLAED CMS',
+        'logo' => $conf['site_logo'] ?? '',
+        'title' => $title,
         'message_html' => $text,
     ]));
 }

@@ -3675,7 +3675,7 @@ body:has(.sl-admin-login-shell):before {
   bottom: 0;
   left: 5px;
   height: 1px;
-  background: linear-gradient(90deg, rgba(208, 240, 254, 0) 0%, rgba(208, 240, 254, 0.35) 10%, rgba(138, 183, 216, 0.68) 28%, rgba(79, 122, 166, 0.9) 44%, var(--sl-color-primary-center) 47.5%, var(--sl-color-primary-center) 52.5%, rgba(79, 122, 166, 0.9) 56%, rgba(138, 183, 216, 0.68) 72%, rgba(208, 240, 254, 0.35) 90%, rgba(208, 240, 254, 0) 100%);
+  background: var(--sl-line-gradient);
   content: "";
 }
 
@@ -4373,4 +4373,76 @@ body:has(.sl-admin-login-shell):before {
 }
 .sl-captcha .altcha-checkbox input[type="checkbox"]:checked + svg {
   color: #fff;
+}
+
+/* Message / error page (404, access, ban) shared by setExit */
+.sl-msg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, var(--sl-color-primary-soft) 0%, var(--sl-color-primary-tint) 52%, var(--sl-color-bg-soft) 100%);
+}
+.sl-msg-card {
+  width: 100%;
+  max-width: 460px;
+  padding: 28px 28px 20px;
+  text-align: center;
+  background: var(--sl-color-bg);
+  border: 1px solid var(--sl-color-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(35, 52, 70, 0.14);
+}
+.sl-msg-brand {
+  display: inline-block;
+  margin-bottom: 14px;
+}
+.sl-msg-brand img {
+  max-width: 240px;
+  height: auto;
+}
+.sl-msg-line {
+  height: 1px;
+  margin: 0 0 22px;
+  background: var(--sl-line-gradient);
+}
+.sl-msg-title {
+  margin: 0 0 14px;
+  font-size: 20px;
+  color: var(--sl-color-text);
+}
+.sl-msg-body {
+  margin-bottom: 22px;
+}
+.sl-msg-body .sl-warn,
+.sl-msg-body .sl-info {
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--sl-color-text);
+}
+.sl-msg-body .sl-warn:before,
+.sl-msg-body .sl-info:before {
+  font-size: 52px;
+}
+.sl-msg-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+.sl-msg-foot {
+  padding-top: 16px;
+  border-top: 1px solid var(--sl-color-border);
+  font-size: 12px;
+  color: var(--sl-color-muted);
 }

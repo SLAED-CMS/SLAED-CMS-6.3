@@ -6,17 +6,23 @@
 {{{ links }}}
 {{{ scripts }}}
 </head>
-<body>
+<body{% if is_bare %} class="sl-admin-shell"{% endif %}>
+  {% if not is_bare %}
   <div class="sl-admin-shell sl-admin-login-shell">
     <div class="sl-admin-login-top"></div>
     <div class="sl-admin-login-card">
       <div class="sl-admin-login-header">
         <div class="sl-admin-brand"><h1><a href="//slaed.net" target="_blank" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}" title="{{ adtitle }}"></a></h1></div>
       </div>
-      <div class="sl-admin-login-content">{% block content %}{% endblock %}</div>
+      <div class="sl-admin-login-content">
+  {% endif %}
+  {% block content %}{% endblock %}
+  {% if not is_bare %}
+      </div>
       <div class="sl-admin-login-footer"><div class="sl-admin-login-copyright">{{{ license }}}</div></div>
     </div>
     <div class="sl-admin-login-bottom"></div>
   </div>
+  {% endif %}
 </body>
 </html>

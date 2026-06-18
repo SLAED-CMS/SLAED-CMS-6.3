@@ -10,7 +10,7 @@ define('BASE_DIR', str_replace('\\', '/', __DIR__));
 require_once BASE_DIR.'/core/system.php';
 
 if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) setExit(_CLOSE_TEXT);
-if (isset($_GET['error'])) setExit(sprintf(_ERROR404, $_GET['error'], $conf['homeurl']), 1);
+if (isset($_GET['error'])) setExit(sprintf(_ERROR_PAGE, $_GET['error']), 1);
 
 $go = getVar('req', 'go', 'var');
 $name = getVar('req', 'name', 'var');
