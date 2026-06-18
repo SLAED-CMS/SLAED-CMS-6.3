@@ -26,6 +26,42 @@ html {
   color: var(--sl-color-success);
 }
 
+/* Rendered help/info markdown (admin info docs) */
+.sl-markdown {
+  padding: 4px 16px 16px;
+  line-height: 1.55;
+}
+.sl-markdown > :first-child {
+  margin-top: 0;
+}
+.sl-markdown h1,
+.sl-markdown h2,
+.sl-markdown h3,
+.sl-markdown h4 {
+  margin: 1.5em 0 0.5em;
+  line-height: 1.3;
+}
+.sl-markdown p,
+.sl-markdown ul,
+.sl-markdown ol,
+.sl-markdown pre {
+  margin: 0 0 1em;
+}
+.sl-markdown ul,
+.sl-markdown ol {
+  padding-left: 1.6em;
+}
+.sl-markdown li {
+  margin-bottom: 0.35em;
+}
+.sl-markdown hr {
+  margin: 1.5em 0;
+}
+.sl-markdown [class*="sl-callout-"] {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 /* Callouts: Markdown alert blocks */
 .sl-callout-note,
 .sl-callout-tip,

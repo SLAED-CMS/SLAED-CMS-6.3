@@ -368,7 +368,10 @@ function setTplAdminInfoPage(array $data = []): void {
             ]);
             $text = (string)getVar('post', 'text', 'raw', $text);
         } else {
-            $content = filterHtml(trim(getVar('post', 'text', 'raw', '')));
+            // Info docs are Markdown source rendered in trusted mode (filterContent safe=false);
+            // store raw with LF line endings — filterHtml would mangle Markdown (nl2br,
+            // htmlspecialchars, $/quote escaping), and HTML forms submit CRLF.
+            $content = trim(str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'text', 'raw', '')));
             if ($content !== '') {
                 $dir = dirname($path);
                 if (!is_dir($dir)) mkdir($dir, 0777, true);
@@ -386,7 +389,7 @@ function setTplAdminInfoPage(array $data = []): void {
             }
         }
     }
-    $info = $prs->filterContent($text, false, $mod);
+    $info = $tpl->getHtmlPart('div', ['class' => 'sl-markdown', 'content_html' => $prs->filterContent($text, false, $mod)]);
     $body = ($alert !== '' ? $alert : '').$tpl->getHtmlPart('box', ['content_html' => $info]);
     $head = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '');
     if ($head === 'true') {
