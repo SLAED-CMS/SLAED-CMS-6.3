@@ -11,6 +11,7 @@ if (!defined('BLOCK_FILE')) {
 
 global $conf, $locale, $tpl;
 $handle = opendir(BASE_DIR.'/lang');
+$langlist = [];
 while (false !== ($file = readdir($handle))) {
     if (preg_match("/^(.+)\.php/", $file, $matches)) {
         $langlist[] = $matches[1];

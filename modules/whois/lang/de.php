@@ -1,6 +1,8 @@
 <?php
+# Author: Eduard Laas
 # 2005 - 2026 SLAED
-# Website: http://www.slaed.net
+# License: MIT
+# Website: slaed.net
 
 define('_ABMIT','In dieser Abteilung k&#246;nnen Sie die F&#252;hrung des Projekts &#252;ber die Website illegal benutzen Sie unsere Software-Produkt. Dazu f&#252;llen Sie bitte ein und senden Sie das folgende Formular.');
 define('_ABTEXT','Vielen Dank f&#252;r die F&#246;rderung Anti-Piraterie! In K&#252;rze Abteilung Sicherheit analysiert Ihre Informationen, und, im Falle Ihre Best&#228;tigung wird angemessene Ma&#223;nahmen.');

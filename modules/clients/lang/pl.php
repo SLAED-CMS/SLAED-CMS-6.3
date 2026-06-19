@@ -1,6 +1,8 @@
 <?php
+# Author: Eduard Laas
 # 2005 - 2026 SLAED
-# Website: http://www.slaed.net
+# License: MIT
+# Website: slaed.net
 
 define('_CDATE','Data wydania');
 define('_CDOWN','Pobierz archiwum z systemem');

@@ -1,11 +1,14 @@
 <?php
+# Author: Eduard Laas
 # 2005 - 2026 SLAED
-# Website: http://www.slaed.net
+# License: MIT
+# Website: slaed.net
 
 if (!defined('BLOCK_FILE')) {
-	header('Location: ../index.php');
-	exit;
+    header('Location: ../index.php');
+    exit;
 }
 
 global $tpl;
+$content = '';
 $content = $tpl->getHtmlFrag('block-menu', ['content' => $content]);

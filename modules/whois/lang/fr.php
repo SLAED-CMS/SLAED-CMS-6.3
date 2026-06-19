@@ -1,6 +1,8 @@
 <?php
+# Author: Eduard Laas
 # 2005 - 2026 SLAED
-# Website: http://www.slaed.net
+# License: MIT
+# Website: slaed.net
 
 define('_ABMIT','Dans cette section, Vous pouvez informer la direction de projet de site de terre qui utilise notre produit logiciel. Pour ce faire, veuillez remplir et envoyer le formulaire ci-dessous.');
 define('_ABTEXT','Merci pour promouvoir anti-piratage! Bient&#244;t d&#233;partement de la s&#233;curit&#233; analysera Votre information, et en cas de confirmation de votre prendra les mesures appropri&#233;es.');

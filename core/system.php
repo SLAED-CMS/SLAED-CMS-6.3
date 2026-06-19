@@ -3550,17 +3550,26 @@ function adminblock(): string {
 }
 
 # User info link
-function user_info(string $name): string {
+function user_info(string $name, bool $icon = false): string {
     global $conf, $tpl;
     if (!$name) return '';
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         return $tpl->getHtmlFrag('link', [
             'href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($name),
             'title' => (string)_PERSONALINFO,
+            'icon_name' => $icon ? 'person-circle' : '',
             'label' => $name,
         ]);
     }
     return $name;
+}
+
+# Query recent root forum topics shared by the forum blocks and theme teasers
+function getForumTopics(string $cols, string $bclos, int $limit): mixed {
+    global $db;
+    $where = $bclos ? 'cid NOT IN ('.$bclos.') AND' : '';
+    $vis = is_moder('forum') ? '' : "AND time <= now() AND status > '1'";
+    return $db->getSqlQuery('SELECT '.$cols.' FROM '.PREFIX_DB.'_forum WHERE '.$where." pid = '0' ".$vis.' ORDER BY ltime DESC LIMIT 0, '.$limit);
 }
 
 # Show cart
@@ -3614,9 +3623,9 @@ function getCartSummary(string $info = ''): string {
             ],
         ]);
         return $tpl->getHtmlFrag('table', [
-            'open' => true,
             'title' => _PBASKET,
             'is_cart' => true,
+            'rows_html' => $rows.$footer,
             'headers' => [
                 ['text' => _ID, 'is_cart_col_num' => true],
                 ['text' => _PRODUCT],
@@ -3624,7 +3633,7 @@ function getCartSummary(string $info = ''): string {
                 ['text' => _PREIS, 'is_cart_col_stat' => true],
                 ['text' => _FUNCTIONS, 'is_cart_col_stat' => true],
             ],
-        ]).$rows.$footer.$tpl->getHtmlFrag('table', []);
+        ]);
     }
     return '';
 }
@@ -4642,7 +4651,7 @@ function encode_php(array $text): string {
             $rows .= $tpl->getHtmlFrag('code-row', ['is_odd' => $odd, 'row_num' => $count, 'code_html' => $chtml]);
             $count++;
         }
-        $format = $tpl->getHtmlFrag('table', ['open' => true, 'is_form' => true]).str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows).$tpl->getHtmlFrag('table', []);
+        $format = $tpl->getHtmlFrag('table', ['is_form' => true, 'rows_html' => str_replace('&nbsp;&nbsp;', '&nbsp; ', $rows)]);
     } elseif ($conf['syntax'] == 2) {
         if ($sname !== 'hljs') {
             $scripts = $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/highlightjs/highlight.min.js', 'attr' => '']);

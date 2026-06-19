@@ -17,24 +17,17 @@ function setTemplateSeason(): string {
 # Query recent forum topics and render via forum-teaser partial
 function setTemplateForum(): string {
     global $db, $tpl;
-    $blimit = 3;
-    $bclos = '97, 98, 99, 100, 101';
-    $bwhere = $bclos ? 'cid NOT IN ('.$bclos.') AND' : '';
-    $ordern = is_moder('forum') ? '' : "AND time <= now() AND status > '1'";
     $items = '';
-    $result = $db->getSqlQuery('SELECT id, title, ltime, luid, lname, lpost, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);
+    $result = getForumTopics('id, title, ltime, luid, lname, lpost, status', '97, 98, 99, 100, 101', 3);
     while ([$id, $title, $time, $luid, $lname, $lpost, $status] = $db->getSqlRow($result)) {
-        $poster = $luid ? user_info($lname) : htmlspecialchars((string)$lname, ENT_QUOTES, 'UTF-8');
         $items .= $tpl->getHtmlFrag('forum-teaser-item', [
-            'hidden' => ($status <= 1 || $time > date('Y-m-d H:i:s')),
-            'href' => 'index.php?name=forum&amp;op=view&amp;id='.(int)$id.'&amp;last#'.$lpost,
-            'title' => (string)$title,
-            'short' => cutstr((string)$title, 50),
+            'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
+            'href' => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost,
+            'title' => html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             'by' => _POSTEDBY,
-            'poster' => $poster,
+            'poster' => $luid ? user_info($lname, true) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
             'when_label' => _DATE,
             'when' => format_time($time, _TIMESTRING),
-            'date' => format_time($time),
         ]);
     }
     return $tpl->getHtmlPart('forum-teaser', ['items' => $items, 'label' => _FORUM]);
@@ -47,11 +40,11 @@ function getThemeHeadVars(): array {
     $fcat = (int)getVar('get', 'cat', 'num', 0);
     $cname = ($fcat && !empty($conf['files'])) ? getTplCategoryTrail($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
     [$count] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
-    $random = mt_rand(0, (int)$count);
+    $random = mt_rand(0, max(0, (int)$count - 1));
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
-    $ftitle = htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8');
+    $ftitle = html_entity_decode((string)$title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $faq = $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=faq&amp;op=view&amp;id='.(int)$fid,
+        'href' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
         'title' => $ftitle,
         'icon_name' => 'stars',
         'label' => $ftitle,

@@ -1,6 +1,8 @@
 <?php
+# Author: Eduard Laas
 # 2005 - 2026 SLAED
-# Website: http://www.slaed.net
+# License: MIT
+# Website: slaed.net
 
 define('_ABMIT','In this Department You can inform the management of the project on the site of illegally using our software product. To do this, fill and send the following form.');
 define('_ABTEXT','Thank you for the assistance in the fight against piracy! In the nearest time the security Department will review Your information, and in case of its confirmation will take the appropriate measures.');

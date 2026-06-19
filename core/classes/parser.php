@@ -389,7 +389,7 @@ class Parser {
         $src = preg_replace_callback(
             '/\[code\](.*?)\[\/code\]/si',
             function(array $m): string {
-                $txt  = str_replace('?', '&#063;', (string)$m[1]);
+                $txt  = str_replace('?', '&#063;', html_entity_decode((string)$m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
                 $html = '<div class="sl-code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
                 return $this->addStash($html);
             },
