@@ -1,9 +1,9 @@
 # Upgrading SLAED CMS
 
 > **Migration Guide for SLAED CMS**
-> *Last updated: April 2026*
+> *Last updated: June 2026*
 
-This document describes the upgrade process using currently confirmed files and repository structure. Where the exact historical path cannot be verified from the current codebase alone, it is marked as `TODO:`.
+This document describes the upgrade process using currently confirmed files and repository structure. Where the exact upgrade path cannot be verified from the current codebase alone, it is marked as `TODO:`.
 
 ## Table of Contents
 
@@ -69,7 +69,7 @@ The repository currently contains these SQL files under `setup/sql/`:
 > The repository confirms these files exist. It does not, by itself, fully define every safe version-to-version upgrade path.
 
 > [!IMPORTANT]
-> `TODO:` Confirm the exact supported source-version matrix for production upgrades and whether intermediate SQL steps are required for specific legacy versions.
+> `TODO:` Confirm the exact supported source-version matrix for production upgrades and whether intermediate SQL steps are required for specific source versions.
 
 ---
 
@@ -101,7 +101,7 @@ mysql -u root -p your_database < setup/sql/table.sql
 For upgrades, review the available `table_update*.sql` files and apply the correct path for your current version.
 
 > [!IMPORTANT]
-> `TODO:` Confirm the exact upgrade order for each legacy source version before documenting a mandatory sequence.
+> `TODO:` Confirm the exact upgrade order for each supported source version before documenting a mandatory sequence.
 
 ### 4. Review Configuration
 
@@ -121,6 +121,10 @@ rm -rf storage/cache/*
 
 Additional runtime-generated locations present in the repository:
 
+- `storage/cache/`
+- `storage/captcha/`
+- `storage/counter/`
+- `storage/geoip/`
 - `storage/logs/`
 - `storage/sitemap/`
 - `storage/backup/`
@@ -153,7 +157,7 @@ Current method family:
 - `getSqlField()`
 - `getSqlRowCount()`
 
-Custom code using older `sql_*` methods should be reviewed.
+Custom code should use the current `Database` API.
 
 ### Input Handling
 
@@ -179,11 +183,11 @@ Current helpers:
 
 ### Content Editors
 
-The new pluggable editor layer is now active via the `Editor` class (`core/classes/editor.php`). When migrating old forms and textareas, update them to output via `Editor::getContent()` or `Editor::getCode()` rather than rendering raw textareas with hardcoded editor initializers. The available editor drivers are bundled under `plugins/editors/`.
+The pluggable editor layer is active via the `Editor` class (`core/classes/editor.php`). Forms and textareas should output via `Editor::getContent()` or `Editor::getCode()` rather than hardcoded editor initializers. The available editor drivers are bundled under `plugins/editors/`.
 
 ### Content Parsing
 
-Legacy text manipulation functions such as `filterMarkdown()` and `filterReplaceText()` have been removed. All user and administrative content formatting should be passed through the unified `Parser` class (`core/classes/parser.php`), typically accessed via its `filterContent()` method.
+User and administrative content formatting should be passed through the unified `Parser` class (`core/classes/parser.php`), typically accessed via its `filterContent()` method.
 
 ### Template Layer
 
@@ -195,19 +199,14 @@ The modern engine supports automatic CSS and JS injection for components placed 
 When upgrading custom modules:
 - Remove subdirectories from your module's `fragments/` logic (e.g. `new/`). The fragment namespace has been strictly flattened. Update `$tpl->getHtmlFrag(...)` calls accordingly.
 
-> [!NOTE]
-> The current repository snapshot does not contain an active `core/template.php` runtime file.
-
 ### Themes
 
 Themes currently present in the repository:
 
 - `admin`
-- `default`
 - `lite`
-- `simple`
 
-If your installation contains older theme directories not present in the current repository, review them manually before upgrade.
+If your installation contains custom theme directories not present in the current repository, review them manually before upgrade.
 
 ---
 

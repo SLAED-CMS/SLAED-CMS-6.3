@@ -9,9 +9,9 @@
 
 **Modular PHP Content Management System**
 
-> *Last updated: April 2026*
+> *Last updated: June 2026*
 
-SLAED CMS is a modular content management system with a legacy runtime, a modernized database layer, multi-language support, and an actively evolving template stack. The current codebase contains both stable legacy subsystems and newer runtime components used for ongoing modernization work.
+SLAED CMS is a modular content management system with a current PHP runtime, a PDO-backed database layer, multi-language support, and an actively evolving template stack.
 
 The repository entrypoints and active runtime files currently include:
 
@@ -119,13 +119,10 @@ composer quality
 - **Backend:** PHP 8.1+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
 - **Template Runtime:** `core/classes/template.php`
-- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: ckeditor, codemirror, plain, tinymce, toastui); additional plugins: highlightjs, htmx, tablesort, system
+- **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: ckeditor, codemirror, plain, tinymce, toastui); additional plugins: altcha, highlightjs, htmx, tablesort, system
 - **Content Parsing:** `Parser` class in `core/classes/parser.php`
 - **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
 - **Languages:** 6 bundled locale files in `lang/`
-
-> [!NOTE]
-> The current repository does not contain an active `core/template.php` runtime file. Template rendering is handled through the `Template` class in `core/classes/template.php`.
 
 ---
 
@@ -137,7 +134,8 @@ composer quality
 - Multi-language support
 - User groups, roles, and permissions
 - Prepared-statement database layer
-- Caching and logging directories under `storage/`
+- Runtime storage directories under `storage/`, including cache, logs, captcha,
+  counter, GeoIP, sitemap, and backup data
 - Central frontend head assembly through `setHead()` and final page rendering through `setFoot()`
 - Runtime-generated sitemap data under `storage/sitemap/`
 
@@ -153,11 +151,9 @@ composer quality
 Bundled themes currently present in the repository:
 
 - `templates/admin`
-- `templates/default`
 - `templates/lite`
-- `templates/simple`
 
-`templates/simple` is a bundled frontend theme that follows the same template tree structure as the other bundled frontend themes.
+`templates/lite` is the bundled frontend theme in the current repository. It includes local Bootstrap assets under `templates/lite/assets/vendor/bootstrap/`.
 
 ### Routing and Entry Flow
 
@@ -199,7 +195,7 @@ slaed-cms/
 ├── plugins/               # Bundled JS/editor/plugin assets
 ├── setup/                 # Installation and SQL files
 ├── sound/                 # Bundled sound assets
-├── storage/               # Cache, logs, backups
+├── storage/               # Runtime-generated cache, logs, counters, GeoIP, sitemap, backups
 ├── templates/             # Themes and template trees
 ├── tests/                 # PHPUnit and validation tests
 ├── uploads/               # Uploaded files
@@ -212,10 +208,10 @@ slaed-cms/
 
 ## Development Notes
 
-- Legacy code and modernized code coexist in the current repository.
+- Current runtime code and actively modernized components coexist in the repository.
 - New template work targets `core/classes/template.php`, the shared `$tpl` runtime object, and HTML files under `templates/*`.
-- Current active theme directories are `admin`, `default`, `lite`, and `simple`.
-- Current frontend module directories include `account`, `content`, `faq`, `files`, `forum`, `help`, `links`, `media`, `news`, `pages`, `search`, `shop`, `sitemap`, `users`, `voting`, and additional module folders under `modules/`.
+- Current theme directories are `admin` and `lite`.
+- Current module directories are `account`, `auto_links`, `changelog`, `clients`, `contact`, `content`, `faq`, `files`, `forum`, `help`, `jokes`, `links`, `main`, `media`, `money`, `news`, `order`, `pages`, `recommend`, `rss`, `search`, `shop`, `sitemap`, `users`, `voting`, and `whois`.
 - Public documentation aims to describe the current repository state, not a future fully completed migration.
 
 For contribution rules and coding conventions, see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -242,8 +238,12 @@ For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md]
 
 | Document | Description |
 |----------|-------------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Current runtime architecture and request flow map |
 | [docs/TEMPLATES.md](docs/TEMPLATES.md) | Template system and theme structure |
 | [docs/TESTS.md](docs/TESTS.md) | Testing and validation commands |
+| [docs/PRINCIPLES.md](docs/PRINCIPLES.md) | Engineering principles |
+| [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance architecture and optimization priorities |
+| [docs/PLUGINS.md](docs/PLUGINS.md) | Plugin architecture design note |
 | [docs/EDITORS.md](docs/EDITORS.md) | Pluggable Editor and Plugin system architecture |
 | [docs/PARSER.md](docs/PARSER.md) | Content parsing and Markdown/BBCode architecture |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution and coding rules |

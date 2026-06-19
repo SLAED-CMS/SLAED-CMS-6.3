@@ -26,25 +26,18 @@ Created in:
 ## Themes
 Current theme directories:
 - `templates/admin`
-- `templates/default`
 - `templates/lite`
-- `templates/simple`
 
 ## Theme Roles
-
-### `templates/default`
-- bundled frontend theme directory with layouts, pages, partials, fragments, assets, and images
-
-### `templates/simple`
-- bundled frontend theme with the same template tree structure as the other frontend themes
-- includes local Bootstrap 5 assets
 
 ### `templates/admin`
 - current admin theme files
 - contains admin layouts, pages, partials, and fragments used by the admin runtime
 
 ### `templates/lite`
-- bundled frontend theme
+- current bundled frontend theme
+- contains frontend layouts, pages, partials, fragments, assets, and images
+- includes local Bootstrap assets under `assets/vendor/bootstrap/`
 
 ## Theme Structure
 Themes should follow this structure:
@@ -64,7 +57,7 @@ templates/<theme>/
 
 `index.html` is not the main architectural entry for the active template runtime.
 
-Common active layout files in bundled themes include `layouts/app.html` and `layouts/home.html`.
+Common active layout files in `templates/lite` include `layouts/app.html` and `layouts/home.html`. `templates/admin` uses admin-specific layouts such as `layouts/admin.html` and `layouts/bare.html`.
 
 ## Theme Hooks
 
@@ -298,18 +291,27 @@ Do not:
 - add placeholder mapping helpers for new slices
 - copy theme inventories from installations or snapshots that are not present in the current repository
 
-## Current Runtime Slices
-Already moved to the current runtime:
-- admin login
-- admin registration
-- admin preview
-- admin searchbox
+## Current Runtime Status
 
-Additional confirmed current usage:
+Confirmed current usage:
 
+- frontend/admin bootstrap creates `$tpl = new Template($theme)` in `core/system.php`
+- admin requests force `$conf['theme'] = 'admin'` in `core/system.php`
+- direct admin helper endpoints can create `new Template('admin')` from `index.php`
 - frontend pages are finalized through `setFoot()` and `$tpl->getHtmlPage(...)`
 - admin page rendering also ends in `$tpl->getHtmlPage(...)`
 - frontend and admin fragments are rendered through `$tpl->getHtmlFrag(...)`
+- PHP callers render larger reusable parts through `$tpl->getHtmlPart(...)`
+
+Current template-related tests include:
+
+- `tests/TemplateValidationTest.php`
+- `tests/Unit/AdminCssClassUsageTest.php`
+- `tests/Unit/AdminLoginBridgeFlowTest.php`
+- `tests/Unit/AdminPageRenderFlowTest.php`
+- `tests/Unit/AdminPreviewBridgeFlowTest.php`
+- `tests/Unit/AdminSearchboxBridgeFlowTest.php`
+- `tests/Unit/ViewBridgeSmokeTest.php`
 
 ## Assets
 Theme-local assets should live inside the theme.
@@ -320,7 +322,8 @@ Recommended pattern:
 - `assets/vendor/<library>/...`
 
 Example already present:
-- `templates/simple/assets/vendor/bootstrap/`
+- `templates/lite/assets/vendor/bootstrap/`
+- `templates/admin/assets/vendor/bootstrap/`
 
 ### Automatic Asset Loading
 The current runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists (for example `partials/alerts.css` or `partials/alerts.js`), the engine detects it at compile time and injects `<link>` and `<script defer>` tags into the compiled PHP output. This keeps asset registration close to the template file instead of spreading it across PHP callers.

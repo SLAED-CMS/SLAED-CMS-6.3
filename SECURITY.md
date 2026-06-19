@@ -1,7 +1,7 @@
 # Security Policy
 
 > **SLAED CMS Security Information**
-> *Last updated: April 2026*
+> *Last updated: June 2026*
 
 ---
 
@@ -10,14 +10,11 @@
 | Version | Supported | PHP Version | Status |
 | ------- | --------- | ----------- | ------ |
 | 6.3.x   | Yes       | 8.1+        | Active development |
-| 6.2.x   | `TODO:`   | Legacy      | `TODO:` Confirm from maintained branches |
-| 6.1.x   | `TODO:`   | Legacy      | `TODO:` Confirm from maintained branches |
-| < 6.0   | `TODO:`   | Legacy      | `TODO:` Confirm from maintained branches |
 
-Only version 6.3.x should be considered for security fixes.
+Only version 6.3.x is currently supported for security fixes.
 
 > [!IMPORTANT]
-> The current repository documents the `6.3` code line. It does not provide enough evidence to publish a reliable support matrix for older branches without additional branch-level verification.
+> The current repository documents the `6.3` code line. The next supported project line is expected to become `8.0`, but until that line is released and documented, `6.3.x` remains the only supported line in this policy.
 
 ---
 
@@ -91,6 +88,9 @@ Runtime logs are stored under `storage/logs/`.
 The repository also contains runtime-generated data under:
 
 - `storage/cache/`
+- `storage/captcha/`
+- `storage/counter/`
+- `storage/geoip/`
 - `storage/sitemap/`
 - `storage/backup/`
 

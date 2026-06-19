@@ -1,7 +1,7 @@
 # Contributing to SLAED CMS
 
 > **Contribution Guidelines for SLAED CMS 6.3**
-> *Last updated: April 2026*
+> *Last updated: June 2026*
 
 Thank you for your interest in contributing to SLAED CMS. This document describes the current contribution workflow, coding conventions, and project-specific rules that contributors should follow.
 
@@ -60,9 +60,6 @@ mysql -u root -p your_database < setup/sql/table.sql
 
 Review the files in `config/` and adjust local settings as needed for your environment.
 
-> [!NOTE]
-> The repository does not ship a `config/db.php.example` file. Configure the real files used by your local installation.
-
 ### 3. Writable Directories
 
 Typical writable directories:
@@ -116,16 +113,18 @@ Project functions use `verbNoun` naming with the approved verb set:
 | `filter` | Sanitization or normalization |
 
 ```php
-function getUser(int $id): array {}
-function setConfigFile(string $file, array $data): bool {}
-function addMail(string $mail, string $name, string $subj, string $text): void {}
-function isAdmin(): bool {}
-function checkSiteToken(string $name = 'token'): bool {}
-function filterText(string|array $text, int $save = 0): string|array {}
+function getTheme(): string {}
+function setHead(array $seo = []): void {}
+function addMail(string $email, string $smail, string $subject, string $message, int $id = 0, int $pr = 0): void {}
+function isAdmin(bool $super = false): bool {}
+function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {}
+function filterText(string|array $message, int $type = 0): string {}
 ```
 
 Additional enforced constraints from `.rules/global.md`:
 
+- apply these naming rules to new code and to existing code that is explicitly
+  being rewritten or refactored
 - function names must use `camelCase`
 - function names must use letters only
 - function names must not contain `_`
@@ -222,7 +221,6 @@ Do not use these names for module configuration files.
 
 - Use `$afile` for admin entry routing.
 - Use `setRedirect()` for redirects.
-- Use `setAdminNavi()` for admin navigation blocks where appropriate.
 - Keep admin handlers in named functions instead of large inline switch bodies when touching a file substantially.
 
 ```php
@@ -255,7 +253,7 @@ Admin pages are handled by the admin runtime and do not use the frontend lifecyc
 
 ### Content Parsers and Editors
 
-- **Parsing:** Use `Parser::filterContent()` from `core/classes/parser.php` to render Markdown/BBCode to HTML. Do not use legacy functions like `filterMarkdown()`.
+- **Parsing:** Use `Parser::filterContent()` from `core/classes/parser.php` to render Markdown/BBCode to HTML.
 - **Editors:** When building forms, use `Editor::getContent()` for WYSIWYG textareas and `Editor::getCode()` for syntax highlighting fields. Do not manually output generic `<textarea>` tags with custom JS initializers.
 
 ---
@@ -266,7 +264,7 @@ The active file-backed template runtime in the current repository is:
 
 - `core/classes/template.php`
 
-Historical legacy rendering still exists in PHP-side output assembly, but the repository snapshot does not contain an active `core/template.php` runtime file.
+Some PHP-side output assembly still exists, but the active template runtime is `core/classes/template.php`.
 
 For new template work:
 
@@ -274,8 +272,8 @@ For new template work:
 - Use the shared `$tpl` runtime object when available.
 - Keep HTML in template files under `templates/*`.
 - Place reusable components in `partials/` (e.g., `partials/modal.html`) to take advantage of shortname syntax (`{% component 'modal' %}`).
-- Keep component CSS and JS alongside the HTML file (`partials/modal.css` and `partials/modal.js`). The runtime will inject them automatically with zero runtime I/O overhead.
-- Do not add new legacy `setTemplateBasic()`-only rendering paths for new slices unless the task explicitly requires legacy work.
+- Keep component CSS and JS alongside the HTML file (`partials/modal.css` and `partials/modal.js`). Asset registration stays colocated with templates; the runtime still performs the existing path and freshness checks.
+- Do not introduce new PHP-side rendering paths that bypass the active `Template` runtime unless the task explicitly requires it.
 
 Current modern runtime methods:
 

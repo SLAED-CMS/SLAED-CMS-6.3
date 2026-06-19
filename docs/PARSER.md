@@ -1,6 +1,6 @@
 # Parser System Documentation
 
-This document describes the `Parser` class, the unified content processing and sanitization engine replacing legacy `filterMarkdown()` and `filterReplaceText()` functions.
+This document describes the `Parser` class, the unified content processing and sanitization engine.
 
 ## Architecture Overview
 
@@ -26,7 +26,7 @@ The `$safe` boolean parameter is crucial:
 
 ## Supported Markup
 
-The `Parser` supports a hybrid composition of Markdown and legacy SLAED BBCode to preserve backward compatibility while enabling modern authoring workflows.
+The `Parser` supports a hybrid composition of Markdown and SLAED BBCode.
 
 ### Markdown Support
 - **Headers:** ATX headers (`# h1` through `###### h6`) and Setext headers. Automatically generates `id="slug"` attributes for anchor linking.
@@ -34,9 +34,9 @@ The `Parser` supports a hybrid composition of Markdown and legacy SLAED BBCode t
 - **Blockquotes:** Standard `> Quote`, including GitHub-flavored Alerts (`> [!NOTE]`, `> [!WARNING]`).
 - **Tables:** Full GFM table support with column alignment.
 - **Code:** Inline backticks `` `code` `` and triple-backtick fenced blocks (` ``` `). Indented code blocks (4 spaces).
-- **Inline:** Markdown links `[text](url)` and images `![alt](url "title")`. (Note: bold/italic relies on either BBCode or modern CSS defaults, check your theme).
+- **Inline:** Markdown links `[text](url)`, images `![alt](url "title")`, and emphasis markers such as `***`, `**`, `*`, and `_`.
 
-### BBCode Legacy Support
+### BBCode Support
 - **Typography:** `[b]`, `[i]`, `[u]`, `[s]`, `[color=X]`, `[size=N]`, `[family=X]`, `[left]`, `[center]`, `[right]`, `[justify]`.
 - **Blocks:** `[quote]`, `[hide]` (visible only to admins/auth users), `[tabs]...[tab]`.
 - **Code:** `[code]`, `[php]`, `[code=lang]`.
@@ -46,6 +46,6 @@ The `Parser` supports a hybrid composition of Markdown and legacy SLAED BBCode t
 
 ## Authoring Guidelines
 
-- **New Code:** Stop using `filterText()` and `filterMarkdown()`. Route all text display through `$parser->filterContent()`.
+- **Content rendering:** Use `$parser->filterContent()` for Markdown/BBCode display. `filterText()` is a security text helper in `core/security.php`, not the content rendering pipeline.
 - **Module `$mod` Parameter:** Always try to pass the active module name (`$mod`). It routes local attachment queries to `uploads/<module>/` and binds the module's custom replacement tables appropriately.
 - **Trusted vs Untrusted:** Never pass `$safe = false` if the input originates directly from a standard user session or anonymous request.

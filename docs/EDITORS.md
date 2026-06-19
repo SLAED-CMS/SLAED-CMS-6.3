@@ -1,10 +1,10 @@
 # Editor System Documentation
 
-This document describes the pluggable editor system introduced in recent refactorings.
+This document describes the pluggable editor system.
 
 ## Architecture Overview
 
-The system uses a central `Editor` class (`core/classes/editor.php`) to manage and initialize different editors for content and code. Editors are loaded dynamically based on user and administrator configuration, replacing hardcoded generic `<textarea>` initializations.
+The system uses a central `Editor` class (`core/classes/editor.php`) to manage and initialize different editors for content and code. Editors are loaded dynamically based on user and administrator configuration.
 
 The primary entry points are:
 - `Editor::getContent(array $data)` — renders a WYSIWYG or plain text editor
@@ -56,8 +56,8 @@ Each editor must provide a `manifest.json` file in its folder. The system uses t
 - `priority`: *Required.* Integer sorting order for dropdown panels.
 - `roles`: *Required.* Array containing `user` and/or `admin`. Determines where it can be used.
 - `profiles`: *Required.* Array containing `simple` and/or `full`. Represents configurations.
-- `formats`: *Required for content editors.* Array containing values such as `plain`, `html`, or `markdown`. Dictates the output format logic. For code editors, this is replaced by `lang`.
-- `lang`: *Required for code editors.* Array of supported languages (e.g., `["php", "html", "css", "js", "json", "sql", "xml", "text"]`).
+- `formats`: *Required.* Array containing values such as `plain`, `html`, `markdown`, or code-related output formats. The current manifest validation expects this field for every editor.
+- `lang`: *Required for code editors.* Array of supported languages (e.g., `["php", "html", "css", "js", "json", "sql", "xml", "text"]`). This is additional code-editor metadata, not a replacement for `formats`.
 
 ## Driver Interfaces
 
@@ -91,16 +91,12 @@ interface CodeDriver {
 }
 ```
 
-## Migration & Usage
+## Usage
 
-Do not output standard textareas natively anymore. Instead, use the `Editor` class in your module templates/PHP wrappers.
+Use the `Editor` class in module templates/PHP wrappers.
 
-**Old way:**
-```html
-<textarea name="body" id="body" class="editor"></textarea>
-```
+### Content Editor
 
-**New Content Way:**
 ```php
 echo Editor::getContent([
     'id' => 'body',
@@ -110,7 +106,8 @@ echo Editor::getContent([
 ]);
 ```
 
-**New Code Way:**
+### Code Editor
+
 ```php
 echo Editor::getCode([
     'id' => 'source',

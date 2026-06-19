@@ -8,17 +8,25 @@ The repository currently ships with:
 - PHPStan
 - PHP-CS-Fixer
 - PHP syntax checks via `php -l`
+- browser audit scripts backed by Playwright and Chrome Remote Interface
 
 Configuration files:
 - `phpunit.xml`
 - `phpstan.neon`
 - `.php-cs-fixer.dist.php`
+- `package.json`
 
 Composer scripts currently present in `composer.json`:
 
 - `composer test`
 - `composer analyse`
 - `composer quality`
+
+NPM scripts currently present in `package.json`:
+
+- `npm run browser:audit`
+- `npm run browser:inspect`
+- `npm run browser:attach`
 
 ## Installation
 Install dev dependencies first:
@@ -73,6 +81,13 @@ vendor/bin/php-cs-fixer fix --using-cache=no --config=.php-cs-fixer.dist.php <pa
 php -l path/to/file.php
 ```
 
+### Browser Audit
+```bash
+npm run browser:audit
+npm run browser:inspect
+npm run browser:attach
+```
+
 ## PHPUnit Layout
 `phpunit.xml` defines two suites:
 
@@ -81,6 +96,7 @@ Directory:
 - `tests/Unit`
 
 Current unit test files include:
+- `AdminCssClassUsageTest.php`
 - `AdminLoginBridgeFlowTest.php`
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
@@ -121,8 +137,10 @@ For focused code work:
 2. run relevant PHPUnit
 3. run `phpstan analyse` when the change touches shared logic
 4. run PHP-CS-Fixer dry-run on changed paths when style is relevant
+5. run browser audit scripts when the change touches browser behavior, frontend
+   rendering, or live UI flows
 
 ## Notes
-- historical test names such as `ViewBridgeSmokeTest` still exist
+- test names such as `ViewBridgeSmokeTest` are current repository filenames
 - the current runtime target is `Template`, not `View`
 - run only relevant checks, but never claim a check that was not run
