@@ -19,6 +19,8 @@
           sl-table-cell
           {% if cell.is_num %} sl-table-col-num{% endif %}
           {% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}
+          {% if cell.is_forum_user %} sl-fl-col-user{% endif %}
+          {% if cell.is_truncate %} sl-cell-ellipsis{% endif %}
           {% if cell.is_cart_col_num %} sl-cart-col-num{% endif %}
           {% if cell.is_cart_col_content %} sl-cart-col-content{% endif %}
           {% if cell.is_cart_col_stat %} sl-cart-col-stat{% endif %}

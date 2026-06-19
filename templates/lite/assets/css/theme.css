@@ -316,9 +316,12 @@ a .sl-letter:hover {
 .sl-table-head th:last-child {
   border-radius: 0 8px 0 0;
 }
-.sl-table-body .sl-table-cell {
+.sl-table-cell {
   border-bottom: 1px solid var(--sl-color-border-stronger);
   padding: 5px;
+}
+.sl-table-row:hover {
+  background-color: var(--sl-color-surface-alt);
 }
 .sl-table-col-num {
   width: 45px;
@@ -330,16 +333,64 @@ a .sl-letter:hover {
   display: inline-block;
   height: 30px;
   line-height: 30px;
-  padding: 0 10px;
-  border-radius: 15px;
   color: var(--sl-color-text);
 }
 .sl-table-num-link:hover {
   background-color: var(--sl-color-border-subtle);
   text-decoration: none;
 }
+.sl-cell-ellipsis .sl-table-num-link {
+  display: block;
+  max-width: 450px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sl-cell-ellipsis .sl-table-num-link:hover {
+  background: none;
+}
 .sl-table-date {
   color: inherit;
+}
+
+/* Tables: sort indicators */
+thead tr .sl-sort,
+thead tr .sl-sort-asc,
+thead tr .sl-sort-desc {
+  position: relative;
+  cursor: pointer;
+  padding-right: 26px;
+}
+thead tr .sl-sort::after,
+thead tr .sl-sort-asc::after,
+thead tr .sl-sort-desc::after {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 10px;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.55;
+  text-align: center;
+}
+thead tr .sl-sort::after {
+  content: "\2195";
+}
+thead tr .sl-sort-asc::after {
+  content: "\25B2";
+}
+thead tr .sl-sort-desc::after {
+  content: "\25BC";
+}
+thead tr th[data-sort-method="none"] {
+  cursor: default;
+}
+thead tr th[data-sort-method="none"]::after {
+  content: none;
+}
+.sl-block .sl-table-list {
+  margin-bottom: 0;
 }
 
 /* Pagination: pager controls */
@@ -2150,6 +2201,12 @@ ol.sl-sublist-two li:hover:before {
 .sl-block-content {
   line-height: 1.45;
 }
+.sl-block-content > li > a {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 #sidebar .sl-block:last-child {
   margin-bottom: 0;
 }
@@ -2585,6 +2642,10 @@ ol.sl-sublist-two li:hover:before {
   padding: 0;
   margin: 0;
 }
+.sl-list-item {
+  flex-basis: 100%;
+  min-width: 0;
+}
 .sl-list-item > li {
   padding: 14px 0 0;
   margin-bottom: 14px;
@@ -2618,7 +2679,8 @@ ol.sl-sublist-two li:hover:before {
   gap: var(--sl-space-sm);
   white-space: nowrap;
 }
-.sl-forum-meta-icon {
+.sl-forum-meta-icon,
+.sl-forum-meta-item a .bi {
   color: var(--sl-but-link-text);
   font-size: var(--sl-icon-size-xs);
   line-height: 1;
@@ -3967,6 +4029,12 @@ ol.sl-sublist-two li:hover:before {
 .sl-fl-col-last {
   width: 140px;
 }
+.sl-fl-col-user {
+  white-space: nowrap;
+}
+.sl-fl-col-user .bi {
+  font-size: var(--sl-icon-size-xs);
+}
 .sl-fl-col-num {
   text-align: center !important;
   width: 45px;
@@ -3978,6 +4046,7 @@ ol.sl-sublist-two li:hover:before {
   width: 80px;
   padding-right: 0 !important;
   padding-left: 0 !important;
+  white-space: nowrap;
 }
 .sl-fl-col-content h4,
 .sl-fl-col-content h3 {
