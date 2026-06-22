@@ -608,9 +608,9 @@ function getFavoriteButton(?int $fid, string $mod): string {
             } else {
                 $rep_id = 'rep'.$fid.$mod;
                 $url = 'index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod;
-                $content = $tpl->getHtmlFrag('block-content', [
+                $content = $tpl->getHtmlFrag('span', [
                     'id' => $rep_id,
-                    'content' => $tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => $rep_id, 'swap' => 'outerHTML', 'title' => _FAVOR_ADD, 'label' => '', 'is_favorite' => true]),
+                    'content_html' => $tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => $rep_id, 'swap' => 'outerHTML', 'title' => _FAVOR_ADD, 'label' => '', 'is_favorite' => true]),
                 ]);
             }
         }

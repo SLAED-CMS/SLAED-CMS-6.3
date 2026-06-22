@@ -13,7 +13,7 @@ global $db, $tpl;
 $content = '';
 $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_jokes WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while (list($jokeid, $title) = $db->getSqlRow($result)) {
-    $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $title = getDecodedText($title);
     $content .= $tpl->getHtmlFrag('block-list-item', [
         'url' => 'index.php?name=jokes#'.$jokeid,
         'title' => $title,

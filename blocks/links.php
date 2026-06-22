@@ -16,7 +16,7 @@ $strip = 40;
 $col1 = '';
 $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_links WHERE status != '0' ORDER BY time DESC LIMIT 0,10");
 while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
-    $l_title = html_entity_decode($l_title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $l_title = getDecodedText($l_title);
     $col1 .= $tpl->getHtmlFrag('link', [
         'href' => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
         'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
@@ -29,7 +29,7 @@ while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
 $col2 = '';
 $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_links WHERE status != '0' ORDER BY tvotes DESC LIMIT 0,10");
 while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
-    $l_title = html_entity_decode($l_title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $l_title = getDecodedText($l_title);
     $col2 .= $tpl->getHtmlFrag('link', [
         'href' => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
         'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),

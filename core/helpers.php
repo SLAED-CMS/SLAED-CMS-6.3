@@ -727,7 +727,7 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
     if ($db->getSqlRowCount($res) > 0) {
         $opts = $empty;
         $mass = [];
-        $pref = str_repeat(html_entity_decode('&nbsp;', ENT_QUOTES | ENT_HTML5, 'UTF-8'), 5);
+        $pref = str_repeat(getDecodedText('&nbsp;'), 5);
         while ([$cid, $title, $parent, $pview] = $db->getSqlRow($res)) {
             if (is_acess($pview)) $mass[$cid] = [getConst($title), $parent];
         }
@@ -748,6 +748,17 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
     }
     if ($empty) return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'select_class' => $clas, 'title' => _CATEGORIES, 'options_html' => $empty]);
     return '';
+}
+
+# Resolve the category id and title of a module item for header breadcrumbs, guarding tables that lack these columns
+function getItemCrumb(string $mod, int $id): array {
+    global $db;
+    $mod = preg_replace('#[^a-z0-9_]#', '', strtolower($mod));
+    if ($mod === '' || $id < 1) return ['cid' => 0, 'title' => ''];
+    [$cols] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tbl AND COLUMN_NAME IN (:cid, :title)', ['tbl' => PREFIX_DB.'_'.$mod, 'cid' => 'cid', 'title' => 'title']));
+    if ((int)$cols < 2) return ['cid' => 0, 'title' => ''];
+    [$cid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT cid, title FROM '.PREFIX_DB.'_'.$mod.' WHERE id = :id', ['id' => $id]));
+    return ['cid' => (int)$cid, 'title' => (string)$title];
 }
 
 # Render the shared category breadcrumb trail

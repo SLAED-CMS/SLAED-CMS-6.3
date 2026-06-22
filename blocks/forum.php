@@ -14,7 +14,7 @@ global $db, $tpl;
 $rows = '';
 $result = getForumTopics('id, title, time, lname, lpost, ltime, status', '97, 98', 3);
 while ([$id, $title, $time, $lname, $lpost, $ltime, $status] = $db->getSqlRow($result)) {
-    $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $title = getDecodedText($title);
     $rows .= $tpl->getHtmlFrag('table-row', [
         'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
         'cells' => [

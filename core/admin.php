@@ -807,7 +807,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $id = $val[0];
                 $fid = $val[1];
                 $modul = $val[2];
-                $title = html_entity_decode((string)$val[3], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $title = getDecodedText((string)$val[3]);
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
                 $delhref = 'admin.php?name=favorites&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -881,7 +881,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
             $info = $prs->filterContent($body, false, 'privat');
-            $title = html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $title = getDecodedText($title);
             $delhref = 'admin.php?name=privat&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [

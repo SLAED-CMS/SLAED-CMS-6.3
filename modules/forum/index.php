@@ -169,9 +169,9 @@ function forum(): void {
         if ($id) {
             if (!$cnt) {
                 if ($isview) {
-                    $cat = (int)$id;
+                    $catid = (int)$id;
                     $lang = ($conf['multilingual']) ? 'AND (c.lang = :locale OR c.lang = \'\') AND s.cid = :cat' : 'AND s.cid = :cat';
-                    $lpars = ['cat' => $cat];
+                    $lpars = ['cat' => $catid];
                     if ($conf['multilingual']) {
                         $lpars['locale'] = $locale;
                     }
@@ -188,51 +188,31 @@ function forum(): void {
                     $cont = $tpl->getHtmlFrag('forum-topic-view', ['open' => true, 'button' => $newbt, 'title_html' => $cat_link]);
                     if ($db->getSqlRowCount($query) > 0) {
                         $mark = 0;
+                        $canmod = is_moder($conf['name']);
+                        $pop = (int)$conf['forum']['pop'];
+                        $slabels = [
+                            'is_topic_moderated' => _TOPICM,
+                            'is_topic_admin' => _TOPICA,
+                            'is_topic_closed' => _TOPICN,
+                            'is_topic_new' => _ISNEWPOST,
+                            'is_topic_old' => _NONEWPOST,
+                            'is_topic_popular_new' => _TPOPN,
+                            'is_topic_popular_old' => _TPOP,
+                            'is_topic_pending' => _TOPICP,
+                            'is_topic_hot' => _THOT,
+                            'is_topic_announcement' => _TANNOUN,
+                        ];
                         $topicList = $tpl->getHtmlFrag('forum-category-table', ['open' => true, 'is_topic_list' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
                         while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
-                            $view = 0;
-                            if (!$status && is_moder($conf['name'])) {
-                                $timg = forumIcon($thref, $title, 'is_topic_moderated', _TOPICM);
-                                $tlink = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label' => $title]);
-                                $lpost = forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last');
-                                $view = 1;
-                            } elseif ($status == 1) {
-                                if (is_moder($conf['name'])) {
-                                    $timg = forumIcon($thref, $title, 'is_topic_admin', _TOPICA);
-                                    $tlink = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label' => $title]);
-                                    $lpost = forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last');
-                                } else {
-                                    $timg = $tpl->getHtmlFrag('inline-badge', ['title_text' => _TOPICA, 'label' => '', 'is_topic_admin' => true]);
-                                    $tlink = $title;
-                                    $lpost = $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
-                                }
-                                $view = 1;
-                            } elseif ($status == 2) {
-                                $timg = forumIcon($thref, $title, 'is_topic_closed', _TOPICN);
-                                $tlink = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label' => $title]);
-                                $lpost = forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last');
-                                $view = 1;
-                            } elseif ($status == 3 && $time <= date('Y-m-d H:i:s')) {
-                                if ($ltime > $ulast) {
-                                    $timg = ($comments > $conf['forum']['pop']) ? forumIcon($thref, $title, 'is_topic_popular_new', _TPOPN) : forumIcon($thref, $title, 'is_topic_new', _ISNEWPOST);
-                                } else {
-                                    $timg = ($comments > $conf['forum']['pop']) ? forumIcon($thref, $title, 'is_topic_popular_old', _TPOP) : forumIcon($thref, $title, 'is_topic_old', _NONEWPOST);
-                                }
-                                $tlink = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label' => $title]);
-                                $lpost = forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last');
-                                $view = 1;
-                            } elseif ($status == 3 && $time > date('Y-m-d H:i:s') && is_moder($conf['name'])) {
-                                $timg = forumIcon($thref, $title, 'is_topic_pending', _TOPICP);
-                                $tlink = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label' => $title]);
-                                $lpost = forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last');
-                                $view = 1;
-                            } elseif ($status == 4 || $status == 5) {
-                                $timg = ($status == 4) ? forumIcon($thref, $title, 'is_topic_hot', _THOT) : forumIcon($thref, $title, 'is_topic_announcement', _TANNOUN);
-                                $tlink = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label' => $title]);
-                                $lpost = forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last');
-                                $view = 1;
-                            }
+                            $title = getDecodedText($title);
+                            $state = getForumTopicState((int)$status, $time, $ltime, (int)$comments, $pop, $ulast, $canmod);
+                            $view = $state !== '' ? 1 : 0;
+                            $canlink = !($status == 1 && !$canmod);
+                            $slabel = $slabels[$state] ?? '';
+                            $badge = $state ? $tpl->getHtmlFrag('inline-badge', ['title_text' => $slabel, 'label' => '', $state => true]) : '';
+                            $tlink = $canlink ? $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $title, 'label_html' => $badge, 'label' => $title]) : $badge.' '.$title;
+                            $lpost = $canlink ? forumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'is_forum_last') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _LASTMESSAGE, 'label' => '', 'is_forum_last' => true]);
                             $ldata = _DATE.': '.format_time($ltime, _TIMESTRING);
                             $post = ($nick) ? user_info($nick) : $uname.' ('._ANONYM.')';
                             $lposter = ($luid) ? _POSTER.': '.user_info($lname) : _POSTER.': '.$lname;
@@ -250,13 +230,13 @@ function forum(): void {
                             } else {
                                 $checkb = '';
                             }
-                            $topicList .= ($view) ? $tpl->getHtmlFrag('forum-category-row', ['is_topic_list' => true, 'icon' => $timg, 'link' => $tlink, 'replies' => $comments, 'posts' => $post, 'views' => $counter, 'last_date' => $ldata, 'last_poster' => $lposter, 'last_link' => $lpost.$checkb]) : '';
+                            $topicList .= ($view) ? $tpl->getHtmlFrag('forum-category-row', ['is_topic_list' => true, 'link' => $tlink, 'replies' => $comments, 'posts' => $post, 'views' => $counter, 'last_date' => $ldata, 'last_poster' => $lposter, 'last_link' => $lpost.$checkb]) : '';
                         }
                         $topicList .= $tpl->getHtmlFrag('forum-category-table', []);
                         if ($ismod) {
                             $topicList .= $tpl->getHtmlPart('fieldset-panel', ['legend' => _CHECKOP, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => tmoder(1)
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
-                                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$cat, 'input_attr' => ''])
+                                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
                             $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $topicList]);
                         } else {
@@ -265,7 +245,7 @@ function forum(): void {
                     } else {
                         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
                     }
-                    $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
+                    $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$catid."'" : "pid = '0' AND cid = '".$catid."' AND time <= NOW() AND status != '0'";
                     $pnum = getTplPager([
                         'limit'     => $listnum,
                         'maxpg'     => $conf['forum']['pnum'],
@@ -273,12 +253,12 @@ function forum(): void {
                         'field'     => 'id',
                         'mod'       => $conf['name'],
                         'where'     => $order,
-                        'url_extra' => ['cat' => $cat],
+                        'url_extra' => ['cat' => $catid],
                         'prefix'    => 'new/',
                     ]);
                     $cont .= $tpl->getHtmlFrag('forum-topic-view', ['button' => $newbt, 'pager' => $pnum]);
-                    $b_can = $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _ISCAN]);
-                    $b_not = $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => _NOTCAN]);
+                    $b_can = $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_success' => true, 'text' => _ISCAN]);
+                    $b_not = $tpl->getHtmlFrag('span', ['is_bold' => true, 'is_danger' => true, 'text' => _NOTCAN]);
                     $infov = ($isview) ? sprintf(_ACINFOV, $b_can) : sprintf(_ACINFOV, $b_not);
                     $infor = ($isread) ? sprintf(_ACINFOR, $b_can) : sprintf(_ACINFOR, $b_not);
                     $infot = ($istopic) ? sprintf(_ACINFOT, $b_can) : sprintf(_ACINFOT, $b_not);

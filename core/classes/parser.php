@@ -132,7 +132,7 @@ class Parser {
 
     # Decode HTML entities.
     private function filterDec(string $s): string {
-        return html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return getDecodedText($s);
     }
 
     # Public web root for resolving relative asset paths.
@@ -389,7 +389,7 @@ class Parser {
         $src = preg_replace_callback(
             '/\[code\](.*?)\[\/code\]/si',
             function(array $m): string {
-                $txt  = str_replace('?', '&#063;', html_entity_decode((string)$m[1], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                $txt  = str_replace('?', '&#063;', getDecodedText((string)$m[1]));
                 $html = '<div class="sl-code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
                 return $this->addStash($html);
             },

@@ -3564,6 +3564,22 @@ function user_info(string $name, bool $icon = false): string {
     return $name;
 }
 
+# Resolve the topic status badge flag shared by the forum list and the home forum block
+function getForumTopicState(int $status, string $time, string $ltime, int $comments, int $pop, int $ulast, bool $ismod): string {
+    $now = date('Y-m-d H:i:s');
+    if (!$status && $ismod) return 'is_topic_moderated';
+    if ($status == 1) return 'is_topic_admin';
+    if ($status == 2) return 'is_topic_closed';
+    if ($status == 3 && $time <= $now) {
+        $ispop = $comments > $pop;
+        if ($ltime > $ulast) return $ispop ? 'is_topic_popular_new' : 'is_topic_new';
+        return $ispop ? 'is_topic_popular_old' : 'is_topic_old';
+    }
+    if ($status == 3 && $time > $now && $ismod) return 'is_topic_pending';
+    if ($status == 4 || $status == 5) return ($status == 4) ? 'is_topic_hot' : 'is_topic_announcement';
+    return '';
+}
+
 # Query recent root forum topics shared by the forum blocks and theme teasers
 function getForumTopics(string $cols, string $bclos, int $limit): mixed {
     global $db;
@@ -4582,6 +4598,11 @@ function catmids(string $modul, string $field): string {
     return isset($catid) ? 'AND '.$field.' IN ('.implode(', ', $catid).')' : '';
 }
 
+# Decode stored HTML entities to plain UTF-8 text for safe re-escaping at the output boundary
+function getDecodedText(string $text): string {
+    return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+}
+
 # Length end filter
 function cutstr(mixed $strip, int $size, string $type = ''): string {
     $strip = (string)$strip;
@@ -4684,6 +4705,8 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
     global $showbanners, $foot, $tpl;
     if ($url == '') {
         $blocktitle = getConst($blocktitle);
+        $bicon = '';
+        $bhref = '';
         if ($bfile != '') {
             $path = BASE_DIR.'/blocks/'.$bfile;
             if (file_exists($path)) {
@@ -4707,10 +4730,10 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             return $content;
             break;
             case 'o':
-            return $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content]);
+            return $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
             break;
             default:
-            echo $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content]);
+            echo $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
             break;
         }
     } else {

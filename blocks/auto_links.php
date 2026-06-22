@@ -13,7 +13,7 @@ global $db, $tpl, $conf, $prs;
 $content = '';
 $result = $db->getSqlQuery('SELECT id, title, intro FROM '.PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($conf['auto_links']['limit']).'');
 while (list($a_id, $a_site, $a_description) = $db->getSqlRow($result)) {
-    $a_site = cutstr(html_entity_decode($a_site, ENT_QUOTES | ENT_HTML5, 'UTF-8'), $conf['auto_links']['strip']);
+    $a_site = cutstr(getDecodedText($a_site), $conf['auto_links']['strip']);
     $title = filterText(cutstr($prs->filterContent($a_description, false, ''), 250), 1);
     $content .= $tpl->getHtmlFrag('block-list-item', [
         'url' => 'index.php?name=auto_links&amp;op=view&amp;id='.$a_id,

@@ -23,7 +23,7 @@ function setTemplateForum(): string {
         $items .= $tpl->getHtmlFrag('forum-teaser-item', [
             'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
             'href' => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost,
-            'title' => html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            'title' => getDecodedText($title),
             'by' => _POSTEDBY,
             'poster' => $luid ? user_info($lname, true) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
             'when_label' => _DATE,
@@ -38,11 +38,20 @@ function getThemeHeadVars(): array {
     global $db, $conf, $tpl;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';
     $fcat = (int)getVar('get', 'cat', 'num', 0);
+    $ctitle = '';
+    if (!$fcat && getVar('get', 'op', 'text', '') === 'view' && $conf['name']) {
+        $crumb = getItemCrumb($conf['name'], (int)getVar('get', 'id', 'num', 0));
+        $fcat = $crumb['cid'];
+        $ctitle = $crumb['title'];
+    }
     $cname = ($fcat && !empty($conf['files'])) ? getTplCategoryTrail($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
+    if ($cname !== '' && $ctitle !== '') {
+        $cname .= ' '.urldecode($conf['files']['defis']).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
+    }
     [$count] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
     $random = mt_rand(0, max(0, (int)$count - 1));
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
-    $ftitle = html_entity_decode((string)$title, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $ftitle = getDecodedText((string)$title);
     $faq = $tpl->getHtmlFrag('link', [
         'href' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
         'title' => $ftitle,
