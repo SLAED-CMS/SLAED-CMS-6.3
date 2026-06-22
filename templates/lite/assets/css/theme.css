@@ -125,10 +125,6 @@ a .sl-letter:hover {
 .sl-meta-foot:after,
 .sl-card-aside:after,
 .sl-partners:after,
-.sl-grid-1-2:after,
-.sl-grid-1-4:after,
-.sl-grid-1-3:after,
-#head-content .sl-wrp:after,
 .sl-comment:after,
 .sl-progress-info:after {
   content: "";
@@ -339,7 +335,7 @@ a .sl-letter:hover {
   background-color: var(--sl-color-border-subtle);
   text-decoration: none;
 }
-.sl-cell-ellipsis .sl-table-num-link {
+.sl-cell-ellipsis > a:last-child {
   display: block;
   max-width: 450px;
   overflow: hidden;
@@ -395,34 +391,31 @@ thead tr th[data-sort-method="none"]::after {
 
 /* Pagination: pager controls */
 .sl-pager {
-  position: relative;
-  height: 40px;
-  padding: 25px 60px 0 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 16px;
   border-top: 1px solid var(--sl-color-border-subtle);
 }
 .sl-pager-main {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-xs);
+  font-size: 16px;
 }
 .sl-pager-pages {
-  padding-top: 5px;
-  text-align: center;
-  font-size: 18px;
+  display: contents;
 }
 .sl-pager-nextprev {
-  display: inline;
-}
-.sl-pager-prev,
-.sl-pager-next {
-  width: 40px;
-  height: 40px;
-  position: absolute;
-  top: 25px;
+  display: contents;
 }
 .sl-pager-prev {
-  left: 0;
+  order: -1;
 }
 .sl-pager-next {
-  right: 0;
+  order: 1;
 }
 
 /* Pagination: page numbers */
@@ -484,7 +477,7 @@ span.sl-pnum-nav {
 .sl-pager-info {
   margin: 0 0 var(--sl-space-xs) 0;
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: normal;
   color: var(--sl-color-text-muted);
 }
@@ -2537,7 +2530,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-heading-1 {
   font-weight: bold;
   color: var(--sl-login-link-color);
-  font-size: 30px;
+  font-size: 32px;
   margin: 50px 0 16px 0;
 }
 
@@ -2991,24 +2984,33 @@ ol.sl-sublist-two li:hover:before {
 }
 
 /* sl-grid system: containers */
-.sl-grid-1-3,
 .sl-grid-1-2,
+.sl-grid-1-3,
 .sl-grid-1-4 {
+  display: grid;
+  gap: 2%;
   list-style: none;
   padding: 0;
   margin: 0;
 }
+.sl-grid-1-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.sl-grid-1-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.sl-grid-1-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .sl-grid {
   float: left;
 }
-.sl-grid-1-2 .sl-grid,
-.sl-grid-1-4 .sl-grid:first-child,
-.sl-grid-1-3 .sl-grid:first-child {
-  margin-left: 0;
-}
-.sl-grid-1-4 .sl-grid {
-  margin-left: 2%;
-  width: 23.5%;
+.sl-grid-1-2 > .sl-grid,
+.sl-grid-1-3 > .sl-grid,
+.sl-grid-1-4 > .sl-grid {
+  float: none;
+  width: auto;
+  margin: 0;
 }
 
 /* sl-dropdown */
@@ -3640,22 +3642,30 @@ ol.sl-sublist-two li:hover:before {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   background-size: cover;
 }
+#head-content .sl-wrp {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 45px;
+  min-height: 116px;
+}
 #head-content a {
   color: var(--sl-color-on-dark);
 }
 #head-content .sl-font {
   font-weight: bold;
   text-transform: uppercase;
-  font-size: 30px;
-  float: left;
-  margin: 35px 45px 0 0;
+  font-size: 32px;
+  margin: 0;
 }
 .sl-breadcrumbs {
-  float: left;
+  font-family: "Magistral", Arial, Tahoma, sans-serif;
+  font-weight: bold;
+  font-size: 32px;
   list-style: none;
   padding: 0;
-  margin: 47px 0 0;
-  max-width: 660px;
+  margin: 0;
+  max-width: 1320px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -3904,7 +3914,7 @@ ol.sl-sublist-two li:hover:before {
 /* News: titles */
 .sl-mtl {
   font-weight: bold;
-  font-size: 30px;
+  font-size: 32px;
   color: var(--sl-login-link-color);
   margin: 45px 0 15px 0;
 }
@@ -4012,6 +4022,9 @@ ol.sl-sublist-two li:hover:before {
 .sl-ft-topics {
   margin-bottom: 20px;
 }
+.sl-ft-topics .sl-fl-col-content h3 {
+  margin: 0;
+}
 .sl-fl-col-icon {
   width: var(--sl-size-64);
   padding-right: 0 !important;
@@ -4083,23 +4096,57 @@ ol.sl-sublist-two li:hover:before {
   vertical-align: middle;
   margin: -1px 5px 0 0;
 }
+.sl-forum-top .sl-pull-right,
+.sl-forum-foot .sl-pull-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+}
 .sl-forum-top .sl-pull-right {
   margin-left: 20px;
 }
 .sl-forum-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-sm) var(--sl-space-lg);
   margin-bottom: 50px;
+}
+.sl-forum-foot .sl-pager-info {
+  flex-basis: 100%;
+  margin: 0;
+  padding-bottom: var(--sl-space-md);
+  border-bottom: 1px solid var(--sl-color-border-subtle);
+  text-align: left;
+}
+.sl-forum-foot .sl-pager {
+  justify-content: flex-start;
+  padding-top: 0;
+  border-top: 0;
+}
+.sl-forum-foot .sl-pull-right {
+  float: none;
+  margin: 0;
 }
 .sl-forum-list-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 40px;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: var(--sl-space-md) 0;
 }
 .sl-forum-list-info .sl-grid {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   float: none;
   width: auto;
   margin: 0;
-  flex: 1 1 280px;
+  flex: 0 0 auto;
+}
+.sl-forum-list-info > ul:last-child {
+  text-align: right;
 }
 .sl-forum-list-info ul {
   list-style: none;
@@ -4107,7 +4154,7 @@ ol.sl-sublist-two li:hover:before {
   margin: 0;
 }
 .sl-forum-list-info ul li {
-  margin: var(--sl-space-md) 0;
+  margin: var(--sl-space-xs) 0;
 }
 .sl-forum-list-info img {
   vertical-align: middle;
@@ -4421,6 +4468,15 @@ ol.sl-sublist-two li:hover:before {
     width: min(100% - 24px, var(--sl-container));
   }
 
+  .sl-grid-1-3,
+  .sl-grid-1-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-grid-1-2 {
+    grid-template-columns: 1fr;
+  }
+
   #footbox > .sl-wrp > .sl-grid:first-child {
     display: block;
     float: none;
@@ -4680,6 +4736,12 @@ ol.sl-sublist-two li:hover:before {
 @media (max-width: 768px) {
   #topmenu > ul {
     display: block;
+  }
+
+  .sl-grid-1-2,
+  .sl-grid-1-3,
+  .sl-grid-1-4 {
+    grid-template-columns: 1fr;
   }
 
   #topmenu > ul > li {
@@ -5006,34 +5068,6 @@ ol.sl-sublist-two li:hover:before {
 
   .sl-card-menu .sl-float-panel a {
     white-space: normal;
-  }
-
-  .sl-pager {
-    height: auto;
-    padding: 16px 0 0;
-  }
-
-  .sl-pager-prev,
-  .sl-pager-next {
-    position: static;
-    display: inline-block;
-    vertical-align: top;
-    margin: 0 var(--sl-space-sm) var(--sl-space-md) 0;
-  }
-
-  .sl-pager-nextprev {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--sl-space-sm);
-  }
-
-  .sl-pager-pages {
-    padding-top: 0;
-  }
-
-  .sl-pnum {
-    margin-bottom: var(--sl-space-md);
   }
 
 }
