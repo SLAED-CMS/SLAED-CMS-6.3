@@ -1,5 +1,5 @@
 <tr class="sl-forum-line">
-  <td class="{% if is_topic_list %}sl-fl-col-icon-m{% else %}sl-fl-col-icon{% endif %}">{{{ icon }}}</td>
+  {% if is_topic_list %}{% else %}<td class="sl-fl-col-icon">{{{ icon }}}</td>{% endif %}
   <td class="sl-fl-col-content">
     {% if is_topic_list %}<h3>{{{ link }}}</h3>{% else %}<h4>{{{ link }}}</h4>
     <p class="sl-forum-description">{{ desc }}</p>

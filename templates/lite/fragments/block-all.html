@@ -1,4 +1,4 @@
 <aside class="sl-block">
-  <h3 class="sl-title">{{ title }}</h3>
+  <h3 class="sl-title">{% if href %}<a href="{{{ href }}}" title="{{ title }}">{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}{{ title }}</a>{% else %}{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}{{ title }}{% endif %}</h3>
   <div class="sl-block-content">{{{ content }}}</div>
 </aside>

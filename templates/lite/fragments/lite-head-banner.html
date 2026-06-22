@@ -1,2 +1,1 @@
-{% if module %}<p class="sl-font">{{ module }}</p>{% endif %}
-{% if category %}<div class="sl-breadcrumbs">{{{ category }}}</div>{% endif %}
+{% if category %}<div class="sl-breadcrumbs">{{{ category }}}</div>{% elseif module %}<p class="sl-font">{{ module }}</p>{% endif %}

@@ -1,4 +1,5 @@
 <span
+  {% if id %}id="{{ id }}"{% endif %}
   {% if title %}title="{{ title }}"{% elseif back_title %}title="{{ back_title }}"{% endif %}
   {% if is_back or back_text or has_back_button %}onclick="javascript:window.history.go(-1);"{% endif %}
 

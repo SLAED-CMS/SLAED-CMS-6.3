@@ -1,11 +1,11 @@
 {% if is_category_info %}
-<ul class="sl-grid-1-3 sl-forum-cat-info">
+<ul class="sl-forum-cat-info">
   <li class="sl-grid">{{{ new }}}</li>
   <li class="sl-grid">{{{ nonew }}}</li>
   <li class="sl-grid">{{{ closed }}}</li>
 </ul>
 {% else %}
-<div class="sl-forum-list-info sl-grid-1-2">
+<div class="sl-forum-list-info">
   <ul class="sl-grid sl-grid">
     <li>{{{ new }}}</li>
     <li>{{{ old }}}</li>
@@ -20,7 +20,7 @@
     <li>{{{ closed }}}</li>
     <li>{{{ pinned }}}</li>
   </ul>
-  <!--<ul class="sl-grid">
+  <ul class="sl-grid">
     <li>{{{ perm_view }}}</li>
     <li>{{{ perm_read }}}</li>
     <li>{{{ perm_topic }}}</li>
@@ -28,6 +28,6 @@
     <li>{{{ perm_edit }}}</li>
     <li>{{{ perm_delete }}}</li>
     <li>{{{ perm_mod }}}</li>
-  </ul> -->
+  </ul>
 </div>
 {% endif %}
