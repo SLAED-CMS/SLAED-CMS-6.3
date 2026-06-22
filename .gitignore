@@ -65,6 +65,9 @@ package-lock.json
 .phpunit.cache/
 tests/coverage/
 
+# PHP CS Fixer
+.php-cs-fixer.cache
+
 # OS files
 .DS_Store
 desktop.ini
