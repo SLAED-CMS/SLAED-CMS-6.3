@@ -4996,8 +4996,10 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
     list($numstories) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(cid) FROM '.PREFIX_DB.'_comment '.$ordern, $params));
     if ($numstories > 0) {
         $com = getVar('get', 'com', 'num', '1');
+        $numpages = (int) ceil($numstories / $ccnum);
+        if ($com < 1) $com = 1;
+        if ($com > $numpages) $com = $numpages;
         $offset = ($com - 1) * $ccnum;
-        $numpages = ceil($numstories / $ccnum);
         if ($conf['comments']['sort']) {
             $sort = 'ASC';
             $a = ($com) ? $offset+1 : 1;
@@ -5007,6 +5009,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             if ($numstories > $offset) $a -= $offset;
         }
         $where = [];
+        $cmassiv = [];
         $result = $db->getSqlQuery('SELECT id, cid, modul, time, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment '.$ordern.' ORDER BY time '.$sort.' LIMIT '.intval($offset).', '.intval($ccnum), $params);
         while (list($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status) = $db->getSqlRow($result)) {
             $cmassiv[] = [$com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status];
@@ -5161,7 +5164,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
-            $cont .= getPageNumbers($com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
+            $cont .= getPageNumbers($mod, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
             $out = $tpl->getHtmlFrag('title', ['title' => _COMMENTS]).$cont;
         }
     } else {
