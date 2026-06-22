@@ -980,7 +980,7 @@ select.sl-field {
   border-radius: 15px;
   background-color: var(--sl-color-bg);
   border: 1px solid var(--sl-color-border-subtle);
-  text-decoration: none !important;
+  text-decoration: none;
 }
 .sl-menu > ul > li > a:hover,
 .sl-menu > ul > li:hover > a {
@@ -1022,7 +1022,7 @@ select.sl-field {
   display: block;
   color: var(--sl-color-on-dark);
   padding: 3px 15px;
-  text-decoration: none !important;
+  text-decoration: none;
 }
 .sl-menu .sl-float-panel a:hover,
 .sl-card-menu .sl-float-panel a:hover {
@@ -1230,7 +1230,7 @@ select.sl-field {
   white-space: nowrap;
   color: var(--sl-color-on-dark);
   font-weight: bold;
-  text-decoration: none !important;
+  text-decoration: none;
   font-size: 12px;
 }
 .sl-card-id {
@@ -1243,7 +1243,7 @@ a.sl-cart-id:hover {
 .sl-card-read,
 .sl-card-admin,
 .sl-back-button {
-  text-decoration: none !important;
+  text-decoration: none;
   cursor: pointer;
   box-shadow:
     0 1px 1px 0 rgba(0, 0, 0, 0.1),
@@ -2177,7 +2177,7 @@ ol.sl-sublist-two li:hover:before {
   font-size: 14px;
   font-weight: 400;
   box-sizing: border-box;
-  text-decoration: none !important;
+  text-decoration: none;
   box-shadow: var(--sl-but-border-shadow);
   transition: opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   background-clip: padding-box;
@@ -2545,7 +2545,7 @@ ol.sl-sublist-two li:hover:before {
   box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.1);
   overflow: hidden;
   color: var(--sl-color-text-muted);
-  text-decoration: none !important;
+  text-decoration: none;
 }
 .sl-site-link * {
   cursor: pointer;
@@ -2618,7 +2618,7 @@ ol.sl-sublist-two li:hover:before {
   height: 20px;
   padding: var(--sl-space-lg) 20px;
   color: var(--sl-color-text-muted);
-  text-decoration: none !important;
+  text-decoration: none;
   opacity: 0.5;
 }
 .sl-rate-sites.active {
@@ -2767,7 +2767,7 @@ ol.sl-sublist-two li:hover:before {
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  text-decoration: none !important;
+  text-decoration: none;
   box-shadow: var(--sl-shadow-medium);
   transition: padding-left 0.18s ease;
 }
@@ -3196,11 +3196,8 @@ ol.sl-sublist-two li:hover:before {
 }
 #header .sl-wrp {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px 30px;
-}
-#header .sl-d-pane {
-  margin-top: 10px;
 }
 #header .sl-d-pane {
   display: flex;
@@ -3245,18 +3242,14 @@ ol.sl-sublist-two li:hover:before {
   margin: 0;
   color: var(--sl-color-text-muted);
 }
-#header .sl-slogan {
-  margin-top: var(--sl-space-xs);
-}
-
 /* Login */
 .sl-login-top--head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: nowrap;
   list-style: none;
   padding: 0;
-  margin: 10px 0 0 40px;
+  margin: 0 0 0 40px;
 }
 .sl-login-top--head > li {
   float: none;
@@ -3273,7 +3266,7 @@ ol.sl-sublist-two li:hover:before {
   line-height: var(--sl-login-link-line-height);
   height: var(--sl-login-link-height);
   color: var(--sl-login-link-color);
-  text-decoration: none !important;
+  text-decoration: none;
   box-sizing: border-box;
 }
 .sl-login-top--head > li > .sl-login-toggle {
@@ -3377,7 +3370,7 @@ ol.sl-sublist-two li:hover:before {
   font-family: Arial, Tahoma, sans-serif;
   font-size: 14px;
   font-weight: 400;
-  text-decoration: none !important;
+  text-decoration: none;
 }
 .sl-login-top--head .sl-login-submit:hover,
 .sl-login-top--head .sl-login-submit:focus-visible {
@@ -3449,6 +3442,7 @@ ol.sl-sublist-two li:hover:before {
   font-weight: bold;
   font-size: 45px;
   line-height: 40px;
+  transform: translateY(-1px);
 }
 
 /* Top menu */
@@ -3480,7 +3474,7 @@ ol.sl-sublist-two li:hover:before {
   height: var(--sl-nav-control-size);
   padding: 0 15px;
   color: var(--sl-login-link-color);
-  text-decoration: none !important;
+  text-decoration: none;
   font-size: 1.15em;
 }
 #topmenu > ul > li > a:hover,
@@ -3551,7 +3545,7 @@ ol.sl-sublist-two li:hover:before {
   display: block;
   color: var(--sl-color-on-dark);
   padding: 3px 15px;
-  text-decoration: none !important;
+  text-decoration: none;
 }
 #topmenu ul ul a:hover {
   background-color: var(--sl-color-brand-link);
@@ -3681,20 +3675,25 @@ ol.sl-sublist-two li:hover:before {
   box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1);
   height: 76px;
 }
+#demo-line .sl-wrp {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+}
 .sl-demo-line-title {
-  float: left;
   font-size: 24px;
   font-weight: 700;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
   text-transform: uppercase;
-  margin: 22px 0 0;
+  margin: 0;
 }
 #demo-line .sl-d-pane {
-  float: right;
-  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  margin-top: 0;
 }
 #demo-line .sl-d-pane > li {
-  float: left;
   margin-left: var(--sl-space-lg);
 }
 #demo-line .sl-d-pane .sl-d-info,
@@ -3705,7 +3704,6 @@ ol.sl-sublist-two li:hover:before {
   display: flex;
   align-items: center;
   gap: var(--sl-space-sm);
-  margin-top: 5px;
   padding-left: var(--sl-space-xs);
 }
 #demo-line .sl-d-btns .sl-but-neutral,
@@ -3855,12 +3853,15 @@ ol.sl-sublist-two li:hover:before {
 
 /* Content */
 #container {
-  padding: 24px calc(var(--sl-sidebar) + var(--sl-gutter)) 24px 0;
-  height: 1%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sl-sidebar);
+  column-gap: var(--sl-gutter);
+  padding: 24px 0;
 }
 #content {
-  float: left;
-  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 #content img {
   max-width: 100%;
@@ -3872,10 +3873,6 @@ ol.sl-sublist-two li:hover:before {
 #content svg {
   max-width: 100%;
   height: auto;
-}
-#content {
-  overflow-wrap: anywhere;
-  word-break: break-word;
 }
 #content pre {
   max-width: 100%;
@@ -3906,9 +3903,7 @@ ol.sl-sublist-two li:hover:before {
   overflow-x: auto;
 }
 #sidebar {
-  float: right;
-  width: var(--sl-sidebar);
-  margin-right: calc((var(--sl-sidebar) + var(--sl-gutter)) * -1);
+  min-width: 0;
 }
 
 /* News: titles */
@@ -4546,6 +4541,7 @@ ol.sl-sublist-two li:hover:before {
 
   #header .sl-wrp {
     flex-wrap: wrap;
+    align-items: flex-start;
   }
 
   .sl-top-contact,
@@ -4651,18 +4647,15 @@ ol.sl-sublist-two li:hover:before {
     margin-top: 0;
   }
 
-  #container {
-    padding: 0 0 40px;
+  #demo-line .sl-wrp {
+    flex-direction: column;
+    align-items: flex-start;
     height: auto;
   }
 
-  #leftbar,
-  #content,
-  #sidebar {
-    float: none;
-    width: auto;
-    margin-right: 0;
-    padding-left: 0;
+  #container {
+    grid-template-columns: 1fr;
+    padding: 0 0 40px;
   }
 
   #leftbar,
