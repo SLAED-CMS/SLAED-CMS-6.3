@@ -40,7 +40,7 @@
     </div>
   </header>
   <nav id="hmenu" aria-label="Главное меню">
-    <div class="sl-wrp sl-clrfix">
+    <div class="sl-wrp">
       {% include 'partials/menu.html' %}
       <form class="sl-search-form" role="search" action="index.php?name=search" method="post">
         <input type="hidden" value="{{ modul }}" name="mod">
@@ -117,7 +117,6 @@
     </div>
     <div class="sl-wrp sl-clrfix">
       <nav class="sl-fmenu" aria-label="Нижнее меню">
-        <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
         <ul>
           <li><a href="index.php" title="{{ home }}">{{ home }}</a></li>
           <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта">Услуги</a></li>
@@ -128,6 +127,7 @@
           <li><a href="index.php?name=main" title="Презентационная страница системы">Портфолио</a></li>
           <li><a href="index.php?name=sitemap" title="Карта сайта">Карта сайта</a></li>
         </ul>
+        <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
       </nav>
     </div>
   </footer>
