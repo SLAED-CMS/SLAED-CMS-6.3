@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="format-detection" content="telephone=no">
   {{{ meta }}}
+  {{{ preload }}}
   {{{ links }}}
   {{{ scripts }}}
 </head>
@@ -44,7 +45,7 @@
       {% include 'partials/menu.html' %}
       <form class="sl-search-form" role="search" action="index.php?name=search" method="post">
         <input type="hidden" value="{{ modul }}" name="mod">
-        <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" class="sl-field" required>
+        <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" aria-label="{{ search }}" class="sl-field" required>
         <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>
       </form>
     </div>
@@ -95,12 +96,12 @@
       <section class="sl-grid" aria-label="Технологии">
         <h2 class="sl-font sl-f-title">Технологии</h2>
         <div class="sl-partners">
-          <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=18" title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=19" title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=22" title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery"></a>
-          <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=18" title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=19" title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=22" title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI" width="74" height="74"></a>
         </div>
       </section>
       <section class="sl-grid" aria-label="Контакты">

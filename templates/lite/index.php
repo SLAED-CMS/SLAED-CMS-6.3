@@ -62,12 +62,30 @@ function getThemeHeadVars(): array {
     if ($mname !== '' || $cname !== '') {
         $head = $tpl->getHtmlFrag('lite-head-banner', ['module' => $mname, 'category' => $cname]);
     }
+    $season = setTemplateSeason();
     return [
-        'season' => setTemplateSeason(),
+        'season' => $season,
         'modul' => $conf['name'] ?? '',
         'faqtitle' => $faq,
         'head_html' => $head,
+        'preload' => getTemplateLcpPreload($season, $head !== ''),
     ];
+}
+
+# Build a single LCP preload link for the hero actually rendered on this page:
+# the main-module slider uses <season>.jpg, head-content pages use <season>-cat.jpg
+function getTemplateLcpPreload(string $season, bool $hasHead): string {
+    global $conf;
+    if (($conf['name'] ?? '') === 'main') {
+        $img = preg_replace('/^sl-/', '', $season).'.jpg';
+    } elseif ($hasHead) {
+        $img = preg_replace('/^sl-/', '', $season).'-cat.jpg';
+    } else {
+        return '';
+    }
+    $href = 'templates/'.getTheme().'/images/seasons/'.$img;
+    if (!is_file(BASE_DIR.'/'.$href)) return '';
+    return '<link rel="preload" as="image" href="'.$href.'" fetchpriority="high">'."\n";
 }
 
 # Provide foot-time variables for the lite theme layout
