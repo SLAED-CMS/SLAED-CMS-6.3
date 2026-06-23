@@ -19,8 +19,8 @@
     <li><a href="index.php?name=account&amp;op=passfor">{{ passfor_label }}</a></li>
   </ul>
   <form action="index.php?name=account" method="post" class="sl-block-login">
-    <p>{{ nickname_label }}: {{{ name_input }}}</p>
-    <p>{{ password_label }}: <input type="password" name="user_pass" maxlength="32" class="sl-field sl-field--block" required></p>
+    <p><label>{{ nickname_label }}: {{{ name_input }}}</label></p>
+    <p><label>{{ password_label }}: <input type="password" name="user_pass" maxlength="32" class="sl-field sl-field--block" required></label></p>
     {% if captcha_html %}{{{ captcha_html }}}{% endif %}
     {{{ hidden_inputs }}}
     {% if has_network %}<p class="sl-net-login">{{ network_label }}: {{{ networks_html }}}</p>{% endif %}
