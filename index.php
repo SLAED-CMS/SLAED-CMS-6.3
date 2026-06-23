@@ -209,7 +209,7 @@ if (empty($go)) {
     if (!in_array($type, ['css', 'js'], true)) die('Illegal file access');
     $afile = Cache::getPath('assets', $hash, $type);
     if ($afile === '' || !is_file($afile)) die('Illegal file access');
-    Cache::setHeaders(true, $conf['cache_d'], ($type === 'css') ? 'text/css' : 'text/javascript');
+    Cache::setHeaders(true, $conf['cache_d'], ($type === 'css') ? 'text/css' : 'text/javascript', 0, true);
     echo Cache::getBody($afile);
 } elseif ($go == 'captcha') {
     Cache::setHeaders(false);

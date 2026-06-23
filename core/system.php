@@ -29,6 +29,10 @@ define('CAPTCHA_DIR', BASE_DIR.'/storage/captcha');
 # Uploads directory for user content
 define('UPLOADS_DIR', BASE_DIR.'/uploads');
 
+# Asset bundle version; bump on every release that ships changed CSS/JS/fonts so
+# cached immutable bundles are invalidated even when deployment preserves mtimes
+define('ASSETS_VER', 2);
+
 # Load the runtime config from cache, rebuilding it from source if needed
 function getConfig(): array {
     $local_file = CONFIG_DIR.'/local.php';
@@ -2356,7 +2360,8 @@ function doScript(): string {
     $cont = '';
     if (!defined('ADMIN_FILE')) {
         $mtimes = array_map(fn($file) => is_file($file) ? filemtime($file) : 0, $array);
-        $bits = array_merge(['assets-v1', $theme, 'js'], $array, $mtimes, [$conf['script_c'], $conf['script_h'], $conf['script_a']]);
+        $sizes = array_map(fn($file) => is_file($file) ? filesize($file) : 0, $array);
+        $bits = array_merge(['assets-v'.ASSETS_VER, $theme, 'js'], $array, $mtimes, $sizes, [$conf['script_c'], $conf['script_h'], $conf['script_a']]);
         $hash = Cache::getHash($bits);
         $sfile = Cache::getPath('assets', $hash, 'js');
         $route = 'index.php?go=asset&file='.$hash.'&type=js';
@@ -2409,7 +2414,8 @@ function doCss(): string {
     if (!defined('ADMIN_FILE')) {
         $bundle = !empty($conf['cache_css']) || !empty($conf['css_h']);
         $mtimes = array_map(fn($file) => is_file($file) ? filemtime($file) : 0, $array);
-        $bits = array_merge(['assets-v1', $theme, 'css'], $array, $mtimes, [$conf['css_c'], $conf['css_h'], $conf['css_e']]);
+        $sizes = array_map(fn($file) => is_file($file) ? filesize($file) : 0, $array);
+        $bits = array_merge(['assets-v'.ASSETS_VER, $theme, 'css'], $array, $mtimes, $sizes, [$conf['css_c'], $conf['css_h'], $conf['css_e']]);
         $hash = Cache::getHash($bits);
         $cfile = Cache::getPath('assets', $hash, 'css');
         $route = 'index.php?go=asset&file='.$hash.'&type=css';

@@ -167,12 +167,12 @@ class Cache {
     }
 
     # Emit browser cache, content type, and security headers for public or no-store responses
-    public static function setHeaders(bool $public, int $days = 0, string $type = 'text/html', int $mtime = 0): void {
+    public static function setHeaders(bool $public, int $days = 0, string $type = 'text/html', int $mtime = 0, bool $immutable = false): void {
         $ctype = ($type === 'text/html') ? $type.'; charset='._CHARSET : $type;
         header('Content-Type: '.$ctype);
         if ($public) {
-            $max = $days * 86400;
-            header('Cache-Control: public, max-age='.$max);
+            $max = $immutable ? 31536000 : $days * 86400;
+            header('Cache-Control: public, max-age='.$max.($immutable ? ', immutable' : ''));
             header('Expires: '.gmdate('D, d M Y H:i:s', time() + $max).' GMT');
         } else {
             header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
