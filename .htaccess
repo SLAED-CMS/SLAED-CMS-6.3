@@ -17,20 +17,30 @@ ErrorDocument 404 /index.php?error=404
 ErrorDocument 500 /index.php?error=500
 ErrorDocument 503 /index.php?error=503
 
-# Deflate compression
-# <IfModule mod_deflate.c>
-# <FilesMatch "\.(js|css)$">
-# SetOutputFilter DEFLATE
-# </FilesMatch>
-# </IfModule>
+# Deflate compression (Apache fallback; on nginx/LiteSpeed configure gzip/brotli in the server config)
+# WOFF2/WOFF are already compressed and are intentionally excluded
+<IfModule mod_deflate.c>
+<FilesMatch "\.(js|css|svg|xml|json|txt)$">
+SetOutputFilter DEFLATE
+</FilesMatch>
+</IfModule>
 
-# Browser cache expires
-# <IfModule mod_expires.c>
-# <FilesMatch "\.(js|jpg|jpeg|gif|png|css)$">
-# ExpiresActive On
-# ExpiresDefault "access plus 1 month"
-# </FilesMatch>
-# </IfModule>
+# Browser cache expires (Apache fallback; on nginx/LiteSpeed configure expires/Cache-Control in the server config)
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType text/css               "access plus 30 days"
+ExpiresByType text/javascript        "access plus 30 days"
+ExpiresByType application/javascript "access plus 30 days"
+ExpiresByType image/jpeg             "access plus 30 days"
+ExpiresByType image/png              "access plus 30 days"
+ExpiresByType image/gif              "access plus 30 days"
+ExpiresByType image/webp             "access plus 30 days"
+ExpiresByType image/svg+xml          "access plus 30 days"
+ExpiresByType image/x-icon           "access plus 30 days"
+ExpiresByType font/woff2             "access plus 1 year"
+ExpiresByType font/woff              "access plus 1 year"
+ExpiresByType font/ttf               "access plus 1 year"
+</IfModule>
 
 # Mod rewrite on
 RewriteEngine On
