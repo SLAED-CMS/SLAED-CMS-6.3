@@ -1430,8 +1430,6 @@ ol.sl-sublist-two li:hover:before {
 }
 .sl-debug-section {
   border: 1px solid var(--sl-color-border);
-  margin: 10px;
-  padding: 10px;
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
@@ -2685,10 +2683,7 @@ ol.sl-sublist-two li:hover:before {
   color: inherit;
 }
 
-/* Ideas and feedback floating tabs */
-/* Side tabs: pinned to the left edge, stacked around the vertical center.
-   No transform on the blocks themselves so the feedback float panel keeps a
-   correct fixed-positioning containing block. */
+/* Ideas/feedback floating tabs pinned to the left edge; no transform on the blocks so the feedback float panel keeps a correct fixed-positioning containing block */
 #block-idea,
 #block-feedback {
   position: fixed;
@@ -2952,6 +2947,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-grid-1-3 > .sl-grid,
 .sl-grid-1-4 > .sl-grid {
   margin: 0;
+  min-width: 0;
 }
 
 /* sl-dropdown */
@@ -3142,7 +3138,6 @@ ol.sl-sublist-two li:hover:before {
   width: var(--sl-sidebar);
   flex: 0 0 var(--sl-sidebar);
   margin-left: auto;
-  margin-right: -30px;
   text-align: left;
 }
 #header .sl-d-pane > li {
@@ -3161,7 +3156,6 @@ ol.sl-sublist-two li:hover:before {
   width: auto;
   height: 59px;
   margin: 0;
-  margin-left: -30px;
   background: none;
   overflow: visible;
 }
@@ -3679,7 +3673,6 @@ ol.sl-sublist-two li:hover:before {
   align-items: flex-start;
   gap: var(--sl-space-md);
   width: auto;
-  margin-top: 30px;
   text-decoration: none;
   overflow: visible;
   background: none;
@@ -4404,7 +4397,7 @@ td.sl-fl-col-stat {
   }
 
   .sl-grid-1-2 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   #footbox > .sl-wrp > .sl-grid:first-child {
@@ -4476,6 +4469,18 @@ td.sl-fl-col-stat {
   #header .sl-wrp {
     flex-wrap: wrap;
     align-items: flex-start;
+  }
+
+  /* Hide the header version/download pane on small screens: it duplicates the identical CTA in #demo-line and the footer, and declutters the wrapped header */
+  #header .sl-d-pane {
+    display: none;
+  }
+
+  #demo-line .sl-d-pane {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
   }
 
   .sl-top-contact,
@@ -4649,6 +4654,12 @@ td.sl-fl-col-stat {
 
 }
 @media (max-width: 768px) {
+  /* Fixed left-edge vertical tabs are a desktop-gutter pattern; on mobile they overlap the menu and block taps, so hide them (the CTAs remain in the footer and main menu) */
+  #block-idea,
+  #block-feedback {
+    display: none;
+  }
+
   #topmenu > ul {
     display: block;
   }
@@ -4656,7 +4667,7 @@ td.sl-fl-col-stat {
   .sl-grid-1-2,
   .sl-grid-1-3,
   .sl-grid-1-4 {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   #topmenu > ul > li {
@@ -4701,6 +4712,11 @@ td.sl-fl-col-stat {
     --sl-login-field-width: 100%;
   }
 
+  /* Closed dropdown is viewport-fixed so its off-screen box never widens the page; the JS-opened state (.sl-is-open) overrides position/coords to stay in view */
+  .sl-login-top--head .sl-login-dropdown-form {
+    position: fixed;
+  }
+
   .sl-search-form {
     width: 100%;
   }
@@ -4713,26 +4729,6 @@ td.sl-fl-col-stat {
 @media (max-width: 560px) {
   .sl-wrp {
     width: min(100% - 16px, var(--sl-container));
-  }
-
-  #header .sl-d-pane {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-    flex: 1 1 100%;
-    flex-wrap: wrap;
-    gap: var(--sl-space-md);
-  }
-
-  #header .sl-d-pane > li {
-    margin-left: 0;
-  }
-
-  #header .sl-d-btns {
-    flex: 1 1 100%;
-    width: 100%;
-    flex-wrap: wrap;
-    white-space: normal;
   }
 
   .sl-top-contact li {
