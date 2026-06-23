@@ -248,6 +248,70 @@ Recommended direction:
 | P2 | Security blocker scans | Medium | large lists and regex cost | parsed-list cache, no behavior change |
 | P3 | Scheduler heavy jobs | Medium | background work competes with requests | dedicated scheduler trigger |
 
+## Static Asset Caching And Compression (Web Server)
+
+SLAED ships to many users on different servers, so the safe defaults are split
+between portable code (asset bundle headers in PHP) and per-server static-file
+configuration that the operator must apply.
+
+### Scope split
+
+- The hashed CSS/JS bundle is served by PHP through `index.php?go=asset`. Its
+  cache headers and gzip are handled in PHP and work on any server.
+- Plain static files (images, fonts, direct `.css`/`.js`, `.svg`) are served by
+  the web server itself. Their `Cache-Control`/`Expires` and compression are a
+  server-config concern, not PHP.
+
+### Apache / LiteSpeed
+
+`.htaccess` already enables `mod_deflate` and `mod_expires` as a fallback:
+text assets are compressed, images/CSS/JS get 30 days, fonts get 1 year. WOFF2
+is intentionally excluded from compression because it is already compressed.
+This works out of the box on Apache and on LiteSpeed in `.htaccess`-compat mode.
+
+### nginx
+
+nginx ignores `.htaccess`. Apply the equivalent in the server/location config.
+The known production gap is that WOFF2 and some SVG have no `Cache-Control`.
+
+```nginx
+# Compression (the PHP bundle is served via index.php?go=asset, so gzip_proxied is required).
+# Do not gzip woff2/woff — they are already compressed.
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_comp_level 5;
+gzip_min_length 1024;
+gzip_types text/plain text/css text/javascript application/javascript application/json image/svg+xml application/rss+xml application/xml;
+
+# Raster images — 30 days
+location ~* \.(?:jpe?g|gif|png|webp|avif|ico)$ {
+    expires 30d;
+    add_header Cache-Control "public";
+    access_log off;
+}
+
+# SVG (logos/icons may change) — 30 days
+location ~* \.svg$ {
+    expires 30d;
+    add_header Cache-Control "public";
+}
+
+# Fonts — 1 year (safe once font URLs are versioned; otherwise rename on change)
+location ~* \.(?:woff2?|ttf)$ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    access_log off;
+}
+```
+
+### Font caching caveat
+
+Font file names are static (for example `magistralb-wf.woff2`). A 1-year /
+`immutable` policy is only safe if the font URL is versioned (`?v=filemtime`) or
+the file is renamed on change. Otherwise returning visitors keep the old font
+after a replacement.
+
 ## What Not To Assume
 
 - Do not assume `getConfig()` scans all config files on every request when

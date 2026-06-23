@@ -124,3 +124,42 @@ ServerSignature Off
 ```apache
 Options All -ExecCGI -Indexes -Includes +FollowSymLinks
 ```
+
+**6. Кеширование браузера и сжатие статики (PageSpeed):**
+Заставляет браузер хранить картинки, стили, скрипты и шрифты локально и отдавать текстовые файлы в сжатом виде. Эти блоки уже включены в стандартном `.htaccess` проекта — здесь они приведены для справки и тонкой настройки. Шрифты `woff2/woff` сжимать не нужно (они уже сжаты), поэтому из сжатия они исключены.
+
+```apache
+# Сжатие текстовых файлов
+<IfModule mod_deflate.c>
+<FilesMatch "\.(js|css|svg|xml|json|txt)$">
+SetOutputFilter DEFLATE
+</FilesMatch>
+</IfModule>
+
+# Время хранения в кеше браузера
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType text/css               "access plus 30 days"
+ExpiresByType application/javascript "access plus 30 days"
+ExpiresByType image/jpeg             "access plus 30 days"
+ExpiresByType image/png              "access plus 30 days"
+ExpiresByType image/svg+xml          "access plus 30 days"
+ExpiresByType font/woff2             "access plus 1 year"
+</IfModule>
+```
+
+> [!NOTE]
+> **На Nginx эти директивы не работают** — задайте кеш и сжатие в конфиге сервера (блок `server`). Шрифты `woff2/woff` в `gzip_types` не добавляйте.
+
+```nginx
+gzip on;
+gzip_vary on;
+gzip_proxied any;
+gzip_types text/css text/javascript application/javascript application/json image/svg+xml application/xml;
+
+location ~* \.(?:jpe?g|gif|png|webp|svg|ico)$ { expires 30d; add_header Cache-Control "public"; }
+location ~* \.(?:woff2?|ttf)$              { expires 1y;  add_header Cache-Control "public, immutable"; }
+```
+
+> [!IMPORTANT]
+> Имена файлов шрифтов постоянны, поэтому срок «1 год / immutable» безопасен, только если при замене шрифта файл переименовывается (или к ссылке добавляется версия `?v=...`). Иначе у вернувшихся посетителей останется старая версия из кеша.
