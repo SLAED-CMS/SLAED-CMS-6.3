@@ -886,7 +886,7 @@ select.sl-field {
 .sl-main-list > li {
   border-top: 1px solid var(--sl-color-border-subtle);
   padding: 25px 29px 0 80px;
-  height: 1%;
+  display: flow-root;
   min-height: 60px;
   position: relative;
   margin-bottom: 25px;
@@ -2159,7 +2159,7 @@ ol.sl-sublist-two li:hover:before {
 }
 .sl-block {
   background: var(--sl-color-surface);
-  height: 1%;
+  display: flow-root;
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 25px;
@@ -4193,7 +4193,7 @@ td.sl-fl-col-stat {
 /* Polls */
 .sl-post-vote {
   padding: 30px 15px;
-  height: 1%;
+  display: flow-root;
   border-bottom: 1px solid var(--sl-color-border-subtle);
   margin-top: -18px;
   margin-bottom: 25px;
