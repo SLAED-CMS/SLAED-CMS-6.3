@@ -26,7 +26,7 @@
     </div>
   </div>
   <header id="header">
-    <div class="sl-wrp sl-clrfix">
+    <div class="sl-wrp">
       <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
         <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
       </a>
@@ -115,7 +115,7 @@
         </address>
       </section>
     </div>
-    <div class="sl-wrp sl-clrfix">
+    <div class="sl-wrp">
       <nav class="sl-fmenu" aria-label="Нижнее меню">
         <ul>
           <li><a href="index.php" title="{{ home }}">{{ home }}</a></li>
@@ -135,7 +135,7 @@
   <div id="block-feedback"><a href="index.php?name=contact" title="{{ _FEEDBACK }}" class="sl-btn-feedback"><b class="sl-font">{{ _FEEDBACK }}</b></a></div>
   {% if debug_html %}
   <div class="sl-advantage">
-    <div class="sl-wrp sl-clrfix">
+    <div class="sl-wrp">
       {{{ debug_html }}}
     </div>
   </div>

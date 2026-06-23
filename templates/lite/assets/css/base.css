@@ -71,6 +71,10 @@
   --sl-shadow-soft: 0 1px 2px rgba(42, 48, 60, 0.12);
   --sl-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.2);
   --sl-shadow-strong: 0 6px 12px rgba(0, 0, 0, 0.175);
+  --sl-overlay-10: rgba(0, 0, 0, 0.1);
+  --sl-overlay-12: rgba(0, 0, 0, 0.12);
+  --sl-overlay-15: rgba(0, 0, 0, 0.15);
+  --sl-overlay-20: rgba(0, 0, 0, 0.2);
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-radius-control: 4px;
@@ -347,7 +351,7 @@ table {
 
 /* Base: global element styles, typography, links and form defaults */
 body {
-  background: #fff;
+  background: var(--sl-color-bg);
   min-width: 0;
 }
 
@@ -360,14 +364,14 @@ button {
     14px/1.4 Arial,
     Tahoma,
     sans-serif;
-  color: #222;
+  color: var(--sl-color-text);
   outline: none;
 }
 
 a {
   outline: none;
   text-decoration: none;
-  color: #30a2f6;
+  color: var(--sl-color-brand-link);
 }
 
 a:hover {
@@ -449,7 +453,7 @@ optgroup {
     14px/1.4 Arial,
     Tahoma,
     sans-serif;
-  color: #222;
+  color: var(--sl-color-text);
   outline: none;
 }
 
@@ -531,7 +535,7 @@ input[disabled] {
 }
 
 blockquote {
-  background: #fff;
+  background: var(--sl-color-bg);
   border-left: 1px solid #b8c3cd;
   border-right: 1px solid #b8c3cd;
   color: #798086;
