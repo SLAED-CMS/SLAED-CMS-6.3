@@ -1677,11 +1677,14 @@ function setHead(array $seo = []): void {
         $item = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
+    [$logo_w, $logo_h] = getImageBox(BASE_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
     $sitevars = [
         'theme' => getTheme(),
         'lang' => substr(_LOCALE, 0, 2),
         'sitename' => $conf['sitename'] ?? '',
         'logo' => $conf['site_logo'] ?? '',
+        'logo_w' => $logo_w ?: '',
+        'logo_h' => $logo_h ?: '',
         'homeurl' => $conf['homeurl'] ?? '',
         'slogan' => $conf['slogan'] ?? '',
         'license' => $licens,
@@ -2746,6 +2749,24 @@ function getImgEncode(array $img): string {
         $cont = 'url('.$img[1].')';
     }
     return $cont;
+}
+
+# Resolve intrinsic [width, height] for CLS-safe image attributes; [0, 0] when unknown
+function getImageBox(string $file): array {
+    if (!is_file($file)) return [0, 0];
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    if ($ext === 'svg') {
+        $svg = (string)file_get_contents($file);
+        if (preg_match('/viewBox\s*=\s*"\s*[\d.eE+-]+\s+[\d.eE+-]+\s+([\d.eE+-]+)\s+([\d.eE+-]+)/', $svg, $m)) {
+            $w = (int)round((float)$m[1]);
+            $h = (int)round((float)$m[2]);
+            if ($w > 0 && $h > 0) return [$w, $h];
+        }
+        return [0, 0];
+    }
+    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'], true)) return [0, 0];
+    $info = getimagesize($file);
+    return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
 }
 
 # Compress CSS

@@ -29,7 +29,7 @@
   <header id="header">
     <div class="sl-wrp">
       <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
-        <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+        <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
       </a>
       <p class="sl-font sl-slogan">Все великое<br>просто</p>
       {{{ login }}}
@@ -83,12 +83,12 @@
     <div class="sl-wrp sl-grid-1-4">
       <section class="sl-grid" aria-label="SLAED CMS">
         <a href="index.php?name=content&amp;op=view&amp;id=1" class="sl-upper-wordmark" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">
-          <img class="sl-upper-wordmark-img" src="templates/{{ theme }}/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+          <img class="sl-upper-wordmark-img" src="templates/{{ theme }}/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" width="355" height="110">
           <span class="sl-upper-tagline sl-font">Все великое просто</span>
         </a>
         {{{ foot_html }}}
         <a class="sl-thd sl-madein sl-madein-brand" href="index.php?name=content&amp;op=view&amp;id=7" title="Официальный патент на бренд SLAED в Германии">
-          <img src="templates/{{ theme }}/images/flags/de.svg" alt="Официальная регистрация бренда SLAED в Германии">
+          <img src="templates/{{ theme }}/images/flags/de.svg" alt="Официальная регистрация бренда SLAED в Германии" width="60" height="40">
           <span class="sl-madein-label sl-font">Made<br>in<br>Germany</span>
         </a>
       </section>
