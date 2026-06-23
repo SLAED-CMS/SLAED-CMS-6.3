@@ -959,7 +959,7 @@ function getAdminModuleNames(string $modules): array {
 function updateSessionTrack(int $ctime, string $request, string $name): array {
     global $db, $conf, $user, $admin;
     $ip = getIp();
-    $url = urlencode($request);
+    $url = substr(urlencode($request), 0, 2048);
     $guest = 0;
     $uname = '';
     if (isAdmin()) {
