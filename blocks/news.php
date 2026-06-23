@@ -10,6 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $db, $tpl;
+$content = '';
 $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_news WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while (list($id, $title) = $db->getSqlRow($result)) {
     $title = getDecodedText($title);

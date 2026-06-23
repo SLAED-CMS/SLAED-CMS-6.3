@@ -443,7 +443,7 @@ legend {
 
 fieldset {
   padding: var(--sl-space-sm);
-  margin: var(--sl-space-sm);
+  margin-top: var(--sl-space-sm);
   border: 1px solid var(--sl-color-border);
   border-radius: var(--sl-radius-control);
 }
