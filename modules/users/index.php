@@ -73,6 +73,7 @@ function users(): void {
             ]),
         ]);
     } else {
+        if ((int)$num > 1) setError(404);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;

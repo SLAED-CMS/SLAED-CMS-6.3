@@ -243,6 +243,7 @@ function forum(): void {
                             $cont .= $topicList;
                         }
                     } else {
+                        if ((int)$num > 1) setError(404);
                         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
                     }
                     $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$catid."'" : "pid = '0' AND cid = '".$catid."' AND time <= NOW() AND status != '0'";
@@ -326,7 +327,7 @@ function view(): void {
         $numpages = max(1, (int)ceil($numfor / $fornum));
         $num = (int)(getVar('req', 'num', 'num') ?: 1);
         $num = ($last && $conf['forum']['sort']) ? $numpages : $num;
-        $num = min(max(1, $num), $numpages);
+        if ($num < 1 || $num > $numpages) setError(404);
         $offset = ($num-1) * $fornum;
         if ($conf['forum']['sort']) {
             $sort = 'ASC';
@@ -345,13 +346,7 @@ function view(): void {
             if ($uid) $where[] = $uid;
             unset($id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
         }
-        if (!$rows) {
-            setHead(['title' => _FORUM]);
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
-            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO, 'meta' => $meta]);
-            setFoot();
-            return;
-        }
+        if (!$rows) setError(404);
         if ($where) {
             $query = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
             while ([$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor] = $db->getSqlRow($query)) {
@@ -373,6 +368,10 @@ function view(): void {
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($rows[0][7], false, $conf['name']))), 160);
         $seoimg = getImgText($rows[0][7], '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
+        if (!$ismod) {
+            if (!$isread) setError(403);
+            elseif ($tstatus <= 1) setError(404);
+        }
         setHead([
             'title' => $rows[0][5],
             'ctitle' => $rows[0][18],
@@ -491,14 +490,11 @@ function view(): void {
                 $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => $selmm])]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
-        } else {
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
-            $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
         }
         echo $cont;
     setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 

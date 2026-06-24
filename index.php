@@ -10,7 +10,6 @@ define('BASE_DIR', str_replace('\\', '/', __DIR__));
 require_once BASE_DIR.'/core/system.php';
 
 if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) setExit(_CLOSE_TEXT);
-if (isset($_GET['error'])) setExit(sprintf(_ERROR_PAGE, $_GET['error']), 1);
 
 $go = getVar('req', 'go', 'var');
 $name = getVar('req', 'name', 'var');
@@ -51,20 +50,20 @@ if (empty($go)) {
                     $gname = $grp['name'] ?? '';
                 }
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
+                http_response_code(403);
                 setHead();
-                $meta = '<meta http-equiv="refresh" content="15; url=index.php?name=account&op=newuser">';
                 echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED])
-                    .$tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => $meta, 'type' => 'info', 'is_warn' => false]);
+                    .$tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
                 setFoot();
                 exit;
             } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
                 getLang($name);
                 require_once $path;
             } elseif ($view == 2 && !is_moder($name)) {
+                http_response_code(403);
                 setHead();
-                $meta = '<meta http-equiv="refresh" content="5; url=index.php">';
                 echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED])
-                    .$tpl->getHtmlFrag('alert', ['text' => _MODULESADMINS, 'meta' => $meta, 'type' => 'info', 'is_warn' => false]);
+                    .$tpl->getHtmlFrag('alert', ['text' => _MODULESADMINS, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
                 setFoot();
                 exit;
             } else {

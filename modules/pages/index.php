@@ -83,7 +83,7 @@ function pages(): void {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$id, $cid, $uname, $stitle, $time, $hometext, , $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl([
                 'name'   => $conf['name'],
                 'op'     => 'view',
@@ -150,6 +150,7 @@ function pages(): void {
             'prefix'    => 'new/',
         ]);
     } else {
+        if ((int)$num > 1) setError(404);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
@@ -198,6 +199,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
+    if ((int)$num > 1 && !$rows) setError(404);
     $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['pages']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -347,7 +349,7 @@ function view(): void {
         echo $cont;
         setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 

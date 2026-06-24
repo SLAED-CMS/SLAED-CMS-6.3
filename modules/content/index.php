@@ -71,6 +71,7 @@ function content(): void {
             ]),
         ]);
     } else {
+        if ((int)$num > 1) setError(404);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
@@ -122,7 +123,7 @@ function view(): void {
         echo $cont;
         setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 

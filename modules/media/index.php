@@ -148,6 +148,7 @@ function media(): void {
             'prefix'    => 'new/',
         ]);
     } else {
+        if ((int)$num > 1) setError(404);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
@@ -196,6 +197,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
+    if ((int)$num > 1 && !$rows) setError(404);
     $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['media']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -396,7 +398,7 @@ function view(): void {
         echo $cont;
         setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 
@@ -575,7 +577,7 @@ function broken(): void {
         echo getModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
         setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 

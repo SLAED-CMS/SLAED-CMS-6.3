@@ -135,6 +135,7 @@ function shop(): void {
 			'prefix'    => 'new/',
 		]);
 	} else {
+		if ((int)$num > 1) setError(404);
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
 	echo $cont;
@@ -181,6 +182,7 @@ function liste(): void {
 			'time_label'    => _DATE,
 		];
 	}
+	if ((int)$num > 1 && !$rows) setError(404);
 	$cont .= $tpl->getHtmlPart('content-list', [
 		'rows'        => $rows,
 		'before_html' => ($conf['shop']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -304,7 +306,7 @@ function view(): void {
 		echo $cont;
 		setFoot();
 	} else {
-		setRedirect('index.php?name='.$conf['name']);
+		setError(404);
 	}
 }
 

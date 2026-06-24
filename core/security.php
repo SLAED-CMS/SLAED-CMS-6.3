@@ -12,7 +12,6 @@ if (ob_get_level() === 0) ob_start();
 # Security: block /index.php/... PATH_INFO abuse to avoid routing bypass and unexpected module execution via malformed URLs.
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
-    header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
     $_GET['error'] = 404;
 }
 
@@ -149,60 +148,8 @@ if ($bcookie == 'block') {
     }
 }
 
-if ($conf['security']['error_log'] && isset($_GET['error'])) {
-    $error = intval($_GET['error']);
-    $http = [
-        100 => 'HTTP/1.1 100 Continue',
-        101 => 'HTTP/1.1 101 Switching Protocols',
-        200 => 'HTTP/1.1 200 OK',
-        201 => 'HTTP/1.1 201 Created',
-        202 => 'HTTP/1.1 202 Accepted',
-        203 => 'HTTP/1.1 203 Non-Authoritative Information',
-        204 => 'HTTP/1.1 204 No Content',
-        205 => 'HTTP/1.1 205 Reset Content',
-        206 => 'HTTP/1.1 206 Partial Content',
-        300 => 'HTTP/1.1 300 Multiple Choices',
-        301 => 'HTTP/1.1 301 Moved Permanently',
-        302 => 'HTTP/1.1 302 Found',
-        303 => 'HTTP/1.1 303 See Other',
-        304 => 'HTTP/1.1 304 Not Modified',
-        305 => 'HTTP/1.1 305 Use Proxy',
-        307 => 'HTTP/1.1 307 Temporary Redirect',
-        400 => 'HTTP/1.1 400 Bad Request',
-        401 => 'HTTP/1.1 401 Unauthorized',
-        402 => 'HTTP/1.1 402 Payment Required',
-        403 => 'HTTP/1.1 403 Forbidden',
-        404 => 'HTTP/1.1 404 Not Found',
-        405 => 'HTTP/1.1 405 Method Not Allowed',
-        406 => 'HTTP/1.1 406 Not Acceptable',
-        407 => 'HTTP/1.1 407 Proxy Authentication Required',
-        408 => 'HTTP/1.1 408 Request Time-out',
-        409 => 'HTTP/1.1 409 Conflict',
-        410 => 'HTTP/1.1 410 Gone',
-        411 => 'HTTP/1.1 411 Length Required',
-        412 => 'HTTP/1.1 412 Precondition Failed',
-        413 => 'HTTP/1.1 413 Request Entity Too Large',
-        414 => 'HTTP/1.1 414 Request-URI Too Large',
-        415 => 'HTTP/1.1 415 Unsupported Media Type',
-        416 => 'HTTP/1.1 416 Requested range not satisfiable',
-        417 => 'HTTP/1.1 417 Expectation Failed',
-        500 => 'HTTP/1.1 500 Internal Server Error',
-        501 => 'HTTP/1.1 501 Not Implemented',
-        502 => 'HTTP/1.1 502 Bad Gateway',
-        503 => 'HTTP/1.1 503 Service Unavailable',
-        504 => 'HTTP/1.1 504 Gateway Time-out',
-    ];
-    $httpmsg = $http[$error] ?? null;
-    if ($httpmsg) {
-        Logger::addSite('error', $httpmsg, [
-            'http_code' => $error,
-            'module' => isset($_GET['name']) ? substr((string)$_GET['name'], 0, 50) : null,
-            'op' => isset($_GET['op']) ? substr((string)$_GET['op'], 0, 50) : null,
-        ]);
-    }
-    unset($http, $httpmsg);
-    setExit(sprintf(_ERROR_PAGE, $error), 1);
-}
+# Render the standard error page for any explicit error code; HTTP status and conditional logging are handled inside setError()
+if (isset($_GET['error'])) setError((int)$_GET['error']);
 
 # Add PHP errors to error_php.log
 function addPhpLog($no, $mesg, $file, $line) {
@@ -448,11 +395,10 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     $theme = getTheme();
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
-    $jump = ($typ !== '') ? $tpl->getHtmlFrag('meta-refresh', ['secs' => 5, 'url' => (string)($conf['homeurl'] ?? '').'/index.php']) . "\n" : '';
     $base = rtrim((string)($conf['homeurl'] ?? ''), '/').'/';
     $meta = $tpl->getHtmlFrag('head-base', ['href' => $base]) . "\n"
         . $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => (string)($conf['sitename'] ?? '')]) . "\n"
-        . $tpl->getHtmlFrag('head-meta', ['name' => 'generator', 'content' => 'SLAED CMS '.($conf['version'] ?? '')]) . "\n" . $jump;
+        . $tpl->getHtmlFrag('head-meta', ['name' => 'generator', 'content' => 'SLAED CMS '.($conf['version'] ?? '')]) . "\n";
     $license = getLicenseHtml();
     $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
     $adpath = img_find('logos/'.$adlogo);
@@ -498,6 +444,22 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         'title' => $title,
         'message_html' => $text,
     ]));
+}
+
+# Emit an HTTP error status, log it when enabled, and render the standard error page before stopping, for SEO-correct responses such as out-of-range pagination
+function setError(int $code = 404): never {
+    global $conf;
+    $msg = [400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found', 410 => 'Gone', 500 => 'Internal Server Error'][$code] ?? 'Error';
+    if (!headers_sent()) http_response_code($code);
+    if (!empty($conf['security']['error_log'])) {
+        Logger::addSite('error', ($_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1').' '.$code.' '.$msg, [
+            'http_code' => $code,
+            'module' => isset($_GET['name']) ? substr((string)$_GET['name'], 0, 50) : null,
+            'op' => isset($_GET['op']) ? substr((string)$_GET['op'], 0, 50) : null,
+        ]);
+    }
+    if (ob_get_level() > 0) ob_clean();
+    setExit(sprintf(_ERROR_PAGE, $code), '1', _ERROR.' '.$code);
 }
 
 # Cookie set

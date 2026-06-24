@@ -85,6 +85,7 @@ function voting(): void {
             'prefix'    => 'new/',
         ]);
     } else {
+        if ((int)$num > 1) setError(404);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
@@ -107,9 +108,7 @@ function view(): void {
         $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
         if ($acomm) $cont .= setComShow($id, $acomm);
     } else {
-        setHead(['title' => _VOTING]);
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 3]);
-        $cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO, 'meta' => $meta]);
+        setError(404);
     }
     echo $cont;
     setFoot();

@@ -82,7 +82,7 @@ function files(): void {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$id, $cid, $uname, $stitle, $description, , $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
@@ -145,6 +145,7 @@ function files(): void {
             'prefix'    => 'new/',
         ]);
     } else {
+        if ((int)$num > 1) setError(404);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
@@ -193,6 +194,7 @@ function liste(): void {
     }
     $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
+    if ((int)$num > 1 && !$rows) setError(404);
     $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['files']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -356,7 +358,7 @@ function view(): void {
         echo $cont;
         setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 
@@ -479,7 +481,7 @@ function broken(): void {
         echo getModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
         setFoot();
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 
@@ -509,7 +511,7 @@ function loading(): void {
             setFoot();
         }
     } else {
-        setRedirect('index.php?name='.$conf['name']);
+        setError(404);
     }
 }
 
