@@ -194,29 +194,48 @@ function addSqlLog($no, $mesg, $sql) {
     ]);
 }
 
-if ($conf['security']['error_log']) {
-    set_error_handler('addPhpLog');
+# Render a consistent response for uncaught errors: visible detail in debug, clean 500 in production, never inside non-HTML responses
+function setErrorOut(string $detail = ''): void {
+    global $conf;
+    static $busy = false;
+    if ($busy) return;
+    $busy = true;
+    if (in_array((string)($_REQUEST['go'] ?? ''), ['1', '2', '3', '4', '5', 'asset', 'captcha', 'rss', 'xsl'], true) || headers_sent()) {
+        if (!headers_sent()) http_response_code(500);
+        return;
+    }
+    if ($detail !== '' && (int)($conf['security']['error'] ?? 0) > 0) setExit($detail);
+    setError(500);
+}
 
-    # Guard duplicate exception shutdown logging
-    $lexc = false;
+# Non-fatal PHP errors go to error_php.log when logging is enabled
+if ($conf['security']['error_log']) set_error_handler('addPhpLog');
 
-    set_exception_handler(function(Throwable $e) use (&$lexc) {
-        $msg = get_class($e).': '.$e->getMessage();
-        Logger::addPhp('error', $msg, [
+# Uncaught exceptions get a consistent response; logging stays gated by error_log, rendering does not
+$lexc = false;
+set_exception_handler(function(Throwable $e) use (&$lexc) {
+    global $conf;
+    if (!empty($conf['security']['error_log'])) {
+        Logger::addPhp('error', get_class($e).': '.$e->getMessage(), [
             'php_errno' => $e->getCode(),
             'php_err' => 'EXCEPTION',
             'ex_class' => get_class($e),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString(),
         ]);
-        $lexc = true;
-    });
+    }
+    $lexc = true;
+    setErrorOut(get_class($e).': '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
+});
 
-    # Add fatal shutdown errors to error_php.log
-    register_shutdown_function(function() use (&$lexc) {
-        if ($lexc) return;
-        $e = error_get_last();
-        if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+# Fatal shutdown errors are logged when enabled and carry a 500 status; no heavy render in shutdown (state may be broken)
+register_shutdown_function(function() use (&$lexc) {
+    global $conf;
+    if ($lexc) return;
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        if (!empty($conf['security']['error_log'])) {
             Logger::addPhp('error', (string)$e['message'], [
                 'php_errno' => $e['type'],
                 'php_err' => 'FATAL',
@@ -224,8 +243,9 @@ if ($conf['security']['error_log']) {
                 'line' => $e['line'],
             ]);
         }
-    });
-}
+        if (!headers_sent()) http_response_code(500);
+    }
+});
 
 # Checking URL, GET, POST, COOKIE, FILES variables for safety
 if (!isAdmin(true)) {
