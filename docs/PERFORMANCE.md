@@ -312,6 +312,44 @@ Font file names are static (for example `magistralb-wf.woff2`). A 1-year /
 the file is renamed on change. Otherwise returning visitors keep the old font
 after a replacement.
 
+### PHP error pages (nginx `fastcgi_intercept_errors`)
+
+SLAED renders its own `404`/`403`/`503` responses in PHP through `setError()`
+(and `500`, e.g. on a DB-connection failure): the correct HTTP status, a branded
+message page (logo, title, home link, search form), and `Cache-Control: no-store`
+so the error is not cached.
+
+If nginx has `fastcgi_intercept_errors on` (or an `error_page` on the PHP location
+that matches), nginx discards the PHP body and serves its own error page instead.
+The HTTP status stays correct, but the operator loses the SLAED page, the
+`no-store` headers are stripped (the error may then be cached), and the bare nginx
+page leaks the server name.
+
+Keep FastCGI errors from PHP passing through unchanged:
+
+```nginx
+location ~ \.php$ {
+    fastcgi_intercept_errors off;   # let PHP-generated 4xx/5xx reach the client
+    # ... existing fastcgi_pass / params ...
+}
+```
+
+Two classes of 5xx need different handling:
+
+- **App-emitted (PHP alive):** the app returns the status while it can still
+  render — `404`/`403`, `503` (maintenance, captcha/limits), `500` (caught error
+  such as a failed DB connection). These should pass through (`intercept off`) so
+  the SLAED page and `no-store` reach the client.
+- **Infrastructure (PHP not running):** `502`/`504` (PHP-FPM unreachable or timed
+  out), `503` from a full FPM pool, or a hard PHP fatal. No PHP runs, so only nginx
+  can answer — serve a static page scoped to server failures:
+  `error_page 502 504 /maintenance.html;`. nginx generates `502`/`504` itself, so
+  this applies regardless of `fastcgi_intercept_errors`.
+
+For `500` there is a trade-off: `intercept off` lets a caught `setError(500)`
+render the SLAED page, but a hard fatal then yields whatever PHP emitted; a static
+`error_page 500` guarantees a page but also overrides the caught case. Pick per need.
+
 ## What Not To Assume
 
 - Do not assume `getConfig()` scans all config files on every request when
