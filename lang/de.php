@@ -161,7 +161,7 @@ define('_ERROR1','Fehler, falsche E-Mail!');
 define('_ERROR2','Bitte, benutzen Sie ein Standart Format');
 define('_ERROR3','Entfernen Sie bitte den Anfang');
 define('_ERROR4','Bitte, benutzen Sie keine Leerzeichen');
-define('_ERROR_PAGE','Fehler %1$s aufgetreten. Die angeforderte Seite ist nicht verfügbar oder existiert nicht. Möglicherweise sind Sie einem veralteten Link gefolgt, haben die Adresse falsch eingegeben oder es ist ein Serverfehler aufgetreten. Sie werden nun auf die Hauptseite der Website umgeleitet.');
+define('_ERROR_PAGE','Fehler %1$s aufgetreten. Die angeforderte Seite ist nicht verfügbar oder existiert nicht. Möglicherweise sind Sie einem veralteten Link gefolgt, haben die Adresse falsch eingegeben oder es ist ein Serverfehler aufgetreten. Kehren Sie zur Startseite zurück oder nutzen Sie die Suche.');
 define('_ERRORINVNICK','Ungültiger Benutzername!');
 define('_ERRORTR','Text für die übersetzung nicht erkannt!');
 define('_ERROR_ALL','Bitte die erforderlichen Felder ausfüllen!');

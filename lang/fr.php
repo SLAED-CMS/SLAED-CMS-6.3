@@ -161,7 +161,7 @@ define('_ERROR1','Une erreur est erroné E-Mail!');
 define('_ERROR2',"S'il vous plaît, utilisez le format standard");
 define('_ERROR3',"S'il vous plaît, n'incluez pas dans le début de l'adresse");
 define('_ERROR4',"S'il vous plaît, n'utilisez pas d'espaces");
-define('_ERROR_PAGE',"Erreur %1\$s survenue. La page demandée est indisponible ou n'existe pas. Vous avez peut-être suivi un lien obsolète, saisi une mauvaise adresse, ou une erreur serveur s'est produite. Vous allez être redirigé vers la page d'accueil du site.");
+define('_ERROR_PAGE',"Erreur %1\$s survenue. La page demandée est indisponible ou n'existe pas. Vous avez peut-être suivi un lien obsolète, saisi une mauvaise adresse, ou une erreur serveur s'est produite. Revenez à la page d'accueil ou utilisez la recherche.");
 define('_ERRORINVNICK',"À vous ne sont pas valides à l'utilisation de signes!");
 define('_ERRORTR','Pas découvert texte pour la traduction!');
 define('_ERROR_ALL',"S'il vous plaît, remplissez tous les champs requis!");

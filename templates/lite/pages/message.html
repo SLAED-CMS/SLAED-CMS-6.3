@@ -1,5 +1,7 @@
 {% extends 'layouts/bare.html' %}
 
+{% block title %}{% if title %}{{ title }} — {{ sitename }}{% else %}{{ sitename }}{% endif %}{% endblock %}
+
 {% block content %}
 <div class="sl-msg">
   <div class="sl-msg-card">
