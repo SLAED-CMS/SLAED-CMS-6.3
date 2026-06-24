@@ -9,13 +9,17 @@ AddDefaultCharset utf-8
 # Prevent directory listing
 Options -Indexes
 
-# Errors
+# Errors: app-servable statuses render the branded SLAED page via the front controller (whitelisted in core/security.php)
 ErrorDocument 400 /index.php?error=400
 ErrorDocument 401 /index.php?error=401
 ErrorDocument 403 /index.php?error=403
 ErrorDocument 404 /index.php?error=404
 ErrorDocument 500 /index.php?error=500
 ErrorDocument 503 /index.php?error=503
+
+# Infrastructure statuses (PHP not running, e.g. Apache as a reverse proxy): serve the static self-contained page
+ErrorDocument 502 /error.html
+ErrorDocument 504 /error.html
 
 # Deflate compression (Apache fallback; on nginx/LiteSpeed configure gzip/brotli in the server config)
 # WOFF2/WOFF are already compressed and are intentionally excluded

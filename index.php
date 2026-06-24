@@ -67,10 +67,10 @@ if (empty($go)) {
                 setFoot();
                 exit;
             } else {
-                setRedirect('index.php');
+                setError(404);
             }
         } else {
-            setRedirect('index.php');
+            setError(404);
         }
     } else {
         $home = 1;

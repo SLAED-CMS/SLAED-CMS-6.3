@@ -5138,8 +5138,8 @@ td.sl-fl-col-stat {
 .sl-msg-search {
   float: none;
   width: auto;
-  max-width: 300px;
-  margin: 0 auto 20px;
+  max-width: 440px;
+  margin: 0 auto 12px;
 }
 .sl-msg-search .sl-home-link {
   flex: 0 0 var(--sl-nav-control-size);
@@ -5156,8 +5156,9 @@ td.sl-fl-col-stat {
   background: var(--sl-color-tone-neutral);
 }
 .sl-msg-foot {
-  padding-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid var(--sl-color-border-subtle);
   font-size: 12px;
   color: var(--sl-color-text-muted);
+  max-width: 440px;
 }

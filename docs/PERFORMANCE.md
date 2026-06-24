@@ -343,12 +343,74 @@ Two classes of 5xx need different handling:
 - **Infrastructure (PHP not running):** `502`/`504` (PHP-FPM unreachable or timed
   out), `503` from a full FPM pool, or a hard PHP fatal. No PHP runs, so only nginx
   can answer — serve a static page scoped to server failures:
-  `error_page 502 504 /maintenance.html;`. nginx generates `502`/`504` itself, so
-  this applies regardless of `fastcgi_intercept_errors`.
+  `error_page 502 504 /error.html;`. nginx generates `502`/`504` itself, so this
+  applies regardless of `fastcgi_intercept_errors`. The page (`/error.html` at the
+  web root) is fully self-contained — inline `<style>` (real theme rules), inline SVG
+  logo and icons, no external CSS/font/favicon/image — so it renders identically to
+  the branded page even if every other file on the server is missing.
 
 For `500` there is a trade-off: `intercept off` lets a caught `setError(500)`
 render the SLAED page, but a hard fatal then yields whatever PHP emitted; a static
 `error_page 500` guarantees a page but also overrides the caught case. Pick per need.
+
+### Branded pages for nginx-native errors (`?error=`)
+
+With `intercept off`, errors nginx raises itself (a `return 404;` guard, a truly
+missing static file) still yield the bare nginx page. To brand those too, the
+bootstrap in `core/security.php` reads `?error=NNN` and renders the SLAED page for a
+whitelisted set (`400 401 402 403 404 500 502 503 504`); the whitelist keeps a forged
+`?error=` from emitting arbitrary/invalid statuses. Point the server's error handler
+at it for app-servable statuses, and keep `502`/`504` on the static file (`502`/`504`
+are whitelisted only so a manual `?error=502` still renders a page when PHP is alive):
+
+```nginx
+error_page 400 401 402 403 404 500 503 /index.php?error=$status;
+error_page 502 504 /error.html;
+```
+
+The same contract is mirrored for Apache in `.htaccess` (`ErrorDocument`), so the
+behavior matches regardless of the web server in front of PHP.
+
+### Working recipes
+
+**aaPanel / 宝塔 (per-site, does not touch shared `enable-php-84.conf`):** in the
+site's `server {}` block — `fastcgi_intercept_errors off;` is inherited by the PHP
+`location` (which does not set it), so only this site is affected:
+
+```nginx
+server {
+    # ...
+    fastcgi_intercept_errors off;
+    error_page 400 401 402 403 404 500 503 /index.php?error=$status;
+    error_page 502 504 /error.html;
+    include enable-php-84.conf;
+    # ...
+}
+```
+
+**OSPanel (dev, global for all PHP hosts):** the `friendly_errors.conf` snippet
+(`modules/Nginx/conf/snippets/`) is included per host; add at its top so PHP errors
+pass through while nginx-native errors keep the friendly page:
+
+```nginx
+fastcgi_intercept_errors off;
+proxy_intercept_errors   off;
+```
+
+Note: OSPanel may overwrite this snippet on an Nginx-module update; re-apply the two
+lines if branded PHP errors regress. After any change: `nginx -t && nginx -s reload`.
+
+**Apache (`.htaccess`, shipped with the project):** Apache does not intercept
+PHP-emitted statuses the way nginx does, so the equivalent is a set of
+`ErrorDocument` directives — already present in the repo `.htaccess`:
+
+```apache
+ErrorDocument 404 /index.php?error=404
+ErrorDocument 403 /index.php?error=403
+# ... 400 401 500 503 likewise ...
+ErrorDocument 502 /error.html
+ErrorDocument 504 /error.html
+```
 
 ## What Not To Assume
 

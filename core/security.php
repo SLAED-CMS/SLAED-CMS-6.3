@@ -148,8 +148,9 @@ if ($bcookie == 'block') {
     }
 }
 
-# Render the standard error page for any explicit error code; HTTP status and conditional logging are handled inside setError()
-if (isset($_GET['error'])) setError((int)$_GET['error']);
+# Render the branded error page for whitelisted ?error= codes (web server routes error_page/ErrorDocument to it); the whitelist blocks forged or invalid statuses
+$ecode = isset($_GET['error']) ? (int)$_GET['error'] : 0;
+if ($ecode && in_array($ecode, [400, 401, 402, 403, 404, 500, 502, 503, 504], true)) setError($ecode);
 
 # Add PHP errors to error_php.log
 function addPhpLog($no, $mesg, $file, $line) {
@@ -469,7 +470,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
 # Emit an HTTP error status, log it when enabled, and render the standard error page before stopping, for SEO-correct responses such as out-of-range pagination
 function setError(int $code = 404): never {
     global $conf;
-    $msg = [400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found', 410 => 'Gone', 500 => 'Internal Server Error', 503 => 'Service Unavailable'][$code] ?? 'Error';
+    $msg = [400 => 'Bad Request', 401 => 'Unauthorized', 402 => 'Payment Required', 403 => 'Forbidden', 404 => 'Not Found', 410 => 'Gone', 500 => 'Internal Server Error', 502 => 'Bad Gateway', 503 => 'Service Unavailable', 504 => 'Gateway Timeout'][$code] ?? 'Error';
     if (!headers_sent()) http_response_code($code);
     if (!empty($conf['security']['error_log'])) {
         Logger::addSite('error', ($_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1').' '.$code.' '.$msg, [

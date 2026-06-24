@@ -49,6 +49,7 @@ function changelog(): void {
     $paged = chlogPaginate($commits, $page, $config['perpage']);
     $totcom = $paged['total'];
     $totpage = $paged['pages'];
+    if ($page > $totpage) setError(404);
     $page = $paged['page'];
     $compg = $paged['items'];
 
