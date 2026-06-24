@@ -449,7 +449,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
 # Emit an HTTP error status, log it when enabled, and render the standard error page before stopping, for SEO-correct responses such as out-of-range pagination
 function setError(int $code = 404): never {
     global $conf;
-    $msg = [400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found', 410 => 'Gone', 500 => 'Internal Server Error'][$code] ?? 'Error';
+    $msg = [400 => 'Bad Request', 403 => 'Forbidden', 404 => 'Not Found', 410 => 'Gone', 500 => 'Internal Server Error', 503 => 'Service Unavailable'][$code] ?? 'Error';
     if (!headers_sent()) http_response_code($code);
     if (!empty($conf['security']['error_log'])) {
         Logger::addSite('error', ($_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1').' '.$code.' '.$msg, [

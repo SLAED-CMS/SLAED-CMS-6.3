@@ -24,8 +24,8 @@ class Database {
             $opts = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_BOTH, PDO::ATTR_EMULATE_PREPARES => false];
             $this->sqlconnid = new PDO($dsn, $user, $pass, $opts);
         } catch (PDOException $e) {
-            $msg = _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage();
-            setExit($msg);
+            Logger::addSite('error', _SQLERRORCON.' - '._ERROR.': '.$e->getCode().' - '.$e->getMessage(), ['http_code' => 500]);
+            setError(500);
         }
     }
 

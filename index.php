@@ -9,7 +9,7 @@ $sgtime = microtime(true);
 define('BASE_DIR', str_replace('\\', '/', __DIR__));
 require_once BASE_DIR.'/core/system.php';
 
-if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) setExit(_CLOSE_TEXT);
+if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) { http_response_code(503); setExit(_CLOSE_TEXT); }
 
 $go = getVar('req', 'go', 'var');
 $name = getVar('req', 'name', 'var');
