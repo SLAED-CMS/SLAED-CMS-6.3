@@ -451,6 +451,15 @@ class Parser {
             ) ?? $src;
         }
 
+        # [left/right/center/justify] — block-level alignment, iterative for nesting
+        while (preg_match('/\[(left|right|center|justify)\](.*?)\[\/\1\]/si', $src)) {
+            $src = preg_replace_callback(
+                '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
+                fn(array $m): string => $this->addStash('<div style="text-align:'.strtolower($m[1]).';">'.$this->filterNest($m[2]).'</div>'),
+                $src
+            ) ?? $src;
+        }
+
         # [attach=...] — image or link from uploads
         if (stripos($src, '[attach=') !== false) $src = $this->filterAttach($src);
 
@@ -755,17 +764,6 @@ class Parser {
             function(array $m): string {
                 $size = max(8, min(48, (int)$m[1]));
                 return '<span style="font-size:'.$size.'px">'.$m[2].'</span>';
-            },
-            $src
-        ) ?? $src;
-
-        # [left/right/center/justify]
-        $src = preg_replace_callback(
-            '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
-            function(array $m): string {
-                $align = strtolower(trim($m[1]));
-                if (!in_array($align, ['left', 'right', 'center', 'justify'], true)) return $m[2];
-                return '<div style="text-align:'.$align.';">'.$m[2].'</div>';
             },
             $src
         ) ?? $src;

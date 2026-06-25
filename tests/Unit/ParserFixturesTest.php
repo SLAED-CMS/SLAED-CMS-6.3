@@ -196,5 +196,18 @@ namespace Tests\Unit {
                 else unset($GLOBALS['tpl']);
             }
         }
+
+        #[Test]
+        public function checkBbAlignBlockSpansParagraphs(): void
+        {
+            $html = self::$p->filterDoc("[justify]\n\nFirst para.\n\nSecond para.\n\n[/justify]", true, '');
+            $this->assertStringContainsString('<div style="text-align:justify;">', $html);
+            $this->assertStringContainsString('<p>First para.</p>', $html);
+            $this->assertStringContainsString('<p>Second para.</p>', $html);
+            $this->assertStringNotContainsString('[justify]', $html);
+
+            $center = self::$p->filterDoc('[center]Mid[/center]', true, '');
+            $this->assertStringContainsString('<div style="text-align:center;">', $center);
+        }
     }
 }
