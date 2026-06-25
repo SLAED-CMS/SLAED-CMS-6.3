@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Alerts Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<style>
+/*
+  SLAED Alerts Lab — review sandbox for the sl-alert component.
+  Design language: itchief "alerts-13" (icon panel + arrow accent).
+  Motion: uiswarup toast (slide-in + depleting timer bar).
+  All colors/spacing/radii come from base.css design tokens.
+  The sl-alert-* block below is the candidate component for theme.css.
+*/
+
+/* ============================================================= */
+/* sl-alert component (candidate for templates/lite/.../theme.css) */
+/* ============================================================= */
+
+/* Alert: base layout, token-driven accent color via --sl-alert-c */
+.sl-alert {
+  --sl-alert-c: var(--sl-color-brand-link);
+  --sl-alert-c-grad-start: var(--sl-but-primary-start);
+  --sl-alert-c-grad-end: var(--sl-but-primary-end);
+  --sl-alert-c-tint: rgba(48, 162, 246, 0.1);
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  margin-bottom: var(--sl-space-lg);
+  background: var(--sl-color-bg);
+  border: 1px solid var(--sl-alert-c);
+  border-radius: var(--sl-radius-control);
+  box-shadow: var(--sl-shadow-soft);
+  overflow: hidden;
+}
+
+/* Alert icon: fixed colored panel with a triangular pointer */
+.sl-alert-icon {
+  flex: 0 0 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sl-alert-c);
+  color: var(--sl-color-on-dark);
+  font-size: var(--sl-icon-size-md);
+}
+.sl-alert-icon::after {
+  content: "";
+  position: absolute;
+  left: 3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 7px solid transparent;
+  border-left-color: var(--sl-alert-c);
+  pointer-events: none;
+}
+
+/* Alert body: title plus message text */
+.sl-alert-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px var(--sl-space-lg) 10px 18px;
+}
+.sl-alert-title {
+  margin: 0 0 2px;
+  font-weight: bold;
+  color: var(--sl-color-text-heading);
+}
+.sl-alert-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--sl-color-text-muted);
+}
+.sl-alert-text a {
+  color: var(--sl-alert-c);
+  text-decoration: underline;
+}
+
+/* Alert close: borderless dismiss control */
+.sl-alert-close {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin: var(--sl-space-sm);
+  padding: var(--sl-space-xs) var(--sl-space-sm);
+  border: 0;
+  border-radius: var(--sl-radius-control);
+  background: transparent;
+  color: var(--sl-color-text-subtle);
+  font-size: var(--sl-icon-size-xs);
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.sl-alert-close:hover {
+  color: var(--sl-color-text);
+  background: var(--sl-color-surface-alt);
+}
+
+/* Alert timer: depleting progress bar for auto-dismiss toasts */
+.sl-alert-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--sl-alert-c);
+  transform-origin: left center;
+  animation: sl-alert-timer var(--sl-alert-life, 5s) linear forwards;
+}
+
+/* Tone modifiers: remap the accent token per semantic type */
+.sl-alert-success {
+  --sl-alert-c: var(--sl-color-success);
+  --sl-alert-c-grad-start: var(--sl-but-success-start);
+  --sl-alert-c-grad-end: var(--sl-but-success-end);
+  --sl-alert-c-tint: rgba(92, 148, 37, 0.1);
+}
+.sl-alert-info {
+  --sl-alert-c: var(--sl-color-tone-info);
+  --sl-alert-c-grad-start: var(--sl-but-primary-start);
+  --sl-alert-c-grad-end: var(--sl-but-primary-end);
+  --sl-alert-c-tint: rgba(29, 155, 240, 0.1);
+}
+.sl-alert-primary {
+  --sl-alert-c: var(--sl-color-brand-link);
+  --sl-alert-c-grad-start: var(--sl-but-primary-start);
+  --sl-alert-c-grad-end: var(--sl-but-primary-end);
+  --sl-alert-c-tint: rgba(48, 162, 246, 0.1);
+}
+.sl-alert-warning {
+  --sl-alert-c: var(--sl-color-warning);
+  --sl-alert-c-grad-start: var(--sl-but-warning-start);
+  --sl-alert-c-grad-end: var(--sl-but-warning-end);
+  --sl-alert-c-tint: rgba(244, 122, 32, 0.1);
+}
+.sl-alert-danger {
+  --sl-alert-c: var(--sl-color-danger);
+  --sl-alert-c-grad-start: var(--sl-but-danger-start);
+  --sl-alert-c-grad-end: var(--sl-but-danger-end);
+  --sl-alert-c-tint: rgba(169, 44, 44, 0.1);
+}
+.sl-alert-accent {
+  --sl-alert-c: var(--sl-color-accent);
+  --sl-alert-c-grad-start: var(--sl-but-accent-start);
+  --sl-alert-c-grad-end: var(--sl-but-accent-end);
+  --sl-alert-c-tint: rgba(140, 44, 169, 0.1);
+}
+.sl-alert-neutral {
+  --sl-alert-c: var(--sl-color-tone-neutral);
+  --sl-alert-c-grad-start: var(--sl-but-neutral-end);
+  --sl-alert-c-grad-end: var(--sl-but-neutral-start);
+  --sl-alert-c-tint: rgba(107, 114, 128, 0.1);
+}
+
+/* Soft style: tinted background, no solid icon panel */
+.sl-alert-soft {
+  background: var(--sl-alert-c-tint);
+  border-color: transparent;
+  border-left: 3px solid var(--sl-alert-c);
+}
+.sl-alert-soft .sl-alert-icon {
+  background: transparent;
+  color: var(--sl-alert-c);
+}
+.sl-alert-soft .sl-alert-icon::after {
+  display: none;
+}
+.sl-alert-soft .sl-alert-title {
+  color: var(--sl-alert-c);
+}
+
+/* Solid style: filled gradient surface with light text */
+.sl-alert-solid {
+  background: linear-gradient(180deg, var(--sl-alert-c-grad-start), var(--sl-alert-c-grad-end));
+  border-color: transparent;
+}
+.sl-alert-solid .sl-alert-icon {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--sl-color-on-dark);
+}
+.sl-alert-solid .sl-alert-icon::after {
+  display: none;
+}
+.sl-alert-solid .sl-alert-title {
+  color: var(--sl-color-on-dark);
+}
+.sl-alert-solid .sl-alert-text {
+  color: rgba(255, 255, 255, 0.9);
+}
+.sl-alert-solid .sl-alert-close {
+  color: rgba(255, 255, 255, 0.75);
+}
+.sl-alert-solid .sl-alert-close:hover {
+  color: var(--sl-color-on-dark);
+  background: rgba(255, 255, 255, 0.18);
+}
+.sl-alert-solid .sl-alert-bar {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* Outline style: hairline frame, white surface */
+.sl-alert-outline {
+  background: var(--sl-color-bg);
+  border-color: var(--sl-alert-c);
+  border-left-width: 3px;
+  box-shadow: none;
+}
+.sl-alert-outline .sl-alert-icon {
+  background: transparent;
+  color: var(--sl-alert-c);
+}
+.sl-alert-outline .sl-alert-icon::after {
+  display: none;
+}
+
+/* Compact: single-line inline alert without a separate title */
+.sl-alert-compact .sl-alert-body {
+  padding-top: var(--sl-space-md);
+  padding-bottom: var(--sl-space-md);
+}
+.sl-alert-compact .sl-alert-text {
+  font-size: 13px;
+  color: var(--sl-color-text);
+}
+
+/* Motion: entrance animations selected via a modifier on the alert */
+.sl-anim-right {
+  animation: sl-alert-in-right 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sl-anim-left {
+  animation: sl-alert-in-left 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sl-anim-down {
+  animation: sl-alert-in-down 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sl-anim-up {
+  animation: sl-alert-in-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sl-anim-pop {
+  animation: sl-alert-pop 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) both;
+}
+.sl-anim-fade {
+  animation: sl-alert-fade 0.5s ease both;
+}
+.sl-anim-flip {
+  transform-origin: top center;
+  animation: sl-alert-flip 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Leaving state applied just before removal for a smooth exit */
+.sl-alert-leaving {
+  animation: sl-alert-out 0.35s ease forwards;
+}
+
+@keyframes sl-alert-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@keyframes sl-alert-in-right {
+  from { opacity: 0; transform: translateX(115%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes sl-alert-in-left {
+  from { opacity: 0; transform: translateX(-115%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes sl-alert-in-down {
+  from { opacity: 0; transform: translateY(-28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sl-alert-in-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes sl-alert-pop {
+  0% { opacity: 0; transform: scale(0.82); }
+  60% { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes sl-alert-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sl-alert-flip {
+  from { opacity: 0; transform: perspective(600px) rotateX(-90deg); }
+  to { opacity: 1; transform: perspective(600px) rotateX(0); }
+}
+@keyframes sl-alert-out {
+  to { opacity: 0; transform: translateX(115%); }
+}
+
+/* Icon motion: looping glyph micro-animations for the alert icon */
+.sl-ico-pulse { animation: sl-ico-pulse 1.6s ease-in-out infinite; }
+.sl-ico-beat { animation: sl-ico-beat 1.4s ease-in-out infinite; }
+.sl-ico-bounce { animation: sl-ico-bounce 1.7s ease infinite; }
+.sl-ico-shake { animation: sl-ico-shake 1.8s ease-in-out infinite; }
+.sl-ico-spin { animation: sl-ico-spin 2.2s linear infinite; }
+.sl-ico-ring { animation: sl-ico-ring 2.2s ease-in-out infinite; transform-origin: top center; }
+
+@keyframes sl-ico-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.22); }
+}
+@keyframes sl-ico-beat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.3); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.3); }
+  56% { transform: scale(1); }
+}
+@keyframes sl-ico-bounce {
+  0%, 20%, 53%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-7px); }
+  70% { transform: translateY(-3px); }
+}
+@keyframes sl-ico-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2.5px); }
+  40% { transform: translateX(2.5px); }
+  60% { transform: translateX(-2.5px); }
+  80% { transform: translateX(2.5px); }
+}
+@keyframes sl-ico-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes sl-ico-ring {
+  0%, 60%, 100% { transform: rotate(0); }
+  10%, 30%, 50% { transform: rotate(-15deg); }
+  20%, 40% { transform: rotate(15deg); }
+}
+
+/* Toast host: stacks live toasts in a screen corner */
+.sl-toast-host {
+  position: fixed;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-lg);
+  width: min(380px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.sl-toast-host .sl-alert {
+  margin: 0;
+  box-shadow: var(--sl-shadow-medium);
+  pointer-events: auto;
+}
+.sl-toast-host.is-tr { top: 18px; right: 18px; }
+.sl-toast-host.is-br { bottom: 18px; right: 18px; flex-direction: column-reverse; }
+.sl-toast-host.is-tl { top: 18px; left: 18px; }
+.sl-toast-host.is-bl { bottom: 18px; left: 18px; flex-direction: column-reverse; }
+.sl-toast-host.is-tc { top: 18px; left: 50%; transform: translateX(-50%); align-items: center; }
+.sl-toast-host.is-bc { bottom: 18px; left: 50%; transform: translateX(-50%); align-items: center; flex-direction: column-reverse; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-anim-right, .sl-anim-left, .sl-anim-down, .sl-anim-up,
+  .sl-anim-pop, .sl-anim-fade, .sl-anim-flip, .sl-alert-bar,
+  .sl-ico-pulse, .sl-ico-beat, .sl-ico-bounce, .sl-ico-shake,
+  .sl-ico-spin, .sl-ico-ring { animation: none; }
+}
+
+/* ============================================================= */
+/* Lab chrome only (not part of the component)                   */
+/* ============================================================= */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: linear-gradient(160deg, var(--sl-color-surface) 0%, var(--sl-color-surface-alt) 100%);
+  color: var(--sl-color-text);
+  font: 14px/1.5 Arial, Tahoma, sans-serif;
+}
+.lab {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 18px 80px;
+}
+.lab-head {
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--sl-color-border);
+}
+.lab-head h1 {
+  margin: 0 0 6px;
+  font: bold 30px/1.1 "Magistral", Arial, sans-serif;
+  color: var(--sl-color-brand-strong);
+}
+.lab-head p {
+  margin: 0;
+  color: var(--sl-color-text-muted);
+}
+.lab-sec {
+  margin: 34px 0 0;
+}
+.lab-sec > h2 {
+  margin: 0 0 4px;
+  font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+  color: var(--sl-color-text-heading);
+}
+.lab-sec > .lab-note {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--sl-color-text-muted);
+}
+.lab-line {
+  height: 1px;
+  margin: 0 0 18px;
+  background: var(--sl-line-gradient);
+}
+.lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 22px;
+}
+@media (max-width: 720px) { .lab-grid { grid-template-columns: 1fr; } }
+.lab-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-md);
+  align-items: center;
+  margin-bottom: 18px;
+}
+.lab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  padding: 7px 14px;
+  border: 1px solid var(--sl-color-border-strong);
+  border-radius: var(--sl-radius-control);
+  background: linear-gradient(180deg, var(--sl-but-neutral-start), var(--sl-but-neutral-end));
+  color: var(--sl-but-neutral-text);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.lab-btn:hover { filter: brightness(1.03); }
+.lab-btn .bi { font-size: var(--sl-icon-size-xs); }
+.lab-btn-success { color: var(--sl-color-success); }
+.lab-btn-info { color: var(--sl-color-tone-info); }
+.lab-btn-warning { color: var(--sl-color-warning); }
+.lab-btn-danger { color: var(--sl-color-danger); }
+.lab-btn-accent { color: var(--sl-color-accent); }
+.lab-tag {
+  font-size: 12px;
+  color: var(--sl-color-text-muted);
+  margin-right: var(--sl-space-xs);
+}
+select.lab-select {
+  height: 34px;
+  padding: 0 var(--sl-space-md);
+  border: 1px solid var(--sl-color-border-strong);
+  border-radius: var(--sl-radius-control);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div class="lab">
+
+  <div class="lab-head">
+    <h1>SLAED Alerts Lab</h1>
+    <p>Анимированные системные уведомления. Оформление в стиле icon-panel + стрелка, движение — toast со шкалой таймера. Все цвета и отступы взяты из токенов <code>base.css</code>.</p>
+  </div>
+
+  <!-- Section 1: card style (icon panel + arrow accent) -->
+  <section class="lab-sec">
+    <h2>1. Карточный стиль (icon-panel + стрелка)</h2>
+    <p class="lab-note">Базовый вид <code>.sl-alert</code>: цветная панель иконки слева, треугольная стрелка, заголовок, текст и кнопка закрытия.</p>
+    <div class="lab-line"></div>
+    <div class="lab-grid">
+      <div class="sl-alert sl-alert-success sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Успешно сохранено</p>
+          <p class="sl-alert-text">Изменения профиля применены без ошибок.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-info sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-info-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">К сведению</p>
+          <p class="sl-alert-text">Доступна новая версия модуля. <a href="#">Подробнее</a>.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-warning sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Внимание</p>
+          <p class="sl-alert-text">Срок действия сессии истекает через 5 минут.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-danger sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-exclamation-octagon-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Ошибка</p>
+          <p class="sl-alert-text">Не удалось подключиться к базе данных.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-accent sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-stars"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Новинка</p>
+          <p class="sl-alert-text">Подключён премиум-набор шаблонов оформления.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-neutral sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-bell-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Уведомление</p>
+          <p class="sl-alert-text">Запланировано техническое обслуживание в 03:00.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: soft style -->
+  <section class="lab-sec">
+    <h2>2. Мягкий стиль (тонированный фон)</h2>
+    <p class="lab-note">Модификатор <code>.sl-alert-soft</code>: лёгкая заливка тоном, цветная левая полоса, без сплошной панели иконки.</p>
+    <div class="lab-line"></div>
+    <div class="lab-grid">
+      <div class="sl-alert sl-alert-success sl-alert-soft">
+        <div class="sl-alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Готово</p>
+          <p class="sl-alert-text">Файл успешно загружен на сервер.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-info sl-alert-soft">
+        <div class="sl-alert-icon"><i class="bi bi-info-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Совет</p>
+          <p class="sl-alert-text">Используйте предпросмотр перед публикацией.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-warning sl-alert-soft">
+        <div class="sl-alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Проверьте данные</p>
+          <p class="sl-alert-text">Поле «E-mail» заполнено в неверном формате.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-danger sl-alert-soft">
+        <div class="sl-alert-icon"><i class="bi bi-x-octagon-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Доступ запрещён</p>
+          <p class="sl-alert-text">Недостаточно прав для этого действия.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: solid style -->
+  <section class="lab-sec">
+    <h2>3. Сплошной стиль (заливка градиентом)</h2>
+    <p class="lab-note">Модификатор <code>.sl-alert-solid</code>: насыщенная заливка кнопочным градиентом и светлый текст — для важных сообщений.</p>
+    <div class="lab-line"></div>
+    <div class="lab-grid">
+      <div class="sl-alert sl-alert-success sl-alert-solid">
+        <div class="sl-alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Оплата подтверждена</p>
+          <p class="sl-alert-text">Подписка продлена на 12 месяцев.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-primary sl-alert-solid">
+        <div class="sl-alert-icon"><i class="bi bi-megaphone-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Объявление</p>
+          <p class="sl-alert-text">Сайт переходит на новый дизайн оформления.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-warning sl-alert-solid">
+        <div class="sl-alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Лимит почти исчерпан</p>
+          <p class="sl-alert-text">Использовано 92% дискового пространства.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-danger sl-alert-solid">
+        <div class="sl-alert-icon"><i class="bi bi-shield-fill-exclamation"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Угроза безопасности</p>
+          <p class="sl-alert-text">Обнаружена попытка несанкционированного входа.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: outline + compact -->
+  <section class="lab-sec">
+    <h2>4. Контурный и компактный</h2>
+    <p class="lab-note"><code>.sl-alert-outline</code> — тонкая рамка на белом фоне. <code>.sl-alert-compact</code> — однострочный inline-вариант без заголовка.</p>
+    <div class="lab-line"></div>
+    <div class="lab-grid">
+      <div class="sl-alert sl-alert-info sl-alert-outline">
+        <div class="sl-alert-icon"><i class="bi bi-info-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Информация</p>
+          <p class="sl-alert-text">Резервная копия создаётся ежедневно в 02:00.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-accent sl-alert-outline">
+        <div class="sl-alert-icon"><i class="bi bi-gift-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-title">Бонус</p>
+          <p class="sl-alert-text">Вам начислено 500 приветственных баллов.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-success sl-alert-soft sl-alert-compact">
+        <div class="sl-alert-icon"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-text">Профиль обновлён.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-danger sl-alert-soft sl-alert-compact">
+        <div class="sl-alert-icon"><i class="bi bi-x-circle-fill"></i></div>
+        <div class="sl-alert-body">
+          <p class="sl-alert-text">Неверный логин или пароль.</p>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: entrance animations -->
+  <section class="lab-sec">
+    <h2>5. Анимации появления</h2>
+    <p class="lab-note">Шесть модификаторов движения. Нажмите «Проиграть заново», чтобы повторить.</p>
+    <div class="lab-line"></div>
+    <div class="lab-controls">
+      <button class="lab-btn" type="button" id="replayAnim"><i class="bi bi-arrow-clockwise"></i> Проиграть заново</button>
+    </div>
+    <div class="lab-grid" id="animGrid">
+      <div class="sl-alert sl-alert-info sl-anim-right">
+        <div class="sl-alert-icon"><i class="bi bi-arrow-left-circle-fill"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">slide-in-right</p><p class="sl-alert-text">Въезд справа — для toast.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-success sl-anim-left">
+        <div class="sl-alert-icon"><i class="bi bi-arrow-right-circle-fill"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">slide-in-left</p><p class="sl-alert-text">Въезд слева.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-warning sl-anim-down">
+        <div class="sl-alert-icon"><i class="bi bi-arrow-down-circle-fill"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">slide-in-down</p><p class="sl-alert-text">Спуск сверху.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-danger sl-anim-up">
+        <div class="sl-alert-icon"><i class="bi bi-arrow-up-circle-fill"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">slide-in-up</p><p class="sl-alert-text">Подъём снизу.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-accent sl-anim-pop">
+        <div class="sl-alert-icon"><i class="bi bi-magic"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">pop / bounce</p><p class="sl-alert-text">Упругое появление.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-primary sl-anim-flip">
+        <div class="sl-alert-icon"><i class="bi bi-arrow-repeat"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">flip-in</p><p class="sl-alert-text">Переворот по оси X.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: live toasts -->
+  <section class="lab-sec">
+    <h2>6. Toast-уведомления (живой запуск)</h2>
+    <p class="lab-note">Всплывают в углу, едут с анимацией и автоматически закрываются по шкале таймера. Закрытие крестиком — с плавным выездом.</p>
+    <div class="lab-line"></div>
+    <div class="lab-controls">
+      <span class="lab-tag">Позиция:</span>
+      <select class="lab-select" id="toastPos">
+        <option value="is-tr">сверху справа</option>
+        <option value="is-br" selected>снизу справа</option>
+        <option value="is-tl">сверху слева</option>
+        <option value="is-bl">снизу слева</option>
+        <option value="is-tc">сверху по центру</option>
+        <option value="is-bc">снизу по центру</option>
+      </select>
+    </div>
+    <div class="lab-controls">
+      <button class="lab-btn lab-btn-success" type="button" data-toast="success"><i class="bi bi-check-circle-fill"></i> Success</button>
+      <button class="lab-btn lab-btn-info" type="button" data-toast="info"><i class="bi bi-info-circle-fill"></i> Info</button>
+      <button class="lab-btn lab-btn-warning" type="button" data-toast="warning"><i class="bi bi-exclamation-triangle-fill"></i> Warning</button>
+      <button class="lab-btn lab-btn-danger" type="button" data-toast="danger"><i class="bi bi-exclamation-octagon-fill"></i> Danger</button>
+      <button class="lab-btn lab-btn-accent" type="button" data-toast="accent"><i class="bi bi-stars"></i> Accent</button>
+      <button class="lab-btn" type="button" data-toast="random"><i class="bi bi-shuffle"></i> Случайный</button>
+    </div>
+  </section>
+
+  <!-- Section 7: animated icons inside alerts -->
+  <section class="lab-sec">
+    <h2>7. Анимированные иконки внутри уведомлений</h2>
+    <p class="lab-note">Иконка получает зацикленную микро-анимацию через утилиту <code>.sl-ico-*</code> на теге <code>&lt;i class="bi"&gt;</code>. Те же классы автоматически применяются к toast-уведомлениям ниже.</p>
+    <div class="lab-line"></div>
+    <div class="lab-grid">
+      <div class="sl-alert sl-alert-success">
+        <div class="sl-alert-icon"><i class="bi bi-check-circle-fill sl-ico-pulse"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">pulse — пульсация</p><p class="sl-alert-text">Плавное увеличение и возврат масштаба.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-info">
+        <div class="sl-alert-icon"><i class="bi bi-arrow-repeat sl-ico-spin"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">spin — вращение</p><p class="sl-alert-text">Непрерывный поворот — процесс, синхронизация.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-warning">
+        <div class="sl-alert-icon"><i class="bi bi-exclamation-triangle-fill sl-ico-shake"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">shake — дрожание</p><p class="sl-alert-text">Лёгкая тряска для привлечения внимания.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-danger">
+        <div class="sl-alert-icon"><i class="bi bi-heart-pulse-fill sl-ico-beat"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">beat — сердцебиение</p><p class="sl-alert-text">Двойной импульс масштаба, как пульс.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-neutral">
+        <div class="sl-alert-icon"><i class="bi bi-bell-fill sl-ico-ring"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">ring — звонок</p><p class="sl-alert-text">Покачивание колокольчика вокруг верхней точки.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-accent">
+        <div class="sl-alert-icon"><i class="bi bi-stars sl-ico-bounce"></i></div>
+        <div class="sl-alert-body"><p class="sl-alert-title">bounce — отскок</p><p class="sl-alert-text">Короткий подпрыгивающий акцент.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="sl-toast-host is-br" id="toastHost"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var preset = {
+    success: { tone: "sl-alert-success", icon: "bi-check-circle-fill", anim: "sl-ico-pulse", title: "Успешно", text: "Операция выполнена без ошибок." },
+    info: { tone: "sl-alert-info", icon: "bi-arrow-repeat", anim: "sl-ico-spin", title: "К сведению", text: "Доступно новое системное обновление." },
+    warning: { tone: "sl-alert-warning", icon: "bi-exclamation-triangle-fill", anim: "sl-ico-shake", title: "Внимание", text: "Проверьте корректность введённых данных." },
+    danger: { tone: "sl-alert-danger", icon: "bi-heart-pulse-fill", anim: "sl-ico-beat", title: "Ошибка", text: "Запрос не выполнен, повторите попытку." },
+    accent: { tone: "sl-alert-accent", icon: "bi-stars", anim: "sl-ico-bounce", title: "Новинка", text: "Активирована новая возможность системы." }
+  };
+
+  var host = document.getElementById("toastHost");
+  var life = 5000;
+
+  function removeAlert(node) {
+    if (node.dataset.leaving) return;
+    node.dataset.leaving = "1";
+    node.classList.add("sl-alert-leaving");
+    node.addEventListener("animationend", function () { node.remove(); }, { once: true });
+  }
+
+  function buildToast(type) {
+    var key = type === "random" ? ["success", "info", "warning", "danger", "accent"][Math.floor(Math.random() * 5)] : type;
+    var meta = preset[key];
+    var node = document.createElement("div");
+    node.className = "sl-alert " + meta.tone + " sl-anim-right";
+    node.style.setProperty("--sl-alert-life", (life / 1000) + "s");
+    node.innerHTML =
+      '<div class="sl-alert-icon"><i class="bi ' + meta.icon + ' ' + meta.anim + '"></i></div>' +
+      '<div class="sl-alert-body"><p class="sl-alert-title">' + meta.title + '</p>' +
+      '<p class="sl-alert-text">' + meta.text + '</p></div>' +
+      '<button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>' +
+      '<span class="sl-alert-bar"></span>';
+    host.appendChild(node);
+    var timer = setTimeout(function () { removeAlert(node); }, life);
+    node.querySelector(".sl-alert-close").addEventListener("click", function () {
+      clearTimeout(timer);
+      removeAlert(node);
+    });
+    node.addEventListener("mouseenter", function () { node.querySelector(".sl-alert-bar").style.animationPlayState = "paused"; });
+  }
+
+  document.querySelectorAll("[data-toast]").forEach(function (btn) {
+    btn.addEventListener("click", function () { buildToast(btn.dataset.toast); });
+  });
+
+  document.getElementById("toastPos").addEventListener("change", function () {
+    host.className = "sl-toast-host " + this.value;
+  });
+
+  document.body.addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".sl-alert-close");
+    if (btn && !btn.closest(".sl-toast-host")) removeAlert(btn.closest(".sl-alert"));
+  });
+
+  document.getElementById("replayAnim").addEventListener("click", function () {
+    var grid = document.getElementById("animGrid");
+    var clone = grid.cloneNode(true);
+    grid.parentNode.replaceChild(clone, grid);
+    clone.id = "animGrid";
+  });
+})();
+</script>
+</body>
+</html>
