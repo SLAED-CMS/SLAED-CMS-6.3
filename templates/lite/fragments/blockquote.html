@@ -1,5 +1,5 @@
 {% if is_callout %}
-  <div class="sl-callout-{{ callout_type }}">{{{ content_html }}}</div>
+  <div class="sl-alert sl-alert-{{ callout_type }}"><div class="sl-alert-body">{{{ content_html }}}</div></div>
 {% elseif is_hide %}
   <blockquote class="sl-hide"><p title="{{ title_text }}">{{{ content_html }}}</p></blockquote>
 {% elseif is_quote %}

@@ -1577,10 +1577,6 @@ function setHead(array $seo = []): void {
         if (!empty($conf['agraph']) && !empty($conf['graph'])) {
             $strmeta .= str_replace($from, $into, $conf['graph']);
         }
-        $favicon = 'templates/'.$theme.'/images/favicon.svg';
-        if (is_file(BASE_DIR.'/'.$favicon)) {
-            $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
-        }
         if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => ''])."\n";
         if ($conf['rss']['act']) {
             $fieldc = explode('||', $conf['rss']['rss']);
@@ -1594,6 +1590,10 @@ function setHead(array $seo = []): void {
         $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'search', 'href' => $conf['homeurl'].'/index.php?go=search', 'type' => 'application/opensearchdescription+xml', 'title' => $conf['sitename'].' - '._SEARCH])."\n";
     } else {
         $strmeta .= '<title>'.$conf['sitename'].' '.$sep.' '._ADMIN.'</title>'."\n";
+    }
+    $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
+    if (is_file(BASE_DIR.'/'.$favicon)) {
+        $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
     }
     $strlink .= doCss();
     if (!defined('ADMIN_FILE') && !empty($conf['aschema']) && !empty($conf['schema'])) {
@@ -1824,7 +1824,7 @@ function getFlashHtml(): string {
     return $tpl->getHtmlFrag('alert', [
         'is_warn' => !empty($data['warn']),
         'is_flash' => true,
-        'alert_attr' => 'data-sl-autohide="15000"',
+        'alert_attr' => 'data-sl-autohide="5000"',
         'text' => $text,
     ]);
 }

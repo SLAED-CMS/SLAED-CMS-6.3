@@ -6,7 +6,7 @@ function initAdminAlerts(scope) {
         if (node.getAttribute('data-sl-alert-ready') === '1') continue;
         node.setAttribute('data-sl-alert-ready', '1');
         var time = parseInt(node.getAttribute('data-sl-autohide'), 10);
-        if (isNaN(time) || time < 1) time = 15000;
+        if (isNaN(time) || time < 1) time = 5000;
         window.setTimeout((function (item) {
             return function () {
                 if (!item || !item.parentNode) return;

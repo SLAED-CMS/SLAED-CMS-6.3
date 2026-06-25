@@ -1,18 +1,10 @@
-{% if messages %}
-  {% if is_warn %}
-    <div class="sl-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-      {% for message in messages %}{{ message }}<br>{% endfor %}
-    </div>
-  {% else %}
-    <div class="sl-info"><i class="bi bi-info-circle" aria-hidden="true"></i>
-      {% for message in messages %}{{ message }}<br>{% endfor %}
-    </div>
-  {% endif %}
-{% elseif text %}
-  {% if is_warn %}
-    <div class="sl-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{{ text }}}</div>
-  {% else %}
-    <div class="sl-info"><i class="bi bi-info-circle" aria-hidden="true"></i> {{{ text }}}</div>
-  {% endif %}
-{% endif %}
+<div class="sl-alert {% if type %}sl-alert-{{ type }}{% elseif is_warn %}sl-alert-warn{% else %}sl-alert-info{% endif %}">
+  <div class="sl-alert-body">
+    {% if messages %}
+      <ul class="sl-alert-list">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>
+    {% elseif text %}
+      <p class="sl-alert-text">{{{ text }}}</p>
+    {% endif %}
+  </div>
+</div>
 {% if meta %}{{{ meta }}}{% endif %}

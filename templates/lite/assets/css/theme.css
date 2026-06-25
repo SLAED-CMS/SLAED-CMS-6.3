@@ -500,14 +500,151 @@ span.sl-pnum-nav {
   margin-bottom: 10px;
 }
 
-/* Alerts: info and warning box icons */
-.sl-warn .bi {
-  color: var(--sl-color-warning);
-  margin-right: var(--sl-space-sm);
+/* Alert: unified inline notice with semantic tone (info/success/warn/error/accent) */
+/* Shared vocabulary with the admin theme and the parser GFM callouts */
+.sl-alert {
+  --sl-alert-c: var(--sl-color-tone-info);
+  --sl-alert-tint: rgba(29, 155, 240, 0.08);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sl-space-lg);
+  margin: 0 0 18px;
+  padding: 13px 16px;
+  background: var(--sl-alert-tint);
+  border-left: 3px solid var(--sl-alert-c);
+  border-radius: var(--sl-radius-control);
+  box-shadow: var(--sl-shadow-soft);
 }
-.sl-info .bi {
-  color: var(--sl-color-tone-info);
-  margin-right: var(--sl-space-sm);
+.sl-alert::before {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  display: inline-block;
+  font-family: "bootstrap-icons";
+  font-style: normal;
+  font-size: var(--sl-icon-size-md);
+  line-height: 1;
+  color: var(--sl-alert-c);
+  content: "\f430";
+}
+.sl-alert-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sl-alert-body > div + div {
+  margin-top: var(--sl-space-sm);
+}
+.sl-alert-title {
+  margin: 0 0 2px;
+  font-weight: bold;
+  color: var(--sl-color-text-heading);
+}
+.sl-alert-text {
+  margin: 0;
+  line-height: 1.55;
+  text-align: justify;
+  color: var(--sl-color-text);
+}
+.sl-alert-text a {
+  color: var(--sl-alert-c);
+  text-decoration: underline;
+}
+.sl-alert-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc outside;
+}
+.sl-alert-list li {
+  margin: 2px 0;
+  line-height: 1.5;
+}
+.sl-alert-close {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin: -2px -4px 0 0;
+  padding: var(--sl-space-xs);
+  border: 0;
+  background: none;
+  color: var(--sl-color-text-subtle);
+  font-size: var(--sl-icon-size-xs);
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--sl-radius-control);
+}
+.sl-alert-close:hover {
+  color: var(--sl-color-text);
+  background: var(--sl-color-surface-alt);
+}
+.sl-alert-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-md);
+  margin-top: var(--sl-space-lg);
+}
+
+/* Tones: remap accent token + ::before glyph and always-on motion */
+.sl-alert-info { --sl-alert-c: var(--sl-color-tone-info); --sl-alert-tint: rgba(29, 155, 240, 0.08); }
+.sl-alert-info::before { content: "\f430"; animation: sl-alert-pulse 1.8s ease-in-out infinite; }
+.sl-alert-success { --sl-alert-c: var(--sl-color-success); --sl-alert-tint: rgba(92, 148, 37, 0.09); }
+.sl-alert-success::before { content: "\f26a"; animation: sl-alert-pulse 1.8s ease-in-out infinite; }
+.sl-alert-warn { --sl-alert-c: var(--sl-color-warning); --sl-alert-tint: rgba(244, 122, 32, 0.09); }
+.sl-alert-warn::before { content: "\f33a"; animation: sl-alert-shake 1.9s ease-in-out infinite; }
+.sl-alert-error { --sl-alert-c: var(--sl-color-danger); --sl-alert-tint: rgba(169, 44, 44, 0.08); }
+.sl-alert-error::before { content: "\f626"; animation: sl-alert-beat 1.5s ease-in-out infinite; }
+.sl-alert-accent { --sl-alert-c: var(--sl-color-accent); --sl-alert-tint: rgba(140, 44, 169, 0.08); }
+.sl-alert-accent::before { content: "\f483"; animation: sl-alert-pulse 1.8s ease-in-out infinite; }
+
+/* Flash: auto-hide variant with a depleting 5s timer bar */
+.sl-alert-flash {
+  overflow: hidden;
+  max-height: 200px;
+  transition: opacity 0.35s ease, transform 0.35s ease, max-height 0.35s ease, margin 0.35s ease, padding 0.35s ease;
+}
+.sl-alert-flash-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--sl-alert-c);
+  transform-origin: left center;
+  animation: sl-alert-flash-frame 5s linear forwards;
+}
+.sl-alert-flash.sl-is-hiding {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+@keyframes sl-alert-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+@keyframes sl-alert-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes sl-alert-beat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.25); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.25); }
+  56% { transform: scale(1); }
+}
+@keyframes sl-alert-flash-frame {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-alert::before,
+  .sl-alert-flash-bar { animation: none !important; }
 }
 .sl-news-info:hover {
   opacity: 0.8;
@@ -1654,12 +1791,6 @@ ol.sl-sublist-two li:hover:before {
   opacity: 1;
   visibility: visible;
   z-index: 3000;
-}
-.sl-table-block {
-  width: 100%;
-}
-.sl-table-block td {
-  padding-bottom: 5px;
 }
 .sl-generates,
 .sl-license {
@@ -5108,32 +5239,10 @@ td.sl-fl-col-stat {
 .sl-msg-body {
   margin-bottom: 22px;
 }
-.sl-msg-body .sl-warn,
-.sl-msg-body .sl-info {
-  display: block;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: justify;
-  text-align-last: center;
-  font-size: 16px;
-  line-height: 1.45;
-  color: var(--sl-color-text);
-}
-.sl-msg-body .sl-warn .bi,
-.sl-msg-body .sl-info .bi {
-  display: block;
-  margin-bottom: 12px;
-  text-align: center;
-  font-size: 52px;
-  line-height: 1;
-}
-.sl-msg-body .sl-warn .bi {
-  color: var(--sl-color-warning);
-}
-.sl-msg-body .sl-info .bi {
-  color: var(--sl-color-brand-link);
+/* Message/error page keeps the natural .sl-alert box; only drop side margins to fit the card */
+.sl-msg-body .sl-alert {
+  margin-left: 0;
+  margin-right: 0;
 }
 .sl-msg-search {
   float: none;

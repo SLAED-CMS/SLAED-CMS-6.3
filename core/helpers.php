@@ -361,7 +361,7 @@ function setTplAdminInfoPage(array $data = []): void {
     if (!empty($conf['adminfo']) && getVar('post', $save, 'num', 0)) {
         if (!checkSiteToken()) {
             $alert = $tpl->getHtmlFrag('alert', [
-                'alert_attr' => 'data-sl-autohide="15000"',
+                'alert_attr' => 'data-sl-autohide="5000"',
                 'is_flash' => true,
                 'is_warn' => true,
                 'text' => _TOKENMISS,
@@ -381,7 +381,7 @@ function setTplAdminInfoPage(array $data = []): void {
                     fclose($fp);
                     $text = $content;
                     $alert = $tpl->getHtmlFrag('alert', [
-                        'alert_attr' => 'data-sl-autohide="15000"',
+                        'alert_attr' => 'data-sl-autohide="5000"',
                         'is_flash' => true,
                         'text' => _SUCCSAVE,
                     ]);

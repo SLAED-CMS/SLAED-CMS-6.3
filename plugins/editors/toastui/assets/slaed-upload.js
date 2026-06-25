@@ -18,7 +18,7 @@
         var opt = getOpt(id);
         var el = opt.msg ? doc.getElementById(opt.msg) : null;
         if (!el) return;
-        el.className = warn ? 'sl-alert sl-warn' : 'sl-alert';
+        el.className = warn ? 'sl-alert sl-alert-warn' : 'sl-alert sl-alert-info';
         el.textContent = text || '';
     }
 
@@ -71,7 +71,7 @@
     }
 
     function getRows(id, rows) {
-        if (!rows || !rows.length) return '<div class="sl-info">' + getEsc(getLab(id, 'nofiles', 'No files')) + '</div>';
+        if (!rows || !rows.length) return '<div class="sl-alert sl-alert-info">' + getEsc(getLab(id, 'nofiles', 'No files')) + '</div>';
         return '<table class="sl-table"><tbody>' + rows.map(function(row) {
             var dat = ' data-editor="' + getEsc(id) + '" data-file="' + getEsc(row.file) + '"';
             var img = row.image ? '<img src="' + getEsc(row.url) + '" alt="" style="max-width:80px;max-height:50px">' : '';
@@ -91,9 +91,9 @@
         fetch(opt.files, { credentials: 'same-origin' }).then(function(res) {
             return res.json();
         }).then(function(json) {
-            el.innerHTML = json.ok ? getRows(id, json.files || []) : '<div class="sl-alert sl-warn">' + getEsc(json.error || getLab(id, 'load', 'Load failed')) + '</div>';
+            el.innerHTML = json.ok ? getRows(id, json.files || []) : '<div class="sl-alert sl-alert-warn">' + getEsc(json.error || getLab(id, 'load', 'Load failed')) + '</div>';
         }).catch(function() {
-            el.innerHTML = '<div class="sl-alert sl-warn">' + getEsc(getLab(id, 'load', 'Load failed')) + '</div>';
+            el.innerHTML = '<div class="sl-alert sl-alert-warn">' + getEsc(getLab(id, 'load', 'Load failed')) + '</div>';
         });
     }
 

@@ -604,6 +604,13 @@ class Parser {
                     $hd = trim($seg[0]);
                     if (preg_match('/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i', $hd, $cm)) {
                         $kind = strtolower($cm[1]);
+                        $tone = match ($kind) {
+                            'tip' => 'success',
+                            'important' => 'accent',
+                            'warning' => 'warn',
+                            'caution' => 'error',
+                            default => 'info',
+                        };
                         array_shift($seg);
                         $inner = $this->filterBlocks(implode("\n", $seg));
                         global $tpl;
@@ -611,9 +618,9 @@ class Parser {
                             ? (string) $tpl->getHtmlFrag('blockquote', [
                                 'is_callout' => true,
                                 'content_html' => $inner,
-                                'callout_type' => $kind,
+                                'callout_type' => $tone,
                             ])
-                            : '<div>'.$inner.'</div>';
+                            : '<div class="sl-alert sl-alert-'.$tone.'"><div class="sl-alert-body">'.$inner.'</div></div>';
                         $out .= $this->addStash($html)."\n";
                     } else {
                         $inner = $this->filterBlocks(implode("\n", $seg));
