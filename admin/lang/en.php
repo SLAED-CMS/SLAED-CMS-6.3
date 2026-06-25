@@ -178,6 +178,8 @@ define('_DTHUMB','Additional directory');
 define('_EDFILEA','The total number of files to the administrator of the');
 define('_EDFILEU','The total number of files for the user');
 define('_EDITBLOCK','Edit Block');
+define('_EDITORADMIN','Administrator editor');
+define('_EDITORUSER','User editor');
 define('_EDITVOTE','Edit poll');
 define('_EFUNC','File of introduction in a kernel of system');
 define('_EFUNCN','The core of the system');

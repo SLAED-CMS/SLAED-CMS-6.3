@@ -178,6 +178,8 @@ define('_DTHUMB','Zusätzliche Verzeichnis');
 define('_EDFILEA','Anzahl von Dateien, für den Administrator');
 define('_EDFILEU','Anzahl von Dateien für den Benutzer');
 define('_EDITBLOCK','Block bearbeiten');
+define('_EDITORADMIN','Administrator-Editor');
+define('_EDITORUSER','Benutzer-Editor');
 define('_EDITVOTE','Umfrage bearbeiten');
 define('_EFUNC','Die Datei der Einführung in den Kern des Systems');
 define('_EFUNCN','Der System-Kernel');

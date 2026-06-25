@@ -304,8 +304,8 @@ function config(): void {
         'options_html' => $opts,
         'is_config' => true,
     ])];
-    $rows[] = ['label_html' => _EDITOR.' user:', 'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user')];
-    $rows[] = ['label_html' => _EDITOR.' admin:', 'field_html' => Editor::getSelect('editor_admin', (string)($conf['editor']['admin'] ?? 'plain'), 'content', 'admin')];
+    $rows[] = ['label_html' => _EDITORUSER, 'field_html' => Editor::getSelect('editor_user', (string)($conf['editor']['user'] ?? 'plain'), 'content', 'user')];
+    $rows[] = ['label_html' => _EDITORADMIN, 'field_html' => Editor::getSelect('editor_admin', (string)($conf['editor']['admin'] ?? 'plain'), 'content', 'admin')];
     $list = timezone_identifiers_list();
     $name = $conf['gtime'] ?? '';
     $opts = '';
