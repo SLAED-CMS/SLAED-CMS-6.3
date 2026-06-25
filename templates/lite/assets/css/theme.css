@@ -917,13 +917,17 @@ select.sl-field {
   text-shadow: var(--sl-but-text-shadow-dark);
 }
 .sl-but:hover,
+.sl-but-navi:hover,
+.sl-but-read:hover,
 .sl-but-neutral:hover,
 .sl-but-primary:hover,
 .sl-but-success:hover,
 .sl-but-danger:hover,
 .sl-but-warning:hover,
 .sl-but-accent:hover {
-  opacity: 0.85;
+  color: var(--sl-color-brand-link);
+  border-color: var(--sl-but-link-hover-border);
+  opacity: 0.8;
 }
 .sl-hidden {
   opacity: 0.5;
@@ -934,16 +938,12 @@ select.sl-field {
 }
 .sl-but-navi,
 .sl-but-read {
-  color: var(--sl-but-link-text);
+  color: var(--sl-but-neutral-text);
   background-color: var(--sl-color-bg);
   border-color: var(--sl-but-neutral-start);
   --sl-but-border-light: var(--sl-but-link-border-light);
   --sl-but-border-dark: var(--sl-but-link-border-dark);
   text-shadow: var(--sl-but-text-shadow-light);
-}
-.sl-but-navi:hover,
-.sl-but-read:hover {
-  border-color: var(--sl-but-link-hover-border);
 }
 .sl-avatar {
   max-width: 100%;
@@ -2977,22 +2977,14 @@ ol.sl-sublist-two li:hover:before {
   border: 1px solid var(--sl-color-border-strong);
   border-radius: 6px;
   background: var(--sl-color-bg);
-  overflow-x: auto;
-  overflow-y: visible;
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
 }
 .sl-tabs > ul {
   display: flex;
-  flex-wrap: nowrap;
-  width: max-content;
-  min-width: 100%;
+  flex-wrap: wrap;
   margin: 0;
   padding: var(--sl-space-md) var(--sl-space-md) 0;
   list-style: none;
-  background: var(--sl-color-surface);
   border-bottom: 1px solid var(--sl-color-border-strong);
-  overflow: visible;
 }
 .sl-tabs > ul > li {
   display: block;
