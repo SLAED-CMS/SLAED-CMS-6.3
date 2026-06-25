@@ -159,7 +159,7 @@ function liste(): void {
     $let = getVar('get', 'let', 'let');
     $params = [];
     if ($let) {
-        $order = "WHERE UCASE(f.title) LIKE BINARY :let AND f.time <= NOW() AND f.status != '0'";
+        $order = "WHERE UCASE(f.title) LIKE BINARY UCASE(:let) AND f.time <= NOW() AND f.status != '0'";
         $params['let'] = $let.'%';
     } else {
         $order = "WHERE f.time <= NOW() AND f.status != '0'";
@@ -192,9 +192,9 @@ function liste(): void {
             'time_label'    => _DATE,
         ];
     }
-    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $onum = ($let) ? "UCASE(title) LIKE BINARY UCASE(:let) AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    if ((int)$num > 1 && !$rows) setError(404);
+    if (!$rows) setError(404);
     $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['files']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -218,7 +218,6 @@ function liste(): void {
             'where_params' => $wparams,
             'url_extra'    => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
         ]) : '',
-        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
     ]);
     echo $cont;
     setFoot();
@@ -382,7 +381,7 @@ function add(): void {
         $fversion = getVar('post', 'fversion', 'text');
         $fsize    = getVar('post', 'fsize', 'num');
         $info = _ADDFNOTE;
-        if ($conf['files']['upload'] == 1) $info .= sprintf(_ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), filterSize($conf['files']['max_size']));
+        if ($conf['files']['upload'] == 1) $info .= sprintf(' '._ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), filterSize($conf['files']['max_size']));
         $info .= ' '._ADDFNOTE3;
         setHead(['title' => _ADD]);
         $cont = getModuleNavi(['title' => _ADD, 'htitle' => _FILES]);

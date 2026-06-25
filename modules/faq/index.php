@@ -188,7 +188,7 @@ function liste(): void {
     $let = getVar('get', 'let', 'let');
     $params = [];
     if ($let) {
-        $order = "WHERE UCASE(s.title) LIKE BINARY :let AND s.time <= NOW() AND s.status != '0'";
+        $order = "WHERE UCASE(s.title) LIKE BINARY UCASE(:let) AND s.time <= NOW() AND s.status != '0'";
         $params['let'] = $let.'%';
     } else {
         $order = "WHERE s.time <= NOW() AND s.status != '0'";
@@ -221,9 +221,9 @@ function liste(): void {
             'time_label'    => _DATE,
         ];
     }
-    $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+    $onum = ($let) ? "UCASE(title) LIKE BINARY UCASE(:let) AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
-    if ((int)$num > 1 && !$rows) setError(404);
+    if (!$rows) setError(404);
     $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['faq']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -247,7 +247,6 @@ function liste(): void {
             'where_params' => $wparams,
             'url_extra'    => $let ? ['op' => 'liste', 'let' => $let] : ['op' => 'liste'],
         ]) : '',
-        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
     ]);
     echo $cont;
     setFoot();

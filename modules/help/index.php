@@ -153,8 +153,8 @@ function liste(): void {
     $params = ['uid' => $uid];
     if ($let) {
         $params['let'] = $let.'%';
-        $order  = "WHERE UCASE(s.title) LIKE BINARY :let AND s.time <= NOW() AND s.pid = '0' AND s.uid = :uid";
-        $onum   = "title LIKE BINARY '".addslashes($let)."%' AND time <= NOW() AND pid = '0' AND uid = ".$uid;
+        $order  = "WHERE UCASE(s.title) LIKE BINARY UCASE(:let) AND s.time <= NOW() AND s.pid = '0' AND s.uid = :uid";
+        $onum   = "UCASE(title) LIKE BINARY UCASE('".addslashes($let)."%') AND time <= NOW() AND pid = '0' AND uid = ".$uid;
     } else {
         $order  = "WHERE s.time <= NOW() AND s.pid = '0' AND s.uid = :uid";
         $onum   = "time <= NOW() AND pid = '0' AND uid = ".$uid;
@@ -184,7 +184,7 @@ function liste(): void {
             'time_label'    => _DATE,
         ];
     }
-    if ((int)$num > 1 && !$rows) setError(404);
+    if (!$rows) setError(404);
     $cont .= $tpl->getHtmlPart('content-list', [
         'rows'        => $rows,
         'before_html' => ($conf['help']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -207,7 +207,6 @@ function liste(): void {
             'where'     => $onum,
             'url_extra' => $url_extra,
         ]) : '',
-        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
     ]);
     echo $cont;
     setFoot();

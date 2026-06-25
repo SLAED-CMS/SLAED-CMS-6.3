@@ -150,9 +150,9 @@ function liste(): void {
 	$let    = getVar('get', 'let', 'let');
 	$params = [];
 	if ($let) {
-		$order = "WHERE UCASE(p.title) LIKE BINARY :let AND p.time <= NOW() AND p.status != '0'";
+		$order = "WHERE UCASE(p.title) LIKE BINARY UCASE(:let) AND p.time <= NOW() AND p.status != '0'";
 		$params['let'] = $let.'%';
-		$onum = "title LIKE BINARY '".addslashes($let)."%' AND time <= NOW() AND status != '0'";
+		$onum = "UCASE(title) LIKE BINARY UCASE('".addslashes($let)."%') AND time <= NOW() AND status != '0'";
 	} else {
 		$order = "WHERE p.time <= NOW() AND p.status != '0'";
 		$onum  = "time <= NOW() AND status != '0'";
@@ -182,7 +182,7 @@ function liste(): void {
 			'time_label'    => _DATE,
 		];
 	}
-	if ((int)$num > 1 && !$rows) setError(404);
+	if (!$rows) setError(404);
 	$cont .= $tpl->getHtmlPart('content-list', [
 		'rows'        => $rows,
 		'before_html' => ($conf['shop']['letter'] && $rows) ? letter($conf['name']) : '',
@@ -205,7 +205,6 @@ function liste(): void {
 			'where'     => $onum,
 			'url_extra' => $url_extra,
 		]) : '',
-		'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
 	]);
 	echo $cont;
 	setFoot();
