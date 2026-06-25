@@ -9,7 +9,10 @@
 <style>
 :root {
   --sl-icon-size-sm: var(--sl-size-18);
+  --sl-icon-size-md: var(--sl-size-24);
   --sl-size-18: 18px;
+  --sl-size-24: 24px;
+  --sl-shadow-soft: 0 1px 2px rgba(42, 48, 60, 0.12);
   --sl-color-warning: #f47a20;
   --sl-color-border-subtle: #ebebee;
   --sl-color-tone-neutral: #6b7280;
@@ -69,20 +72,25 @@ a { text-decoration: none; color: var(--sl-color-brand-link); outline: none; }
 .sl-msg-line { height: 1px; margin: 0 0 22px; background: var(--sl-line-gradient); }
 .sl-msg-title { margin: 0 0 14px; font-size: 20px; color: var(--sl-color-text-heading); }
 .sl-msg-body { margin-bottom: 22px; }
-.sl-msg-body .sl-warn { display: block; margin: 0; padding: 0; border: 0; background: none; text-align: justify; text-align-last: center; font-size: 16px; line-height: 1.45; color: var(--sl-color-text); }
+.sl-alert { display: flex; align-items: flex-start; gap: var(--sl-space-lg); margin: 0; padding: 13px 16px; text-align: left; background: var(--sl-alert-tint); border-left: 3px solid var(--sl-alert-c); border-radius: var(--sl-radius-control); box-shadow: var(--sl-shadow-soft); }
+.sl-alert-warn { --sl-alert-c: var(--sl-color-warning); --sl-alert-tint: rgba(244, 122, 32, 0.09); }
+.sl-alert .bi { flex: 0 0 auto; width: var(--sl-icon-size-md); height: var(--sl-icon-size-md); margin-top: 1px; color: var(--sl-alert-c); animation: sl-alert-shake 1.9s ease-in-out infinite; }
+.sl-alert-body { flex: 1 1 auto; min-width: 0; }
+.sl-alert-text { margin: 0; line-height: 1.55; text-align: justify; color: var(--sl-color-text); }
+@keyframes sl-alert-shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-2px); } 40% { transform: translateX(2px); } 60% { transform: translateX(-2px); } 80% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) { .sl-alert .bi { animation: none; } }
 .sl-msg-search { float: none; width: auto; max-width: 440px; margin: 0 auto 12px; }
 .sl-msg-search .sl-home-link { flex: 0 0 var(--sl-nav-control-size); height: var(--sl-nav-control-size); border-radius: 50%; color: var(--sl-login-link-color); }
 .sl-msg-search .sl-home-link:hover, .sl-msg-search .sl-home-link:focus-visible { color: var(--sl-color-on-dark); background: var(--sl-color-tone-neutral); }
 .sl-msg-foot { padding-top: 12px; border-top: 1px solid var(--sl-color-border-subtle); font-size: 12px; color: var(--sl-color-text-muted); max-width: 440px; }
 svg.bi { fill: currentColor; flex: none; }
-.sl-msg-body .sl-warn svg.bi { display: block; width: 52px; height: 52px; margin: 0 auto 12px; color: var(--sl-color-warning); }
 .sl-circle-action svg.bi { position: relative; z-index: 1; width: var(--sl-icon-size-sm); height: var(--sl-icon-size-sm); }
 </style>
 </head>
 <body>
 <div class="sl-msg">
   <div class="sl-msg-card">
-    <a class="sl-msg-brand" href="/" title="SLAED CMS"><svg role="img" aria-label="SLAED CMS" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="93.9814mm" height="28.723mm" version="1.1" style="display:block;width:100%;max-width:240px;height:auto;shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
+    <a class="sl-msg-brand" href="https://slaed.net" title="SLAED CMS"><svg role="img" aria-label="SLAED CMS" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="93.9814mm" height="28.723mm" version="1.1" style="display:block;width:100%;max-width:240px;height:auto;shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
 viewBox="0 0 8832.5 2699.43"
  xmlns:xlink="http://www.w3.org/1999/xlink"
  xmlns:xodm="http://www.corel.com/coreldraw/odm/2003">
@@ -180,10 +188,10 @@ viewBox="0 0 8832.5 2699.43"
     <div class="sl-msg-line"></div>
     <h1 class="sl-msg-title">Service temporarily unavailable</h1>
     <div class="sl-msg-body">
-      <div class="sl-warn"><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/></svg> The server is undergoing maintenance or is temporarily overloaded. Please try again in a few minutes.</div>
+      <div class="sl-alert sl-alert-warn"><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/></svg><div class="sl-alert-body"><p class="sl-alert-text">The server is undergoing maintenance or is temporarily overloaded. Please try again in a few minutes.</p></div></div>
     </div>
-    <form class="sl-search-form sl-msg-search" action="/index.php?name=search" method="post" role="search">
-      <a class="sl-home-link sl-circle-action" href="/" title="Home" aria-label="Home"><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5"/></svg></a>
+    <form class="sl-search-form sl-msg-search" action="https://slaed.net/index.php?name=search" method="post" role="search">
+      <a class="sl-home-link sl-circle-action" href="https://slaed.net" title="Home" aria-label="Home"><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 14.5v-3.505c0-.245.25-.495.5-.495h2c.25 0 .5.25.5.5v3.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5"/></svg></a>
       <input type="hidden" name="mod" value="">
       <input type="text" name="word" maxlength="100" placeholder="Search" class="sl-field" required>
       <button type="submit" class="sl-circle-action" aria-label="Search" title="Search"><svg class="bi" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/></svg></button>
