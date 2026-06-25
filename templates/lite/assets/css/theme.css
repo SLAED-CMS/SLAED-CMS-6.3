@@ -1665,6 +1665,8 @@ ol.sl-sublist-two li:hover:before {
   text-align: justify;
 }
 .sl-img {
+  max-width: 100%;
+  height: auto;
   margin: 0 5px 0 0;
   border-radius: 5px;
 }
@@ -1685,6 +1687,55 @@ ol.sl-sublist-two li:hover:before {
 }
 .sl-img-right {
   float: right;
+}
+/* Gallery: responsive thumbnail grid for content download lists */
+.sl-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sl-grid-gap);
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.sl-gallery > li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sl-space-sm);
+  margin: 0;
+  padding: var(--sl-space-lg);
+  list-style: none;
+  border: 1px solid var(--sl-color-border-subtle);
+  border-radius: var(--sl-radius-control);
+  background: var(--sl-color-surface);
+}
+.sl-gallery-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--sl-radius-control);
+  border: 1px solid var(--sl-color-border-subtle);
+  background: var(--sl-color-bg);
+}
+.sl-gallery-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.sl-gallery > li > b {
+  color: var(--sl-color-text-heading);
+}
+.sl-gallery > li > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--sl-color-text-muted);
+}
+.sl-gallery-dl {
+  align-self: flex-start;
+  margin-top: auto;
 }
 .sl-home {
   min-height: 100%;
