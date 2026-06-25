@@ -178,7 +178,6 @@ define('_DTHUMB','Dodatkowe katalog');
 define('_EDFILEA','Całkowita liczba plików dla admina');
 define('_EDFILEU','Całkowita liczba plików dla użytkownika');
 define('_EDITBLOCK','Edytuj blok');
-define('_EDITORADMIN','Edytor administratora');
 define('_EDITORUSER','Edytor użytkownika');
 define('_EDITVOTE','Edycja ankieta');
 define('_EFUNC','Plik ingerencji w jądro systemu');

@@ -178,7 +178,6 @@ define('_DTHUMB',"Plus d'annuaire");
 define('_EDFILEA',"Le nombre total de fichiers pour l'administrateur");
 define('_EDFILEU',"Le nombre total de fichiers pour l'utilisateur");
 define('_EDITBLOCK','Editer le bloc');
-define('_EDITORADMIN','Éditeur administrateur');
 define('_EDITORUSER','Éditeur utilisateur');
 define('_EDITVOTE','Modifier sondage');
 define('_EFUNC','Le fichier de mise en œuvre dans le noyau du système');
