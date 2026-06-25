@@ -24,7 +24,7 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'default';
+            $GLOBALS['__test_theme'] = 'admin';
             $GLOBALS['__test_is_user'] = false;
             $GLOBALS['__test_user_info'] = [];
             $GLOBALS['__test_captcha'] = '';
@@ -33,7 +33,7 @@ namespace Tests\Unit {
             $GLOBALS['__test_filter_replace'] = [];
             $GLOBALS['__test_fields_out'] = [];
             $GLOBALS['conf'] = [
-                'theme' => 'default',
+                'theme' => 'admin',
                 'sitename' => 'SLAED',
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
@@ -47,7 +47,7 @@ namespace Tests\Unit {
         #[Test]
         public function previewHappyPathUsesNewAdminPartial(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('admin');
             $html = $tpl->getHtmlPart('preview', [
                 'title' => 'Preview',
                 'title_html' => '<b>Title</b>',
@@ -90,7 +90,7 @@ namespace Tests\Unit {
                 'body_b' => 'Body two',
                 'body_c' => 'Body three',
             ];
-            $html = (new \Template('default'))->getHtmlPart('preview', $view);
+            $html = (new \Template('admin'))->getHtmlPart('preview', $view);
 
             $this->assertStringContainsString('Preview', $html);
             $this->assertStringContainsString('<b>Mapped</b>', $html);
@@ -102,7 +102,7 @@ namespace Tests\Unit {
         #[Test]
         public function previewPartialHandlesHtmlContentCorrectly(): void
         {
-            $html = (new \Template('default'))->getHtmlPart('preview', [
+            $html = (new \Template('admin'))->getHtmlPart('preview', [
                 'title' => 'Preview',
                 'title_html' => '<b>Title</b>',
                 'body_a' => '<em>Html text</em>',

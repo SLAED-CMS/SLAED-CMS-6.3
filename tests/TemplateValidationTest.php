@@ -214,13 +214,19 @@ class TemplateValidationTest extends TestCase
 
     public function testSharedFrontendFragmentsStayInSyncAcrossThemes(): void
     {
-        $themes = ['default', 'lite', 'simple'];
         $allowed = [];
         $errors = [];
         $maps = [];
 
-        foreach ($themes as $theme) {
+        // Discover frontend themes dynamically: any template theme with a fragments dir, except admin
+        foreach (scandir(self::$templatesPath) ?: [] as $theme) {
+            if ($theme === '.' || $theme === '..' || $theme === 'admin') {
+                continue;
+            }
             $path = self::$templatesPath.'/'.$theme.'/fragments';
+            if (!is_dir($path)) {
+                continue;
+            }
             $maps[$theme] = [];
             foreach (scandir($path) ?: [] as $file) {
                 if ($file === '.' || $file === '..') {
@@ -233,20 +239,19 @@ class TemplateValidationTest extends TestCase
             }
         }
 
-        $common = array_values(array_intersect(
-            array_keys($maps['default']),
-            array_keys($maps['lite']),
-            array_keys($maps['simple'])
-        ));
+        if (count($maps) < 2) {
+            $this->markTestSkipped('Only one frontend theme present — cross-theme fragment sync is not applicable');
+        }
+
+        $common = array_values(array_intersect(...array_map('array_keys', $maps)));
         sort($common);
 
         $different = [];
         foreach ($common as $file) {
-            $hashes = [
-                'default' => $maps['default'][$file],
-                'lite' => $maps['lite'][$file],
-                'simple' => $maps['simple'][$file],
-            ];
+            $hashes = [];
+            foreach ($maps as $theme => $map) {
+                $hashes[$theme] = $map[$file];
+            }
             if (count(array_unique($hashes)) > 1) {
                 $different[] = $file;
                 if (!in_array($file, $allowed, true)) {
@@ -378,8 +383,19 @@ class TemplateValidationTest extends TestCase
                 continue;
             }
             $content = file_get_contents($file);
-            if (preg_match('/<style\b|<\/style>|style\s*=/i', $content)) {
-                $errors[] = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file));
+            $relative = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file));
+            // Block-level <style> tags are never allowed inside templates
+            if (preg_match('/<style\b|<\/style>/i', $content)) {
+                $errors[] = $relative.' (<style> block)';
+            }
+            // Inline style="" is allowed only when it injects a dynamic template value ({{ ... }}),
+            // e.g. progress widths or avatar URLs; static inline styling must live in CSS
+            if (preg_match_all('/style\s*=\s*(["\'])(.*?)\1/is', $content, $matches)) {
+                foreach ($matches[2] as $value) {
+                    if (!str_contains($value, '{{')) {
+                        $errors[] = $relative.' (static inline style: '.trim($value).')';
+                    }
+                }
             }
         }
 
@@ -387,7 +403,7 @@ class TemplateValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Inline styles должны быть вынесены в CSS:\n".implode("\n", $errors)
+            "Статичные inline styles должны быть вынесены в CSS (динамические {{ }} допустимы):\n".implode("\n", $errors)
         );
     }
 

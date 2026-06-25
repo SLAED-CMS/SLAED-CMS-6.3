@@ -13,9 +13,9 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'default';
+            $GLOBALS['__test_theme'] = 'lite';
             $GLOBALS['conf'] = [
-                'theme' => 'default',
+                'theme' => 'lite',
                 'sitename' => 'SLAED',
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
@@ -29,7 +29,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersLoginNavPartial(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $html = $tpl->getHtmlPart('login-nav', [
                 'login' => 'Login',
                 'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'placeholder_text' => 'Nickname'],
@@ -50,7 +50,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersMessageBlockPartial(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $html = $tpl->getHtmlPart('message-block', [
                 'title' => 'Hello',
                 'intro_text' => 'Warn',
@@ -64,7 +64,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersAlertFragment(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $html = $tpl->getHtmlFrag('alert', [
                 'text' => 'Hello',
                 'is_warn' => true,
@@ -72,13 +72,19 @@ namespace Tests\Unit {
 
             $this->assertNotSame('', $html);
             $this->assertStringContainsString('Hello', $html);
-            $this->assertStringContainsString('sl-warn', $html);
+            $this->assertStringContainsString('sl-alert sl-alert-warn', $html);
+
+            $info = $tpl->getHtmlFrag('alert', ['text' => 'Info', 'type' => 'info']);
+            $this->assertStringContainsString('sl-alert sl-alert-info', $info);
+
+            $error = $tpl->getHtmlFrag('alert', ['text' => 'Boom', 'type' => 'error']);
+            $this->assertStringContainsString('sl-alert sl-alert-error', $error);
         }
 
         #[Test]
         public function viewRendersErrorPageWithBareLayout(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $html = $tpl->getHtmlPage('error', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
@@ -103,7 +109,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewDirectCallsRenderSmokeOutputs(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $part = $tpl->getHtmlPart('login-nav', [
                 'login' => 'Login',
                 'name_field' => ['itype' => 'text', 'name_attr' => 'user_name'],
@@ -138,7 +144,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersModulePageWithAppLayout(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $html = $tpl->getHtmlPage('module', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
@@ -166,7 +172,7 @@ namespace Tests\Unit {
         #[Test]
         public function viewRendersHomePageWithHomeLayout(): void
         {
-            $tpl = new \Template('default');
+            $tpl = new \Template('lite');
             $html = $tpl->getHtmlPage('home', [
                 'lang' => 'en',
                 'sitename' => 'SLAED',
@@ -188,33 +194,6 @@ namespace Tests\Unit {
             $this->assertStringContainsString('home-down', $html);
             $this->assertStringContainsString('home-foot', $html);
             $this->assertStringContainsString('home.js', $html);
-        }
-
-        #[Test]
-        public function simpleThemeRendersModulePage(): void
-        {
-            $tpl = new \Template('simple');
-            $html = $tpl->getHtmlPage('module', [
-                'lang' => 'en',
-                'sitename' => 'Simple',
-                'meta' => '<meta charset="utf-8">',
-                'links' => '<link rel="stylesheet" href="simple.css">',
-                'scripts' => '<script src="simple.js"></script>',
-                'head_html' => '<div class="simple-head">Head</div>',
-                'content' => '<section class="simple-body">Body</section>',
-                'blocks_left' => '<div class="simple-left">Left</div>',
-                'blocks_right' => '<div class="simple-right">Right</div>',
-                'blocks_down' => '<div class="simple-down">Down</div>',
-                'foot_html' => '<div class="simple-foot">Foot</div>',
-            ], 'app');
-
-            $this->assertNotSame('', $html);
-            $this->assertStringContainsString('simple-head', $html);
-            $this->assertStringContainsString('simple-body', $html);
-            $this->assertStringContainsString('simple-left', $html);
-            $this->assertStringContainsString('simple-right', $html);
-            $this->assertStringContainsString('simple-down', $html);
-            $this->assertStringContainsString('simple-foot', $html);
         }
 
         #[Test]

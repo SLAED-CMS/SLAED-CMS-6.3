@@ -15,9 +15,9 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'default';
+            $GLOBALS['__test_theme'] = 'admin';
             $GLOBALS['conf'] = [
-                'theme' => 'default',
+                'theme' => 'admin',
                 'sitename' => 'SLAED',
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
@@ -28,10 +28,10 @@ namespace Tests\Unit {
         #[Test]
         public function happyPathUsesNewPartial(): void
         {
-            $html = (new \Template('default'))->getHtmlPart('searchbox', ['searchbox' => '<form class="search-form">Find</form>']);
+            $html = (new \Template('admin'))->getHtmlPart('searchbox', ['searchbox' => '<form class="search-form">Find</form>']);
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('admin-searchbox', $html);
+            $this->assertStringContainsString('sl-searchbox', $html);
             $this->assertStringContainsString('search-form', $html);
         }
 
@@ -46,7 +46,7 @@ namespace Tests\Unit {
         #[Test]
         public function mappedUserVisibleValuesArePreserved(): void
         {
-            $html = (new \Template('default'))->getHtmlPart('searchbox', ['searchbox' => '<form><input value="search"></form>']);
+            $html = (new \Template('admin'))->getHtmlPart('searchbox', ['searchbox' => '<form><input value="search"></form>']);
 
             $this->assertStringContainsString('<form><input value="search"></form>', $html);
         }
@@ -54,7 +54,7 @@ namespace Tests\Unit {
         #[Test]
         public function conditionalRenderingWorksForEmptyOptionalValue(): void
         {
-            $html = (new \Template('default'))->getHtmlPart('searchbox', ['searchbox' => '']);
+            $html = (new \Template('admin'))->getHtmlPart('searchbox', ['searchbox' => '']);
 
             $this->assertSame('', trim($html));
         }

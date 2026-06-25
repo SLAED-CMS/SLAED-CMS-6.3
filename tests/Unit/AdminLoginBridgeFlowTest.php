@@ -50,7 +50,7 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'default';
+            $GLOBALS['__test_theme'] = 'admin';
             $GLOBALS['__test_is_user'] = false;
             $GLOBALS['__test_user_info'] = [];
             $GLOBALS['__test_captcha'] = '';
@@ -63,7 +63,7 @@ namespace Tests\Unit {
             ];
             $GLOBALS['__test_host'] = 'admin.example.test';
             $GLOBALS['conf'] = [
-                'theme' => 'default',
+                'theme' => 'admin',
                 'sitename' => 'SLAED',
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
@@ -75,19 +75,19 @@ namespace Tests\Unit {
         }
 
         #[Test]
-        public function adminLoginFlowUsesNewLoginPartialHappyPath(): void
+        public function adminLoginFlowUsesNewAuthFormPartialHappyPath(): void
         {
-            $GLOBALS['__test_captcha'] = '<div class="admin-captcha">captcha</div>';
-
-            $html = (new \Template('admin'))->getHtmlPart('login', [
+            $tpl = new \Template('admin');
+            $captcha = '<div class="admin-captcha">captcha</div>';
+            $html = $tpl->getHtmlPart('auth-form', [
                 'route' => 'admin',
-                'nickname' => 'Nickname',
-                'password' => 'Password',
-                'captcha' => $GLOBALS['__test_captcha'],
-                'name_field' => ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser'],
-                'pwd_field' => ['itype' => 'password', 'name_attr' => 'apwd'],
-                'hidden' => ['name_attr' => 'op', 'value_attr' => 'login'],
-                'submit' => ['button_type' => 'submit', 'label' => 'Login'],
+                'rows' => [
+                    ['has_colon' => true, 'label' => 'Nickname', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'placeholder_text' => 'Nickname', 'is_required' => true])],
+                    ['has_colon' => true, 'label' => 'Password', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'pwd', 'placeholder_text' => 'Password', 'is_required' => true])],
+                    ['field_html' => $captcha],
+                ],
+                'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
+                'submit' => ['button_type' => 'submit', 'submit_label' => 'Login'],
             ]);
 
             $this->assertNotSame('', $html);
@@ -96,28 +96,23 @@ namespace Tests\Unit {
             $this->assertStringContainsString('Password', $html);
             $this->assertStringContainsString('Login', $html);
             $this->assertStringContainsString('admin-captcha', $html);
+            $this->assertStringContainsString('name="op"', $html);
         }
 
         #[Test]
-        public function adminRegistrationFlowUsesNewRegistrationPartialHappyPath(): void
+        public function adminRegistrationFlowUsesNewAuthFormPartialHappyPath(): void
         {
-            $html = (new \Template('admin'))->getHtmlPart('registration', [
+            $tpl = new \Template('admin');
+            $html = $tpl->getHtmlPart('auth-form', [
                 'route' => 'admin',
-                'nickname' => 'Nickname',
-                'homepage' => 'Homepage',
-                'email' => 'Email',
-                'password' => 'Password',
-                'retype' => 'Retype password',
-                'createuserdata' => 'Create user data',
-                'aname_field' => ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser'],
-                'aurl_field' => ['itype' => 'url', 'name_attr' => 'aurl', 'value_attr' => 'http://admin.example.test'],
-                'aemail_field' => ['itype' => 'email', 'name_attr' => 'aemail', 'value_attr' => 'admin@example.test'],
-                'apwd_field' => ['itype' => 'password', 'name_attr' => 'apwd'],
-                'apwd2_field' => ['itype' => 'password', 'name_attr' => 'apwd2'],
-                'yes_field' => ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => 'Yes', 'is_checked' => true],
-                'no_field' => ['name_attr' => 'auser_new', 'value_attr' => '0', 'label_text' => 'No'],
+                'rows' => [
+                    ['has_colon' => true, 'label' => 'Nickname', 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'aname', 'value_attr' => 'AdminUser'])],
+                    ['has_colon' => true, 'label' => 'Homepage', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aurl', 'value_attr' => 'http://admin.example.test'])],
+                    ['has_colon' => true, 'label' => 'Email', 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'aemail', 'value_attr' => 'admin@example.test'])],
+                    ['label' => 'Create user data', 'field_html' => $tpl->getHtmlFrag('radio', ['name_attr' => 'auser_new', 'value_attr' => '1', 'label_text' => 'Yes', 'is_checked' => true])],
+                ],
                 'hidden' => ['name_attr' => 'op', 'value_attr' => 'add_admin'],
-                'submit' => ['button_type' => 'submit', 'label' => 'Send'],
+                'submit' => ['button_type' => 'submit', 'submit_label' => 'Send'],
             ]);
 
             $this->assertNotSame('', $html);
@@ -129,38 +124,16 @@ namespace Tests\Unit {
         }
 
         #[Test]
-        public function adminLoginFlowReturnsEmptyStringWhenNewThemeIsMissing(): void
+        public function adminAuthFormReturnsEmptyStringWhenThemeIsMissing(): void
         {
-            $GLOBALS['__test_captcha'] = '<div class="legacy-captcha">captcha</div>';
-
-            $html = (new \Template('missing-theme'))->getHtmlPart('login', [
+            $html = (new \Template('missing-theme'))->getHtmlPart('auth-form', [
                 'route' => 'admin',
-                'nickname' => 'Nickname',
-                'password' => 'Password',
-                'captcha' => $GLOBALS['__test_captcha'],
-                'login' => 'Login',
-            ]);
-
-            $this->assertSame('', $html);
-        }
-
-        #[Test]
-        public function adminRegistrationFlowReturnsEmptyStringWhenNewThemeIsMissing(): void
-        {
-            $html = (new \Template('missing-theme'))->getHtmlPart('registration', [
-                'route' => 'admin',
-                'nickname' => 'Nickname',
-                'aname' => 'AdminUser',
-                'homepage' => 'Homepage',
-                'host' => 'admin.example.test',
-                'email' => 'Email',
-                'aemail' => 'admin@example.test',
-                'password' => 'Password',
-                'retype' => 'Retype password',
-                'createuserdata' => 'Create user data',
-                'yes' => 'Yes',
-                'no' => 'No',
-                'send' => 'Send',
+                'rows' => [
+                    ['has_colon' => true, 'label' => 'Nickname', 'field_html' => '<input name="name">'],
+                    ['has_colon' => true, 'label' => 'Password', 'field_html' => '<input name="pwd">'],
+                ],
+                'hidden' => ['name_attr' => 'op', 'value_attr' => 'check_admin'],
+                'submit' => ['button_type' => 'submit', 'submit_label' => 'Login'],
             ]);
 
             $this->assertSame('', $html);

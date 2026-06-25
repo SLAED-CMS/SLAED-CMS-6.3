@@ -21,6 +21,9 @@ namespace {
     if (!function_exists('is_user')) {
         function is_user(): bool { return false; }
     }
+    if (!function_exists('getDecodedText')) {
+        function getDecodedText(string $text): string { return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'); }
+    }
 }
 
 namespace Tests\Unit {
@@ -158,6 +161,36 @@ namespace Tests\Unit {
                 $this->assertStringContainsString('class="sl-img sl-img-right"', $existing);
                 $this->assertStringContainsString('onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"', $existing);
                 $this->assertStringNotContainsString('style=', $existing);
+            } finally {
+                if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
+                else unset($GLOBALS['tpl']);
+            }
+        }
+
+        #[Test]
+        public function checkGfmCalloutsRenderAsAlerts(): void
+        {
+            if (!class_exists('Template', false)) {
+                require_once BASE_DIR.'/core/classes/template.php';
+            }
+            $hadtpl = array_key_exists('tpl', $GLOBALS);
+            $oldtpl = $GLOBALS['tpl'] ?? null;
+            $GLOBALS['tpl'] = new \Template('lite');
+
+            try {
+                $parser = new \Parser();
+                $map = [
+                    'NOTE' => 'sl-alert sl-alert-info',
+                    'TIP' => 'sl-alert sl-alert-success',
+                    'IMPORTANT' => 'sl-alert sl-alert-accent',
+                    'WARNING' => 'sl-alert sl-alert-warn',
+                    'CAUTION' => 'sl-alert sl-alert-error',
+                ];
+                foreach ($map as $kind => $expected) {
+                    $html = $parser->filterContent("> [!$kind]\n> body text", true, '');
+                    $this->assertStringContainsString($expected, $html, "callout $kind");
+                    $this->assertStringContainsString('sl-alert-body', $html, "callout $kind body");
+                }
             } finally {
                 if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
                 else unset($GLOBALS['tpl']);

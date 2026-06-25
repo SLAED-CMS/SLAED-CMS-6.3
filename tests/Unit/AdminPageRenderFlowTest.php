@@ -17,14 +17,14 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'default';
+            $GLOBALS['__test_theme'] = 'admin';
             $GLOBALS['__test_is_user'] = false;
             $GLOBALS['__test_user_info'] = [];
             $GLOBALS['__test_captcha'] = '';
             $GLOBALS['__test_token'] = [];
             $GLOBALS['__test_templates'] = [];
             $GLOBALS['conf'] = [
-                'theme' => 'default',
+                'theme' => 'admin',
                 'sitename' => 'SLAED',
                 'homeurl' => 'https://slaed.loc',
                 'slogan' => 'Fast CMS',
@@ -38,9 +38,9 @@ namespace Tests\Unit {
         #[Test]
         public function adminPageUsesAdminLayoutContract(): void
         {
-            $html = (new \Template('default'))->getHtmlPage('admin', [
+            $html = (new \Template('admin'))->getHtmlPage('admin', [
                 'lang' => 'en',
-                'theme' => 'default',
+                'theme' => 'admin',
                 'sitename' => 'SLAED',
                 'meta' => '<meta charset="utf-8">',
                 'links' => '<link rel="stylesheet" href="theme.css">',
@@ -66,9 +66,9 @@ namespace Tests\Unit {
         #[Test]
         public function messagePageUsesBareLayoutContract(): void
         {
-            $html = (new \Template('default'))->getHtmlPage('message', [
+            $html = (new \Template('admin'))->getHtmlPage('message', [
                 'lang' => 'en',
-                'theme' => 'default',
+                'theme' => 'admin',
                 'sitename' => 'SLAED',
                 'meta' => '<meta charset="utf-8">',
                 'links' => '<link rel="stylesheet" href="theme.css">',
@@ -76,7 +76,7 @@ namespace Tests\Unit {
                 'license' => 'License',
                 'login' => 'Message',
                 'title' => '<h2>Denied</h2>',
-                'content' => '<div class="sl-warn">Access denied</div>',
+                'content' => '<div class="sl-alert sl-alert-warn">Access denied</div>',
             ], 'bare');
 
             $this->assertNotSame('', $html);
