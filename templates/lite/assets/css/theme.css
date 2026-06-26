@@ -3029,7 +3029,7 @@ ol.sl-sublist-two li:hover:before {
   border-radius: 6px;
   background: var(--sl-color-bg);
 }
-.sl-tabs > ul {
+.sl-tabs-nav {
   display: flex;
   flex-wrap: wrap;
   margin: 0;
@@ -3037,14 +3037,14 @@ ol.sl-sublist-two li:hover:before {
   list-style: none;
   border-bottom: 1px solid var(--sl-color-border-strong);
 }
-.sl-tabs > ul > li {
+.sl-tabs-item {
   display: block;
   margin: 0 2px -1px 0;
   padding: 0;
   list-style: none;
   flex: 0 0 auto;
 }
-.sl-tabs > ul > li > a {
+.sl-tabs-link {
   display: block;
   padding: var(--sl-space-sm);
   border: 1px solid var(--sl-color-border-strong);
@@ -3058,33 +3058,43 @@ ol.sl-sublist-two li:hover:before {
   white-space: nowrap;
   text-decoration: none;
   text-shadow: none;
+  cursor: pointer;
   transition:
     background-color 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease;
 }
-.sl-tabs > ul > li > a:hover {
+.sl-tabs-link:hover {
   color: var(--sl-color-brand-strong);
   background: var(--sl-color-bg);
   border-color: var(--sl-color-border-muted);
   text-decoration: none;
 }
-  .sl-tabs > ul > li.sl-tabs-active > a,
-  .sl-tabs > ul > li > a.selected,
-  .sl-tabs > ul > li > a[aria-selected="true"] {
+.sl-tabs-link.sl-is-active,
+.sl-tabs-link.selected,
+.sl-tabs-link[aria-selected="true"] {
   background: var(--sl-color-bg);
   border-color: var(--sl-color-border-strong);
   border-bottom: 1px solid var(--sl-color-bg);
   color: var(--sl-color-brand-link);
   text-shadow: none;
-  padding-bottom: var(--sl-space-sm);
 }
-.sl-tabs > div,
-.sl-tabs > .sl-tabs-panel {
+.sl-tabs-content {
   margin: 0;
   border-top: 0;
   padding: 14px 16px 10px;
   background: var(--sl-color-bg);
+}
+.sl-tab-panel {
+  display: none;
+}
+.sl-tabs-content > .sl-tab-panel:first-child {
+  display: block;
+}
+@media print {
+  .sl-tab-panel {
+    display: block !important;
+  }
 }
 
 /* BX Slider wrapper */

@@ -2579,6 +2579,22 @@ input.sl-but-blue[value="ОК"] {
     display: block !important;
   }
 }
+.sl-form-row {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.sl-form-label {
+  width: 160px;
+  flex-shrink: 0;
+  padding-top: var(--sl-space-sm);
+}
+.sl-form-label::after {
+  content: ":";
+}
+.sl-form-value {
+  padding-top: var(--sl-space-sm);
+}
 
 .sl-div-form .ck.ck-editor__main > .ck-editor__editable,
 .sl-div-form .ck.ck-editor__main > .ck-editor__editable_inline {
