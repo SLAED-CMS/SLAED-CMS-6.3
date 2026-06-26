@@ -2690,17 +2690,22 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
         $tabs,
         $conts
     ));
-    $tlinks = implode('', array_map(static function($p) use ($tpl, $pref, $id): string {
-        $label = preg_match('/<[^>]+>/', $p['tab']) ? $p['tab'] : htmlspecialchars($p['tab'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $link = $tpl->getHtmlFrag('link', [
-            'href' => '#'.$pref.'_'.$id.'_'.$p['id'],
+    if (!$pairs) return '';
+    static $seq = 0;
+    $gid = 'sl-tabs-'.preg_replace('/[^a-z0-9_-]/i', '', $pref.$id).'-'.(++$seq);
+    $tlinks = implode('', array_map(static function($p) use ($tpl, $gid): string {
+        $args = [
+            'href' => '#',
+            'is_active' => $p['id'] === 0,
+            'rel' => $gid.'-'.$p['id'],
             'title' => strip_tags((string)$p['tab']),
-            'label_html' => $label,
-        ]);
-        return $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
+        ];
+        $key = preg_match('/<[^>]+>/', (string)$p['tab']) ? 'label_html' : 'label';
+        $args[$key] = (string)$p['tab'];
+        return $tpl->getHtmlFrag('tabs-link', $args);
     }, $pairs));
-    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('block-content', ['id' => $pref.'_'.$id.'_'.$p['id'], 'content' => $p['cont']]), $pairs));
-    return $tpl->getHtmlFrag('navi-tabs-wrap', ['tabs_html' => $tlinks, 'content_html' => $cdivs, 'id' => $id]);
+    $cdivs = implode('', array_map(static fn($p): string => $tpl->getHtmlFrag('tabs-panel', ['panel_id' => $gid.'-'.$p['id'], 'content_html' => $p['cont']]), $pairs));
+    return $tpl->getHtmlPart('tabs', ['id' => $gid, 'is_runtime' => true, 'tabs_html' => $tlinks, 'content_html' => $cdivs]);
 }
 
 # Transliteration
