@@ -1,0 +1,1387 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED · UI Kit</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<!-- Real theme so live components (tables, tip/float, tabs, sort, alerts) are genuine -->
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/*
+  SLAED UI Kit — ONE button style (faithful sl-but-neutral reproduction)
+  plus a broad component set. The page links the real theme.css + slaed.js
+  + tablesort.min.js, so live mechanisms run for real: tooltips/dropdowns
+  (.sl-float/.sl-tip), sortable tables (Tablesort), tabs (data-sl-tabs-init),
+  accordion (data-sl-toggle), alerts (sl-alert). The button below is the
+  approved faithful recipe (var-driven: gap, padding, radius) and overrides
+  theme's base. New demo pieces: corner-form switch, input-group, vertical
+  group, chips, badges, breadcrumbs, pager, progress, avatars, spinner, modal.
+*/
+
+/* corner-form switch: one variable, every control inside follows */
+.sl-shape-pill   { --sl-ctl-r: 999px; }
+.sl-shape-round  { --sl-ctl-r: 9px; }
+.sl-shape-sharp  { --sl-ctl-r: 4px; }
+.sl-shape-square { --sl-ctl-r: 0px; }
+
+/* ======================================================================
+   THE BUTTON — faithful sl-but-neutral (overrides theme base; var-driven)
+   ====================================================================== */
+.sl-but-neutral {
+  --sl-but-r: 999px;
+  --sl-but-h: 30px;
+  --sl-but-px: 14px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  gap: 7px;
+  white-space: nowrap;
+  height: var(--sl-but-h);
+  padding: 0 var(--sl-but-px);
+  margin: 0;
+  line-height: 1;
+  border: 0;
+  border-radius: var(--sl-ctl-r, var(--sl-but-r));
+  cursor: pointer;
+  font-family: Arial, Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  box-sizing: border-box;
+  text-decoration: none;
+  color: var(--sl-but-neutral-text);
+  background: linear-gradient(to top, var(--sl-but-neutral-start) 0%, var(--sl-but-neutral-end) 100%);
+  border-color: var(--sl-but-neutral-start);
+  --sl-but-border-light: var(--sl-but-neutral-border-inner);
+  --sl-but-border-dark: var(--sl-but-neutral-border-outer);
+  text-shadow: var(--sl-but-text-shadow-neutral);
+  box-shadow: var(--sl-but-border-shadow);
+  transition: opacity 0.2s ease, transform 0.14s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  background-clip: padding-box;
+}
+.sl-but-neutral > .bi { font-size: 1.04em; line-height: 0; }
+.sl-but-neutral:hover { color: var(--sl-color-brand-link); border-color: var(--sl-but-link-hover-border); opacity: 0.8; }
+.sl-but-neutral:focus-visible { outline: none; box-shadow: var(--sl-but-border-shadow), 0 0 0 3px rgba(48, 162, 246, 0.3); }
+.sl-but-neutral[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* per-button corner form (standalone, no shape container) */
+.sl-but-pill { --sl-but-r: 999px; }
+.sl-but-round { --sl-but-r: 9px; }
+.sl-but-sharp { --sl-but-r: 4px; }
+.sl-but-square { --sl-but-r: 0px; }
+/* sizes & layout */
+.sl-but-sm { --sl-but-h: 26px; --sl-but-px: 11px; font-size: 13px; gap: 6px; }
+.sl-but-lg { --sl-but-h: 38px; --sl-but-px: 22px; font-size: 15px; gap: 9px; }
+.sl-but-block { display: flex; width: 100%; }
+.sl-but-icon { --sl-but-px: 0; width: var(--sl-but-h); gap: 0; }
+.sl-but-icon > .bi { font-size: 1.1em; }
+.sl-but-tall { height: auto; align-self: stretch; }
+.sl-but-neutral.sl-is-active { color: #fff; background: var(--sl-color-brand-link); text-shadow: none; }
+.sl-but-badge {
+  position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 700 10px/1 Arial, sans-serif; color: #fff; background: var(--sl-color-danger);
+  border: 2px solid var(--sl-color-bg); border-radius: 999px;
+}
+.sl-is-loading { color: transparent !important; pointer-events: none; }
+.sl-is-loading::after {
+  content: ""; position: absolute; width: 15px; height: 15px; margin: auto;
+  border: 2px solid var(--sl-but-neutral-text); border-right-color: transparent; border-radius: 50%;
+  animation: sl-spin 0.6s linear infinite;
+}
+@keyframes sl-spin { to { transform: rotate(360deg); } }
+
+/* groups & split — inner corners square, ends follow the form */
+.sl-but-group { display: inline-flex; vertical-align: middle; }
+.sl-but-group > .sl-but-neutral { border-radius: 0; margin: 0; }
+.sl-but-group > :first-child { border-top-left-radius: var(--sl-ctl-r, 9px); border-bottom-left-radius: var(--sl-ctl-r, 9px); }
+.sl-but-group > :last-child { border-top-right-radius: var(--sl-ctl-r, 9px); border-bottom-right-radius: var(--sl-ctl-r, 9px); }
+.sl-but-group > * + * { margin-left: -1px; }
+.sl-but-group > :hover { z-index: 2; }
+.sl-but-split { display: inline-flex; vertical-align: middle; }
+.sl-but-split > .sl-but-neutral { border-radius: 0; margin: 0; }
+.sl-but-split > :first-child { border-top-left-radius: var(--sl-ctl-r, 999px); border-bottom-left-radius: var(--sl-ctl-r, 999px); }
+.sl-but-split > :last-child { --sl-but-px: 0; width: var(--sl-but-h); margin-left: -1px; border-top-right-radius: var(--sl-ctl-r, 999px); border-bottom-right-radius: var(--sl-ctl-r, 999px); }
+.sl-but-fab {
+  --sl-but-h: 54px; --sl-but-px: 0; width: 54px; font-size: 21px; border-radius: 999px;
+  box-shadow: var(--sl-but-border-shadow), 0 8px 20px rgba(42, 48, 60, 0.24);
+}
+
+/* corner-form follows the container for button & field */
+.sl-shape-pill .sl-but-neutral, .sl-shape-round .sl-but-neutral, .sl-shape-sharp .sl-but-neutral, .sl-shape-square .sl-but-neutral { border-radius: var(--sl-ctl-r); }
+.sl-shape-pill .sl-field, .sl-shape-round .sl-field, .sl-shape-sharp .sl-field, .sl-shape-square .sl-field { border-radius: var(--sl-ctl-r); }
+
+/* ======================================================================
+   FIELD helpers (on top of real .sl-field)
+   ====================================================================== */
+.sl-field-sm { height: 26px; font-size: 13px; padding-left: 9px; padding-right: 9px; }
+.sl-field-lg { height: 38px; font-size: 15px; }
+.sl-field-block { display: block; width: 100%; }
+.sl-field-icon { position: relative; display: inline-flex; align-items: center; }
+.sl-field-icon > .bi { position: absolute; left: 11px; color: var(--sl-color-text-subtle); pointer-events: none; font-size: 15px; }
+.sl-field-icon > .sl-field { padding-left: 32px; }
+.sl-switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: 14px/1 Arial, sans-serif; }
+.sl-switch input { appearance: none; -webkit-appearance: none; width: 38px; height: 22px; margin: 0; border-radius: 999px; background: var(--sl-color-surface-soft); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08); cursor: pointer; transition: background-color 0.18s ease; }
+.sl-switch input::after { content: ""; position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); transition: transform 0.18s ease; }
+.sl-switch input:checked { background: var(--sl-color-brand-link); }
+.sl-switch input:checked::after { transform: translateX(16px); }
+
+/* input-group + vertical + bar */
+.sl-ig { display: inline-flex; align-items: stretch; vertical-align: middle; }
+.sl-ig > .sl-field, .sl-ig > .sl-but-neutral, .sl-ig > .sl-ig-text { border-radius: 0; margin: 0; }
+.sl-ig > :first-child { border-top-left-radius: var(--sl-ctl-r, var(--sl-radius-control)); border-bottom-left-radius: var(--sl-ctl-r, var(--sl-radius-control)); }
+.sl-ig > :last-child { border-top-right-radius: var(--sl-ctl-r, var(--sl-radius-control)); border-bottom-right-radius: var(--sl-ctl-r, var(--sl-radius-control)); }
+.sl-ig > * + * { margin-left: -1px; }
+.sl-ig > :hover, .sl-ig > :focus-within, .sl-ig > .sl-field:focus { z-index: 2; }
+.sl-ig .sl-field { flex: 1; min-width: 0; }
+.sl-ig-text { display: inline-flex; align-items: center; padding: 0 12px; white-space: nowrap; background: var(--sl-color-surface-alt); border: 1px solid var(--sl-field-border); color: var(--sl-color-text-muted); font: 14px/1 Arial, sans-serif; }
+.sl-ig-block { display: flex; width: 100%; }
+.sl-vg { display: inline-flex; align-items: stretch; gap: 8px; }
+.sl-vg-fields { display: flex; flex-direction: column; gap: 8px; }
+.sl-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sl-bar-spacer { flex: 1; }
+
+/* dropdown menu plumbing (theme styles .sl-menu .sl-float-panel) */
+.lab-card .sl-menu, .lab-card .sl-menu ul { list-style: none; margin: 0; padding: 0; }
+.lab-card .sl-menu > ul { display: inline-flex; gap: 12px; }
+.lab-card .sl-float { position: relative; }
+
+/* ======================================================================
+   CHIPS / TAGS
+   ====================================================================== */
+.sl-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px;
+  border-radius: 999px; background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading);
+  border: 1px solid var(--sl-color-border); font: 13px/1 Arial, sans-serif; white-space: nowrap; vertical-align: middle;
+}
+.sl-chip > .bi { font-size: 13px; opacity: 0.85; }
+.sl-chip-img { width: 20px; height: 20px; border-radius: 50%; margin-left: -7px; object-fit: cover; }
+.sl-chip-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.8; }
+.sl-chip-close { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin: 0 -5px 0 1px; padding: 0; border: 0; background: none; color: inherit; opacity: 0.6; cursor: pointer; border-radius: 50%; font-size: 10px; }
+.sl-chip-close:hover { opacity: 1; background: rgba(0, 0, 0, 0.1); }
+.sl-chip-sharp { border-radius: 5px; }
+.sl-chip-info { background: rgba(48, 162, 246, 0.12); color: #207fb6; border-color: transparent; }
+.sl-chip-success { background: rgba(92, 148, 37, 0.14); color: #4f8a1e; border-color: transparent; }
+.sl-chip-warn { background: rgba(244, 122, 32, 0.15); color: #c5560c; border-color: transparent; }
+.sl-chip-danger { background: rgba(169, 44, 44, 0.11); color: #a92c2c; border-color: transparent; }
+.sl-chip-accent { background: rgba(140, 44, 169, 0.11); color: #8c2ca9; border-color: transparent; }
+.sl-chip-choice { cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+.sl-chip-choice:hover { border-color: var(--sl-color-border-strong); }
+.sl-chip-choice.sl-is-on { background: var(--sl-color-brand-link); color: #fff; border-color: transparent; }
+
+/* ======================================================================
+   BADGES / LABELS (status pills + counters)
+   ====================================================================== */
+.sl-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font: 700 11px/1.5 Arial, sans-serif; vertical-align: middle; }
+.sl-badge-sharp { border-radius: 4px; }
+.sl-badge-neutral { background: var(--sl-color-surface-soft); color: var(--sl-color-text-heading); }
+.sl-badge-info { background: rgba(48, 162, 246, 0.14); color: #207fb6; }
+.sl-badge-success { background: rgba(92, 148, 37, 0.16); color: #4f8a1e; }
+.sl-badge-warn { background: rgba(244, 122, 32, 0.16); color: #c5560c; }
+.sl-badge-danger { background: rgba(169, 44, 44, 0.12); color: #a92c2c; }
+.sl-badge-accent { background: rgba(140, 44, 169, 0.12); color: #8c2ca9; }
+.sl-badge-solid.sl-badge-info { background: var(--sl-color-brand-link); color: #fff; }
+.sl-badge-solid.sl-badge-success { background: var(--sl-color-success); color: #fff; }
+.sl-badge-solid.sl-badge-warn { background: var(--sl-color-warning); color: #fff; }
+.sl-badge-solid.sl-badge-danger { background: var(--sl-color-danger); color: #fff; }
+.sl-badge-solid.sl-badge-accent { background: var(--sl-color-accent); color: #fff; }
+.sl-badge-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.sl-badge-count { min-width: 18px; height: 18px; padding: 0 5px; justify-content: center; border-radius: 999px; background: var(--sl-color-danger); color: #fff; font-size: 11px; }
+
+/* ======================================================================
+   BREADCRUMBS
+   ====================================================================== */
+.sl-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font: 13px/1 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.sl-crumbs a { color: var(--sl-color-brand-strong); text-decoration: none; }
+.sl-crumbs a:hover { text-decoration: underline; }
+.sl-crumbs .bi { font-size: 11px; opacity: 0.5; }
+.sl-crumbs > span { color: var(--sl-color-text-heading); }
+
+/* ======================================================================
+   PROGRESS
+   ====================================================================== */
+.sl-progress { height: 8px; background: var(--sl-color-surface-soft); border-radius: 999px; overflow: hidden; }
+.sl-progress-bar { height: 100%; background: var(--sl-color-brand-link); border-radius: 999px; transition: width 0.3s ease; }
+.sl-progress-bar.sl-is-success { background: var(--sl-color-success); }
+.sl-progress-bar.sl-is-warn { background: var(--sl-color-warning); }
+.sl-progress-bar.sl-is-danger { background: var(--sl-color-danger); }
+.sl-progress-striped .sl-progress-bar { background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%, transparent); background-size: 16px 16px; animation: sl-progress-move 0.8s linear infinite; }
+@keyframes sl-progress-move { from { background-position: 0 0; } to { background-position: 16px 0; } }
+
+/* ======================================================================
+   AVATARS
+   ====================================================================== */
+.sl-ava { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--sl-color-surface-soft); color: var(--sl-color-text-muted); font: 700 14px/1 Arial, sans-serif; border: 2px solid var(--sl-color-bg); box-sizing: border-box; vertical-align: middle; overflow: hidden; }
+.sl-ava > img { width: 100%; height: 100%; object-fit: cover; }
+.sl-ava-sm { width: 28px; height: 28px; font-size: 12px; }
+.sl-ava-lg { width: 48px; height: 48px; font-size: 18px; }
+.sl-ava-brand { background: var(--sl-color-brand-link); color: #fff; }
+.sl-ava-accent { background: var(--sl-color-accent); color: #fff; }
+.sl-ava-success { background: var(--sl-color-success); color: #fff; }
+.sl-ava-status::after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; background: var(--sl-color-success); border: 2px solid var(--sl-color-bg); }
+.sl-ava-status.sl-is-off::after { background: var(--sl-color-text-subtle); }
+.sl-ava-group { display: inline-flex; align-items: center; }
+.sl-ava-group .sl-ava + .sl-ava { margin-left: -12px; }
+.sl-ava-more { background: var(--sl-color-surface-dark); color: #fff; font-size: 12px; }
+
+/* ======================================================================
+   ACCORDION (real toggle via data-sl-toggle / slaed.js)
+   ====================================================================== */
+.sl-acc { border: 1px solid var(--sl-color-border); border-radius: 7px; overflow: hidden; }
+.sl-acc + .sl-acc { margin-top: 10px; }
+.sl-acc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 12px 15px; border: 0; background: var(--sl-color-surface); color: var(--sl-color-text-heading); font: bold 14px/1.2 Arial, sans-serif; text-align: left; cursor: pointer; }
+.sl-acc-head:hover { background: var(--sl-color-surface-alt); }
+.sl-acc-head .bi { transition: transform 0.2s ease; color: var(--sl-color-text-muted); }
+.sl-acc-head.sl-is-open .bi { transform: rotate(180deg); }
+.sl-acc-body { padding: 14px 15px; border-top: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text); font: 14px/1.55 Arial, sans-serif; }
+
+/* ======================================================================
+   SPINNER / LOADER
+   ====================================================================== */
+.sl-spinner { display: inline-block; width: 22px; height: 22px; border: 3px solid var(--sl-color-surface-soft); border-top-color: var(--sl-color-brand-link); border-radius: 50%; animation: sl-spin 0.7s linear infinite; vertical-align: middle; }
+.sl-spinner-sm { width: 16px; height: 16px; border-width: 2px; }
+.sl-spinner-lg { width: 34px; height: 34px; border-width: 4px; }
+.sl-dots { display: inline-flex; gap: 5px; vertical-align: middle; }
+.sl-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-brand-link); animation: sl-dot 1s ease-in-out infinite; }
+.sl-dots span:nth-child(2) { animation-delay: 0.15s; }
+.sl-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes sl-dot { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+
+/* ======================================================================
+   MODAL — pure CSS via :target
+   ====================================================================== */
+.sl-modal { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(20, 24, 30, 0.5); opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease; }
+.sl-modal:target { opacity: 1; visibility: visible; }
+.sl-modal-back { position: absolute; inset: 0; cursor: default; }
+.sl-modal-dialog { position: relative; width: 100%; max-width: 440px; background: var(--sl-color-bg); overflow: hidden; border-radius: var(--sl-ctl-r, 11px); box-shadow: var(--sl-shadow-medium); transform: translateY(10px) scale(0.98); transition: transform 0.2s ease; }
+.sl-modal:target .sl-modal-dialog { transform: none; }
+.sl-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-modal-title { margin: 0; font: bold 17px/1.2 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.sl-modal-x { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: var(--sl-color-text-muted); text-decoration: none; font-size: 18px; }
+.sl-modal-x:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading); }
+.sl-modal-body { padding: 18px; color: var(--sl-color-text); font: 14px/1.5 Arial, sans-serif; }
+.sl-modal-body p { margin: 0 0 10px; }
+.sl-modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 13px 18px; border-top: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-surface); }
+
+/* ======================================================================
+   NEW COMPONENTS — same flat/light stylistics, --sl-color-* tokens
+   ====================================================================== */
+/* close button */
+.sl-close { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-ctl-r, var(--sl-radius-control)); background: var(--sl-color-bg); color: var(--sl-color-text-muted); cursor: pointer; font-size: 14px; transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
+.sl-close:hover { color: var(--sl-color-danger); border-color: var(--sl-color-border-strong); background: var(--sl-color-surface-alt); }
+.sl-close-flat { border-color: transparent; background: none; }
+.sl-close-flat:hover { background: var(--sl-color-surface-alt); border-color: transparent; }
+
+/* list group */
+.sl-list { border: 1px solid var(--sl-color-border); border-radius: var(--sl-ctl-r, 8px); overflow: hidden; background: var(--sl-color-bg); }
+.sl-list-item { display: flex; align-items: center; gap: 9px; padding: 10px 13px; color: var(--sl-color-text); text-decoration: none; font: 14px/1.3 Arial, sans-serif; }
+.sl-list-item + .sl-list-item { border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-list-item .bi { color: var(--sl-color-text-muted); }
+.sl-list-item .sl-badge { margin-left: auto; }
+a.sl-list-item:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-brand-strong); }
+.sl-list-item.sl-is-active { background: var(--sl-color-brand-link); color: #fff; }
+.sl-list-item.sl-is-active .bi { color: #fff; }
+.sl-list-item.sl-is-disabled { opacity: 0.5; pointer-events: none; }
+
+/* navbar */
+.sl-navbar { display: flex; align-items: center; gap: 12px; padding: 8px 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-ctl-r, 8px); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-navbar-brand { display: flex; align-items: center; gap: 8px; font: bold 16px/1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.sl-navbar-brand .bi { color: var(--sl-color-brand-strong); }
+.sl-navbar-nav { display: flex; gap: 4px; margin: 0 0 0 auto; padding: 0; list-style: none; }
+.sl-navbar-nav a { display: block; padding: 7px 12px; border-radius: var(--sl-ctl-r, var(--sl-radius-control)); color: var(--sl-color-text-muted); text-decoration: none; font: 600 13px/1 Arial, sans-serif; }
+.sl-navbar-nav a:hover { color: var(--sl-color-brand-strong); }
+.sl-navbar-nav a.sl-is-active { color: var(--sl-color-text-heading); background: var(--sl-color-surface-alt); }
+
+/* navs: pills / underline */
+.sl-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.sl-nav-pills a { display: block; padding: 7px 14px; border-radius: var(--sl-ctl-r, 999px); color: var(--sl-color-text-muted); text-decoration: none; font: 600 13px/1 Arial, sans-serif; }
+.sl-nav-pills a:hover { color: var(--sl-color-brand-strong); }
+.sl-nav-pills a.sl-is-active { color: #fff; background: var(--sl-color-brand-link); }
+.sl-nav-underline { gap: 18px; border-bottom: 1px solid var(--sl-color-border); }
+.sl-nav-underline a { display: block; padding: 9px 1px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--sl-color-text-muted); text-decoration: none; font: 600 13px/1 Arial, sans-serif; }
+.sl-nav-underline a:hover { color: var(--sl-color-brand-strong); }
+.sl-nav-underline a.sl-is-active { color: var(--sl-color-brand-link); border-bottom-color: var(--sl-color-brand-link); }
+
+/* toasts */
+.sl-toaster { position: fixed; right: 18px; bottom: 18px; z-index: 6000; display: flex; flex-direction: column; gap: 10px; width: 320px; max-width: calc(100vw - 36px); }
+.sl-toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--sl-color-border); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-medium); transform: translateX(120%); opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; }
+.sl-toast.sl-is-in { transform: none; opacity: 1; }
+.sl-toast > .bi { color: var(--sl-color-brand-strong); font-size: 18px; margin-top: 1px; }
+.sl-toast-body { flex: 1; min-width: 0; font: 13px/1.45 Arial, sans-serif; color: var(--sl-color-text); }
+.sl-toast-title { font-weight: bold; color: var(--sl-color-text-heading); }
+.sl-toast-x { border: 0; background: none; color: var(--sl-color-text-subtle); cursor: pointer; font-size: 12px; }
+
+/* placeholders (skeleton shimmer) */
+.sl-ph { display: block; height: 13px; border-radius: var(--sl-ctl-r, 4px); background: linear-gradient(90deg, var(--sl-color-surface-soft) 25%, var(--sl-color-surface-alt) 37%, var(--sl-color-surface-soft) 63%); background-size: 400% 100%; animation: sl-ph 1.4s ease infinite; }
+.sl-ph-circle { border-radius: 50%; }
+@keyframes sl-ph { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+/* popover (hover, title + body) */
+.sl-pop { position: relative; display: inline-flex; }
+.sl-pop-panel { position: absolute; bottom: 100%; left: 50%; z-index: 100; width: 230px; margin-bottom: 11px; transform: translateX(-50%) translateY(6px); border: 1px solid var(--sl-color-border-muted); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-strong); opacity: 0; visibility: hidden; transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease; }
+.sl-pop:hover .sl-pop-panel, .sl-pop:focus-within .sl-pop-panel { opacity: 1; visibility: visible; transform: translateX(-50%); }
+.sl-pop-panel::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 7px solid transparent; border-top-color: var(--sl-color-bg); }
+.sl-pop-head { padding: 9px 13px; font: bold 13px/1.3 Arial, sans-serif; color: var(--sl-color-text-heading); border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-pop-body { padding: 11px 13px; font: 13px/1.5 Arial, sans-serif; color: var(--sl-color-text-muted); }
+
+/* collapse (standalone, data-sl-toggle) */
+.sl-collapse { margin-top: 10px; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-ctl-r, 6px); background: var(--sl-color-surface); font: 14px/1.55 Arial, sans-serif; color: var(--sl-color-text); }
+
+/* offcanvas (slide-in via :target) */
+.sl-offcanvas-wrap { position: fixed; inset: 0; z-index: 5200; visibility: hidden; }
+.sl-offcanvas-wrap:target { visibility: visible; }
+.sl-offcanvas-back { position: absolute; inset: 0; background: rgba(20, 24, 30, 0.45); opacity: 0; transition: opacity 0.25s ease; }
+.sl-offcanvas-wrap:target .sl-offcanvas-back { opacity: 1; }
+.sl-offcanvas { position: absolute; top: 0; bottom: 0; right: 0; width: 320px; max-width: 86vw; display: flex; flex-direction: column; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-medium); transform: translateX(100%); transition: transform 0.25s ease; }
+.sl-offcanvas-wrap:target .sl-offcanvas { transform: none; }
+.sl-offcanvas-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-offcanvas-title { margin: 0; font: bold 16px/1.2 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.sl-offcanvas-body { padding: 15px 16px; overflow-y: auto; }
+
+/* scrollspy */
+.sl-spy { display: grid; grid-template-columns: 140px 1fr; gap: 14px; }
+.sl-spy-nav { display: flex; flex-direction: column; gap: 4px; }
+.sl-spy-nav a { padding: 7px 11px; border-radius: var(--sl-ctl-r, 6px); color: var(--sl-color-text-muted); text-decoration: none; font: 600 13px/1 Arial, sans-serif; }
+.sl-spy-nav a.sl-is-active { color: #fff; background: var(--sl-color-brand-link); }
+.sl-spy-body { position: relative; max-height: 200px; overflow-y: auto; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-surface); }
+.sl-spy-body h4 { margin: 0 0 5px; font: bold 15px/1.2 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.sl-spy-body p { margin: 0 0 16px; font: 13px/1.6 Arial, sans-serif; color: var(--sl-color-text-muted); }
+
+/* carousel (scroll-snap + nav + dots) */
+.sl-carousel { position: relative; }
+.sl-carousel-track { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 4px 2px 8px; }
+.sl-slide { flex: 0 0 240px; scroll-snap-align: start; height: 140px; border-radius: var(--sl-ctl-r, 8px); display: flex; align-items: flex-end; padding: 14px; color: #fff; font: bold 15px/1.2 Arial, sans-serif; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.sl-carousel-nav { position: absolute; top: 40%; transform: translateY(-50%); z-index: 2; }
+.sl-carousel-prev { left: -6px; }
+.sl-carousel-next { right: -6px; }
+.sl-carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
+.sl-cdot { width: 8px; height: 8px; border: 0; padding: 0; border-radius: 50%; background: var(--sl-color-border-strong); cursor: pointer; }
+.sl-cdot.sl-is-on { background: var(--sl-color-brand-link); }
+
+/* ======================================================================
+   MORE COMPONENTS (nc-*) — flat production stylistics
+   ====================================================================== */
+.nc-toolbar { display: inline-flex; align-items: center; gap: 6px; padding: 5px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.nc-toolbar-sep { width: 1px; align-self: stretch; margin: 2px; background: var(--sl-color-border); }
+.nc-stepper { display: inline-flex; align-items: center; border: 1px solid var(--sl-color-border); border-radius: 999px; overflow: hidden; }
+.nc-stepper button { width: 28px; height: 28px; border: 0; background: var(--sl-color-bg); color: var(--sl-color-text); cursor: pointer; font-size: 16px; }
+.nc-stepper button:hover { background: var(--sl-color-brand-link); color: #fff; }
+.nc-stepper input { width: 42px; border: 0; background: transparent; text-align: center; font: 600 14px/1 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-range { appearance: none; -webkit-appearance: none; width: 200px; height: 6px; border-radius: 999px; background: var(--sl-color-surface-soft); outline: none; vertical-align: middle; }
+.nc-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--sl-color-brand-link); cursor: pointer; box-shadow: var(--sl-shadow-soft); }
+.nc-range::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: var(--sl-color-brand-link); cursor: pointer; }
+.nc-rate { display: inline-flex; gap: 3px; font-size: 19px; color: var(--sl-color-border-strong); cursor: pointer; }
+.nc-rate .bi.is-on { color: var(--sl-color-warning); }
+.nc-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--sl-color-surface-soft); gap: 2px; }
+.nc-seg button { border: 0; background: transparent; color: var(--sl-color-text-muted); padding: 5px 14px; border-radius: 999px; font: 600 13px/1 Arial, sans-serif; cursor: pointer; }
+.nc-seg button.is-on { background: var(--sl-color-bg); color: var(--sl-color-brand-strong); box-shadow: var(--sl-shadow-soft); }
+.nc-stat { padding: 14px 16px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.nc-stat-label { font: 12px/1 Arial, sans-serif; color: var(--sl-color-text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.nc-stat-value { margin: 7px 0 2px; font: 800 26px/1 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-stat-delta { font: 600 12px/1 Arial, sans-serif; color: var(--sl-color-success); }
+.nc-stat-delta.is-down { color: var(--sl-color-danger); }
+.nc-timeline { position: relative; padding-left: 22px; }
+.nc-timeline::before { content: ""; position: absolute; left: 6px; top: 4px; bottom: 4px; width: 2px; background: var(--sl-color-border); }
+.nc-tl-item { position: relative; padding: 0 0 14px; }
+.nc-tl-item::before { content: ""; position: absolute; left: -19px; top: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--sl-color-brand-link); box-shadow: 0 0 0 3px var(--sl-color-bg); }
+.nc-tl-item.is-success::before { background: var(--sl-color-success); } .nc-tl-item.is-warn::before { background: var(--sl-color-warning); }
+.nc-tl-item h5 { margin: 0 0 2px; font: bold 13px/1.2 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-tl-item p { margin: 0; font: 12px/1.4 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.nc-th { display: flex; }
+.nc-th-item { flex: 1; text-align: center; position: relative; padding-top: 22px; font: 12px/1.4 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.nc-th-item::before { content: ""; position: absolute; top: 3px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--sl-color-brand-link); box-shadow: 0 0 0 3px var(--sl-color-bg); z-index: 1; }
+.nc-th-item::after { content: ""; position: absolute; top: 8px; left: 50%; width: 100%; height: 2px; background: var(--sl-color-border); }
+.nc-th-item:last-child::after { display: none; }
+.nc-th-item.is-done::before { background: var(--sl-color-success); }
+.nc-th-item h5 { margin: 0 0 2px; font: bold 12px/1.2 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-steps { display: flex; align-items: center; }
+.nc-step { display: flex; align-items: center; gap: 8px; color: var(--sl-color-text-muted); font: 600 13px/1 Arial, sans-serif; }
+.nc-step-num { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--sl-color-surface-soft); color: var(--sl-color-text-muted); font-size: 12px; }
+.nc-step.is-done .nc-step-num { background: var(--sl-color-success); color: #fff; }
+.nc-step.is-on .nc-step-num { background: var(--sl-color-brand-link); color: #fff; }
+.nc-step.is-on { color: var(--sl-color-text-heading); }
+.nc-step-line { flex: 1; height: 2px; min-width: 22px; background: var(--sl-color-border); margin: 0 8px; }
+.nc-kbd { display: inline-block; padding: 2px 7px; border-radius: 6px; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); box-shadow: 0 1px 0 var(--sl-color-border); font: 600 12px/1.4 "Courier New", monospace; color: var(--sl-color-text-heading); }
+.nc-code { display: block; margin: 0; padding: 12px 14px; border-radius: 8px; background: var(--sl-color-surface-dark); color: #cfe3f5; font: 13px/1.5 "Courier New", monospace; overflow: auto; }
+.nc-quote { margin: 0; padding: 10px 14px; border-left: 3px solid var(--sl-color-brand-link); background: var(--sl-color-surface); border-radius: 0 8px 8px 0; font: italic 14px/1.5 Arial, sans-serif; color: var(--sl-color-text); }
+.nc-empty { text-align: center; padding: 26px 16px; color: var(--sl-color-text-muted); }
+.nc-empty > .bi { font-size: 40px; opacity: 0.4; }
+.nc-empty h4 { margin: 10px 0 4px; font: bold 16px/1.2 Arial, sans-serif; color: var(--sl-color-text); }
+.nc-empty p { margin: 0 0 12px; font: 13px/1.4 Arial, sans-serif; }
+.nc-divider { display: flex; align-items: center; gap: 12px; color: var(--sl-color-text-muted); font: 12px/1 Arial, sans-serif; }
+.nc-divider::before, .nc-divider::after { content: ""; flex: 1; height: 1px; background: var(--sl-color-border); }
+.nc-tree { font: 13px/1.8 Arial, sans-serif; color: var(--sl-color-text); }
+.nc-tree ul { list-style: none; margin: 0; padding-left: 18px; }
+.nc-tree .bi { color: var(--sl-color-text-muted); margin-right: 5px; }
+.nc-chat { display: flex; flex-direction: column; gap: 8px; max-width: 380px; }
+.nc-bubble { max-width: 78%; padding: 8px 12px; border-radius: 14px; font: 13px/1.4 Arial, sans-serif; }
+.nc-bubble-in { align-self: flex-start; background: var(--sl-color-surface-soft); color: var(--sl-color-text); border-bottom-left-radius: 4px; }
+.nc-bubble-out { align-self: flex-end; background: var(--sl-color-brand-link); color: #fff; border-bottom-right-radius: 4px; }
+.nc-bubble-meta { font: 10px/1 Arial, sans-serif; color: var(--sl-color-text-subtle); margin-top: 3px; }
+.nc-typing { display: inline-flex; gap: 4px; padding: 11px 13px; background: var(--sl-color-surface-soft); border-radius: 14px; border-bottom-left-radius: 4px; align-self: flex-start; }
+.nc-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--sl-color-text-subtle); animation: sl-dot 1s ease-in-out infinite; }
+.nc-typing span:nth-child(2) { animation-delay: 0.15s; } .nc-typing span:nth-child(3) { animation-delay: 0.3s; }
+.nc-profile { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.nc-drop { padding: 24px; border: 2px dashed var(--sl-color-border); border-radius: 8px; text-align: center; color: var(--sl-color-text-muted); font: 13px/1.4 Arial, sans-serif; background: var(--sl-color-surface); cursor: pointer; }
+.nc-drop > .bi { font-size: 28px; display: block; margin-bottom: 6px; opacity: 0.6; }
+.nc-swatch { width: 34px; height: 34px; border-radius: 9px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08); cursor: pointer; }
+.nc-meter { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--sl-color-surface-soft); }
+.nc-meter span { height: 100%; }
+.nc-loadbar { height: 4px; border-radius: 999px; background: var(--sl-color-surface-soft); overflow: hidden; }
+.nc-loadbar::after { content: ""; display: block; width: 40%; height: 100%; background: var(--sl-color-brand-link); border-radius: 999px; animation: nc-load 1.3s ease-in-out infinite; }
+@keyframes nc-load { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+.nc-vtabs { display: grid; grid-template-columns: 150px 1fr; gap: 14px; }
+.nc-vtabs-nav { display: flex; flex-direction: column; gap: 4px; }
+.nc-vtabs-nav button { text-align: left; border: 0; background: transparent; padding: 8px 12px; border-radius: 999px; color: var(--sl-color-text-muted); font: 600 13px/1 Arial, sans-serif; cursor: pointer; }
+.nc-vtabs-nav button.is-on { background: var(--sl-color-brand-link); color: #fff; }
+.nc-vtabs-panel { display: none; font: 13px/1.6 Arial, sans-serif; color: var(--sl-color-text); }
+.nc-vtabs-panel.is-on { display: block; }
+.nc-ring { position: relative; width: 62px; height: 62px; border-radius: 50%; background: conic-gradient(var(--sl-color-brand-link) calc(var(--p, 65) * 1%), var(--sl-color-surface-soft) 0); display: grid; place-items: center; }
+.nc-ring::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--sl-color-bg); }
+.nc-ring b { position: relative; z-index: 1; font: 700 14px/1 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-donut { width: 118px; height: 118px; border-radius: 50%; position: relative; background: conic-gradient(var(--sl-color-brand-link) 0 45%, var(--sl-color-success) 0 70%, var(--sl-color-warning) 0 88%, var(--sl-color-danger) 0 100%); }
+.nc-donut::after { content: ""; position: absolute; inset: 26px; border-radius: 50%; background: var(--sl-color-bg); }
+.nc-bars { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
+.nc-bars span { flex: 1; background: var(--sl-color-brand-link); border-radius: 6px 6px 0 0; min-height: 6px; opacity: 0.85; }
+.nc-otp { display: inline-flex; gap: 8px; }
+.nc-otp input { width: 38px; height: 44px; text-align: center; border: 1px solid var(--sl-color-border); border-radius: 10px; font: 700 18px/1 Arial, sans-serif; color: var(--sl-color-text-heading); background: var(--sl-color-bg); }
+.nc-otp input:focus { outline: none; border-color: var(--sl-color-brand-link); box-shadow: 0 0 0 3px rgba(48, 162, 246, 0.16); }
+.nc-flabel { position: relative; display: inline-block; }
+.nc-flabel .sl-field { height: 46px; padding: 18px 12px 6px; }
+.nc-flabel label { position: absolute; left: 13px; top: 15px; color: var(--sl-color-text-subtle); font: 13px/1 Arial, sans-serif; pointer-events: none; transition: 0.15s ease; }
+.nc-flabel .sl-field:focus + label, .nc-flabel .sl-field:not(:placeholder-shown) + label { top: 8px; font-size: 10px; color: var(--sl-color-brand-strong); }
+.nc-affix { display: inline-flex; align-items: center; border: 1px solid var(--sl-color-border); border-radius: 999px; background: var(--sl-color-bg); overflow: hidden; }
+.nc-affix > span { padding: 0 11px; color: var(--sl-color-text-muted); font: 13px/1 Arial, sans-serif; background: var(--sl-color-surface-alt); align-self: stretch; display: flex; align-items: center; }
+.nc-affix input { border: 0; outline: none; height: 32px; padding: 0 12px; background: transparent; font: 13px/1 Arial, sans-serif; }
+.nc-ta-wrap { position: relative; display: inline-block; }
+.nc-ta-wrap textarea { width: 260px; min-height: 70px; padding: 9px 12px; border: 1px solid var(--sl-color-border-strong); border-radius: 8px; font: 13px/1.45 Arial, sans-serif; color: var(--sl-color-text); resize: vertical; }
+.nc-ta-count { position: absolute; right: 12px; bottom: 9px; font: 11px/1 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.nc-cal { display: inline-block; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; padding: 12px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.nc-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font: bold 13px/1 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-cal-grid { display: grid; grid-template-columns: repeat(7, 28px); gap: 2px; }
+.nc-cal-grid b { font: 600 10px/28px Arial, sans-serif; color: var(--sl-color-text-muted); text-align: center; }
+.nc-cal-grid a { display: grid; place-items: center; height: 28px; border-radius: 50%; color: var(--sl-color-text); text-decoration: none; font: 12px/1 Arial, sans-serif; }
+.nc-cal-grid a:hover { background: var(--sl-color-surface-alt); }
+.nc-cal-grid a.is-on { background: var(--sl-color-brand-link); color: #fff; }
+.nc-cal-grid a.mute { color: var(--sl-color-text-subtle); opacity: 0.6; }
+.nc-layout { display: grid; grid-template-columns: 170px 1fr; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; overflow: hidden; background: var(--sl-color-bg); }
+.nc-side { background: var(--sl-color-surface); padding: 12px; border-right: 1px solid var(--sl-color-border-subtle); }
+.nc-main { padding: 14px; font: 13px/1.6 Arial, sans-serif; color: var(--sl-color-text); }
+.nc-cmd { border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; overflow: hidden; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); max-width: 420px; }
+.nc-cmd-input { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-bottom: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text-muted); }
+.nc-cmd-input input { border: 0; outline: none; flex: 1; font: 14px/1 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.nc-cmd-item { display: flex; align-items: center; gap: 9px; padding: 9px 13px; color: var(--sl-color-text); font: 13px/1 Arial, sans-serif; cursor: pointer; }
+.nc-cmd-item:hover { background: var(--sl-color-surface-alt); } .nc-cmd-item .bi { color: var(--sl-color-text-muted); } .nc-cmd-item .nc-kbd { margin-left: auto; }
+.nc-social a { width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; text-decoration: none; }
+.nc-vote { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; background: var(--sl-color-surface-soft); cursor: pointer; font: 600 13px/1 Arial, sans-serif; color: var(--sl-color-text-muted); user-select: none; }
+.nc-vote.is-on { background: rgba(48, 162, 246, 0.14); color: var(--sl-color-brand-strong); }
+.nc-testi { padding: 16px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.nc-price { padding: 18px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); text-align: center; }
+.nc-price.is-pop { border-color: var(--sl-color-brand-link); box-shadow: 0 8px 24px rgba(48, 124, 192, 0.16); }
+.nc-price-amount { font: 800 30px/1 Arial, sans-serif; color: var(--sl-color-text-heading); margin: 6px 0; }
+.nc-price ul { list-style: none; margin: 12px 0; padding: 0; font: 13px/2 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.nc-feat { display: flex; gap: 12px; align-items: flex-start; }
+.nc-feat-ic { width: 38px; height: 38px; border-radius: 11px; background: rgba(48, 162, 246, 0.12); color: var(--sl-color-brand-strong); display: grid; place-items: center; font-size: 18px; flex-shrink: 0; }
+.nc-feat h5 { margin: 2px 0 3px; font: bold 14px/1.2 Arial, sans-serif; color: var(--sl-color-text-heading); } .nc-feat p { margin: 0; font: 12px/1.45 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.nc-ribbon { position: relative; overflow: hidden; }
+.nc-ribbon::after { content: attr(data-ribbon); position: absolute; top: 12px; right: -28px; transform: rotate(45deg); background: var(--sl-color-danger); color: #fff; font: 700 10px/1.6 Arial, sans-serif; padding: 3px 30px; }
+.nc-status { display: inline-flex; align-items: center; gap: 6px; font: 13px/1 Arial, sans-serif; color: var(--sl-color-text-muted); }
+.nc-status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--sl-color-success); }
+.nc-status.away::before { background: var(--sl-color-warning); } .nc-status.off::before { background: var(--sl-color-text-subtle); }
+.nc-tipd { position: relative; }
+.nc-tipd::after { content: attr(data-tip); position: absolute; background: var(--sl-color-surface-dark); color: #fff; padding: 5px 9px; border-radius: 7px; font: 12px/1.3 Arial, sans-serif; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity 0.15s ease; z-index: 30; }
+.nc-tipd:hover::after { opacity: 1; visibility: visible; }
+.nc-tipd-top::after { bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+.nc-tipd-bottom::after { top: calc(100% + 8px); left: 50%; transform: translateX(-50%); }
+.nc-tipd-left::after { right: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.nc-tipd-right::after { left: calc(100% + 8px); top: 50%; transform: translateY(-50%); }
+.nc-dl { display: grid; grid-template-columns: max-content 1fr; gap: 7px 18px; font: 13px/1.4 Arial, sans-serif; }
+.nc-dl dt { color: var(--sl-color-text-muted); } .nc-dl dd { margin: 0; color: var(--sl-color-text-heading); }
+.nc-cloud a { display: inline-block; margin: 3px 4px; color: var(--sl-color-brand-strong); text-decoration: none; }
+.nc-heat { display: inline-flex; gap: 3px; } .nc-heat span { width: 14px; height: 14px; border-radius: 3px; background: var(--sl-color-surface-soft); }
+.nc-cookie { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: 8px; background: var(--sl-color-surface-dark); color: #dce4ec; font: 13px/1.4 Arial, sans-serif; }
+.nc-footer { padding: 18px; border-radius: 8px; background: var(--sl-color-surface-dark); color: #aab6c2; font: 13px/1.7 Arial, sans-serif; }
+.nc-footer a { color: #cfe3f5; text-decoration: none; }
+.nc-chart { width: 100%; display: block; }
+.nc-c-grid { stroke: var(--sl-color-border); stroke-width: 1; }
+.nc-c-line { fill: none; stroke: var(--sl-color-brand-link); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.nc-c-line2 { fill: none; stroke: var(--sl-color-success); stroke-width: 2.5; stroke-linejoin: round; }
+.nc-c-area { fill: rgba(48, 162, 246, 0.14); stroke: none; }
+.nc-spark { fill: none; stroke: var(--sl-color-success); stroke-width: 2; }
+.nc-gauge-track { fill: none; stroke: var(--sl-color-surface-soft); stroke-width: 12; stroke-linecap: round; }
+.nc-gauge-val { fill: none; stroke: var(--sl-color-brand-link); stroke-width: 12; stroke-linecap: round; }
+.nc-gauge-num { fill: var(--sl-color-text-heading); font: 800 20px Arial, sans-serif; }
+.nc-radar-grid { fill: none; stroke: var(--sl-color-border); stroke-width: 1; }
+.nc-radar-area { fill: rgba(48, 162, 246, 0.18); stroke: var(--sl-color-brand-link); stroke-width: 2; }
+.nc-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font: 12px/1 Arial, sans-serif; color: var(--sl-color-text); }
+.nc-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.nc-legend span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--sl-color-brand-link); }
+.nc-legend .lg-green::before { background: var(--sl-color-success); } .nc-legend .lg-orange::before { background: var(--sl-color-warning); } .nc-legend .lg-red::before { background: var(--sl-color-danger); }
+.nc-speeddial { display: inline-flex; flex-direction: column-reverse; align-items: center; gap: 8px; }
+.nc-speeddial-row { flex-direction: row-reverse; }
+
+/* ======================================================================
+   Lab chrome
+   ====================================================================== */
+body { background: linear-gradient(160deg, var(--sl-color-surface) 0%, var(--sl-color-surface-alt) 100%); }
+.lab { max-width: 1000px; margin: 0 auto; padding: 28px 18px 90px; }
+.lab-head { margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--sl-color-border); }
+.lab-head h1 { margin: 0 0 6px; font: bold 30px/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-brand-strong); }
+.lab-head p { margin: 0 0 6px; color: var(--sl-color-text-muted); }
+.lab-toc { margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 6px 8px; font-size: 12px; }
+.lab-toc a { color: var(--sl-color-brand-strong); text-decoration: none; padding: 2px 8px; border: 1px solid var(--sl-color-border); border-radius: 999px; }
+.lab-toc a:hover { background: var(--sl-color-bg); }
+.lab-sec { margin: 38px 0 0; scroll-margin-top: 16px; }
+body { counter-reset: secn; }
+.lab-sec > h2 { margin: 0 0 4px; font: bold 20px/1.2 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); counter-increment: secn; }
+.lab-sec > h2::before { content: counter(secn) ". "; color: var(--sl-color-brand-strong); }
+.lab-sec > .lab-note { margin: 0 0 14px; font-size: 13px; color: var(--sl-color-text-muted); }
+.lab-line { height: 1px; margin: 0 0 18px; background: var(--sl-line-gradient); }
+.lab-card { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; padding: 22px; box-shadow: var(--sl-shadow-soft); }
+.lab-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lab-row + .lab-row { margin-top: 16px; }
+.lab-shapes { display: grid; gap: 0; }
+.lab-shape { display: flex; align-items: center; gap: 16px; padding: 13px 0; }
+.lab-shape + .lab-shape { border-top: 1px dashed var(--sl-color-border); }
+.lab-shape:first-child { padding-top: 0; }
+.lab-shape:last-child { padding-bottom: 0; }
+.lab-shape-name { width: 52px; flex-shrink: 0; font: bold 10px/1.3 Arial, sans-serif; letter-spacing: 0.4px; text-transform: uppercase; color: var(--sl-color-text-subtle); }
+.lab-shape-body { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.lab-shape-body.lab-shape-col { flex-direction: column; align-items: flex-start; gap: 14px; }
+.lab-mut { color: var(--sl-color-text-muted); font: 13px/1 Arial, sans-serif; }
+</style>
+</head>
+<body>
+<div class="lab">
+  <div class="lab-head">
+    <h1>SLAED UI Kit</h1>
+    <p>Единственный стиль кнопки — боевая <code>sl-but-neutral</code>. Подсказки, дропдауны, вкладки, сортировка таблиц и аккордеон работают на <strong>настоящих</strong> механизмах: <code>slaed.js</code> + <code>tablesort.min.js</code> + <code>theme.css</code>.</p>
+    <p>Интерактивные блоки показаны в формах углов: <code>pill</code> · <code>round</code> · <code>sharp</code> · <code>square</code> (контейнер <code>sl-shape-*</code>). Pill — для сравнения.</p>
+    <nav class="lab-toc">
+      <a href="#sec-base">Кнопки</a>
+      <a href="#sec-sizes">Размеры</a>
+      <a href="#sec-groups">Группы</a>
+      <a href="#sec-fields">Поля</a>
+      <a href="#sec-ig">Поле+кнопка</a>
+      <a href="#sec-vg">Вертикаль</a>
+      <a href="#sec-bar">Фильтр-бар</a>
+      <a href="#sec-chips">Чипсы</a>
+      <a href="#sec-badges">Бейджи</a>
+      <a href="#sec-alerts">Алерты</a>
+      <a href="#sec-crumbs">Хлебные крошки</a>
+      <a href="#sec-pager">Пагинация</a>
+      <a href="#sec-progress">Прогресс</a>
+      <a href="#sec-ava">Аватары</a>
+      <a href="#sec-spin">Спиннеры</a>
+      <a href="#sec-tips">Подсказки</a>
+      <a href="#sec-menu">Меню</a>
+      <a href="#sec-tabs">Вкладки</a>
+      <a href="#sec-acc">Аккордеон</a>
+      <a href="#sec-table">Таблицы</a>
+      <a href="#sec-modals">Модалки</a>
+      <a href="#sec-form">Форма</a>
+      <a href="#sec-close">Close</a>
+      <a href="#sec-list">List group</a>
+      <a href="#sec-navbar">Navbar</a>
+      <a href="#sec-navs">Navs</a>
+      <a href="#sec-pop">Popover</a>
+      <a href="#sec-collapse">Collapse</a>
+      <a href="#sec-toast">Toasts</a>
+      <a href="#sec-ph">Placeholders</a>
+      <a href="#sec-oc">Offcanvas</a>
+      <a href="#sec-spy">Scrollspy</a>
+      <a href="#sec-carousel">Carousel</a>
+    </nav>
+  </div>
+
+  <!-- base buttons -->
+  <section class="lab-sec" id="sec-base">
+    <h2>Кнопки</h2>
+    <p class="lab-note">Текст, иконка слева/справа, только иконка — в четырёх формах. Между иконкой и текстом — корректный <code>gap</code>.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-shapes">
+      <div class="lab-shape"><div class="lab-shape-name">pill</div><div class="lab-shape-body sl-shape-pill">
+        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
+        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
+        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
+        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
+      </div></div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-sizes">
+    <h2>Размеры и состояния</h2>
+    <p class="lab-note"><code>sm</code> · md · <code>lg</code>; hover, focus-ring, <code>sl-hidden</code>/<code>disabled</code>, <code>sl-is-loading</code>.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="lab-row">
+        <button class="sl-but-neutral sl-but-sm">Small</button>
+        <button class="sl-but-neutral">Medium</button>
+        <button class="sl-but-neutral sl-but-lg">Large</button>
+        <button class="sl-but-neutral sl-but-sm sl-but-icon"><i class="bi bi-plus-lg"></i></button>
+        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-plus-lg"></i></button>
+        <button class="sl-but-neutral sl-but-lg sl-but-icon"><i class="bi bi-plus-lg"></i></button>
+      </div>
+      <div class="lab-row">
+        <button class="sl-but-neutral">Обычная</button>
+        <button class="sl-but-neutral sl-is-loading">Загрузка</button>
+        <button class="sl-but-neutral sl-hidden">sl-hidden</button>
+        <button class="sl-but-neutral" disabled>disabled</button>
+        <button class="sl-but-neutral">Готово <i class="bi bi-check-lg"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-groups">
+    <h2>Группы кнопок</h2>
+    <p class="lab-note">Сегменты, split, пагинатор. Внутренние стыки прямые, форму берут только крайние углы.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-shapes">
+      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
+        <div class="sl-but-group"><button class="sl-but-neutral">День</button><button class="sl-but-neutral">Неделя</button><button class="sl-but-neutral">Месяц</button></div>
+        <div class="sl-but-split"><button class="sl-but-neutral"><i class="bi bi-save"></i> Сохранить</button><button class="sl-but-neutral"><i class="bi bi-chevron-down"></i></button></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
+        <div class="sl-but-group"><button class="sl-but-neutral">День</button><button class="sl-but-neutral">Неделя</button><button class="sl-but-neutral">Месяц</button></div>
+        <div class="sl-but-split"><button class="sl-but-neutral"><i class="bi bi-save"></i> Сохранить</button><button class="sl-but-neutral"><i class="bi bi-chevron-down"></i></button></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
+        <div class="sl-but-group"><button class="sl-but-neutral">День</button><button class="sl-but-neutral">Неделя</button><button class="sl-but-neutral">Месяц</button></div>
+        <div class="sl-but-split"><button class="sl-but-neutral"><i class="bi bi-save"></i> Сохранить</button><button class="sl-but-neutral"><i class="bi bi-chevron-down"></i></button></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">FAB</div><div class="lab-shape-body">
+        <button class="sl-but-neutral sl-but-fab"><i class="bi bi-plus-lg"></i></button><span class="lab-mut">плавающая кнопка остаётся круглой</span>
+      </div></div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-toolbar"><h2>Тулбар кнопок</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-toolbar"><div class="sl-but-group"><button class="sl-but-neutral sl-but-icon"><i class="bi bi-type-bold"></i></button><button class="sl-but-neutral sl-but-icon"><i class="bi bi-type-italic"></i></button></div><span class="nc-toolbar-sep"></span><button class="sl-but-neutral sl-but-icon"><i class="bi bi-text-left"></i></button><button class="sl-but-neutral sl-but-icon"><i class="bi bi-text-center"></i></button><span class="nc-toolbar-sep"></span><button class="sl-but-neutral sl-but-icon"><i class="bi bi-link-45deg"></i></button></div></div></section>
+
+  <section class="lab-sec" id="sec-close">
+    <h2>Кнопка закрытия</h2>
+    <p class="lab-note">Иконка-закрытие: с рамкой (по форме углов) и плоская.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row">
+      <button class="sl-close"><i class="bi bi-x-lg"></i></button>
+      <button class="sl-close sl-shape-pill"><i class="bi bi-x-lg"></i></button>
+      <button class="sl-close sl-shape-square"><i class="bi bi-x-lg"></i></button>
+      <button class="sl-close sl-close-flat"><i class="bi bi-x-lg"></i></button>
+      <span class="lab-mut">рамка · pill · square · плоская</span>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-speed"><h2>Speed dial</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:50px;align-items:flex-end"><div class="nc-speeddial" data-speed><button class="sl-but-neutral sl-but-fab" data-speed-toggle><i class="bi bi-plus-lg"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-share"></i></button></div><div class="nc-speeddial nc-speeddial-row" data-speed><button class="sl-but-neutral sl-but-fab" data-speed-toggle><i class="bi bi-share"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-telegram"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-link-45deg"></i></button></div></div></div></section>
+
+  <section class="lab-sec" id="sec-fields">
+    <h2>Поля ввода</h2>
+    <p class="lab-note">Боевой <code>.sl-field</code>. Pill для полей — наглядно, почему не подходит.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-shapes">
+      <div class="lab-shape"><div class="lab-shape-name">pill</div><div class="lab-shape-body sl-shape-pill">
+        <span class="sl-field-icon"><i class="bi bi-search"></i><input class="sl-field" type="text" placeholder="Поиск"></span><input class="sl-field" type="text" value="OK"><select class="sl-field"><option>Категория</option></select><label class="sl-mut"><input type="checkbox" checked> Чекбокс</label>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
+        <span class="sl-field-icon"><i class="bi bi-search"></i><input class="sl-field" type="text" placeholder="Поиск"></span><input class="sl-field" type="text" value="OK"><select class="sl-field"><option>Категория</option></select><label class="sl-mut"><input type="checkbox" checked> Чекбокс</label>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
+        <span class="sl-field-icon"><i class="bi bi-search"></i><input class="sl-field" type="text" placeholder="Поиск"></span><input class="sl-field" type="text" value="OK"><select class="sl-field"><option>Категория</option></select><label class="sl-mut"><input type="checkbox" checked> Чекбокс</label>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
+        <span class="sl-field-icon"><i class="bi bi-search"></i><input class="sl-field" type="text" placeholder="Поиск"></span><input class="sl-field" type="text" value="OK"><select class="sl-field"><option>Категория</option></select><label class="sl-mut"><input type="checkbox" checked> Чекбокс</label>
+      </div></div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-ig">
+    <h2>Поле + кнопка</h2>
+    <p class="lab-note">Форма решает: кнопка и поле делят планку, pill выбивается.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-shapes">
+      <div class="lab-shape"><div class="lab-shape-name">pill</div><div class="lab-shape-body sl-shape-pill">
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
+      </div></div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-vg">
+    <h2>Вертикальные поля</h2>
+    <p class="lab-note">Два инпута стопкой + кнопка во всю высоту обоих (<code>sl-but-tall</code>).</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-shapes">
+      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
+        <div class="sl-vg"><div class="sl-vg-fields"><span class="sl-field-icon"><i class="bi bi-person"></i><input class="sl-field" type="text" placeholder="Логин" style="width:220px"></span><span class="sl-field-icon"><i class="bi bi-lock"></i><input class="sl-field" type="password" placeholder="Пароль" style="width:220px"></span></div><button class="sl-but-neutral sl-but-tall"><i class="bi bi-box-arrow-in-right"></i> Войти</button></div>
+      </div></div>
+      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
+        <div class="sl-vg"><div class="sl-vg-fields"><span class="sl-field-icon"><i class="bi bi-person"></i><input class="sl-field" type="text" placeholder="Логин" style="width:220px"></span><span class="sl-field-icon"><i class="bi bi-lock"></i><input class="sl-field" type="password" placeholder="Пароль" style="width:220px"></span></div><button class="sl-but-neutral sl-but-tall"><i class="bi bi-box-arrow-in-right"></i> Войти</button></div>
+      </div></div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-bar">
+    <h2>Фильтр-бар</h2>
+    <p class="lab-note">Селекты + поле + переключатель + кнопки одной высоты.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card sl-shape-sharp">
+      <div class="sl-bar">
+        <select class="sl-field"><option>Все разделы</option></select>
+        <span class="sl-field-icon"><i class="bi bi-search"></i><input class="sl-field" type="text" placeholder="Фильтр"></span>
+        <label class="sl-switch"><input type="checkbox"> Активные</label>
+        <span class="sl-bar-spacer"></span>
+        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="sl-but-neutral"><i class="bi bi-funnel"></i> Применить</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-flabel"><h2>Floating label</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row"><span class="nc-flabel"><input class="sl-field" type="text" placeholder=" " style="width:220px"><label>Имя</label></span><span class="nc-flabel"><input class="sl-field" type="email" placeholder=" " value="a@slaed.net" style="width:220px"><label>E-mail</label></span></div></div></section>
+
+  <section class="lab-sec" id="sec-affix"><h2>Input affix</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row"><span class="nc-affix"><span>https://</span><input type="text" placeholder="slaed.net" style="width:150px"></span><span class="nc-affix"><input type="text" placeholder="0.00" style="width:90px"><span>₽</span></span></div></div></section>
+
+  <section class="lab-sec" id="sec-ta"><h2>Textarea + счётчик</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-ta-wrap"><textarea maxlength="120" placeholder="Комментарий…" data-ta-count></textarea><span class="nc-ta-count" data-ta-out>0 / 120</span></div></div></section>
+
+  <section class="lab-sec" id="sec-stepper"><h2>Stepper</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-stepper"><button data-step="-1">−</button><input value="3" data-step-val><button data-step="1">+</button></div></div></section>
+
+  <section class="lab-sec" id="sec-range"><h2>Range slider</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row"><input class="nc-range" type="range" value="60" data-range><span class="sl-badge sl-badge-solid sl-badge-info" data-range-out>60</span></div></div></section>
+
+  <section class="lab-sec" id="sec-otp"><h2>OTP / PIN</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-otp" data-otp><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"></div></div></section>
+
+  <section class="lab-sec" id="sec-seg"><h2>Segmented</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-seg" data-seg><button class="is-on">День</button><button>Неделя</button><button>Месяц</button></div></div></section>
+
+  <section class="lab-sec" id="sec-rate"><h2>Rating</h2><div class="lab-line"></div><div class="lab-card"><span class="nc-rate" data-rate><i class="bi bi-star-fill is-on"></i><i class="bi bi-star-fill is-on"></i><i class="bi bi-star-fill is-on"></i><i class="bi bi-star-fill is-on"></i><i class="bi bi-star"></i></span></div></section>
+
+  <section class="lab-sec" id="sec-dropz"><h2>File dropzone</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-drop"><i class="bi bi-cloud-arrow-up"></i>Перетащите файлы или <span style="color:var(--sl-color-brand-strong)">выберите</span></div></div></section>
+
+  <section class="lab-sec" id="sec-cal"><h2>Calendar</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cal"><div class="nc-cal-head"><button class="sl-but-neutral sl-but-icon sl-but-sm"><i class="bi bi-chevron-left"></i></button> Март 2026 <button class="sl-but-neutral sl-but-icon sl-but-sm"><i class="bi bi-chevron-right"></i></button></div><div class="nc-cal-grid"><b>Пн</b><b>Вт</b><b>Ср</b><b>Чт</b><b>Пт</b><b>Сб</b><b>Вс</b><a class="mute">23</a><a class="mute">24</a><a>25</a><a>26</a><a>27</a><a>28</a><a>1</a><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><a>10</a><a>11</a><a class="is-on">12</a><a>13</a><a>14</a><a>15</a></div></div></div></section>
+
+  <section class="lab-sec" id="sec-swatch"><h2>Color swatches</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:8px"><span class="nc-swatch" style="background:#30a2f6"></span><span class="nc-swatch" style="background:#5c9425"></span><span class="nc-swatch" style="background:#e8780f"></span><span class="nc-swatch" style="background:#c5384a"></span><span class="nc-swatch" style="background:#8c2ca9"></span></div></div></section>
+
+  <section class="lab-sec" id="sec-form">
+    <h2>Форма целиком</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card sl-shape-sharp" style="max-width:460px">
+      <div style="display:grid;gap:12px">
+        <div class="sl-ig sl-ig-block"><span class="sl-ig-text"><i class="bi bi-type"></i></span><input class="sl-field" type="text" value="Новая статья"></div>
+        <select class="sl-field sl-field-block"><option>Новости</option><option>Обзоры</option></select>
+        <div class="lab-row" style="gap:8px"><span class="sl-chip sl-chip-choice sl-is-on">важное</span><span class="sl-chip sl-chip-choice">релиз</span><span class="sl-chip sl-chip-choice">php</span></div>
+        <label class="sl-switch"><input type="checkbox" checked> Опубликовать сразу</label>
+        <div class="lab-row"><button class="sl-but-neutral"><i class="bi bi-check-lg"></i> Сохранить</button><button class="sl-but-neutral">Предпросмотр</button><button class="sl-but-neutral">Отмена</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-badges">
+    <h2>Badge</h2>
+    <p class="lab-note">Статус-метки (мягкие и solid), с точкой, счётчики.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="lab-row">
+        <span class="sl-badge sl-badge-neutral">draft</span>
+        <span class="sl-badge sl-badge-info">new</span>
+        <span class="sl-badge sl-badge-success">published</span>
+        <span class="sl-badge sl-badge-warn">pending</span>
+        <span class="sl-badge sl-badge-danger">blocked</span>
+        <span class="sl-badge sl-badge-accent">pro</span>
+      </div>
+      <div class="lab-row">
+        <span class="sl-badge sl-badge-solid sl-badge-info">new</span>
+        <span class="sl-badge sl-badge-solid sl-badge-success">ok</span>
+        <span class="sl-badge sl-badge-solid sl-badge-warn">hot</span>
+        <span class="sl-badge sl-badge-solid sl-badge-danger">−50%</span>
+        <span class="sl-badge sl-badge-success sl-badge-dot">online</span>
+        <span class="sl-badge sl-badge-neutral sl-badge-dot">offline</span>
+      </div>
+      <div class="lab-row">
+        <span class="lab-mut">Счётчики:</span>
+        <span class="sl-badge sl-badge-count">5</span>
+        <span class="sl-badge sl-badge-count">12</span>
+        <span class="sl-badge sl-badge-count">99+</span>
+        <span class="sl-badge sl-badge-info sl-badge-sharp">v7.0</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-chips">
+    <h2>Chips</h2>
+    <p class="lab-note">Базовые, с иконкой, удаляемые (×), с аватаром, тоновые, выбираемые (choice — кликни), прямоугольные.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="lab-row">
+        <span class="sl-chip">Тег</span>
+        <span class="sl-chip"><i class="bi bi-hash"></i> php</span>
+        <span class="sl-chip">Дизайн <button class="sl-chip-close" aria-label="Убрать"><i class="bi bi-x-lg"></i></button></span>
+        <span class="sl-chip"><span class="sl-ava sl-ava-sm sl-ava-brand" style="width:20px;height:20px;font-size:10px;margin-left:-7px;border:0">Э</span> Эдуард <button class="sl-chip-close" aria-label="Убрать"><i class="bi bi-x-lg"></i></button></span>
+      </div>
+      <div class="lab-row">
+        <span class="sl-chip sl-chip-info"><span class="sl-chip-dot"></span> Info</span>
+        <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle"></i> Готово</span>
+        <span class="sl-chip sl-chip-warn"><i class="bi bi-exclamation-triangle"></i> Внимание</span>
+        <span class="sl-chip sl-chip-danger"><i class="bi bi-x-circle"></i> Ошибка</span>
+        <span class="sl-chip sl-chip-accent">Premium</span>
+        <span class="sl-chip sl-chip-sharp">прямоугольный</span>
+      </div>
+      <div class="lab-row">
+        <span class="lab-mut">Выбор:</span>
+        <span class="sl-chip sl-chip-choice sl-is-on">Все</span>
+        <span class="sl-chip sl-chip-choice">Новости</span>
+        <span class="sl-chip sl-chip-choice">Обзоры</span>
+        <span class="sl-chip sl-chip-choice">Файлы</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-ava">
+    <h2>Avatars</h2>
+    <p class="lab-note">Инициалы и цвета, размеры, статус-индикатор, группа со стопкой.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="lab-row">
+        <span class="sl-ava sl-ava-sm sl-ava-brand">A</span>
+        <span class="sl-ava">ЭЛ</span>
+        <span class="sl-ava sl-ava-accent">К</span>
+        <span class="sl-ava sl-ava-lg sl-ava-success">SL</span>
+        <span class="sl-ava sl-ava-status">М</span>
+        <span class="sl-ava sl-ava-status sl-is-off sl-ava-accent">B</span>
+      </div>
+      <div class="lab-row">
+        <span class="lab-mut">Группа:</span>
+        <span class="sl-ava-group">
+          <span class="sl-ava sl-ava-brand">A</span>
+          <span class="sl-ava sl-ava-accent">B</span>
+          <span class="sl-ava sl-ava-success">C</span>
+          <span class="sl-ava sl-ava-more">+9</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-statusd"><h2>Status indicators</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:20px"><span class="nc-status">Онлайн</span><span class="nc-status away">Отошёл</span><span class="nc-status off">Офлайн</span></div></div></section>
+
+  <section class="lab-sec" id="sec-list">
+    <h2>List group</h2>
+    <p class="lab-note">Связный список: активный пункт, ссылки, отключённый, счётчики-бейджи.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row" style="align-items:flex-start;gap:18px">
+      <div class="sl-list" style="min-width:240px">
+        <a class="sl-list-item sl-is-active" href="#"><i class="bi bi-inbox"></i> Входящие <span class="sl-badge sl-badge-solid sl-badge-info">12</span></a>
+        <a class="sl-list-item" href="#"><i class="bi bi-send"></i> Отправленные</a>
+        <a class="sl-list-item" href="#"><i class="bi bi-archive"></i> Архив</a>
+        <span class="sl-list-item sl-is-disabled"><i class="bi bi-trash3"></i> Корзина — нет доступа</span>
+      </div>
+      <div class="sl-list" style="min-width:240px">
+        <div class="sl-list-item"><i class="bi bi-cpu"></i> CPU <span class="sl-badge sl-badge-success">32%</span></div>
+        <div class="sl-list-item"><i class="bi bi-memory"></i> RAM <span class="sl-badge sl-badge-warn">71%</span></div>
+        <div class="sl-list-item"><i class="bi bi-hdd"></i> Диск <span class="sl-badge sl-badge-danger">92%</span></div>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-dl"><h2>Data list</h2><div class="lab-line"></div><div class="lab-card"><dl class="nc-dl"><dt>Версия</dt><dd>6.2 Pro</dd><dt>Размер</dt><dd>9.17 MB</dd><dt>Лицензия</dt><dd>GNU GPL 3</dd></dl></div></section>
+
+  <section class="lab-sec" id="sec-tree"><h2>Tree view</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-tree"><ul><li><i class="bi bi-folder2-open"></i> templates<ul><li><i class="bi bi-folder2"></i> lite<ul><li><i class="bi bi-filetype-css"></i> base.css</li></ul></li></ul></li><li><i class="bi bi-folder2"></i> plugins<ul><li><i class="bi bi-filetype-js"></i> slaed.js</li></ul></li></ul></div></div></section>
+
+  <section class="lab-sec" id="sec-ribbon"><h2>Ribbon card</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="lab-card nc-ribbon" data-ribbon="NEW" style="padding:0"><div style="height:90px;background:linear-gradient(135deg,#5cb6f7,#2f7fc0)"></div><div style="padding:14px"><h3 style="margin:0 0 5px;font:bold 15px Arial;color:var(--sl-color-text-heading)">С лентой</h3><p style="margin:0;font:12px Arial;color:var(--sl-color-text-muted)">Угловая метка.</p></div></div></div></section>
+
+  <section class="lab-sec" id="sec-profile"><h2>Profile card</h2><div class="lab-line"></div><div class="lab-card" style="max-width:380px"><div class="nc-profile"><span class="sl-ava sl-ava-brand sl-ava-lg">ЭЛ</span><div style="flex:1"><div style="font-weight:bold;color:var(--sl-color-text-heading)">Eduard Laas</div><div class="lab-mut">администратор</div></div><button class="sl-but-neutral sl-but-icon"><i class="bi bi-three-dots"></i></button></div></div></section>
+
+  <section class="lab-sec" id="sec-stat"><h2>Stat / KPI</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="nc-stat"><div class="nc-stat-label">Визиты</div><div class="nc-stat-value">12 480</div><div class="nc-stat-delta"><i class="bi bi-arrow-up-short"></i>8.2%</div></div><div class="nc-stat"><div class="nc-stat-label">Заказы</div><div class="nc-stat-value">342</div><div class="nc-stat-delta is-down"><i class="bi bi-arrow-down-short"></i>3.1%</div></div><div class="nc-stat"><div class="nc-stat-label">Доход</div><div class="nc-stat-value">₽ 98k</div><div class="nc-stat-delta"><i class="bi bi-arrow-up-short"></i>14%</div></div></div></section>
+
+  <section class="lab-sec" id="sec-price"><h2>Pricing</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="nc-price"><div class="nc-stat-label">Lite</div><div class="nc-price-amount">₽ 0</div><ul><li>1 сайт</li><li>Базовые модули</li></ul><button class="sl-but-neutral">Выбрать</button></div><div class="nc-price is-pop"><span class="sl-badge sl-badge-solid sl-badge-info">популярный</span><div class="nc-stat-label" style="margin-top:8px">Pro</div><div class="nc-price-amount">₽ 990</div><ul><li>10 сайтов</li><li>Все модули</li></ul><button class="sl-but-neutral">Выбрать</button></div><div class="nc-price"><div class="nc-stat-label">Enterprise</div><div class="nc-price-amount">₽ 4900</div><ul><li>∞ сайтов</li><li>SLA</li></ul><button class="sl-but-neutral">Выбрать</button></div></div></section>
+
+  <section class="lab-sec" id="sec-testi"><h2>Testimonial</h2><div class="lab-line"></div><div class="lab-card" style="max-width:420px"><div class="nc-testi"><p style="margin:0 0 12px;font:italic 14px/1.5 Arial;color:var(--sl-color-text-heading)">«SLAED CMS — лучшее для быстрого запуска.»</p><div class="lab-row" style="gap:10px"><span class="sl-ava sl-ava-accent">К</span><div style="font-weight:bold;color:var(--sl-color-text-heading)">Константин</div></div></div></div></section>
+
+  <section class="lab-sec" id="sec-featlist"><h2>Feature list</h2><div class="lab-line"></div><div class="lab-card" style="display:grid;grid-template-columns:1fr 1fr;gap:18px"><div class="nc-feat"><span class="nc-feat-ic"><i class="bi bi-lightning-charge"></i></span><div><h5>Быстро</h5><p>Лёгкие шаблоны.</p></div></div><div class="nc-feat"><span class="nc-feat-ic"><i class="bi bi-shield-check"></i></span><div><h5>Безопасно</h5><p>CSRF, prepared SQL.</p></div></div></div></section>
+
+  <section class="lab-sec" id="sec-timeline"><h2>Timeline</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-timeline"><div class="nc-tl-item is-success"><h5>Создан</h5><p>12.03 14:02</p></div><div class="nc-tl-item is-warn"><h5>В обработке</h5><p>12.03 15:30</p></div><div class="nc-tl-item"><h5>Доставка</h5><p>14.03</p></div></div></div></section>
+
+  <section class="lab-sec" id="sec-steps"><h2>Steps</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-steps"><span class="nc-step is-done"><span class="nc-step-num"><i class="bi bi-check-lg"></i></span> Корзина</span><span class="nc-step-line"></span><span class="nc-step is-on"><span class="nc-step-num">2</span> Доставка</span><span class="nc-step-line"></span><span class="nc-step"><span class="nc-step-num">3</span> Оплата</span></div></div></section>
+
+  <section class="lab-sec" id="sec-chat"><h2>Chat bubbles</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-chat"><span class="nc-bubble nc-bubble-in">Привет! Как обновить до 7?</span><span class="nc-bubble nc-bubble-out">Последовательно, с версии до версии.</span><span class="nc-bubble nc-bubble-in">Понял 🙏</span></div></div></section>
+
+  <section class="lab-sec" id="sec-chat2"><h2>Chat — варианты</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-chat"><div class="lab-row" style="gap:8px;align-items:flex-end"><span class="sl-ava sl-ava-sm sl-ava-accent">К</span><div><span class="nc-bubble nc-bubble-in">Привет!</span><div class="nc-bubble-meta">14:21</div></div></div><div style="align-self:flex-end"><span class="nc-bubble nc-bubble-out">Готово ✓✓</span></div><div class="nc-typing"><span></span><span></span><span></span></div></div></div></section>
+
+  <section class="lab-sec" id="sec-table">
+    <h2>Table</h2>
+    <p class="lab-note">Боевая <code>.sl-table</code> с сортировкой (<code>data-sl-table-sort</code> + Tablesort) и «выбрать все». Кликни по заголовку.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <form>
+      <div class="sl-table-shell">
+        <table class="sl-table sl-table--sort" data-sl-table-sort>
+          <thead class="sl-table-head"><tr>
+            <th data-sort-method="none" data-sl-check-all style="width:32px"><input type="checkbox" data-sl-check-item></th>
+            <th class="sl-table-col-num">ID</th><th>Заголовок</th><th>Раздел</th><th>Статус</th><th>Дата</th>
+            <th data-sort-method="none" style="width:90px">Действия</th>
+          </tr></thead>
+          <tbody class="sl-table-body">
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">102</td><td>Релиз SLAED CMS 7</td><td>Новости</td><td><span class="sl-badge sl-badge-success">published</span></td><td>14.03.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">87</td><td>Обзор модуля форума</td><td>Обзоры</td><td><span class="sl-badge sl-badge-warn">pending</span></td><td>02.02.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">9</td><td>Установка на OSPanel</td><td>Документация</td><td><span class="sl-badge sl-badge-neutral">draft</span></td><td>21.12.2025</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">143</td><td>Темы оформления: lite</td><td>Шаблоны</td><td><span class="sl-badge sl-badge-info">new</span></td><td>30.04.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="lab-row sl-shape-sharp" style="margin-top:14px">
+        <button class="sl-but-neutral sl-but-sm" type="button"><i class="bi bi-check2-square"></i> С выбранными</button>
+        <button class="sl-but-neutral sl-but-sm" type="button"><i class="bi bi-trash3"></i> Удалить</button>
+      </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-cloud"><h2>Tag cloud</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cloud"><a href="#" style="font-size:20px">php</a><a href="#" style="font-size:14px">cms</a><a href="#" style="font-size:24px">slaed</a><a href="#" style="font-size:16px">шаблоны</a><a href="#" style="font-size:18px">модули</a><a href="#" style="font-size:22px">дизайн</a></div></div></section>
+
+  <section class="lab-sec" id="sec-heat"><h2>Heatmap</h2><div class="lab-line"></div><div class="lab-card"><div style="display:grid;gap:3px"><div class="nc-heat"><span></span><span style="background:#bfe0c5"></span><span style="background:#7fc88f"></span><span style="background:#4faf64"></span><span style="background:#2f8a44"></span><span style="background:#7fc88f"></span></div><div class="nc-heat"><span style="background:#bfe0c5"></span><span></span><span style="background:#4faf64"></span><span style="background:#7fc88f"></span><span style="background:#2f8a44"></span><span style="background:#bfe0c5"></span></div></div></div></section>
+
+  <section class="lab-sec" id="sec-type"><h2>Kbd · Code · Quote</h2><div class="lab-line"></div><div class="lab-card" style="display:grid;gap:14px"><div class="lab-row"><span class="lab-mut">Сохранить:</span> <span class="nc-kbd">Ctrl</span> + <span class="nc-kbd">S</span></div><pre class="nc-code">$conf['site']['name'] = 'SLAED CMS';</pre><blockquote class="nc-quote">Хороший дизайн — это как можно меньше дизайна.</blockquote></div></section>
+
+  <section class="lab-sec" id="sec-navbar">
+    <h2>Navbar</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card">
+      <nav class="sl-navbar">
+        <span class="sl-navbar-brand"><i class="bi bi-hexagon-fill"></i> SLAED</span>
+        <ul class="sl-navbar-nav">
+          <li><a href="#" class="sl-is-active">Главная</a></li>
+          <li><a href="#">Новости</a></li>
+          <li><a href="#">Форум</a></li>
+          <li><a href="#">Файлы</a></li>
+        </ul>
+        <button class="sl-but-neutral sl-but-icon sl-but-sm" style="margin-left:8px"><i class="bi bi-search"></i></button>
+      </nav>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-navs">
+    <h2>Navs</h2>
+    <p class="lab-note">Дополнение к вкладкам: pill-навигация и подчёркнутая.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card" style="display:grid;gap:16px">
+      <ul class="sl-nav sl-nav-pills"><li><a href="#" class="sl-is-active">Активная</a></li><li><a href="#">Ссылка</a></li><li><a href="#">Ещё</a></li></ul>
+      <ul class="sl-nav sl-nav-underline"><li><a href="#" class="sl-is-active">Обзор</a></li><li><a href="#">Профиль</a></li><li><a href="#">Настройки</a></li></ul>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-tabs">
+    <h2>Tabs</h2>
+    <p class="lab-note">Боевые <code>.sl-tabs</code> + <code>data-sl-tabs-init</code>: переключение, стрелки ←/→, запоминание.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div id="lab-tabs" class="sl-tabs" data-sl-tabs-init="lab-tabs">
+        <ul class="sl-tabs-nav">
+          <li class="sl-tabs-item"><a class="sl-tabs-link sl-is-active" href="#" data-sl-tab-link data-sl-tab-target="lt-a">Основное</a></li>
+          <li class="sl-tabs-item"><a class="sl-tabs-link" href="#" data-sl-tab-link data-sl-tab-target="lt-b">Параметры</a></li>
+          <li class="sl-tabs-item"><a class="sl-tabs-link" href="#" data-sl-tab-link data-sl-tab-target="lt-c">SEO</a></li>
+        </ul>
+        <div class="sl-tabs-content">
+          <div id="lt-a" class="sl-tab-panel" data-sl-tab-panel="lt-a"><p class="lab-mut" style="margin:0 0 12px">Базовые поля записи.</p><div class="sl-shape-sharp"><div class="sl-ig sl-ig-block" style="max-width:420px"><span class="sl-ig-text"><i class="bi bi-type"></i></span><input class="sl-field" type="text" value="Новая статья"></div></div></div>
+          <div id="lt-b" class="sl-tab-panel" data-sl-tab-panel="lt-b"><p class="lab-mut" style="margin:0 0 12px">Параметры публикации.</p><label class="sl-switch"><input type="checkbox" checked> Опубликовать сразу</label></div>
+          <div id="lt-c" class="sl-tab-panel" data-sl-tab-panel="lt-c"><p class="lab-mut" style="margin:0 0 12px">SEO-данные.</p><div class="sl-shape-sharp"><input class="sl-field sl-field-block" type="text" placeholder="meta title" style="max-width:420px"></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-vtabs"><h2>Vertical tabs</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-vtabs" data-vtabs><div class="nc-vtabs-nav"><button class="is-on" data-vt="1">Профиль</button><button data-vt="2">Безопасность</button><button data-vt="3">Уведомления</button></div><div><div class="nc-vtabs-panel is-on" data-vtp="1">Имя, аватар, био.</div><div class="nc-vtabs-panel" data-vtp="2">Пароль, 2FA.</div><div class="nc-vtabs-panel" data-vtp="3">E-mail и push.</div></div></div></div></section>
+
+  <section class="lab-sec" id="sec-crumbs">
+    <h2>Breadcrumb</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card">
+      <nav class="sl-crumbs">
+        <a href="#"><i class="bi bi-house-door"></i> Главная</a>
+        <i class="bi bi-chevron-right"></i>
+        <a href="#">Каталог</a>
+        <i class="bi bi-chevron-right"></i>
+        <a href="#">Модули</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>Форум</span>
+      </nav>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-pager">
+    <h2>Pagination</h2>
+    <p class="lab-note">Из той же кнопки: группа neutral, активная страница — заливка brand.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card sl-shape-sharp"><div class="lab-row">
+      <div class="sl-but-group">
+        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-chevron-left"></i></button>
+        <button class="sl-but-neutral">1</button>
+        <button class="sl-but-neutral sl-is-active">2</button>
+        <button class="sl-but-neutral">3</button>
+        <button class="sl-but-neutral">4</button>
+        <button class="sl-but-neutral">…</button>
+        <button class="sl-but-neutral">24</button>
+        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-menu">
+    <h2>Dropdown</h2>
+    <p class="lab-note">Боевой <code>.sl-menu .sl-float</code>: кнопка-триггер + тёмная панель. Наведи на кнопку.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row">
+      <nav class="sl-menu"><ul><li class="sl-float">
+        <button class="sl-but-neutral">Действия <i class="bi bi-chevron-down"></i></button>
+        <ul class="sl-float-panel">
+          <li><a href="#"><i class="bi bi-pencil"></i> Редактировать</a></li>
+          <li><a href="#"><i class="bi bi-files"></i> Дублировать</a></li>
+          <li><a href="#"><i class="bi bi-archive"></i> В архив</a></li>
+          <li><a href="#"><i class="bi bi-trash3"></i> Удалить</a></li>
+        </ul>
+      </li></ul></nav>
+      <nav class="sl-menu"><ul><li class="sl-float">
+        <button class="sl-but-neutral sl-but-icon" title="Ещё"><i class="bi bi-three-dots-vertical"></i></button>
+        <ul class="sl-float-panel">
+          <li><a href="#"><i class="bi bi-eye"></i> Просмотр</a></li>
+          <li><a href="#"><i class="bi bi-download"></i> Скачать</a></li>
+          <li><a href="#"><i class="bi bi-share"></i> Поделиться</a></li>
+        </ul>
+      </li></ul></nav>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-cmd"><h2>Command palette</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cmd"><div class="nc-cmd-input"><i class="bi bi-search"></i><input type="text" placeholder="Команда…"><span class="nc-kbd">Esc</span></div><div class="nc-cmd-item"><i class="bi bi-file-earmark-plus"></i> Создать запись <span class="nc-kbd">N</span></div><div class="nc-cmd-item"><i class="bi bi-gear"></i> Настройки <span class="nc-kbd">,</span></div></div></div></section>
+
+  <section class="lab-sec" id="sec-layout"><h2>Sidebar layout</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-layout"><aside class="nc-side"><div class="sl-list" style="border:0"><a class="sl-list-item sl-is-active" href="#"><i class="bi bi-speedometer2"></i> Дашборд</a><a class="sl-list-item" href="#"><i class="bi bi-folder2"></i> Файлы</a></div></aside><div class="nc-main"><h4 style="margin:0 0 6px;color:var(--sl-color-text-heading)">Дашборд</h4>Контент рядом с боковым меню.</div></div></div></section>
+
+  <section class="lab-sec" id="sec-tips">
+    <h2>Tooltip</h2>
+    <p class="lab-note">Боевой <code>.sl-float.sl-tip</code> из <code>slaed.js</code>. Наведи или сфокусируй (Tab).</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row" style="gap:26px">
+      <span class="lab-mut">Цена <nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">Указана без учёта скидки и НДС.</div></nav></span>
+      <span class="lab-mut">Статус <nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel"><dl><dt>Создан</dt><dd>12.03.2026</dd><dt>Автор</dt><dd>Eduard Laas</dd></dl></div></nav></span>
+      <span class="lab-mut">Справка <nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-question-circle-fill"></i><div class="sl-float-panel">Полноценная панель: переносит текст, держит максимум 520px и уходит от края экрана.</div></nav></span>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-tipd"><h2>Tooltip — directions</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:30px;padding:20px 0"><button class="sl-but-neutral nc-tipd nc-tipd-top" data-tip="Сверху">Top</button><button class="sl-but-neutral nc-tipd nc-tipd-bottom" data-tip="Снизу">Bottom</button><button class="sl-but-neutral nc-tipd nc-tipd-left" data-tip="Слева">Left</button><button class="sl-but-neutral nc-tipd nc-tipd-right" data-tip="Справа">Right</button></div></div></section>
+
+  <section class="lab-sec" id="sec-pop">
+    <h2>Popover</h2>
+    <p class="lab-note">Поповер с заголовком и телом (наведение/фокус) — богаче подсказки.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row" style="gap:24px">
+      <span class="sl-pop" tabindex="0"><button class="sl-but-neutral"><i class="bi bi-chat-square-text"></i> Поповер</button><span class="sl-pop-panel"><span class="sl-pop-head">Заголовок</span><span class="sl-pop-body">Текст поповера: появляется по наведению или фокусу, со стрелкой.</span></span></span>
+      <span class="sl-pop" tabindex="0"><span class="sl-badge sl-badge-info" style="cursor:help">подробнее</span><span class="sl-pop-panel"><span class="sl-pop-head">Детали</span><span class="sl-pop-body">Можно цеплять к любому элементу.</span></span></span>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-alerts">
+    <h2>Alerts</h2>
+    <p class="lab-note">Реальный <code>.sl-alert</code> из <code>theme.css</code>: тона info/success/warn/error/accent, иконка-анимация, закрытие. Flash — авто-скрытие за 5с через <code>data-sl-autohide</code> (<code>slaed.js</code>).</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="sl-alert sl-alert-info">
+        <div class="sl-alert-body"><p class="sl-alert-title">К сведению</p><p class="sl-alert-text">Доступна новая версия модуля. <a href="#">Подробнее</a>.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-success">
+        <div class="sl-alert-body"><p class="sl-alert-title">Сохранено</p><p class="sl-alert-text">Изменения применены без ошибок.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-warn">
+        <div class="sl-alert-body"><p class="sl-alert-title">Внимание</p><p class="sl-alert-text">Сессия истекает через 5 минут.</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-error">
+        <div class="sl-alert-body"><p class="sl-alert-title">Ошибка</p><p class="sl-alert-text">Не удалось подключиться к базе данных.</p>
+          <div class="sl-alert-actions"><button class="sl-but-neutral sl-but-sm" type="button"><i class="bi bi-arrow-clockwise"></i> Повторить</button></div>
+        </div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sl-alert sl-alert-accent sl-alert-flash" data-sl-autohide="5000">
+        <div class="sl-alert-body"><p class="sl-alert-title">Авто-скрытие</p><p class="sl-alert-text">Это flash-уведомление исчезнет через 5 секунд (полоса-таймер внизу).</p></div>
+        <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
+        <span class="sl-alert-flash-bar"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-toast">
+    <h2>Toasts</h2>
+    <p class="lab-note">Всплывающие уведомления справа-снизу, авто-скрытие 4с. Статичный образец + живой триггер.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row">
+      <div class="sl-toast sl-is-in" style="position:static;transform:none;width:300px"><i class="bi bi-bell-fill"></i><div class="sl-toast-body"><div class="sl-toast-title">Уведомление</div>Новое событие в системе.</div><button class="sl-toast-x"><i class="bi bi-x-lg"></i></button></div>
+      <button class="sl-but-neutral" id="toast-btn"><i class="bi bi-bell"></i> Показать тост</button>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-acc">
+    <h2>Accordion</h2>
+    <p class="lab-note">Боевой тогл <code>data-sl-toggle</code> / <code>data-sl-toggle-control</code> из <code>slaed.js</code> (со slide-эффектом). Кликни по заголовку.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="sl-acc">
+        <button class="sl-acc-head" type="button" data-sl-toggle-control="acc-1">Что такое SLAED CMS? <i class="bi bi-chevron-down"></i></button>
+        <div id="acc-1" class="sl-acc-body" data-sl-toggle="acc-1" data-sl-toggle-default="open" data-sl-toggle-effect="slide">Модульная CMS на PHP. Здесь — единая дизайн-система: одна кнопка, общие поля, токены из base.css.</div>
+      </div>
+      <div class="sl-acc">
+        <button class="sl-acc-head" type="button" data-sl-toggle-control="acc-2">Как подключить компонент? <i class="bi bi-chevron-down"></i></button>
+        <div id="acc-2" class="sl-acc-body" data-sl-toggle="acc-2" data-sl-toggle-default="closed" data-sl-toggle-effect="slide">Разметка использует боевые классы (<code>.sl-alert</code>, <code>.sl-tabs</code>, <code>.sl-tip</code>), а поведение даёт <code>slaed.js</code> через data-атрибуты.</div>
+      </div>
+      <div class="sl-acc">
+        <button class="sl-acc-head" type="button" data-sl-toggle-control="acc-3">Поддерживаются ли формы углов? <i class="bi bi-chevron-down"></i></button>
+        <div id="acc-3" class="sl-acc-body" data-sl-toggle="acc-3" data-sl-toggle-default="closed" data-sl-toggle-effect="slide">Да — контейнер <code>sl-shape-*</code> переключает pill/round/sharp/square сразу всем контролам внутри.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-collapse">
+    <h2>Collapse</h2>
+    <p class="lab-note">Произвольный сворачиваемый блок на боевом <code>data-sl-toggle</code> (slide).</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <button class="sl-but-neutral" type="button" data-sl-toggle-control="col-1"><i class="bi bi-arrows-expand"></i> Показать / скрыть</button>
+      <div id="col-1" class="sl-collapse" data-sl-toggle="col-1" data-sl-toggle-default="closed" data-sl-toggle-effect="slide">Сворачиваемая область на том же движке, что и аккордеон. Внутри — любая разметка.</div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-modals">
+    <h2>Modal</h2>
+    <p class="lab-note">CSS через <code>:target</code>. Каждая кнопка открывает окно в своей форме.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card"><div class="lab-row">
+      <a class="sl-but-neutral sl-but-round" href="#modal-round"><i class="bi bi-window"></i> Round</a>
+      <a class="sl-but-neutral sl-but-sharp" href="#modal-sharp"><i class="bi bi-window"></i> Sharp</a>
+      <a class="sl-but-neutral sl-but-square" href="#modal-square"><i class="bi bi-window"></i> Square</a>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-oc">
+    <h2>Offcanvas</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card"><div class="lab-row">
+      <a class="sl-but-neutral" href="#oc1"><i class="bi bi-layout-sidebar-inset-reverse"></i> Открыть панель</a>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-cookie"><h2>Cookie bar</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cookie"><i class="bi bi-cookie" style="font-size:20px;color:#e8c06a"></i><span style="flex:1">Мы используем cookie.</span><button class="sl-but-neutral">Принять</button></div></div></section>
+
+  <section class="lab-sec" id="sec-progress">
+    <h2>Progress</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card" style="display:grid;gap:14px;max-width:520px">
+      <div class="sl-progress"><div class="sl-progress-bar" style="width:35%"></div></div>
+      <div class="sl-progress"><div class="sl-progress-bar sl-is-success" style="width:70%"></div></div>
+      <div class="sl-progress"><div class="sl-progress-bar sl-is-warn" style="width:50%"></div></div>
+      <div class="sl-progress"><div class="sl-progress-bar sl-is-danger" style="width:88%"></div></div>
+      <div class="sl-progress sl-progress-striped"><div class="sl-progress-bar" style="width:60%"></div></div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-ring"><h2>Circular progress</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:20px"><span class="nc-ring" style="--p:35"><b>35%</b></span><span class="nc-ring" style="--p:65"><b>65%</b></span><span class="nc-ring" style="--p:90;--sl-color-brand-link:var(--sl-color-success)"><b>90%</b></span></div></div></section>
+
+  <section class="lab-sec" id="sec-meter"><h2>Meter</h2><div class="lab-line"></div><div class="lab-card" style="max-width:520px"><div class="nc-meter"><span style="width:45%;background:var(--sl-color-brand-link)"></span><span style="width:25%;background:var(--sl-color-success)"></span><span style="width:18%;background:var(--sl-color-warning)"></span><span style="width:12%;background:var(--sl-color-danger)"></span></div></div></section>
+
+  <section class="lab-sec" id="sec-loadbar"><h2>Loading bar</h2><div class="lab-line"></div><div class="lab-card" style="max-width:520px"><div class="nc-loadbar"></div></div></section>
+
+  <section class="lab-sec" id="sec-spin">
+    <h2>Spinners</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card"><div class="lab-row" style="gap:26px">
+      <span class="sl-spinner sl-spinner-sm"></span>
+      <span class="sl-spinner"></span>
+      <span class="sl-spinner sl-spinner-lg"></span>
+      <span class="sl-dots"><span></span><span></span><span></span></span>
+      <button class="sl-but-neutral sl-is-loading">Загрузка</button>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-ph">
+    <h2>Placeholders</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card"><div class="lab-row" style="align-items:flex-start;gap:18px">
+      <div style="width:220px;border:1px solid var(--sl-color-border-subtle);border-radius:8px;overflow:hidden">
+        <span class="sl-ph" style="height:96px;border-radius:0"></span>
+        <div style="padding:13px"><span class="sl-ph" style="width:70%;height:15px;margin-bottom:9px"></span><span class="sl-ph" style="width:100%"></span><span class="sl-ph" style="width:90%;margin-top:6px"></span><span class="sl-ph" style="width:40%;height:28px;margin-top:12px"></span></div>
+      </div>
+      <div style="flex:1;display:flex;gap:12px;align-items:center;max-width:320px"><span class="sl-ph sl-ph-circle" style="width:48px;height:48px"></span><div style="flex:1"><span class="sl-ph" style="width:50%;height:14px;margin-bottom:8px"></span><span class="sl-ph" style="width:85%"></span></div></div>
+    </div></div>
+  </section>
+
+  <section class="lab-sec" id="sec-empty"><h2>Empty state</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-empty"><i class="bi bi-inbox"></i><h4>Пока пусто</h4><p>Здесь появятся записи.</p><button class="sl-but-neutral"><i class="bi bi-plus-lg"></i> Создать</button></div></div></section>
+
+  <section class="lab-sec" id="sec-divider"><h2>Divider</h2><div class="lab-line"></div><div class="lab-card" style="display:grid;gap:16px"><div class="nc-divider">или</div><div class="nc-divider">РАЗДЕЛ</div></div></section>
+
+  <section class="lab-sec" id="sec-carousel">
+    <h2>Carousel</h2>
+    <p class="lab-note">scroll-snap дорожка с навигацией (та же кнопка) и точками.</p>
+    <div class="lab-line"></div>
+    <div class="lab-card">
+      <div class="sl-carousel" id="car1">
+        <button class="sl-but-neutral sl-but-icon sl-carousel-nav sl-carousel-prev" data-car-prev><i class="bi bi-chevron-left"></i></button>
+        <div class="sl-carousel-track">
+          <div class="sl-slide" style="background:linear-gradient(135deg,#5cb6f7,#2f7fc0)">Слайд 1</div>
+          <div class="sl-slide" style="background:linear-gradient(135deg,#9b6be0,#6a2fa0)">Слайд 2</div>
+          <div class="sl-slide" style="background:linear-gradient(135deg,#79c23f,#4f8a1e)">Слайд 3</div>
+          <div class="sl-slide" style="background:linear-gradient(135deg,#f59a3c,#e8780f)">Слайд 4</div>
+          <div class="sl-slide" style="background:linear-gradient(135deg,#fb7878,#c5384a)">Слайд 5</div>
+        </div>
+        <button class="sl-but-neutral sl-but-icon sl-carousel-nav sl-carousel-next" data-car-next><i class="bi bi-chevron-right"></i></button>
+        <div class="sl-carousel-dots" data-car-dots></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-spy">
+    <h2>Scrollspy</h2>
+    <p class="lab-line"></p>
+    <div class="lab-card">
+      <div class="sl-spy" id="spy1">
+        <nav class="sl-spy-nav">
+          <a href="#sp-1" class="sl-is-active">Раздел 1</a>
+          <a href="#sp-2">Раздел 2</a>
+          <a href="#sp-3">Раздел 3</a>
+        </nav>
+        <div class="sl-spy-body">
+          <div id="sp-1"><h4>Раздел 1</h4><p>Прокручивай — активный пункт слева подсвечивается по позиции. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
+          <div id="sp-2"><h4>Раздел 2</h4><p>Tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation.</p></div>
+          <div id="sp-3"><h4>Раздел 3</h4><p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lab-sec" id="sec-line"><h2>Line chart</h2><div class="lab-line"></div><div class="lab-card" style="max-width:520px"><svg class="nc-chart" viewBox="0 0 320 140" style="height:140px"><line class="nc-c-grid" x1="0" y1="35" x2="320" y2="35"/><line class="nc-c-grid" x1="0" y1="70" x2="320" y2="70"/><line class="nc-c-grid" x1="0" y1="105" x2="320" y2="105"/><polyline class="nc-c-line" points="0,110 40,80 80,95 120,50 160,65 200,30 240,55 280,25 320,40"/><polyline class="nc-c-line2" points="0,120 40,110 80,100 120,90 160,95 200,75 240,80 280,60 320,70"/></svg><div class="nc-legend"><span>Визиты</span><span class="lg-green">Заказы</span></div></div></section>
+
+  <section class="lab-sec" id="sec-area"><h2>Area chart</h2><div class="lab-line"></div><div class="lab-card" style="max-width:520px"><svg class="nc-chart" viewBox="0 0 320 140" style="height:140px"><polygon class="nc-c-area" points="0,140 0,100 50,70 100,85 150,40 200,55 250,25 320,45 320,140"/><polyline class="nc-c-line" points="0,100 50,70 100,85 150,40 200,55 250,25 320,45"/></svg></div></section>
+
+  <section class="lab-sec" id="sec-spark"><h2>Sparklines</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:24px"><svg width="90" height="30" viewBox="0 0 90 30"><polyline class="nc-spark" points="0,24 15,18 30,22 45,10 60,14 75,6 90,12"/></svg><svg width="90" height="30" viewBox="0 0 90 30"><polyline class="nc-spark" style="stroke:var(--sl-color-danger)" points="0,8 15,14 30,10 45,18 60,16 75,22 90,26"/></svg></div></div></section>
+
+  <section class="lab-sec" id="sec-bars"><h2>Bar chart</h2><div class="lab-line"></div><div class="lab-card" style="max-width:420px"><div class="nc-bars"><span style="height:40%"></span><span style="height:65%"></span><span style="height:30%"></span><span style="height:85%"></span><span style="height:55%"></span><span style="height:70%"></span></div></div></section>
+
+  <section class="lab-sec" id="sec-stack"><h2>Stacked bars</h2><div class="lab-line"></div><div class="lab-card" style="max-width:440px"><div class="nc-bars" style="height:120px"><span style="height:70%;background:linear-gradient(var(--sl-color-warning) 20%, var(--sl-color-success) 20% 55%, var(--sl-color-brand-link) 55%)"></span><span style="height:90%;background:linear-gradient(var(--sl-color-warning) 20%, var(--sl-color-success) 20% 45%, var(--sl-color-brand-link) 45%)"></span><span style="height:55%;background:linear-gradient(var(--sl-color-warning) 20%, var(--sl-color-success) 20% 60%, var(--sl-color-brand-link) 60%)"></span><span style="height:80%;background:linear-gradient(var(--sl-color-warning) 20%, var(--sl-color-success) 20% 40%, var(--sl-color-brand-link) 40%)"></span></div><div class="nc-legend"><span>Desktop</span><span class="lg-green">Mobile</span><span class="lg-orange">Tablet</span></div></div></section>
+
+  <section class="lab-sec" id="sec-donut"><h2>Donut chart</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:20px"><div class="nc-donut"></div><div class="nc-legend" style="flex-direction:column;gap:7px"><span>Прямые 45%</span><span class="lg-green">Поиск 25%</span><span class="lg-orange">Соцсети 18%</span><span class="lg-red">Прочее 12%</span></div></div></div></section>
+
+  <section class="lab-sec" id="sec-gauge"><h2>Gauge</h2><div class="lab-line"></div><div class="lab-card"><svg width="150" height="92" viewBox="0 0 150 92"><path class="nc-gauge-track" d="M12 82 A 63 63 0 0 1 138 82"/><path class="nc-gauge-val" d="M12 82 A 63 63 0 0 1 138 82" stroke-dasharray="198" stroke-dashoffset="69"/><text class="nc-gauge-num" x="75" y="80" text-anchor="middle">65</text></svg></div></section>
+
+  <section class="lab-sec" id="sec-radar"><h2>Radar chart</h2><div class="lab-line"></div><div class="lab-card"><svg width="200" height="200" viewBox="0 0 200 200"><polygon class="nc-radar-grid" points="100,20 168,60 168,140 100,180 32,140 32,60"/><polygon class="nc-radar-grid" points="100,60 134,80 134,120 100,140 66,120 66,80"/><polygon class="nc-radar-area" points="100,35 150,72 145,130 100,160 55,125 50,70"/></svg></div></section>
+
+  <section class="lab-sec" id="sec-social"><h2>Social buttons</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row nc-social"><a href="#" style="background:#1da1f2"><i class="bi bi-twitter-x"></i></a><a href="#" style="background:#1877f2"><i class="bi bi-facebook"></i></a><a href="#" style="background:#0088cc"><i class="bi bi-telegram"></i></a><a href="#" style="background:#333"><i class="bi bi-github"></i></a></div></div></section>
+
+  <section class="lab-sec" id="sec-vote"><h2>Like / vote</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row"><span class="nc-vote" data-vote><i class="bi bi-hand-thumbs-up"></i> 124</span><span class="nc-vote is-on" data-vote><i class="bi bi-heart-fill"></i> 56</span></div></div></section>
+
+  <section class="lab-sec" id="sec-footer"><h2>Footer</h2><div class="lab-line"></div><div class="nc-footer"><div class="lab-row" style="justify-content:space-between"><b style="color:#fff">SLAED</b><span>© 2026 — <a href="#">Docs</a> · <a href="#">Форум</a></span></div></div></section>
+
+</div>
+
+<!-- ===================== MODALS ===================== -->
+<div class="sl-modal sl-shape-round" id="modal-round">
+  <a class="sl-modal-back" href="#sec-modals" aria-label="Закрыть"></a>
+  <div class="sl-modal-dialog">
+    <div class="sl-modal-head"><h3 class="sl-modal-title">Round-окно</h3><a class="sl-modal-x" href="#sec-modals"><i class="bi bi-x-lg"></i></a></div>
+    <div class="sl-modal-body"><p>Углы 9px у диалога, полей и кнопок.</p><input class="sl-field sl-field-block" type="text" value="Заголовок"></div>
+    <div class="sl-modal-foot"><a class="sl-but-neutral" href="#sec-modals">Отмена</a><a class="sl-but-neutral" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
+  </div>
+</div>
+<div class="sl-modal sl-shape-sharp" id="modal-sharp">
+  <a class="sl-modal-back" href="#sec-modals" aria-label="Закрыть"></a>
+  <div class="sl-modal-dialog">
+    <div class="sl-modal-head"><h3 class="sl-modal-title">Sharp-окно</h3><a class="sl-modal-x" href="#sec-modals"><i class="bi bi-x-lg"></i></a></div>
+    <div class="sl-modal-body"><p>Углы 4px — как у боевых полей, самый «системный».</p><input class="sl-field sl-field-block" type="text" value="Заголовок"></div>
+    <div class="sl-modal-foot"><a class="sl-but-neutral" href="#sec-modals">Отмена</a><a class="sl-but-neutral" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
+  </div>
+</div>
+<div class="sl-modal sl-shape-square" id="modal-square">
+  <a class="sl-modal-back" href="#sec-modals" aria-label="Закрыть"></a>
+  <div class="sl-modal-dialog">
+    <div class="sl-modal-head"><h3 class="sl-modal-title">Square-окно</h3><a class="sl-modal-x" href="#sec-modals"><i class="bi bi-x-lg"></i></a></div>
+    <div class="sl-modal-body"><p>Углы 0 — строгий прямоугольный вид.</p><input class="sl-field sl-field-block" type="text" value="Заголовок"></div>
+    <div class="sl-modal-foot"><a class="sl-but-neutral" href="#sec-modals">Отмена</a><a class="sl-but-neutral" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
+  </div>
+</div>
+
+<!-- offcanvas -->
+<div class="sl-offcanvas-wrap" id="oc1">
+  <a class="sl-offcanvas-back" href="#sec-oc" aria-label="Закрыть"></a>
+  <aside class="sl-offcanvas">
+    <div class="sl-offcanvas-head"><h3 class="sl-offcanvas-title">Панель</h3><a class="sl-close sl-close-flat" href="#sec-oc" aria-label="Закрыть"><i class="bi bi-x-lg"></i></a></div>
+    <div class="sl-offcanvas-body">
+      <p style="margin:0 0 14px;color:var(--sl-color-text-muted);font:14px/1.5 Arial,sans-serif">Выезжающая боковая панель (offcanvas) в общем стиле.</p>
+      <div class="sl-list"><a class="sl-list-item" href="#"><i class="bi bi-gear"></i> Настройки</a><a class="sl-list-item" href="#"><i class="bi bi-person"></i> Профиль</a><a class="sl-list-item" href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div>
+    </div>
+  </aside>
+</div>
+
+<!-- toaster -->
+<div class="sl-toaster" id="toaster"></div>
+
+<!-- demo glue: chips/toasts close, toast trigger, carousel, scrollspy -->
+<script>
+document.addEventListener('click', function (event) {
+  var choice = event.target.closest('.sl-chip-choice');
+  if (choice && !event.target.closest('.sl-chip-close')) choice.classList.toggle('sl-is-on');
+  var close = event.target.closest('.sl-chip-close, .sl-alert-close, .sl-toast-x');
+  if (close) { var host = close.closest('.sl-chip, .sl-alert, .sl-toast'); if (host) host.remove(); }
+});
+(function () {
+  var btn = document.getElementById('toast-btn'), box = document.getElementById('toaster'), n = 0;
+  if (btn) btn.addEventListener('click', function () {
+    n++; var t = document.createElement('div'); t.className = 'sl-toast';
+    t.innerHTML = '<i class="bi bi-bell-fill"></i><div class="sl-toast-body"><div class="sl-toast-title">Уведомление #' + n + '</div>Новое событие в системе.</div><button class="sl-toast-x"><i class="bi bi-x-lg"></i></button>';
+    box.appendChild(t); requestAnimationFrame(function () { t.classList.add('sl-is-in'); });
+    setTimeout(function () { t.classList.remove('sl-is-in'); setTimeout(function () { t.remove(); }, 300); }, 4000);
+  });
+})();
+document.querySelectorAll('.sl-carousel').forEach(function (car) {
+  var track = car.querySelector('.sl-carousel-track'), slides = track.children, dotsBox = car.querySelector('[data-car-dots]'), step = 252;
+  for (var i = 0; i < slides.length; i++) { var d = document.createElement('button'); d.className = 'sl-cdot' + (i === 0 ? ' sl-is-on' : ''); d.dataset.idx = i; dotsBox.appendChild(d); }
+  car.querySelector('[data-car-prev]').onclick = function () { track.scrollBy({ left: -step, behavior: 'smooth' }); };
+  car.querySelector('[data-car-next]').onclick = function () { track.scrollBy({ left: step, behavior: 'smooth' }); };
+  dotsBox.onclick = function (e) { if (e.target.dataset.idx) slides[+e.target.dataset.idx].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' }); };
+  track.addEventListener('scroll', function () { var idx = Math.round(track.scrollLeft / step), dots = dotsBox.children; for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('sl-is-on', i === idx); });
+});
+document.querySelectorAll('.sl-spy').forEach(function (spy) {
+  var box = spy.querySelector('.sl-spy-body'), links = spy.querySelectorAll('.sl-spy-nav a'), secs = [];
+  links.forEach(function (a) { secs.push(spy.querySelector(a.getAttribute('href'))); });
+  box.addEventListener('scroll', function () {
+    var pos = box.scrollTop + box.clientHeight * 0.3, idx = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= pos) idx = i; });
+    links.forEach(function (a, i) { a.classList.toggle('sl-is-active', i === idx); });
+  });
+});
+</script>
+<script>
+document.querySelectorAll('.nc-stepper').forEach(function (s) { var inp = s.querySelector('[data-step-val]'); s.querySelectorAll('[data-step]').forEach(function (b) { b.addEventListener('click', function () { inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + parseInt(b.dataset.step, 10)); }); }); });
+document.querySelectorAll('[data-range]').forEach(function (r) { var out = r.parentNode.querySelector('[data-range-out]'); r.addEventListener('input', function () { if (out) out.textContent = r.value; }); });
+document.querySelectorAll('[data-rate]').forEach(function (g) { var stars = g.querySelectorAll('.bi'); g.addEventListener('click', function (e) { var t = e.target.closest('.bi'); if (!t) return; var idx = Array.prototype.indexOf.call(stars, t); stars.forEach(function (st, i) { st.classList.toggle('bi-star-fill', i <= idx); st.classList.toggle('bi-star', i > idx); st.classList.toggle('is-on', i <= idx); }); }); });
+document.querySelectorAll('[data-seg]').forEach(function (seg) { seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; seg.querySelectorAll('button').forEach(function (x) { x.classList.toggle('is-on', x === b); }); }); });
+document.querySelectorAll('[data-vtabs]').forEach(function (vt) { vt.addEventListener('click', function (e) { var b = e.target.closest('[data-vt]'); if (!b) return; var id = b.dataset.vt; vt.querySelectorAll('[data-vt]').forEach(function (x) { x.classList.toggle('is-on', x === b); }); vt.querySelectorAll('[data-vtp]').forEach(function (p) { p.classList.toggle('is-on', p.dataset.vtp === id); }); }); });
+document.querySelectorAll('[data-otp]').forEach(function (g) { var ins = g.querySelectorAll('input'); ins.forEach(function (inp, i) { inp.addEventListener('input', function () { inp.value = inp.value.replace(/\D/g, ''); if (inp.value && ins[i + 1]) ins[i + 1].focus(); }); }); });
+document.querySelectorAll('[data-ta-count]').forEach(function (ta) { var out = ta.parentNode.querySelector('[data-ta-out]'), max = ta.getAttribute('maxlength'); ta.addEventListener('input', function () { out.textContent = ta.value.length + ' / ' + max; }); });
+document.querySelectorAll('[data-vote]').forEach(function (v) { v.addEventListener('click', function () { v.classList.toggle('is-on'); }); });
+document.querySelectorAll('[data-speed]').forEach(function (sd) { var items = sd.querySelectorAll('.sl-but-icon'); sd.querySelector('[data-speed-toggle]').addEventListener('click', function () { items.forEach(function (it) { it.style.display = it.style.display === 'none' ? 'inline-flex' : 'none'; }); }); });
+</script>
+<!-- Real system mechanisms: Tablesort first, then slaed.js wires everything -->
+<script src="../plugins/tablesort/tablesort.min.js"></script>
+<script src="../plugins/system/slaed.js"></script>
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED · Clay UI</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<style>
+/*
+  SLAED Clay — a 5th, playful "claymorphism" language. Pillowy surfaces with
+  layered soft colour shadows (raised) and inset wells (sunken), big radii,
+  a candy palette, and springy bouncy interactions (press to squish in).
+  Same canonical order & names as the other four labs. Live behaviour reuses
+  real slaed.js (tabs, sort, dropdowns, accordion/collapse), re-dressed.
+*/
+.cl {
+  --bg: #f1ecfb; --surf: #fbf8ff; --surf2: #f1ecf9; --sink: #ece5f6;
+  --ink: #4a4368; --ink2: #8a81a6; --ink3: #b7aed2;
+  --p1: #ff8aa0; --p2: #a78bfa; --teal: #2dd4bf; --amber: #fbbf24; --sky: #38bdf8; --lime: #84cc16; --vio: #a78bfa;
+  --ok: #34d399; --warn: #fbbf24; --bad: #fb6f84;
+  --grad: linear-gradient(135deg, #ff8aa0 0%, #a78bfa 100%);
+  --grad2: linear-gradient(135deg, #5eead4, #38bdf8);
+  --r: 18px; --rs: 13px; --rxs: 9px;
+  --clay: 7px 7px 16px rgba(150,128,196,0.32), -6px -6px 14px rgba(255,255,255,0.95);
+  --clay-sm: 4px 4px 10px rgba(150,128,196,0.26), -4px -4px 8px rgba(255,255,255,0.9);
+  --clay-hi: 10px 12px 26px rgba(150,128,196,0.4), -7px -7px 16px rgba(255,255,255,0.95);
+  --well: inset 4px 4px 9px rgba(150,128,196,0.32), inset -4px -4px 8px rgba(255,255,255,0.9);
+  --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif; color: var(--ink);
+}
+body { counter-reset: sec; margin: 0; background: linear-gradient(160deg, #f8ecf6 0%, #ece6fb 48%, #e6f1fb 100%); background-attachment: fixed; min-height: 100vh; }
+
+/* ===== buttons ===== */
+.cl-but { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 19px; border: 0; border-radius: var(--rs); background: var(--surf); color: var(--ink); font: 700 14px/1 inherit; white-space: nowrap; text-decoration: none; cursor: pointer; vertical-align: middle; box-shadow: var(--clay-sm); transition: transform 0.18s var(--bounce), box-shadow 0.15s ease, color 0.15s ease; }
+.cl-but > .bi { font-size: 1.05em; line-height: 0; }
+.cl-but:hover { transform: translateY(-2px); box-shadow: var(--clay); color: var(--p2); }
+.cl-but:active { transform: translateY(1px) scale(0.97); box-shadow: var(--well); }
+.cl-but:focus-visible { outline: none; box-shadow: var(--clay-sm), 0 0 0 4px rgba(167, 139, 250, 0.3); }
+.cl-but[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: var(--clay-sm); }
+.cl-but-primary { background: var(--grad); color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.13); }
+.cl-but-primary:hover { color: #fff; box-shadow: 7px 9px 20px rgba(255, 138, 160, 0.45), -4px -4px 10px rgba(255, 255, 255, 0.7); }
+.cl-but-teal { background: var(--grad2); color: #073b40; }
+.cl-but-ghost { background: transparent; box-shadow: none; color: var(--ink2); }
+.cl-but-ghost:hover { background: var(--surf); box-shadow: var(--clay-sm); color: var(--p2); }
+.cl-but-danger { background: linear-gradient(135deg, #fb8aa0, #f43f5e); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.13); }
+.cl-but-icon { width: 38px; padding: 0; }
+.cl-but-sm { height: 32px; padding: 0 14px; font-size: 13px; } .cl-but-sm.cl-but-icon { width: 32px; }
+.cl-but-lg { height: 46px; padding: 0 24px; font-size: 15px; } .cl-but-lg.cl-but-icon { width: 46px; }
+.cl-but.is-on { background: var(--grad); color: #fff; box-shadow: var(--well); }
+.cl-loading { color: transparent !important; pointer-events: none; position: relative; }
+.cl-loading::after { content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; border: 2.5px solid currentColor; border-right-color: transparent; border-radius: 50%; color: var(--p2); animation: cl-spin 0.6s linear infinite; }
+@keyframes cl-spin { to { transform: rotate(360deg); } }
+.cl-group { display: inline-flex; gap: 4px; padding: 5px; border-radius: var(--r); background: var(--surf); box-shadow: var(--well); }
+.cl-group .cl-but { box-shadow: none; background: transparent; }
+.cl-group .cl-but:hover { transform: none; box-shadow: none; }
+.cl-group .cl-but.is-on { box-shadow: var(--clay-sm); }
+.cl-fab { width: 56px; height: 56px; padding: 0; border-radius: 50%; background: var(--grad); color: #fff; box-shadow: 7px 9px 22px rgba(255, 138, 160, 0.5), -5px -5px 12px rgba(255, 255, 255, 0.8); animation: cl-float 3s ease-in-out infinite; }
+.cl-fab > .bi { font-size: 23px; }
+@keyframes cl-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.cl-close { width: 36px; height: 36px; padding: 0; color: var(--ink2); background: var(--surf); border: 0; border-radius: var(--rs); box-shadow: var(--clay-sm); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; }
+.cl-close:hover { color: var(--bad); box-shadow: var(--clay); }
+.cl-close:active { box-shadow: var(--well); }
+.cl-toolbar { display: inline-flex; align-items: center; gap: 6px; padding: 7px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay-sm); }
+.cl-toolbar-sep { width: 2px; align-self: stretch; margin: 4px 2px; border-radius: 2px; background: var(--sink); }
+
+/* ===== fields ===== */
+.cl-field { box-sizing: border-box; height: 40px; padding: 0 15px; border: 0; border-radius: var(--rs); background: var(--surf); color: var(--ink); font: 14px/1 inherit; box-shadow: var(--well); transition: box-shadow 0.16s ease; }
+.cl-field::placeholder { color: var(--ink3); }
+.cl-field:focus { outline: none; box-shadow: var(--well), 0 0 0 3px rgba(167, 139, 250, 0.28); }
+.cl-field-block { display: block; width: 100%; }
+select.cl-field { cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 32px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%238a81a6' d='M4.5 6l3.5 3.5L11.5 6z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.cl-field-ic { position: relative; display: inline-flex; align-items: center; }
+.cl-field-ic > .bi { position: absolute; left: 14px; color: var(--ink3); pointer-events: none; font-size: 15px; }
+.cl-field-ic > .cl-field { padding-left: 38px; }
+.cl-check { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; font-size: 14px; color: var(--ink2); }
+.cl-check input { appearance: none; -webkit-appearance: none; position: relative; width: 22px; height: 22px; min-width: 22px; margin: 0; border: 0; border-radius: 8px; background: var(--surf); box-shadow: var(--well); cursor: pointer; transition: 0.15s var(--bounce); }
+.cl-check input[type="radio"] { border-radius: 50%; }
+.cl-check input:checked { background: var(--grad); box-shadow: var(--clay-sm); }
+.cl-check input[type="checkbox"]:checked::after { content: ""; position: absolute; left: 7px; top: 3px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); }
+.cl-check input[type="radio"]:checked::after { content: ""; position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; border-radius: 50%; background: #fff; transform: translate(-50%, -50%); }
+.cl-switch { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14px; color: var(--ink2); }
+.cl-switch input { appearance: none; -webkit-appearance: none; width: 50px; height: 28px; margin: 0; border-radius: 999px; background: var(--surf); box-shadow: var(--well); cursor: pointer; transition: background 0.2s ease; }
+.cl-switch input::after { content: ""; position: absolute; left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: var(--clay-sm); transition: transform 0.22s var(--bounce); }
+.cl-switch input:checked { background: var(--grad); }
+.cl-switch input:checked::after { transform: translateX(22px); }
+.cl-ig { display: inline-flex; align-items: stretch; gap: 7px; } .cl-ig .cl-field { flex: 1; min-width: 0; }
+.cl-flabel { position: relative; display: inline-block; }
+.cl-flabel .cl-field { height: 52px; padding: 21px 15px 7px; }
+.cl-flabel label { position: absolute; left: 16px; top: 17px; color: var(--ink3); font-size: 14px; pointer-events: none; transition: 0.15s ease; }
+.cl-flabel .cl-field:focus + label, .cl-flabel .cl-field:not(:placeholder-shown) + label { top: 9px; font-size: 10px; color: var(--p2); }
+.cl-affix { display: inline-flex; align-items: center; border-radius: var(--rs); background: var(--surf); box-shadow: var(--well); overflow: hidden; }
+.cl-affix > span { padding: 0 13px; color: var(--ink2); font-size: 13px; align-self: stretch; display: flex; align-items: center; }
+.cl-affix input { border: 0; outline: none; height: 38px; padding: 0 13px; background: transparent; color: var(--ink); font-size: 13px; }
+.cl-ta-wrap { position: relative; display: inline-block; }
+.cl-ta-wrap textarea { width: 280px; min-height: 78px; padding: 12px 14px; border: 0; border-radius: var(--rs); background: var(--surf); box-shadow: var(--well); color: var(--ink); font: 13px/1.45 inherit; resize: vertical; }
+.cl-ta-wrap textarea:focus { outline: none; box-shadow: var(--well), 0 0 0 3px rgba(167, 139, 250, 0.28); }
+.cl-ta-count { position: absolute; right: 14px; bottom: 10px; font-size: 11px; color: var(--ink3); }
+.cl-stepper { display: inline-flex; align-items: center; border-radius: 999px; background: var(--surf); box-shadow: var(--well); padding: 4px; }
+.cl-stepper button { width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer; font-size: 17px; transition: 0.12s var(--bounce); }
+.cl-stepper button:hover { background: var(--surf); box-shadow: var(--clay-sm); color: var(--p2); }
+.cl-stepper button:active { transform: scale(0.9); }
+.cl-stepper input { width: 46px; border: 0; background: transparent; text-align: center; color: var(--ink); font: 700 15px/1 inherit; }
+.cl-range { appearance: none; -webkit-appearance: none; width: 200px; height: 12px; border-radius: 999px; background: var(--surf); box-shadow: var(--well); outline: none; vertical-align: middle; }
+.cl-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--grad); cursor: pointer; box-shadow: var(--clay-sm); }
+.cl-range::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: #a78bfa; cursor: pointer; }
+.cl-otp { display: inline-flex; gap: 9px; }
+.cl-otp input { width: 44px; height: 50px; text-align: center; border: 0; border-radius: var(--rs); background: var(--surf); box-shadow: var(--well); color: var(--ink); font: 800 19px/1 inherit; }
+.cl-otp input:focus { outline: none; box-shadow: var(--well), 0 0 0 3px rgba(167, 139, 250, 0.28); }
+.cl-pwd { display: grid; gap: 8px; max-width: 260px; }
+.cl-pwd-bars { display: flex; gap: 6px; }
+.cl-pwd-bars span { flex: 1; height: 7px; border-radius: 999px; background: var(--sink); box-shadow: var(--well); transition: background 0.2s ease; }
+.cl-pwd-bars span.on1 { background: var(--bad); } .cl-pwd-bars span.on2 { background: var(--warn); } .cl-pwd-bars span.on3 { background: var(--ok); }
+.cl-seg { display: inline-flex; padding: 5px; border-radius: 999px; background: var(--surf); box-shadow: var(--well); gap: 3px; }
+.cl-seg button { border: 0; background: transparent; color: var(--ink2); padding: 7px 17px; border-radius: 999px; font: 700 13px/1 inherit; cursor: pointer; transition: 0.15s var(--bounce); }
+.cl-seg button.is-on { background: var(--grad); color: #fff; box-shadow: var(--clay-sm); }
+.cl-rate { display: inline-flex; gap: 5px; font-size: 22px; color: var(--ink3); cursor: pointer; }
+.cl-rate .bi.is-on { color: var(--amber); }
+.cl-drop { padding: 28px; border: 0; border-radius: var(--r); text-align: center; color: var(--ink2); font-size: 13px; background: var(--surf); box-shadow: var(--well); cursor: pointer; }
+.cl-drop > .bi { font-size: 32px; display: block; margin-bottom: 9px; color: var(--p2); }
+.cl-cal { display: inline-block; border-radius: var(--r); padding: 15px; background: var(--surf); box-shadow: var(--clay); }
+.cl-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font: 800 14px/1 inherit; }
+.cl-cal-grid { display: grid; grid-template-columns: repeat(7, 32px); gap: 3px; }
+.cl-cal-grid b { font: 700 10px/32px inherit; color: var(--ink3); text-align: center; }
+.cl-cal-grid a { display: grid; place-items: center; height: 32px; border-radius: 50%; color: var(--ink); text-decoration: none; font-size: 12px; transition: 0.12s var(--bounce); }
+.cl-cal-grid a:hover { background: var(--surf); box-shadow: var(--clay-sm); }
+.cl-cal-grid a.is-on { background: var(--grad); color: #fff; box-shadow: var(--clay-sm); }
+.cl-cal-grid a.mute { color: var(--ink3); opacity: 0.5; }
+.cl-swatch { width: 40px; height: 40px; border-radius: 13px; box-shadow: var(--clay-sm); cursor: pointer; transition: 0.15s var(--bounce); } .cl-swatch:hover { transform: translateY(-3px) rotate(-4deg); }
+
+/* ===== data display ===== */
+.cl-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 999px; font: 800 11px/1.5 inherit; vertical-align: middle; background: var(--surf); box-shadow: var(--clay-sm); color: var(--ink2); }
+.cl-badge-p { background: var(--grad); color: #fff; } .cl-badge-teal { background: var(--grad2); color: #073b40; } .cl-badge-ok { background: linear-gradient(135deg, #6ee7b7, #34d399); color: #053b29; } .cl-badge-warn { background: linear-gradient(135deg, #fde68a, #fbbf24); color: #5b3d05; } .cl-badge-bad { background: linear-gradient(135deg, #fda4af, #fb6f84); color: #5b0a17; }
+.cl-badge-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.cl-chip { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 14px; border-radius: 999px; font: 600 13px/1 inherit; color: var(--ink); background: var(--surf); box-shadow: var(--clay-sm); white-space: nowrap; vertical-align: middle; }
+.cl-chip > .bi { color: var(--p2); }
+.cl-chip-x { width: 18px; height: 18px; margin: 0 -6px 0 1px; border: 0; background: none; color: var(--ink3); cursor: pointer; border-radius: 50%; font-size: 10px; display: inline-flex; align-items: center; justify-content: center; }
+.cl-chip-x:hover { background: var(--sink); color: var(--ink); }
+.cl-chip-choice { cursor: pointer; transition: 0.15s var(--bounce); } .cl-chip-choice:hover { transform: translateY(-2px); } .cl-chip-choice.is-on { background: var(--grad); color: #fff; }
+.cl-ava { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; background: var(--surf); box-shadow: var(--clay-sm); color: var(--ink2); font: 800 14px/1 inherit; vertical-align: middle; }
+.cl-ava-p { background: var(--grad); color: #fff; } .cl-ava-teal { background: var(--grad2); color: #073b40; } .cl-ava-amber { background: linear-gradient(135deg, #fde68a, #fbbf24); color: #5b3d05; }
+.cl-ava-26 { width: 26px; height: 26px; font-size: 11px; } .cl-ava-30 { width: 30px; height: 30px; font-size: 12px; } .cl-ava-32 { width: 32px; height: 32px; font-size: 13px; }
+.cl-ava-group { display: inline-flex; } .cl-ava-group .cl-ava + .cl-ava { margin-left: -14px; }
+.cl-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink2); }
+.cl-status::before { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--ok); box-shadow: var(--clay-sm); }
+.cl-status.away::before { background: var(--warn); } .cl-status.off::before { background: var(--ink3); }
+.cl-list { border-radius: var(--r); overflow: hidden; background: var(--surf); box-shadow: var(--clay); }
+.cl-list-item { display: flex; align-items: center; gap: 11px; padding: 13px 16px; color: var(--ink); text-decoration: none; font-size: 14px; }
+.cl-list-item + .cl-list-item { border-top: 2px solid var(--sink); }
+.cl-list-item .bi { color: var(--p2); } .cl-list-item .cl-badge { margin-left: auto; }
+a.cl-list-item:hover { background: var(--surf2); }
+.cl-list-item.is-active { background: var(--grad); color: #fff; } .cl-list-item.is-active .bi { color: #fff; }
+.cl-dl { display: grid; grid-template-columns: max-content 1fr; gap: 9px 20px; font-size: 13px; } .cl-dl dt { color: var(--ink3); } .cl-dl dd { margin: 0; color: var(--ink); font-weight: 600; }
+.cl-tree { font: 13px/2 inherit; color: var(--ink); } .cl-tree ul { list-style: none; margin: 0; padding-left: 20px; } .cl-tree .bi { color: var(--amber); margin-right: 7px; }
+
+/* ===== cards ===== */
+.cl-card { background: var(--surf); border-radius: var(--r); box-shadow: var(--clay); overflow: hidden; transition: transform 0.2s var(--bounce), box-shadow 0.2s ease; }
+.cl-card:hover { transform: translateY(-5px); box-shadow: var(--clay-hi); }
+.cl-card-media { display: block; height: 120px; background: var(--grad); }
+.cl-card-body { padding: 16px 18px; }
+.cl-card-title { margin: 0 0 6px; font: 800 16px/1.25 inherit; color: var(--ink); }
+.cl-card-text { margin: 0 0 13px; font: 13px/1.5 inherit; color: var(--ink2); }
+.cl-ribbon { position: relative; overflow: hidden; }
+.cl-ribbon::after { content: attr(data-ribbon); position: absolute; top: 14px; right: -28px; transform: rotate(45deg); background: var(--bad); color: #fff; font: 800 10px/1.6 inherit; padding: 4px 32px; box-shadow: var(--clay-sm); }
+.cl-profile { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); }
+.cl-stat { padding: 17px 19px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); }
+.cl-stat-label { font-size: 12px; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+.cl-stat-value { margin: 9px 0 3px; font: 800 28px/1 inherit; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.cl-stat-delta { font: 700 12px/1 inherit; color: var(--ok); } .cl-stat-delta.is-down { color: var(--bad); }
+.cl-price { padding: 22px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); text-align: center; }
+.cl-price.is-pop { box-shadow: var(--clay-hi); transform: scale(1.03); }
+.cl-price-amount { font: 800 34px/1 inherit; color: var(--ink); margin: 9px 0; }
+.cl-price ul { list-style: none; margin: 15px 0; padding: 0; font: 13px/2.2 inherit; color: var(--ink2); }
+.cl-testi { padding: 20px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); }
+.cl-feat { display: flex; gap: 14px; align-items: flex-start; }
+.cl-feat-ic { width: 46px; height: 46px; border-radius: 15px; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; color: #fff; box-shadow: var(--clay-sm); }
+.cl-feat h5 { margin: 4px 0 4px; font: 800 14px/1.2 inherit; color: var(--ink); } .cl-feat p { margin: 0; font: 12px/1.5 inherit; color: var(--ink2); }
+
+/* ===== timeline / steps / chat ===== */
+.cl-timeline { position: relative; padding-left: 26px; }
+.cl-timeline::before { content: ""; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 3px; border-radius: 3px; background: var(--sink); }
+.cl-tl-item { position: relative; padding: 0 0 16px; }
+.cl-tl-item::before { content: ""; position: absolute; left: -24px; top: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--grad); box-shadow: var(--clay-sm); }
+.cl-tl-item.is-ok::before { background: linear-gradient(135deg, #6ee7b7, #34d399); } .cl-tl-item.is-warn::before { background: linear-gradient(135deg, #fde68a, #fbbf24); }
+.cl-tl-item h5 { margin: 0 0 2px; font: 800 13px/1.2 inherit; color: var(--ink); } .cl-tl-item p { margin: 0; font: 12px/1.4 inherit; color: var(--ink2); }
+.cl-th { display: flex; }
+.cl-th-item { flex: 1; text-align: center; position: relative; padding-top: 26px; font: 12px/1.4 inherit; color: var(--ink2); }
+.cl-th-item::before { content: ""; position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: var(--grad); box-shadow: var(--clay-sm); z-index: 1; }
+.cl-th-item::after { content: ""; position: absolute; top: 9px; left: 50%; width: 100%; height: 3px; background: var(--sink); }
+.cl-th-item:last-child::after { display: none; } .cl-th-item.is-done::before { background: linear-gradient(135deg, #6ee7b7, #34d399); }
+.cl-th-item h5 { margin: 0 0 2px; font: 800 12px/1.2 inherit; color: var(--ink); }
+.cl-steps { display: flex; align-items: center; }
+.cl-step { display: flex; align-items: center; gap: 10px; color: var(--ink3); font: 700 13px/1 inherit; }
+.cl-step-num { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--surf); box-shadow: var(--clay-sm); color: var(--ink2); font-size: 13px; }
+.cl-step.is-done .cl-step-num { background: linear-gradient(135deg, #6ee7b7, #34d399); color: #053b29; } .cl-step.is-on .cl-step-num { background: var(--grad); color: #fff; } .cl-step.is-on { color: var(--ink); }
+.cl-step-line { flex: 1; height: 3px; min-width: 22px; border-radius: 3px; background: var(--sink); margin: 0 10px; }
+.cl-chat { display: flex; flex-direction: column; gap: 9px; max-width: 380px; }
+.cl-bubble { max-width: 78%; padding: 10px 14px; border-radius: 18px; font: 13px/1.4 inherit; box-shadow: var(--clay-sm); }
+.cl-bubble-in { align-self: flex-start; background: var(--surf); color: var(--ink); border-bottom-left-radius: 5px; }
+.cl-bubble-out { align-self: flex-end; background: var(--grad); color: #fff; border-bottom-right-radius: 5px; }
+.cl-bubble-meta { font: 10px/1 inherit; color: var(--ink3); margin-top: 3px; }
+.cl-typing { display: inline-flex; gap: 5px; padding: 14px 16px; background: var(--surf); border-radius: 18px; border-bottom-left-radius: 5px; box-shadow: var(--clay-sm); align-self: flex-start; }
+.cl-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--ink3); animation: cl-typing 1s ease-in-out infinite; }
+.cl-typing span:nth-child(2) { animation-delay: 0.15s; } .cl-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes cl-typing { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+.cl-cloud a { display: inline-block; margin: 4px 6px; color: var(--p2); text-decoration: none; font-weight: 700; }
+.cl-heat { display: inline-flex; gap: 4px; } .cl-heat span { width: 17px; height: 17px; border-radius: 5px; background: var(--sink); box-shadow: var(--clay-sm); }
+.cl-kbd { display: inline-block; padding: 3px 10px; border-radius: 9px; background: var(--surf); box-shadow: var(--clay-sm); font: 700 12px/1.5 "Courier New", monospace; color: var(--ink); }
+.cl-code { display: block; margin: 0; padding: 14px 16px; border-radius: var(--r); background: var(--surf); box-shadow: var(--well); color: var(--p2); font: 13px/1.5 "Courier New", monospace; overflow: auto; }
+.cl-quote { margin: 0; padding: 13px 16px; border-radius: var(--rs); background: var(--surf); box-shadow: var(--clay-sm); border-left: 4px solid var(--p1); font: italic 14px/1.5 inherit; color: var(--ink2); }
+
+/* ===== navigation ===== */
+.cl-navbar { display: flex; align-items: center; gap: 16px; padding: 11px 18px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); }
+.cl-navbar-brand { display: flex; align-items: center; gap: 10px; font: 800 17px/1 inherit; color: var(--ink); }
+.cl-navbar-brand .bi { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 1.2em; }
+.cl-navbar-nav { display: flex; gap: 5px; margin: 0 0 0 auto; padding: 0; list-style: none; }
+.cl-navbar-nav a { padding: 8px 14px; border-radius: var(--rs); color: var(--ink2); text-decoration: none; font: 700 13px/1 inherit; }
+.cl-navbar-nav a:hover { color: var(--ink); } .cl-navbar-nav a.is-active { color: var(--p2); background: var(--surf); box-shadow: var(--well); }
+.cl-nav { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.cl-nav-pills a { padding: 8px 16px; border-radius: 999px; color: var(--ink2); text-decoration: none; font: 700 13px/1 inherit; background: var(--surf); box-shadow: var(--clay-sm); }
+.cl-nav-pills a.is-active { background: var(--grad); color: #fff; }
+.cl-nav-underline { gap: 22px; }
+.cl-nav-underline a { padding: 10px 1px; color: var(--ink2); text-decoration: none; font: 700 13px/1 inherit; border-bottom: 3px solid transparent; }
+.cl-nav-underline a.is-active { color: var(--p2); border-bottom-color: var(--p1); }
+.cl-vtabs { display: grid; grid-template-columns: 160px 1fr; gap: 18px; }
+.cl-vtabs-nav { display: flex; flex-direction: column; gap: 5px; }
+.cl-vtabs-nav button { text-align: left; border: 0; background: transparent; padding: 10px 14px; border-radius: var(--rs); color: var(--ink2); font: 700 13px/1 inherit; cursor: pointer; }
+.cl-vtabs-nav button.is-on { background: var(--grad); color: #fff; box-shadow: var(--clay-sm); }
+.cl-vtabs-panel { display: none; font: 13px/1.6 inherit; color: var(--ink2); } .cl-vtabs-panel.is-on { display: block; }
+.cl-crumbs { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: 13px; color: var(--ink3); }
+.cl-crumbs a { color: var(--p2); text-decoration: none; font-weight: 600; } .cl-crumbs .bi { font-size: 11px; opacity: 0.6; } .cl-crumbs > span { color: var(--ink); font-weight: 600; }
+.cl-pager { display: inline-flex; gap: 5px; padding: 5px; border-radius: var(--r); background: var(--surf); box-shadow: var(--well); }
+.cl-pager .cl-but { box-shadow: none; background: transparent; } .cl-pager .cl-but:hover { transform: none; box-shadow: var(--clay-sm); background: var(--surf); }
+.cl-cmd { border-radius: var(--r); overflow: hidden; background: var(--surf); box-shadow: var(--clay); max-width: 420px; }
+.cl-cmd-input { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 2px solid var(--sink); color: var(--ink3); }
+.cl-cmd-input input { border: 0; outline: none; flex: 1; background: transparent; color: var(--ink); font-size: 14px; }
+.cl-cmd-item { display: flex; align-items: center; gap: 11px; padding: 11px 16px; color: var(--ink); font-size: 13px; cursor: pointer; }
+.cl-cmd-item:hover { background: var(--surf2); } .cl-cmd-item .bi { color: var(--p2); } .cl-cmd-item .cl-kbd { margin-left: auto; }
+.cl-layout { display: grid; grid-template-columns: 190px 1fr; border-radius: var(--r); overflow: hidden; background: var(--surf); box-shadow: var(--clay); }
+.cl-side { background: var(--surf2); padding: 15px; }
+.cl-main { padding: 16px; font: 13px/1.6 inherit; color: var(--ink2); }
+
+/* ===== overlays / feedback ===== */
+.cl-tipd { position: relative; }
+.cl-tipd::after { content: attr(data-tip); position: absolute; background: var(--ink); color: #fff; padding: 7px 11px; border-radius: 10px; font: 12px/1.3 inherit; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity 0.15s ease; z-index: 30; box-shadow: var(--clay); }
+.cl-tipd:hover::after { opacity: 1; visibility: visible; }
+.cl-tipd-top::after { bottom: calc(100% + 9px); left: 50%; transform: translateX(-50%); } .cl-tipd-bottom::after { top: calc(100% + 9px); left: 50%; transform: translateX(-50%); } .cl-tipd-left::after { right: calc(100% + 9px); top: 50%; transform: translateY(-50%); } .cl-tipd-right::after { left: calc(100% + 9px); top: 50%; transform: translateY(-50%); }
+.cl-pop { position: relative; display: inline-flex; }
+.cl-pop-panel { position: absolute; bottom: 100%; left: 50%; z-index: 100; width: 240px; margin-bottom: 14px; transform: translateX(-50%) translateY(8px); border-radius: var(--r); background: var(--surf); box-shadow: var(--clay-hi); opacity: 0; visibility: hidden; transition: 0.2s var(--bounce); }
+.cl-pop:hover .cl-pop-panel, .cl-pop:focus-within .cl-pop-panel { opacity: 1; visibility: visible; transform: translateX(-50%); }
+.cl-pop-head { padding: 11px 14px; font: 800 13px/1.3 inherit; color: var(--ink); border-bottom: 2px solid var(--sink); }
+.cl-pop-body { padding: 12px 14px; font: 12px/1.5 inherit; color: var(--ink2); }
+.cl-note { position: relative; display: flex; gap: 13px; align-items: flex-start; padding: 15px 17px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); }
+.cl-note > .bi { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; color: #fff; background: var(--grad); box-shadow: var(--clay-sm); }
+.cl-note-body { flex: 1; min-width: 0; } .cl-note-title { margin: 0 0 2px; font: 800 13px/1.3 inherit; color: var(--ink); } .cl-note-text { margin: 0; font: 12px/1.5 inherit; color: var(--ink2); }
+.cl-note-x { width: 26px; height: 26px; border: 0; background: none; color: var(--ink3); cursor: pointer; border-radius: 8px; font-size: 13px; } .cl-note-x:hover { color: var(--ink); background: var(--sink); }
+.cl-note-ok > .bi { background: linear-gradient(135deg, #6ee7b7, #34d399); } .cl-note-warn > .bi { background: linear-gradient(135deg, #fde68a, #fbbf24); } .cl-note-bad > .bi { background: linear-gradient(135deg, #fda4af, #fb6f84); }
+.cl-toaster { position: fixed; right: 20px; bottom: 20px; z-index: 6000; display: flex; flex-direction: column; gap: 11px; width: 320px; }
+.cl-toast { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay-hi); transform: translateX(120%); opacity: 0; transition: transform 0.35s var(--bounce), opacity 0.3s ease; }
+.cl-toast.is-in { transform: none; opacity: 1; } .cl-toast > .bi { color: var(--p2); font-size: 19px; } .cl-toast-body { flex: 1; font: 13px/1.45 inherit; color: var(--ink2); } .cl-toast-title { font-weight: 800; color: var(--ink); } .cl-toast-x { border: 0; background: none; color: var(--ink3); cursor: pointer; font-size: 12px; }
+.cl-acc { border-radius: var(--r); overflow: hidden; background: var(--surf); box-shadow: var(--clay); } .cl-acc + .cl-acc { margin-top: 12px; }
+.cl-acc-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 15px 17px; border: 0; background: transparent; color: var(--ink); font: 800 14px/1.2 inherit; text-align: left; cursor: pointer; }
+.cl-acc-head:hover { color: var(--p2); } .cl-acc-head .bi { transition: transform 0.2s var(--bounce); color: var(--ink3); } .cl-acc-head.sl-is-open .bi { transform: rotate(180deg); }
+.cl-acc-body { padding: 0 17px 16px; font: 13px/1.55 inherit; color: var(--ink2); }
+.cl-collapse { margin-top: 12px; padding: 16px; border-radius: var(--r); background: var(--surf); box-shadow: var(--well); font: 13px/1.55 inherit; color: var(--ink2); }
+.cl-modal { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(74, 67, 104, 0.35); backdrop-filter: blur(4px); opacity: 0; visibility: hidden; transition: 0.2s ease; }
+.cl-modal:target { opacity: 1; visibility: visible; }
+.cl-modal-back, .cl-oc-back { position: absolute; inset: 0; }
+.cl-modal-dialog { position: relative; width: 100%; max-width: 440px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay-hi); overflow: hidden; transform: translateY(16px) scale(0.95); transition: transform 0.25s var(--bounce); }
+.cl-modal:target .cl-modal-dialog { transform: none; }
+.cl-modal-head, .cl-oc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px 19px; border-bottom: 2px solid var(--sink); }
+.cl-modal-title, .cl-oc-title { margin: 0; font: 800 17px/1.2 inherit; color: var(--ink); }
+.cl-modal-body { padding: 19px; font: 13px/1.55 inherit; color: var(--ink2); }
+.cl-modal-foot { display: flex; justify-content: flex-end; gap: 11px; padding: 16px 19px; border-top: 2px solid var(--sink); }
+.cl-oc-wrap { position: fixed; inset: 0; z-index: 5200; visibility: hidden; } .cl-oc-wrap:target { visibility: visible; }
+.cl-oc-back { background: rgba(74, 67, 104, 0.3); opacity: 0; transition: opacity 0.25s ease; } .cl-oc-wrap:target .cl-oc-back { opacity: 1; }
+.cl-oc { position: absolute; top: 12px; bottom: 12px; right: 12px; width: 320px; max-width: 86vw; display: flex; flex-direction: column; background: var(--surf); border-radius: var(--r); box-shadow: var(--clay-hi); transform: translateX(120%); transition: transform 0.3s var(--bounce); }
+.cl-oc-wrap:target .cl-oc { transform: none; } .cl-oc-body { padding: 17px; overflow-y: auto; }
+.cl-cookie { display: flex; align-items: center; gap: 16px; padding: 15px 18px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); font-size: 13px; color: var(--ink2); }
+
+/* ===== progress / charts / misc ===== */
+.cl-progress { height: 14px; padding: 3px; border-radius: 999px; background: var(--surf); box-shadow: var(--well); }
+.cl-progress-bar { height: 100%; border-radius: 999px; background: var(--grad); }
+.cl-progress-bar.is-ok { background: linear-gradient(90deg, #6ee7b7, #34d399); } .cl-progress-bar.is-warn { background: linear-gradient(90deg, #fde68a, #fbbf24); }
+.cl-ring { position: relative; width: 70px; height: 70px; border-radius: 50%; background: conic-gradient(var(--p1) calc(var(--p, 65) * 1%), var(--sink) 0); display: grid; place-items: center; box-shadow: var(--clay-sm); }
+.cl-ring::after { content: ""; position: absolute; inset: 10px; border-radius: 50%; background: var(--surf); box-shadow: var(--well); }
+.cl-ring b { position: relative; z-index: 1; font: 800 14px/1 inherit; color: var(--ink); }
+.cl-meter { display: flex; height: 14px; padding: 3px; border-radius: 999px; overflow: hidden; background: var(--surf); box-shadow: var(--well); gap: 2px; } .cl-meter span { height: 100%; border-radius: 999px; }
+.cl-loadbar { height: 7px; border-radius: 999px; background: var(--surf); box-shadow: var(--well); overflow: hidden; } .cl-loadbar::after { content: ""; display: block; width: 40%; height: 100%; background: var(--grad); border-radius: 999px; animation: cl-load 1.3s ease-in-out infinite; }
+@keyframes cl-load { 0% { margin-left: -40%; } 100% { margin-left: 100%; } }
+.cl-spinner { display: inline-block; width: 26px; height: 26px; border: 4px solid var(--sink); border-top-color: var(--p2); border-radius: 50%; animation: cl-spin 0.7s linear infinite; vertical-align: middle; }
+.cl-spinner-lg { width: 38px; height: 38px; }
+.cl-ph { display: block; height: 14px; border-radius: 8px; background: linear-gradient(90deg, var(--sink) 25%, var(--surf2) 37%, var(--sink) 63%); background-size: 400% 100%; animation: cl-ph 1.4s ease infinite; box-shadow: var(--well); } .cl-ph-circle { border-radius: 50%; }
+@keyframes cl-ph { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+.cl-empty { text-align: center; padding: 30px 16px; color: var(--ink3); } .cl-empty > .bi { font-size: 46px; color: var(--ink3); opacity: 0.6; } .cl-empty h4 { margin: 12px 0 4px; font: 800 16px/1.2 inherit; color: var(--ink2); } .cl-empty p { margin: 0 0 14px; font-size: 13px; }
+.cl-divider { display: flex; align-items: center; gap: 14px; color: var(--ink3); font-size: 12px; font-weight: 700; } .cl-divider::before, .cl-divider::after { content: ""; flex: 1; height: 3px; border-radius: 3px; background: var(--sink); }
+.cl-carousel { position: relative; } .cl-carousel-track { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 6px 4px 12px; }
+.cl-slide { flex: 0 0 240px; scroll-snap-align: start; height: 150px; border-radius: var(--r); display: flex; align-items: flex-end; padding: 16px; color: #fff; font: 800 17px/1.2 inherit; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); box-shadow: var(--clay); }
+.cl-carousel-nav { position: absolute; top: 42%; transform: translateY(-50%); z-index: 2; } .cl-carousel-prev { left: -8px; } .cl-carousel-next { right: -8px; }
+.cl-carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; } .cl-cdot { width: 10px; height: 10px; border: 0; padding: 0; border-radius: 50%; background: var(--sink); box-shadow: var(--clay-sm); cursor: pointer; } .cl-cdot.is-on { background: var(--grad); }
+.cl-spy { display: grid; grid-template-columns: 150px 1fr; gap: 16px; } .cl-spy-nav { display: flex; flex-direction: column; gap: 5px; } .cl-spy-nav a { padding: 8px 13px; border-radius: var(--rs); color: var(--ink2); text-decoration: none; font: 700 13px/1 inherit; } .cl-spy-nav a.is-active { background: var(--grad); color: #fff; box-shadow: var(--clay-sm); }
+.cl-spy-body { position: relative; max-height: 170px; overflow-y: auto; padding: 16px; border-radius: var(--r); background: var(--surf); box-shadow: var(--well); } .cl-spy-body h4 { margin: 0 0 5px; color: var(--ink); font: 800 15px/1.2 inherit; } .cl-spy-body p { margin: 0 0 16px; font: 13px/1.6 inherit; color: var(--ink2); }
+.cl-social a { width: 40px; height: 40px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 17px; text-decoration: none; box-shadow: var(--clay-sm); transition: 0.15s var(--bounce); } .cl-social a:hover { transform: translateY(-3px) rotate(-3deg); }
+.cl-vote { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px; background: var(--surf); box-shadow: var(--clay-sm); cursor: pointer; font: 700 13px/1 inherit; color: var(--ink2); user-select: none; transition: 0.15s var(--bounce); } .cl-vote:active { transform: scale(0.94); } .cl-vote.is-on { background: var(--grad); color: #fff; }
+.cl-footer { padding: 22px; border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); color: var(--ink2); font: 13px/1.7 inherit; } .cl-footer a { color: var(--p2); text-decoration: none; font-weight: 600; }
+.cl-chart { width: 100%; display: block; }
+.cl-c-grid { stroke: var(--sink); stroke-width: 2; } .cl-c-line { fill: none; stroke: var(--p1); stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; } .cl-c-line2 { fill: none; stroke: var(--p2); stroke-width: 3.5; stroke-linejoin: round; } .cl-c-area { fill: rgba(255, 138, 160, 0.2); stroke: none; }
+.cl-spark { fill: none; stroke: var(--ok); stroke-width: 3; } .cl-gauge-track { fill: none; stroke: var(--sink); stroke-width: 14; stroke-linecap: round; } .cl-gauge-val { fill: none; stroke: var(--p1); stroke-width: 14; stroke-linecap: round; } .cl-gauge-num { fill: var(--ink); font: 800 20px inherit; }
+.cl-radar-grid { fill: none; stroke: var(--sink); stroke-width: 2; } .cl-radar-area { fill: rgba(167, 139, 250, 0.25); stroke: var(--p2); stroke-width: 3; }
+.cl-bars { display: flex; align-items: flex-end; gap: 9px; height: 100px; } .cl-bars span { flex: 1; background: var(--grad); border-radius: 8px 8px 4px 4px; min-height: 8px; box-shadow: var(--clay-sm); }
+.cl-donut { width: 124px; height: 124px; border-radius: 50%; position: relative; background: conic-gradient(var(--p1) 0 45%, var(--p2) 0 70%, var(--amber) 0 88%, var(--teal) 0 100%); box-shadow: var(--clay-sm); } .cl-donut::after { content: ""; position: absolute; inset: 28px; border-radius: 50%; background: var(--surf); box-shadow: var(--well); }
+.cl-legend { display: flex; flex-wrap: wrap; gap: 13px; margin-top: 11px; font-size: 12px; color: var(--ink2); font-weight: 600; } .cl-legend span { display: inline-flex; align-items: center; gap: 7px; } .cl-legend span::before { content: ""; width: 11px; height: 11px; border-radius: 4px; background: var(--p1); } .cl-legend .lg-vio::before { background: var(--p2); } .cl-legend .lg-amber::before { background: var(--amber); } .cl-legend .lg-teal::before { background: var(--teal); }
+.cl-speeddial { display: inline-flex; flex-direction: column-reverse; align-items: center; gap: 10px; } .cl-speeddial-row { flex-direction: row-reverse; }
+
+/* ===== live components ===== */
+.sl-tabs { border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); overflow: hidden; }
+.sl-tabs-nav { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 12px 14px; list-style: none; border-bottom: 2px solid var(--sink); }
+.sl-tabs-item { list-style: none; } .sl-tabs-link { display: block; padding: 8px 16px; border-radius: 999px; font: 700 13px/1 inherit; color: var(--ink2); text-decoration: none; cursor: pointer; }
+.sl-tabs-link.sl-is-active, .sl-tabs-link.selected, .sl-tabs-link[aria-selected="true"] { background: var(--grad); color: #fff; box-shadow: var(--clay-sm); }
+.sl-tabs-content { padding: 16px; font: 13px/1.5 inherit; color: var(--ink2); } .sl-tab-panel { display: none; }
+.sl-table-shell { border-radius: var(--r); background: var(--surf); box-shadow: var(--clay); overflow: hidden; }
+.sl-table { width: 100%; border-collapse: collapse; font: 13px/1.4 inherit; }
+.sl-table thead th { padding: 13px 15px; text-align: left; font: 800 11px/1 inherit; text-transform: uppercase; letter-spacing: 0.3px; color: var(--ink3); border-bottom: 2px solid var(--sink); white-space: nowrap; cursor: pointer; }
+.sl-table tbody td { padding: 12px 15px; border-bottom: 2px solid var(--sink); color: var(--ink); } .sl-table tbody tr:last-child td { border-bottom: 0; } .sl-table tbody tr:hover td { background: var(--surf2); }
+.sl-table-col-num { color: var(--ink3); font-variant-numeric: tabular-nums; }
+thead tr .sl-sort-asc::after { content: " ▲"; color: var(--p2); font-size: 9px; } thead tr .sl-sort-desc::after { content: " ▼"; color: var(--p2); font-size: 9px; }
+.sl-float { position: relative; } .sl-tip { display: inline-flex; align-items: center; justify-content: center; cursor: help; color: var(--p2); }
+.sl-float-panel { position: absolute; top: 100%; left: 0; z-index: 100; min-width: 170px; width: max-content; max-width: 290px; margin-top: 10px; padding: 13px 15px; list-style: none; font: 13px/1.5 inherit; color: var(--ink); background: var(--surf); border-radius: var(--r); box-shadow: var(--clay-hi); opacity: 0; visibility: hidden; transition: 0.2s var(--bounce); }
+.sl-tip:hover > .sl-float-panel, .sl-tip:focus-within > .sl-float-panel, .sl-float.sl-is-open > .sl-float-panel { opacity: 1; visibility: visible; }
+.sl-float.sl-is-open > .sl-float-panel { position: fixed; margin: 0; z-index: 3000; }
+.sl-float-panel dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 12px; margin: 0; } .sl-float-panel dt { font-weight: 800; color: var(--ink); }
+.sl-menu, .sl-menu ul { list-style: none; margin: 0; padding: 0; } .sl-menu > ul { display: inline-flex; gap: 10px; } .sl-menu .sl-float-panel { padding: 7px; } .sl-menu .sl-float-panel a { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: var(--rs); color: var(--ink); text-decoration: none; font-size: 13px; } .sl-menu .sl-float-panel a:hover { background: var(--surf2); color: var(--p2); } .sl-menu .sl-float-panel .bi { color: var(--ink3); }
+
+/* ===== chrome ===== */
+.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 18px 130px; }
+.head h1 { margin: 0 0 8px; font: 800 36px/1.05 inherit; letter-spacing: -0.8px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.head p { margin: 0 0 6px; max-width: 820px; color: var(--ink2); font: 14px/1.6 inherit; }
+.toc { margin: 18px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.toc a { font-size: 12px; font-weight: 700; color: var(--ink2); text-decoration: none; padding: 7px 13px; border-radius: 999px; background: var(--surf); box-shadow: var(--clay-sm); }
+.toc a:hover { color: var(--p2); transform: translateY(-2px); }
+.sec { margin: 36px 0 0; scroll-margin-top: 14px; }
+.sec > h2 { margin: 0 0 14px; font: 800 20px/1.2 inherit; color: var(--ink); counter-increment: sec; }
+.sec > h2::before { content: counter(sec) ". "; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.panel { padding: 24px; border-radius: 22px; background: var(--surf); box-shadow: var(--clay); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; } .row + .row { margin-top: 17px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; } .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.tag { font: 800 10px/1.3 inherit; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink3); width: 56px; flex-shrink: 0; }
+.mut { color: var(--ink3); font: 13px/1.45 inherit; }
+code { background: var(--surf); padding: 2px 7px; border-radius: 7px; box-shadow: var(--clay-sm); font: 12px/1 "Courier New", monospace; color: var(--p2); }
+@media (max-width: 760px) { .grid3, .grid2, .cl-vtabs, .cl-spy, .cl-layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="cl">
+<div class="wrap">
+  <div class="head">
+    <h1>SLAED · Clay UI</h1>
+    <p>Пятый дизайн-язык — «пластилиновый»: пухлые мягкие формы, многослойные цветные тени, крупные радиусы, конфетная палитра и пружинистые взаимодействия (кнопки «вдавливаются» при нажатии, элементы подпрыгивают). Порядок и названия — общие с остальными четырьмя лабами. Живые механики — на боевом <code>slaed.js</code>.</p>
+    <nav class="toc">
+      <a href="#s1">Кнопки</a><a href="#s5">Поля</a><a href="#s19">Badge</a><a href="#s26">Card</a><a href="#s33">Timeline</a><a href="#s38">Table</a><a href="#s42">Navbar</a><a href="#s51">Tooltip</a><a href="#s56">Accordion</a><a href="#s61">Progress</a><a href="#s69">Carousel</a><a href="#s71">Charts</a><a href="#s83">Banner</a>
+    </nav>
+  </div>
+
+  <section class="sec" id="s1"><h2>Кнопки</h2><div class="panel">
+    <div class="row"><button class="cl-but">Кнопка</button><button class="cl-but cl-but-primary"><i class="bi bi-stars"></i> Primary</button><button class="cl-but cl-but-teal">Teal</button><button class="cl-but cl-but-ghost">Ghost</button><button class="cl-but cl-but-danger"><i class="bi bi-trash3"></i> Удалить</button><button class="cl-but cl-but-icon"><i class="bi bi-gear"></i></button><button class="cl-but cl-loading" style="width:90px">…</button><button class="cl-but" disabled>off</button></div>
+    <div class="row"><span class="tag">размер</span><button class="cl-but cl-but-sm">Small</button><button class="cl-but">Medium</button><button class="cl-but cl-but-lg">Large</button><div class="cl-group"><button class="cl-but">День</button><button class="cl-but is-on">Неделя</button><button class="cl-but">Месяц</button></div><button class="cl-but cl-fab"><i class="bi bi-plus-lg"></i></button></div>
+  </div></section>
+  <section class="sec" id="s2"><h2>Тулбар кнопок</h2><div class="panel"><div class="cl-toolbar"><button class="cl-but cl-but-ghost cl-but-icon"><i class="bi bi-type-bold"></i></button><button class="cl-but cl-but-ghost cl-but-icon"><i class="bi bi-type-italic"></i></button><span class="cl-toolbar-sep"></span><button class="cl-but cl-but-ghost cl-but-icon"><i class="bi bi-text-left"></i></button><button class="cl-but cl-but-ghost cl-but-icon is-on"><i class="bi bi-text-center"></i></button><span class="cl-toolbar-sep"></span><button class="cl-but cl-but-ghost cl-but-icon"><i class="bi bi-link-45deg"></i></button></div></div></section>
+  <section class="sec" id="s3"><h2>Кнопка закрытия</h2><div class="panel"><div class="row"><button class="cl-close"><i class="bi bi-x-lg"></i></button><button class="cl-but cl-but-ghost cl-but-icon"><i class="bi bi-x-lg"></i></button></div></div></section>
+  <section class="sec" id="s4"><h2>Speed dial</h2><div class="panel"><div class="row" style="gap:50px;align-items:flex-end"><div class="cl-speeddial" data-speed><button class="cl-but cl-fab" data-speed-toggle><i class="bi bi-plus-lg"></i></button><button class="cl-but cl-but-icon" style="display:none"><i class="bi bi-pencil"></i></button><button class="cl-but cl-but-icon" style="display:none"><i class="bi bi-share"></i></button></div><div class="cl-speeddial cl-speeddial-row" data-speed><button class="cl-but cl-fab" data-speed-toggle><i class="bi bi-share"></i></button><button class="cl-but cl-but-icon" style="display:none"><i class="bi bi-telegram"></i></button><button class="cl-but cl-but-icon" style="display:none"><i class="bi bi-link-45deg"></i></button></div></div></div></section>
+  <section class="sec" id="s5"><h2>Поля ввода</h2><div class="panel"><div class="row"><span class="cl-field-ic"><i class="bi bi-search"></i><input class="cl-field" placeholder="Поиск"></span><input class="cl-field" placeholder="Поле"><select class="cl-field"><option>Раздел</option><option>Новости</option></select><div class="cl-ig"><input class="cl-field" placeholder="Промокод"><button class="cl-but cl-but-primary">OK</button></div></div><div class="row"><label class="cl-check"><input type="checkbox" checked> Чекбокс</label><label class="cl-check"><input type="radio" name="r" checked> Радио A</label><label class="cl-check"><input type="radio" name="r"> Радио B</label><label class="cl-switch"><input type="checkbox" checked> Переключатель</label></div></div></section>
+  <section class="sec" id="s6"><h2>Floating label</h2><div class="panel"><div class="row"><span class="cl-flabel"><input class="cl-field" placeholder=" " style="width:220px"><label>Имя</label></span><span class="cl-flabel"><input class="cl-field" placeholder=" " value="a@slaed.net" style="width:220px"><label>E-mail</label></span></div></div></section>
+  <section class="sec" id="s7"><h2>Input affix</h2><div class="panel"><div class="row"><span class="cl-affix"><span>https://</span><input placeholder="slaed.net" style="width:150px"></span><span class="cl-affix"><input placeholder="0.00" style="width:90px"><span>₽</span></span></div></div></section>
+  <section class="sec" id="s8"><h2>Textarea + счётчик</h2><div class="panel"><div class="cl-ta-wrap"><textarea maxlength="120" placeholder="Комментарий…" data-ta-count></textarea><span class="cl-ta-count" data-ta-out>0 / 120</span></div></div></section>
+  <section class="sec" id="s9"><h2>Stepper</h2><div class="panel"><div class="cl-stepper"><button data-step="-1">−</button><input value="3" data-step-val><button data-step="1">+</button></div></div></section>
+  <section class="sec" id="s10"><h2>Range slider</h2><div class="panel"><div class="row"><input class="cl-range" type="range" value="60" data-range><span class="cl-badge cl-badge-p" data-range-out>60</span></div></div></section>
+  <section class="sec" id="s11"><h2>Range — варианты</h2><div class="panel" style="display:grid;gap:18px;max-width:360px"><div class="row"><span class="mut" style="width:60px">тонкий</span><input class="cl-range" type="range" value="40" style="height:8px"></div><div class="row"><span class="mut" style="width:60px">обычный</span><input class="cl-range" type="range" value="60"></div><div class="row"><span class="mut" style="width:60px">толстый</span><input class="cl-range" type="range" value="75" style="height:16px"></div></div></section>
+  <section class="sec" id="s12"><h2>OTP / PIN</h2><div class="panel"><div class="cl-otp" data-otp><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric"></div></div></section>
+  <section class="sec" id="s13"><h2>Password strength</h2><div class="panel"><div class="cl-pwd" data-pwd><input class="cl-field" type="password" placeholder="Пароль"><div class="cl-pwd-bars"><span></span><span></span><span></span></div><span class="mut" data-pwd-label>Введите пароль</span></div></div></section>
+  <section class="sec" id="s14"><h2>Segmented</h2><div class="panel"><div class="cl-seg" data-seg><button class="is-on">День</button><button>Неделя</button><button>Месяц</button></div></div></section>
+  <section class="sec" id="s15"><h2>Rating</h2><div class="panel"><span class="cl-rate" data-rate><i class="bi bi-star-fill is-on"></i><i class="bi bi-star-fill is-on"></i><i class="bi bi-star-fill is-on"></i><i class="bi bi-star-fill is-on"></i><i class="bi bi-star"></i></span></div></section>
+  <section class="sec" id="s16"><h2>File dropzone</h2><div class="panel"><div class="cl-drop"><i class="bi bi-cloud-arrow-up"></i>Перетащите файлы или <span style="color:var(--p2);font-weight:700">выберите</span></div></div></section>
+  <section class="sec" id="s17"><h2>Calendar</h2><div class="panel"><div class="cl-cal"><div class="cl-cal-head"><button class="cl-but cl-but-ghost cl-but-icon cl-but-sm"><i class="bi bi-chevron-left"></i></button> Март 2026 <button class="cl-but cl-but-ghost cl-but-icon cl-but-sm"><i class="bi bi-chevron-right"></i></button></div><div class="cl-cal-grid"><b>Пн</b><b>Вт</b><b>Ср</b><b>Чт</b><b>Пт</b><b>Сб</b><b>Вс</b><a class="mute">23</a><a class="mute">24</a><a>25</a><a>26</a><a>27</a><a>28</a><a>1</a><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><a>10</a><a>11</a><a class="is-on">12</a><a>13</a><a>14</a><a>15</a></div></div></div></section>
+  <section class="sec" id="s18"><h2>Color swatches</h2><div class="panel"><div class="row" style="gap:10px"><span class="cl-swatch" style="background:#ff8aa0"></span><span class="cl-swatch" style="background:#a78bfa"></span><span class="cl-swatch" style="background:#2dd4bf"></span><span class="cl-swatch" style="background:#fbbf24"></span><span class="cl-swatch" style="background:#38bdf8"></span><span class="cl-swatch" style="background:#84cc16"></span></div></div></section>
+  <section class="sec" id="s19"><h2>Badge</h2><div class="panel"><div class="row"><span class="cl-badge">draft</span><span class="cl-badge cl-badge-p">new</span><span class="cl-badge cl-badge-ok">ok</span><span class="cl-badge cl-badge-warn">pending</span><span class="cl-badge cl-badge-bad">−50%</span><span class="cl-badge cl-badge-teal">PRO</span><span class="cl-badge cl-badge-ok cl-badge-dot">online</span></div></div></section>
+  <section class="sec" id="s20"><h2>Chips</h2><div class="panel"><div class="row"><span class="cl-chip"><i class="bi bi-hash"></i> php</span><span class="cl-chip">Дизайн <button class="cl-chip-x"><i class="bi bi-x-lg"></i></button></span><span class="cl-chip cl-chip-choice is-on"><i class="bi bi-check2" style="color:#fff"></i> Все</span><span class="cl-chip cl-chip-choice">Новости</span><span class="cl-chip cl-chip-choice">Обзоры</span></div></div></section>
+  <section class="sec" id="s21"><h2>Avatars</h2><div class="panel"><div class="row"><span class="cl-ava">ЭЛ</span><span class="cl-ava cl-ava-p">A</span><span class="cl-ava cl-ava-teal">К</span><span class="cl-ava cl-ava-amber">SL</span><span class="cl-ava-group" style="margin-left:6px"><span class="cl-ava cl-ava-p">A</span><span class="cl-ava cl-ava-teal">B</span><span class="cl-ava cl-ava-amber">C</span><span class="cl-ava">+9</span></span></div></div></section>
+  <section class="sec" id="s22"><h2>Status indicators</h2><div class="panel"><div class="row" style="gap:22px"><span class="cl-status">Онлайн</span><span class="cl-status away">Отошёл</span><span class="cl-status off">Офлайн</span></div></div></section>
+  <section class="sec" id="s23"><h2>List group</h2><div class="grid2"><div class="cl-list"><a class="cl-list-item is-active" href="#"><i class="bi bi-inbox"></i> Входящие <span class="cl-badge" style="background:rgba(255,255,255,.25);color:#fff;box-shadow:none">12</span></a><a class="cl-list-item" href="#"><i class="bi bi-send"></i> Отправленные</a><a class="cl-list-item" href="#"><i class="bi bi-archive"></i> Архив</a></div><div class="cl-list"><div class="cl-list-item"><i class="bi bi-cpu"></i> CPU <span class="cl-badge cl-badge-ok">32%</span></div><div class="cl-list-item"><i class="bi bi-hdd"></i> Диск <span class="cl-badge cl-badge-bad">92%</span></div></div></div></section>
+  <section class="sec" id="s24"><h2>Data list</h2><div class="panel"><dl class="cl-dl"><dt>Версия</dt><dd>6.2 Pro</dd><dt>Размер</dt><dd>9.17 MB</dd><dt>Лицензия</dt><dd>GNU GPL 3</dd></dl></div></section>
+  <section class="sec" id="s25"><h2>Tree view</h2><div class="panel"><div class="cl-tree"><ul><li><i class="bi bi-folder2-open"></i> templates<ul><li><i class="bi bi-folder2"></i> lite<ul><li><i class="bi bi-filetype-css"></i> base.css</li></ul></li></ul></li><li><i class="bi bi-folder2"></i> plugins<ul><li><i class="bi bi-filetype-js"></i> slaed.js</li></ul></li></ul></div></div></section>
+  <section class="sec" id="s26"><h2>Card</h2><div class="grid3"><div class="cl-card"><span class="cl-card-media"></span><div class="cl-card-body"><h3 class="cl-card-title">Релиз CMS 7</h3><p class="cl-card-text">Пластилиновый дизайн.</p><button class="cl-but cl-but-primary cl-but-sm">Открыть</button></div></div><div class="cl-card"><span class="cl-card-media" style="background:var(--grad2)"></span><div class="cl-card-body"><h3 class="cl-card-title">Модуль форума</h3><p class="cl-card-text">Обзор движка.</p><button class="cl-but cl-but-sm">Читать</button></div></div><div class="cl-card"><span class="cl-card-media" style="background:linear-gradient(135deg,#fde68a,#fbbf24)"></span><div class="cl-card-body"><h3 class="cl-card-title">Шаблон lite</h3><p class="cl-card-text">Светлая тема.</p><button class="cl-but cl-but-sm">Подробнее</button></div></div></div></section>
+  <section class="sec" id="s27"><h2>Ribbon card</h2><div class="grid3"><div class="cl-card cl-ribbon" data-ribbon="NEW"><span class="cl-card-media"></span><div class="cl-card-body"><h3 class="cl-card-title">С лентой</h3><p class="cl-card-text">Угловая метка.</p></div></div></div></section>
+  <section class="sec" id="s28"><h2>Profile card</h2><div class="panel" style="max-width:380px"><div class="cl-profile"><span class="cl-ava cl-ava-p" style="width:54px;height:54px;font-size:19px">ЭЛ</span><div style="flex:1"><div style="font-weight:800;color:var(--ink)">Eduard Laas</div><div class="mut">администратор</div></div><button class="cl-but cl-but-ghost cl-but-icon"><i class="bi bi-three-dots"></i></button></div></div></section>
+  <section class="sec" id="s29"><h2>Stat / KPI</h2><div class="grid3"><div class="cl-stat"><div class="cl-stat-label">Визиты</div><div class="cl-stat-value">12 480</div><div class="cl-stat-delta"><i class="bi bi-arrow-up-short"></i>8.2%</div></div><div class="cl-stat"><div class="cl-stat-label">Заказы</div><div class="cl-stat-value">342</div><div class="cl-stat-delta is-down"><i class="bi bi-arrow-down-short"></i>3.1%</div></div><div class="cl-stat"><div class="cl-stat-label">Доход</div><div class="cl-stat-value">₽ 98k</div><div class="cl-stat-delta"><i class="bi bi-arrow-up-short"></i>14%</div></div></div></section>
+  <section class="sec" id="s30"><h2>Pricing</h2><div class="grid3"><div class="cl-price"><div class="cl-stat-label">Lite</div><div class="cl-price-amount">₽ 0</div><ul><li>1 сайт</li><li>Базовые модули</li></ul><button class="cl-but">Выбрать</button></div><div class="cl-price is-pop"><span class="cl-badge cl-badge-p">популярный</span><div class="cl-stat-label" style="margin-top:8px">Pro</div><div class="cl-price-amount">₽ 990</div><ul><li>10 сайтов</li><li>Все модули</li></ul><button class="cl-but cl-but-primary">Выбрать</button></div><div class="cl-price"><div class="cl-stat-label">Enterprise</div><div class="cl-price-amount">₽ 4900</div><ul><li>∞ сайтов</li><li>SLA</li></ul><button class="cl-but">Выбрать</button></div></div></section>
+  <section class="sec" id="s31"><h2>Testimonial</h2><div class="panel" style="max-width:420px"><div class="cl-testi"><p style="margin:0 0 14px;font:italic 14px/1.5 inherit;color:var(--ink)">«SLAED CMS — лучшее для быстрого запуска.»</p><div class="row" style="gap:11px"><span class="cl-ava cl-ava-teal">К</span><div style="font-weight:800;color:var(--ink)">Константин</div></div></div></div></section>
+  <section class="sec" id="s32"><h2>Feature list</h2><div class="panel grid2" style="gap:18px"><div class="cl-feat"><span class="cl-feat-ic" style="background:linear-gradient(135deg,#ff8aa0,#f43f5e)"><i class="bi bi-lightning-charge"></i></span><div><h5>Быстро</h5><p>Лёгкие шаблоны.</p></div></div><div class="cl-feat"><span class="cl-feat-ic" style="background:var(--grad2)"><i class="bi bi-shield-check"></i></span><div><h5>Безопасно</h5><p>CSRF, prepared SQL.</p></div></div></div></section>
+  <section class="sec" id="s33"><h2>Timeline</h2><div class="panel"><div class="cl-timeline"><div class="cl-tl-item is-ok"><h5>Создан</h5><p>12.03 14:02</p></div><div class="cl-tl-item is-warn"><h5>В обработке</h5><p>12.03 15:30</p></div><div class="cl-tl-item"><h5>Доставка</h5><p>14.03</p></div></div></div></section>
+  <section class="sec" id="s34"><h2>Timeline — горизонтальный</h2><div class="panel"><div class="cl-th"><div class="cl-th-item is-done"><h5>Корзина</h5>готово</div><div class="cl-th-item is-done"><h5>Доставка</h5>готово</div><div class="cl-th-item"><h5>Оплата</h5>сейчас</div><div class="cl-th-item"><h5>Готово</h5>—</div></div></div></section>
+  <section class="sec" id="s35"><h2>Steps</h2><div class="panel"><div class="cl-steps"><span class="cl-step is-done"><span class="cl-step-num"><i class="bi bi-check-lg"></i></span> Корзина</span><span class="cl-step-line"></span><span class="cl-step is-on"><span class="cl-step-num">2</span> Доставка</span><span class="cl-step-line"></span><span class="cl-step"><span class="cl-step-num">3</span> Оплата</span></div></div></section>
+  <section class="sec" id="s36"><h2>Chat bubbles</h2><div class="panel"><div class="cl-chat"><span class="cl-bubble cl-bubble-in">Привет! Как обновить до 7?</span><span class="cl-bubble cl-bubble-out">Последовательно, с версии до версии.</span><span class="cl-bubble cl-bubble-in">Понял 🙏</span></div></div></section>
+  <section class="sec" id="s37"><h2>Chat — варианты</h2><div class="panel"><div class="cl-chat"><div class="row" style="gap:9px;align-items:flex-end"><span class="cl-ava cl-ava-30 cl-ava-teal">К</span><div><span class="cl-bubble cl-bubble-in">Привет!</span><div class="cl-bubble-meta">14:21</div></div></div><div style="align-self:flex-end"><span class="cl-bubble cl-bubble-out">Готово ✓✓</span></div><div class="cl-typing"><span></span><span></span><span></span></div></div></div></section>
+  <section class="sec" id="s38"><h2>Table</h2><div class="panel"><div class="sl-table-shell"><table class="sl-table" data-sl-table-sort><thead><tr><th class="sl-table-col-num">ID</th><th>Заголовок</th><th>Дата</th></tr></thead><tbody><tr><td class="sl-table-col-num">102</td><td>Релиз 7</td><td>14.03.2026</td></tr><tr><td class="sl-table-col-num">9</td><td>Установка</td><td>21.12.2025</td></tr><tr><td class="sl-table-col-num">143</td><td>Тема lite</td><td>30.04.2026</td></tr></tbody></table></div></div></section>
+  <section class="sec" id="s39"><h2>Tag cloud</h2><div class="panel"><div class="cl-cloud"><a href="#" style="font-size:20px">php</a><a href="#" style="font-size:14px">cms</a><a href="#" style="font-size:26px">slaed</a><a href="#" style="font-size:16px">шаблоны</a><a href="#" style="font-size:18px">модули</a><a href="#" style="font-size:23px">дизайн</a></div></div></section>
+  <section class="sec" id="s40"><h2>Heatmap</h2><div class="panel"><div style="display:grid;gap:4px"><div class="cl-heat"><span></span><span style="background:#ffd1da"></span><span style="background:#ffa9bb"></span><span style="background:#ff8aa0"></span><span style="background:#f43f5e"></span><span style="background:#ffa9bb"></span></div><div class="cl-heat"><span style="background:#ffd1da"></span><span></span><span style="background:#ff8aa0"></span><span style="background:#ffa9bb"></span><span style="background:#f43f5e"></span><span style="background:#ffd1da"></span></div></div></div></section>
+  <section class="sec" id="s41"><h2>Kbd · Code · Quote</h2><div class="panel" style="display:grid;gap:14px"><div class="row"><span class="mut">Сохранить:</span> <span class="cl-kbd">Ctrl</span> + <span class="cl-kbd">S</span></div><pre class="cl-code">$conf['site']['name'] = 'SLAED CMS';</pre><blockquote class="cl-quote">Хороший дизайн — это как можно меньше дизайна.</blockquote></div></section>
+  <section class="sec" id="s42"><h2>Navbar</h2><nav class="cl-navbar"><span class="cl-navbar-brand"><i class="bi bi-hexagon-fill"></i> SLAED</span><ul class="cl-navbar-nav"><li><a href="#" class="is-active">Главная</a></li><li><a href="#">Новости</a></li><li><a href="#">Форум</a></li></ul><button class="cl-but cl-but-icon" style="margin-left:6px"><i class="bi bi-search"></i></button></nav></section>
+  <section class="sec" id="s43"><h2>Navs</h2><div class="panel" style="display:grid;gap:18px"><ul class="cl-nav cl-nav-pills"><li><a href="#" class="is-active">Активная</a></li><li><a href="#">Ссылка</a></li><li><a href="#">Ещё</a></li></ul><ul class="cl-nav cl-nav-underline"><li><a href="#" class="is-active">Обзор</a></li><li><a href="#">Профиль</a></li></ul></div></section>
+  <section class="sec" id="s44"><h2>Tabs</h2><div class="panel"><div id="cl-tabs" class="sl-tabs" data-sl-tabs-init="cl-tabs"><ul class="sl-tabs-nav"><li class="sl-tabs-item"><a class="sl-tabs-link sl-is-active" href="#" data-sl-tab-link data-sl-tab-target="ct-a">Основное</a></li><li class="sl-tabs-item"><a class="sl-tabs-link" href="#" data-sl-tab-link data-sl-tab-target="ct-b">Параметры</a></li></ul><div class="sl-tabs-content"><div id="ct-a" class="sl-tab-panel" data-sl-tab-panel="ct-a">Живые вкладки на slaed.js.</div><div id="ct-b" class="sl-tab-panel" data-sl-tab-panel="ct-b"><label class="cl-switch"><input type="checkbox" checked> Опция</label></div></div></div></div></section>
+  <section class="sec" id="s45"><h2>Vertical tabs</h2><div class="panel"><div class="cl-vtabs" data-vtabs><div class="cl-vtabs-nav"><button class="is-on" data-vt="1">Профиль</button><button data-vt="2">Безопасность</button><button data-vt="3">Уведомления</button></div><div><div class="cl-vtabs-panel is-on" data-vtp="1">Имя, аватар, био.</div><div class="cl-vtabs-panel" data-vtp="2">Пароль, 2FA.</div><div class="cl-vtabs-panel" data-vtp="3">E-mail и push.</div></div></div></div></section>
+  <section class="sec" id="s46"><h2>Breadcrumb</h2><div class="panel"><nav class="cl-crumbs"><a href="#"><i class="bi bi-house-door"></i> Главная</a><i class="bi bi-chevron-right"></i><a href="#">Каталог</a><i class="bi bi-chevron-right"></i><span>Модули</span></nav></div></section>
+  <section class="sec" id="s47"><h2>Pagination</h2><div class="panel"><div class="cl-pager"><button class="cl-but cl-but-icon"><i class="bi bi-chevron-left"></i></button><button class="cl-but">1</button><button class="cl-but is-on">2</button><button class="cl-but">3</button><button class="cl-but">24</button><button class="cl-but cl-but-icon"><i class="bi bi-chevron-right"></i></button></div></div></section>
+  <section class="sec" id="s48"><h2>Dropdown</h2><div class="panel"><div class="row"><nav class="sl-menu"><ul><li class="sl-float"><button class="cl-but">Действия <i class="bi bi-chevron-down"></i></button><ul class="sl-float-panel"><li><a href="#"><i class="bi bi-pencil"></i> Редактировать</a></li><li><a href="#"><i class="bi bi-trash3"></i> Удалить</a></li></ul></li></ul></nav></div></div></section>
+  <section class="sec" id="s49"><h2>Command palette</h2><div class="panel"><div class="cl-cmd"><div class="cl-cmd-input"><i class="bi bi-search"></i><input placeholder="Команда…"><span class="cl-kbd">Esc</span></div><div class="cl-cmd-item"><i class="bi bi-file-earmark-plus"></i> Создать запись <span class="cl-kbd">N</span></div><div class="cl-cmd-item"><i class="bi bi-gear"></i> Настройки <span class="cl-kbd">,</span></div></div></div></section>
+  <section class="sec" id="s50"><h2>Sidebar layout</h2><div class="panel"><div class="cl-layout"><aside class="cl-side"><div class="cl-list" style="box-shadow:none"><a class="cl-list-item is-active" href="#"><i class="bi bi-speedometer2"></i> Дашборд</a><a class="cl-list-item" href="#"><i class="bi bi-folder2"></i> Файлы</a></div></aside><div class="cl-main"><h4 style="margin:0 0 6px;color:var(--ink)">Дашборд</h4>Контент рядом с боковым меню.</div></div></div></section>
+  <section class="sec" id="s51"><h2>Tooltip</h2><div class="panel"><div class="row" style="gap:26px"><span class="mut">Цена <nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">Без учёта скидки и НДС.</div></nav></span><span class="mut">Статус <nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel"><dl><dt>Создан</dt><dd>12.03.2026</dd><dt>Автор</dt><dd>Eduard</dd></dl></div></nav></span></div></div></section>
+  <section class="sec" id="s52"><h2>Tooltip — directions</h2><div class="panel"><div class="row" style="gap:30px;padding:20px 0"><button class="cl-but cl-tipd cl-tipd-top" data-tip="Сверху">Top</button><button class="cl-but cl-tipd cl-tipd-bottom" data-tip="Снизу">Bottom</button><button class="cl-but cl-tipd cl-tipd-left" data-tip="Слева">Left</button><button class="cl-but cl-tipd cl-tipd-right" data-tip="Справа">Right</button></div></div></section>
+  <section class="sec" id="s53"><h2>Popover</h2><div class="panel"><span class="cl-pop" tabindex="0"><button class="cl-but"><i class="bi bi-chat-square-text"></i> Поповер</button><span class="cl-pop-panel"><span class="cl-pop-head">Заголовок</span><span class="cl-pop-body">Пластилиновый поповер с заголовком и телом.</span></span></span></div></section>
+  <section class="sec" id="s54"><h2>Alerts</h2><div class="panel" style="display:grid;gap:12px"><div class="cl-note"><i class="bi bi-info-circle-fill"></i><div class="cl-note-body"><p class="cl-note-title">К сведению</p><p class="cl-note-text">Доступна новая версия модуля.</p></div><button class="cl-note-x"><i class="bi bi-x-lg"></i></button></div><div class="cl-note cl-note-ok"><i class="bi bi-check-circle-fill"></i><div class="cl-note-body"><p class="cl-note-title">Сохранено</p><p class="cl-note-text">Изменения применены.</p></div><button class="cl-note-x"><i class="bi bi-x-lg"></i></button></div><div class="cl-note cl-note-bad"><i class="bi bi-x-octagon-fill"></i><div class="cl-note-body"><p class="cl-note-title">Ошибка</p><p class="cl-note-text">Нет соединения с БД.</p></div><button class="cl-note-x"><i class="bi bi-x-lg"></i></button></div></div></section>
+  <section class="sec" id="s55"><h2>Toasts</h2><div class="panel"><div class="row"><div class="cl-toast is-in" style="position:static;transform:none;width:290px"><i class="bi bi-bell-fill"></i><div class="cl-toast-body"><div class="cl-toast-title">Уведомление</div>Новое событие.</div><button class="cl-toast-x"><i class="bi bi-x-lg"></i></button></div><button class="cl-but cl-but-primary" id="toast-btn"><i class="bi bi-bell"></i> Показать тост</button></div></div></section>
+  <section class="sec" id="s56"><h2>Accordion</h2><div class="cl-acc"><button class="cl-acc-head" type="button" data-sl-toggle-control="ca-1">Что это за стиль? <i class="bi bi-chevron-down"></i></button><div id="ca-1" class="cl-acc-body" data-sl-toggle="ca-1" data-sl-toggle-default="open" data-sl-toggle-effect="slide">Claymorphism: пухлые формы, цветные мягкие тени, пружинистые движения.</div></div><div class="cl-acc"><button class="cl-acc-head" type="button" data-sl-toggle-control="ca-2">Откуда поведение? <i class="bi bi-chevron-down"></i></button><div id="ca-2" class="cl-acc-body" data-sl-toggle="ca-2" data-sl-toggle-default="closed" data-sl-toggle-effect="slide">Из боевого slaed.js — те же data-атрибуты.</div></div></section>
+  <section class="sec" id="s57"><h2>Collapse</h2><div class="panel"><button class="cl-but" type="button" data-sl-toggle-control="ccol"><i class="bi bi-arrows-expand"></i> Показать / скрыть</button><div id="ccol" class="cl-collapse" data-sl-toggle="ccol" data-sl-toggle-default="closed" data-sl-toggle-effect="slide">Произвольный сворачиваемый блок на боевом data-sl-toggle.</div></div></section>
+  <section class="sec" id="s58"><h2>Modal</h2><div class="panel"><div class="row"><a class="cl-but cl-but-primary" href="#cm-info"><i class="bi bi-window"></i> Открыть окно</a><a class="cl-but cl-but-danger" href="#cm-del">Удаление</a></div></div></section>
+  <section class="sec" id="s59"><h2>Offcanvas</h2><div class="panel"><a class="cl-but" href="#coc"><i class="bi bi-layout-sidebar-inset-reverse"></i> Открыть панель</a></div></section>
+  <section class="sec" id="s60"><h2>Cookie bar</h2><div class="panel"><div class="cl-cookie"><i class="bi bi-cookie" style="font-size:22px;color:#e8a23a"></i><span style="flex:1">Мы используем cookie.</span><button class="cl-but cl-but-primary cl-but-sm">Принять</button><button class="cl-but cl-but-ghost cl-but-sm">Отклонить</button></div></div></section>
+  <section class="sec" id="s61"><h2>Progress</h2><div class="panel" style="display:grid;gap:15px;max-width:520px"><div class="cl-progress"><div class="cl-progress-bar" style="width:45%"></div></div><div class="cl-progress"><div class="cl-progress-bar is-ok" style="width:72%"></div></div><div class="cl-progress"><div class="cl-progress-bar is-warn" style="width:55%"></div></div></div></section>
+  <section class="sec" id="s62"><h2>Circular progress</h2><div class="panel"><div class="row" style="gap:22px"><span class="cl-ring" style="--p:35"><b>35%</b></span><span class="cl-ring" style="--p:65"><b>65%</b></span><span class="cl-ring" style="--p:90;--p1:var(--ok)"><b>90%</b></span></div></div></section>
+  <section class="sec" id="s63"><h2>Meter</h2><div class="panel" style="max-width:520px"><div class="cl-meter"><span style="width:45%;background:var(--p1)"></span><span style="width:25%;background:var(--p2)"></span><span style="width:18%;background:var(--amber)"></span><span style="width:12%;background:var(--teal)"></span></div></div></section>
+  <section class="sec" id="s64"><h2>Loading bar</h2><div class="panel" style="max-width:520px"><div class="cl-loadbar"></div></div></section>
+  <section class="sec" id="s65"><h2>Spinners</h2><div class="panel"><div class="row" style="gap:24px"><span class="cl-spinner"></span><span class="cl-spinner cl-spinner-lg"></span><button class="cl-but cl-but-primary cl-loading" style="width:90px">…</button></div></div></section>
+  <section class="sec" id="s66"><h2>Placeholders</h2><div class="panel" style="max-width:420px"><div class="row" style="gap:14px"><span class="cl-ph cl-ph-circle" style="width:50px;height:50px"></span><div style="flex:1"><span class="cl-ph" style="width:50%;display:block;margin-bottom:9px"></span><span class="cl-ph" style="width:85%;display:block"></span></div></div></div></section>
+  <section class="sec" id="s67"><h2>Empty state</h2><div class="panel"><div class="cl-empty"><i class="bi bi-inbox"></i><h4>Пока пусто</h4><p>Здесь появятся записи.</p><button class="cl-but cl-but-primary"><i class="bi bi-plus-lg"></i> Создать</button></div></div></section>
+  <section class="sec" id="s68"><h2>Divider</h2><div class="panel" style="display:grid;gap:18px"><div class="cl-divider">или</div><div class="cl-divider">РАЗДЕЛ</div></div></section>
+  <section class="sec" id="s69"><h2>Carousel</h2><div class="panel"><div class="cl-carousel" id="car1"><button class="cl-but cl-but-icon cl-carousel-nav cl-carousel-prev" data-car-prev><i class="bi bi-chevron-left"></i></button><div class="cl-carousel-track"><div class="cl-slide" style="background:linear-gradient(135deg,#ff8aa0,#f43f5e)">Слайд 1</div><div class="cl-slide" style="background:linear-gradient(135deg,#a78bfa,#7c5cf0)">Слайд 2</div><div class="cl-slide" style="background:linear-gradient(135deg,#5eead4,#2dd4bf)">Слайд 3</div><div class="cl-slide" style="background:linear-gradient(135deg,#fde68a,#fbbf24)">Слайд 4</div></div><button class="cl-but cl-but-icon cl-carousel-nav cl-carousel-next" data-car-next><i class="bi bi-chevron-right"></i></button><div class="cl-carousel-dots" data-car-dots></div></div></div></section>
+  <section class="sec" id="s70"><h2>Scrollspy</h2><div class="panel"><div class="cl-spy" id="spy1"><nav class="cl-spy-nav"><a href="#sp1" class="is-active">Раздел 1</a><a href="#sp2">Раздел 2</a><a href="#sp3">Раздел 3</a></nav><div class="cl-spy-body"><div id="sp1"><h4>Раздел 1</h4><p>Прокручивай — пункт слева подсвечивается. Lorem ipsum dolor sit amet.</p></div><div id="sp2"><h4>Раздел 2</h4><p>Tempor incididunt ut labore et dolore magna aliqua.</p></div><div id="sp3"><h4>Раздел 3</h4><p>Duis aute irure dolor in reprehenderit in voluptate.</p></div></div></div></div></section>
+  <section class="sec" id="s71"><h2>Line chart</h2><div class="panel" style="max-width:520px"><svg class="cl-chart" viewBox="0 0 320 140" style="height:140px"><line class="cl-c-grid" x1="0" y1="35" x2="320" y2="35"/><line class="cl-c-grid" x1="0" y1="70" x2="320" y2="70"/><line class="cl-c-grid" x1="0" y1="105" x2="320" y2="105"/><polyline class="cl-c-line" points="0,110 40,80 80,95 120,50 160,65 200,30 240,55 280,25 320,40"/><polyline class="cl-c-line2" points="0,120 40,110 80,100 120,90 160,95 200,75 240,80 280,60 320,70"/></svg><div class="cl-legend"><span>Визиты</span><span class="lg-vio">Заказы</span></div></div></section>
+  <section class="sec" id="s72"><h2>Area chart</h2><div class="panel" style="max-width:520px"><svg class="cl-chart" viewBox="0 0 320 140" style="height:140px"><polygon class="cl-c-area" points="0,140 0,100 50,70 100,85 150,40 200,55 250,25 320,45 320,140"/><polyline class="cl-c-line" points="0,100 50,70 100,85 150,40 200,55 250,25 320,45"/></svg></div></section>
+  <section class="sec" id="s73"><h2>Sparklines</h2><div class="panel"><div class="row" style="gap:24px"><svg width="90" height="30" viewBox="0 0 90 30"><polyline class="cl-spark" points="0,24 15,18 30,22 45,10 60,14 75,6 90,12"/></svg><svg width="90" height="30" viewBox="0 0 90 30"><polyline class="cl-spark" style="stroke:var(--bad)" points="0,8 15,14 30,10 45,18 60,16 75,22 90,26"/></svg></div></div></section>
+  <section class="sec" id="s74"><h2>Bar chart</h2><div class="panel" style="max-width:420px"><div class="cl-bars"><span style="height:40%"></span><span style="height:65%"></span><span style="height:30%"></span><span style="height:85%"></span><span style="height:55%"></span><span style="height:70%"></span></div></div></section>
+  <section class="sec" id="s75"><h2>Stacked bars</h2><div class="panel" style="max-width:440px"><div class="cl-bars" style="height:120px"><span style="height:70%;background:linear-gradient(var(--amber) 20%, var(--p2) 20% 55%, var(--p1) 55%)"></span><span style="height:90%;background:linear-gradient(var(--amber) 20%, var(--p2) 20% 45%, var(--p1) 45%)"></span><span style="height:55%;background:linear-gradient(var(--amber) 20%, var(--p2) 20% 60%, var(--p1) 60%)"></span><span style="height:80%;background:linear-gradient(var(--amber) 20%, var(--p2) 20% 40%, var(--p1) 40%)"></span></div><div class="cl-legend"><span>Desktop</span><span class="lg-vio">Mobile</span><span class="lg-amber">Tablet</span></div></div></section>
+  <section class="sec" id="s76"><h2>Donut chart</h2><div class="panel"><div class="row" style="gap:22px"><div class="cl-donut"></div><div class="cl-legend" style="flex-direction:column;gap:8px"><span>Прямые 45%</span><span class="lg-vio">Поиск 25%</span><span class="lg-amber">Соцсети 18%</span><span class="lg-teal">Прочее 12%</span></div></div></div></section>
+  <section class="sec" id="s77"><h2>Gauge</h2><div class="panel"><svg width="150" height="92" viewBox="0 0 150 92"><path class="cl-gauge-track" d="M12 82 A 63 63 0 0 1 138 82"/><path class="cl-gauge-val" d="M12 82 A 63 63 0 0 1 138 82" stroke-dasharray="198" stroke-dashoffset="69"/><text class="cl-gauge-num" x="75" y="80" text-anchor="middle">65</text></svg></div></section>
+  <section class="sec" id="s78"><h2>Radar chart</h2><div class="panel"><svg width="200" height="200" viewBox="0 0 200 200"><polygon class="cl-radar-grid" points="100,20 168,60 168,140 100,180 32,140 32,60"/><polygon class="cl-radar-grid" points="100,60 134,80 134,120 100,140 66,120 66,80"/><polygon class="cl-radar-area" points="100,35 150,72 145,130 100,160 55,125 50,70"/></svg></div></section>
+  <section class="sec" id="s79"><h2>Social buttons</h2><div class="panel"><div class="row cl-social"><a href="#" style="background:#1da1f2"><i class="bi bi-twitter-x"></i></a><a href="#" style="background:#1877f2"><i class="bi bi-facebook"></i></a><a href="#" style="background:#0088cc"><i class="bi bi-telegram"></i></a><a href="#" style="background:#333"><i class="bi bi-github"></i></a></div></div></section>
+  <section class="sec" id="s80"><h2>Like / vote</h2><div class="panel"><div class="row"><span class="cl-vote" data-vote><i class="bi bi-hand-thumbs-up"></i> 124</span><span class="cl-vote is-on" data-vote><i class="bi bi-heart-fill"></i> 56</span></div></div></section>
+  <section class="sec" id="s81"><h2>Footer</h2><div class="cl-footer"><div class="row" style="justify-content:space-between"><span class="cl-navbar-brand"><i class="bi bi-hexagon-fill"></i> SLAED</span><span>© 2026 — <a href="#">Docs</a> · <a href="#">Форум</a> · <a href="#">GitHub</a></span></div></div></section>
+  <section class="sec" id="s82"><h2>Sizes 26·30·32</h2><div class="panel"><div class="row"><span class="cl-chip" style="height:26px">26</span><span class="cl-chip" style="height:30px">30</span><span class="cl-chip" style="height:32px">32</span><span class="cl-ava cl-ava-26 cl-ava-p">26</span><span class="cl-ava cl-ava-30 cl-ava-p">30</span><span class="cl-ava cl-ava-32 cl-ava-p">32</span></div></div></section>
+  <section class="sec" id="s83"><h2>Banner / CTA</h2><div style="display:flex;align-items:center;gap:20px;padding:26px;border-radius:22px;background:var(--grad);color:#fff;box-shadow:var(--clay-hi)"><i class="bi bi-rocket-takeoff" style="font-size:40px"></i><div style="flex:1"><div style="font:800 20px inherit">SLAED CMS 7 — пластилиновая тема</div><div style="opacity:.92;font:13px inherit">Пухло, мягко, с пружинкой. Обнови и попробуй.</div></div><button class="cl-but cl-but-lg" style="background:#fff;color:var(--p2)"><i class="bi bi-stars"></i> Обновить</button></div></section>
+
+</div>
+
+<div class="cl-modal" id="cm-info"><a class="cl-modal-back" href="#s58"></a><div class="cl-modal-dialog"><div class="cl-modal-head"><h3 class="cl-modal-title">Информация</h3><a class="cl-close" href="#s58"><i class="bi bi-x-lg"></i></a></div><div class="cl-modal-body"><p style="margin:0 0 12px">Окно в пластилиновой теме.</p><input class="cl-field cl-field-block" placeholder="Значение"></div><div class="cl-modal-foot"><a class="cl-but" href="#s58">Отмена</a><a class="cl-but cl-but-primary" href="#s58">ОК</a></div></div></div>
+<div class="cl-modal" id="cm-del"><a class="cl-modal-back" href="#s58"></a><div class="cl-modal-dialog"><div class="cl-modal-head"><h3 class="cl-modal-title">Удалить запись?</h3><a class="cl-close" href="#s58"><i class="bi bi-x-lg"></i></a></div><div class="cl-modal-body"><p style="margin:0">Действие необратимо.</p></div><div class="cl-modal-foot"><a class="cl-but" href="#s58">Отмена</a><a class="cl-but cl-but-danger" href="#s58"><i class="bi bi-trash3"></i> Удалить</a></div></div></div>
+<div class="cl-oc-wrap" id="coc"><a class="cl-oc-back" href="#s59"></a><aside class="cl-oc"><div class="cl-oc-head"><h3 class="cl-oc-title">Панель</h3><a class="cl-close" href="#s59"><i class="bi bi-x-lg"></i></a></div><div class="cl-oc-body"><div class="cl-list"><a class="cl-list-item" href="#"><i class="bi bi-gear"></i> Настройки</a><a class="cl-list-item" href="#"><i class="bi bi-person"></i> Профиль</a><a class="cl-list-item" href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside></div>
+<div class="cl-toaster" id="toaster"></div>
+
+<script>
+document.addEventListener('click', function (e) {
+  var ch = e.target.closest('.cl-chip-choice'); if (ch && !e.target.closest('.cl-chip-x')) ch.classList.toggle('is-on');
+  var x = e.target.closest('.cl-chip-x, .cl-note-x, .cl-toast-x'); if (x) { var h = x.closest('.cl-chip, .cl-note, .cl-toast'); if (h) h.remove(); }
+});
+document.querySelectorAll('.cl-stepper').forEach(function (s) { var inp = s.querySelector('[data-step-val]'); s.querySelectorAll('[data-step]').forEach(function (b) { b.addEventListener('click', function () { inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + parseInt(b.dataset.step, 10)); }); }); });
+document.querySelectorAll('[data-range]').forEach(function (r) { var out = r.parentNode.querySelector('[data-range-out]'); r.addEventListener('input', function () { if (out) out.textContent = r.value; }); });
+document.querySelectorAll('[data-rate]').forEach(function (g) { var stars = g.querySelectorAll('.bi'); g.addEventListener('click', function (e) { var t = e.target.closest('.bi'); if (!t) return; var idx = Array.prototype.indexOf.call(stars, t); stars.forEach(function (st, i) { st.classList.toggle('bi-star-fill', i <= idx); st.classList.toggle('bi-star', i > idx); st.classList.toggle('is-on', i <= idx); }); }); });
+document.querySelectorAll('[data-seg]').forEach(function (seg) { seg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; seg.querySelectorAll('button').forEach(function (x) { x.classList.toggle('is-on', x === b); }); }); });
+document.querySelectorAll('[data-vtabs]').forEach(function (vt) { vt.addEventListener('click', function (e) { var b = e.target.closest('[data-vt]'); if (!b) return; var id = b.dataset.vt; vt.querySelectorAll('[data-vt]').forEach(function (x) { x.classList.toggle('is-on', x === b); }); vt.querySelectorAll('[data-vtp]').forEach(function (p) { p.classList.toggle('is-on', p.dataset.vtp === id); }); }); });
+document.querySelectorAll('[data-otp]').forEach(function (g) { var ins = g.querySelectorAll('input'); ins.forEach(function (inp, i) { inp.addEventListener('input', function () { inp.value = inp.value.replace(/\D/g, ''); if (inp.value && ins[i + 1]) ins[i + 1].focus(); }); }); });
+document.querySelectorAll('[data-ta-count]').forEach(function (ta) { var out = ta.parentNode.querySelector('[data-ta-out]'), max = ta.getAttribute('maxlength'); ta.addEventListener('input', function () { out.textContent = ta.value.length + ' / ' + max; }); });
+document.querySelectorAll('[data-vote]').forEach(function (v) { v.addEventListener('click', function () { v.classList.toggle('is-on'); }); });
+document.querySelectorAll('[data-speed]').forEach(function (sd) { var items = sd.querySelectorAll('.cl-but-icon'); sd.querySelector('[data-speed-toggle]').addEventListener('click', function () { items.forEach(function (it) { it.style.display = it.style.display === 'none' ? 'inline-flex' : 'none'; }); }); });
+document.querySelectorAll('[data-pwd]').forEach(function (w) { var inp = w.querySelector('input'), bars = w.querySelectorAll('.cl-pwd-bars span'), lab = w.querySelector('[data-pwd-label]'); inp.addEventListener('input', function () { var v = inp.value, s = 0; if (v.length >= 6) s++; if (/[A-Z]/.test(v) && /[0-9]/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v) && v.length >= 10) s++; bars.forEach(function (b, i) { b.className = i < s ? 'on' + s : ''; }); lab.textContent = !v ? 'Введите пароль' : ['Слабый', 'Слабый', 'Средний', 'Надёжный'][s]; }); });
+document.querySelectorAll('.cl-carousel').forEach(function (car) { var track = car.querySelector('.cl-carousel-track'), slides = track.children, dotsBox = car.querySelector('[data-car-dots]'), step = 256; for (var i = 0; i < slides.length; i++) { var d = document.createElement('button'); d.className = 'cl-cdot' + (i === 0 ? ' is-on' : ''); d.dataset.idx = i; dotsBox.appendChild(d); } car.querySelector('[data-car-prev]').onclick = function () { track.scrollBy({ left: -step, behavior: 'smooth' }); }; car.querySelector('[data-car-next]').onclick = function () { track.scrollBy({ left: step, behavior: 'smooth' }); }; dotsBox.onclick = function (e) { if (e.target.dataset.idx) slides[+e.target.dataset.idx].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' }); }; track.addEventListener('scroll', function () { var idx = Math.round(track.scrollLeft / step), dots = dotsBox.children; for (var i = 0; i < dots.length; i++) dots[i].classList.toggle('is-on', i === idx); }); });
+document.querySelectorAll('.cl-spy').forEach(function (spy) { var box = spy.querySelector('.cl-spy-body'), links = spy.querySelectorAll('.cl-spy-nav a'), secs = []; links.forEach(function (a) { secs.push(spy.querySelector(a.getAttribute('href'))); }); box.addEventListener('scroll', function () { var pos = box.scrollTop + box.clientHeight * 0.3, idx = 0; secs.forEach(function (s, i) { if (s && s.offsetTop <= pos) idx = i; }); links.forEach(function (a, i) { a.classList.toggle('is-active', i === idx); }); }); });
+(function () { var btn = document.getElementById('toast-btn'), box = document.getElementById('toaster'), n = 0; if (btn) btn.addEventListener('click', function () { n++; var t = document.createElement('div'); t.className = 'cl-toast'; t.innerHTML = '<i class="bi bi-bell-fill"></i><div class="cl-toast-body"><div class="cl-toast-title">Уведомление #' + n + '</div>Новое событие.</div><button class="cl-toast-x"><i class="bi bi-x-lg"></i></button>'; box.appendChild(t); requestAnimationFrame(function () { t.classList.add('is-in'); }); setTimeout(function () { t.classList.remove('is-in'); setTimeout(function () { t.remove(); }, 300); }, 4000); }); })();
+</script>
+<script src="../plugins/tablesort/tablesort.min.js"></script>
+<script src="../plugins/system/slaed.js"></script>
+</body>
+</html>
