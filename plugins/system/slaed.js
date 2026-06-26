@@ -648,6 +648,138 @@
         }
     }
 
+    function initTabGroup(group) {
+        var list = Array.prototype.slice.call(group.querySelectorAll('[data-sl-tab-link][data-sl-tab-target]'));
+        if (!list.length) return;
+        var saveGroup = group.getAttribute('data-sl-tabs-init') || group.id || 'tabs';
+        var save = 'slaed-tabs:' + saveGroup;
+        var syncSelector = group.getAttribute('data-sl-tabs-sync');
+
+        function pick(link) {
+            var rel = link.getAttribute('data-sl-tab-target');
+            if (!rel) return;
+            var index = list.indexOf(link);
+            for (var i = 0; i < list.length; i++) {
+                var item = list[i];
+                var show = item === link;
+                var target = item.getAttribute('data-sl-tab-target');
+                var pane = group.querySelector('[data-sl-tab-panel="' + target + '"]') || document.getElementById(target);
+                item.classList.toggle('selected', show);
+                item.classList.toggle('sl-is-active', show);
+                item.setAttribute('aria-selected', show ? 'true' : 'false');
+                item.setAttribute('tabindex', show ? '0' : '-1');
+                if (pane) {
+                    pane.style.display = show ? 'block' : 'none';
+                    pane.hidden = !show;
+                    pane.setAttribute('aria-hidden', show ? 'false' : 'true');
+                }
+            }
+            var shows = document.querySelectorAll('[data-sl-tab-show][data-sl-tab-group="' + saveGroup + '"]');
+            for (var s = 0; s < shows.length; s++) {
+                shows[s].style.display = (shows[s].getAttribute('data-sl-tab-show') === String(index)) ? '' : 'none';
+            }
+            try {
+                window.sessionStorage.setItem(save, String(index));
+            } catch (err) {
+            }
+            if (syncSelector) {
+                var sync = document.querySelectorAll(syncSelector);
+                for (var k = 0; k < sync.length; k++) {
+                    if ('value' in sync[k]) sync[k].value = String(index);
+                }
+            }
+            var infos = document.querySelectorAll('[data-sl-tab-info-link="' + saveGroup + '"]');
+            for (var j = 0; j < infos.length; j++) {
+                try {
+                    var url = new URL(infos[j].href, window.location.href);
+                    url.searchParams.set('tab', String(index));
+                    infos[j].href = url.toString();
+                } catch (err) {
+                }
+            }
+        }
+
+        for (var i = 0; i < list.length; i++) {
+            list[i].setAttribute('role', 'tab');
+            list[i].onclick = function () {
+                pick(this);
+                return false;
+            };
+            list[i].onkeydown = function (event) {
+                var pos = list.indexOf(this);
+                if (event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    pick(list[(pos + 1) % list.length]);
+                } else if (event.key === 'ArrowLeft') {
+                    event.preventDefault();
+                    pick(list[(pos + list.length - 1) % list.length]);
+                }
+            };
+            var target = list[i].getAttribute('data-sl-tab-target');
+            var pane = group.querySelector('[data-sl-tab-panel="' + target + '"]') || document.getElementById(target);
+            if (pane) pane.setAttribute('role', 'tabpanel');
+        }
+
+        var idx = -1;
+        var attr = parseInt(group.getAttribute('data-sl-tabs-index'), 10);
+        if (!isNaN(attr) && list[attr]) idx = attr;
+        if (idx < 0) {
+            try {
+                idx = parseInt(window.sessionStorage.getItem(save), 10);
+            } catch (err) {
+            }
+        }
+        if (isNaN(idx) || !list[idx]) {
+            idx = list.findIndex(function (item) {
+                return item.classList.contains('sl-is-active') || item.classList.contains('selected');
+            });
+        }
+        if (idx < 0) idx = 0;
+        pick(list[idx]);
+
+        var nav = group.querySelector('.sl-tabs-nav');
+        if (nav) {
+            nav.setAttribute('role', 'tablist');
+            nav.addEventListener('wheel', function (event) {
+                if (this.scrollWidth <= this.clientWidth) return;
+                if (Math.abs(event.deltaY) <= Math.abs(event.deltaX) && event.deltaX === 0) return;
+                event.preventDefault();
+                this.scrollLeft += event.deltaX || event.deltaY;
+            }, { passive: false });
+        }
+    }
+
+    function setTabs(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var groups = root.querySelectorAll('[data-sl-tabs-init]');
+        for (var i = 0; i < groups.length; i++) {
+            if (groups[i].getAttribute('data-sl-tabs-ready') === '1') continue;
+            groups[i].setAttribute('data-sl-tabs-ready', '1');
+            initTabGroup(groups[i]);
+        }
+    }
+
+    function setAlerts(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var list = root.querySelectorAll('[data-sl-autohide]');
+        for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (item.getAttribute('data-sl-alert-ready') === '1') continue;
+            item.setAttribute('data-sl-alert-ready', '1');
+            var time = parseInt(item.getAttribute('data-sl-autohide'), 10);
+            if (isNaN(time) || time < 1) time = 5000;
+            window.setTimeout((function (el) {
+                return function () {
+                    if (!el || !el.parentNode) return;
+                    el.classList.add('sl-is-hiding');
+                    window.setTimeout(function () {
+                        if (el && el.parentNode) el.parentNode.removeChild(el);
+                    }, 400);
+                };
+            })(item), time);
+        }
+    }
+
     function setSlaedUi() {
         setTableSort(document);
         setLightbox();
@@ -656,12 +788,16 @@
         setToggleBlocks();
         setFloating(document);
         setEditorInsertHandler();
+        setTabs(document);
+        setAlerts(document);
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {
         setTableSort(event.target);
         setToggleBlocks();
         setFloating(event.target);
+        setTabs(event.target);
+        setAlerts(event.target);
     });
 
     window.addEventListener('resize', refitFloating);
