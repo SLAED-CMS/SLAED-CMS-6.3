@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
 /*
-  SLAED UI Kit — ONE button style (faithful sl-but-neutral reproduction)
+  SLAED UI Kit — ONE button style (faithful .sl-but reproduction)
   plus a broad component set. The page links the real theme.css + slaed.js
   + tablesort.min.js, so live mechanisms run for real: tooltips/dropdowns
   (.sl-float/.sl-tip), sortable tables (Tablesort), tabs (data-sl-tabs-init),
@@ -28,12 +28,9 @@
 .sl-shape-square { --sl-ctl-r: 0px; }
 
 /* ======================================================================
-   THE BUTTON — faithful sl-but-neutral (overrides theme base; var-driven)
+   THE BUTTON — single faithful .sl-but (matches production neutral)
    ====================================================================== */
-.sl-but-neutral {
-  --sl-but-r: 999px;
-  --sl-but-h: 30px;
-  --sl-but-px: 14px;
+.sl-but {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -41,12 +38,12 @@
   vertical-align: middle;
   gap: 7px;
   white-space: nowrap;
-  height: var(--sl-but-h);
-  padding: 0 var(--sl-but-px);
+  height: 30px;
+  padding: 0 14px;
   margin: 0;
   line-height: 1;
   border: 0;
-  border-radius: var(--sl-ctl-r, var(--sl-but-r));
+  border-radius: 999px;
   cursor: pointer;
   font-family: Arial, Tahoma, sans-serif;
   font-size: 14px;
@@ -60,33 +57,14 @@
   --sl-but-border-dark: var(--sl-but-neutral-border-outer);
   text-shadow: var(--sl-but-text-shadow-neutral);
   box-shadow: var(--sl-but-border-shadow);
-  transition: opacity 0.2s ease, transform 0.14s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  transition: opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
   background-clip: padding-box;
 }
-.sl-but-neutral > .bi { font-size: 1.04em; line-height: 0; }
-.sl-but-neutral:hover { color: var(--sl-color-brand-link); border-color: var(--sl-but-link-hover-border); opacity: 0.8; }
-.sl-but-neutral:focus-visible { outline: none; box-shadow: var(--sl-but-border-shadow), 0 0 0 3px rgba(48, 162, 246, 0.3); }
-.sl-but-neutral[disabled] { opacity: 0.5; cursor: not-allowed; }
-
-/* per-button corner form (standalone, no shape container) */
-.sl-but-pill { --sl-but-r: 999px; }
-.sl-but-round { --sl-but-r: 9px; }
-.sl-but-sharp { --sl-but-r: 4px; }
-.sl-but-square { --sl-but-r: 0px; }
-/* sizes & layout */
-.sl-but-sm { --sl-but-h: 26px; --sl-but-px: 11px; font-size: 13px; gap: 6px; }
-.sl-but-lg { --sl-but-h: 38px; --sl-but-px: 22px; font-size: 15px; gap: 9px; }
-.sl-but-block { display: flex; width: 100%; }
-.sl-but-icon { --sl-but-px: 0; width: var(--sl-but-h); gap: 0; }
-.sl-but-icon > .bi { font-size: 1.1em; }
-.sl-but-tall { height: auto; align-self: stretch; }
-.sl-but-neutral.sl-is-active { color: #fff; background: var(--sl-color-brand-link); text-shadow: none; }
-.sl-but-badge {
-  position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px;
-  display: inline-flex; align-items: center; justify-content: center;
-  font: 700 10px/1 Arial, sans-serif; color: #fff; background: var(--sl-color-danger);
-  border: 2px solid var(--sl-color-bg); border-radius: 999px;
-}
+.sl-but > .bi { font-size: 1.04em; line-height: 0; }
+.sl-but:hover { color: var(--sl-color-brand-link); opacity: 0.8; }
+.sl-but:focus-visible { outline: none; box-shadow: var(--sl-but-border-shadow), 0 0 0 3px rgba(48, 162, 246, 0.3); }
+.sl-but[disabled] { opacity: 0.5; cursor: not-allowed; }
+.sl-but.sl-is-active { color: #fff; background: var(--sl-color-brand-link); text-shadow: none; }
 .sl-is-loading { color: transparent !important; pointer-events: none; }
 .sl-is-loading::after {
   content: ""; position: absolute; width: 15px; height: 15px; margin: auto;
@@ -94,25 +72,6 @@
   animation: sl-spin 0.6s linear infinite;
 }
 @keyframes sl-spin { to { transform: rotate(360deg); } }
-
-/* groups & split — inner corners square, ends follow the form */
-.sl-but-group { display: inline-flex; vertical-align: middle; }
-.sl-but-group > .sl-but-neutral { border-radius: 0; margin: 0; }
-.sl-but-group > :first-child { border-top-left-radius: var(--sl-ctl-r, 9px); border-bottom-left-radius: var(--sl-ctl-r, 9px); }
-.sl-but-group > :last-child { border-top-right-radius: var(--sl-ctl-r, 9px); border-bottom-right-radius: var(--sl-ctl-r, 9px); }
-.sl-but-group > * + * { margin-left: -1px; }
-.sl-but-group > :hover { z-index: 2; }
-.sl-but-split { display: inline-flex; vertical-align: middle; }
-.sl-but-split > .sl-but-neutral { border-radius: 0; margin: 0; }
-.sl-but-split > :first-child { border-top-left-radius: var(--sl-ctl-r, 999px); border-bottom-left-radius: var(--sl-ctl-r, 999px); }
-.sl-but-split > :last-child { --sl-but-px: 0; width: var(--sl-but-h); margin-left: -1px; border-top-right-radius: var(--sl-ctl-r, 999px); border-bottom-right-radius: var(--sl-ctl-r, 999px); }
-.sl-but-fab {
-  --sl-but-h: 54px; --sl-but-px: 0; width: 54px; font-size: 21px; border-radius: 999px;
-  box-shadow: var(--sl-but-border-shadow), 0 8px 20px rgba(42, 48, 60, 0.24);
-}
-
-/* corner-form follows the container for button & field */
-.sl-shape-pill .sl-but-neutral, .sl-shape-round .sl-but-neutral, .sl-shape-sharp .sl-but-neutral, .sl-shape-square .sl-but-neutral { border-radius: var(--sl-ctl-r); }
 .sl-shape-pill .sl-field, .sl-shape-round .sl-field, .sl-shape-sharp .sl-field, .sl-shape-square .sl-field { border-radius: var(--sl-ctl-r); }
 
 /* ======================================================================
@@ -132,7 +91,7 @@
 
 /* input-group + vertical + bar */
 .sl-ig { display: inline-flex; align-items: stretch; vertical-align: middle; }
-.sl-ig > .sl-field, .sl-ig > .sl-but-neutral, .sl-ig > .sl-ig-text { border-radius: 0; margin: 0; }
+.sl-ig > .sl-field, .sl-ig > .sl-but, .sl-ig > .sl-ig-text { border-radius: 0; margin: 0; }
 .sl-ig > :first-child { border-top-left-radius: var(--sl-ctl-r, var(--sl-radius-control)); border-bottom-left-radius: var(--sl-ctl-r, var(--sl-radius-control)); }
 .sl-ig > :last-child { border-top-right-radius: var(--sl-ctl-r, var(--sl-radius-control)); border-bottom-right-radius: var(--sl-ctl-r, var(--sl-radius-control)); }
 .sl-ig > * + * { margin-left: -1px; }
@@ -365,8 +324,6 @@ a.sl-list-item:hover { background: var(--sl-color-surface-alt); color: var(--sl-
 /* ======================================================================
    MORE COMPONENTS (nc-*) — flat production stylistics
    ====================================================================== */
-.nc-toolbar { display: inline-flex; align-items: center; gap: 6px; padding: 5px; border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
-.nc-toolbar-sep { width: 1px; align-self: stretch; margin: 2px; background: var(--sl-color-border); }
 .nc-stepper { display: inline-flex; align-items: center; border: 1px solid var(--sl-color-border); border-radius: 999px; overflow: hidden; }
 .nc-stepper button { width: 28px; height: 28px; border: 0; background: var(--sl-color-bg); color: var(--sl-color-text); cursor: pointer; font-size: 16px; }
 .nc-stepper button:hover { background: var(--sl-color-brand-link); color: #fff; }
@@ -521,8 +478,6 @@ a.sl-list-item:hover { background: var(--sl-color-surface-alt); color: var(--sl-
 .nc-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .nc-legend span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--sl-color-brand-link); }
 .nc-legend .lg-green::before { background: var(--sl-color-success); } .nc-legend .lg-orange::before { background: var(--sl-color-warning); } .nc-legend .lg-red::before { background: var(--sl-color-danger); }
-.nc-speeddial { display: inline-flex; flex-direction: column-reverse; align-items: center; gap: 8px; }
-.nc-speeddial-row { flex-direction: row-reverse; }
 
 /* ======================================================================
    Lab chrome
@@ -559,12 +514,11 @@ body { counter-reset: secn; }
 <div class="lab">
   <div class="lab-head">
     <h1>SLAED UI Kit</h1>
-    <p>Единственный стиль кнопки — боевая <code>sl-but-neutral</code>. Подсказки, дропдауны, вкладки, сортировка таблиц и аккордеон работают на <strong>настоящих</strong> механизмах: <code>slaed.js</code> + <code>tablesort.min.js</code> + <code>theme.css</code>.</p>
+    <p>Единственный стиль кнопки — боевой <code>.sl-but</code>. Подсказки, дропдауны, вкладки, сортировка таблиц и аккордеон работают на <strong>настоящих</strong> механизмах: <code>slaed.js</code> + <code>tablesort.min.js</code> + <code>theme.css</code>.</p>
     <p>Интерактивные блоки показаны в формах углов: <code>pill</code> · <code>round</code> · <code>sharp</code> · <code>square</code> (контейнер <code>sl-shape-*</code>). Pill — для сравнения.</p>
     <nav class="lab-toc">
       <a href="#sec-base">Кнопки</a>
       <a href="#sec-sizes">Размеры</a>
-      <a href="#sec-groups">Группы</a>
       <a href="#sec-fields">Поля</a>
       <a href="#sec-ig">Поле+кнопка</a>
       <a href="#sec-vg">Вертикаль</a>
@@ -598,74 +552,34 @@ body { counter-reset: secn; }
     </nav>
   </div>
 
-  <!-- base buttons -->
+  <!-- buttons -->
   <section class="lab-sec" id="sec-base">
     <h2>Кнопки</h2>
-    <p class="lab-note">Текст, иконка слева/справа, только иконка — в четырёх формах. Между иконкой и текстом — корректный <code>gap</code>.</p>
+    <p class="lab-note">Единственный стиль — <code>.sl-but</code>. Текст, иконка слева, иконка справа, только иконка. Между иконкой и текстом — корректный <code>gap</code>.</p>
     <div class="lab-line"></div>
-    <div class="lab-card"><div class="lab-shapes">
-      <div class="lab-shape"><div class="lab-shape-name">pill</div><div class="lab-shape-body sl-shape-pill">
-        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
-      </div></div>
-      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
-        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
-      </div></div>
-      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
-        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
-      </div></div>
-      <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
-        <button class="sl-but-neutral">Отмена</button><button class="sl-but-neutral"><i class="bi bi-gear"></i> Настройки</button><button class="sl-but-neutral">Далее <i class="bi bi-arrow-right"></i></button><button class="sl-but-neutral sl-but-icon" title="Меню"><i class="bi bi-three-dots"></i></button>
-      </div></div>
+    <div class="lab-card"><div class="lab-row">
+      <button class="sl-but">Отмена</button>
+      <button class="sl-but"><i class="bi bi-gear"></i> Настройки</button>
+      <button class="sl-but">Далее <i class="bi bi-arrow-right"></i></button>
+      <button class="sl-but" title="Меню"><i class="bi bi-three-dots"></i></button>
     </div></div>
   </section>
 
   <section class="lab-sec" id="sec-sizes">
-    <h2>Размеры и состояния</h2>
-    <p class="lab-note"><code>sm</code> · md · <code>lg</code>; hover, focus-ring, <code>sl-hidden</code>/<code>disabled</code>, <code>sl-is-loading</code>.</p>
+    <h2>Состояния</h2>
+    <p class="lab-note">hover, focus-ring, <code>sl-hidden</code>/<code>disabled</code>, <code>sl-is-loading</code>, <code>sl-is-active</code>.</p>
     <div class="lab-line"></div>
     <div class="lab-card">
       <div class="lab-row">
-        <button class="sl-but-neutral sl-but-sm">Small</button>
-        <button class="sl-but-neutral">Medium</button>
-        <button class="sl-but-neutral sl-but-lg">Large</button>
-        <button class="sl-but-neutral sl-but-sm sl-but-icon"><i class="bi bi-plus-lg"></i></button>
-        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-plus-lg"></i></button>
-        <button class="sl-but-neutral sl-but-lg sl-but-icon"><i class="bi bi-plus-lg"></i></button>
-      </div>
-      <div class="lab-row">
-        <button class="sl-but-neutral">Обычная</button>
-        <button class="sl-but-neutral sl-is-loading">Загрузка</button>
-        <button class="sl-but-neutral sl-hidden">sl-hidden</button>
-        <button class="sl-but-neutral" disabled>disabled</button>
-        <button class="sl-but-neutral">Готово <i class="bi bi-check-lg"></i></button>
+        <button class="sl-but">Обычная</button>
+        <button class="sl-but sl-is-active">Активная</button>
+        <button class="sl-but sl-is-loading">Загрузка</button>
+        <button class="sl-but sl-hidden">sl-hidden</button>
+        <button class="sl-but" disabled>disabled</button>
+        <button class="sl-but">Готово <i class="bi bi-check-lg"></i></button>
       </div>
     </div>
   </section>
-
-  <section class="lab-sec" id="sec-groups">
-    <h2>Группы кнопок</h2>
-    <p class="lab-note">Сегменты, split, пагинатор. Внутренние стыки прямые, форму берут только крайние углы.</p>
-    <div class="lab-line"></div>
-    <div class="lab-card"><div class="lab-shapes">
-      <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
-        <div class="sl-but-group"><button class="sl-but-neutral">День</button><button class="sl-but-neutral">Неделя</button><button class="sl-but-neutral">Месяц</button></div>
-        <div class="sl-but-split"><button class="sl-but-neutral"><i class="bi bi-save"></i> Сохранить</button><button class="sl-but-neutral"><i class="bi bi-chevron-down"></i></button></div>
-      </div></div>
-      <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
-        <div class="sl-but-group"><button class="sl-but-neutral">День</button><button class="sl-but-neutral">Неделя</button><button class="sl-but-neutral">Месяц</button></div>
-        <div class="sl-but-split"><button class="sl-but-neutral"><i class="bi bi-save"></i> Сохранить</button><button class="sl-but-neutral"><i class="bi bi-chevron-down"></i></button></div>
-      </div></div>
-      <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
-        <div class="sl-but-group"><button class="sl-but-neutral">День</button><button class="sl-but-neutral">Неделя</button><button class="sl-but-neutral">Месяц</button></div>
-        <div class="sl-but-split"><button class="sl-but-neutral"><i class="bi bi-save"></i> Сохранить</button><button class="sl-but-neutral"><i class="bi bi-chevron-down"></i></button></div>
-      </div></div>
-      <div class="lab-shape"><div class="lab-shape-name">FAB</div><div class="lab-shape-body">
-        <button class="sl-but-neutral sl-but-fab"><i class="bi bi-plus-lg"></i></button><span class="lab-mut">плавающая кнопка остаётся круглой</span>
-      </div></div>
-    </div></div>
-  </section>
-
-  <section class="lab-sec" id="sec-toolbar"><h2>Тулбар кнопок</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-toolbar"><div class="sl-but-group"><button class="sl-but-neutral sl-but-icon"><i class="bi bi-type-bold"></i></button><button class="sl-but-neutral sl-but-icon"><i class="bi bi-type-italic"></i></button></div><span class="nc-toolbar-sep"></span><button class="sl-but-neutral sl-but-icon"><i class="bi bi-text-left"></i></button><button class="sl-but-neutral sl-but-icon"><i class="bi bi-text-center"></i></button><span class="nc-toolbar-sep"></span><button class="sl-but-neutral sl-but-icon"><i class="bi bi-link-45deg"></i></button></div></div></section>
 
   <section class="lab-sec" id="sec-close">
     <h2>Кнопка закрытия</h2>
@@ -679,8 +593,6 @@ body { counter-reset: secn; }
       <span class="lab-mut">рамка · pill · square · плоская</span>
     </div></div>
   </section>
-
-  <section class="lab-sec" id="sec-speed"><h2>Speed dial</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:50px;align-items:flex-end"><div class="nc-speeddial" data-speed><button class="sl-but-neutral sl-but-fab" data-speed-toggle><i class="bi bi-plus-lg"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-share"></i></button></div><div class="nc-speeddial nc-speeddial-row" data-speed><button class="sl-but-neutral sl-but-fab" data-speed-toggle><i class="bi bi-share"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-telegram"></i></button><button class="sl-but-neutral sl-but-icon" style="display:none"><i class="bi bi-link-45deg"></i></button></div></div></div></section>
 
   <section class="lab-sec" id="sec-fields">
     <h2>Поля ввода</h2>
@@ -708,19 +620,19 @@ body { counter-reset: secn; }
     <div class="lab-line"></div>
     <div class="lab-card"><div class="lab-shapes">
       <div class="lab-shape"><div class="lab-shape-name">pill</div><div class="lab-shape-body sl-shape-pill">
-        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but"><i class="bi bi-search"></i> Найти</button></div>
         <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
       </div></div>
       <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
-        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but"><i class="bi bi-search"></i> Найти</button></div>
         <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
       </div></div>
       <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
-        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but"><i class="bi bi-search"></i> Найти</button></div>
         <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
       </div></div>
       <div class="lab-shape"><div class="lab-shape-name">square</div><div class="lab-shape-body sl-shape-square">
-        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but-neutral"><i class="bi bi-search"></i> Найти</button></div>
+        <div class="sl-ig"><input class="sl-field" type="text" placeholder="Поиск по сайту"><button class="sl-but"><i class="bi bi-search"></i> Найти</button></div>
         <div class="sl-ig"><span class="sl-ig-text">https://</span><input class="sl-field" type="text" placeholder="slaed.net"></div>
       </div></div>
     </div></div>
@@ -728,14 +640,14 @@ body { counter-reset: secn; }
 
   <section class="lab-sec" id="sec-vg">
     <h2>Вертикальные поля</h2>
-    <p class="lab-note">Два инпута стопкой + кнопка во всю высоту обоих (<code>sl-but-tall</code>).</p>
+    <p class="lab-note">Два инпута стопкой и кнопка справа.</p>
     <div class="lab-line"></div>
     <div class="lab-card"><div class="lab-shapes">
       <div class="lab-shape"><div class="lab-shape-name">round</div><div class="lab-shape-body sl-shape-round">
-        <div class="sl-vg"><div class="sl-vg-fields"><span class="sl-field-icon"><i class="bi bi-person"></i><input class="sl-field" type="text" placeholder="Логин" style="width:220px"></span><span class="sl-field-icon"><i class="bi bi-lock"></i><input class="sl-field" type="password" placeholder="Пароль" style="width:220px"></span></div><button class="sl-but-neutral sl-but-tall"><i class="bi bi-box-arrow-in-right"></i> Войти</button></div>
+        <div class="sl-vg"><div class="sl-vg-fields"><span class="sl-field-icon"><i class="bi bi-person"></i><input class="sl-field" type="text" placeholder="Логин" style="width:220px"></span><span class="sl-field-icon"><i class="bi bi-lock"></i><input class="sl-field" type="password" placeholder="Пароль" style="width:220px"></span></div><button class="sl-but"><i class="bi bi-box-arrow-in-right"></i> Войти</button></div>
       </div></div>
       <div class="lab-shape"><div class="lab-shape-name">sharp</div><div class="lab-shape-body sl-shape-sharp">
-        <div class="sl-vg"><div class="sl-vg-fields"><span class="sl-field-icon"><i class="bi bi-person"></i><input class="sl-field" type="text" placeholder="Логин" style="width:220px"></span><span class="sl-field-icon"><i class="bi bi-lock"></i><input class="sl-field" type="password" placeholder="Пароль" style="width:220px"></span></div><button class="sl-but-neutral sl-but-tall"><i class="bi bi-box-arrow-in-right"></i> Войти</button></div>
+        <div class="sl-vg"><div class="sl-vg-fields"><span class="sl-field-icon"><i class="bi bi-person"></i><input class="sl-field" type="text" placeholder="Логин" style="width:220px"></span><span class="sl-field-icon"><i class="bi bi-lock"></i><input class="sl-field" type="password" placeholder="Пароль" style="width:220px"></span></div><button class="sl-but"><i class="bi bi-box-arrow-in-right"></i> Войти</button></div>
       </div></div>
     </div></div>
   </section>
@@ -750,8 +662,8 @@ body { counter-reset: secn; }
         <span class="sl-field-icon"><i class="bi bi-search"></i><input class="sl-field" type="text" placeholder="Фильтр"></span>
         <label class="sl-switch"><input type="checkbox"> Активные</label>
         <span class="sl-bar-spacer"></span>
-        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-arrow-counterclockwise"></i></button>
-        <button class="sl-but-neutral"><i class="bi bi-funnel"></i> Применить</button>
+        <button class="sl-but"><i class="bi bi-arrow-counterclockwise"></i></button>
+        <button class="sl-but"><i class="bi bi-funnel"></i> Применить</button>
       </div>
     </div>
   </section>
@@ -774,7 +686,7 @@ body { counter-reset: secn; }
 
   <section class="lab-sec" id="sec-dropz"><h2>File dropzone</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-drop"><i class="bi bi-cloud-arrow-up"></i>Перетащите файлы или <span style="color:var(--sl-color-brand-strong)">выберите</span></div></div></section>
 
-  <section class="lab-sec" id="sec-cal"><h2>Calendar</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cal"><div class="nc-cal-head"><button class="sl-but-neutral sl-but-icon sl-but-sm"><i class="bi bi-chevron-left"></i></button> Март 2026 <button class="sl-but-neutral sl-but-icon sl-but-sm"><i class="bi bi-chevron-right"></i></button></div><div class="nc-cal-grid"><b>Пн</b><b>Вт</b><b>Ср</b><b>Чт</b><b>Пт</b><b>Сб</b><b>Вс</b><a class="mute">23</a><a class="mute">24</a><a>25</a><a>26</a><a>27</a><a>28</a><a>1</a><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><a>10</a><a>11</a><a class="is-on">12</a><a>13</a><a>14</a><a>15</a></div></div></div></section>
+  <section class="lab-sec" id="sec-cal"><h2>Calendar</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cal"><div class="nc-cal-head"><button class="sl-but"><i class="bi bi-chevron-left"></i></button> Март 2026 <button class="sl-but"><i class="bi bi-chevron-right"></i></button></div><div class="nc-cal-grid"><b>Пн</b><b>Вт</b><b>Ср</b><b>Чт</b><b>Пт</b><b>Сб</b><b>Вс</b><a class="mute">23</a><a class="mute">24</a><a>25</a><a>26</a><a>27</a><a>28</a><a>1</a><a>2</a><a>3</a><a>4</a><a>5</a><a>6</a><a>7</a><a>8</a><a>9</a><a>10</a><a>11</a><a class="is-on">12</a><a>13</a><a>14</a><a>15</a></div></div></div></section>
 
   <section class="lab-sec" id="sec-swatch"><h2>Color swatches</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:8px"><span class="nc-swatch" style="background:#30a2f6"></span><span class="nc-swatch" style="background:#5c9425"></span><span class="nc-swatch" style="background:#e8780f"></span><span class="nc-swatch" style="background:#c5384a"></span><span class="nc-swatch" style="background:#8c2ca9"></span></div></div></section>
 
@@ -787,7 +699,7 @@ body { counter-reset: secn; }
         <select class="sl-field sl-field-block"><option>Новости</option><option>Обзоры</option></select>
         <div class="lab-row" style="gap:8px"><span class="sl-chip sl-chip-choice sl-is-on">важное</span><span class="sl-chip sl-chip-choice">релиз</span><span class="sl-chip sl-chip-choice">php</span></div>
         <label class="sl-switch"><input type="checkbox" checked> Опубликовать сразу</label>
-        <div class="lab-row"><button class="sl-but-neutral"><i class="bi bi-check-lg"></i> Сохранить</button><button class="sl-but-neutral">Предпросмотр</button><button class="sl-but-neutral">Отмена</button></div>
+        <div class="lab-row"><button class="sl-but"><i class="bi bi-check-lg"></i> Сохранить</button><button class="sl-but">Предпросмотр</button><button class="sl-but">Отмена</button></div>
       </div>
     </div>
   </section>
@@ -904,11 +816,11 @@ body { counter-reset: secn; }
 
   <section class="lab-sec" id="sec-ribbon"><h2>Ribbon card</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="lab-card nc-ribbon" data-ribbon="NEW" style="padding:0"><div style="height:90px;background:linear-gradient(135deg,#5cb6f7,#2f7fc0)"></div><div style="padding:14px"><h3 style="margin:0 0 5px;font:bold 15px Arial;color:var(--sl-color-text-heading)">С лентой</h3><p style="margin:0;font:12px Arial;color:var(--sl-color-text-muted)">Угловая метка.</p></div></div></div></section>
 
-  <section class="lab-sec" id="sec-profile"><h2>Profile card</h2><div class="lab-line"></div><div class="lab-card" style="max-width:380px"><div class="nc-profile"><span class="sl-ava sl-ava-brand sl-ava-lg">ЭЛ</span><div style="flex:1"><div style="font-weight:bold;color:var(--sl-color-text-heading)">Eduard Laas</div><div class="lab-mut">администратор</div></div><button class="sl-but-neutral sl-but-icon"><i class="bi bi-three-dots"></i></button></div></div></section>
+  <section class="lab-sec" id="sec-profile"><h2>Profile card</h2><div class="lab-line"></div><div class="lab-card" style="max-width:380px"><div class="nc-profile"><span class="sl-ava sl-ava-brand sl-ava-lg">ЭЛ</span><div style="flex:1"><div style="font-weight:bold;color:var(--sl-color-text-heading)">Eduard Laas</div><div class="lab-mut">администратор</div></div><button class="sl-but"><i class="bi bi-three-dots"></i></button></div></div></section>
 
   <section class="lab-sec" id="sec-stat"><h2>Stat / KPI</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="nc-stat"><div class="nc-stat-label">Визиты</div><div class="nc-stat-value">12 480</div><div class="nc-stat-delta"><i class="bi bi-arrow-up-short"></i>8.2%</div></div><div class="nc-stat"><div class="nc-stat-label">Заказы</div><div class="nc-stat-value">342</div><div class="nc-stat-delta is-down"><i class="bi bi-arrow-down-short"></i>3.1%</div></div><div class="nc-stat"><div class="nc-stat-label">Доход</div><div class="nc-stat-value">₽ 98k</div><div class="nc-stat-delta"><i class="bi bi-arrow-up-short"></i>14%</div></div></div></section>
 
-  <section class="lab-sec" id="sec-price"><h2>Pricing</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="nc-price"><div class="nc-stat-label">Lite</div><div class="nc-price-amount">₽ 0</div><ul><li>1 сайт</li><li>Базовые модули</li></ul><button class="sl-but-neutral">Выбрать</button></div><div class="nc-price is-pop"><span class="sl-badge sl-badge-solid sl-badge-info">популярный</span><div class="nc-stat-label" style="margin-top:8px">Pro</div><div class="nc-price-amount">₽ 990</div><ul><li>10 сайтов</li><li>Все модули</li></ul><button class="sl-but-neutral">Выбрать</button></div><div class="nc-price"><div class="nc-stat-label">Enterprise</div><div class="nc-price-amount">₽ 4900</div><ul><li>∞ сайтов</li><li>SLA</li></ul><button class="sl-but-neutral">Выбрать</button></div></div></section>
+  <section class="lab-sec" id="sec-price"><h2>Pricing</h2><div class="lab-line"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px"><div class="nc-price"><div class="nc-stat-label">Lite</div><div class="nc-price-amount">₽ 0</div><ul><li>1 сайт</li><li>Базовые модули</li></ul><button class="sl-but">Выбрать</button></div><div class="nc-price is-pop"><span class="sl-badge sl-badge-solid sl-badge-info">популярный</span><div class="nc-stat-label" style="margin-top:8px">Pro</div><div class="nc-price-amount">₽ 990</div><ul><li>10 сайтов</li><li>Все модули</li></ul><button class="sl-but">Выбрать</button></div><div class="nc-price"><div class="nc-stat-label">Enterprise</div><div class="nc-price-amount">₽ 4900</div><ul><li>∞ сайтов</li><li>SLA</li></ul><button class="sl-but">Выбрать</button></div></div></section>
 
   <section class="lab-sec" id="sec-testi"><h2>Testimonial</h2><div class="lab-line"></div><div class="lab-card" style="max-width:420px"><div class="nc-testi"><p style="margin:0 0 12px;font:italic 14px/1.5 Arial;color:var(--sl-color-text-heading)">«SLAED CMS — лучшее для быстрого запуска.»</p><div class="lab-row" style="gap:10px"><span class="sl-ava sl-ava-accent">К</span><div style="font-weight:bold;color:var(--sl-color-text-heading)">Константин</div></div></div></div></section>
 
@@ -936,16 +848,16 @@ body { counter-reset: secn; }
             <th data-sort-method="none" style="width:90px">Действия</th>
           </tr></thead>
           <tbody class="sl-table-body">
-            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">102</td><td>Релиз SLAED CMS 7</td><td>Новости</td><td><span class="sl-badge sl-badge-success">published</span></td><td>14.03.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
-            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">87</td><td>Обзор модуля форума</td><td>Обзоры</td><td><span class="sl-badge sl-badge-warn">pending</span></td><td>02.02.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
-            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">9</td><td>Установка на OSPanel</td><td>Документация</td><td><span class="sl-badge sl-badge-neutral">draft</span></td><td>21.12.2025</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
-            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">143</td><td>Темы оформления: lite</td><td>Шаблоны</td><td><span class="sl-badge sl-badge-info">new</span></td><td>30.04.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but-neutral sl-but-icon sl-but-sm" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">102</td><td>Релиз SLAED CMS 7</td><td>Новости</td><td><span class="sl-badge sl-badge-success">published</span></td><td>14.03.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">87</td><td>Обзор модуля форума</td><td>Обзоры</td><td><span class="sl-badge sl-badge-warn">pending</span></td><td>02.02.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">9</td><td>Установка на OSPanel</td><td>Документация</td><td><span class="sl-badge sl-badge-neutral">draft</span></td><td>21.12.2025</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
+            <tr><td><input type="checkbox" data-sl-check-item></td><td class="sl-table-col-num">143</td><td>Темы оформления: lite</td><td>Шаблоны</td><td><span class="sl-badge sl-badge-info">new</span></td><td>30.04.2026</td><td><div class="sl-shape-sharp" style="display:inline-flex;gap:6px"><button class="sl-but" type="button" title="Изменить"><i class="bi bi-pencil"></i></button><button class="sl-but" type="button" title="Удалить"><i class="bi bi-trash3"></i></button></div></td></tr>
           </tbody>
         </table>
       </div>
       <div class="lab-row sl-shape-sharp" style="margin-top:14px">
-        <button class="sl-but-neutral sl-but-sm" type="button"><i class="bi bi-check2-square"></i> С выбранными</button>
-        <button class="sl-but-neutral sl-but-sm" type="button"><i class="bi bi-trash3"></i> Удалить</button>
+        <button class="sl-but" type="button"><i class="bi bi-check2-square"></i> С выбранными</button>
+        <button class="sl-but" type="button"><i class="bi bi-trash3"></i> Удалить</button>
       </div>
       </form>
     </div>
@@ -969,7 +881,7 @@ body { counter-reset: secn; }
           <li><a href="#">Форум</a></li>
           <li><a href="#">Файлы</a></li>
         </ul>
-        <button class="sl-but-neutral sl-but-icon sl-but-sm" style="margin-left:8px"><i class="bi bi-search"></i></button>
+        <button class="sl-but" style="margin-left:8px"><i class="bi bi-search"></i></button>
       </nav>
     </div>
   </section>
@@ -1027,15 +939,15 @@ body { counter-reset: secn; }
     <p class="lab-note">Из той же кнопки: группа neutral, активная страница — заливка brand.</p>
     <div class="lab-line"></div>
     <div class="lab-card sl-shape-sharp"><div class="lab-row">
-      <div class="sl-but-group">
-        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-chevron-left"></i></button>
-        <button class="sl-but-neutral">1</button>
-        <button class="sl-but-neutral sl-is-active">2</button>
-        <button class="sl-but-neutral">3</button>
-        <button class="sl-but-neutral">4</button>
-        <button class="sl-but-neutral">…</button>
-        <button class="sl-but-neutral">24</button>
-        <button class="sl-but-neutral sl-but-icon"><i class="bi bi-chevron-right"></i></button>
+      <div class="lab-row">
+        <button class="sl-but"><i class="bi bi-chevron-left"></i></button>
+        <button class="sl-but">1</button>
+        <button class="sl-but sl-is-active">2</button>
+        <button class="sl-but">3</button>
+        <button class="sl-but">4</button>
+        <button class="sl-but">…</button>
+        <button class="sl-but">24</button>
+        <button class="sl-but"><i class="bi bi-chevron-right"></i></button>
       </div>
     </div></div>
   </section>
@@ -1046,7 +958,7 @@ body { counter-reset: secn; }
     <div class="lab-line"></div>
     <div class="lab-card"><div class="lab-row">
       <nav class="sl-menu"><ul><li class="sl-float">
-        <button class="sl-but-neutral">Действия <i class="bi bi-chevron-down"></i></button>
+        <button class="sl-but">Действия <i class="bi bi-chevron-down"></i></button>
         <ul class="sl-float-panel">
           <li><a href="#"><i class="bi bi-pencil"></i> Редактировать</a></li>
           <li><a href="#"><i class="bi bi-files"></i> Дублировать</a></li>
@@ -1055,7 +967,7 @@ body { counter-reset: secn; }
         </ul>
       </li></ul></nav>
       <nav class="sl-menu"><ul><li class="sl-float">
-        <button class="sl-but-neutral sl-but-icon" title="Ещё"><i class="bi bi-three-dots-vertical"></i></button>
+        <button class="sl-but" title="Ещё"><i class="bi bi-three-dots-vertical"></i></button>
         <ul class="sl-float-panel">
           <li><a href="#"><i class="bi bi-eye"></i> Просмотр</a></li>
           <li><a href="#"><i class="bi bi-download"></i> Скачать</a></li>
@@ -1080,14 +992,14 @@ body { counter-reset: secn; }
     </div></div>
   </section>
 
-  <section class="lab-sec" id="sec-tipd"><h2>Tooltip — directions</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:30px;padding:20px 0"><button class="sl-but-neutral nc-tipd nc-tipd-top" data-tip="Сверху">Top</button><button class="sl-but-neutral nc-tipd nc-tipd-bottom" data-tip="Снизу">Bottom</button><button class="sl-but-neutral nc-tipd nc-tipd-left" data-tip="Слева">Left</button><button class="sl-but-neutral nc-tipd nc-tipd-right" data-tip="Справа">Right</button></div></div></section>
+  <section class="lab-sec" id="sec-tipd"><h2>Tooltip — directions</h2><div class="lab-line"></div><div class="lab-card"><div class="lab-row" style="gap:30px;padding:20px 0"><button class="sl-but nc-tipd nc-tipd-top" data-tip="Сверху">Top</button><button class="sl-but nc-tipd nc-tipd-bottom" data-tip="Снизу">Bottom</button><button class="sl-but nc-tipd nc-tipd-left" data-tip="Слева">Left</button><button class="sl-but nc-tipd nc-tipd-right" data-tip="Справа">Right</button></div></div></section>
 
   <section class="lab-sec" id="sec-pop">
     <h2>Popover</h2>
     <p class="lab-note">Поповер с заголовком и телом (наведение/фокус) — богаче подсказки.</p>
     <div class="lab-line"></div>
     <div class="lab-card"><div class="lab-row" style="gap:24px">
-      <span class="sl-pop" tabindex="0"><button class="sl-but-neutral"><i class="bi bi-chat-square-text"></i> Поповер</button><span class="sl-pop-panel"><span class="sl-pop-head">Заголовок</span><span class="sl-pop-body">Текст поповера: появляется по наведению или фокусу, со стрелкой.</span></span></span>
+      <span class="sl-pop" tabindex="0"><button class="sl-but"><i class="bi bi-chat-square-text"></i> Поповер</button><span class="sl-pop-panel"><span class="sl-pop-head">Заголовок</span><span class="sl-pop-body">Текст поповера: появляется по наведению или фокусу, со стрелкой.</span></span></span>
       <span class="sl-pop" tabindex="0"><span class="sl-badge sl-badge-info" style="cursor:help">подробнее</span><span class="sl-pop-panel"><span class="sl-pop-head">Детали</span><span class="sl-pop-body">Можно цеплять к любому элементу.</span></span></span>
     </div></div>
   </section>
@@ -1111,7 +1023,7 @@ body { counter-reset: secn; }
       </div>
       <div class="sl-alert sl-alert-error">
         <div class="sl-alert-body"><p class="sl-alert-title">Ошибка</p><p class="sl-alert-text">Не удалось подключиться к базе данных.</p>
-          <div class="sl-alert-actions"><button class="sl-but-neutral sl-but-sm" type="button"><i class="bi bi-arrow-clockwise"></i> Повторить</button></div>
+          <div class="sl-alert-actions"><button class="sl-but" type="button"><i class="bi bi-arrow-clockwise"></i> Повторить</button></div>
         </div>
         <button class="sl-alert-close" type="button" aria-label="Закрыть"><i class="bi bi-x-lg"></i></button>
       </div>
@@ -1129,7 +1041,7 @@ body { counter-reset: secn; }
     <div class="lab-line"></div>
     <div class="lab-card"><div class="lab-row">
       <div class="sl-toast sl-is-in" style="position:static;transform:none;width:300px"><i class="bi bi-bell-fill"></i><div class="sl-toast-body"><div class="sl-toast-title">Уведомление</div>Новое событие в системе.</div><button class="sl-toast-x"><i class="bi bi-x-lg"></i></button></div>
-      <button class="sl-but-neutral" id="toast-btn"><i class="bi bi-bell"></i> Показать тост</button>
+      <button class="sl-but" id="toast-btn"><i class="bi bi-bell"></i> Показать тост</button>
     </div></div>
   </section>
 
@@ -1158,7 +1070,7 @@ body { counter-reset: secn; }
     <p class="lab-note">Произвольный сворачиваемый блок на боевом <code>data-sl-toggle</code> (slide).</p>
     <div class="lab-line"></div>
     <div class="lab-card">
-      <button class="sl-but-neutral" type="button" data-sl-toggle-control="col-1"><i class="bi bi-arrows-expand"></i> Показать / скрыть</button>
+      <button class="sl-but" type="button" data-sl-toggle-control="col-1"><i class="bi bi-arrows-expand"></i> Показать / скрыть</button>
       <div id="col-1" class="sl-collapse" data-sl-toggle="col-1" data-sl-toggle-default="closed" data-sl-toggle-effect="slide">Сворачиваемая область на том же движке, что и аккордеон. Внутри — любая разметка.</div>
     </div>
   </section>
@@ -1168,9 +1080,9 @@ body { counter-reset: secn; }
     <p class="lab-note">CSS через <code>:target</code>. Каждая кнопка открывает окно в своей форме.</p>
     <div class="lab-line"></div>
     <div class="lab-card"><div class="lab-row">
-      <a class="sl-but-neutral sl-but-round" href="#modal-round"><i class="bi bi-window"></i> Round</a>
-      <a class="sl-but-neutral sl-but-sharp" href="#modal-sharp"><i class="bi bi-window"></i> Sharp</a>
-      <a class="sl-but-neutral sl-but-square" href="#modal-square"><i class="bi bi-window"></i> Square</a>
+      <a class="sl-but" href="#modal-round"><i class="bi bi-window"></i> Round</a>
+      <a class="sl-but" href="#modal-sharp"><i class="bi bi-window"></i> Sharp</a>
+      <a class="sl-but" href="#modal-square"><i class="bi bi-window"></i> Square</a>
     </div></div>
   </section>
 
@@ -1178,11 +1090,11 @@ body { counter-reset: secn; }
     <h2>Offcanvas</h2>
     <p class="lab-line"></p>
     <div class="lab-card"><div class="lab-row">
-      <a class="sl-but-neutral" href="#oc1"><i class="bi bi-layout-sidebar-inset-reverse"></i> Открыть панель</a>
+      <a class="sl-but" href="#oc1"><i class="bi bi-layout-sidebar-inset-reverse"></i> Открыть панель</a>
     </div></div>
   </section>
 
-  <section class="lab-sec" id="sec-cookie"><h2>Cookie bar</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cookie"><i class="bi bi-cookie" style="font-size:20px;color:#e8c06a"></i><span style="flex:1">Мы используем cookie.</span><button class="sl-but-neutral">Принять</button></div></div></section>
+  <section class="lab-sec" id="sec-cookie"><h2>Cookie bar</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-cookie"><i class="bi bi-cookie" style="font-size:20px;color:#e8c06a"></i><span style="flex:1">Мы используем cookie.</span><button class="sl-but">Принять</button></div></div></section>
 
   <section class="lab-sec" id="sec-progress">
     <h2>Progress</h2>
@@ -1210,7 +1122,7 @@ body { counter-reset: secn; }
       <span class="sl-spinner"></span>
       <span class="sl-spinner sl-spinner-lg"></span>
       <span class="sl-dots"><span></span><span></span><span></span></span>
-      <button class="sl-but-neutral sl-is-loading">Загрузка</button>
+      <button class="sl-but sl-is-loading">Загрузка</button>
     </div></div>
   </section>
 
@@ -1226,7 +1138,7 @@ body { counter-reset: secn; }
     </div></div>
   </section>
 
-  <section class="lab-sec" id="sec-empty"><h2>Empty state</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-empty"><i class="bi bi-inbox"></i><h4>Пока пусто</h4><p>Здесь появятся записи.</p><button class="sl-but-neutral"><i class="bi bi-plus-lg"></i> Создать</button></div></div></section>
+  <section class="lab-sec" id="sec-empty"><h2>Empty state</h2><div class="lab-line"></div><div class="lab-card"><div class="nc-empty"><i class="bi bi-inbox"></i><h4>Пока пусто</h4><p>Здесь появятся записи.</p><button class="sl-but"><i class="bi bi-plus-lg"></i> Создать</button></div></div></section>
 
   <section class="lab-sec" id="sec-divider"><h2>Divider</h2><div class="lab-line"></div><div class="lab-card" style="display:grid;gap:16px"><div class="nc-divider">или</div><div class="nc-divider">РАЗДЕЛ</div></div></section>
 
@@ -1236,7 +1148,7 @@ body { counter-reset: secn; }
     <div class="lab-line"></div>
     <div class="lab-card">
       <div class="sl-carousel" id="car1">
-        <button class="sl-but-neutral sl-but-icon sl-carousel-nav sl-carousel-prev" data-car-prev><i class="bi bi-chevron-left"></i></button>
+        <button class="sl-but sl-carousel-nav sl-carousel-prev" data-car-prev><i class="bi bi-chevron-left"></i></button>
         <div class="sl-carousel-track">
           <div class="sl-slide" style="background:linear-gradient(135deg,#5cb6f7,#2f7fc0)">Слайд 1</div>
           <div class="sl-slide" style="background:linear-gradient(135deg,#9b6be0,#6a2fa0)">Слайд 2</div>
@@ -1244,7 +1156,7 @@ body { counter-reset: secn; }
           <div class="sl-slide" style="background:linear-gradient(135deg,#f59a3c,#e8780f)">Слайд 4</div>
           <div class="sl-slide" style="background:linear-gradient(135deg,#fb7878,#c5384a)">Слайд 5</div>
         </div>
-        <button class="sl-but-neutral sl-but-icon sl-carousel-nav sl-carousel-next" data-car-next><i class="bi bi-chevron-right"></i></button>
+        <button class="sl-but sl-carousel-nav sl-carousel-next" data-car-next><i class="bi bi-chevron-right"></i></button>
         <div class="sl-carousel-dots" data-car-dots></div>
       </div>
     </div>
@@ -1299,7 +1211,7 @@ body { counter-reset: secn; }
   <div class="sl-modal-dialog">
     <div class="sl-modal-head"><h3 class="sl-modal-title">Round-окно</h3><a class="sl-modal-x" href="#sec-modals"><i class="bi bi-x-lg"></i></a></div>
     <div class="sl-modal-body"><p>Углы 9px у диалога, полей и кнопок.</p><input class="sl-field sl-field-block" type="text" value="Заголовок"></div>
-    <div class="sl-modal-foot"><a class="sl-but-neutral" href="#sec-modals">Отмена</a><a class="sl-but-neutral" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
+    <div class="sl-modal-foot"><a class="sl-but" href="#sec-modals">Отмена</a><a class="sl-but" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
   </div>
 </div>
 <div class="sl-modal sl-shape-sharp" id="modal-sharp">
@@ -1307,7 +1219,7 @@ body { counter-reset: secn; }
   <div class="sl-modal-dialog">
     <div class="sl-modal-head"><h3 class="sl-modal-title">Sharp-окно</h3><a class="sl-modal-x" href="#sec-modals"><i class="bi bi-x-lg"></i></a></div>
     <div class="sl-modal-body"><p>Углы 4px — как у боевых полей, самый «системный».</p><input class="sl-field sl-field-block" type="text" value="Заголовок"></div>
-    <div class="sl-modal-foot"><a class="sl-but-neutral" href="#sec-modals">Отмена</a><a class="sl-but-neutral" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
+    <div class="sl-modal-foot"><a class="sl-but" href="#sec-modals">Отмена</a><a class="sl-but" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
   </div>
 </div>
 <div class="sl-modal sl-shape-square" id="modal-square">
@@ -1315,7 +1227,7 @@ body { counter-reset: secn; }
   <div class="sl-modal-dialog">
     <div class="sl-modal-head"><h3 class="sl-modal-title">Square-окно</h3><a class="sl-modal-x" href="#sec-modals"><i class="bi bi-x-lg"></i></a></div>
     <div class="sl-modal-body"><p>Углы 0 — строгий прямоугольный вид.</p><input class="sl-field sl-field-block" type="text" value="Заголовок"></div>
-    <div class="sl-modal-foot"><a class="sl-but-neutral" href="#sec-modals">Отмена</a><a class="sl-but-neutral" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
+    <div class="sl-modal-foot"><a class="sl-but" href="#sec-modals">Отмена</a><a class="sl-but" href="#sec-modals"><i class="bi bi-check-lg"></i> Сохранить</a></div>
   </div>
 </div>
 
@@ -1377,9 +1289,7 @@ document.querySelectorAll('[data-seg]').forEach(function (seg) { seg.addEventLis
 document.querySelectorAll('[data-vtabs]').forEach(function (vt) { vt.addEventListener('click', function (e) { var b = e.target.closest('[data-vt]'); if (!b) return; var id = b.dataset.vt; vt.querySelectorAll('[data-vt]').forEach(function (x) { x.classList.toggle('is-on', x === b); }); vt.querySelectorAll('[data-vtp]').forEach(function (p) { p.classList.toggle('is-on', p.dataset.vtp === id); }); }); });
 document.querySelectorAll('[data-otp]').forEach(function (g) { var ins = g.querySelectorAll('input'); ins.forEach(function (inp, i) { inp.addEventListener('input', function () { inp.value = inp.value.replace(/\D/g, ''); if (inp.value && ins[i + 1]) ins[i + 1].focus(); }); }); });
 document.querySelectorAll('[data-ta-count]').forEach(function (ta) { var out = ta.parentNode.querySelector('[data-ta-out]'), max = ta.getAttribute('maxlength'); ta.addEventListener('input', function () { out.textContent = ta.value.length + ' / ' + max; }); });
-document.querySelectorAll('[data-vote]').forEach(function (v) { v.addEventListener('click', function () { v.classList.toggle('is-on'); }); });
-document.querySelectorAll('[data-speed]').forEach(function (sd) { var items = sd.querySelectorAll('.sl-but-icon'); sd.querySelector('[data-speed-toggle]').addEventListener('click', function () { items.forEach(function (it) { it.style.display = it.style.display === 'none' ? 'inline-flex' : 'none'; }); }); });
-</script>
+document.querySelectorAll('[data-vote]').forEach(function (v) { v.addEventListener('click', function () { v.classList.toggle('is-on'); }); });</script>
 <!-- Real system mechanisms: Tablesort first, then slaed.js wires everything -->
 <script src="../plugins/tablesort/tablesort.min.js"></script>
 <script src="../plugins/system/slaed.js"></script>

@@ -23,8 +23,8 @@
 /* Alert: base layout, token-driven accent color via --sl-alert-c */
 .sl-alert {
   --sl-alert-c: var(--sl-color-brand-link);
-  --sl-alert-c-grad-start: var(--sl-but-primary-start);
-  --sl-alert-c-grad-end: var(--sl-but-primary-end);
+  --sl-alert-c-grad-start: var(--sl-grad-info-start);
+  --sl-alert-c-grad-end: var(--sl-grad-info-end);
   --sl-alert-c-tint: rgba(48, 162, 246, 0.1);
   position: relative;
   display: flex;
@@ -116,38 +116,38 @@
 /* Tone modifiers: remap the accent token per semantic type */
 .sl-alert-success {
   --sl-alert-c: var(--sl-color-success);
-  --sl-alert-c-grad-start: var(--sl-but-success-start);
-  --sl-alert-c-grad-end: var(--sl-but-success-end);
+  --sl-alert-c-grad-start: var(--sl-grad-success-start);
+  --sl-alert-c-grad-end: var(--sl-grad-success-end);
   --sl-alert-c-tint: rgba(92, 148, 37, 0.1);
 }
 .sl-alert-info {
   --sl-alert-c: var(--sl-color-tone-info);
-  --sl-alert-c-grad-start: var(--sl-but-primary-start);
-  --sl-alert-c-grad-end: var(--sl-but-primary-end);
+  --sl-alert-c-grad-start: var(--sl-grad-info-start);
+  --sl-alert-c-grad-end: var(--sl-grad-info-end);
   --sl-alert-c-tint: rgba(29, 155, 240, 0.1);
 }
 .sl-alert-primary {
   --sl-alert-c: var(--sl-color-brand-link);
-  --sl-alert-c-grad-start: var(--sl-but-primary-start);
-  --sl-alert-c-grad-end: var(--sl-but-primary-end);
+  --sl-alert-c-grad-start: var(--sl-grad-info-start);
+  --sl-alert-c-grad-end: var(--sl-grad-info-end);
   --sl-alert-c-tint: rgba(48, 162, 246, 0.1);
 }
 .sl-alert-warning {
   --sl-alert-c: var(--sl-color-warning);
-  --sl-alert-c-grad-start: var(--sl-but-warning-start);
-  --sl-alert-c-grad-end: var(--sl-but-warning-end);
+  --sl-alert-c-grad-start: #ffa024;
+  --sl-alert-c-grad-end: #f18c0d;
   --sl-alert-c-tint: rgba(244, 122, 32, 0.1);
 }
 .sl-alert-danger {
   --sl-alert-c: var(--sl-color-danger);
-  --sl-alert-c-grad-start: var(--sl-but-danger-start);
-  --sl-alert-c-grad-end: var(--sl-but-danger-end);
+  --sl-alert-c-grad-start: #fb7878;
+  --sl-alert-c-grad-end: #f76d6d;
   --sl-alert-c-tint: rgba(169, 44, 44, 0.1);
 }
 .sl-alert-accent {
   --sl-alert-c: var(--sl-color-accent);
-  --sl-alert-c-grad-start: var(--sl-but-accent-start);
-  --sl-alert-c-grad-end: var(--sl-but-accent-end);
+  --sl-alert-c-grad-start: #b15ee5;
+  --sl-alert-c-grad-end: #8c2ca9;
   --sl-alert-c-tint: rgba(140, 44, 169, 0.1);
 }
 .sl-alert-neutral {
