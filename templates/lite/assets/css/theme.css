@@ -325,10 +325,6 @@ a .sl-letter:hover {
 .sl-cell-ellipsis .sl-table-num-link:hover {
   background: none;
 }
-.sl-table-date {
-  color: inherit;
-}
-
 /* Tables: sort indicators */
 thead tr .sl-sort,
 thead tr .sl-sort-asc,
@@ -1759,6 +1755,19 @@ ol.sl-sublist-two li:hover:before {
 .sl-vote-actions {
   display: inline-block;
 }
+.sl-vote-actions-center {
+  display: block;
+  text-align: center;
+}
+.sl-vote-links-center {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sl-space-sm);
+}
+.sl-vote-links-center a {
+  margin-right: 0;
+}
 .sl-progress-line {
   box-sizing: content-box;
   width: 100%;
@@ -2975,6 +2984,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-table-shell {
   overflow-x: auto;
+  overflow-y: clip;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -4336,6 +4346,21 @@ td.sl-fl-col-stat {
 .sl-chip-neutral {
   background: var(--sl-color-surface-alt);
   color: var(--sl-color-text-heading);
+}
+.sl-chip .bi,
+.sl-date .bi, .sl-card-date .bi,
+.sl-views .bi, .sl-card-reads .bi, .sl-hits .bi,
+.sl-post-icon .bi, .sl-card-post .bi, .sl-media-post .bi,
+.sl-coms .bi, .sl-card-comment .bi, .sl-comment-link .bi,
+.sl-cat .bi, .sl-card-category .bi,
+.sl-votes .bi, .sl-rate-sites .bi, .sl-cart-total .bi,
+.sl-download .bi, .sl-faq .bi,
+.sl-message-in .bi, .sl-message-out .bi, .sl-message-save .bi,
+.sl-favor .bi, .sl-favor-on .bi, .sl-favor-off .bi,
+.sl-n-day .bi, .sl-n-days .bi, .sl-n-week .bi,
+.sl-news-info .bi, .sl-status-active .bi, .sl-status-inactive .bi,
+.sl-module .bi, .sl-ed2k .bi, .sl-http .bi, .sl-last .bi {
+  font-size: var(--sl-icon-size-xs);
 }
 /* Clickable meta chips (links) carry the system success tone */
 a.sl-chip,

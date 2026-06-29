@@ -635,6 +635,20 @@ function getTplNewGraphic(string $time): string {
     return '';
 }
 
+# Build the standard admin edit/delete menu keys for any front-end content row or card; callers pass the exact admin hrefs
+function getTplEditMenu(string $edithref, string $delhref, string $title): array {
+    $ask = str_replace(['\\', "'"], ['\\\\', "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
+    return [
+        'is_moder'     => true,
+        'editor_label' => _EDITOR,
+        'edit_href'    => $edithref,
+        'edit_text'    => _FULLEDIT,
+        'delete_href'  => $delhref,
+        'delete_text'  => _ONDELETE,
+        'delete_ask'   => $ask,
+    ];
+}
+
 # Format a gender value for display
 function getGenderText(int $gender): string {
     if ($gender == 2) return (string)_WOMAN;

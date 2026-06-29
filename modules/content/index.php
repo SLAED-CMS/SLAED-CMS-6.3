@@ -27,25 +27,15 @@ function content(): void {
         while ($row = $db->getSqlRow($result)) {
             [$id, $title, $time, $counter] = $row;
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
-            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
             $tip = $tpl->getHtmlFrag('block-content', [
                 'content' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _DATE, 'text' => format_time($time)])
                     .(($counter) ? ' '.$tpl->getHtmlFrag('span', ['title' => _READS, 'is_views' => true, 'text' => (string)$counter]) : ''),
             ]);
             $menu = '';
             if ($ismoder) {
-                $edit = $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]);
-                $delete = $tpl->getHtmlFrag('link', [
-                    'href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
-                    'title' => _ONDELETE,
-                    'label' => _ONDELETE,
-                    'confirm_text' => $ask,
-                    'is_delete' => true,
-                ]);
-                $menu = $tpl->getHtmlFrag('popover', [
-                    'editor_label' => _EDITOR,
-                    'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $edit]).$tpl->getHtmlFrag('list-item', ['content_html' => $delete]),
-                ]);
+                $edit = $afile.'.php?name=content&amp;op=add&amp;id='.$id;
+                $del = $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+                $menu = $tpl->getHtmlFrag('popover', getTplEditMenu($edit, $del, $title));
             }
             $rows[] = [
                 'id' => (string)$id,
@@ -105,18 +95,15 @@ function view(): void {
             'time' => $time,
             'author' => $conf['sitename'],
         ]);
-        $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
+        $ismoder = is_moder($conf['name']);
+        $edit = $afile.'.php?name=content&amp;op=add&amp;id='.$id;
+        $del = $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken();
         $cont = $tpl->getHtmlPart('view', [
-            'is_moder' => is_moder($conf['name']),
+            'is_moder' => $ismoder,
             'title_text' => filterTextHighlight($title, $word),
             'text' => filterTextHighlight($prs->filterDoc($body, false, $conf['name']), $word),
             'fields' => $fields,
-            'editor' => _EDITOR,
-            'edit_href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id,
-            'edit_text' => _FULLEDIT,
-            'delete_href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
-            'delete_text' => _ONDELETE,
-            'delete_ask' => $ask,
+            ...($ismoder ? getTplEditMenu($edit, $del, $title) : []),
             'back_title' => _BACK,
             'back_text' => _BACK,
         ]);

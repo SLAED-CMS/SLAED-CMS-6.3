@@ -116,12 +116,6 @@ function help(): void {
                 'rating'        => '',
                 'favorites'     => '',
                 'voting'        => '',
-                'editor'        => _EDITOR,
-                'edit_href'     => '',
-                'edit_text'     => '',
-                'delete_href'   => '',
-                'delete_text'   => '',
-                'delete_ask'    => '',
                 'is_moder'      => false,
             ]);
         }
@@ -280,12 +274,6 @@ function view(): void {
                     'back_title'    => _BACK,
                     'back_text'     => _BACK,
                     'is_moder'      => false,
-                    'editor'        => _EDITOR,
-                    'edit_href'     => '',
-                    'edit_text'     => '',
-                    'delete_href'   => '',
-                    'delete_text'   => '',
-                    'delete_ask'    => '',
                 ]);
             } else {
                 $cont .= $tpl->getHtmlFrag('card', [
@@ -316,12 +304,6 @@ function view(): void {
                     'rating'        => $rating,
                     'favorites'     => '',
                     'voting'        => '',
-                    'editor'        => _EDITOR,
-                    'edit_href'     => '',
-                    'edit_text'     => '',
-                    'delete_href'   => '',
-                    'delete_text'   => '',
-                    'delete_ask'    => '',
                     'is_moder'      => false,
                 ]);
             }

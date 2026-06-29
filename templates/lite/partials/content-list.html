@@ -4,7 +4,9 @@
 {% for row in rows %}
 {% include 'fragments/table-row.html' with row %}
 {% endfor %}
-{% include 'fragments/table.html' with table_close %}
+</tbody>
+</table>
+</div>
 {{{ pager_html }}}
 {% else %}
 {% include 'fragments/alert.html' with empty_alert %}

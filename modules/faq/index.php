@@ -120,7 +120,8 @@ function faq(): void {
             $date  = ($conf['faq']['date']) ? format_time($time) : '';
             $iso   = ($conf['faq']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
-            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
+            $edit = $afile.'.php?name=faq&amp;op=faq_add&amp;id='.$id;
+            $del = $afile.'.php?name=faq&amp;op=faq_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -149,13 +150,8 @@ function faq(): void {
                 'rating'        => $rating,
                 'favorites'     => '',
                 'voting'        => '',
-                'editor'        => _EDITOR,
-                'edit_href'     => $afile.'.php?name=faq&amp;op=faq_add&amp;id='.$id,
-                'edit_text'     => _FULLEDIT,
-                'delete_href'   => $afile.'.php?name=faq&amp;op=faq_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
-                'delete_text'   => _ONDELETE,
-                'delete_ask'    => $ask,
                 'is_moder'      => $ismoder,
+                ...($ismoder ? getTplEditMenu($edit, $del, $stitle) : []),
             ]);
         }
         $cont .= $tpl->getHtmlFrag('grid', []);
@@ -292,9 +288,11 @@ function view(): void {
         $iso   = ($conf['faq']['date']) ? date('c', strtotime($time)) : '';
         $rating    = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
-        $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
+        $ismoder = is_moder($conf['name']);
+        $edit = $afile.'.php?name=faq&amp;op=faq_add&amp;id='.$id;
+        $del = $afile.'.php?name=faq&amp;op=faq_delete&amp;id='.$id.'&amp;token='.getSiteToken();
         $cont .= $tpl->getHtmlPart('view', [
-            'is_moder'      => is_moder($conf['name']),
+            'is_moder'      => $ismoder,
             'id'            => $id,
             'title_text'    => filterTextHighlight($title, $word),
             'title_new'     => '',
@@ -314,12 +312,7 @@ function view(): void {
             'rating'        => $rating,
             'favorites'     => $favorites,
             'voting'        => '',
-            'editor'        => _EDITOR,
-            'edit_href'     => $afile.'.php?name=faq&amp;op=faq_add&amp;id='.$id,
-            'edit_text'     => _FULLEDIT,
-            'delete_href'   => $afile.'.php?name=faq&amp;op=faq_delete&amp;id='.$id.'&amp;token='.getSiteToken(),
-            'delete_text'   => _ONDELETE,
-            'delete_ask'    => $ask,
+            ...($ismoder ? getTplEditMenu($edit, $del, $title) : []),
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);

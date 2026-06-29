@@ -46,7 +46,8 @@ function autolink(): void {
             $date   = format_time($time);
             $iso    = date('c', strtotime($time));
             $hbadge = $tpl->getHtmlFrag('inline-badge', ['title_text' => _HITS, 'label' => $hits, 'is_hits' => true]);
-            $ask    = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$sitename.'&quot;?');
+            $edit = $afile.'.php?name=auto_links&amp;op=auto_links_add&amp;id='.$id;
+            $del = $afile.'.php?name=auto_links&amp;op=auto_links_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -75,13 +76,8 @@ function autolink(): void {
                 'rating'        => '',
                 'favorites'     => '',
                 'voting'        => '',
-                'editor'        => _EDITOR,
-                'edit_href'     => $afile.'.php?name=auto_links&amp;op=auto_links_add&amp;id='.$id,
-                'edit_text'     => _FULLEDIT,
-                'delete_href'   => $afile.'.php?name=auto_links&amp;op=auto_links_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
-                'delete_text'   => _ONDELETE,
-                'delete_ask'    => $ask,
                 'is_moder'      => $ismoder,
+                ...($ismoder ? getTplEditMenu($edit, $del, $sitename) : []),
             ]);
         }
         $cont .= $tpl->getHtmlFrag('grid', []);

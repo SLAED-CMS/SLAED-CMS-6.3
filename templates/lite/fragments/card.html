@@ -28,7 +28,7 @@
       </li>
       <li>
         {% if post_span %}{% include 'fragments/span.html' with post_span %}
-        {% elseif post_text %}<span title="{{ post_label }}" class="sl-card-post"><i class="bi bi-chat-square-text" aria-hidden="true"></i> {{{ post_text }}}</span>
+        {% elseif post_text %}<span title="{{ post_label }}" class="sl-card-post"><i class="bi bi-person-circle" aria-hidden="true"></i> {{{ post_text }}}</span>
         {% endif %}
       </li>
       <li class="sl-meta-actions">

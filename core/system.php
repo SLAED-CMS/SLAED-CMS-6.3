@@ -2933,6 +2933,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
 
     return $tpl->getHtmlPart('voting-widget', [
         'has_form'   => !$rate,
+        'is_view'    => $votid === 'voting',
         'form_id'    => 'form'.$votid,
         'poll_id'    => $id,
         'token'      => getSiteToken(),

@@ -93,7 +93,8 @@ function jokes(): void {
             $date   = ($conf['jokes']['date']) ? format_time($time) : '';
             $iso    = ($conf['jokes']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(1, $id, $conf['name'], $ratingtot, $rating, '');
-            $ask    = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$jtitle.'&quot;?');
+            $edit = $afile.'.php?name=jokes&amp;op=jokes_add&amp;id='.$id;
+            $del = $afile.'.php?name=jokes&amp;op=jokes_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -122,13 +123,8 @@ function jokes(): void {
                 'rating'        => $rating,
                 'favorites'     => '',
                 'voting'        => '',
-                'editor'        => _EDITOR,
-                'edit_href'     => $afile.'.php?name=jokes&amp;op=jokes_add&amp;id='.$id,
-                'edit_text'     => _FULLEDIT,
-                'delete_href'   => $afile.'.php?name=jokes&amp;op=jokes_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
-                'delete_text'   => _ONDELETE,
-                'delete_ask'    => $ask,
                 'is_moder'      => $ismoder,
+                ...($ismoder ? getTplEditMenu($edit, $del, $jtitle) : []),
             ]);
         }
         $cont .= $tpl->getHtmlFrag('grid', []);

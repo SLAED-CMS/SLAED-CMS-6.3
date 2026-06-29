@@ -92,7 +92,8 @@ function files(): void {
             $iso    = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
             $hits   = ($conf['files']['hits']) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _FILEHITS, 'label' => $hits, 'is_download' => true]) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
-            $ask    = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
+            $edit = $afile.'.php?name=files&amp;op=add&amp;id='.$id;
+            $del = $afile.'.php?name=files&amp;op=files_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -121,13 +122,8 @@ function files(): void {
                 'rating'        => $rating,
                 'favorites'     => '',
                 'voting'        => '',
-                'editor'        => _EDITOR,
-                'edit_href'     => $afile.'.php?name=files&amp;op=add&amp;id='.$id,
-                'edit_text'     => _FULLEDIT,
-                'delete_href'   => $afile.'.php?name=files&amp;op=files_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token,
-                'delete_text'   => _ONDELETE,
-                'delete_ask'    => $ask,
                 'is_moder'      => $ismoder,
+                ...($ismoder ? getTplEditMenu($edit, $del, $stitle) : []),
             ]);
         }
         $cont .= $tpl->getHtmlFrag('grid', []);
@@ -153,7 +149,7 @@ function files(): void {
 }
 
 function liste(): void {
-    global $db, $conf, $tpl;
+    global $db, $afile, $conf, $tpl;
     $cwhere = catmids($conf['name'], 'f.cid');
     $listnum = (int)($conf['files']['listnum']);
     $let = getVar('get', 'let', 'let');
@@ -175,9 +171,11 @@ function liste(): void {
     setHead(['title' => _LIST]);
     $cont = getModuleNavi(['title' => _LIST, 'htitle' => _FILES]);
     $rows = [];
+    $ismoder = is_moder($conf['name']);
+    $token = $ismoder ? getSiteToken() : '';
     while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $cdesc = $cdesc ?: $ctitle;
-        $rows[] = [
+        $row = [
             'id'            => (string)$id,
             'title_href'    => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]),
             'title_attr'    => $title,
@@ -191,6 +189,12 @@ function liste(): void {
             'time_iso'      => date('c', strtotime($time)),
             'time_label'    => _DATE,
         ];
+        if ($ismoder) {
+            $edit = $afile.'.php?name=files&amp;op=add&amp;id='.$id;
+            $del = $afile.'.php?name=files&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $row += getTplEditMenu($edit, $del, $title);
+        }
+        $rows[] = $row;
     }
     $onum = ($let) ? "UCASE(title) LIKE BINARY UCASE(:let) AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
     $wparams = ($let) ? ['let' => $let.'%'] : [];
@@ -206,6 +210,7 @@ function liste(): void {
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
             'col_date'   => _DATE,
+            'col_func'   => $ismoder ? _FUNCTIONS : '',
         ],
         'table_close' => [],
         'pager_html'  => $rows ? getTplPager([
@@ -266,7 +271,9 @@ function view(): void {
         $hits  = ($conf['files']['hits']) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _FILEHITS, 'label' => $hits, 'is_download' => true]) : '';
         $rating    = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavoriteButton($id, $conf['name']);
-        $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
+        $ismoder = is_moder($conf['name']);
+        $edit = $afile.'.php?name=files&amp;op=add&amp;id='.$id;
+        $del = $afile.'.php?name=files&amp;op=files_delete&amp;id='.$id.'&amp;token='.getSiteToken();
         if (is_user() || $conf['files']['down'] == '1') {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
             $download = $tpl->getHtmlPart('form-wrap', [
@@ -280,7 +287,7 @@ function view(): void {
         }
         $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $cont .= $tpl->getHtmlPart('view', [
-            'is_moder'      => is_moder($conf['name']),
+            'is_moder'      => $ismoder,
             'id'            => $id,
             'title_text'    => filterTextHighlight($title, $word),
             'category_href' => $ctitle ? $chref : '',
@@ -304,12 +311,7 @@ function view(): void {
             'home'          => ($awebsite) ? _SITE.': '.domain($awebsite) : '',
             'download'      => $download ?? '',
             'broken'        => $broken,
-            'editor'        => _EDITOR,
-            'edit_href'     => $afile.'.php?name=files&amp;op=add&amp;id='.$id,
-            'edit_text'     => _FULLEDIT,
-            'delete_href'   => $afile.'.php?name=files&amp;op=files_delete&amp;id='.$id.'&amp;token='.getSiteToken(),
-            'delete_text'   => _ONDELETE,
-            'delete_ask'    => $ask,
+            ...($ismoder ? getTplEditMenu($edit, $del, $title) : []),
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);

@@ -11,8 +11,8 @@
   class="
     {% if class %}{{ class }}
     {% else %}
-      {% if is_list %}sl-table-list
-      {% else %}sl-table{% if sortable %} sl-table--sort{% endif %}{% if is_amount %} sl-table-amount{% endif %}{% if is_form %} sl-table-form{% endif %}{% if is_avatar_grid %} sl-avatar-grid{% endif %}{% if is_cart %} sl-cart-table{% endif %}{% if is_faq %} sl-table-faq{% endif %}
+      {% if is_list or sortable %}sl-table-list
+      {% else %}sl-table{% if is_amount %} sl-table-amount{% endif %}{% if is_form %} sl-table-form{% endif %}{% if is_avatar_grid %} sl-avatar-grid{% endif %}{% if is_cart %} sl-cart-table{% endif %}{% if is_faq %} sl-table-faq{% endif %}
       {% endif %}
     {% endif %}
   "
@@ -34,15 +34,17 @@
 {% elseif col_id or col_title or col_cat or col_poster or col_date or col_func %}
 <thead class="sl-table-head">
   <tr>
-    {% if col_id %}<th class="sl-table-col-num">{{ col_id }}</th>{% endif %}
     {% if col_title %}<th>{{ col_title }}</th>{% endif %}
     {% if col_cat %}<th>{{ col_cat }}</th>{% endif %}
     {% if col_poster %}<th>{{ col_poster }}</th>{% endif %}
     {% if col_date %}<th>{{ col_date }}</th>{% endif %}
     {% if col_func %}<th data-sort-method="none">{{ col_func }}</th>{% endif %}
+    {% if col_id %}<th class="sl-table-col-num" data-sort-method="none">{{ col_id }}</th>{% endif %}
   </tr>
 </thead>
 {% endif %}
-<tbody{% if body_class %} class="{{ body_class }}"{% else %}{% if is_list %}{% else %} class="sl-table-body"{% endif %}{% endif %}>{{{ rows_html }}}</tbody>
+<tbody{% if body_class %} class="{{ body_class }}"{% else %}{% if is_list or sortable %}{% else %} class="sl-table-body"{% endif %}{% endif %}>{{{ rows_html }}}{% if open %}{% else %}
+</tbody>
 </table>
 </div>
+{% endif %}
