@@ -7,11 +7,10 @@
     {% elseif class %}{{ class }}
     {% elseif is_changelog_primary %}sl-changelog-button sl-changelog-button-primary
     {% elseif is_changelog_secondary %}sl-changelog-button sl-changelog-button-secondary
-    {% elseif reload_query %}sl-but-success
+    {% elseif reload_query %}sl-but
     {% elseif is_navi_lower %}sl-navi-lower-action
     {% elseif is_login_submit %}sl-login-submit
-    {% elseif is_legacy_green %}sl-but-success
-    {% else %}sl-but-primary
+    {% else %}sl-but
     {% endif %}
   "
   {% if title %}title="{{ title }}"{% endif %}

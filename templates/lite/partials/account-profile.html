@@ -22,8 +22,8 @@
       </div>
       <div class="sl-carg">
         {% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}
-        {% if has_privat_button %}<a href="{{{ privat_href }}}" title="{{ privat_title }}" class="sl-but-success">{{ privat_label }}</a>{% endif %}
-        {% if has_profil_button %}<a href="{{{ profil_href }}}" title="{{ profil_title }}" class="sl-but-neutral">{{ profil_label }}</a>{% endif %}
+        {% if has_privat_button %}<a href="{{{ privat_href }}}" title="{{ privat_title }}" class="sl-but">{{ privat_label }}</a>{% endif %}
+        {% if has_profil_button %}<a href="{{{ profil_href }}}" title="{{ profil_title }}" class="sl-but">{{ profil_label }}</a>{% endif %}
         {% if has_back_button %}{% include 'fragments/span.html' %}{% endif %}
       </div>
     </div>
