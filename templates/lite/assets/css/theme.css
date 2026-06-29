@@ -570,9 +570,6 @@ thead tr th[data-sort-method="none"]::after {
   .sl-alert::before,
   .sl-alert-flash-bar { animation: none !important; }
 }
-.sl-news-info:hover {
-  opacity: 0.8;
-}
 .sl-icat,
 .sl-card-image {
   padding: 10px;
@@ -1201,10 +1198,6 @@ button.sl-but-mini:hover,
   width: 170px;
   list-style: none;
 }
-.sl-coms:hover,
-.sl-card-comment:hover {
-  opacity: 0.8;
-}
 /* Tables: list-wrap and list-row layouts */
 .sl-cart-row td,
 .sl-forum-line td {
@@ -1311,11 +1304,6 @@ td.sl-cart-col-stat {
 }
 .sl-read-link {
   display: inline-block;
-}
-.sl-favor {
-  font-size: 0.9em;
-  color: var(--sl-color-text-muted);
-  cursor: pointer;
 }
 
 .sl-table-amount td:first-child {
@@ -3882,6 +3870,10 @@ ol.sl-sublist-two li:hover:before {
   margin-right: 15px;
 }
 .sl-cargs {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-xs);
   font-size: 12px;
 }
 .sl-com-top {
@@ -4126,8 +4118,60 @@ td.sl-fl-col-stat {
   margin-bottom: 12px;
 }
 .sl-fp-meta .sl-grey {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-xs);
   font-size: 12px;
   order: 0;
+}
+/* Forum post & comment meta as chips: date/edit = info, flag+IP = neutral (white+border) */
+.sl-fp-meta .sl-grey > .sl-topic-post,
+.sl-fp-meta .sl-grey > .sl-topic-edit,
+.sl-fp-meta .sl-grey > .sl-geo-ip,
+.sl-cargs > .sl-topic-post,
+.sl-cargs > .sl-topic-edit,
+.sl-cargs > .sl-geo-ip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: 999px;
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text-heading);
+  font-size: 13px;
+  vertical-align: middle;
+  text-decoration: none;
+}
+.sl-fp-meta .sl-grey > .sl-topic-post,
+.sl-fp-meta .sl-grey > .sl-topic-edit,
+.sl-cargs > .sl-topic-post,
+.sl-cargs > .sl-topic-edit {
+  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+  color: var(--sl-color-brand-strong);
+  border-color: transparent;
+}
+.sl-fp-meta .sl-grey > .sl-topic-post .bi,
+.sl-fp-meta .sl-grey > .sl-topic-edit .bi,
+.sl-cargs > .sl-topic-post .bi,
+.sl-cargs > .sl-topic-edit .bi {
+  color: inherit;
+  font-size: 13px;
+  top: 0;
+}
+.sl-fp-meta .sl-grey > .sl-geo-ip,
+.sl-cargs > .sl-geo-ip {
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+  border-color: transparent;
+}
+.sl-fp-meta .sl-grey > .sl-geo-ip a,
+.sl-cargs > .sl-geo-ip a {
+  color: inherit;
+  text-decoration: none;
 }
 .sl-fp-meta .sl-pull-right {
   display: flex;
@@ -4231,19 +4275,87 @@ td.sl-fl-col-stat {
 /* Desktop density tuning */
 }
 
-/* Bootstrap Icons: shared sizing/color for the migrated meta/forum/cart glyphs */
-.sl-date .bi, .sl-card-date .bi,
-.sl-views .bi, .sl-card-reads .bi, .sl-hits .bi,
-.sl-post-icon .bi, .sl-card-post .bi, .sl-media-post .bi,
-.sl-coms .bi, .sl-card-comment .bi, .sl-comment-link .bi,
-.sl-cat .bi, .sl-card-category .bi,
-.sl-votes .bi, .sl-rate-sites .bi, .sl-cart-total .bi,
-.sl-download .bi, .sl-faq .bi,
-.sl-message-in .bi, .sl-message-out .bi, .sl-message-save .bi,
-.sl-favor .bi, .sl-favor-on .bi, .sl-favor-off .bi,
-.sl-n-day .bi, .sl-n-days .bi, .sl-n-week .bi,
-.sl-news-info .bi, .sl-status-active .bi, .sl-status-inactive .bi,
-.sl-module .bi, .sl-ed2k .bi, .sl-http .bi, .sl-last .bi,
+/* Chips: one pill component for every meta label - 26px tall, auto width, tone by semantics.
+   Per-field meta hooks are grouped onto the matching tone, so all modules render the same
+   chip without per-field styling; the icon inherits the chip font-size and colour. */
+.sl-chip,
+.sl-date, .sl-card-date,
+.sl-views, .sl-card-reads, .sl-hits,
+.sl-post-icon, .sl-card-post, .sl-media-post,
+.sl-coms, .sl-card-comment, .sl-comment-link,
+.sl-cat, .sl-card-category,
+.sl-votes, .sl-rate-sites, .sl-cart-total,
+.sl-download, .sl-faq,
+.sl-message-in, .sl-message-out, .sl-message-save,
+.sl-favor, .sl-favor-on, .sl-favor-off,
+.sl-n-day, .sl-n-days, .sl-n-week,
+.sl-news-info, .sl-status-active, .sl-status-inactive,
+.sl-module, .sl-ed2k, .sl-http, .sl-last {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--sl-color-surface-alt);
+  color: var(--sl-color-text-heading);
+  font: 13px/1 Arial, Tahoma, sans-serif;
+  white-space: nowrap;
+  vertical-align: middle;
+  text-decoration: none;
+}
+.sl-chip-info,
+.sl-date, .sl-card-date,
+.sl-coms, .sl-card-comment, .sl-comment-link,
+.sl-post-icon, .sl-card-post, .sl-media-post {
+  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+  color: var(--sl-color-brand-strong);
+}
+.sl-chip-success,
+.sl-votes, .sl-rate-sites, .sl-status-active {
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+}
+.sl-chip-warn,
+.sl-n-day, .sl-n-days, .sl-n-week {
+  background: color-mix(in srgb, var(--sl-color-warning) 16%, transparent);
+  color: var(--sl-color-warning);
+}
+.sl-chip-danger,
+.sl-favor, .sl-favor-on, .sl-favor-off {
+  background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
+  color: var(--sl-color-danger);
+  cursor: pointer;
+}
+.sl-chip-accent {
+  background: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
+  color: var(--sl-color-accent);
+}
+.sl-chip-neutral {
+  background: var(--sl-color-surface-alt);
+  color: var(--sl-color-text-heading);
+}
+/* Clickable meta chips (links) carry the system success tone */
+a.sl-chip,
+a.sl-date, a.sl-card-date,
+a.sl-views, a.sl-card-reads, a.sl-hits,
+a.sl-post-icon, a.sl-card-post, a.sl-media-post,
+a.sl-coms, a.sl-card-comment, a.sl-comment-link,
+a.sl-cat, a.sl-card-category,
+a.sl-votes, a.sl-rate-sites, a.sl-cart-total,
+a.sl-download, a.sl-faq,
+a.sl-message-in, a.sl-message-out, a.sl-message-save,
+a.sl-favor, a.sl-favor-on, a.sl-favor-off,
+a.sl-n-day, a.sl-n-days, a.sl-n-week,
+a.sl-news-info, a.sl-status-active, a.sl-status-inactive,
+a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+}
+
+/* Plain icon controls (not chips): cart/shop actions + forum/topic state glyphs */
 .sl-cart-checkout .bi, .sl-shop-checkout .bi, .sl-shop-add .bi,
 .sl-plus .bi, .sl-cart-plus .bi, .sl-cart-minus .bi,
 .sl-forum-new .bi, .sl-forum-old .bi, .sl-forum-closed .bi, .sl-forum-last .bi,
@@ -4258,7 +4370,6 @@ td.sl-fl-col-stat {
   position: relative;
   top: -1px;
 }
-/* Forum/topic state icon colors (match etalon): grey read, orange warning, green review */
 .sl-forum-old .bi, .sl-topic-old .bi,
 .sl-topic-popular-old .bi, .sl-topic-closed .bi,
 .sl-forum-closed .bi {

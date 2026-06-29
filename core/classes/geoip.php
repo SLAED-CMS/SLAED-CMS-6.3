@@ -89,7 +89,7 @@ class Geoip {
             'label' => $ip,
             'is_blank' => true,
         ]);
-        return self::getFlagHtml($ip).$link;
+        return $tpl->getHtmlFrag('span', ['is_geo_ip' => true, 'content_html' => self::getFlagHtml($ip).$link]);
     }
 
     # Return database file status for admin UI
