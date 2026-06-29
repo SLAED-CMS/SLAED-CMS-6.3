@@ -2,13 +2,13 @@
   {% if href %}href="{{{ href }}}"{% endif %}
   title="{{ title }}"
 
-  {% if class or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_card_admin or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden %}
+  {% if class or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_login_button %} sl-login-link sl-login-link-top{% endif %}
     {% if is_login_profile %} sl-login-profile{% endif %}
     {% if is_navi_button %} sl-but{% endif %}
-    {% if is_navi_lower %} sl-navi-lower-action{% endif %}
+    {% if is_navi_lower %} sl-but{% endif %}
     {% if is_plus %} sl-plus{% endif %}
     {% if is_shop_add %} sl-shop-add{% endif %}
     {% if is_shop_checkout %} sl-shop-checkout{% endif %}
@@ -16,14 +16,13 @@
     {% if is_read %} sl-read-link{% endif %}
     {% if is_card_image %} sl-card-image{% endif %}
     {% if is_card_comment %} sl-card-comment{% endif %}
-    {% if is_card_id %} sl-card-id{% endif %}
+    {% if is_card_id %} sl-but-mini{% endif %}
     {% if is_card_category %} sl-card-category{% endif %}
-    {% if is_card_read %} sl-card-read{% endif %}
-    {% if is_card_admin %} sl-card-admin{% endif %}
+    {% if is_card_read %} sl-but{% endif %}
     {% if is_media_ed2k %} sl-ed2k{% endif %}
     {% if is_media_http %} sl-http{% endif %}
     {% if is_account_button %} sl-but{% endif %}
-    {% if is_num_anchor %} sl-card-id{% endif %}
+    {% if is_num_anchor %} sl-but-mini{% endif %}
     {% if is_button_blue %} sl-but{% endif %}
     {% if is_button_green %} sl-but{% endif %}
     {% if is_footer_button %} sl-but{% endif %}

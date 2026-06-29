@@ -134,7 +134,6 @@ function news(): void {
                 'favorites' => '',
                 'voting' => '',
                 'editor' => _EDITOR,
-                'editor_span' => ['text' => _EDITOR, 'is_card_admin' => true],
                 'edit_href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id,
                 'edit_text' => _FULLEDIT,
                 'edit_link' => ['href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],

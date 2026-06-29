@@ -2,13 +2,13 @@
   <a
     href="{{{ href }}}"
     title="{{ title }}"
-    class="sl-pnum{% if is_nav %} sl-pnum-nav{% endif %}"
+    class="sl-but-mini"
   >{% if is_nav and icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% else %}{{ label }}{% endif %}</a>
 {% elseif query %}
   <a
     href="{{{ query }}}"
     title="{{ title }}"
-    class="sl-pnum{% if is_nav %} sl-pnum-nav{% endif %}"
+    class="sl-but-mini"
     hx-get="{{{ query }}}"
     hx-target="#{{ target_id }}"
     hx-swap="innerHTML"
@@ -17,6 +17,6 @@
 {% else %}
   <span
     title="{{ title }}"
-    class="sl-pnum{% if is_cur %} sl-pnum-cur{% endif %}{% if is_nav %} sl-pnum-nav{% endif %}"
+    class="sl-but-mini{% if is_nav %} sl-is-muted{% elseif is_cur %} sl-is-active{% endif %}"
   >{% if is_nav and icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% else %}{{ label }}{% endif %}</span>
 {% endif %}

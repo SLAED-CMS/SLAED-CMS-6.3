@@ -31,9 +31,10 @@
         {% elseif post_text %}<span title="{{ post_label }}" class="sl-card-post"><i class="bi bi-chat-square-text" aria-hidden="true"></i> {{{ post_text }}}</span>
         {% endif %}
       </li>
-      <li>
+      <li class="sl-meta-actions">
+        {% if is_moder %}{% include 'fragments/popover.html' %}{% endif %}
         {% if id_link %}{% include 'fragments/link.html' with id_link %}
-        {% else %}<a href="#{{ id }}" title="{{ id }}" class="sl-card-id">{{ id }}</a>
+        {% else %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
         {% endif %}
       </li>
     </ul>
@@ -67,37 +68,8 @@
   <div class="sl-meta-foot">
     <div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>
     {% if footer_items %}{% for item in footer_items %}{{{ item.content_html }}}{% endfor %}{% endif %}
-    {% if is_moder %}
-      <nav class="sl-card-menu">
-        <ul>
-          <li class="sl-float">
-            {% if editor_span %}
-              {% include 'fragments/span.html' with editor_span %}
-            {% else %}
-              <span class="sl-card-admin">{{ editor }}</span>
-            {% endif %}
-            <ul class="sl-float-panel">
-              <li>
-                {% if edit_link %}
-                  {% include 'fragments/link.html' with edit_link %}
-                {% else %}
-                  <a href="{{{ edit_href }}}" title="{{ edit_text }}">{{ edit_text }}</a>
-                {% endif %}
-              </li>
-              <li>
-                {% if delete_link %}
-                  {% include 'fragments/link.html' with delete_link %}
-                {% else %}
-                  <a href="{{{ delete_href }}}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a>
-                {% endif %}
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </nav>
-    {% endif %}
     {% if read_link %}{% include 'fragments/link.html' with read_link %}
-    {% elseif read_href %}<a href="{{{ read_href }}}" title="{{ title_attr }}" class="sl-card-read">{{ read_text }}</a>
+    {% elseif read_href %}<a href="{{{ read_href }}}" title="{{ title_attr }}" class="sl-but">{{ read_text }}</a>
     {% endif %}
   </div>
 </article>

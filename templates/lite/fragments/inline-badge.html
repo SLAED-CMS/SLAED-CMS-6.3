@@ -1,7 +1,7 @@
 <span
   {% if is_pager_dots %}title="&hellip;"{% elseif title_text %}title="{{ title_text }}"{% endif %}
   class="
-    {% if is_pager_dots %}sl-pnum-dots
+    {% if is_pager_dots %}sl-but-mini sl-is-muted
     {% else %}
       {{ class }}
       {% if is_account_button %} sl-but{% endif %}
