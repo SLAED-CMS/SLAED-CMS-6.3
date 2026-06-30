@@ -3702,8 +3702,8 @@ ol.sl-sublist-two li:hover:before {
 
 /* Footer menu */
 #footbox > .sl-wrp:last-child {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  width: 100%;
+  margin: 0;
   background-color: var(--sl-color-surface-darker);
   padding: 0;
 }
