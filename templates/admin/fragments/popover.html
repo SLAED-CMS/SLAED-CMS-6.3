@@ -43,7 +43,7 @@
   <div class="sl-float-panel">
     <dl>
       {% for item in items %}
-      <dt>{{ item.label }}</dt>
+      {% if item.label %}<dt>{{ item.label }}</dt>{% endif %}
       <dd>{% if item.has_value_text %}{{ item.value_text }}{% else %}{{{ item.value }}}{% endif %}</dd>
       {% endfor %}
     </dl>

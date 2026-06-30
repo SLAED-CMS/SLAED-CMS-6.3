@@ -459,7 +459,7 @@ function getTplUserSearchInput(array $data = []): string {
     $tip = (string)($data['tip'] ?? '');
     $tiphtml = '';
     if ($tip !== '') {
-        $tiphtml = getTplTitleTip([['label' => _INFO, 'value' => $tip]]);
+        $tiphtml = getTplTitleTip($tip);
     }
     return $tpl->getHtmlFrag('input', [
         'endpoint_attr' => $endpoint,
@@ -659,12 +659,13 @@ function getGenderText(int $gender): string {
 # Render one title tip block from one or many label-value items
 function getTplTitleTip(mixed $data): string {
     global $tpl;
-    if (!is_array($data)) $data = [['value' => (string)$data]];
+    # Single plain tip: render the text directly, without a label/definition grid
+    if (!is_array($data)) return $tpl->getHtmlFrag('popover', ['content_html' => (string)$data]);
     $last = count($data) - 1;
     $items = [];
     foreach ($data as $idx => $item) {
         $items[] = [
-            'label' => (string)($item['label'] ?? _INFO),
+            'label' => (string)($item['label'] ?? ''),
             'value' => (string)($item['value'] ?? ''),
             'is_last' => $idx === $last,
         ];

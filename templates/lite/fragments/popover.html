@@ -26,18 +26,18 @@
 </nav>
 {% else %}
 {% if content_html %}
-<nav class="sl-float sl-tip" tabindex="0"><span class="sl-but-mini"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span><div class="sl-float-panel">{{{ content_html }}}</div></nav>
+<nav class="sl-float sl-tip" tabindex="0"><span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span><div class="sl-float-panel">{{{ content_html }}}</div></nav>
 {% endif %}
 {% if content %}
-<nav class="sl-float sl-tip" tabindex="0"><span class="sl-but-mini"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span><div class="sl-float-panel">{{{ content }}}</div></nav>
+<nav class="sl-float sl-tip" tabindex="0"><span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span><div class="sl-float-panel">{{{ content }}}</div></nav>
 {% endif %}
 {% if items %}
 <nav class="sl-float sl-tip" tabindex="0">
-  <span class="sl-but-mini"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span>
+  <span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span>
   <div class="sl-float-panel">
     <dl>
       {% for item in items %}
-      <dt>{{ item.label }}</dt>
+      {% if item.label %}<dt>{{ item.label }}</dt>{% endif %}
       <dd>{% if item.has_value_text %}{{ item.value_text }}{% else %}{{{ item.value }}}{% endif %}</dd>
       {% endfor %}
     </dl>

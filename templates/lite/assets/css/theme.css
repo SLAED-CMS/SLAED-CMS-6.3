@@ -976,16 +976,6 @@ select.sl-field {
     opacity 0.3s ease,
     visibility 0.3s ease;
 }
-.sl-menu .sl-float-panel:after {
-  content: "";
-  border-bottom: 8px solid var(--sl-color-surface-dark);
-  border-right: 8px solid transparent;
-  border-top: 0 dotted;
-  border-left: 8px solid transparent;
-  position: absolute;
-  left: var(--sl-float-arrow, 15px);
-  top: -8px;
-}
 .sl-menu .sl-float-panel a {
   white-space: nowrap;
   display: block;
@@ -1044,9 +1034,7 @@ a.sl-but-mini:hover,
 button.sl-but-mini:hover,
 .sl-but-mini:focus-visible,
 .sl-but-mini.sl-is-active,
-.sl-editor-menu:hover .sl-but-mini,
-.sl-tip:hover > .sl-but-mini,
-.sl-tip:focus-within > .sl-but-mini {
+.sl-editor-menu:hover .sl-but-mini {
   background-color: var(--sl-color-brand-link);
   color: var(--sl-color-on-dark);
 }
@@ -1563,6 +1551,14 @@ ol.sl-sublist-two li:hover:before {
   margin-right: var(--sl-space-sm);
   cursor: help;
 }
+/* Bare info-tip trigger: no button chrome, system-green glyph */
+.sl-tip-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--sl-color-success);
+  font-size: var(--sl-icon-size-xs);
+  line-height: 1;
+}
 .sl-tip:focus-visible {
   outline: 2px solid rgba(47, 141, 189, 0.45);
   outline-offset: 2px;
@@ -1573,15 +1569,16 @@ ol.sl-sublist-two li:hover:before {
   top: 100%;
   left: 0;
   z-index: 100;
-  min-width: 180px;
+  min-width: 150px;
   width: max-content;
-  max-width: 520px;
+  max-width: 300px;
   padding: 10px;
   margin: 2px 0 0 0;
   list-style: none;
   white-space: normal;
   overflow-wrap: anywhere;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 16px;
   background-color: var(--sl-color-bg);
   border: 1px solid var(--sl-color-border-muted);
   border-radius: 6px;
@@ -1602,7 +1599,9 @@ ol.sl-sublist-two li:hover:before {
 .sl-tip dt {
   margin: 0;
   color: var(--sl-color-text-heading);
-  font-weight: bold;
+}
+.sl-tip dt::after {
+  content: ":";
 }
 .sl-tip dd {
   margin: 0;
@@ -1612,6 +1611,38 @@ ol.sl-sublist-two li:hover:before {
 .sl-tip:focus-within > .sl-float-panel {
   opacity: 1;
   visibility: visible;
+}
+
+/* Popover arrow: shared geometry, flips with .sl-float-up; colour set per context */
+.sl-float-panel::after {
+  content: "";
+  position: absolute;
+  left: var(--sl-float-arrow, 16px);
+  top: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid var(--sl-float-arrow-color, transparent);
+  transform: translateX(-50%);
+}
+.sl-float.sl-float-up > .sl-float-panel::after {
+  top: auto;
+  bottom: -8px;
+  border-bottom: 0;
+  border-top: 8px solid var(--sl-float-arrow-color, transparent);
+}
+.sl-tip > .sl-float-panel {
+  --sl-float-arrow-color: var(--sl-color-bg);
+}
+.sl-tip > .sl-float-panel::after {
+  filter: drop-shadow(0 -1px 0 var(--sl-color-border-muted));
+}
+.sl-tip.sl-float-up > .sl-float-panel::after {
+  filter: drop-shadow(0 1px 0 var(--sl-color-border-muted));
+}
+.sl-menu .sl-float-panel {
+  --sl-float-arrow-color: var(--sl-color-surface-dark);
 }
 
 /* Floating popovers: JS-driven viewport-fixed placement (shared by tip, menu, dropdowns) */
