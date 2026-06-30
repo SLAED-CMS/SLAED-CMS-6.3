@@ -3583,14 +3583,14 @@ function adminblock(): string {
 }
 
 # User info link
-function user_info(string $name, bool $icon = false): string {
+function user_info(string $name): string {
     global $conf, $tpl;
     if (!$name) return '';
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         return $tpl->getHtmlFrag('link', [
             'href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($name),
             'title' => (string)_PERSONALINFO,
-            'icon_name' => $icon ? 'person-circle' : '',
+            'is_author' => true,
             'label' => $name,
         ]);
     }

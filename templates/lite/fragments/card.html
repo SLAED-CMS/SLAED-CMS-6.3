@@ -16,7 +16,7 @@
       <li>
         {% if comm_html %}{{{ comm_html }}}
         {% elseif comm_link %}{% include 'fragments/link.html' with comm_link %}
-        {% elseif comm_href %}<a href="{{{ comm_href }}}" title="{{ comm_label }}" class="sl-card-comment"><i class="bi bi-chat" aria-hidden="true"></i> {{ comm_text }}</a>
+        {% elseif comm_href %}<a href="{{{ comm_href }}}" title="{{ comm_label }}" class="sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
         {% endif %}
       </li>
       <li>{{{ hits }}}</li>
@@ -28,7 +28,7 @@
       </li>
       <li>
         {% if post_span %}{% include 'fragments/span.html' with post_span %}
-        {% elseif post_text %}<span title="{{ post_label }}" class="sl-card-post"><i class="bi bi-person-circle" aria-hidden="true"></i> {{{ post_text }}}</span>
+        {% elseif post_text %}<span title="{{ post_label }}" class="sl-card-post">{{{ post_text }}}</span>
         {% endif %}
       </li>
       <li class="sl-meta-actions">

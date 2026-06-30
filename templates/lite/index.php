@@ -25,7 +25,7 @@ function setTemplateForum(): string {
             'href' => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost,
             'title' => getDecodedText($title),
             'by' => _POSTEDBY,
-            'poster' => $luid ? user_info($lname, true) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
+            'poster' => $luid ? user_info($lname) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
             'when_label' => _DATE,
             'when' => format_time($time, _TIMESTRING),
         ]);

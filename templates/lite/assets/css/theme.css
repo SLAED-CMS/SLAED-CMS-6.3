@@ -4316,6 +4316,12 @@ td.sl-fl-col-stat {
   vertical-align: middle;
   text-decoration: none;
 }
+/* Author name link: align person icon + name with the same gap/centering as sibling chips */
+.sl-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 .sl-chip-info,
 .sl-date, .sl-card-date,
 .sl-coms, .sl-card-comment, .sl-comment-link,

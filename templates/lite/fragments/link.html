@@ -2,7 +2,7 @@
   {% if href %}href="{{{ href }}}"{% endif %}
   title="{{ title }}"
 
-  {% if class or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden %}
+  {% if class or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden or is_author %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_login_button %} sl-login-link sl-login-link-top{% endif %}
@@ -38,6 +38,7 @@
     {% if is_cat_image %} sl-catimg{% endif %}
     {% if is_cat_name %} sl-catname{% endif %}
     {% if is_top_hidden %} sl-thide{% endif %}
+    {% if is_author %} sl-author{% endif %}
   "
   {% endif %}
 
@@ -77,7 +78,7 @@
       {% endif %}
     >
   {% endif %}
-  {% if is_comments or is_card_comment %}<i class="bi bi-chat" aria-hidden="true"></i> {% endif %}
+  {% if is_comments or is_card_comment %}<i class="bi bi-chat-text" aria-hidden="true"></i> {% endif %}
   {% if is_comment %}<i class="bi bi-chat-dots" aria-hidden="true"></i> {% endif %}
   {% if is_category or is_card_category %}<i class="bi bi-folder" aria-hidden="true"></i> {% endif %}
   {% if is_votes %}<i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> {% endif %}
@@ -88,6 +89,7 @@
   {% if is_cart_checkout or is_shop_checkout %}<i class="bi bi-cart-check" aria-hidden="true"></i> {% endif %}
   {% if is_shop_add %}<i class="bi bi-cart-plus" aria-hidden="true"></i> {% endif %}
   {% if is_plus %}<i class="bi bi-plus-lg" aria-hidden="true"></i> {% endif %}
+  {% if is_author %}<i class="bi bi-person" aria-hidden="true"></i>{% endif %}
   {% if label_html %}{{{ label_html }}}{% endif %}
   {% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>&nbsp;{% endif %}
   {% if label %}

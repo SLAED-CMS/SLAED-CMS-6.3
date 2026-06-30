@@ -34,10 +34,10 @@ while ([$id, $uid, $uname, $title, $time, $comments, $counter, $luid, $lname, $l
         'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
         'cells' => [
             ['content_html' => $tlink, 'is_truncate' => true],
-            ['content_html' => $uid ? user_info($uname, true) : $uname, 'is_forum_user' => true],
+            ['content_html' => $uid ? user_info($uname) : $uname, 'is_forum_user' => true],
             ['text' => $comments, 'is_forum_stat' => true],
             ['text' => $counter, 'is_forum_stat' => true],
-            ['content_html' => $luid ? user_info($lname, true) : $lname, 'is_forum_user' => true],
+            ['content_html' => $luid ? user_info($lname) : $lname, 'is_forum_user' => true],
         ],
     ]);
 }
