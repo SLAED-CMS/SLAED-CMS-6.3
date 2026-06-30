@@ -19,29 +19,19 @@ function voting(): void {
     $result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
+        $ismoder = is_moder($conf['name']);
         while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]);
             $comm = ($acomm && $comm) ? $comm : _NO;
             $vote = array_sum(explode('|', $answer));
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
-                $report = getTplTitleTip([
-                    ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING), 'is_last' => false],
-                    ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING), 'is_last' => false],
-                    ['label' => _TYPE, 'value' => $type, 'is_last' => true],
-                ]);
-            $admin = '';
-            if (is_moder($conf['name'])) {
-                $items = [
-                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-                    $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$stitle.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
-                ];
-                $admin = $tpl->getHtmlFrag('popover', [
-                    'editor_label' => _EDITOR,
-                    'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
-                ]);
-            }
-            $rows .= $tpl->getHtmlPart('voting-home', [
-                'id' => $id,
+            $report = getTplTitleTip([
+                ['label' => _CHNGSTORY, 'value' => format_time($date, _TIMESTRING)],
+                ['label' => _ENDDATE, 'value' => format_time($enddate, _TIMESTRING)],
+                ['label' => _TYPE, 'value' => $type],
+            ]);
+            $row = [
+                'id' => (string)$id,
                 'id_link' => [
                     'href' => '#'.$id,
                     'title' => (string)$id,
@@ -59,19 +49,24 @@ function voting(): void {
                 'title_new' => getTplNewGraphic($date),
                 'comm' => $comm,
                 'vote' => $vote,
-                    'info' => $report,
                 'report' => $report,
-                'admin' => $admin,
-            ]);
+            ];
+            if ($ismoder) {
+                $edit = $afile.'.php?name=voting&amp;op=add&amp;id='.$id;
+                $del = $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1';
+                $row += getTplEditMenu($edit, $del, $stitle);
+            }
+            $rows .= $tpl->getHtmlPart('voting-home', $row);
         }
         $cont .= $tpl->getHtmlFrag('table', [
-            'is_list' => true,
+            'is_list'  => true,
+            'sortable' => true,
             'rows_html' => $rows,
             'headers' => [
-                ['text' => _ID, 'is_forum_num' => true],
                 ['text' => _TITLE],
                 ['text' => cutstr(_COMMENTS, 4, 1), 'is_forum_stat' => true],
                 ['text' => cutstr(_VOTES, 3, 1), 'is_forum_stat' => true],
+                ['text' => _ID, 'is_num' => true],
             ],
         ]);
         $cont .= getTplPager([

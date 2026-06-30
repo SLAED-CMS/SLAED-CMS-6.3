@@ -262,7 +262,6 @@ a .sl-letter:hover {
 .sl-table-list,
 .sl-table-list-sort {
   width: 100%;
-  margin-bottom: 40px;
   border-collapse: collapse;
   border-spacing: 0;
 }
