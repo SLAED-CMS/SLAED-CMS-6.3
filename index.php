@@ -102,7 +102,7 @@ if (empty($go)) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);
         $tok = getVar('req', 'token', 'raw', '')
             ?: ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
-        if (!$fdsize && !checkSiteToken($tok)) die('Illegal file access');
+        if (!($go == 4 && $fdsize) && !checkSiteToken($tok)) die('Illegal file access');
     }
     if ($go == 1) {
         Cache::setHeaders(false);

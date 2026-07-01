@@ -459,7 +459,6 @@ function send(): void {
                     'title' => $title, 'intro' => $hometext, 'body' => $bodytext,
                     'field' => $field, 'ip' => getIp()]
             );
-            update_points(31);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
             setHead(['title' => _ADD]);

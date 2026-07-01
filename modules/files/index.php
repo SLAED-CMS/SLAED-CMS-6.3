@@ -457,7 +457,6 @@ function send(): void {
                 ." VALUES (NULL, :cid, :postid, :uname, :title, :intro, :body, :url, NOW(), :fsize, :fversion, :mail, :home, :ip, '0')",
                 ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'mail' => $mail, 'home' => $home, 'ip' => getIp()]
             );
-            update_points(9);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
@@ -492,7 +491,7 @@ function loading(): void {
     if (($id && is_user()) || ($id && $conf['files']['down'] == '1')) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET hits = hits+1 WHERE id = :id', ['id' => $id]);
         [$stitle, $url] = $db->getSqlRow($db->getSqlQuery('SELECT title, url FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]));
-        update_points(11);
+        addPointsAction('download', $id, 11);
         if ($conf['files']['stream'] == 2) {
             $type = strtolower(substr(strrchr($url, '.'), 1));
             stream($url, getRandomString(10).'.'.$type);

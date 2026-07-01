@@ -108,7 +108,7 @@ function view(): void {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
         if (!$url) setRedirect('index.php?name='.$conf['name']);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
-        update_points(4);
+        addPointsAction('autolink', $id, 4);
         setRedirect($url);
     } else {
         setRedirect('index.php?name='.$conf['name']);

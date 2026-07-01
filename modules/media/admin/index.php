@@ -283,7 +283,8 @@ function save(): void {
             $postid = is_user_id($postname) ?: 0;
             $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
             if ($mid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET cid = :cid, uid = :uid, name = :name, title = :title, subtitle = :subtitle, year = :year, director = :director, roles = :roles, intro = :intro, author = :createdby, duration = :duration, lang = :lang, note = :note, format = :format, quality = :quality, size = :size, released = :released, links = :links, time = :time, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :mid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'intro' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'time' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'mid' => $mid]);
+                setContentActive('_media', [$mid], 25);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET cid = :cid, uid = :uid, name = :name, title = :title, subtitle = :subtitle, year = :year, director = :director, roles = :roles, intro = :intro, author = :createdby, duration = :duration, lang = :lang, note = :note, format = :format, quality = :quality, size = :size, released = :released, links = :links, time = :time, ihome = :ihome, acomm = :acomm WHERE id = :mid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'intro' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'time' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'mid' => $mid]);
             } else {
                 $ip = getip();
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, intro, author, duration, lang, note, format, quality, size, released, links, time, ihome, acomm, ip, status) VALUES (NULL, :cid, :uid, :name, :title, :subtitle, :year, :director, :roles, :intro, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, :time, :ihome, :acomm, :ip, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'intro' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'time' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
@@ -321,7 +322,7 @@ function approve(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
-    if (!$iswarn && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'1\' WHERE id = :id', ['id' => $id]);
+    if (!$iswarn && $id) setContentActive('_media', [$id], 25);
     setRedirect($afile.'.php?name=media&status=2', false, 302, $iswarn ? _TOKENMISS : _SUCCSTATUS, $iswarn);
 }
 

@@ -418,7 +418,6 @@ function send(): void {
                 .' VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :intro, :body, :ip, \'0\')',
                 ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'intro' => $hometext, 'body' => $bodytext, 'ip' => getIp()]
             );
-            update_points(35);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['pages']['addmail'], $conf['name'], $puname, _PAGES);
             setHead(['title' => _ADD]);

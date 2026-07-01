@@ -277,7 +277,8 @@ function save(): void {
             $postid = is_user_id($postname) ?: 0;
             $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
             if ($pid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
+                setContentActive('_pages', [$pid], 35);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, ihome = :ihome, acomm = :acomm WHERE id = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
             } else {
                 $ip = getip();
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, intro, body, comments, counter, ihome, acomm, score, ratings, ip, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
@@ -325,7 +326,11 @@ function updatePagesAction(int|array $ids = 0, string $vtyp = ''): void {
         }
         $in = implode(', ', $keys);
         if ($typ[0] === 'a') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET status = :typ WHERE id IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+            if ((int)substr($typ, 1) === 1) {
+                setContentActive('_pages', $all, 35);
+            } else {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET status = :typ WHERE id IN ('.$in.')', ['typ' => 0] + $pars);
+            }
         } elseif ($typ[0] === 'h') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET ihome = :typ WHERE id IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
         } elseif ($typ[0] === 't') {

@@ -183,7 +183,8 @@ function save(): void {
             $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
             $postname = (!is_user_id($postname)) ? filterText(substr($postname, 0, 25)) : '';
             if ($fid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET cid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+                setContentActive('_faq', [$fid], 6);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET cid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, body = :body, ihome = :ihome, acomm = :acomm WHERE id = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
             } else {
                 $ip = getip();
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (cid, uid, name, title, time, body, ihome, acomm, ip, status) VALUES (:cat, :postid, :postname, :subject, :time, :body, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);

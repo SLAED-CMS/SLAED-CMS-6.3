@@ -79,7 +79,7 @@ function send(): void {
             ],
         ]);
         addMail($femail, $semail, $subject, $message, 0, 3);
-        update_points(38);
+        updatePoints(38);
         setHead(['title' => _RECOMMTITLE]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
         echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);

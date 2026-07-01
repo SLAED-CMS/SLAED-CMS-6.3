@@ -553,7 +553,6 @@ function send(): void {
                     'note' => $note, 'format' => $format, 'quality' => $quality,
                     'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]
             );
-            update_points(25);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);

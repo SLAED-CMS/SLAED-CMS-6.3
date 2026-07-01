@@ -542,7 +542,7 @@ function addPrivateMessage() {
         $title = filterHtml($title, 1);
         $text = filterHtml($text);
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :body, NOW(), :ip, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'body' => $text, 'ip' => $ip]);
-        update_points(45);
+        updatePoints(45);
         if ($conf['privat']['newmail']) {
             [$user_email, $user_psmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :uidin', ['uidin' => $uidin]));
             if ($user_email && $user_psmail) {
@@ -631,7 +631,7 @@ function addFavorite() {
             echo getFavoriteButton($id, $mod);
         } else {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul)', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
-            update_points(44);
+            updatePoints(44);
         }
     }
     echo getFavoriteButton($id, $mod);

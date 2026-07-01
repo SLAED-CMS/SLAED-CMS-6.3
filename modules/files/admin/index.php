@@ -253,7 +253,8 @@ function save(): void {
                         $url = $newfile;
                     }
                 }
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm, status = :status WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
+                setContentActive('_files', [$fid], 9);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ihome' => $ihome, 'acomm' => $acomm, 'id' => $fid]);
             } else {
                 $ip = getip();
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :filesize, :version, :email, :website, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
@@ -295,7 +296,7 @@ function approve(): void {
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
     if (!$iswarn && $id) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET status = :status WHERE id = :id', ['status' => '1', 'id' => $id]);
+        setContentActive('_files', [$id], 9);
     }
     setRedirect($afile.'.php?name=files&status=2', false, 302, $iswarn ? _TOKENMISS : _SUCCSTATUS, $iswarn);
 }

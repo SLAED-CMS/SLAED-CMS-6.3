@@ -698,7 +698,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         $votes = 1;
     }
     $width = (int)max(0, min(100, round(($scor / $votes) * 20)));
-    $result = substr($scor / $votes, 0, 4);
+    $result = number_format($scor / $votes, 2);
     if (intval($votes) && intval($scor)) {
         $title = _RATING.': '.$result.'/'.$votes.' '._AVERAGESCORE.': '.$result;
         $scored = true;

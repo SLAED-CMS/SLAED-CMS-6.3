@@ -164,7 +164,8 @@ function save(): void {
             $postid = is_user_id($postname) ?: 0;
             $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
             if ($jokeid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, time = :time, title = :title, cid = :cat, body = :joke, status = \'1\' WHERE id = :jokeid', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
+                setContentActive('_jokes', [$jokeid], 19);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, time = :time, title = :title, cid = :cat, body = :joke WHERE id = :jokeid', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
             } else {
                 $ip = getip();
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, time, title, cid, body, ip, status) VALUES (:uid, :name, :time, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);

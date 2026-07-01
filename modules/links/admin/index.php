@@ -194,7 +194,8 @@ function save(): void {
             $postid = is_user_id($postname) ?: 0;
             $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
             if ($fid) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+                setContentActive('_links', [$fid], 21);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, email = :email, ihome = :ihome, acomm = :acomm WHERE id = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
             } else {
                 $ip = getip();
                 $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_links (cid, uid, name, title, intro, body, url, time, email, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :email, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
@@ -221,7 +222,7 @@ function approve(): void {
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
     if (!$iswarn && $id) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'1\' WHERE id = :id', ['id' => $id]);
+        setContentActive('_links', [$id], 21);
     }
     setRedirect($afile.'.php?name=links&status=2', false, 302, $iswarn ? _TOKENMISS : _SUCCSTATUS, $iswarn);
 }

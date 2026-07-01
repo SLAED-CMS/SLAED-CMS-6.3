@@ -465,7 +465,7 @@ function kasse(): void {
 			}
 			setcookie('shop', false);
 			setcookie('part', false);
-			update_points(39);
+			updatePoints(39);
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['shop']['sende'], false, $conf['name'])]);
 		} else {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);

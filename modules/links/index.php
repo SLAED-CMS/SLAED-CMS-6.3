@@ -427,7 +427,6 @@ function send(): void {
                     'title' => $title, 'intro' => $description, 'body' => $bodytext,
                     'site' => $site, 'mail' => $mail, 'ip' => getIp()]
             );
-            update_points(21);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
@@ -462,7 +461,7 @@ function loading(): void {
     if (($id && is_user()) || ($id && $conf['links']['links'] == '1')) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET hits = hits+1 WHERE id = :id', ['id' => $id]);
         [$title, $url] = $db->getSqlRow($db->getSqlQuery('SELECT title, url FROM '.PREFIX_DB.'_links WHERE id = :id', ['id' => $id]));
-        update_points(23);
+        addPointsAction('linkout', $id, 23);
         $info = sprintf(_NOTELINKLOAD, $title, domain($url));
         setHead(['title' => _LINKS]);
         $cont = getModuleNavi(['title' => _LINKS]);

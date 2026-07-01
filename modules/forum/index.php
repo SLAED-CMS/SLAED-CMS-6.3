@@ -799,14 +799,14 @@ function send(): void {
                                 }
                             }
                         }
-                        update_points(14);
+                        updatePoints(14);
                     } else {
                         if (strtotime($ltime) > time()) {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1 WHERE id IN ('.$catids.')');
                         } else {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost = :lpost WHERE id IN ('.$catids.')', ['lpost' => $lpid]);
                         }
-                        update_points(13);
+                        updatePoints(13);
                     }
                 }
             }
@@ -876,14 +876,14 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
             if (!$recycle || $recycle == $catid) {
                 if ($uid) {
                     if ($pid) {
-                        update_points(14, $uid, 1);
+                        updatePoints(14, $uid, 1);
                     } else {
-                        update_points(13, $uid, 1);
+                        updatePoints(13, $uid, 1);
                     }
                 }
                 [$fid, $fuid] = $db->getSqlRow($db->getSqlQuery('SELECT id, uid FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
                 if ($fid) {
-                    if ($fuid) update_points(44, $fuid, 1);
+                    if ($fuid) updatePoints(44, $fuid, 1);
                     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
                 }
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);

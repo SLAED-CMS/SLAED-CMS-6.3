@@ -104,7 +104,7 @@ function contact(): void {
                 'body_html' => $message,
             ]);
             addMail($to, $semail, $subject, $msg, 1, 1);
-            update_points(5);
+            updatePoints(5);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 5]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {

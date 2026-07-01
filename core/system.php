@@ -1727,7 +1727,7 @@ function setHead(array $seo = []): void {
     $sitevars = array_replace($sitevars, getThemeHookVars('getThemeHeadVars'));
     $sitepage = $home ? 'home' : 'module';
     ob_start();
-    update_points(1);
+    updatePoints(1);
     return;
 }
 
@@ -4785,7 +4785,7 @@ function getRatingView(): void {
     $stl = getVar('get', 'stl', 'num', 0);
     $con = explode('|', $conf['ratings'][strtolower($mod)] ?? '');
     $map = [
-        'account' => ['_users', 'votes', 'tvotes', 2],
+        'account' => ['_users', 'votes', 'tvotes', 0],
         'faq' => ['_faq', 'ratings', 'score', 8],
         'files' => ['_files', 'votes', 'tvotes', 12],
         'forum' => ['_forum', 'ratings', 'score', 15],
@@ -4803,17 +4803,26 @@ function getRatingView(): void {
     $cmod = substr($mod, 0, 2).'-'.$id;
     $cook = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : 0;
     $uid = is_user() ? intval(substr($user[0], 0, 11)) : 0;
+    $self = $mod === 'account' && $uid && $uid === $id;
+    $where = $mod === 'account' ? 'id = :id' : "id = :id AND status != '0'";
+    [$exists] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.$tab.' WHERE '.$where, ['id' => $id]));
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :mod', ['past' => time() - intval($con[0]), 'mod' => $mod]);
     $cq = 'SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND ip = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')";
     [$num] = $db->getSqlRow($db->getSqlQuery($cq, ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
-    $voted = $cook == $id || $num > 0;
-    if (!$voted && $rate) {
+    $voted = $cook == $id || $num > 0 || $self;
+    if (!$voted && $rate && $exists) {
         setcookie($cmod, $id, time() + intval($con[0]));
+        $pdo = $db->sqlconnid instanceof PDO ? $db->sqlconnid : null;
+        if ($pdo) $pdo->beginTransaction();
         $ins = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :modul, :time, :uid, :ip)', ['mid' => $id, 'modul' => $mod, 'time' => time(), 'uid' => $uid, 'ip' => $ip]);
         if ($ins) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET '.$cnt.' = '.$cnt.' + 1, '.$scr.' = '.$scr.' + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
-            if ($pts) update_points($pts);
+            if ($pts && $uid) {
+                [$spent] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_rating WHERE uid = :uid AND time > :since', ['uid' => $uid, 'since' => time() - 86400]));
+                if ($spent <= 30) updatePoints($pts);
+            }
         }
+        if ($pdo) { $ins ? $pdo->commit() : $pdo->rollBack(); }
         $voted = true;
     }
     if (!$voted) return;
@@ -5270,37 +5279,37 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
     if ($id && $mod) {
         if ($mod == 'account' || $mod == 'members') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_users SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
-            update_points(3, $uid, $point);
+            updatePoints(3, $uid, $point);
         } elseif ($mod == 'faq') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(7, $uid, $point);
+            updatePoints(7, $uid, $point);
         } elseif ($mod == 'files') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(10, $uid, $point);
+            updatePoints(10, $uid, $point);
         } elseif ($mod == 'gallery') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_gallery SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
-            update_points(17, $uid, $point);
+            updatePoints(17, $uid, $point);
         } elseif ($mod == 'links') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(22, $uid, $point);
+            updatePoints(22, $uid, $point);
         } elseif ($mod == 'media') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(26, $uid, $point);
+            updatePoints(26, $uid, $point);
         } elseif ($mod == 'multimedia') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_multimedia SET totalcom=totalcom".$typ." WHERE id = '".$id."'");
-            update_points(29, $uid, $point);
+            updatePoints(29, $uid, $point);
         } elseif ($mod == 'news') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(32, $uid, $point);
+            updatePoints(32, $uid, $point);
         } elseif ($mod == 'pages') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(36, $uid, $point);
+            updatePoints(36, $uid, $point);
         } elseif ($mod == 'shop') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(40, $uid, $point);
+            updatePoints(40, $uid, $point);
         } elseif ($mod == 'voting') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
-            update_points(43, $uid, $point);
+            updatePoints(43, $uid, $point);
         }
     }
 }
@@ -5355,7 +5364,7 @@ function updateVotingResult(): void {
                     }
                     $answ = implode('|', $answ);
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET answer = :answer WHERE id = :id', ['answer' => $answ, 'id' => $id]);
-                    update_points(42);
+                    updatePoints(42);
                 }
                 $cont = getVotingView($id);
             }
@@ -5368,7 +5377,7 @@ function updateVotingResult(): void {
 }
 
 # Update points
-function update_points(int $id, int $uid = 0, bool $del = false): void {
+function updatePoints(int $id, int $uid = 0, bool $del = false): void {
  global $db, $conf, $user;
     $uid = $uid ?: (is_user() ? intval($user[0]) : 0);
     if ($id && $uid && $conf['users']['point'] == 1) {
@@ -5378,6 +5387,38 @@ function update_points(int $id, int $uid = 0, bool $del = false): void {
         $delta   = $del ? -$delta : $delta;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET points = points + :delta WHERE id = :uid', ['delta' => $delta, 'uid' => $uid]);
     }
+}
+
+# Add action points once per (event, item, user/ip) within a retention window; reuses the _rating dedup table
+function addPointsAction(string $event, int $mid, int $pts, int $ttl = 2592000): void {
+    global $db, $user;
+    if (!$mid || !$pts || !is_user()) return;
+    $uid = intval($user[0]);
+    $ip  = getIp();
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :event', ['past' => time() - $ttl, 'event' => $event]);
+    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :mid AND modul = :event AND ip = :ip) OR (mid = :mid2 AND modul = :event2 AND uid = :uid AND uid != '0')", ['mid' => $mid, 'event' => $event, 'ip' => $ip, 'mid2' => $mid, 'event2' => $event, 'uid' => $uid]));
+    if ($num > 0) return;
+    $ins = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :event, :time, :uid, :ip)', ['mid' => $mid, 'event' => $event, 'time' => time(), 'uid' => $uid, 'ip' => $ip]);
+    if ($ins) updatePoints($pts);
+}
+
+# Promote pending items to active (status 0 -> 1) and credit submission points to their authors in one step
+function setContentActive(string $tab, array $ids, int $pts): void {
+    global $db;
+    $ids = array_values(array_filter(array_map('intval', $ids), static fn($val): bool => $val > 0));
+    if (!$ids) return;
+    $keys = [];
+    $pars = [];
+    foreach ($ids as $pos => $val) {
+        $keys[] = ':id'.$pos;
+        $pars['id'.$pos] = $val;
+    }
+    $in = implode(', ', $keys);
+    if ($pts) {
+        $res = $db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.$tab.' WHERE id IN ('.$in.") AND status = '0' AND uid > 0", $pars);
+        while ([$uid] = $db->getSqlRow($res)) updatePoints($pts, (int)$uid);
+    }
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab." SET status = '1' WHERE id IN (".$in.')', $pars);
 }
 
 # Format image preview PHP GD

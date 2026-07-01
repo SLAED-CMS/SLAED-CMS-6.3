@@ -84,7 +84,7 @@ function send(): void {
                 ]);
                 addMail($mail, $amail, $subject, $msg, 0, 3);
             }
-            update_points(34);
+            updatePoints(34);
             setHead(['title' => _ORDER]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
             echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);
