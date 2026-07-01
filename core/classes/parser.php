@@ -323,10 +323,10 @@ class Parser {
         $src = preg_replace('/\[hr\]/si', $this->addStash('<hr>'), $src) ?? $src;
         $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
 
-        # *NN smilies
-        if (preg_match('/\*(\d{2})/', $src)) {
+        # *NN smilies (01-18 only; higher numbers have no image and stay as text)
+        if (preg_match('/\*(0[1-9]|1[0-8])/', $src)) {
             $src = preg_replace_callback(
-                '/\*(\d{2})/',
+                '/\*(0[1-9]|1[0-8])/',
                 function(array $m): string {
                     $num = $this->filterEsc($m[1]);
                     $img = img_find('smilies/'.$num.'.gif');
