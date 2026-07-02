@@ -212,9 +212,7 @@ function liste(): void {
             'category_attr' => $cdesc,
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
             'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
-            'time_text'     => format_time($time),
-            'time_iso'      => date('c', strtotime($time)),
-            'time_label'    => _DATE,
+            'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
     }
     $onum = ($let) ? "UCASE(title) LIKE BINARY UCASE(:let) AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
@@ -230,7 +228,6 @@ function liste(): void {
             'col_title'  => _QUESTION,
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
-            'col_date'   => _DATE,
         ],
         'table_close' => [],
         'pager_html'  => $rows ? getTplPager([

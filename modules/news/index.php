@@ -197,9 +197,7 @@ function liste(): void {
             'category_attr' => $cdesc,
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
             'post_text'     => ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM),
-            'time_text'     => format_time($time),
-            'time_iso'      => date('c', strtotime($time)),
-            'time_label'    => _DATE,
+            'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
         if ($ismoder) {
             $edit = $afile.'.php?name=news&amp;op=add&amp;id='.$id;
@@ -221,8 +219,6 @@ function liste(): void {
             'col_title'  => _TITLE,
             'col_cat'    => _CATEGORY,
             'col_poster' => _POSTER,
-            'col_date'   => _DATE,
-            'col_func'   => $ismoder ? _FUNCTIONS : '',
         ],
         'table_close' => [],
         'pager_html'  => $rows ? getTplPager([

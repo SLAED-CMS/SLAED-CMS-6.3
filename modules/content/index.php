@@ -40,15 +40,14 @@ function content(): void {
             $rows[] = [
                 'id' => (string)$id,
                 'cells' => [
-                    ['is_num' => true, 'href' => '#'.$id, 'title' => (string)$id, 'text' => (string)$id],
                     ['content_html' => getTplNewGraphic($time).' '.$tpl->getHtmlFrag('link', ['href' => $href, 'title' => $title, 'label' => $title, 'suffix_html' => $tip])],
-                    ['content_html' => $menu],
+                    ['is_num' => true, 'content_html' => ($menu !== '' ? $menu.' ' : '').$tpl->getHtmlFrag('link', ['href' => '#'.$id, 'title' => (string)$id, 'label' => (string)$id, 'is_num_anchor' => true])],
                 ],
             ];
         }
         $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
-            'table_open' => ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS],
+            'table_open' => ['open' => true, 'sortable' => true, 'col_id' => _ID, 'col_title' => _TITLE],
             'table_close' => [],
             'pager_html' => getTplPager([
             'limit'  => $limit,

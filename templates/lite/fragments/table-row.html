@@ -89,8 +89,8 @@
   {% elseif cells_html %}
     {{{ cells_html }}}
   {% else %}
-    <td class="sl-table-cell sl-cell-ellipsis">
-      {% if title_new %}{{{ title_new }}} {% endif %}
+    <td class="sl-table-cell sl-cell-ellipsis" data-sort="{{ title_text }}">
+      {% if report %}{{{ report }}}{% endif %}{% if title_new %}{{{ title_new }}} {% endif %}
       <a href="{{{ title_href }}}" title="{{ title_attr }}">{{ title_text }}</a>
     </td>
     <td class="sl-table-cell">
@@ -101,14 +101,8 @@
       {% endif %}
     </td>
     <td class="sl-table-cell"><span class="sl-chip sl-chip-info">{{{ post_text }}}</span></td>
-    <td class="sl-table-cell">
-      <time datetime="{{ time_iso }}" title="{{ time_label }}" class="sl-chip sl-chip-info"><i class="bi bi-calendar3" aria-hidden="true"></i>{{ time_text }}</time>
-    </td>
-    {% if is_moder %}
-    <td class="sl-table-cell">{% include 'fragments/popover.html' %}</td>
-    {% endif %}
     <td class="sl-table-cell sl-table-col-num">
-      <a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
+      {% if is_moder %}{% include 'fragments/popover.html' %} {% endif %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>
     </td>
   {% endif %}
 </tr>

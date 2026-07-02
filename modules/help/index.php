@@ -173,9 +173,7 @@ function liste(): void {
             'category_attr' => $cdesc,
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
             'post_text'     => ad_status('', $status ? 0 : 1),
-            'time_text'     => format_time($time),
-            'time_iso'      => date('c', strtotime($time)),
-            'time_label'    => _DATE,
+            'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
     }
     if (!$rows) setError(404);
@@ -189,7 +187,6 @@ function liste(): void {
             'col_title'  => _TITLE,
             'col_cat'    => _CATEGORY,
             'col_poster' => _STATUS,
-            'col_date'   => _DATE,
         ],
         'table_close' => [],
         'pager_html'  => $rows ? getTplPager([
