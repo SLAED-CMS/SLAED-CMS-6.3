@@ -12,10 +12,7 @@
   <div class="sl-com-right">
     <div class="sl-com-top">
       <div class="sl-carg">{% if report %}{{{ report }}}{% endif %}<b>{{ name }}</b></div>
-      <div class="sl-carg">
-        {% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}
-        {{{ user_menu_html }}}
-      </div>
+      <div class="sl-meta-actions sl-com-edit">{{{ user_menu_html }}}{% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}</div>
     </div>
     <div class="sl-com-cont">
       <div class="sl-table-shell">

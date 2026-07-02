@@ -117,7 +117,7 @@ class EditorToastUi implements ContentDriver {
         $js = '(function(){var ta=document.getElementById('.$jid.');var root=window.toastui&&window.toastui.Editor;';
         $js .= 'if(!ta||!root){return;}';
         $js .= 'var ed=new root({el:document.getElementById('.$jid.'+"_toast"),';
-        $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',height:'.$h.',language:'.$lang.',usageStatistics:false});';
+        $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',height:'.$h.',language:'.$lang.',autofocus:'.$focus.',usageStatistics:false});';
         $js .= 'if(window.SlaedToastUi){window.SlaedToastUi.register('.$jid.',ed,'.$jopt.');}';
         $js .= 'if('.$focus.'){setTimeout(function(){var box=document.getElementById('.$jid.'+"_toast");var foc=box&&box.querySelector(".toastui-editor-contents[contenteditable=true],.ProseMirror.toastui-editor-contents,.toastui-editor textarea:not(.toastui-editor-pseudo-clipboard)");if(foc){foc.focus();}else{try{ed.focus();}catch(e){}}},300);}';
         $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=ed.getMarkdown();},true);';

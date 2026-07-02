@@ -1596,6 +1596,8 @@ ol.sl-sublist-two li:hover:before {
   padding: 10px;
   margin: 2px 0 0 0;
   list-style: none;
+  /* Overlay content is always left-aligned, even inside centered hosts (forum name plate) */
+  text-align: left;
   white-space: normal;
   overflow-wrap: anywhere;
   font-size: 14px;
@@ -2953,11 +2955,13 @@ ol.sl-sublist-two li:hover:before {
 }
 
 /* sl-grid system: containers */
+/* Percentage row-gap never joins the auto height calc, so stacked rows would overflow the container - keep only the column gap in percent */
 .sl-grid-1-2,
 .sl-grid-1-3,
 .sl-grid-1-4 {
   display: grid;
-  gap: 2%;
+  column-gap: 2%;
+  row-gap: var(--sl-space-lg);
   list-style: none;
   padding: 0;
   margin: 0;
@@ -3228,9 +3232,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-login-top--head > li > a:hover,
 .sl-login-top--head > li > a:focus-visible,
 .sl-login-top--head > li > .sl-login-toggle:hover,
-.sl-login-top--head > li > .sl-login-toggle:focus-visible,
-.sl-login-top--head .sl-login-links a:hover,
-.sl-login-top--head .sl-login-links a:focus-visible {
+.sl-login-top--head > li > .sl-login-toggle:focus-visible {
   color: var(--sl-login-link-hover-color);
 }
 .sl-login-top--head .sl-login-dropdown {
@@ -3275,51 +3277,17 @@ ol.sl-sublist-two li:hover:before {
   margin-bottom: 10px;
 }
 .sl-login-top--head .sl-login-form li.sl-login-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sl-login-links-gap);
   margin-bottom: 0;
-  font-size: var(--sl-login-links-font-size);
 }
 .sl-login-top--head .sl-login-field {
   width: var(--sl-login-field-width);
   height: var(--sl-login-field-height);
   padding: var(--sl-login-field-pad-y) var(--sl-login-field-pad-x);
   box-sizing: border-box;
-}
-.sl-login-top--head .sl-login-submit {
-  display: inline-block;
-  white-space: nowrap;
-  padding: var(--sl-login-submit-pad-y) var(--sl-login-submit-pad-x);
-  margin: 0 var(--sl-login-submit-mr) 0 0;
-  line-height: var(--sl-login-link-line-height);
-  height: var(--sl-login-link-height);
-  color: var(--sl-login-link-color);
-  background: transparent;
-  border: 0;
-  border-radius: var(--sl-login-pill-radius);
-  box-shadow: none;
-  cursor: pointer;
-  font-family: Arial, Tahoma, sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  text-decoration: none;
-}
-.sl-login-top--head .sl-login-submit:hover,
-.sl-login-top--head .sl-login-submit:focus-visible {
-  color: var(--sl-login-link-hover-color);
-}
-.sl-login-top--head .sl-login-links a {
-  display: inline;
-  width: auto;
-  height: auto;
-  padding: 0;
-  margin: 0;
-  line-height: 1.2;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  text-shadow: none;
-}
-.sl-login-top--head .sl-login-links a + a {
-  margin-left: var(--sl-login-links-gap);
 }
 .sl-login-top--head.sl-logged > li > .sl-login-profile {
   position: relative;
@@ -3644,6 +3612,10 @@ ol.sl-sublist-two li:hover:before {
 #footbox address {
   font-style: normal;
 }
+/* Footer columns are simple stacks, not card grids: block layout keeps each heading above its content */
+#footbox .sl-grid-1-4 > .sl-grid {
+  display: block;
+}
 .sl-upper-wordmark {
   display: flex;
   flex-direction: column;
@@ -3930,6 +3902,7 @@ ol.sl-sublist-two li:hover:before {
   align-items: center;
 }
 .sl-com-edit {
+  grid-column: 3;
   justify-self: end;
 }
 
@@ -4213,11 +4186,10 @@ td.sl-fl-col-stat {
 
 /* Polls */
 .sl-post-vote {
-  padding: 30px 15px;
+  padding: 24px 0;
   display: flow-root;
   border-bottom: 1px solid var(--sl-color-border-subtle);
-  margin-top: -18px;
-  margin-bottom: 25px;
+  margin-bottom: 24px;
 }
 .sl-progress-info {
   display: grid;
@@ -4333,6 +4305,10 @@ td.sl-fl-col-stat {
   white-space: nowrap;
   vertical-align: middle;
   text-decoration: none;
+  transition: background-color 0.2s ease;
+  & .bi {
+    font-size: var(--sl-icon-size-xs);
+  }
 }
 /* Author name link: align person icon + name with the same gap/centering as sibling chips */
 .sl-author {
@@ -4340,53 +4316,13 @@ td.sl-fl-col-stat {
   align-items: center;
   gap: 6px;
 }
-.sl-chip-info,
-.sl-date, .sl-card-date,
-.sl-coms, .sl-card-comment, .sl-comment-link,
-.sl-post-icon, .sl-card-post, .sl-media-post {
-  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
-  color: var(--sl-color-brand-strong);
+a.sl-author {
+  transition: color 0.2s ease;
+  &:hover {
+    color: var(--sl-color-brand-strong);
+  }
 }
-.sl-chip-success,
-.sl-votes, .sl-rate-sites, .sl-status-active {
-  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
-  color: var(--sl-color-success);
-}
-.sl-chip-warn,
-.sl-n-day, .sl-n-days, .sl-n-week {
-  background: color-mix(in srgb, var(--sl-color-warning) 16%, transparent);
-  color: var(--sl-color-warning);
-}
-.sl-chip-danger,
-.sl-favor, .sl-favor-on, .sl-favor-off {
-  background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
-  color: var(--sl-color-danger);
-  cursor: pointer;
-}
-.sl-chip-accent {
-  background: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
-  color: var(--sl-color-accent);
-}
-.sl-chip-neutral {
-  background: var(--sl-color-surface-alt);
-  color: var(--sl-color-text-heading);
-}
-.sl-chip .bi,
-.sl-date .bi, .sl-card-date .bi,
-.sl-views .bi, .sl-card-reads .bi, .sl-hits .bi,
-.sl-post-icon .bi, .sl-card-post .bi, .sl-media-post .bi,
-.sl-coms .bi, .sl-card-comment .bi, .sl-comment-link .bi,
-.sl-cat .bi, .sl-card-category .bi,
-.sl-votes .bi, .sl-rate-sites .bi, .sl-cart-total .bi,
-.sl-download .bi, .sl-faq .bi,
-.sl-message-in .bi, .sl-message-out .bi, .sl-message-save .bi,
-.sl-favor .bi, .sl-favor-on .bi, .sl-favor-off .bi,
-.sl-n-day .bi, .sl-n-days .bi, .sl-n-week .bi,
-.sl-news-info .bi, .sl-status-active .bi, .sl-status-inactive .bi,
-.sl-module .bi, .sl-ed2k .bi, .sl-http .bi, .sl-last .bi {
-  font-size: var(--sl-icon-size-xs);
-}
-/* Clickable meta chips (links) carry the system success tone */
+/* Clickable meta chips (links) default to the system success tone and deepen their tone tint on hover */
 a.sl-chip,
 a.sl-date, a.sl-card-date,
 a.sl-views, a.sl-card-reads, a.sl-hits,
@@ -4402,6 +4338,53 @@ a.sl-news-info, a.sl-status-active, a.sl-status-inactive,
 a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
   background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
   color: var(--sl-color-success);
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-success) 24%, transparent);
+  &:hover {
+    background: var(--sl-chip-hover-bg);
+  }
+}
+/* Tone classes come after the link default, so an explicit sl-chip-* tone wins on spans and links alike */
+.sl-chip-info, a.sl-chip-info,
+.sl-date, .sl-card-date,
+.sl-coms, .sl-card-comment, .sl-comment-link,
+.sl-post-icon, .sl-card-post, .sl-media-post {
+  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+  color: var(--sl-color-brand-strong);
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-brand-link) 22%, transparent);
+}
+.sl-chip-success, a.sl-chip-success,
+.sl-votes, .sl-rate-sites, .sl-status-active {
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-success) 24%, transparent);
+}
+.sl-chip-warn, a.sl-chip-warn,
+.sl-n-day, .sl-n-days, .sl-n-week {
+  background: color-mix(in srgb, var(--sl-color-warning) 16%, transparent);
+  color: var(--sl-color-warning);
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-warning) 26%, transparent);
+}
+.sl-chip-danger, a.sl-chip-danger,
+.sl-favor, .sl-favor-on, .sl-favor-off {
+  background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
+  color: var(--sl-color-danger);
+  cursor: pointer;
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-danger) 22%, transparent);
+}
+.sl-chip-accent, a.sl-chip-accent {
+  background: color-mix(in srgb, var(--sl-color-accent) 12%, transparent);
+  color: var(--sl-color-accent);
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-accent) 22%, transparent);
+}
+.sl-chip-neutral, a.sl-chip-neutral {
+  background: var(--sl-color-surface-alt);
+  color: var(--sl-color-text-heading);
+  --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-text-heading) 8%, var(--sl-color-surface-alt));
+}
+/* Favourite toggles and chips wrapping the profile link are clickable too: same hover deepening */
+.sl-favor:hover, .sl-favor-on:hover, .sl-favor-off:hover,
+.sl-post-icon:has(> a):hover, .sl-card-post:has(> a):hover, .sl-media-post:has(> a):hover {
+  background: var(--sl-chip-hover-bg);
 }
 
 /* Plain icon controls (not chips): cart/shop actions + forum/topic state glyphs */
@@ -4790,6 +4773,27 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
     display: none;
   }
 
+  /* Phones: content reads better one step larger; fields need 16px or iOS zooms the page on focus */
+  body {
+    font-size: 15px;
+  }
+
+  select,
+  input,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Profile info table: stack the label/value cells so the card fits the screen without sideways scrolling */
+  .sl-table-acc-info tr,
+  .sl-table-acc-info td {
+    display: block;
+  }
+
+  .sl-table-acc-info td {
+    padding: 2px 0;
+  }
+
   #topmenu > ul {
     display: block;
   }
@@ -4859,6 +4863,19 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
 @media (max-width: 560px) {
   .sl-wrp {
     width: min(100% - 16px, var(--sl-container));
+  }
+
+  /* Bottom footer menu: match the 8px page gutter, tighten dividers and keep the ad link in the wrap flow */
+  #footbox > .sl-wrp:last-child > .sl-fmenu {
+    width: min(100% - 16px, var(--sl-container));
+  }
+
+  .sl-fmenu ul li:before {
+    margin: 0 10px;
+  }
+
+  .sl-fmenu .sl-pull-right {
+    margin-left: 0;
   }
 
   .sl-top-contact li {
@@ -5244,5 +5261,23 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
 @media (min-width: 769px) and (max-width: 1400px) {
   .sl-wrp {
     width: min(100% - 80px, var(--sl-container));
+  }
+}
+
+/* Coarse pointers get a ~40px hit zone on compact controls via an invisible overlay, keeping the visual size intact */
+@media (pointer: coarse) {
+  .sl-but-mini,
+  .sl-tabs-link,
+  .sl-fmenu a,
+  a.sl-author {
+    position: relative;
+  }
+  .sl-but-mini::after,
+  .sl-tabs-link::after,
+  .sl-fmenu a::after,
+  a.sl-author::after {
+    content: "";
+    position: absolute;
+    inset: -7px;
   }
 }

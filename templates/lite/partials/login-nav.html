@@ -11,11 +11,11 @@
         </li>
         {% if captcha %}{{{ captcha }}}{% endif %}
         <li>
-          <button type="{{ submit_button.button_type }}" title="{{ submit_button.title }}" class="sl-login-submit">{{ submit_button.label }}</button>
+          <button type="{{ submit_button.button_type }}" title="{{ submit_button.title }}" class="sl-but">{{ submit_button.label }}</button>
         </li>
         <li class="sl-login-links">
-          <a href="{{{ lost_link.href }}}" title="{{ lost_link.title }}" class="sl-login-link sl-login-link-lost">{{ lost_link.label }}</a>
-          <a href="{{{ register_link.href }}}" title="{{ register_link.title }}" class="sl-login-link sl-login-link-register">{{ register_link.label }}</a>
+          <a href="{{{ lost_link.href }}}" title="{{ lost_link.title }}" class="sl-chip sl-chip-danger"><i class="bi bi-key" aria-hidden="true"></i>{{ lost_link.label }}</a>
+          <a href="{{{ register_link.href }}}" title="{{ register_link.title }}" class="sl-chip sl-chip-success"><i class="bi bi-person-plus" aria-hidden="true"></i>{{ register_link.label }}</a>
         </li>
       </ul>
       {% if token %}<input type="hidden" name="{{ token_field.name_attr }}" value="{{ token_field.value_attr }}">{% endif %}

@@ -208,14 +208,12 @@
         }
     }
 
+    // Float panels bypass the legacy display/slide/puff path: their visibility lives in CSS and placement in placeFloat, so toggling them never jumps
     function setToggleBlockState(element, id, isOpen, effect, duration) {
         element.classList.toggle('sl-is-open', isOpen);
         element.classList.toggle('sl-is-closed', !isOpen);
         setToggleControls(id, isOpen);
         if (element.classList.contains('sl-float-panel')) {
-            // Float dropdowns share the sl-tip visibility model: opacity/visibility
-            // via CSS, viewport-fixed placement via placeFloat. Skip the legacy
-            // display/slide/puff path so there is no positioning jump on open/close.
             var floatHost = element.closest('.sl-float');
             if (floatHost) {
                 if (isOpen) placeFloat(floatHost); else clearFloatState(floatHost);
@@ -568,10 +566,8 @@
     var floatGap = 8;
     var floatStates = ['sl-float-left', 'sl-float-right', 'sl-float-up', 'sl-is-open'];
 
+    // Drop only the state classes: the panel keeps its inline fixed position and fades out in place with no jump back to the static CSS spot
     function clearFloatState(node) {
-        // Only drop the state classes. The panel keeps its inline fixed position
-        // so it fades out in place on close (hover and click) with no jump back
-        // to the static CSS spot.
         for (var i = 0; i < floatStates.length; i++) node.classList.remove(floatStates[i]);
     }
 
@@ -579,25 +575,29 @@
         return node.querySelector(':scope > .sl-float-panel');
     }
 
+    // Open a float: inline fixed styles beat theme CSS and survive the close fade; park off-screen only on first measure so re-placing never yanks the panel from under the cursor
     function placeFloat(node) {
         var panel = getFloatPanel(node);
         if (!panel) return;
 
+        if (node.slFloatClose) {
+            window.clearTimeout(node.slFloatClose);
+            node.slFloatClose = null;
+        }
         clearFloatState(node);
         node.classList.add('sl-is-open');
 
-        // Position is written inline on the panel (both hover and click) so it
-        // overrides any tuned/id-scoped theme CSS and, crucially, survives the
-        // close transition (sl-is-open is removed, but the panel keeps these
-        // styles and just fades out in place).
+        var placed = panel.style.position === 'fixed';
         panel.style.position = 'fixed';
         panel.style.right = 'auto';
         panel.style.bottom = 'auto';
         panel.style.margin = '0';
         panel.style.transform = 'none';
         panel.style.zIndex = '3000';
-        panel.style.left = '-9999px';
-        panel.style.top = '-9999px';
+        if (!placed) {
+            panel.style.left = '-9999px';
+            panel.style.top = '-9999px';
+        }
 
         window.requestAnimationFrame(function () {
             var rect = panel.getBoundingClientRect();
@@ -633,6 +633,7 @@
         for (var i = 0; i < list.length; i++) placeFloat(list[i]);
     }
 
+    // Wire hover/focus float opening; closing waits for a grace delay and for focus to leave, so the cursor can cross the gap into the panel and typing inside never closes it
     function setFloating(node) {
         var root = node && node.nodeType ? node : document;
         var list = root.querySelectorAll ? root.querySelectorAll('.sl-float:not([data-sl-float-event="click"])') : [];
@@ -642,12 +643,13 @@
                 item.setAttribute('data-sl-float-ready', '1');
                 item.addEventListener('mouseenter', function () { placeFloat(item); });
                 item.addEventListener('focusin', function () { placeFloat(item); });
-                // Keep the panel open while focus stays inside (login form,
-                // any panel with fields): mouseleave must not close it mid-typing,
-                // and focus moves between inner fields must not flicker it
                 item.addEventListener('mouseleave', function () {
                     if (item.contains(document.activeElement)) return;
-                    clearFloatState(item);
+                    if (item.slFloatClose) window.clearTimeout(item.slFloatClose);
+                    item.slFloatClose = window.setTimeout(function () {
+                        item.slFloatClose = null;
+                        clearFloatState(item);
+                    }, 300);
                 });
                 item.addEventListener('focusout', function (e) {
                     if (e.relatedTarget && item.contains(e.relatedTarget)) return;
@@ -655,6 +657,18 @@
                 });
             }(list[i]));
         }
+    }
+
+    // Close hover-model floats on a tap or click outside: touch has no mouseleave, so this is the only reliable close path on coarse pointers
+    function setFloatOutsideClose() {
+        if (document.documentElement.getAttribute('data-sl-float-outside-ready') === '1') return;
+        document.documentElement.setAttribute('data-sl-float-outside-ready', '1');
+        document.addEventListener('pointerdown', function (e) {
+            var list = document.querySelectorAll('.sl-float.sl-is-open:not([data-sl-float-event="click"])');
+            for (var i = 0; i < list.length; i++) {
+                if (!list[i].contains(e.target)) clearFloatState(list[i]);
+            }
+        });
     }
 
     function initTabGroup(group) {
@@ -796,6 +810,7 @@
         setTableCheckAll();
         setToggleBlocks();
         setFloating(document);
+        setFloatOutsideClose();
         setEditorInsertHandler();
         setTabs(document);
         setAlerts(document);

@@ -2,7 +2,7 @@
   {% if href %}href="{{{ href }}}"{% endif %}
   title="{{ title }}"
 
-  {% if class or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden or is_author %}
+  {% if class or chip_tone or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden or is_author %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_login_button %} sl-login-link sl-login-link-top{% endif %}
@@ -39,6 +39,7 @@
     {% if is_cat_name %} sl-catname{% endif %}
     {% if is_top_hidden %} sl-thide{% endif %}
     {% if is_author %} sl-author{% endif %}
+    {% if chip_tone %} sl-chip sl-chip-{{ chip_tone }}{% endif %}
   "
   {% endif %}
 
@@ -91,7 +92,7 @@
   {% if is_plus %}<i class="bi bi-plus-lg" aria-hidden="true"></i> {% endif %}
   {% if is_author %}<i class="bi bi-person" aria-hidden="true"></i>{% endif %}
   {% if label_html %}{{{ label_html }}}{% endif %}
-  {% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>&nbsp;{% endif %}
+  {% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% if chip_tone %} {% else %}&nbsp;{% endif %}{% endif %}
   {% if label %}
     {% if is_bold_label %}<b>{{ label }}</b>{% else %}{{ label }}{% endif %}
   {% endif %}

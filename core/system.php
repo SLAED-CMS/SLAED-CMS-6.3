@@ -1666,7 +1666,7 @@ function setHead(array $seo = []): void {
             'register' => _REG,
             'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true],
             'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true],
-            'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN, 'is_login_submit' => true],
+            'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN],
             'lost_link' => ['href' => 'index.php?name=account&amp;op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
             'register_link' => ['href' => 'index.php?name=account&amp;op=newuser', 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
@@ -2924,12 +2924,12 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     }
 
     $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true, 'hx_include' => '#form'.$votid]) : '';
-    $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'is_account_button' => true]) : '';
+    $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'icon_name' => 'card-checklist', 'chip_tone' => 'accent']) : '';
     $votes = $force ? '' : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
     if (!$force && !$modul && $votid != 'voting') {
         $votes = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
     }
-    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comm, 'is_comments' => true]) : '';
+    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comm, 'is_comments' => true, 'chip_tone' => 'info']) : '';
 
     return $tpl->getHtmlPart('voting-widget', [
         'has_form'   => !$rate,
