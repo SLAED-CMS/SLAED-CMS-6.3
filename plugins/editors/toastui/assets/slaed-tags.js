@@ -81,12 +81,37 @@
     api.insertWrap = function(id, open, close, text) {
         addWrap(getEditor(id), open, close, text);
     };
+    function refit(id) {
+        var box = doc.getElementById(String(id) + '_toast');
+        var bar = box && box.querySelector('.toastui-editor-defaultUI-toolbar');
+        if (!bar || !bar.parentElement) return;
+        // Toast UI folds surplus toolbar icons into its "..." dropdown only
+        // when the toolbar has a determinate width: at width:auto it shares
+        // the row with the md tab switcher and classifies the icons against
+        // a bogus width, so they spill past the editor. Pin the toolbar to
+        // the real remaining row width; its ResizeObserver then reclassifies
+        // correctly on every change.
+        var tabs = box.querySelector('.toastui-editor-md-tab-container');
+        var cs = win.getComputedStyle(bar);
+        var pad = (cs.boxSizing === 'border-box') ? 0 : parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+        // -1: the pinned width must differ from the auto width, or the box
+        // does not resize and the observer never re-runs the stale classifier
+        var w = bar.parentElement.clientWidth - (tabs ? tabs.offsetWidth : 0) - pad - 1;
+        if (w > 0) bar.style.width = w + 'px';
+    }
+    function refitAll() {
+        map.forEach(function(ed, id) { refit(id); });
+    }
+    win.addEventListener('load', refitAll);
+    win.addEventListener('resize', refitAll);
     api.register = function(id, ed, opt) {
         map.set(String(id), ed);
         api.options[String(id)] = opt || {};
         addTags(id, ed, opt || {});
         if (api.addEmoji) api.addEmoji(id, ed, opt || {});
         if (api.addUpload) api.addUpload(id, ed, opt || {});
+        if (typeof ed.on === 'function') ed.on('changeMode', function() { refit(id); });
+        if (doc.readyState === 'complete') refit(id);
     };
     win.SlaedToastUi = api;
 })(window, document);

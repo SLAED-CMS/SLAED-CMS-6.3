@@ -1,3 +1,21 @@
+/* The editor mount div (id="*_toast") is a flex item inside .sl-form-row;
+   without an explicit basis it shrink-wraps to the toolbar content instead
+   of filling the field zone like every other .sl-field input */
+div[id$="_toast"] {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+/* On mode switch Toast UI briefly re-renders every icon before its throttled
+   classifier folds the surplus into "..."; clip only the horizontal spill so
+   the flash stays inside the frame (x-only: the "..." dropdown and the
+   link/image popups open downwards and must stay visible) */
+.toastui-editor-toolbar {
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
 .toastui-editor-defaultUI-toolbar button.toastui-editor-toolbar-icons {
     height: 32px;
     margin-left: 1px;
