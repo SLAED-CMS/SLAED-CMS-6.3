@@ -5,6 +5,7 @@
   hx-target="{% if target_id %}#{{ target_id }}{% else %}#rep{{ target }}{% endif %}"
   hx-swap="{% if swap %}{{ swap }}{% else %}innerHTML{% endif %}"
   hx-push-url="false"
+  {% if hx_include %}hx-include="{{ hx_include }}"{% endif %}
 
   title="{{ title }}"
 
