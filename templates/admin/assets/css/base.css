@@ -81,7 +81,18 @@
   --sl-focus-success-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
   --sl-focus-danger: rgba(226, 76, 76, 0.3);
   --sl-focus-success: rgba(52, 185, 75, 0.3);
-  --sl-line-gradient: linear-gradient(90deg, rgba(208, 240, 254, 0) 0%, rgba(208, 240, 254, 0.35) 10%, rgba(138, 183, 216, 0.68) 28%, rgba(79, 122, 166, 0.9) 44%, var(--sl-color-primary-center) 47.5%, var(--sl-color-primary-center) 52.5%, rgba(79, 122, 166, 0.9) 56%, rgba(138, 183, 216, 0.68) 72%, rgba(208, 240, 254, 0.35) 90%, rgba(208, 240, 254, 0) 100%);
+  --sl-line-gradient:
+    linear-gradient(90deg,
+    rgba(208, 240, 254, 0) 0%,
+    rgba(208, 240, 254, 0.35) 10%,
+    rgba(138, 183, 216, 0.68) 28%,
+    rgba(79, 122, 166, 0.9) 44%,
+    var(--sl-color-primary-center) 47.5%,
+    var(--sl-color-primary-center) 52.5%,
+    rgba(79, 122, 166, 0.9) 56%,
+    rgba(138, 183, 216, 0.68) 72%,
+    rgba(208, 240, 254, 0.35) 90%,
+    rgba(208, 240, 254, 0) 100%);
   --sl-shadow-card: 0 1px 1px rgba(35, 52, 70, 0.08);
   --sl-shadow-xs: 0 1px 2px rgba(32, 75, 102, 0.08);
   --sl-bg-footer-stripe:
@@ -112,7 +123,7 @@
   --sl-progress-fill-5-end: #8c2ca9;
 }
 
-/* Reset / base element styles */
+/* Reset: base element styles and box defaults */
 html,
 body,
 div,
@@ -153,11 +164,7 @@ select,
 input,
 textarea,
 button {
-  font:
-    14px/16px Tahoma,
-    Arial,
-    Verdana,
-    sans-serif;
+  font: 14px/16px Tahoma, Arial, Verdana, sans-serif;
   color: var(--sl-color-text);
   outline: none;
 }
@@ -231,7 +238,7 @@ fieldset {
   border-radius: var(--sl-radius-control);
 }
 
-/* Links */
+/* Links: default anchor colors and hover */
 a {
   color: var(--sl-color-primary);
   text-decoration: none;
@@ -256,10 +263,7 @@ select {
   color: var(--sl-color-muted);
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-control);
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 input:where(:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(:disabled)):hover,
@@ -319,7 +323,7 @@ select[multiple] {
   height: 100px;
 }
 
-/* Blockquote */
+/* Blockquote: quoted text framing */
 blockquote {
   background: var(--sl-color-bg);
   border-left: 1px solid var(--sl-color-border-strong);
