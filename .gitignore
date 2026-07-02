@@ -38,6 +38,8 @@
 .claude/
 .prompts/
 .rules/
+/CLAUDE.md
+/AGENTS.md
 .idea/
 docs/plans/
 *.sublime-*
