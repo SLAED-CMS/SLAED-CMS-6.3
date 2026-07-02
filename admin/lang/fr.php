@@ -555,7 +555,6 @@ define('_OGRAPHT','Modèle Open Graph');
 define('_SCHEMA','Activer Schema.org?');
 define('_SCHEMAT','Modèle Schema.org');
 define('_TPLVARS',"<b>[site]</b> - Nom du site<br><b>[loc]</b> - URL de la page<br><b>[title]</b> - Titre SEO (article + catégorie + module + site)<br><b>[desc]</b> - Description<br><b>[img]</b> - Image<br><b>[type]</b> - Type de contenu<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Page d'accueil<br><b>[logo]</b> - Logo<br><b>[time]</b> - Date de publication<br><b>[mtime]</b> - Date de modification<br><b>[ctitle]</b> - Catégorie<br><b>[headline]</b> - Titre de l'article (texte seul, sans suffixes)<br><b>[author]</b> - Auteur de l'article");
-define('_TOKENMISS','Le jeton de sécurité ne correspond pas!');
 define('_ADMINPASSKEEP','Laissez vide pour conserver le mot de passe actuel');
 define('_ADMINSELFDEL','Il est impossible de supprimer le compte administrateur actuel');
 define('_ADMINSELFSUPER','Il est impossible de retirer l accès complet du compte administrateur actuel');

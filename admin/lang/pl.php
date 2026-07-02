@@ -555,7 +555,6 @@ define('_OGRAPHT','Szablon Open Graph');
 define('_SCHEMA','Włączyć Schema.org?');
 define('_SCHEMAT','Szablon Schema.org');
 define('_TPLVARS','<b>[site]</b> - Nazwa strony<br><b>[loc]</b> - URL strony<br><b>[title]</b> - Tytuł SEO (artykuł + kategoria + moduł + strona)<br><b>[desc]</b> - Opis<br><b>[img]</b> - Obraz<br><b>[type]</b> - Typ treści<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Strona główna<br><b>[logo]</b> - Logo<br><b>[time]</b> - Data publikacji<br><b>[mtime]</b> - Data modyfikacji<br><b>[ctitle]</b> - Kategoria<br><b>[headline]</b> - Nagłówek artykułu (tylko tekst, bez sufiksów)<br><b>[author]</b> - Autor artykułu');
-define('_TOKENMISS','Niezgodność tokena bezpieczeństwa!');
 define('_ADMINPASSKEEP','Pozostaw puste, aby zachować bieżące hasło');
 define('_ADMINSELFDEL','Nie można usunąć bieżącego konta administratora');
 define('_ADMINSELFSUPER','Nie można odebrać pełnego dostępu bieżącemu kontu administratora');

@@ -157,6 +157,7 @@ define('_ENDTEXT','Extended Text');
 define('_ENGLISH','English');
 define('_EQUOTE','To quote');
 define('_ERROR','Error');
+define('_TOKENMISS','Security token mismatch!');
 define('_ERROR1','Error, E-Mail address invalid!');
 define('_ERROR2','Please use the standard format');
 define('_ERROR3','Please remove the beginning');

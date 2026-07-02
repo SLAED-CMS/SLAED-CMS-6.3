@@ -157,6 +157,7 @@ define('_ENDTEXT','Texte avancés');
 define('_ENGLISH','Anglais');
 define('_EQUOTE','Citation');
 define('_ERROR','Une erreur');
+define('_TOKENMISS','Le jeton de sécurité ne correspond pas!');
 define('_ERROR1','Une erreur est erroné E-Mail!');
 define('_ERROR2',"S'il vous plaît, utilisez le format standard");
 define('_ERROR3',"S'il vous plaît, n'incluez pas dans le début de l'adresse");

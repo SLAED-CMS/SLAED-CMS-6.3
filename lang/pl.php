@@ -157,6 +157,7 @@ define('_ENDTEXT','Zaawansowany tekst');
 define('_ENGLISH','Angielski');
 define('_EQUOTE','Cytat');
 define('_ERROR','Błąd');
+define('_TOKENMISS','Niezgodność tokena bezpieczeństwa!');
 define('_ERROR1','Błąd, źle podany E-Mail!');
 define('_ERROR2','Proszę używać standardowego formatu');
 define('_ERROR3','Proszę, nie należy podawać na początku adresu');

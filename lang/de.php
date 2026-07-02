@@ -157,6 +157,7 @@ define('_ENDTEXT','Erweiterter Text');
 define('_ENGLISH','Englisch');
 define('_EQUOTE','Zitieren');
 define('_ERROR','Fehler');
+define('_TOKENMISS','Sicherheits-Token stimmt nicht überein!');
 define('_ERROR1','Fehler, falsche E-Mail!');
 define('_ERROR2','Bitte, benutzen Sie ein Standart Format');
 define('_ERROR3','Entfernen Sie bitte den Anfang');
