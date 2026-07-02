@@ -481,6 +481,9 @@ input.sl-but-blue[value="ОК"] {
   margin: 10px;
   padding: 10px;
   max-width: 100%;
+  /* Fieldsets default to min-inline-size: min-content, so one unbreakable
+     token (session base64, long SQL) would stretch the whole page */
+  min-inline-size: 0;
   overflow-x: auto;
   overflow-y: hidden;
   box-sizing: border-box;
@@ -622,12 +625,15 @@ input.sl-but-blue[value="ОК"] {
   border-radius: var(--sl-radius-soft);
   box-shadow: 0 6px 14px var(--sl-shadow-soft);
   background-clip: padding-box;
+  /* Closed panels must leave layout entirely (display, not visibility):
+     hidden ones still count into scrollWidth and give scroll containers a
+     phantom horizontal scrollbar. The second transition keeps the fade
+     where display animation is supported; the first is the fallback. */
+  display: none;
   opacity: 0;
-  visibility: hidden;
   transform: translateX(-50%);
-  transition:
-    opacity 0.18s ease,
-    visibility 0.18s ease;
+  transition: opacity 0.18s ease;
+  transition: opacity 0.18s ease, display 0.18s allow-discrete;
 }
 .sl-tip > .sl-float-panel {
   font-size: 14px;
@@ -678,6 +684,7 @@ input.sl-but-blue[value="ОК"] {
   z-index: 3000;
   margin: 0;
   transform: none;
+  display: block;
   opacity: 1;
   visibility: visible;
 }
@@ -721,8 +728,16 @@ input.sl-but-blue[value="ОК"] {
 }
 .sl-float:hover > .sl-float-panel,
 .sl-float:focus-within > .sl-float-panel {
+  display: block;
   opacity: 1;
-  visibility: visible;
+}
+/* Entry point of the display-driven fade-in (needs allow-discrete above) */
+@starting-style {
+  .sl-float:hover > .sl-float-panel,
+  .sl-float:focus-within > .sl-float-panel,
+  .sl-float.sl-is-open > .sl-float-panel {
+    opacity: 0;
+  }
 }
 
 /* Forms: div-based layout */

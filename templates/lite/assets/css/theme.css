@@ -303,6 +303,8 @@ a .sl-letter:hover {
   text-align: center;
   padding-right: 0;
   padding-left: 0;
+  /* Editor gear + number anchor must stay on one line; the column grows */
+  white-space: nowrap;
 }
 .sl-table-num-link {
   display: inline-block;
@@ -314,12 +316,23 @@ a .sl-letter:hover {
   background-color: var(--sl-color-border-subtle);
   text-decoration: none;
 }
+/* Flexible truncating column: width 100% + max-width 0 lets the cell absorb
+   the free space in an auto-layout table instead of dictating a min-content
+   width that overflows the shell on narrow containers */
+td.sl-cell-ellipsis {
+  width: 100%;
+  max-width: 0;
+}
 .sl-cell-ellipsis > a:last-child {
   display: block;
-  max-width: 450px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Info tip before a truncating block link: float keeps them on one line,
+   the link's own overflow: hidden shrinks it around the float */
+.sl-cell-ellipsis > .sl-tip {
+  float: left;
 }
 .sl-cell-ellipsis .sl-table-num-link:hover {
   background: none;
@@ -969,11 +982,14 @@ select.sl-field {
   text-align: left;
   z-index: 2001;
   box-shadow: var(--sl-shadow-medium);
+  /* Closed panels must leave layout entirely (display, not visibility):
+     hidden ones still count into scrollWidth and give .sl-table-shell a
+     phantom horizontal scrollbar. The second transition keeps the fade
+     where display animation is supported; the first is the fallback. */
+  display: none;
   opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.3s ease,
-    visibility 0.3s ease;
+  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, display 0.3s allow-discrete;
 }
 .sl-menu .sl-float-panel a {
   white-space: nowrap;
@@ -985,9 +1001,12 @@ select.sl-field {
 .sl-menu .sl-float-panel a:hover {
   background-color: var(--sl-color-brand-link);
 }
-.sl-menu .sl-float:hover > .sl-float-panel {
+/* One open model for every float (menus, tips, login form): hover or focus
+   inside shows the panel; JS placeFloat pins it viewport-fixed via .sl-is-open */
+.sl-float:hover > .sl-float-panel,
+.sl-float:focus-within > .sl-float-panel {
+  display: block;
   opacity: 1;
-  visibility: visible;
 }
 
 /* Editor/admin action menu: gear-icon trigger (system-wide) */
@@ -1357,6 +1376,9 @@ ol.sl-sublist-two li:hover:before {
 .sl-debug-section {
   border: 1px solid var(--sl-color-border);
   max-width: 100%;
+  /* Fieldsets default to min-inline-size: min-content, so one unbreakable
+     token (session base64, long SQL) would stretch the whole page */
+  min-inline-size: 0;
   overflow-x: auto;
   overflow-y: hidden;
   box-sizing: border-box;
@@ -1583,11 +1605,11 @@ ol.sl-sublist-two li:hover:before {
   border-radius: 6px;
   box-shadow: var(--sl-shadow-strong);
   background-clip: padding-box;
+  /* display, not visibility: hidden tips must not add scrollable overflow */
+  display: none;
   opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 0.5s ease,
-    visibility 0.5s ease;
+  transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease, display 0.5s allow-discrete;
 }
 .sl-tip dl {
   display: grid;
@@ -1605,11 +1627,6 @@ ol.sl-sublist-two li:hover:before {
 .sl-tip dd {
   margin: 0;
   min-width: 0;
-}
-.sl-tip:hover > .sl-float-panel,
-.sl-tip:focus-within > .sl-float-panel {
-  opacity: 1;
-  visibility: visible;
 }
 
 /* Popover arrow: shared geometry, flips with .sl-float-up; colour set per context */
@@ -1653,9 +1670,18 @@ ol.sl-sublist-two li:hover:before {
   bottom: auto;
   margin: 0;
   transform: none;
+  display: block;
   opacity: 1;
   visibility: visible;
   z-index: 3000;
+}
+/* Entry point of the display-driven fade-in (needs allow-discrete above) */
+@starting-style {
+  .sl-float:hover > .sl-float-panel,
+  .sl-float:focus-within > .sl-float-panel,
+  .sl-float.sl-is-open > .sl-float-panel {
+    opacity: 0;
+  }
 }
 .sl-generates,
 .sl-license {
@@ -2952,34 +2978,6 @@ ol.sl-sublist-two li:hover:before {
   min-width: 0;
 }
 
-/* sl-dropdown */
-.sl-dropdown {
-  position: relative;
-}
-.sl-dropdown-form {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.18s ease, visibility 0.18s ease;
-  min-width: 180px;
-  padding: 15px;
-  margin: 2px 0 0;
-  list-style: none;
-  background-color: var(--sl-color-bg);
-  border: 1px solid var(--sl-color-border-muted);
-  border-radius: 6px;
-  box-shadow: var(--sl-shadow-strong);
-  background-clip: padding-box;
-}
-.sl-dropup .sl-dropdown-form {
-  top: auto;
-  bottom: 100%;
-  margin-bottom: 1px;
-}
-
 /* Visually hide link text while keeping the bi icon child */
 .sl-thd {
   display: inline-block;
@@ -3195,7 +3193,8 @@ ol.sl-sublist-two li:hover:before {
 .sl-login-top--head > li + li {
   margin-left: 0;
 }
-.sl-login-top--head > li > a {
+.sl-login-top--head > li > a,
+.sl-login-top--head > li > .sl-login-toggle {
   float: none;
   display: block;
   padding: var(--sl-login-link-pad-y) var(--sl-login-link-pad-x);
@@ -3211,6 +3210,7 @@ ol.sl-sublist-two li:hover:before {
   border: 0;
   border-radius: var(--sl-login-pill-radius);
   box-shadow: none;
+  cursor: pointer;
 }
 .sl-login-top--head > li > .sl-login-toggle .bi {
   display: inline-block;
@@ -3227,6 +3227,8 @@ ol.sl-sublist-two li:hover:before {
 }
 .sl-login-top--head > li > a:hover,
 .sl-login-top--head > li > a:focus-visible,
+.sl-login-top--head > li > .sl-login-toggle:hover,
+.sl-login-top--head > li > .sl-login-toggle:focus-visible,
 .sl-login-top--head .sl-login-links a:hover,
 .sl-login-top--head .sl-login-links a:focus-visible {
   color: var(--sl-login-link-hover-color);
@@ -3239,9 +3241,11 @@ ol.sl-sublist-two li:hover:before {
   top: 100%;
   left: var(--sl-login-dropdown-form-left);
   z-index: 1000;
+  /* display, not visibility: hidden forms must not add scrollable overflow */
+  display: none;
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.18s ease, visibility 0.18s ease;
+  transition: opacity 0.18s ease;
+  transition: opacity 0.18s ease, display 0.18s allow-discrete;
   width: var(--sl-login-dropdown-form-width);
   max-width: var(--sl-login-dropdown-form-max-width);
   min-width: var(--sl-login-dropdown-min-width);
@@ -3254,22 +3258,12 @@ ol.sl-sublist-two li:hover:before {
   box-shadow: var(--sl-login-dropdown-shadow);
   background-clip: padding-box;
 }
-.sl-login-top--head .sl-login-dropdown-form:after,
-.sl-login-top--head .sl-login-dropdown-form:before {
-  content: "";
-  display: block;
-  position: absolute;
-  top: -9px;
-  left: var(--sl-float-arrow, 50%);
-  margin-left: -8px;
-  border-bottom: 8px solid var(--sl-overlay-15);
-  border-right: 8px solid transparent;
-  border-top: 0 dotted;
-  border-left: 8px solid transparent;
+/* Arrow via the shared .sl-float-panel::after geometry; only colour + outline here */
+.sl-login-top--head .sl-login-dropdown-form {
+  --sl-float-arrow-color: var(--sl-color-bg);
 }
-.sl-login-top--head .sl-login-dropdown-form:after {
-  top: -8px;
-  border-bottom-color: var(--sl-color-bg);
+.sl-login-top--head .sl-login-dropdown-form::after {
+  filter: drop-shadow(0 -1px 0 var(--sl-color-border-muted));
 }
 .sl-login-top--head .sl-login-form {
   list-style: none;
@@ -3926,20 +3920,14 @@ ol.sl-sublist-two li:hover:before {
 .sl-com-top > .sl-carg {
   margin-right: 0;
   min-width: 0;
-}
-.sl-com-top > .sl-carg.sl-dropdown {
   justify-self: start;
-  overflow: hidden;
 }
-.sl-com-top > .sl-carg.sl-dropdown > a {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.sl-com-top > .sl-carg:not(.sl-dropdown) {
-  justify-self: start;
+/* Info tip + name pair: flex eats the inter-fragment whitespace so the gap
+   is exactly the tip margin, and centres the icon against the name */
+.sl-com-top > .sl-carg:first-child,
+.sl-fp-nickname {
+  display: flex;
+  align-items: center;
 }
 .sl-com-edit {
   justify-self: end;
@@ -4174,10 +4162,10 @@ td.sl-fl-col-stat {
 .sl-cargs > .sl-geo-ip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   box-sizing: border-box;
   height: 26px;
-  padding: 0 11px;
+  padding: 0 8px;
   border: 1px solid var(--sl-color-border);
   border-radius: 999px;
   background: var(--sl-color-bg);
@@ -5246,4 +5234,15 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
   font-size: 12px;
   color: var(--sl-color-text-muted);
   max-width: 440px;
+}
+
+/* Left-edge idea/feedback tabs (34px, position: fixed) overlay the content
+   when the 16px .sl-wrp gutter is all the container leaves. Between the
+   mobile hide (768px) and the width where the 1320px container clears the
+   tabs (1320 + 2x40 = 1400px), reserve symmetric 40px gutters. Placed after
+   the 900px/560px media blocks on purpose: same specificity, later wins. */
+@media (min-width: 769px) and (max-width: 1400px) {
+  .sl-wrp {
+    width: min(100% - 80px, var(--sl-container));
+  }
 }
