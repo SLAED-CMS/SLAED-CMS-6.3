@@ -324,9 +324,9 @@ class Parser {
         $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
 
         # *NN smilies (01-18 only; higher numbers have no image and stay as text)
-        if (preg_match('/\*(0[1-9]|1[0-8])/', $src)) {
+        if (preg_match('/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/', $src)) {
             $src = preg_replace_callback(
-                '/\*(0[1-9]|1[0-8])/',
+                '/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/',
                 function(array $m): string {
                     $num = $this->filterEsc($m[1]);
                     $img = img_find('smilies/'.$num.'.gif');
