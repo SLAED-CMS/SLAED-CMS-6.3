@@ -12,19 +12,7 @@
     </div>
     <div class="sl-com-right">
       <div class="sl-com-top">
-        <div class="sl-carg sl-dropdown sl-float" data-sl-float-event="click">
-          <a href="#" data-sl-toggle-control="c-form-{{ id }}"><b>{{ username }}</b></a>
-          <div id="c-form-{{ id }}" class="sl-dropdown-form sl-float-panel">
-            <ul class="sl-list-text">
-              <li>{{{ group }}}</li>
-              <li>{{{ points }}}</li>
-              <li>{{{ regdate }}}</li>
-              <li>{{{ gender }}}</li>
-              <li>{{{ from }}}</li>
-              <li>{{{ warn }}}</li>
-            </ul>
-          </div>
-        </div>
+        <div class="sl-carg">{% if report %}{{{ report }}}{% endif %}<b>{{{ username_html }}}</b></div>
         <div class="sl-carg">{{{ btn_warn }}}{{{ btn_thank }}}<span class="sl-cargs">{{{ date }}} {{{ ip }}}</span></div>
         <div class="sl-meta-actions sl-com-edit">{{{ btn_user }}}{{{ btn_edit }}}{{{ post_count }}}</div>
       </div>

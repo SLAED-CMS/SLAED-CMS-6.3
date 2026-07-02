@@ -472,6 +472,7 @@ define('_UPLOADEROR2','You added the file neither as a reference to it nor as a 
 define('_URANK','Rank');
 define('_URL','Link');
 define('_USER','User');
+define('_USERDEL','User deleted');
 define('_USERNOEXIST',"User Doesn't Exists!");
 define('_USERPASSWORD','User Password for');
 define('_USERS','Users');

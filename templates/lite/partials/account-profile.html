@@ -11,20 +11,10 @@
   </div>
   <div class="sl-com-right">
     <div class="sl-com-top">
-      <div class="sl-carg sl-dropdown sl-float" data-sl-float-event="click">
-        <a href="#" data-sl-toggle-control="i-form"><b>{{ name }}</b></a>
-        <div id="i-form" class="sl-dropdown-form sl-float-panel">
-          <ul class="sl-list-text">
-            <li>{{ cid }}: {{ id }}</li>
-            <li>{{ cip }}: {{{ ip }}}</li>
-          </ul>
-        </div>
-      </div>
+      <div class="sl-carg">{% if report %}{{{ report }}}{% endif %}<b>{{ name }}</b></div>
       <div class="sl-carg">
         {% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}
-        {% if has_privat_button %}<a href="{{{ privat_href }}}" title="{{ privat_title }}" class="sl-but">{{ privat_label }}</a>{% endif %}
-        {% if has_profil_button %}<a href="{{{ profil_href }}}" title="{{ profil_title }}" class="sl-but">{{ profil_label }}</a>{% endif %}
-        {% if has_back_button %}{% include 'fragments/span.html' %}{% endif %}
+        {{{ user_menu_html }}}
       </div>
     </div>
     <div class="sl-com-cont">

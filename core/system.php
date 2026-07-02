@@ -3583,14 +3583,15 @@ function adminblock(): string {
 }
 
 # User info link
-function user_info(string $name): string {
+function user_info(string $name, bool $icon = true): string {
     global $conf, $tpl;
     if (!$name) return '';
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         return $tpl->getHtmlFrag('link', [
             'href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($name),
             'title' => (string)_PERSONALINFO,
-            'is_author' => true,
+            # No person icon next to the info tip: the "i" already marks the user block
+            'is_author' => $icon,
             'label' => $name,
         ]);
     }
@@ -5113,7 +5114,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     }
                 }
             }
-            $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
+            $avname = (!empty($user_name)) ? $user_name : ($com_name ?: (string)_ANONYM);
             $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($com_date, _TIMESTRING), 'is_comment_date' => true]);
             $ip = (is_moder($com_modul)) ? Geoip::getIpHtml($com_host) : '';
             $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_card_id' => true]);
@@ -5122,12 +5123,8 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
             $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
             $rate = (!empty($user_id)) ? getRatingAsync(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
-            $rwarn = (!empty($user_warnings)) ? htmlspecialchars(_UWARNS, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(warnings($user_warnings), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $group = (!empty($user_gname)) ? $tpl->getHtmlFrag('span', ['label' => _GROUP, 'text' => $user_gname]) : '';
-            $point = ($conf['users']['point'] && !empty($user_points)) ? htmlspecialchars(_POINTS, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars((string) $user_points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $regdate = (!empty($user_regdate)) ? htmlspecialchars(_REG, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(format_time($user_regdate), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : _NO_INFO;
-            $gender = (!empty($user_gender)) ? htmlspecialchars(_GENDER, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars(getGenderText($user_gender), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
-            $from = (!empty($user_from)) ? htmlspecialchars(_FROM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '.htmlspecialchars($user_from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '';
+            $utip = getUserTip((string)($user_gname ?? ''), $user_points ?? 0, (string)($user_regdate ?? ''), (int)($user_gender ?? 0), (string)($user_from ?? ''), (string)($user_warnings ?? ''), empty($user_name), (int)$com_uid > 0 && empty($com_name));
+            $uname_html = (!empty($user_name)) ? user_info($user_name, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
             $uitems = [];
             if (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) {
@@ -5198,7 +5195,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],
                 ],
             ]) : '';
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $text, 'sig' => $sig, 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {

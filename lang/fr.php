@@ -472,6 +472,7 @@ define('_UPLOADEROR2',"Vous n'avez pas de fichier ni à titre de référence, ni
 define('_URANK','Titre');
 define('_URL','Référence');
 define('_USER','Utilisateur');
+define('_USERDEL','Utilisateur supprimé');
 define('_USERNOEXIST',"L'utilisateur avec les paramètres n'existe pas!");
 define('_USERPASSWORD',"Le mot de passe pour l'utilisateur");
 define('_USERS','Utilisateurs');

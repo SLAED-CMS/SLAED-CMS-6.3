@@ -436,7 +436,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
 
                 $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id = :uidout ORDER BY g.extra DESC, g.points DESC', ['uidout' => $uidout]);
                 [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor] = $db->getSqlRow($result);
-                $avname = ($user_name) ? $user_name : $com_name.' ('._ANONYM.')';
+                $avname = ($user_name) ? $user_name : ($com_name ?: (string)_ANONYM);
                 $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'label' => format_time($date, _TIMESTRING), 'is_comment_date' => true]);
                 $ip = (is_moder($conf['name'])) ? Geoip::getIpHtml($ip_sender) : '';
                 $avatar = ($user_name) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
@@ -444,12 +444,8 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $trank = ($user_gname) ? _GROUP.': '.$user_gname : _RANK;
                 $rlink = ($user_grank && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
                 $rate = getRatingAsync(0, $user_id, $conf['name'], $user_votes, $user_totalvotes, $com_id, 1);
-                $rwarn = ($user_warnings) ? _UWARNS.': '.warnings($user_warnings) : '';
-                $group = ($user_gname) ? $tpl->getHtmlFrag('span', ['label' => _GROUP, 'text' => $user_gname]) : '';
-                $point = ($conf['users']['point'] && $user_points) ? _POINTS.': '.$user_points : '';
-                $regdate = ($user_regdate) ? _REG.': '.format_time($user_regdate) : _NO_INFO;
-                $gender = ($user_gender) ? _GENDER.': '.getGenderText($user_gender) : '';
-                $from = ($user_from) ? _FROM.': '.$user_from : '';
+                $utip = getUserTip((string)($user_gname ?? ''), $user_points ?? 0, (string)($user_regdate ?? ''), (int)($user_gender ?? 0), (string)($user_from ?? ''), (string)($user_warnings ?? ''), empty($user_name), (int)$uidout > 0);
+                $uname_html = (!empty($user_name)) ? user_info($user_name, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $sig = ($user_sig) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
                 $uitems = [];
                 if ($conf['privat']['profil'] && $user_name) {
@@ -461,7 +457,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $usermenu = getActionMenu($uitems, true);
                 $edit =(($uidin == $uid) || ($uidout == $uid && !$status)) ? getActionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE])]) : '';
                 $rankHtml = ($rank) ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $rank]) : '';
-                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'dropdown_id' => 'm-form-'.$idp, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_edit' => $edit, 'is_private_message' => true]);
+                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_edit' => $edit, 'is_private_message' => true]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -723,16 +719,15 @@ function getFavoriteList(int $obj = 0): string {
             $rows[] = [
                 'id' => (string)$a,
                 'cells' => [
-                    ['is_num' => true, 'href' => '#'.$a, 'title' => (string)$a, 'text' => (string)$a],
                     ['href' => $surl, 'title' => $title, 'text' => cutstr($title, 100)],
-                    ['content_html' => getActionMenu($items)],
+                    ['is_num' => true, 'content_html' => getActionMenu($items).' '.$tpl->getHtmlFrag('link', ['href' => '#'.$a, 'title' => (string)$a, 'label' => (string)$a, 'is_num_anchor' => true])],
                 ],
             ];
             $a++;
         }
         $cont .= $tpl->getHtmlPart('content-list', [
             'rows' => $rows,
-            'table_open' => ['open' => true, 'col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS],
+            'table_open' => ['open' => true, 'col_id' => _ID, 'col_title' => _TITLE],
             'table_close' => [],
         ]);
         $numpages = ceil($fav_num / $newlistnum);

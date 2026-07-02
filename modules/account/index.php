@@ -430,17 +430,26 @@ function view(): void {
                     .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw, 'confirm_text' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?', 'title' => _BANIPSENDER, 'label' => _BANIPSENDER, 'is_delete' => true])
                     .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_del&amp;id='.$uid, 'confirm_text' => _DELETE.' &quot;'.$nick.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
             ]) : '';
+            $report = getTplTitleTip([
+                ['label' => $id[0], 'value' => htmlspecialchars((string)$id[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+                ['label' => $ip[0], 'value' => $ip[1]],
+            ]);
+            $uacts = [];
+            if (($conf['privat']['act'] ?? 0) && !empty($nick)) {
+                $uacts[] = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]), 'title' => _SENDMES, 'label' => _MESSAGE]);
+            }
+            if (is_user() && $uname == $nick) {
+                $uacts[] = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _ACCOUNT, 'label' => _ACCOUNT]);
+            }
+            $uacts[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _BACK, 'label' => _BACK, 'onclick_attr' => 'onclick="window.history.go(-1);return false;"']);
             echo $tpl->getHtmlPart('account-profile', [
                 'has_sign' => !empty($sign),
                 'has_field' => !empty($field),
                 'has_rank_image' => !empty($rankImage),
                 'has_special_group' => !empty($gname),
                 'has_admin_actions' => isAdmin(),
-                'has_privat_button' => ($conf['privat']['act'] ?? 0) && !empty($nick),
-                'has_profil_button' => is_user() && $uname == $nick,
-                'has_back_button' => true,
-                'cid' => $id[0],
-                'id' => $id[1],
+                'report' => $report,
+                'user_menu_html' => getActionMenu($uacts, true),
                 'cname' => $name[0],
                 'name' => $name[1],
                 'curank' => $urank[0],
@@ -466,8 +475,6 @@ function view(): void {
                 'lang' => $lang[1],
                 'cpoints' => $points[0],
                 'points' => $points[1],
-                'cip' => $ip[0],
-                'ip' => $ip[1],
                 'cwarn' => $warn[0],
                 'warn' => $warn[1],
                 'cbirth' => $birth[0],
@@ -486,22 +493,6 @@ function view(): void {
                 'rank_src' => $rankImage,
                 'rank_alt' => $trank,
                 'admin_actions_html' => $acts,
-                'admin_edit_href' => $afile.'.php?op=users_add&amp;id='.$uid,
-                'admin_edit_label' => _FULLEDIT,
-                'admin_block_href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw,
-                'admin_block_title' => _BANIPSENDER,
-                'admin_block_confirm' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?',
-                'admin_delete_href' => $afile.'.php?op=users_del&amp;id='.$uid,
-                'admin_delete_title' => _ONDELETE,
-                'admin_delete_confirm' => _DELETE.' &quot;'.$nick.'&quot;?',
-                'privat_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]),
-                'privat_title' => _SENDMES,
-                'privat_label' => _MESSAGE,
-                'profil_href' => getSeoUrl(['name' => $conf['name']]),
-                'profil_title' => _ACCOUNT,
-                'profil_label' => _ACCOUNT,
-                'back_title' => _BACK,
-                'back_label' => _BACK,
                 'tabs' => $tabs,
                 'info' => _PERSONALINFO,
             ]);

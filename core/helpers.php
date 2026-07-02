@@ -673,6 +673,22 @@ function getTplTitleTip(mixed $data): string {
     return $tpl->getHtmlFrag('popover', ['items' => $items]);
 }
 
+# Build the hover info tip shown before a user name (comments, forum posts, private messages)
+function getUserTip(string $gname, string|int $points, string $regdate, int $gender, string $from, string $warnings, bool $anon = false, bool $deleted = false): string {
+    global $conf;
+    # No bound account: the tip states the status instead of empty profile fields.
+    # $deleted marks orphaned posts whose uid points to a removed user.
+    if ($anon) return getTplTitleTip([['label' => _STATUS, 'value' => (string)($deleted ? _USERDEL : _ANONYM)]]);
+    $items = [];
+    if ($gname !== '') $items[] = ['label' => _GROUP, 'value' => htmlspecialchars($gname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
+    if ($conf['users']['point'] && $points) $items[] = ['label' => _POINTS, 'value' => htmlspecialchars((string)$points, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
+    $items[] = ['label' => _REG, 'value' => ($regdate !== '') ? format_time($regdate) : (string)_NO_INFO];
+    if ($gender) $items[] = ['label' => _GENDER, 'value' => getGenderText($gender)];
+    if ($from !== '') $items[] = ['label' => _FROM, 'value' => htmlspecialchars($from, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];
+    if ($warnings !== '') $items[] = ['label' => _UWARNS, 'value' => warnings($warnings)];
+    return getTplTitleTip($items);
+}
+
 # Build the five star states from a 0-100 fill width, rounded to half stars
 function getRatingStars(int $width): array {
     $half = round($width / 10) / 2;

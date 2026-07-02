@@ -642,8 +642,17 @@
                 item.setAttribute('data-sl-float-ready', '1');
                 item.addEventListener('mouseenter', function () { placeFloat(item); });
                 item.addEventListener('focusin', function () { placeFloat(item); });
-                item.addEventListener('mouseleave', function () { clearFloatState(item); });
-                item.addEventListener('focusout', function () { clearFloatState(item); });
+                // Keep the panel open while focus stays inside (login form,
+                // any panel with fields): mouseleave must not close it mid-typing,
+                // and focus moves between inner fields must not flicker it
+                item.addEventListener('mouseleave', function () {
+                    if (item.contains(document.activeElement)) return;
+                    clearFloatState(item);
+                });
+                item.addEventListener('focusout', function (e) {
+                    if (e.relatedTarget && item.contains(e.relatedTarget)) return;
+                    clearFloatState(item);
+                });
             }(list[i]));
         }
     }

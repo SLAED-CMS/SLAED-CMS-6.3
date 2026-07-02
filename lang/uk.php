@@ -472,6 +472,7 @@ define('_UPLOADEROR2','Ви не додали файл ні у вигляді п
 define('_URANK','Звання');
 define('_URL','Посилання');
 define('_USER','Користувач');
+define('_USERDEL','Користувача видалено');
 define('_USERNOEXIST','Користувача із заданими параметрами не існує!');
 define('_USERPASSWORD','Пароль для користувача');
 define('_USERS','Користувачі');

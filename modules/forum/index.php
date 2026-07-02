@@ -418,7 +418,7 @@ function view(): void {
                         }
                     }
                 }
-                $avname = (!empty($nick)) ? $nick : $val[4].' ('._ANONYM.')';
+                $avname = (!empty($nick)) ? $nick : ($val[4] ?: (string)_ANONYM);
                 $avatar = (!empty($nick)) ? (($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
                 $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'is_comment_date' => true, 'label' => format_time($val[6], _TIMESTRING)]);
                 if (($ismod || $conf['forum']['ledit']) && $val[16]) {
@@ -431,12 +431,8 @@ function view(): void {
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
                 $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$grank), 'alt' => $trank, 'title' => $trank]) : '';
                 $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';
-                $rwarn = (!empty($warn)) ? _UWARNS.': '.warnings($warn) : '';
-                $group = (!empty($gname)) ? $tpl->getHtmlFrag('span', ['label' => _GROUP, 'text' => $gname]) : '';
-                $point = ($conf['users']['point'] && !empty($point)) ? _POINTS.': '.$point : '';
-                $regdate = (!empty($reg)) ? _REG.': '.format_time($reg) : _NO_INFO;
-                $gender = (!empty($gender)) ? _GENDER.': '.getGenderText($gender) : '';
-                $from = (!empty($from)) ? _FROM.': '.$from : '';
+                $utip = getUserTip((string)($gname ?? ''), $point ?? 0, (string)($reg ?? ''), (int)($gender ?? 0), (string)($from ?? ''), (string)($warn ?? ''), empty($nick), (int)$val[3] > 0 && empty($val[4]));
+                $uname_html = (!empty($nick)) ? user_info($nick, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
                 $fields = getTplViewFieldRows(['field' => $val[8], 'mod' => $conf['name']]);
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
                 $uitems = [];
@@ -479,7 +475,7 @@ function view(): void {
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name']), $word);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
                 if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name']), $word);
-                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
+                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);

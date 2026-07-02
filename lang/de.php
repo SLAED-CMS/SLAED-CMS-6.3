@@ -472,6 +472,7 @@ define('_UPLOADEROR2','Sie haben die Datei weder als die Link noch als das Laden
 define('_URANK','Rang');
 define('_URL','Link');
 define('_USER','Benutzer');
+define('_USERDEL','Benutzer gelöscht');
 define('_USERNOEXIST','Benutzer existiert nicht!');
 define('_USERPASSWORD','Benutzer Passwort für');
 define('_USERS','Benutzer');

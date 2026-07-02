@@ -472,6 +472,7 @@ define('_UPLOADEROR2','Nie dodano plik nie w postaci linka do niego ani w postac
 define('_URANK','Tytuł');
 define('_URL','Link');
 define('_USER','Użytkownik');
+define('_USERDEL','Użytkownik usunięty');
 define('_USERNOEXIST','Użytkownika z określonymi parametrami nie istnieje!');
 define('_USERPASSWORD','Hasło dla użytkownika');
 define('_USERS','Użytkownicy');
