@@ -375,6 +375,7 @@ function view(): void {
         setHead([
             'title' => $rows[0][5],
             'ctitle' => $rows[0][18],
+            'cid' => $rows[0][2],
             'desc' => $seodesc,
             'img' => $seoimg,
             'time' => $rows[0][6],

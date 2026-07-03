@@ -407,6 +407,20 @@ function isAdmin(bool $super = false): bool {
     return $cache[0] = $cache[1] = false;
 }
 
+# Return true when the debug panel may be collected: variables[0] disables it, var_view 1 opens it to all visitors, 0 limits it to super-admins
+function checkDebugView(): bool {
+    global $conf;
+    static $view = null;
+    static $busy = false;
+    if ($view !== null) return $view;
+    if ($busy || !isset($GLOBALS['admin'])) return false;
+    $busy = true;
+    $cvar = explode(',', $conf['variables'] ?? '');
+    $view = empty($cvar[0]) && (($conf['var_view'] ?? '') == '1' || isAdmin(true));
+    $busy = false;
+    return $view;
+}
+
 # Format exit and displaying information with an optional page heading
 function setExit(string $msg, string $typ = '', string $title = ''): never {
     global $conf;

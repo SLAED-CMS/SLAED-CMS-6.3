@@ -35,18 +35,18 @@ function setTemplateForum(): string {
 
 # Provide head-time variables for the lite theme layout
 function getThemeHeadVars(): array {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $sitevars;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';
     $fcat = (int)getVar('get', 'cat', 'num', 0);
     $ctitle = '';
-    if (!$fcat && getVar('get', 'op', 'text', '') === 'view' && $conf['name']) {
-        $crumb = getItemCrumb($conf['name'], (int)getVar('get', 'id', 'num', 0));
-        $fcat = $crumb['cid'];
-        $ctitle = $crumb['title'];
+    if (!$fcat) {
+        $fcat = (int)($sitevars['head_cid'] ?? 0);
+        $ctitle = (string)($sitevars['head_item'] ?? '');
     }
-    $cname = ($fcat && !empty($conf['files'])) ? getTplCategoryTrail($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
+    $sep = $conf[$conf['name']]['defis'] ?? ($conf['files']['defis'] ?? $conf['defis']);
+    $cname = ($fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname) : '';
     if ($cname !== '' && $ctitle !== '') {
-        $cname .= ' '.urldecode($conf['files']['defis']).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
+        $cname .= ' '.urldecode($sep).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
     }
     [$count] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
     $random = mt_rand(0, max(0, (int)$count - 1));

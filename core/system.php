@@ -11,6 +11,7 @@ define('FUNC_FILE', true);
 
 # Sentinel baked into cached HTML and replaced with live generation timing right before output
 define('GEN_MARK', "\x02SLGEN\x02");
+define('DBG_MARK', "\x02SLDBG\x02");
 
 # Frozen salt for verifying legacy md5 password hashes; never change it or stored legacy hashes stop matching
 define('PASS_SALT', 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==');
@@ -204,11 +205,11 @@ function checkSchedulerCronValue(string $field, int $value, int $min, int $max):
     return false;
 }
 
-# Returns whether a unix timestamp matches a scheduler cron expression
+# Returns whether a unix timestamp matches an already normalized scheduler cron expression from getSchedulerSchedule
 function checkSchedulerCronMatch(string $schedule, int $time): bool {
-    $schedule = getSchedulerSchedule($schedule);
-    if ($schedule === '') return false;
-    [$min, $hour, $mday, $mon, $wday] = explode(' ', $schedule);
+    $parts = explode(' ', $schedule);
+    if (count($parts) !== 5) return false;
+    [$min, $hour, $mday, $mon, $wday] = $parts;
     $mins = (int)date('i', $time);
     $hourn = (int)date('G', $time);
     $mdayn = (int)date('j', $time);
@@ -279,7 +280,7 @@ function getSchedulerJobs(): array {
 # Returns the runtime state for a scheduler job merged with defaults
 function getSchedulerState(string $name): array {
     $file = LOGS_DIR.'/scheduler/'.$name.'.json';
-    $state = ['running' => 0, 'started_at' => 0, 'last_run' => 0, 'last_success' => 0, 'last_status' => 'idle', 'last_message' => '', 'last_error' => '', 'last_duration' => 0, 'last_trigger' => '', 'fail_count' => 0];
+    $state = ['running' => 0, 'started_at' => 0, 'last_run' => 0, 'last_success' => 0, 'last_status' => 'idle', 'last_message' => '', 'last_error' => '', 'last_duration' => 0, 'last_trigger' => '', 'fail_count' => 0, 'next_run' => 0, 'next_schedule' => '', 'next_last_run' => 0];
     if (!is_file($file) || filesize($file) === 0) return $state;
     $json = file_get_contents($file);
     if ($json === false || $json === '') return $state;
@@ -307,13 +308,21 @@ function checkSchedulerLock(string $name, array $job = [], array $state = []): b
     return (time() - (int)$state['started_at']) < $time;
 }
 
-# Returns whether the scheduler job is due for execution
+# Returns whether the scheduler job is due; the planned time is cached in job state and recomputed only when the schedule or last_run changes
 function checkSchedulerDue(string $name, array $job = [], array $state = []): bool {
     if ($job === []) $job = getSchedulerJob($name);
     if ($state === []) $state = getSchedulerState($name);
     if ((int)($job['active'] ?? 0) !== 1) return false;
     if (checkSchedulerLock($name, $job, $state)) return false;
-    $next = getSchedulerPlannedTime($job, $state);
+    $schedule = getSchedulerSchedule($job);
+    if ($schedule === '') return false;
+    $last = (int)($state['last_run'] ?? 0);
+    if (($state['next_schedule'] ?? '') === $schedule && (int)($state['next_last_run'] ?? 0) === $last) {
+        $next = (int)($state['next_run'] ?? 0);
+    } else {
+        $next = getSchedulerPlannedTime($job, $state);
+        setSchedulerState($name, array_replace($state, ['next_run' => $next, 'next_schedule' => $schedule, 'next_last_run' => $last]));
+    }
     return $next > 0 && $next <= time();
 }
 
@@ -389,11 +398,7 @@ function addSchedulerTrigger(): string {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1 || (int)($conf['scheduler']['pseudo'] ?? 0) !== 1) return '';
     if (checkSchedulerCronAlive()) return '';
-    $job = getSchedulerNextJob();
-    if (!$job) return '';
     $file = LOGS_DIR.'/scheduler/trigger.json';
-    $dir = dirname($file);
-    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return '';
     $last = 0;
     if (is_file($file) && filesize($file) !== 0) {
         $json = file_get_contents($file);
@@ -402,6 +407,10 @@ function addSchedulerTrigger(): string {
     }
     $cool = max(15, (int)($conf['scheduler']['trigger_cooldown'] ?? 15));
     if ($last > 0 && (time() - $last) < $cool) return '';
+    $job = getSchedulerNextJob();
+    if (!$job) return '';
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return '';
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
     return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.rawurlencode(getSiteToken('scheduler'));
@@ -1693,6 +1702,8 @@ function setHead(array $seo = []): void {
         'scripts' => $script,
         'content' => '',
         'head_html' => $login,
+        'head_cid' => (int)($seo['cid'] ?? 0),
+        'head_item' => (string)($seo['title'] ?? ''),
         'foot_html' => '',
         'blocks_left' => '',
         'blocks_right' => '',
@@ -1737,16 +1748,15 @@ function setFoot(): void {
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $vars['content'] = getFlashHtml().((ob_get_level() > 0) ? (string)ob_get_clean() : '');
-        $time = ($conf['db_t'] == '1') ? getTimeLoads() : '';
-        $cvar = explode(',', $conf['variables']);
-        $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
+        $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
+        $debug = checkDebugView() ? getVariables() : '';
         $vars = array_replace($vars, [
             'time_html' => $time,
             'foot_html' => getFootControls(_PAGETOP, _PAGETOP, '', '', '', true, $debug !== ''),
             'debug_html' => $debug,
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
-        echo $tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin');
+        echo getTimedHtml($tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin'));
         unset($adminpage, $adminvars);
         return;
     }
@@ -1754,11 +1764,8 @@ function setFoot(): void {
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
     $docache = checkPageCache();
     $time = ($conf['db_t'] == '1') ? GEN_MARK : '';
-    $cvar = explode(',', $conf['variables']);
-    $debug = (!$cvar[0] && !$docache && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? getVariables() : '';
     $license = !empty($vars['license']) ? (string)$vars['license'] : '';
     getBlocks('f');
-    $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license);
     if ($blocks == '' || $blocks == '0' || $blocks == '1') {
         ob_start(); getBlocks('l'); $left = ob_get_clean();
     } else {
@@ -1785,10 +1792,14 @@ function setFoot(): void {
         'blocks_left' => $left,
         'blocks_right' => $right,
         'blocks_down' => $down,
+    ]);
+    $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
+    $debug = (!$docache && checkDebugView()) ? getVariables() : '';
+    $foot = getFootControls(_PAGETOP, _PAGETOP, $time, $license, '', false, $debug !== '');
+    $vars = array_replace($vars, [
         'foot_html' => $foot,
         'debug_html' => $debug,
     ]);
-    $vars = array_replace($vars, getThemeHookVars('getThemeFootVars'));
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
     unset($sitepage, $sitevars);
@@ -2961,9 +2972,24 @@ function getMemoryLimitBytes(bool $safe = false): int {
     return (int)$value;
 }
 
+# Return one final request metrics snapshot for footer and debug panel formatting
+function getLoadStats(): array {
+    global $db, $sgtime;
+    $qnum = (int)$db->qnum;
+    $sql = (float)$db->sqltime;
+    return [
+        'mem' => memory_get_peak_usage(),
+        'gen' => microtime(true) - $sgtime,
+        'qnum' => $qnum,
+        'sql' => $sql,
+        'avg' => ($qnum > 0) ? ($sql / $qnum) : 0.0,
+    ];
+}
+
 # Returns rendered system debug information
-function getDebugSystemInfo(): string {
-    global $tpl, $db, $sgtime;
+function getDebugSystemInfo(array $stats = []): string {
+    global $tpl;
+    if ($stats === []) $stats = getLoadStats();
     $max = [
         'mem' => getMemoryLimitBytes(),
         'gen' => 2.0,
@@ -2994,11 +3020,11 @@ function getDebugSystemInfo(): string {
             'is_danger' => $state === 'danger',
         ];
     };
-    $memuse = memory_get_usage();
-    $gentime = microtime(true) - $sgtime;
-    $sqltime = (float)$db->sqltime;
-    $qnum = (int)$db->qnum;
-    $avg = ($qnum > 0) ? ($sqltime / $qnum) : 0.0;
+    $memuse = (int)($stats['mem'] ?? memory_get_peak_usage());
+    $gentime = (float)($stats['gen'] ?? 0.0);
+    $sqltime = (float)($stats['sql'] ?? 0.0);
+    $qnum = (int)($stats['qnum'] ?? 0);
+    $avg = (float)($stats['avg'] ?? (($qnum > 0) ? ($sqltime / $qnum) : 0.0));
     $mem = $metric($memuse, $max['mem']);
     $gen = $metric($gentime, $max['gen']);
     $queries = $metric($qnum, $max['qnum']);
@@ -3076,14 +3102,15 @@ function getDebugErrors(): string {
     return $tpl->getHtmlFrag('list', ['is_unordered' => true, 'items_html' => $html]);
 }
 
-# Variable analyzer
+# Variable analyzer; self-guarded so direct calls follow the configured debug visibility
 function getVariables(): string {
     global $db, $conf, $tpl;
+    if (!checkDebugView()) return '';
     $cont = '';
     $cvar = explode(',', $conf['variables']);
     $rows = [];
     if ($cvar[1]) {
-        $rows[] = ['legend' => _SYSTEM_INFO, 'tone' => 'info', 'content' => getDebugSystemInfo()];
+        $rows[] = ['legend' => _SYSTEM_INFO, 'tone' => 'info', 'content' => DBG_MARK];
         if (isAdmin()) {
             $errors = getDebugErrors();
             if ($errors !== '') $rows[] = ['legend' => _ERRLOG, 'tone' => 'danger', 'content' => $errors];
@@ -3222,20 +3249,26 @@ function getTheme(): string {
 
 # Format theme file
 # Determining the load time
-function getTimeLoads(): string {
- global $db, $sgtime;
-    $ttime = sprintf('%.3f', microtime(true) - $sgtime);
-    $qnums = $db->qnum;
-    $sqltime = sprintf('%.3f', $db->sqltime);
+function getTimeLoads(array $stats = []): string {
+    if ($stats === []) $stats = getLoadStats();
+    $ttime = sprintf('%.3f', (float)($stats['gen'] ?? 0.0));
+    $qnums = (int)($stats['qnum'] ?? 0);
+    $sqltime = sprintf('%.3f', (float)($stats['sql'] ?? 0.0));
     $cont = _GENERATION.': '.$ttime.' '._SEC.'. '._AND.' '.$qnums.' '._GENERATION_DB.' '.$sqltime.' '._SEC.'.';
     return $cont;
 }
 
-# Replace the generation marker with live timing for this request, or strip it when generation timing is disabled
+# Replace footer and debug markers with one final request metrics snapshot
 function getTimedHtml(string $html): string {
     global $conf;
-    if (!str_contains($html, GEN_MARK)) return $html;
-    return str_replace(GEN_MARK, ($conf['db_t'] == '1') ? getTimeLoads() : '', $html);
+    $hgen = str_contains($html, GEN_MARK);
+    $hdbg = str_contains($html, DBG_MARK);
+    if (!$hgen && !$hdbg) return $html;
+    $stats = getLoadStats();
+    $maps = [];
+    if ($hgen) $maps[GEN_MARK] = ($conf['db_t'] == '1') ? getTimeLoads($stats) : '';
+    if ($hdbg) $maps[DBG_MARK] = checkDebugView() ? getDebugSystemInfo($stats) : '';
+    return strtr($html, $maps);
 }
 
 # Notify subscribed admins by email on new content or comment submission

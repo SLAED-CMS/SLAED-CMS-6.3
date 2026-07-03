@@ -227,6 +227,7 @@ function view(): void {
 		setHead([
 			'title' => $seotitle,
 			'ctitle' => $seoctitle,
+			'cid' => $cid,
 			'desc' => $seodesc,
 			'img' => $seoimg,
 			'time' => $seotime,

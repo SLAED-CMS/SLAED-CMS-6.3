@@ -781,17 +781,6 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
     return '';
 }
 
-# Resolve the category id and title of a module item for header breadcrumbs, guarding tables that lack these columns
-function getItemCrumb(string $mod, int $id): array {
-    global $db;
-    $mod = preg_replace('#[^a-z0-9_]#', '', strtolower($mod));
-    if ($mod === '' || $id < 1) return ['cid' => 0, 'title' => ''];
-    [$cols] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tbl AND COLUMN_NAME IN (:cid, :title)', ['tbl' => PREFIX_DB.'_'.$mod, 'cid' => 'cid', 'title' => 'title']));
-    if ((int)$cols < 2) return ['cid' => 0, 'title' => ''];
-    [$cid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT cid, title FROM '.PREFIX_DB.'_'.$mod.' WHERE id = :id', ['id' => $id]));
-    return ['cid' => (int)$cid, 'title' => (string)$title];
-}
-
 # Render the shared category breadcrumb trail
 function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', string $home = ''): string {
     global $db, $conf, $tpl;

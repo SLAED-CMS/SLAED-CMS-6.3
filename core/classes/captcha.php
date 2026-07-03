@@ -6,33 +6,36 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Provider contract: every captcha backend renders a widget, verifies a solution, and serves a challenge
 interface CaptchaProvider {
+    # Render the widget markup for the given action
     public function html(string $act): string;
+
+    # Verify a submitted solution; true means the request must be blocked
     public function check(string $act): bool;
+
+    # Emit a challenge response for the widget
     public function challenge(string $act): void;
 }
 
-# Disabled provider: renders nothing and never blocks
 class NullCaptchaProvider implements CaptchaProvider {
+    # Disabled captcha renders nothing
     public function html(string $act): string { return ''; }
+
+    # Disabled captcha never blocks a request
     public function check(string $act): bool { return false; }
+
+    # Report the disabled state as JSON
     public function challenge(string $act): void {
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode(['error' => 'disabled'], JSON_UNESCAPED_SLASHES);
     }
 }
 
-# Self-hosted ALTCHA provider: proof-of-work challenge with HMAC signature, verified without external services
-# Targets ALTCHA widget v3.x (verified against 3.0.11) via the external build: the proof-of-work runs in a self-hosted
-# same-origin Worker (plugins/altcha/altcha-sha.js), so the captcha works under a strict CSP (default-src 'self') without blob:
-# The widget reads the `challenge` attribute (was `challengeurl` in v2), hides footer/logo via `configuration`, and is
-# localized through plugins/altcha/altcha-init.js (the `strings` attribute is ignored in v3)
 class AltchaCaptchaProvider implements CaptchaProvider {
     private const ALGO = 'SHA-256';
     private const FIELD = 'altcha';
 
-    # Render the widget bundle for the given action
+    # Render the ALTCHA v3 widget (3.0.11): external build with the self-hosted same-origin worker plugins/altcha/altcha-sha.js, so a strict CSP works without blob:
     public function html(string $act): string {
         global $tpl, $conf, $locale;
         $url = 'index.php?go=captcha&act='.rawurlencode($act);
@@ -50,7 +53,7 @@ class AltchaCaptchaProvider implements CaptchaProvider {
         ]);
     }
 
-    # Verify the posted ALTCHA payload; return true when the request must be blocked
+    # Verify the posted ALTCHA payload and return true when the request must be blocked; a signed solution is accepted exactly once (replay protection) until it expires anyway
     public function check(string $act): bool {
         $payload = getVar('post', self::FIELD, 'raw', '');
         if (!is_string($payload) || $payload === '') return true;
@@ -72,7 +75,6 @@ class AltchaCaptchaProvider implements CaptchaProvider {
         if (!hash_equals(hash_hmac('sha256', $challenge, $secret), $signature)) return true;
         $expires = $this->saltExpires($salt);
         if ($expires > 0 && time() > $expires) return true;
-        # Replay protection: a signed solution is accepted exactly once until it expires anyway
         $id = hash('sha256', $signature);
         if (CaptchaStore::isUsed($id)) return true;
         CaptchaStore::markUsed($id, $expires > 0 ? $expires : time() + Captcha::ttl());
@@ -111,7 +113,7 @@ class AltchaCaptchaProvider implements CaptchaProvider {
         return isset($params['expires']) ? (int)$params['expires'] : 0;
     }
 
-    # Build the localized widget strings as a JSON attribute value
+    # Build the localized widget strings as a JSON attribute value; the v3 widget ignores the strings attribute, so plugins/altcha/altcha-init.js applies them at runtime
     private function strings(): string {
         $map = [
             'label'                => defined('_CAPTCHA_LABEL') ? _CAPTCHA_LABEL : 'I am human',
@@ -127,7 +129,6 @@ class AltchaCaptchaProvider implements CaptchaProvider {
     }
 }
 
-# File-based store: secret, one-time replay markers and rolling counters under storage/captcha
 class CaptchaStore {
     # Ensure the storage directory exists and is protected from direct web access
     public static function ensureDir(): bool {
@@ -135,7 +136,9 @@ class CaptchaStore {
         $guard = CAPTCHA_DIR.'/.htaccess';
         if (!is_file($guard)) self::write($guard, 'deny from all');
         $index = CAPTCHA_DIR.'/index.html';
-        if (!is_file($index)) self::write($index, '<!DOCTYPE html><html><head><meta charset="utf-8"><title>SLAED CMS</title><meta http-equiv="refresh" content="0; url=https://slaed.net"></head><body></body></html>');
+        $page = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>SLAED CMS</title>'
+            .'<meta http-equiv="refresh" content="0; url=https://slaed.net"></head><body></body></html>';
+        if (!is_file($index)) self::write($index, $page);
         return is_writable(CAPTCHA_DIR);
     }
 
@@ -254,7 +257,6 @@ class CaptchaStore {
     }
 }
 
-# Captcha facade: resolves configuration, applies cross-cutting protection and delegates to the active provider
 class Captcha {
     private static ?CaptchaProvider $provider = null;
 
@@ -285,7 +287,7 @@ class Captcha {
         return self::$provider = new NullCaptchaProvider();
     }
 
-    # Decide whether captcha is required for the given action right now
+    # Decide whether captcha is required for the given action right now; content forms only challenge guests, matching long-standing behavior
     public static function isActive(string $act): bool {
         $cfg = self::conf();
         if (empty($cfg['active']) || (string)($cfg['provider'] ?? 'altcha') === 'null') return false;
@@ -296,7 +298,6 @@ class Captcha {
             if ($mode === 'never') return false;
             return self::loginFailures($flag === 'login_admin' ? 'admin' : 'user') >= self::failThreshold();
         }
-        # Content forms only challenge guests, matching long-standing behavior
         if (function_exists('is_user') && is_user()) return false;
         return !empty($cfg[$flag]);
     }
@@ -323,9 +324,7 @@ class Captcha {
         self::provider()->challenge($act);
     }
 
-    # --- Login failure tracking feeds the "after failed attempts" mode ---
-
-    # Record a failed login for the given scope (user|admin)
+    # Record a failed login for the given scope (user|admin); the streak feeds the "after failed attempts" mode
     public static function registerLoginFailure(string $scope): void {
         self::increment('lf:'.$scope.':'.getIp(), self::loginWindow());
     }
@@ -340,12 +339,12 @@ class Captcha {
         return CaptchaStore::counter('lf:'.$scope.':'.getIp());
     }
 
-    # --- Cross-cutting helpers ---
-
+    # Report whether the hidden honeypot field was filled by a bot
     private static function honeypotTripped(): bool {
         return getVar('post', self::honeypotField(), 'text', '') !== '';
     }
 
+    # Validate the signed form timing token against the minimum and maximum submit age
     private static function timeTokenValid(): bool {
         $token = getVar('post', self::timeField(), 'raw', '');
         if (!is_string($token) || !str_contains($token, '.')) return false;
@@ -357,32 +356,36 @@ class Captcha {
         return $age >= self::minSeconds() && $age <= self::ttl();
     }
 
+    # Report whether the current IP exceeded the failed-solution rate limit
     private static function rateLimited(): bool {
         return CaptchaStore::counter('rl:'.getIp()) >= self::rateMax();
     }
 
+    # Bump a rolling counter for the given key within a time window
     private static function increment(string $key, int $window): void {
         CaptchaStore::increment($key, $window);
     }
 
-    # --- Token builders exposed to the provider ---
-
+    # Honeypot input name shared between renderer and validator
     public static function honeypotField(): string { return 'sl_url'; }
+
+    # Timing token input name shared between renderer and validator
     public static function timeField(): string { return 'sl_ct'; }
 
+    # Issue a signed timing token binding the form render time
     public static function timeToken(): string {
         $issued = time();
         $secret = CaptchaStore::secret();
         return $issued.'.'.hash_hmac('sha256', (string)$issued, $secret);
     }
 
-    # --- Tunables derived from configuration ---
-
+    # Challenge lifetime in seconds from configuration
     public static function ttl(): int {
         $ttl = (int)(self::conf()['ttl'] ?? 600);
         return $ttl > 0 ? $ttl : 600;
     }
 
+    # Proof-of-work upper bound derived from the difficulty setting
     public static function maxNumber(): int {
         return match ((string)(self::conf()['difficulty'] ?? 'normal')) {
             'low'  => 30000,
@@ -391,9 +394,16 @@ class Captcha {
         };
     }
 
+    # Minimum seconds between form render and submit
     private static function minSeconds(): int { return 2; }
+
+    # Failed logins before captcha activates in auto mode
     private static function failThreshold(): int { return 3; }
+
+    # Seconds a login failure counts toward the threshold
     private static function loginWindow(): int { return 900; }
+
+    # Max failed solutions per IP within the challenge lifetime
     private static function rateMax(): int { return 30; }
 
     # Storage diagnostics for the admin panel

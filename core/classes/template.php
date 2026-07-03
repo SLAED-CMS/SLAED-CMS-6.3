@@ -9,21 +9,27 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 class Template {
     protected string $theme = 'default';
     protected string $base = '';
+    protected string $real = '';
     protected string $cache = '';
+    protected array $fresh = [];
+    protected array $rpath = [];
     protected array $blocks = [];
     protected array $slots = [];
     protected array $stack = [];
     protected array $assets = ['css' => [], 'js' => []];
     protected static array $templateErrors = [];
     protected static ?bool $devMode = null;
+    protected static ?int $mtime = null;
 
-    # Set base template and cache paths for the selected theme
+    # Set base template and cache paths for the selected theme; resolve the real base path once per instance
     public function __construct(string $theme = 'default') {
         $this->theme = $this->checkName($theme) ? $theme : 'default';
         $root = defined('BASE_DIR') ? BASE_DIR : dirname(__DIR__, 2);
         $root = str_replace('\\', '/', rtrim($root, '\\/'));
         $this->base = $root.'/templates/'.$this->theme;
         $this->cache = $root.'/storage/cache/templates/'.$this->theme;
+        $rbase = realpath($this->base);
+        $this->real = ($rbase !== false) ? rtrim(str_replace('\\', '/', $rbase), '/') : '';
     }
 
     # Return compiled page markup after validation and cache resolution
@@ -77,10 +83,7 @@ class Template {
         };
     }
 
-    /**
-     * Render a page with explicit parent layout or fallback auto-layout
-     */
-    # Render a page with optional parent layout resolution
+    # Render a page with explicit parent layout or fallback auto-layout resolution
     protected function getPageHtml(string $name, array $data = [], string $layout = 'app'): string {
         $html = '';
         $this->blocks = [];
@@ -118,10 +121,10 @@ class Template {
         }
     }
 
-    # Compile the template when needed and return rendered HTML
+    # Compile the template when needed and return rendered HTML; file validation and freshness run once per file per request
     protected function getHtml(string $type, string $name, array $data = []): string {
-        $data = $this->setData($data);
         $file = $this->getFile($type, $name);
+        if ($file !== '' && isset($this->fresh[$file])) return $this->getView($this->fresh[$file], $data, false, $type, $name);
         if (!$file || !$this->checkFile($file)) {
             $this->reportTemplateError($type, $name, 'Template file not found');
             return $this->getTemplateDebugComment($type, $name, 'template file not found');
@@ -130,18 +133,17 @@ class Template {
         if ($cache === '') return '';
         $mdir = dirname($cache);
         if (!is_dir($mdir) && !mkdir($mdir, 0777, true) && !is_dir($mdir)) return '';
-        if (!is_file($cache) || filemtime($file) > filemtime($cache) || filemtime(__FILE__) > filemtime($cache)) {
+        if (!is_file($cache) || filemtime($file) > filemtime($cache) || (self::$mtime ??= (filemtime(__FILE__) ?: 0)) > filemtime($cache)) {
             $code = $this->getCode($type, $name);
             if ($code === '') return '';
             $code = $this->filterCode($code);
             if (file_put_contents($cache, $code, LOCK_EX) === false) return '';
         }
+        $this->fresh[$file] = $cache;
         return $this->getView($cache, $data, false, $type, $name);
     }
 
-    /**
-     * Render compiled PHP from a cache file or inline source through one shared path
-     */
+    # Render compiled PHP from a cache file or inline source through one shared path
     protected function getView(string $file, array $data = [], bool $iscode = false, string $sourceType = '', string $sourceName = ''): string {
         $data = $this->setData($data);
         $path = $file;
@@ -151,8 +153,8 @@ class Template {
             $path = $this->cache.'/inline-'.sha1($this->theme.'|'.$file).'.php';
             if (!is_file($path) && file_put_contents($path, $file, LOCK_EX) === false) return '';
         }
-        if (!is_file($path)) return '';
-        $real = realpath($path);
+        if (!isset($this->rpath[$path])) $this->rpath[$path] = is_file($path) ? realpath($path) : false;
+        $real = $this->rpath[$path];
         if ($real === false) return '';
         if (!$iscode && in_array($real, $this->stack, true)) return '';
         $lev = ob_get_level();
@@ -194,10 +196,7 @@ class Template {
         return $this->getHtml($type, $name, $data);
     }
 
-    /**
-     * Extract one valid top-level parent layout declaration from raw page code
-     */
-    # Extract the parent layout path from raw template code
+    # Extract one valid top-level parent layout declaration from raw page code
     protected function getParent(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return '';
         if (preg_match_all('/\{%\s*extends\s+\'([^\']+)\'\s*%\}/', $code, $all) !== 1) return '';
@@ -206,10 +205,7 @@ class Template {
         return $this->checkIncl($path) && str_starts_with($path, 'layouts/') ? $path : '';
     }
 
-    /**
-     * Collect flat child blocks and render them before parent layout execution
-     */
-    # Collect rendered child block content for a parent layout render
+    # Collect flat child blocks and render them before the parent layout executes
     protected function getBlocks(string $code, array $data = []): array {
         $out = [];
         if ($code === '' || !str_contains($code, '{%')) return $out;
@@ -458,7 +454,6 @@ class Template {
                 }
                 if (!$this->checkIncl($path)) return $data[0];
                 $prefix = '<?php $this->addAssetPath(\''.$path.'\'); ?>';
-                
                 if (!empty($data[2])) {
                     $name = '$'.$data[2].' ?? null';
                     $props = 'is_array('.$name.') ? '.$name.' : []';
@@ -484,7 +479,6 @@ class Template {
                 if (!$this->checkIncl($path) || !str_starts_with($path, 'partials/')) return $data[0];
                 if (str_contains($body, '{% component') || str_contains($body, '{% endcomponent')) return $data[0];
                 $prefix = '<?php $this->addAssetPath(\''.$path.'\'); ?>';
-                
                 $props = '[]';
                 if (!empty($data[2])) {
                     $name = '$'.$data[2].' ?? null';
@@ -641,9 +635,7 @@ class Template {
         return $out;
     }
 
-    /**
-     * Build a cleaned include scope from current runtime variables
-     */
+    # Build a cleaned include scope from current runtime variables
     protected function getScope(array $data = []): array {
         unset($data['this'], $data['GLOBALS'], $data['scope'], $data['res']);
         unset($data['err'], $data['file'], $data['path'], $data['real']);
@@ -685,16 +677,13 @@ class Template {
         return in_array($type, ['pages', 'partials', 'fragments', 'layouts'], true);
     }
 
-    # Verify that the target file exists inside the theme base path
+    # Verify that the target file exists inside the theme base path resolved once in the constructor
     protected function checkFile(string $file): bool {
-        if ($file === '' || is_link($file) || !file_exists($file) || !is_file($file)) return false;
+        if ($this->real === '' || $file === '' || is_link($file) || !is_file($file)) return false;
         $path = realpath($file);
         if ($path === false || is_link($path)) return false;
         $path = str_replace('\\', '/', $path);
-        $base = realpath($this->base);
-        if ($base === false) return false;
-        $base = rtrim(str_replace('\\', '/', $base), '/');
-        return str_starts_with($path, $base.'/');
+        return str_starts_with($path, $this->real.'/');
     }
 
     # Validate static include paths inside the current theme

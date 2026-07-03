@@ -103,8 +103,7 @@ class Database {
         $etime = microtime(true) - $stime;
         $ttime = sprintf('%.5f', $etime);
         $this->sqltime += $etime;
-        $cvar = explode(',', $conf['variables']);
-        $debug = !empty($cvar[8]) && $tpl instanceof Template;
+        $debug = $tpl instanceof Template && function_exists('checkDebugView') && checkDebugView() && !empty(explode(',', $conf['variables'])[8]);
         $log = !$this->qresult && $conf['security']['error_log'] && function_exists('addSqlLog');
         $sql = ($debug || $log) ? $this->filterSqlQuery($query, $params) : '';
         if ($debug) {

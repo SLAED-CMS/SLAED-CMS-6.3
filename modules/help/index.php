@@ -212,8 +212,8 @@ function view(): void {
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE (s.id = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE id = :id', ['id' => $id]);
-        [$seotitle, $seohometext, $seotime, $seoctitle, $seoname] = $db->getSqlRow($db->getSqlQuery(
-            'SELECT s.title, s.body, s.time, c.title, u.name FROM '.PREFIX_DB.'_help AS s '.
+        [$seocid, $seotitle, $seohometext, $seotime, $seoctitle, $seoname] = $db->getSqlRow($db->getSqlQuery(
+            'SELECT s.cid, s.title, s.body, s.time, c.title, u.name FROM '.PREFIX_DB.'_help AS s '.
             'LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.
             'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) '.
             'WHERE s.id = :id AND s.uid = :uid '.$cwhere, ['id' => $id, 'uid' => $uid]
@@ -225,6 +225,7 @@ function view(): void {
         setHead([
             'title'  => $seotitle,
             'ctitle' => $seoctitle,
+            'cid' => $seocid,
             'desc'   => $seodesc,
             'img'    => $seoimg,
             'time'   => $seotime,

@@ -266,6 +266,7 @@ function view(): void {
         setHead([
             'title'  => $title,
             'ctitle' => $ctitle,
+            'cid' => $cid,
             'desc'   => $seodesc,
             'img'    => $seoimg ? $conf['homeurl'].'/'.$seoimg : '',
             'time'   => $time,
