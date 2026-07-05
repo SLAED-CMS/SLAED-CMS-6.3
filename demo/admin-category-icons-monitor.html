@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Admin Category Icons Monitor Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+.sl-demo-space {
+  display: grid;
+  gap: var(--sl-space-lg);
+}
+
+.sl-demo-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.sl-demo-metric {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--sl-space-md);
+  align-items: center;
+  min-height: 70px;
+  padding: 10px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: linear-gradient(180deg, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-demo-metric img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.sl-demo-metric span,
+.sl-demo-metric strong {
+  display: block;
+  min-width: 0;
+}
+
+.sl-demo-metric span {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-demo-metric strong {
+  margin-top: var(--sl-space-xs);
+  color: var(--sl-color-primary-hover);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sl-demo-panel {
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-card);
+  overflow: hidden;
+}
+
+.sl-demo-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-lg);
+  padding: 10px 12px;
+  background: linear-gradient(180deg, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-demo-panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  color: var(--sl-color-primary-hover);
+  font-weight: bold;
+}
+
+.sl-demo-panel-title img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.sl-demo-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: var(--sl-space-lg);
+}
+
+.sl-demo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sl-demo-table th,
+.sl-demo-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--sl-color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.sl-demo-table th {
+  color: var(--sl-color-muted);
+  background: var(--sl-color-bg-soft);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.sl-demo-table tr:hover td {
+  background: var(--sl-hover-bg-soft);
+}
+
+.sl-demo-cell-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  min-width: 0;
+}
+
+.sl-demo-cell-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.sl-demo-state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-xs);
+  color: var(--sl-color-success-strong);
+  font-weight: bold;
+}
+
+.sl-demo-state::before {
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  border-radius: 50%;
+  content: "";
+}
+
+.sl-demo-state-warn {
+  color: var(--sl-color-warning-strong);
+}
+
+.sl-demo-state-danger {
+  color: var(--sl-color-danger-strong);
+}
+
+.sl-demo-feed {
+  display: grid;
+  gap: var(--sl-space-xs);
+  padding: var(--sl-space-md);
+}
+
+.sl-demo-feed-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: var(--sl-space-md);
+  align-items: start;
+  padding: var(--sl-space-md);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-demo-feed-row img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.sl-demo-feed-row strong,
+.sl-demo-feed-row span {
+  display: block;
+}
+
+.sl-demo-feed-row span {
+  margin-top: var(--sl-space-xs);
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .sl-demo-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-demo-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-demo-space .sl-module-head-body {
+    grid-template-columns: 1fr;
+    gap: var(--sl-space-md);
+  }
+
+  .sl-demo-space .sl-module-head-subtitle {
+    justify-content: flex-start;
+  }
+
+  .sl-demo-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand">
+        <h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1>
+      </div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-activity"></i><b>Мониторинг</b></a></li>
+              <li><a href="#"><i class="bi bi-tags"></i><b>Категории</b></a></li>
+              <li><a href="#"><i class="bi bi-shield-check"></i><b>Статус</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-admin-main">
+      <aside class="sl-admin-sidebar">
+        <div class="sl-block-sidebar">
+          <h3 class="sl-is-open"><b><i class="bi bi-eye"></i> Наблюдение</b></h3>
+          <div class="sl-block-sidebar-content">
+            <div class="sl-block-sidebar-count-list">
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-check-circle"></i> Активные</a></span><span class="sl-block-sidebar-count-value"><span>128</span></span></div>
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-exclamation-triangle"></i> Без иконки</a></span><span class="sl-block-sidebar-count-value"><span class="sl-text-danger">6</span></span></div>
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-filetype-svg"></i> SVG</a></span><span class="sl-block-sidebar-count-value"><span>98%</span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sl-block-sidebar">
+          <h3 class="sl-is-open"><b><i class="bi bi-lightning"></i> Действия</b></h3>
+          <div class="sl-block-sidebar-content">
+            <div class="sl-admin-block-links">
+              <div class="sl-admin-block-link"><a href="#"><i class="bi bi-magic"></i> Автоподбор</a></div>
+              <div class="sl-admin-block-link"><a href="#"><i class="bi bi-arrow-repeat"></i> Синхронизация</a></div>
+              <div class="sl-admin-block-link"><a href="#"><i class="bi bi-download"></i> Экспорт списка</a></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <main class="sl-admin-content">
+        <div class="sl-admin-content-inner sl-demo-space">
+          <div class="sl-module-head">
+            <span class="sl-module-head-icon"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></span>
+            <div class="sl-module-head-body">
+              <h2 class="sl-module-head-title">Состояние иконок</h2>
+              <div class="sl-module-head-subtitle"><a class="sl-but-blue" href="#"><i class="bi bi-arrow-repeat"></i>&nbsp;Обновить</a></div>
+            </div>
+          </div>
+          <div class="sl-alert sl-alert-accent">
+            <div class="sl-alert-body">
+              <div class="sl-alert-title">Вариант для рабочей панели</div>
+              <div class="sl-alert-text">SVG-иконки используются не только как украшение, но и как быстрые визуальные маркеры состояния категорий.</div>
+            </div>
+          </div>
+          <section class="sl-demo-metrics">
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""><span>Категорий всего</span><strong>128</strong></div>
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""><span>Проверены</span><strong>122</strong></div>
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""><span>Ожидают выбора</span><strong>6</strong></div>
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f527.svg" alt=""><span>Требуют правки</span><strong>2</strong></div>
+          </section>
+          <div class="sl-demo-split">
+            <section class="sl-demo-panel">
+              <div class="sl-demo-panel-head">
+                <div class="sl-demo-panel-title"><img src="../templates/admin/images/icons/emoji_u1f4da.svg" alt="">Последние категории</div>
+                <a class="sl-but-back" href="#"><i class="bi bi-tags"></i>&nbsp;Все категории</a>
+              </div>
+              <table class="sl-demo-table">
+                <thead>
+                  <tr><th>Категория</th><th>Модуль</th><th>Файл</th><th>Статус</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><span class="sl-demo-cell-icon"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt="">Новости</span></td><td>news</td><td>emoji_u1f4f0.svg</td><td><span class="sl-demo-state">готово</span></td></tr>
+                  <tr><td><span class="sl-demo-cell-icon"><img src="../templates/admin/images/icons/emoji_u1f4bb.svg" alt="">Софт</span></td><td>files</td><td>emoji_u1f4bb.svg</td><td><span class="sl-demo-state">готово</span></td></tr>
+                  <tr><td><span class="sl-demo-cell-icon"><img src="../templates/admin/images/icons/emoji_u1f4b0.svg" alt="">Магазин</span></td><td>shop</td><td>emoji_u1f4b0.svg</td><td><span class="sl-demo-state">готово</span></td></tr>
+                  <tr><td><span class="sl-demo-cell-icon"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt="">Архив</span></td><td>pages</td><td>не выбран</td><td><span class="sl-demo-state sl-demo-state-warn">подобрать</span></td></tr>
+                  <tr><td><span class="sl-demo-cell-icon"><img src="../templates/admin/images/icons/emoji_u1f527.svg" alt="">Сервис</span></td><td>help</td><td>старый PNG</td><td><span class="sl-demo-state sl-demo-state-danger">заменить</span></td></tr>
+                </tbody>
+              </table>
+            </section>
+            <aside class="sl-demo-panel">
+              <div class="sl-demo-panel-head">
+                <div class="sl-demo-panel-title"><img src="../templates/admin/images/icons/emoji_u1f4a1.svg" alt="">Подсказки</div>
+              </div>
+              <div class="sl-demo-feed">
+                <div class="sl-demo-feed-row"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""><span><strong>Поиск дублей</strong><span>одинаковые SVG можно показать до сохранения категории</span></span></div>
+                <div class="sl-demo-feed-row"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""><span><strong>Безопасный список</strong><span>разрешать только файлы из папки темы</span></span></div>
+                <div class="sl-demo-feed-row"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""><span><strong>Миграция</strong><span>старые PNG можно заменить постепенно через панель состояния</span></span></div>
+                <div class="sl-demo-feed-row"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""><span><strong>Современный вид</strong><span>SVG хорошо смотрится и в маленьких строках, и в крупных превью</span></span></div>
+              </div>
+            </aside>
+          </div>
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body">
+              <div class="sl-alert-title">Идея для внедрения</div>
+              <div class="sl-alert-text">Такой экран можно использовать как переходный монитор: какие категории уже используют SVG, где остался PNG и где файл отсутствует.</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Demo category icon monitor.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+</body>
+</html>

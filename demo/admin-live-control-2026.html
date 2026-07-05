@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="ru" data-sl-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Live Control 2026 Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+:root {
+  --sl-live-page: #e8f6fb;
+  --sl-live-shell: #f8fcfe;
+  --sl-live-surface: #ffffff;
+  --sl-live-plate: #f2f8fb;
+  --sl-live-plate-strong: #e5f1f7;
+  --sl-live-border: #d4e5ee;
+  --sl-live-border-strong: #a9c8da;
+  --sl-live-text: #173044;
+  --sl-live-heading: #031a2e;
+  --sl-live-muted: #5d7186;
+  --sl-live-blue: #0587bf;
+  --sl-live-blue-strong: #00679b;
+  --sl-live-green: #22a743;
+  --sl-live-orange: #de7900;
+  --sl-live-red: #d93535;
+  --sl-live-violet: #7b55bd;
+  --sl-live-cyan: #2bb9df;
+  --sl-live-shadow: 0 10px 28px rgba(20, 72, 105, 0.14);
+  --sl-live-soft-shadow: 0 1px 3px rgba(20, 72, 105, 0.12);
+}
+
+html[data-sl-theme="night"] {
+  --sl-live-page: #0c1117;
+  --sl-live-shell: #111923;
+  --sl-live-surface: #162130;
+  --sl-live-plate: #101820;
+  --sl-live-plate-strong: #1f2d3b;
+  --sl-live-border: #2b4052;
+  --sl-live-border-strong: #4d6880;
+  --sl-live-text: #d8e8f2;
+  --sl-live-heading: #f6fbff;
+  --sl-live-muted: #8ea5b8;
+  --sl-live-blue: #36b6ed;
+  --sl-live-blue-strong: #1a98d6;
+  --sl-live-green: #68d17a;
+  --sl-live-orange: #ffb24a;
+  --sl-live-red: #ff7272;
+  --sl-live-violet: #bb9ae8;
+  --sl-live-cyan: #66d7ef;
+  --sl-live-shadow: 0 14px 32px rgba(0, 0, 0, 0.36);
+  --sl-live-soft-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
+}
+
+html[data-sl-theme="night"],
+html[data-sl-theme="night"] body {
+  background: var(--sl-live-page);
+  color: var(--sl-live-text);
+}
+
+html[data-sl-theme="night"] .sl-wrapper,
+html[data-sl-theme="night"] .sl-wrapmid,
+html[data-sl-theme="night"] .sl-header,
+html[data-sl-theme="night"] .sl-admin-content {
+  background: var(--sl-live-shell);
+  border-color: var(--sl-live-border-strong);
+}
+
+html[data-sl-theme="night"] .sl-toolbar,
+html[data-sl-theme="night"] .sl-toolbar div {
+  background: var(--sl-live-surface);
+  border-color: var(--sl-live-border);
+}
+
+html[data-sl-theme="night"] .sl-toolbar li a,
+html[data-sl-theme="night"] a {
+  color: var(--sl-live-blue);
+}
+
+.sl-live {
+  position: relative;
+  display: grid;
+  grid-template-columns: 286px minmax(0, 1fr) 330px;
+  gap: 10px;
+  color: var(--sl-live-text);
+}
+
+.sl-live::before {
+  content: "";
+  position: absolute;
+  inset: -10px 0 auto;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--sl-live-cyan), var(--sl-live-green), var(--sl-live-orange), transparent);
+  background-size: 260% 100%;
+  opacity: 0.8;
+  animation: sl-live-flow 5s linear infinite;
+}
+
+.sl-live-panel,
+.sl-live-card,
+.sl-live-row,
+.sl-live-stage,
+.sl-live-module,
+.sl-live-command {
+  border: 1px solid var(--sl-live-border);
+  border-radius: 8px;
+  background: var(--sl-live-surface);
+  box-shadow: var(--sl-live-soft-shadow);
+}
+
+.sl-live-side,
+.sl-live-main,
+.sl-live-lens {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sl-live-panel {
+  overflow: hidden;
+}
+
+.sl-live-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: linear-gradient(to bottom, #1aa5d9 0%, #0781b9 48%, #00679d 100%);
+  font-weight: bold;
+}
+
+.sl-live-head-green {
+  background: linear-gradient(to bottom, #54cb68 0%, #27a744 48%, #168830 100%);
+}
+
+.sl-live-head-orange {
+  background: linear-gradient(to bottom, #ffb131 0%, #e27d00 48%, #c96500 100%);
+}
+
+.sl-live-head-soft {
+  color: var(--sl-live-heading);
+  border-bottom: 1px solid var(--sl-live-border);
+  background: linear-gradient(to bottom, var(--sl-live-plate) 0%, var(--sl-live-plate-strong) 100%);
+}
+
+.sl-live-body {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  background: var(--sl-live-plate);
+}
+
+.sl-live-top {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+}
+
+.sl-live-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sl-live-title h2 {
+  margin: 0;
+  color: var(--sl-live-heading);
+  font-size: 25px;
+  line-height: 1.08;
+}
+
+.sl-live-title span {
+  display: block;
+  margin-top: 3px;
+  color: var(--sl-live-muted);
+  font-size: 12px;
+}
+
+.sl-live-actions,
+.sl-live-tabs,
+.sl-live-metas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
+.sl-live-actions {
+  justify-content: flex-start;
+}
+
+.sl-live-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--sl-live-border-strong);
+  border-radius: 999px;
+  background: linear-gradient(to top, var(--sl-live-surface) 0%, var(--sl-live-plate-strong) 100%);
+  color: var(--sl-live-heading);
+  box-shadow: var(--sl-live-soft-shadow);
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sl-live-button:hover,
+.sl-live-button.sl-is-active {
+  border-color: color-mix(in srgb, var(--sl-live-blue) 72%, var(--sl-live-border-strong));
+  background: linear-gradient(to top, var(--sl-live-blue-strong) 0%, var(--sl-live-blue) 100%);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.sl-live-button-danger:hover {
+  border-color: var(--sl-live-red);
+  background: linear-gradient(to top, color-mix(in srgb, var(--sl-live-red) 76%, #000000) 0%, var(--sl-live-red) 100%);
+}
+
+.sl-live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--sl-live-plate-strong);
+  color: var(--sl-live-heading);
+  font: 13px/1 Arial, Tahoma, sans-serif;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sl-live-chip-info {
+  color: var(--sl-live-blue-strong);
+  background: color-mix(in srgb, var(--sl-live-blue) 13%, transparent);
+}
+
+.sl-live-chip-success {
+  color: var(--sl-live-green);
+  background: color-mix(in srgb, var(--sl-live-green) 15%, transparent);
+}
+
+.sl-live-chip-warn {
+  color: var(--sl-live-orange);
+  background: color-mix(in srgb, var(--sl-live-orange) 17%, transparent);
+}
+
+.sl-live-chip-danger {
+  color: var(--sl-live-red);
+  background: color-mix(in srgb, var(--sl-live-red) 13%, transparent);
+}
+
+.sl-live-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sl-live-border-strong);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.sl-live-mini.sl-is-hot,
+.sl-live-mini:hover {
+  background: var(--sl-live-blue);
+  color: #ffffff;
+}
+
+.sl-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sl-live-green);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--sl-live-green) 16%, transparent), 0 0 14px color-mix(in srgb, var(--sl-live-green) 70%, transparent);
+  animation: sl-live-pulse 1.8s ease-in-out infinite;
+}
+
+.sl-live-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--sl-live-blue) 24%, var(--sl-live-border));
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sl-live-blue) 7%, var(--sl-live-surface)) 0%, var(--sl-live-surface) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), var(--sl-live-soft-shadow);
+}
+
+.sl-live-icon img {
+  width: 31px;
+  height: 31px;
+  object-fit: contain;
+  filter: saturate(0.82) contrast(0.96) drop-shadow(0 2px 2px rgba(20, 67, 96, 0.16));
+  transform-origin: center;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+
+.sl-live-icon-soft img {
+  filter: saturate(0.42) contrast(0.88) opacity(0.78);
+}
+
+html[data-sl-theme="night"] .sl-live-icon img {
+  filter: saturate(0.62) contrast(0.9) brightness(0.96) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.28));
+}
+
+html[data-sl-theme="night"] .sl-live-icon-soft img {
+  filter: saturate(0.22) contrast(0.82) brightness(1.14) opacity(0.72);
+}
+
+.sl-live-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px;
+  color: var(--sl-live-text);
+  text-decoration: none;
+}
+
+.sl-live-row:hover,
+.sl-live-module:hover,
+.sl-live-command:hover {
+  border-color: var(--sl-live-border-strong);
+  box-shadow: var(--sl-live-shadow);
+  text-decoration: none;
+}
+
+.sl-live-row:hover .sl-live-icon img,
+.sl-live-module:hover .sl-live-icon img {
+  transform: translateY(-2px) scale(1.06);
+}
+
+.sl-live-name {
+  display: block;
+  overflow: hidden;
+  color: var(--sl-live-blue-strong);
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-live-note {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--sl-live-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-live-meter {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sl-live-border-strong) 42%, transparent);
+}
+
+.sl-live-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--sl-live-blue), var(--sl-live-green));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--sl-live-blue) 42%, transparent);
+  transition: width 0.45s ease;
+}
+
+.sl-live-stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 190px;
+  padding: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--sl-live-blue) 13%, var(--sl-live-surface)) 0%, var(--sl-live-surface) 48%, color-mix(in srgb, var(--sl-live-green) 9%, var(--sl-live-surface)) 100%);
+}
+
+.sl-live-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(120deg, transparent 0 18px, color-mix(in srgb, var(--sl-live-blue) 8%, transparent) 18px 19px);
+  opacity: 0.42;
+  animation: sl-live-drift 18s linear infinite;
+}
+
+.sl-live-stage > * {
+  position: relative;
+}
+
+.sl-live-stage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 12px;
+}
+
+.sl-live-stage h3 {
+  max-width: 720px;
+  margin: 8px 0;
+  color: var(--sl-live-heading);
+  font-size: 34px;
+  line-height: 1.02;
+}
+
+.sl-live-stage p {
+  max-width: 760px;
+  margin: 0 0 12px;
+  color: var(--sl-live-text);
+  line-height: 1.42;
+}
+
+.sl-live-focus {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 10px;
+  border: 1px solid var(--sl-live-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--sl-live-surface) 88%, transparent);
+}
+
+.sl-live-focus strong {
+  color: var(--sl-live-heading);
+  font-size: 18px;
+}
+
+.sl-live-alert {
+  border-left: 4px solid var(--sl-live-red);
+}
+
+.sl-live-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(128px, 1fr));
+  gap: 8px;
+}
+
+.sl-live-module {
+  position: relative;
+  display: grid;
+  grid-template-rows: 46px auto auto 28px;
+  justify-items: center;
+  align-content: start;
+  min-height: 136px;
+  padding: 10px 8px 8px;
+  color: var(--sl-live-text);
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.sl-live-module::after {
+  content: "";
+  position: absolute;
+  inset: auto 8px 7px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--sl-live-blue), transparent);
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.sl-live-module:hover {
+  transform: translateY(-2px);
+}
+
+.sl-live-module:hover::after,
+.sl-live-module.sl-is-active::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sl-live-module.sl-is-hidden {
+  display: none;
+}
+
+.sl-live-module .sl-live-name {
+  max-width: 100%;
+  margin-top: 7px;
+  white-space: normal;
+}
+
+.sl-live-module .sl-live-note {
+  max-width: 100%;
+  white-space: normal;
+}
+
+.sl-live-module-actions {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.sl-live-feed {
+  display: grid;
+  gap: 7px;
+}
+
+.sl-live-feed-item {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid var(--sl-live-border);
+  border-radius: 8px;
+  background: var(--sl-live-surface);
+  animation: sl-live-enter 0.32s ease both;
+}
+
+.sl-live-feed-item b {
+  display: block;
+  color: var(--sl-live-heading);
+}
+
+.sl-live-feed-item span {
+  display: block;
+  margin-top: 2px;
+  color: var(--sl-live-muted);
+  font-size: 12px;
+}
+
+.sl-live-preview {
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+}
+
+.sl-live-preview-main {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.sl-live-preview .sl-live-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.sl-live-preview .sl-live-icon img {
+  width: 38px;
+  height: 38px;
+}
+
+.sl-live-command-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  place-items: start center;
+  padding: 72px 18px 18px;
+  background: rgba(3, 16, 26, 0.52);
+  backdrop-filter: blur(7px);
+}
+
+.sl-live-command-layer.sl-is-open {
+  display: grid;
+}
+
+.sl-live-command-box {
+  width: min(720px, 100%);
+  overflow: hidden;
+  border: 1px solid var(--sl-live-border-strong);
+  border-radius: 8px;
+  background: var(--sl-live-surface);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}
+
+.sl-live-command-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  border-bottom: 1px solid var(--sl-live-border);
+}
+
+.sl-live-command-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sl-live-heading);
+  font-size: 18px;
+}
+
+.sl-live-command-list {
+  display: grid;
+  gap: 6px;
+  max-height: 360px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.sl-live-command {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 54px;
+  padding: 7px;
+  color: var(--sl-live-text);
+  text-decoration: none;
+}
+
+.sl-live-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10000;
+  display: grid;
+  gap: 8px;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.sl-live-toast-item {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid var(--sl-live-border);
+  border-radius: 8px;
+  background: var(--sl-live-surface);
+  box-shadow: var(--sl-live-shadow);
+  animation: sl-live-toast 3.2s ease forwards;
+}
+
+.sl-live-compact .sl-live-module {
+  min-height: 106px;
+  grid-template-rows: 40px auto 22px;
+}
+
+.sl-live-compact .sl-live-module .sl-live-note,
+.sl-live-compact .sl-live-module-actions .sl-live-mini:not(.sl-is-hot) {
+  display: none;
+}
+
+@keyframes sl-live-flow {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 260% 0;
+  }
+}
+
+@keyframes sl-live-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 260px 0;
+  }
+}
+
+@keyframes sl-live-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.86;
+  }
+  50% {
+    transform: scale(1.22);
+    opacity: 1;
+  }
+}
+
+@keyframes sl-live-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sl-live-toast {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  12%, 82% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (max-width: 1320px) {
+  .sl-live {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .sl-live-lens {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-live-grid {
+    grid-template-columns: repeat(3, minmax(128px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .sl-live,
+  .sl-live-stage-grid,
+  .sl-live-lens {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-live-top {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-live-actions {
+    justify-content: flex-start;
+  }
+
+  .sl-live-grid {
+    grid-template-columns: repeat(2, minmax(128px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-live-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-live-row,
+  .sl-live-command {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .sl-live-row > .sl-live-chip,
+  .sl-live-command > .sl-live-mini {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .sl-live-stage h3 {
+    font-size: 27px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand"><h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1></div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-grid-3x3-gap"></i><b>Блоки и баннеры</b></a></li>
+              <li><a href="#"><i class="bi bi-puzzle"></i><b>Модули</b></a></li>
+              <li><a href="#"><i class="bi bi-tags"></i><b>Категории</b></a></li>
+              <li><a href="#"><i class="bi bi-globe"></i><b>Сайт</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/de.svg" alt="DE"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/fr.svg" alt="FR"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-live" id="slLiveRoot">
+      <aside class="sl-live-side">
+        <section class="sl-live-panel">
+          <div class="sl-live-head sl-live-head-orange"><span><i class="bi bi-lightning-charge"></i> Поток задач</span><span class="sl-live-mini sl-is-hot" data-counter="104">104</span></div>
+          <div class="sl-live-body">
+            <a class="sl-live-row sl-live-alert" href="#" data-preview="Безопасность" data-note="setup.php требует действия"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span><span><span class="sl-live-name">setup.php найден</span><span class="sl-live-note">критическая задача</span><span class="sl-live-meter"><span style="width: 92%"></span></span></span><span class="sl-live-chip sl-live-chip-danger">сейчас</span></a>
+            <a class="sl-live-row" href="#" data-preview="Пользователи" data-note="Новые регистрации ожидают решения"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span><span><span class="sl-live-name">Пользователи</span><span class="sl-live-note">регистрация и группы</span><span class="sl-live-meter"><span style="width: 76%"></span></span></span><span class="sl-live-chip sl-live-chip-warn" data-counter="88">88</span></a>
+            <a class="sl-live-row" href="#" data-preview="Комментарии" data-note="Очередь модерации активна"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span><span><span class="sl-live-name">Комментарии</span><span class="sl-live-note">очередь модерации</span><span class="sl-live-meter"><span style="width: 28%"></span></span></span><span class="sl-live-chip sl-live-chip-info" data-counter="3">3</span></a>
+            <a class="sl-live-row" href="#" data-preview="Блоки" data-note="Позиции и баннеры готовы к правке"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span><span class="sl-live-name">Блоки</span><span class="sl-live-note">позиции и баннеры</span><span class="sl-live-meter"><span style="width: 54%"></span></span></span><span class="sl-live-chip sl-live-chip-success">31</span></a>
+          </div>
+        </section>
+        <section class="sl-live-panel">
+          <div class="sl-live-head sl-live-head-green"><span><i class="bi bi-activity"></i> Живой статус</span><span><span class="sl-live-dot"></span></span></div>
+          <div class="sl-live-body">
+            <div class="sl-live-row"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f5c3.svg" alt=""></span><span><span class="sl-live-name">База данных</span><span class="sl-live-note"><b data-counter="17">17</b> запросов, <b data-counter="0.314">0.314</b> сек.</span></span><span class="sl-live-mini">OK</span></div>
+            <div class="sl-live-row"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4bb.svg" alt=""></span><span><span class="sl-live-name">Память</span><span class="sl-live-note"><b data-counter="11">11</b> MB / 1 GB</span></span><span class="sl-live-mini">1%</span></div>
+            <div class="sl-live-row"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span><span><span class="sl-live-name">SVG icons</span><span class="sl-live-note">единый контейнер и фильтр</span></span><span class="sl-live-mini sl-is-hot">live</span></div>
+          </div>
+        </section>
+      </aside>
+      <main class="sl-live-main">
+        <section class="sl-live-panel">
+          <div class="sl-live-top">
+            <div class="sl-live-title">
+              <span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span>
+              <div><h2>SLAED Live Control</h2><span>Панель не лежит на экране, а реагирует: события, фильтры, быстрые команды, смена плотности и день/ночь.</span></div>
+            </div>
+            <div class="sl-live-actions">
+              <button class="sl-live-button sl-is-active" type="button" data-filter="all"><i class="bi bi-ui-checks-grid"></i> Всё</button>
+              <button class="sl-live-button" type="button" data-filter="module"><i class="bi bi-puzzle"></i> Модули</button>
+              <button class="sl-live-button" type="button" data-filter="block"><i class="bi bi-layout-three-columns"></i> Блоки</button>
+              <button class="sl-live-button" type="button" id="slDensityToggle"><i class="bi bi-arrows-collapse-vertical"></i> Плотно</button>
+              <button class="sl-live-button" type="button" id="slThemeToggle"><i class="bi bi-moon-stars"></i> Ночь</button>
+              <button class="sl-live-button" type="button" id="slCommandOpen"><i class="bi bi-command"></i> Команды</button>
+            </div>
+          </div>
+        </section>
+        <section class="sl-live-stage">
+          <div class="sl-live-stage-grid">
+            <div>
+              <div class="sl-live-metas">
+                <span class="sl-live-chip sl-live-chip-danger"><i class="bi bi-shield-exclamation"></i> Важное первым</span>
+                <span class="sl-live-chip sl-live-chip-info"><i class="bi bi-filetype-svg"></i> SVG icons</span>
+                <span class="sl-live-chip sl-live-chip-success"><i class="bi bi-broadcast-pin"></i> live-события</span>
+              </div>
+              <h3>Рабочий центр, который дышит</h3>
+              <p>Система сама поднимает срочное, подсвечивает активные зоны, обновляет счётчики и даёт быстрые действия без ухода из главной панели.</p>
+              <div class="sl-live-tabs">
+                <button class="sl-live-button sl-live-button-danger" type="button" id="slResolveAlert"><i class="bi bi-shield-check"></i> Закрыть setup.php</button>
+                <button class="sl-live-button" type="button" data-action-toast="Очередь пользователей открыта"><i class="bi bi-person-check"></i> Пользователи</button>
+                <button class="sl-live-button" type="button" data-action-toast="Открыт быстрый редактор блока"><i class="bi bi-plus-circle"></i> Новый блок</button>
+              </div>
+            </div>
+            <aside class="sl-live-focus" id="slLiveFocus">
+              <span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span>
+              <strong>Безопасность</strong>
+              <span class="sl-live-note">setup.php требует действия</span>
+              <span class="sl-live-meter"><span style="width: 92%"></span></span>
+              <span class="sl-live-chip sl-live-chip-danger">приоритет 1</span>
+            </aside>
+          </div>
+        </section>
+        <section class="sl-live-panel">
+          <div class="sl-live-head"><span><i class="bi bi-grid-3x3-gap"></i> Активные зоны управления</span><span class="sl-live-chip">живой фильтр</span></div>
+          <div class="sl-live-body">
+            <div class="sl-live-grid" id="slModuleGrid">
+              <a class="sl-live-module sl-is-active" href="#" data-kind="module" data-preview="Конфигурации" data-note="Основные параметры ядра" data-icon="emoji_u2699.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""></span><span class="sl-live-name">Конфигурации</span><span class="sl-live-note">ядро и режимы</span><span class="sl-live-module-actions"><span class="sl-live-mini"><i class="bi bi-pencil"></i></span><span class="sl-live-mini">12</span></span></a>
+              <a class="sl-live-module" href="#" data-kind="block" data-preview="Блоки" data-note="Позиции, баннеры и видимость" data-icon="emoji_u1f9e9.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span class="sl-live-name">Блоки</span><span class="sl-live-note">позиции и баннеры</span><span class="sl-live-module-actions"><span class="sl-live-mini sl-is-hot">31</span><span class="sl-live-mini"><i class="bi bi-eye"></i></span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Категории" data-note="Структура сайта и новые иконки" data-icon="emoji_u1f4c1.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""></span><span class="sl-live-name">Категории</span><span class="sl-live-note">структура и icons</span><span class="sl-live-module-actions"><span class="sl-live-mini"><i class="bi bi-tags"></i></span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Модули" data-note="Компоненты системы и быстрый вход" data-icon="emoji_u1f4e6.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></span><span class="sl-live-name">Модули</span><span class="sl-live-note">50 компонентов</span><span class="sl-live-module-actions"><span class="sl-live-mini sl-is-hot" data-counter="50">50</span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Редактор" data-note="Тексты, шаблоны и быстрые правки" data-icon="emoji_u1f4dd.svg"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4dd.svg" alt=""></span><span class="sl-live-name">Редактор</span><span class="sl-live-note">контент и код</span><span class="sl-live-module-actions"><span class="sl-live-mini"><i class="bi bi-code-slash"></i></span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Безопасность" data-note="Токены, сессии и журналы" data-icon="emoji_u1f6e1.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""></span><span class="sl-live-name">Безопасность</span><span class="sl-live-note">токены и логи</span><span class="sl-live-module-actions"><span class="sl-live-mini sl-is-hot"><i class="bi bi-shield-check"></i></span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Магазин" data-note="Заказы, товары и клиенты" data-icon="emoji_u1f6d2.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f6d2.svg" alt=""></span><span class="sl-live-name">Магазин</span><span class="sl-live-note">заказы и товары</span><span class="sl-live-module-actions"><span class="sl-live-mini"><i class="bi bi-cart"></i></span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Поиск" data-note="Индекс, запросы и переходы" data-icon="emoji_u1f50d.svg"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""></span><span class="sl-live-name">Поиск</span><span class="sl-live-note">индекс и запросы</span><span class="sl-live-module-actions"><span class="sl-live-mini"><i class="bi bi-search"></i></span></span></a>
+              <a class="sl-live-module" href="#" data-kind="block" data-preview="Левый блок" data-note="Видимость и порядок вывода" data-icon="emoji_u1f4ca.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></span><span class="sl-live-name">Левый блок</span><span class="sl-live-note">12 элементов</span><span class="sl-live-module-actions"><span class="sl-live-mini">12</span></span></a>
+              <a class="sl-live-module" href="#" data-kind="block" data-preview="Правый блок" data-note="Позиции и быстрые действия" data-icon="emoji_u1f441.svg"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f441.svg" alt=""></span><span class="sl-live-name">Правый блок</span><span class="sl-live-note">11 элементов</span><span class="sl-live-module-actions"><span class="sl-live-mini">11</span></span></a>
+              <a class="sl-live-module" href="#" data-kind="block" data-preview="Баннеры" data-note="Ротация и ограничения" data-icon="emoji_u1f4e8.svg"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4e8.svg" alt=""></span><span class="sl-live-name">Баннеры</span><span class="sl-live-note">показы</span><span class="sl-live-module-actions"><span class="sl-live-mini">8</span></span></a>
+              <a class="sl-live-module" href="#" data-kind="module" data-preview="Статистика" data-note="Переходы, запросы и нагрузка" data-icon="emoji_u1f4ca.svg"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></span><span class="sl-live-name">Статистика</span><span class="sl-live-note">пульс сайта</span><span class="sl-live-module-actions"><span class="sl-live-mini"><i class="bi bi-graph-up"></i></span></span></a>
+            </div>
+          </div>
+        </section>
+      </main>
+      <aside class="sl-live-lens">
+        <section class="sl-live-panel">
+          <div class="sl-live-head"><span><i class="bi bi-eye"></i> Фокус</span><span class="sl-live-dot"></span></div>
+          <div class="sl-live-preview" id="slPreview">
+            <div class="sl-live-preview-main">
+              <span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""></span>
+              <span><span class="sl-live-name">Конфигурации</span><span class="sl-live-note">Основные параметры ядра</span></span>
+            </div>
+            <span class="sl-live-meter"><span style="width: 68%"></span></span>
+            <div class="sl-live-metas">
+              <span class="sl-live-chip sl-live-chip-info">быстрый вход</span>
+              <span class="sl-live-chip sl-live-chip-success">готово</span>
+            </div>
+          </div>
+        </section>
+        <section class="sl-live-panel">
+          <div class="sl-live-head sl-live-head-green"><span><i class="bi bi-broadcast"></i> Лента событий</span><span class="sl-live-mini" id="slFeedCount">6</span></div>
+          <div class="sl-live-body">
+            <div class="sl-live-feed" id="slLiveFeed">
+              <div class="sl-live-feed-item"><span class="sl-live-mini sl-is-hot">1</span><span><b>SVG icons активны</b><span>единый путь templates/admin/images/icons</span></span></div>
+              <div class="sl-live-feed-item"><span class="sl-live-mini">2</span><span><b>Проверка setup.php</b><span>приоритет поднят в поток задач</span></span></div>
+              <div class="sl-live-feed-item"><span class="sl-live-mini">3</span><span><b>Блоки готовы</b><span>31 позиция отображается в панели</span></span></div>
+            </div>
+          </div>
+        </section>
+        <section class="sl-live-panel">
+          <div class="sl-live-head sl-live-head-orange"><span><i class="bi bi-sliders"></i> Реакции</span></div>
+          <div class="sl-live-body">
+            <button class="sl-live-button" type="button" data-action-toast="Сетка подсвечена"><i class="bi bi-magic"></i> Подсветить сетку</button>
+            <button class="sl-live-button" type="button" data-action-toast="Состояние панели сохранено"><i class="bi bi-save"></i> Сохранить вид</button>
+            <button class="sl-live-button" type="button" data-action-toast="Живая лента обновлена"><i class="bi bi-broadcast-pin"></i> Обновить поток</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Live Control demo.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+<div class="sl-live-command-layer" id="slCommandLayer" aria-hidden="true">
+  <div class="sl-live-command-box" role="dialog" aria-modal="true" aria-label="Команды SLAED">
+    <div class="sl-live-command-search"><i class="bi bi-search"></i><input id="slCommandSearch" type="search" placeholder="Найти действие, модуль или блок"></div>
+    <div class="sl-live-command-list" id="slCommandList">
+      <a class="sl-live-command" href="#" data-action-toast="Открыта безопасность"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""></span><span><span class="sl-live-name">Безопасность</span><span class="sl-live-note">токены, сессии, журналы</span></span><span class="sl-live-mini"><i class="bi bi-shield"></i></span></a>
+      <a class="sl-live-command" href="#" data-action-toast="Открыт модуль блоков"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span><span class="sl-live-name">Управление блоками</span><span class="sl-live-note">позиции, баннеры, видимость</span></span><span class="sl-live-mini">31</span></a>
+      <a class="sl-live-command" href="#" data-action-toast="Открыты категории"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""></span><span><span class="sl-live-name">Категории</span><span class="sl-live-note">структура и новые SVG</span></span><span class="sl-live-mini"><i class="bi bi-tags"></i></span></a>
+      <a class="sl-live-command" href="#" data-action-toast="Открыта очередь пользователей"><span class="sl-live-icon"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span><span><span class="sl-live-name">Новые пользователи</span><span class="sl-live-note">88 регистраций</span></span><span class="sl-live-mini">88</span></a>
+      <a class="sl-live-command" href="#" data-action-toast="Открыт редактор"><span class="sl-live-icon sl-live-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4dd.svg" alt=""></span><span><span class="sl-live-name">Редактор</span><span class="sl-live-note">тексты и шаблоны</span></span><span class="sl-live-mini"><i class="bi bi-code-slash"></i></span></a>
+    </div>
+  </div>
+</div>
+<div class="sl-live-toast" id="slToast"></div>
+<script>
+(() => {
+  const root = document.documentElement;
+  const live = document.getElementById('slLiveRoot');
+  const theme = document.getElementById('slThemeToggle');
+  const density = document.getElementById('slDensityToggle');
+  const command = document.getElementById('slCommandLayer');
+  const commandOpen = document.getElementById('slCommandOpen');
+  const commandSearch = document.getElementById('slCommandSearch');
+  const commandList = document.getElementById('slCommandList');
+  const preview = document.getElementById('slPreview');
+  const focus = document.getElementById('slLiveFocus');
+  const toast = document.getElementById('slToast');
+  const feed = document.getElementById('slLiveFeed');
+  const feedCount = document.getElementById('slFeedCount');
+  const themeKey = 'slaed-live-theme';
+  const densityKey = 'slaed-live-density';
+  const events = [
+    ['Очередь пользователей', 'появилась новая регистрация'],
+    ['Проверка блоков', 'обновлена позиция правой колонки'],
+    ['SVG icons', 'контейнер выровнял визуальный стиль'],
+    ['Безопасность', 'сессия администратора активна'],
+    ['Статистика', 'показатели генерации обновлены']
+  ];
+  let feedIndex = 0;
+
+  const setTheme = (value) => {
+    root.dataset.slTheme = value;
+    theme.innerHTML = value === 'night' ? '<i class="bi bi-sun"></i> День' : '<i class="bi bi-moon-stars"></i> Ночь';
+    localStorage.setItem(themeKey, value);
+  };
+
+  const showToast = (text) => {
+    const item = document.createElement('div');
+    item.className = 'sl-live-toast-item';
+    item.innerHTML = `<span class="sl-live-mini sl-is-hot"><i class="bi bi-check2"></i></span><span>${text}</span>`;
+    toast.prepend(item);
+    window.setTimeout(() => item.remove(), 3300);
+  };
+
+  const addFeed = (title, note) => {
+    const item = document.createElement('div');
+    item.className = 'sl-live-feed-item';
+    item.innerHTML = `<span class="sl-live-mini sl-is-hot">${Math.min(feed.children.length + 1, 99)}</span><span><b>${title}</b><span>${note}</span></span>`;
+    feed.prepend(item);
+    while (feed.children.length > 5) feed.lastElementChild.remove();
+    feedCount.textContent = String(feed.children.length);
+  };
+
+  const setPreview = (title, note, icon) => {
+    preview.innerHTML = `<div class="sl-live-preview-main"><span class="sl-live-icon"><img src="../templates/admin/images/icons/${icon}" alt=""></span><span><span class="sl-live-name">${title}</span><span class="sl-live-note">${note}</span></span></div><span class="sl-live-meter"><span style="width: ${55 + Math.round(Math.random() * 35)}%"></span></span><div class="sl-live-metas"><span class="sl-live-chip sl-live-chip-info">быстрый вход</span><span class="sl-live-chip sl-live-chip-success">готово</span></div>`;
+    focus.querySelector('strong').textContent = title;
+    focus.querySelector('.sl-live-note').textContent = note;
+    focus.querySelector('img').src = `../templates/admin/images/icons/${icon}`;
+  };
+
+  setTheme(localStorage.getItem(themeKey) === 'night' ? 'night' : 'day');
+  if (localStorage.getItem(densityKey) === 'compact') live.classList.add('sl-live-compact');
+
+  theme.addEventListener('click', () => setTheme(root.dataset.slTheme === 'night' ? 'day' : 'night'));
+  density.addEventListener('click', () => {
+    live.classList.toggle('sl-live-compact');
+    localStorage.setItem(densityKey, live.classList.contains('sl-live-compact') ? 'compact' : 'normal');
+    showToast(live.classList.contains('sl-live-compact') ? 'Включён плотный режим' : 'Включён свободный режим');
+  });
+
+  document.querySelectorAll('[data-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      document.querySelectorAll('[data-filter]').forEach((item) => item.classList.remove('sl-is-active'));
+      button.classList.add('sl-is-active');
+      const kind = button.dataset.filter;
+      document.querySelectorAll('.sl-live-module').forEach((module) => {
+        module.classList.toggle('sl-is-hidden', kind !== 'all' && module.dataset.kind !== kind);
+      });
+      showToast(kind === 'all' ? 'Показаны все зоны' : `Фильтр: ${button.textContent.trim()}`);
+    });
+  });
+
+  document.querySelectorAll('.sl-live-module, .sl-live-row').forEach((item) => {
+    item.addEventListener('click', (event) => {
+      event.preventDefault();
+      document.querySelectorAll('.sl-live-module').forEach((module) => module.classList.remove('sl-is-active'));
+      item.classList.add('sl-is-active');
+      setPreview(item.dataset.preview || 'SLAED', item.dataset.note || 'Выбранный раздел', item.dataset.icon || 'emoji_u1f680.svg');
+      addFeed(item.dataset.preview || 'Раздел', item.dataset.note || 'выбран в панели');
+    });
+  });
+
+  document.getElementById('slResolveAlert').addEventListener('click', () => {
+    showToast('Критическая задача помечена как обработанная');
+    addFeed('setup.php', 'сигнал переведён в обработанные');
+    document.querySelector('.sl-live-alert .sl-live-chip').textContent = 'обработано';
+    document.querySelector('.sl-live-alert .sl-live-chip').className = 'sl-live-chip sl-live-chip-success';
+  });
+
+  document.querySelectorAll('[data-action-toast]').forEach((item) => {
+    item.addEventListener('click', (event) => {
+      event.preventDefault();
+      showToast(item.dataset.actionToast);
+      addFeed('Действие', item.dataset.actionToast);
+    });
+  });
+
+  commandOpen.addEventListener('click', () => {
+    command.classList.add('sl-is-open');
+    command.setAttribute('aria-hidden', 'false');
+    commandSearch.focus();
+  });
+
+  command.addEventListener('click', (event) => {
+    if (event.target === command) {
+      command.classList.remove('sl-is-open');
+      command.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  commandSearch.addEventListener('input', () => {
+    const value = commandSearch.value.toLowerCase();
+    commandList.querySelectorAll('.sl-live-command').forEach((item) => {
+      item.style.display = item.textContent.toLowerCase().includes(value) ? '' : 'none';
+    });
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      command.classList.remove('sl-is-open');
+      command.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  window.setInterval(() => {
+    document.querySelectorAll('[data-counter]').forEach((item) => {
+      const value = Number(item.textContent);
+      if (Number.isFinite(value) && value >= 3 && Math.random() > 0.55) item.textContent = String(Math.max(1, value + (Math.random() > 0.5 ? 1 : -1)));
+    });
+    const event = events[feedIndex % events.length];
+    addFeed(event[0], event[1]);
+    feedIndex += 1;
+  }, 4200);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Admin Blocks Icon Panel Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+.sl-demo-space {
+  display: grid;
+  gap: var(--sl-space-lg);
+}
+
+.sl-demo-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.sl-demo-panel,
+.sl-demo-lane,
+.sl-demo-block-card {
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: linear-gradient(180deg, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-demo-panel {
+  overflow: hidden;
+}
+
+.sl-demo-panel-head,
+.sl-demo-lane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-lg);
+  padding: 10px 12px;
+  background: linear-gradient(180deg, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-demo-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  min-width: 0;
+  color: var(--sl-color-primary-hover);
+  font-weight: bold;
+}
+
+.sl-demo-title img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.sl-demo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-xs);
+  min-height: 22px;
+  padding: 1px var(--sl-space-sm);
+  color: var(--sl-color-text-soft);
+  background: var(--sl-color-bg-subtle);
+  border: 1px solid var(--sl-color-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.sl-demo-chip-ok {
+  color: var(--sl-color-success-strong);
+  background: var(--sl-color-success-soft);
+}
+
+.sl-demo-chip-warn {
+  color: var(--sl-color-warning-strong);
+  background: var(--sl-color-warning-soft);
+}
+
+.sl-demo-lane {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sl-demo-lane-list {
+  display: grid;
+  gap: var(--sl-space-md);
+  padding: var(--sl-space-md);
+}
+
+.sl-demo-block-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--sl-space-md);
+  align-items: start;
+  padding: 10px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sl-demo-block-card:hover {
+  border-color: var(--sl-color-primary-soft);
+  box-shadow: var(--sl-hover-shadow-card);
+  transform: translateY(var(--sl-hover-lift-up));
+}
+
+.sl-demo-block-card img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.sl-demo-block-body {
+  min-width: 0;
+}
+
+.sl-demo-block-body strong,
+.sl-demo-block-body span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-demo-block-body strong {
+  color: var(--sl-color-primary-hover);
+}
+
+.sl-demo-block-body span {
+  margin-top: var(--sl-space-xs);
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-demo-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-sm);
+  margin-top: var(--sl-space-md);
+}
+
+.sl-demo-card-actions a {
+  color: var(--sl-color-accent);
+}
+
+.sl-demo-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.sl-demo-metric {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: var(--sl-space-md);
+  align-items: center;
+  min-height: 70px;
+  padding: 10px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-xs);
+}
+
+.sl-demo-metric img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.sl-demo-metric span,
+.sl-demo-metric strong {
+  display: block;
+}
+
+.sl-demo-metric span {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-demo-metric strong {
+  margin-top: var(--sl-space-xs);
+  color: var(--sl-color-primary-hover);
+  font-size: 20px;
+}
+
+.sl-demo-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sl-demo-table th,
+.sl-demo-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--sl-color-border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.sl-demo-table th {
+  color: var(--sl-color-muted);
+  background: var(--sl-color-bg-soft);
+  font-size: 12px;
+}
+
+.sl-demo-table tr:hover td {
+  background: var(--sl-hover-bg-soft);
+}
+
+.sl-demo-row-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  min-width: 0;
+}
+
+.sl-demo-row-title img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.sl-demo-actions {
+  display: inline-flex;
+  gap: var(--sl-space-sm);
+  white-space: nowrap;
+}
+
+.sl-demo-actions a {
+  color: var(--sl-color-accent);
+}
+
+@media (max-width: 1100px) {
+  .sl-demo-board {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-demo-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .sl-demo-space .sl-module-head-body {
+    grid-template-columns: 1fr;
+    gap: var(--sl-space-md);
+  }
+
+  .sl-demo-space .sl-module-head-subtitle {
+    justify-content: flex-start;
+  }
+
+  .sl-demo-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-demo-table th:nth-child(4),
+  .sl-demo-table td:nth-child(4),
+  .sl-demo-table th:nth-child(5),
+  .sl-demo-table td:nth-child(5),
+  .sl-demo-table th:nth-child(7),
+  .sl-demo-table td:nth-child(7) {
+    display: none;
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand"><h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1></div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-boxes"></i><b>Блоки</b></a></li>
+              <li><a href="#"><i class="bi bi-plus-square"></i><b>Добавить</b></a></li>
+              <li><a href="#"><i class="bi bi-sort-down"></i><b>Сортировка</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-admin-main">
+      <aside class="sl-admin-sidebar">
+        <div class="sl-block-sidebar">
+          <h3 class="sl-is-open"><b><i class="bi bi-boxes"></i> Блоки</b></h3>
+          <div class="sl-block-sidebar-content">
+            <div class="sl-block-sidebar-count-list">
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-check-circle"></i> Активные</a></span><span class="sl-block-sidebar-count-value"><span>16</span></span></div>
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-x-circle"></i> Отключены</a></span><span class="sl-block-sidebar-count-value"><span class="sl-text-danger">15</span></span></div>
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-arrow-down-up"></i> Позиции</a></span><span class="sl-block-sidebar-count-value"><span>6</span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sl-block-sidebar">
+          <h3 class="sl-is-open"><b><i class="bi bi-lightning"></i> Действия</b></h3>
+          <div class="sl-block-sidebar-content">
+            <div class="sl-admin-block-links">
+              <div class="sl-admin-block-link"><a href="#"><i class="bi bi-plus-circle"></i> Добавить HTML</a></div>
+              <div class="sl-admin-block-link"><a href="#"><i class="bi bi-file-earmark-code"></i> Файловый блок</a></div>
+              <div class="sl-admin-block-link"><a href="#"><i class="bi bi-sort-numeric-down"></i> Сортировка</a></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <main class="sl-admin-content">
+        <div class="sl-admin-content-inner sl-demo-space">
+          <div class="sl-module-head">
+            <span class="sl-module-head-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span>
+            <div class="sl-module-head-body">
+              <h2 class="sl-module-head-title">Блоки и баннеры</h2>
+              <div class="sl-module-head-subtitle"><a class="sl-but-green" href="#"><i class="bi bi-plus-circle"></i>&nbsp;Новый блок</a></div>
+            </div>
+          </div>
+          <div class="sl-alert sl-alert-warn">
+            <div class="sl-alert-body">
+              <div class="sl-alert-title">Концепт панели блоков</div>
+              <div class="sl-alert-text">Позиции блоков можно показать как рабочие дорожки, а таблицу оставить ниже для точного администрирования.</div>
+            </div>
+          </div>
+          <section class="sl-demo-strip">
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f5c3.svg" alt=""><span>Блоков всего</span><strong>31</strong></div>
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f441.svg" alt=""><span>Публичные</span><strong>24</strong></div>
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f517.svg" alt=""><span>Файловые</span><strong>5</strong></div>
+            <div class="sl-demo-metric"><img src="../templates/admin/images/icons/emoji_u1f4cc.svg" alt=""><span>Позиции</span><strong>6</strong></div>
+          </section>
+          <section class="sl-demo-board">
+            <div class="sl-demo-lane">
+              <div class="sl-demo-lane-head"><span class="sl-demo-title"><img src="../templates/admin/images/icons/emoji_u1f4cc.svg" alt="">По центру вверху</span><span class="sl-demo-chip">10</span></div>
+              <div class="sl-demo-lane-list">
+                <article class="sl-demo-block-card"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""><span class="sl-demo-block-body"><strong>Последние сообщения форума</strong><span>Файл · все посетители · #1</span><span class="sl-demo-chip sl-demo-chip-ok">активен</span><span class="sl-demo-card-actions"><a href="#"><i class="bi bi-arrow-down-up"></i> move</a><a href="#"><i class="bi bi-pencil-square"></i> edit</a></span></span></article>
+                <article class="sl-demo-block-card"><img src="../templates/admin/images/icons/emoji_u1f4a1.svg" alt=""><span class="sl-demo-block-body"><strong>Важная информация</strong><span>HTML · все посетители · #4</span><span class="sl-demo-chip sl-demo-chip-warn">отключен</span><span class="sl-demo-card-actions"><a href="#"><i class="bi bi-power"></i> enable</a><a href="#"><i class="bi bi-pencil-square"></i> edit</a></span></span></article>
+              </div>
+            </div>
+            <div class="sl-demo-lane">
+              <div class="sl-demo-lane-head"><span class="sl-demo-title"><img src="../templates/admin/images/icons/emoji_u1f5bc.svg" alt="">Баннеры</span><span class="sl-demo-chip">4</span></div>
+              <div class="sl-demo-lane-list">
+                <article class="sl-demo-block-card"><img src="../templates/admin/images/icons/emoji_u1f4e2.svg" alt=""><span class="sl-demo-block-body"><strong>Баннер</strong><span>HTML · верхний баннер · #1</span><span class="sl-demo-chip sl-demo-chip-warn">отключен</span><span class="sl-demo-card-actions"><a href="#"><i class="bi bi-power"></i> enable</a><a href="#"><i class="bi bi-trash"></i> delete</a></span></span></article>
+                <article class="sl-demo-block-card"><img src="../templates/admin/images/icons/emoji_u1f310.svg" alt=""><span class="sl-demo-block-body"><strong>Нижний баннер</strong><span>Файл · нижний баннер · #2</span><span class="sl-demo-chip sl-demo-chip-ok">активен</span><span class="sl-demo-card-actions"><a href="#"><i class="bi bi-pencil-square"></i> edit</a><a href="#"><i class="bi bi-arrow-up"></i> up</a></span></span></article>
+              </div>
+            </div>
+            <div class="sl-demo-lane">
+              <div class="sl-demo-lane-head"><span class="sl-demo-title"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt="">Сайдбар</span><span class="sl-demo-chip">17</span></div>
+              <div class="sl-demo-lane-list">
+                <article class="sl-demo-block-card"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""><span class="sl-demo-block-body"><strong>Поиск по сайту</strong><span>Файл · слева · #1</span><span class="sl-demo-chip sl-demo-chip-ok">активен</span><span class="sl-demo-card-actions"><a href="#"><i class="bi bi-pencil-square"></i> edit</a><a href="#"><i class="bi bi-arrow-down"></i> down</a></span></span></article>
+                <article class="sl-demo-block-card"><img src="../templates/admin/images/icons/emoji_u1f4da.svg" alt=""><span class="sl-demo-block-body"><strong>Блок пользователя</strong><span>Системный · справа · #7</span><span class="sl-demo-chip sl-demo-chip-ok">активен</span><span class="sl-demo-card-actions"><a href="#"><i class="bi bi-shield-lock"></i> access</a><a href="#"><i class="bi bi-pencil-square"></i> edit</a></span></span></article>
+              </div>
+            </div>
+          </section>
+          <section class="sl-demo-panel">
+            <div class="sl-demo-panel-head">
+              <div class="sl-demo-title"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt="">Точная таблица блоков</div>
+              <span class="sl-demo-chip">режим администратора</span>
+            </div>
+            <table class="sl-demo-table">
+              <thead><tr><th>№</th><th>Заголовок</th><th>Тип</th><th>Кто видит</th><th>Позиция</th><th>Статус</th><th>Функции</th></tr></thead>
+              <tbody>
+                <tr><td>48</td><td><span class="sl-demo-row-title"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt="">Последние сообщения форума</span></td><td>Файл</td><td>Все посетители</td><td>По центру вверху</td><td><span class="sl-demo-chip sl-demo-chip-ok">активен</span></td><td><span class="sl-demo-actions"><a href="#"><i class="bi bi-pencil-square"></i></a><a href="#"><i class="bi bi-arrow-down-up"></i></a></span></td></tr>
+                <tr><td>19</td><td><span class="sl-demo-row-title"><img src="../templates/admin/images/icons/emoji_u1f4e2.svg" alt="">Баннер</span></td><td>HTML</td><td>Все посетители</td><td>Верхний баннер</td><td><span class="sl-demo-chip sl-demo-chip-warn">отключен</span></td><td><span class="sl-demo-actions"><a href="#"><i class="bi bi-power"></i></a><a href="#"><i class="bi bi-pencil-square"></i></a></span></td></tr>
+                <tr><td>6</td><td><span class="sl-demo-row-title"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt="">Поиск по сайту</span></td><td>Файл</td><td>Все посетители</td><td>Слева</td><td><span class="sl-demo-chip sl-demo-chip-ok">активен</span></td><td><span class="sl-demo-actions"><a href="#"><i class="bi bi-pencil-square"></i></a><a href="#"><i class="bi bi-arrow-down"></i></a></span></td></tr>
+                <tr><td>13</td><td><span class="sl-demo-row-title"><img src="../templates/admin/images/icons/emoji_u1f4da.svg" alt="">Блок пользователя</span></td><td>Системный</td><td>Только пользователи</td><td>Справа</td><td><span class="sl-demo-chip sl-demo-chip-ok">активен</span></td><td><span class="sl-demo-actions"><a href="#"><i class="bi bi-shield-lock"></i></a><a href="#"><i class="bi bi-pencil-square"></i></a></span></td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </main>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Demo blocks icon panel.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+</body>
+</html>

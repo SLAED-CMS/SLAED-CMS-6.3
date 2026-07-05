@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Admin Command Center Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+.sl-command {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.sl-command-side,
+.sl-command-main,
+.sl-command-panel,
+.sl-command-card,
+.sl-command-queue {
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-card);
+}
+
+.sl-command-side {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 8px;
+  background: linear-gradient(180deg, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+}
+
+.sl-command-main {
+  overflow: hidden;
+}
+
+.sl-command-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 14px;
+  padding: 14px;
+  color: var(--sl-color-bg);
+  background:
+    linear-gradient(135deg, rgba(8, 119, 177, 0.96) 0%, rgba(32, 127, 182, 0.92) 54%, rgba(52, 185, 75, 0.88) 100%);
+}
+
+.sl-command-title {
+  display: grid;
+  gap: 10px;
+  align-content: center;
+  min-width: 0;
+}
+
+.sl-command-title h2 {
+  margin: 0;
+  color: var(--sl-color-bg);
+  font-size: 30px;
+  line-height: 1.08;
+}
+
+.sl-command-title p {
+  margin: 0;
+  max-width: 760px;
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.45;
+}
+
+.sl-command-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sl-command-hero-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 10px;
+  color: var(--sl-color-bg);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: var(--sl-radius-control);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sl-command-focus {
+  display: grid;
+  gap: 8px;
+  align-content: center;
+  padding: 10px;
+  color: var(--sl-color-text);
+  border-radius: var(--sl-radius-soft);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.sl-command-focus img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.sl-command-focus strong,
+.sl-command-focus span {
+  display: block;
+}
+
+.sl-command-focus strong {
+  font-size: 18px;
+  color: var(--sl-color-primary-hover);
+}
+
+.sl-command-focus span {
+  color: var(--sl-color-muted);
+  line-height: 1.35;
+}
+
+.sl-command-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
+  padding: 12px;
+}
+
+.sl-command-section {
+  display: grid;
+  gap: 12px;
+}
+
+.sl-command-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sl-command-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 74px;
+  padding: 10px;
+  background: linear-gradient(180deg, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+}
+
+.sl-command-card img,
+.sl-command-tile img,
+.sl-command-event img,
+.sl-command-nav img,
+.sl-command-mini img {
+  object-fit: contain;
+}
+
+.sl-command-card img {
+  width: 42px;
+  height: 42px;
+}
+
+.sl-command-card span,
+.sl-command-card strong {
+  display: block;
+}
+
+.sl-command-card span {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-command-card strong {
+  margin-top: 4px;
+  color: var(--sl-color-primary-hover);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.sl-command-panel {
+  overflow: hidden;
+}
+
+.sl-command-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-command-panel-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sl-color-primary-hover);
+}
+
+.sl-command-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
+.sl-command-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 68px;
+  padding: 9px;
+  color: var(--sl-color-text);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: linear-gradient(180deg, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sl-command-tile:hover {
+  border-color: var(--sl-color-primary-soft);
+  box-shadow: var(--sl-hover-shadow-card);
+  transform: translateY(var(--sl-hover-lift-up));
+}
+
+.sl-command-tile img {
+  width: 42px;
+  height: 42px;
+}
+
+.sl-command-tile strong,
+.sl-command-tile span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-command-tile strong {
+  color: var(--sl-color-primary-hover);
+}
+
+.sl-command-tile span {
+  margin-top: 3px;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-command-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: 999px;
+  background: var(--sl-color-bg-subtle);
+  color: var(--sl-color-text-soft);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.sl-command-badge-warn {
+  color: var(--sl-color-warning-strong);
+  background: var(--sl-color-warning-soft);
+}
+
+.sl-command-badge-ok {
+  color: var(--sl-color-success-strong);
+  background: var(--sl-color-success-soft);
+}
+
+.sl-command-tile .sl-command-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.sl-command-queue {
+  overflow: hidden;
+}
+
+.sl-command-event-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.sl-command-event {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 58px;
+  padding: 8px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-command-event img {
+  width: 36px;
+  height: 36px;
+}
+
+.sl-command-event strong,
+.sl-command-event span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-command-event span {
+  margin-top: 3px;
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-command-nav {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 46px;
+  padding: 7px;
+  color: var(--sl-color-text);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: var(--sl-color-bg);
+}
+
+.sl-command-nav img {
+  width: 32px;
+  height: 32px;
+}
+
+.sl-command-nav strong,
+.sl-command-nav span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-command-nav span {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-command-mini {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: var(--sl-color-bg);
+}
+
+.sl-command-mini img {
+  width: 28px;
+  height: 28px;
+}
+
+.sl-command-mini strong,
+.sl-command-mini span {
+  display: block;
+}
+
+.sl-command-mini span {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 1180px) {
+  .sl-command,
+  .sl-command-body,
+  .sl-command-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-command-kpis,
+  .sl-command-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .sl-command-kpis,
+  .sl-command-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-command-title h2 {
+    font-size: 24px;
+  }
+
+  .sl-command-event {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .sl-command-event .sl-command-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand"><h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1></div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-lightning-charge"></i><b>Очередь</b></a></li>
+              <li><a href="#"><i class="bi bi-grid-3x3-gap"></i><b>Модули</b></a></li>
+              <li><a href="#"><i class="bi bi-shield-check"></i><b>Статус</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-command">
+      <aside class="sl-command-side">
+        <a class="sl-command-nav" href="#"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""><span><strong>Безопасность</strong><span>setup.php, права, сессии</span></span><span class="sl-command-badge sl-command-badge-warn">1</span></a>
+        <a class="sl-command-nav" href="#"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""><span><strong>Пользователи</strong><span>регистрации и группы</span></span><span class="sl-command-badge sl-command-badge-warn">88</span></a>
+        <a class="sl-command-nav" href="#"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""><span><strong>Комментарии</strong><span>модерация и жалобы</span></span><span class="sl-command-badge">3</span></a>
+        <a class="sl-command-nav" href="#"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""><span><strong>Блоки</strong><span>позиции, баннеры, файлы</span></span><span class="sl-command-badge">31</span></a>
+        <a class="sl-command-nav" href="#"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""><span><strong>Модули</strong><span>50 разделов системы</span></span><span class="sl-command-badge sl-command-badge-ok">OK</span></a>
+        <div class="sl-command-mini"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""><span><strong>Icons runtime</strong><span>templates/admin/images/icons</span></span></div>
+      </aside>
+      <main class="sl-command-main">
+        <section class="sl-command-hero">
+          <div class="sl-command-title">
+            <h2>Command Center SLAED</h2>
+            <p>Одна рабочая поверхность для того, что реально требует внимания: безопасность, регистрация, модерация, состояние модулей и быстрые действия.</p>
+            <div class="sl-command-hero-actions">
+              <a href="#"><i class="bi bi-shield-exclamation"></i> Проверить безопасность</a>
+              <a href="#"><i class="bi bi-person-check"></i> Разобрать пользователей</a>
+              <a href="#"><i class="bi bi-plus-circle"></i> Добавить публикацию</a>
+            </div>
+          </div>
+          <aside class="sl-command-focus">
+            <img src="../templates/admin/images/icons/emoji_u1f512.svg" alt="">
+            <strong>Фокус: setup.php</strong>
+            <span>Критический сигнал остаётся первым, но не съедает всю панель. Остальная работа видна рядом.</span>
+          </aside>
+        </section>
+        <div class="sl-command-body">
+          <section class="sl-command-section">
+            <div class="sl-command-kpis">
+              <div class="sl-command-card"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""><span>Новые пользователи</span><strong>88</strong></div>
+              <div class="sl-command-card"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""><span>Новости сегодня</span><strong>2</strong></div>
+              <div class="sl-command-card"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""><span>Комментарии</span><strong>3</strong></div>
+              <div class="sl-command-card"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""><span>Генерация</span><strong>0.31s</strong></div>
+            </div>
+            <section class="sl-command-panel">
+              <div class="sl-command-panel-head">
+                <strong><i class="bi bi-grid-3x3-gap"></i> Рабочие разделы</strong>
+                <span class="sl-command-badge sl-command-badge-ok">icons</span>
+              </div>
+              <div class="sl-command-grid">
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""><span><strong>Конфигурации</strong><span>ядро и настройки</span></span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""><span><strong>Блоки</strong><span>баннеры и позиции</span></span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""><span><strong>Категории</strong><span>иконки и структура</span></span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""><span><strong>Модули</strong><span>50 компонентов</span></span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f4dd.svg" alt=""><span><strong>Редактор</strong><span>контент и код</span></span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""><span><strong>Новости</strong><span>публикации</span></span><span class="sl-command-badge sl-command-badge-warn">2</span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f6d2.svg" alt=""><span><strong>Магазин</strong><span>заказы и товары</span></span></a>
+                <a class="sl-command-tile" href="#"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""><span><strong>Поиск</strong><span>индекс и запросы</span></span></a>
+              </div>
+            </section>
+            <section class="sl-command-panel">
+              <div class="sl-command-panel-head">
+                <strong><i class="bi bi-speedometer2"></i> Состояние системы</strong>
+                <span class="sl-command-badge">live</span>
+              </div>
+              <div class="sl-command-grid">
+                <div class="sl-command-tile"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""><span><strong>Сессия</strong><span>админ активен</span></span><span class="sl-command-badge sl-command-badge-ok">OK</span></div>
+                <div class="sl-command-tile"><img src="../templates/admin/images/icons/emoji_u1f5c3.svg" alt=""><span><strong>База данных</strong><span>17 запросов</span></span><span class="sl-command-badge sl-command-badge-ok">OK</span></div>
+                <div class="sl-command-tile"><img src="../templates/admin/images/icons/emoji_u1f4bb.svg" alt=""><span><strong>Память</strong><span>11 MB / 1 GB</span></span><span class="sl-command-badge">1%</span></div>
+                <div class="sl-command-tile"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""><span><strong>Готовность</strong><span>SVG icons</span></span><span class="sl-command-badge sl-command-badge-ok">100%</span></div>
+              </div>
+            </section>
+          </section>
+          <aside class="sl-command-queue">
+            <div class="sl-command-panel-head">
+              <strong><i class="bi bi-lightning-charge"></i> Очередь действий</strong>
+              <span class="sl-command-badge sl-command-badge-warn">95</span>
+            </div>
+            <div class="sl-command-event-list">
+              <div class="sl-command-event"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""><span><strong>Удалить setup.php</strong><span>критическое предупреждение</span></span><span class="sl-command-badge sl-command-badge-warn">сейчас</span></div>
+              <div class="sl-command-event"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""><span><strong>88 пользователей</strong><span>регистрации ждут решения</span></span><span class="sl-command-badge">88</span></div>
+              <div class="sl-command-event"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""><span><strong>3 комментария</strong><span>проверка модератором</span></span><span class="sl-command-badge">3</span></div>
+              <div class="sl-command-event"><img src="../templates/admin/images/icons/emoji_u1f4bc.svg" alt=""><span><strong>10 клиентов</strong><span>новые записи CRM</span></span><span class="sl-command-badge">10</span></div>
+              <div class="sl-command-event"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""><span><strong>2 новости</strong><span>проверить публикации</span></span><span class="sl-command-badge">2</span></div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Command center demo.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+</body>
+</html>

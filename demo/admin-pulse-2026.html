@@ -1,0 +1,960 @@
+<!doctype html>
+<html lang="ru" data-sl-theme="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Pulse — Live Ops Monitor 2026</title>
+<style>
+:root {
+  --sl-page: #eef5fa;
+  --sl-shell: #ffffff;
+  --sl-panel: #ffffff;
+  --sl-soft: #f2f7fb;
+  --sl-line: #d8e5ee;
+  --sl-line-hard: #b9cfdd;
+  --sl-text: #1b3244;
+  --sl-head: #07202f;
+  --sl-mute: #64798c;
+  --sl-blue: #0783bd;
+  --sl-blue-hot: #0aa0e0;
+  --sl-cyan: #0aa9c2;
+  --sl-green: #23a04a;
+  --sl-orange: #dd7d05;
+  --sl-red: #d63a3a;
+  --sl-violet: #7f63c0;
+  --sl-glow-blue: rgba(10, 160, 224, 0.24);
+  --sl-glow-red: rgba(214, 58, 58, 0.22);
+  --sl-tile-shadow: 0 2px 10px rgba(24, 66, 94, 0.10);
+  --sl-tile-shadow-hover: 0 10px 24px rgba(24, 66, 94, 0.18);
+  --sl-grid-line: rgba(7, 131, 189, 0.07);
+}
+html[data-sl-theme="night"] {
+  --sl-page: #070d14;
+  --sl-shell: #0b141e;
+  --sl-panel: #0e1926;
+  --sl-soft: #0a1420;
+  --sl-line: #1b2c3e;
+  --sl-line-hard: #2c4358;
+  --sl-text: #c4d8e6;
+  --sl-head: #eef7fd;
+  --sl-mute: #6f8ba0;
+  --sl-blue: #2fa8dd;
+  --sl-blue-hot: #46c2ff;
+  --sl-cyan: #35c3dc;
+  --sl-green: #43c56b;
+  --sl-orange: #f5a53a;
+  --sl-red: #ff6b6b;
+  --sl-violet: #a78ae0;
+  --sl-glow-blue: rgba(70, 194, 255, 0.16);
+  --sl-glow-red: rgba(255, 107, 107, 0.16);
+  --sl-tile-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --sl-tile-shadow-hover: 0 12px 28px rgba(0, 0, 0, 0.5);
+  --sl-grid-line: rgba(70, 194, 255, 0.05);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(1100px 500px at 85% -10%, var(--sl-glow-blue), transparent 60%),
+    repeating-linear-gradient(0deg, var(--sl-grid-line) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, var(--sl-grid-line) 0 1px, transparent 1px 44px),
+    var(--sl-page);
+  color: var(--sl-text);
+  font: 14px/1.5 "Segoe UI", Tahoma, Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+a { color: var(--sl-blue); text-decoration: none; }
+
+/* ---------- top bar ---------- */
+.sl-pulse-top {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--sl-line);
+  background: color-mix(in srgb, var(--sl-shell) 86%, transparent);
+  backdrop-filter: blur(10px);
+}
+.sl-pulse-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 2px;
+  color: var(--sl-head);
+}
+.sl-pulse-logo b { color: var(--sl-blue-hot); }
+.sl-pulse-logo small {
+  padding: 2px 8px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 999px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--sl-mute);
+  text-transform: uppercase;
+}
+.sl-pulse-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border: 1px solid color-mix(in srgb, var(--sl-green) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sl-green) 12%, transparent);
+  color: var(--sl-green);
+  font-size: 12px;
+  font-weight: 700;
+}
+.sl-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sl-green);
+  animation: sl-beat 1.6s ease-out infinite;
+}
+@keyframes sl-beat {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-green) 55%, transparent); }
+  70% { box-shadow: 0 0 0 9px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.sl-pulse-clock {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--sl-mute);
+  white-space: nowrap;
+}
+.sl-pulse-clock b { color: var(--sl-head); font-size: 15px; }
+.sl-top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 999px;
+  background: var(--sl-panel);
+  color: var(--sl-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.sl-top-btn:hover, .sl-top-btn:focus-visible {
+  border-color: var(--sl-blue);
+  box-shadow: 0 0 0 3px var(--sl-glow-blue);
+  transform: translateY(-1px);
+}
+.sl-top-btn img { width: 16px; height: 16px; }
+
+/* ---------- layout ---------- */
+.sl-pulse-wrap {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) 330px;
+  gap: 14px;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 14px 18px 40px;
+}
+.sl-rail {
+  position: sticky;
+  top: 68px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: start;
+  padding: 8px 6px;
+  border: 1px solid var(--sl-line);
+  border-radius: 14px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-tile-shadow);
+}
+.sl-rail a {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 44px;
+  border-radius: 10px;
+  transition: background-color 0.18s ease;
+}
+.sl-rail a img {
+  width: 21px;
+  height: 21px;
+  filter: grayscale(1) brightness(0.9) sepia(0.35) hue-rotate(160deg) saturate(2.4);
+  opacity: 0.72;
+  transition: filter 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+.sl-rail a:hover img, .sl-rail a.sl-on img { filter: none; opacity: 1; transform: scale(1.12); }
+.sl-rail a:hover, .sl-rail a.sl-on { background: var(--sl-soft); }
+.sl-rail a.sl-on::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--sl-blue-hot);
+  box-shadow: 0 0 10px var(--sl-blue-hot);
+}
+.sl-rail a::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 56px;
+  top: 50%;
+  z-index: 50;
+  padding: 4px 10px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 7px;
+  background: var(--sl-shell);
+  color: var(--sl-head);
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-4px, -50%);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+.sl-rail a:hover::after { opacity: 1; transform: translate(0, -50%); }
+.sl-rail .sl-rail-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--sl-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+.sl-main { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.sl-side { display: grid; gap: 14px; align-content: start; min-width: 0; }
+
+.sl-card {
+  border: 1px solid var(--sl-line);
+  border-radius: 14px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-tile-shadow);
+  overflow: hidden;
+}
+.sl-card-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--sl-line);
+  color: var(--sl-head);
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.sl-card-head img { width: 17px; height: 17px; }
+.sl-card-head .sl-spacer { margin-left: auto; }
+
+/* ---------- KPI row ---------- */
+.sl-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.sl-kpi {
+  position: relative;
+  padding: 13px 15px 9px;
+  border: 1px solid var(--sl-line);
+  border-radius: 14px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-tile-shadow);
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.sl-kpi:hover { transform: translateY(-3px); border-color: var(--sl-line-hard); box-shadow: var(--sl-tile-shadow-hover); }
+.sl-kpi-top { display: flex; align-items: center; gap: 8px; padding-right: 82px; color: var(--sl-mute); font-size: 12px; font-weight: 600; }
+.sl-kpi-top img { width: 16px; height: 16px; }
+.sl-kpi-val {
+  margin-top: 4px;
+  font-size: 27px;
+  font-weight: 800;
+  color: var(--sl-head);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+.sl-kpi-val small { font-size: 13px; font-weight: 600; color: var(--sl-mute); margin-left: 3px; }
+.sl-kpi-delta {
+  position: absolute;
+  top: 12px;
+  right: 13px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sl-kpi-delta.sl-up { background: color-mix(in srgb, var(--sl-green) 14%, transparent); color: var(--sl-green); }
+.sl-kpi-delta.sl-down { background: color-mix(in srgb, var(--sl-red) 13%, transparent); color: var(--sl-red); }
+.sl-kpi svg { display: block; width: 100%; height: 34px; margin-top: 5px; }
+.sl-kpi svg polyline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sl-kpi svg .sl-area { stroke: none; opacity: 0.15; }
+
+/* ---------- heartbeat chart ---------- */
+.sl-beat-body { padding: 12px 14px 8px; }
+.sl-beat-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; font-size: 12px; color: var(--sl-mute); }
+.sl-beat-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+#sl-beat-svg { display: block; width: 100%; height: 148px; }
+.sl-beat-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 9px 14px 13px;
+}
+.sl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 25px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sl-chip img { width: 13px; height: 13px; }
+.sl-chip-info { background: color-mix(in srgb, var(--sl-blue) 13%, transparent); color: var(--sl-blue); }
+.sl-chip-ok { background: color-mix(in srgb, var(--sl-green) 13%, transparent); color: var(--sl-green); }
+.sl-chip-warn { background: color-mix(in srgb, var(--sl-orange) 15%, transparent); color: var(--sl-orange); }
+.sl-chip-bad { background: color-mix(in srgb, var(--sl-red) 13%, transparent); color: var(--sl-red); }
+.sl-chip-mute { background: var(--sl-soft); color: var(--sl-mute); }
+
+/* ---------- module heatmap ---------- */
+.sl-heat-body { padding: 13px 14px; }
+.sl-heat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 9px;
+}
+.sl-heat-cell {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 10px 6px 8px;
+  border: 1px solid var(--sl-line);
+  border-radius: 11px;
+  background: var(--sl-soft);
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+.sl-heat-cell:hover { transform: translateY(-3px) scale(1.02); box-shadow: var(--sl-tile-shadow-hover); border-color: var(--sl-line-hard); z-index: 2; }
+.sl-heat-ico {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--sl-panel);
+  border: 1px solid var(--sl-line);
+  box-shadow: inset 0 -6px 10px rgba(0, 0, 0, 0.05);
+}
+.sl-heat-ico img { width: 21px; height: 21px; filter: saturate(0.82) contrast(0.96); transition: filter 0.2s ease, transform 0.2s ease; }
+.sl-heat-cell:hover .sl-heat-ico img { filter: saturate(1.1); transform: scale(1.14); }
+.sl-heat-name { font-size: 11.5px; font-weight: 600; color: var(--sl-head); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-heat-bar { width: 100%; height: 4px; border-radius: 3px; background: color-mix(in srgb, var(--sl-mute) 18%, transparent); overflow: hidden; }
+.sl-heat-bar i { display: block; height: 100%; border-radius: 3px; background: var(--sl-blue-hot); transition: width 0.8s ease; }
+.sl-heat-cell[data-tone="hot"] .sl-heat-bar i { background: var(--sl-orange); }
+.sl-heat-cell[data-tone="crit"] .sl-heat-bar i { background: var(--sl-red); }
+.sl-heat-cell[data-tone="crit"] { border-color: color-mix(in srgb, var(--sl-red) 45%, var(--sl-line)); animation: sl-crit 2.4s ease-in-out infinite; }
+@keyframes sl-crit {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 5px var(--sl-glow-red); }
+}
+.sl-heat-cell .sl-heat-n {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--sl-blue);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+}
+.sl-heat-detail {
+  display: none;
+  margin-top: 11px;
+  padding: 11px 13px;
+  border: 1px dashed var(--sl-line-hard);
+  border-radius: 11px;
+  background: var(--sl-soft);
+  font-size: 12.5px;
+}
+.sl-heat-detail.sl-open { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; animation: sl-fade 0.25s ease; }
+@keyframes sl-fade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.sl-heat-detail b { color: var(--sl-head); margin-right: 4px; }
+.sl-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: var(--sl-blue);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.15s ease;
+}
+.sl-mini:hover { background: var(--sl-blue-hot); transform: translateY(-1px); }
+.sl-mini.sl-ghost { background: transparent; border: 1px solid var(--sl-line-hard); color: var(--sl-text); }
+.sl-mini.sl-ghost:hover { border-color: var(--sl-blue); color: var(--sl-blue); }
+
+/* ---------- feed ---------- */
+.sl-feed-filters { display: flex; gap: 6px; }
+.sl-feed-filters button {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--sl-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sl-mute);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.sl-feed-filters button.sl-on { background: var(--sl-blue); border-color: var(--sl-blue); color: #fff; }
+.sl-feed {
+  max-height: 348px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.sl-feed-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--sl-line);
+  font-size: 12.5px;
+  animation: sl-fade 0.3s ease;
+}
+.sl-feed-item:last-child { border-bottom: none; }
+.sl-feed-ico {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--sl-soft);
+  border: 1px solid var(--sl-line);
+}
+.sl-feed-ico img { width: 16px; height: 16px; }
+.sl-feed-item p { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-feed-item p b { color: var(--sl-head); }
+.sl-feed-item time { color: var(--sl-mute); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sl-feed-item[data-kind="warn"] .sl-feed-ico { border-color: color-mix(in srgb, var(--sl-orange) 50%, var(--sl-line)); }
+.sl-feed-item[data-kind="crit"] .sl-feed-ico { border-color: color-mix(in srgb, var(--sl-red) 55%, var(--sl-line)); }
+
+/* ---------- side: alerts and queue ---------- */
+.sl-alert {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 11px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--sl-red) 45%, var(--sl-line));
+  border-radius: 14px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--sl-red) 9%, var(--sl-panel)), var(--sl-panel) 60%);
+  box-shadow: 0 0 0 0 var(--sl-glow-red);
+  animation: sl-crit 3s ease-in-out infinite;
+}
+.sl-alert .sl-heat-ico { width: 40px; height: 40px; }
+.sl-alert .sl-heat-ico img { width: 23px; height: 23px; }
+.sl-alert h3 { margin: 0 0 3px; font-size: 13.5px; color: var(--sl-head); }
+.sl-alert p { margin: 0 0 8px; font-size: 12.5px; color: var(--sl-mute); }
+.sl-queue { padding: 6px 0; }
+.sl-queue-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 14px;
+  transition: background-color 0.15s ease;
+}
+.sl-queue-item:hover { background: var(--sl-soft); }
+.sl-queue-item .sl-heat-ico { width: 34px; height: 34px; }
+.sl-queue-item .sl-heat-ico img { width: 19px; height: 19px; }
+.sl-queue-item h4 { margin: 0; font-size: 13px; color: var(--sl-head); }
+.sl-queue-item .sl-q-bar { margin-top: 5px; height: 4px; border-radius: 3px; background: color-mix(in srgb, var(--sl-mute) 18%, transparent); overflow: hidden; }
+.sl-queue-item .sl-q-bar i { display: block; height: 100%; background: var(--sl-cyan); border-radius: 3px; transition: width 0.6s ease; }
+.sl-queue-item .sl-q-n {
+  min-width: 26px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--sl-soft);
+  border: 1px solid var(--sl-line);
+  color: var(--sl-head);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sl-gauge-body { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 14px; padding: 13px 14px; }
+.sl-gauge { font-size: 12px; color: var(--sl-mute); }
+.sl-gauge b { display: flex; justify-content: space-between; color: var(--sl-head); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.sl-gauge .sl-g-bar { margin-top: 4px; height: 6px; border-radius: 4px; background: color-mix(in srgb, var(--sl-mute) 16%, transparent); overflow: hidden; }
+.sl-gauge .sl-g-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--sl-cyan), var(--sl-blue-hot)); transition: width 0.9s ease; }
+
+/* ---------- toast ---------- */
+#sl-toasts { position: fixed; right: 18px; bottom: 18px; z-index: 100; display: grid; gap: 8px; }
+.sl-toast {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 15px;
+  border: 1px solid var(--sl-line-hard);
+  border-left: 3px solid var(--sl-green);
+  border-radius: 11px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-tile-shadow-hover);
+  color: var(--sl-head);
+  font-size: 13px;
+  font-weight: 600;
+  animation: sl-toast-in 0.3s ease;
+}
+.sl-toast img { width: 16px; height: 16px; }
+@keyframes sl-toast-in { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .sl-pulse-wrap { grid-template-columns: 62px minmax(0, 1fr); }
+  .sl-side { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+}
+@media (max-width: 760px) {
+  .sl-pulse-top { flex-wrap: wrap; row-gap: 8px; padding: 10px 12px; }
+  .sl-card-head { flex-wrap: wrap; row-gap: 6px; }
+  .sl-feed-filters { flex-wrap: wrap; }
+  .sl-pulse-wrap { grid-template-columns: minmax(0, 1fr); padding: 10px 10px 30px; }
+  .sl-rail { position: static; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .sl-rail a::after { display: none; }
+  .sl-rail a.sl-on::before { left: 8px; right: 8px; top: auto; bottom: -4px; width: auto; height: 3px; }
+  .sl-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sl-kpi-top { padding-right: 0; }
+  .sl-kpi-delta { position: static; display: inline-block; margin-top: 3px; width: max-content; }
+  .sl-pulse-clock { display: none; }
+  .sl-side { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="sl-pulse-top">
+  <div class="sl-pulse-logo">SLA<b>E</b>D <small>pulse</small></div>
+  <span class="sl-pulse-status"><span class="sl-pulse-dot"></span> система активна</span>
+  <div class="sl-pulse-clock">аптайм <b id="sl-uptime">14д 06:12:44</b> &nbsp;·&nbsp; <b id="sl-clock">--:--:--</b></div>
+  <button class="sl-top-btn" id="sl-live-toggle" type="button"><img src="../templates/admin/images/icons/emoji_u26a1.svg" alt=""> live: вкл</button>
+  <button class="sl-top-btn" id="sl-theme-toggle" type="button"><img src="../templates/admin/images/icons/emoji_u1f319.svg" alt="" id="sl-theme-ico"> <span id="sl-theme-label">день</span></button>
+</header>
+
+<div class="sl-pulse-wrap">
+
+  <nav class="sl-rail" aria-label="Разделы">
+    <a href="#" class="sl-on" data-tip="Пульт"><img src="../templates/admin/images/icons/emoji_u1f4e1.svg" alt=""></a>
+    <a href="#" data-tip="Пользователи"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""><span class="sl-rail-badge">88</span></a>
+    <a href="#" data-tip="Комментарии"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""><span class="sl-rail-badge">3</span></a>
+    <a href="#" data-tip="Блоки и баннеры"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></a>
+    <a href="#" data-tip="Модули"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></a>
+    <a href="#" data-tip="Категории"><img src="../templates/admin/images/icons/emoji_u1f4c2.svg" alt=""></a>
+    <a href="#" data-tip="Статистика"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></a>
+    <a href="#" data-tip="Безопасность"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""><span class="sl-rail-badge">1</span></a>
+    <a href="#" data-tip="Планировщик"><img src="../templates/admin/images/icons/emoji_u23f0.svg" alt=""></a>
+    <a href="#" data-tip="Конфигурации"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""></a>
+  </nav>
+
+  <main class="sl-main">
+
+    <section class="sl-kpis" aria-label="Ключевые показатели">
+      <article class="sl-kpi">
+        <div class="sl-kpi-top"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""> новые пользователи</div>
+        <div class="sl-kpi-val" id="sl-kpi-users">88</div>
+        <span class="sl-kpi-delta sl-up">+12 сегодня</span>
+        <svg viewBox="0 0 200 34" preserveAspectRatio="none" data-spark="users"></svg>
+      </article>
+      <article class="sl-kpi">
+        <div class="sl-kpi-top"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""> очередь модерации</div>
+        <div class="sl-kpi-val" id="sl-kpi-queue">3</div>
+        <span class="sl-kpi-delta sl-down">-2 за час</span>
+        <svg viewBox="0 0 200 34" preserveAspectRatio="none" data-spark="queue"></svg>
+      </article>
+      <article class="sl-kpi">
+        <div class="sl-kpi-top"><img src="../templates/admin/images/icons/emoji_u26a1.svg" alt=""> генерация</div>
+        <div class="sl-kpi-val" id="sl-kpi-gen">0.31<small>сек</small></div>
+        <span class="sl-kpi-delta sl-up">стабильно</span>
+        <svg viewBox="0 0 200 34" preserveAspectRatio="none" data-spark="gen"></svg>
+      </article>
+      <article class="sl-kpi">
+        <div class="sl-kpi-top"><img src="../templates/admin/images/icons/emoji_u1f5c4.svg" alt=""> запросы к БД</div>
+        <div class="sl-kpi-val" id="sl-kpi-sql">17<small>/стр</small></div>
+        <span class="sl-kpi-delta sl-up">Ø 0.4 мс</span>
+        <svg viewBox="0 0 200 34" preserveAspectRatio="none" data-spark="sql"></svg>
+      </article>
+    </section>
+
+    <section class="sl-card" aria-label="Пульс системы">
+      <div class="sl-card-head">
+        <img src="../templates/admin/images/icons/emoji_u1f4c8.svg" alt=""> Пульс системы — трафик и нагрузка
+        <span class="sl-spacer"></span>
+        <span class="sl-chip sl-chip-ok"><span class="sl-pulse-dot"></span> live</span>
+      </div>
+      <div class="sl-beat-body">
+        <div class="sl-beat-legend">
+          <span><i style="background: var(--sl-blue-hot)"></i>просмотры / мин</span>
+          <span><i style="background: var(--sl-violet)"></i>запросы БД / мин</span>
+        </div>
+        <svg id="sl-beat-svg" viewBox="0 0 600 148" preserveAspectRatio="none" role="img" aria-label="График нагрузки"></svg>
+      </div>
+      <div class="sl-beat-foot">
+        <span class="sl-chip sl-chip-info"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt="">онлайн: <b id="sl-online">7</b></span>
+        <span class="sl-chip sl-chip-ok"><img src="../templates/admin/images/icons/emoji_u1f4be.svg" alt="">память: 10.8 MB / 1 GB</span>
+        <span class="sl-chip sl-chip-warn"><img src="../templates/admin/images/icons/emoji_u1f4e5.svg" alt="">загрузки: 2 в работе</span>
+        <span class="sl-chip sl-chip-mute"><img src="../templates/admin/images/icons/emoji_u23f1.svg" alt="">пик: 14:02</span>
+      </div>
+    </section>
+
+    <section class="sl-card" aria-label="Активность модулей">
+      <div class="sl-card-head">
+        <img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""> Активность модулей
+        <span class="sl-spacer"></span>
+        <span class="sl-chip sl-chip-mute">клик по модулю — детали</span>
+      </div>
+      <div class="sl-heat-body">
+        <div class="sl-heat-grid" id="sl-heat-grid"></div>
+        <div class="sl-heat-detail" id="sl-heat-detail"></div>
+      </div>
+    </section>
+
+    <section class="sl-card" aria-label="Лента событий">
+      <div class="sl-card-head">
+        <img src="../templates/admin/images/icons/emoji_u1f4e3.svg" alt=""> Живая лента событий
+        <span class="sl-spacer"></span>
+        <div class="sl-feed-filters" id="sl-feed-filters">
+          <button type="button" class="sl-on" data-f="all">все</button>
+          <button type="button" data-f="info">события</button>
+          <button type="button" data-f="warn">внимание</button>
+          <button type="button" data-f="crit">критично</button>
+        </div>
+      </div>
+      <div class="sl-feed" id="sl-feed"></div>
+    </section>
+
+  </main>
+
+  <aside class="sl-side">
+
+    <section class="sl-alert" role="alert">
+      <span class="sl-heat-ico"><img src="../templates/admin/images/icons/emoji_u1f6a8.svg" alt=""></span>
+      <div>
+        <h3>Обнаружен setup.php</h3>
+        <p>Файл установки доступен из веба. Удалите или переименуйте его до продолжения работы.</p>
+        <button class="sl-mini" type="button" data-toast="setup.php перемещён в карантин"><img src="../templates/admin/images/icons/emoji_u1f5d1.svg" alt="" style="width:13px;height:13px">устранить</button>
+        <button class="sl-mini sl-ghost" type="button" data-toast="Напоминание отложено на 1 час">позже</button>
+      </div>
+    </section>
+
+    <section class="sl-card">
+      <div class="sl-card-head"><img src="../templates/admin/images/icons/emoji_u23f0.svg" alt=""> Очередь решений <span class="sl-spacer"></span><span class="sl-chip sl-chip-warn" id="sl-q-total">104</span></div>
+      <div class="sl-queue">
+        <div class="sl-queue-item">
+          <span class="sl-heat-ico"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span>
+          <div><h4>Регистрации пользователей</h4><div class="sl-q-bar"><i style="width: 84%"></i></div></div>
+          <span class="sl-q-n">88</span>
+        </div>
+        <div class="sl-queue-item">
+          <span class="sl-heat-ico"><img src="../templates/admin/images/icons/emoji_u1f4bc.svg" alt=""></span>
+          <div><h4>Новые клиенты CRM</h4><div class="sl-q-bar"><i style="width: 22%"></i></div></div>
+          <span class="sl-q-n">10</span>
+        </div>
+        <div class="sl-queue-item">
+          <span class="sl-heat-ico"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span>
+          <div><h4>Комментарии на проверке</h4><div class="sl-q-bar"><i style="width: 9%"></i></div></div>
+          <span class="sl-q-n">3</span>
+        </div>
+        <div class="sl-queue-item">
+          <span class="sl-heat-ico"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""></span>
+          <div><h4>Черновики новостей</h4><div class="sl-q-bar"><i style="width: 6%"></i></div></div>
+          <span class="sl-q-n">2</span>
+        </div>
+        <div class="sl-queue-item">
+          <span class="sl-heat-ico"><img src="../templates/admin/images/icons/emoji_u1f91d.svg" alt="" onerror="this.src='../templates/admin/images/icons/emoji_u1f465.svg'"></span>
+          <div><h4>Заявки партнёров</h4><div class="sl-q-bar"><i style="width: 4%"></i></div></div>
+          <span class="sl-q-n">1</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sl-card">
+      <div class="sl-card-head"><img src="../templates/admin/images/icons/emoji_u1f5a5.svg" alt=""> Ресурсы сервера</div>
+      <div class="sl-gauge-body">
+        <div class="sl-gauge"><b>память <span id="sl-g-mem">1.1%</span></b><div class="sl-g-bar"><i id="sl-g-mem-bar" style="width: 4%"></i></div></div>
+        <div class="sl-gauge"><b>CPU <span id="sl-g-cpu">6%</span></b><div class="sl-g-bar"><i id="sl-g-cpu-bar" style="width: 6%"></i></div></div>
+        <div class="sl-gauge"><b>БД-пул <span id="sl-g-db">17%</span></b><div class="sl-g-bar"><i id="sl-g-db-bar" style="width: 17%"></i></div></div>
+        <div class="sl-gauge"><b>диск <span>41%</span></b><div class="sl-g-bar"><i style="width: 41%"></i></div></div>
+      </div>
+    </section>
+
+    <section class="sl-card">
+      <div class="sl-card-head"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""> Быстрые действия</div>
+      <div class="sl-beat-foot" style="padding-top: 12px">
+        <button class="sl-mini" type="button" data-toast="Кеш шаблонов очищен"><img src="../templates/admin/images/icons/emoji_u267b.svg" alt="" style="width:13px;height:13px">очистить кеш</button>
+        <button class="sl-mini" type="button" data-toast="Проверка безопасности запущена"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt="" style="width:13px;height:13px">аудит защиты</button>
+        <button class="sl-mini sl-ghost" type="button" data-toast="Бэкап поставлен в очередь">бэкап БД</button>
+        <button class="sl-mini sl-ghost" type="button" data-toast="Индекс поиска обновляется">переиндексация</button>
+      </div>
+    </section>
+
+  </aside>
+</div>
+
+<div id="sl-toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var ICO = '../templates/admin/images/icons/';
+  var live = true;
+
+  /* theme */
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('sl-theme-toggle');
+  function applyTheme(t) {
+    root.setAttribute('data-sl-theme', t);
+    document.getElementById('sl-theme-label').textContent = t === 'night' ? 'день' : 'ночь';
+    document.getElementById('sl-theme-ico').src = ICO + (t === 'night' ? 'emoji_u2600.svg' : 'emoji_u1f319.svg');
+    try { localStorage.setItem('sl-pulse-theme', t); } catch (e) {}
+  }
+  themeBtn.addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-sl-theme') === 'night' ? 'day' : 'night');
+  });
+  try { var saved = localStorage.getItem('sl-pulse-theme'); if (saved) applyTheme(saved); } catch (e) {}
+
+  /* clock + uptime */
+  var upSec = 14 * 86400 + 6 * 3600 + 12 * 60 + 44;
+  function two(n) { return n < 10 ? '0' + n : '' + n; }
+  setInterval(function () {
+    var d = new Date();
+    document.getElementById('sl-clock').textContent = two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+    upSec++;
+    var days = Math.floor(upSec / 86400), r = upSec % 86400;
+    document.getElementById('sl-uptime').textContent = days + 'д ' + two(Math.floor(r / 3600)) + ':' + two(Math.floor((r % 3600) / 60)) + ':' + two(r % 60);
+  }, 1000);
+
+  /* sparklines */
+  function makeSeries(n, base, jitter) {
+    var a = [], v = base;
+    for (var i = 0; i < n; i++) { v = Math.max(2, v + (Math.random() - 0.5) * jitter); a.push(v); }
+    return a;
+  }
+  var sparks = {};
+  document.querySelectorAll('[data-spark]').forEach(function (svg) {
+    sparks[svg.getAttribute('data-spark')] = { svg: svg, data: makeSeries(30, 18, 9) };
+  });
+  var sparkColors = { users: 'var(--sl-blue-hot)', queue: 'var(--sl-orange)', gen: 'var(--sl-green)', sql: 'var(--sl-violet)' };
+  function drawSpark(key) {
+    var s = sparks[key], w = 200, h = 34, max = Math.max.apply(null, s.data) * 1.15;
+    var pts = s.data.map(function (v, i) {
+      return (i * w / (s.data.length - 1)).toFixed(1) + ',' + (h - v / max * h).toFixed(1);
+    }).join(' ');
+    var c = sparkColors[key];
+    s.svg.innerHTML = '<polygon class="sl-area" points="0,' + h + ' ' + pts + ' ' + w + ',' + h + '" fill="' + c + '"></polygon>' +
+      '<polyline points="' + pts + '" stroke="' + c + '"></polyline>';
+  }
+  Object.keys(sparks).forEach(drawSpark);
+
+  /* heartbeat big chart */
+  var beat = { a: makeSeries(60, 70, 22), b: makeSeries(60, 40, 16) };
+  function drawBeat() {
+    var svg = document.getElementById('sl-beat-svg'), w = 600, h = 148;
+    function line(data, color, fill) {
+      var max = 130;
+      var pts = data.map(function (v, i) {
+        return (i * w / (data.length - 1)).toFixed(1) + ',' + (h - 8 - Math.min(v, max) / max * (h - 20)).toFixed(1);
+      }).join(' ');
+      var out = '';
+      if (fill) out += '<polygon points="0,' + h + ' ' + pts + ' ' + w + ',' + h + '" fill="' + color + '" opacity="0.10"></polygon>';
+      out += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round"></polyline>';
+      return out;
+    }
+    svg.innerHTML = line(beat.a, '#46c2ff', true) + line(beat.b, '#a78ae0', false);
+  }
+  drawBeat();
+
+  /* live ticking */
+  var online = 7, users = 88, queue = 3;
+  setInterval(function () {
+    if (!live) return;
+    Object.keys(sparks).forEach(function (k) {
+      var s = sparks[k];
+      s.data.push(Math.max(2, s.data[s.data.length - 1] + (Math.random() - 0.5) * 9));
+      s.data.shift();
+      drawSpark(k);
+    });
+    beat.a.push(Math.max(6, beat.a[beat.a.length - 1] + (Math.random() - 0.5) * 24));
+    beat.a.shift();
+    beat.b.push(Math.max(4, beat.b[beat.b.length - 1] + (Math.random() - 0.5) * 15));
+    beat.b.shift();
+    drawBeat();
+    if (Math.random() < 0.35) {
+      online = Math.max(1, online + (Math.random() < 0.5 ? -1 : 1));
+      document.getElementById('sl-online').textContent = online;
+    }
+    if (Math.random() < 0.2) {
+      users++;
+      document.getElementById('sl-kpi-users').textContent = users;
+    }
+    document.getElementById('sl-kpi-gen').innerHTML = (0.28 + Math.random() * 0.08).toFixed(2) + '<small>сек</small>';
+    var cpu = 4 + Math.round(Math.random() * 14);
+    document.getElementById('sl-g-cpu').textContent = cpu + '%';
+    document.getElementById('sl-g-cpu-bar').style.width = cpu + '%';
+    var db = 10 + Math.round(Math.random() * 18);
+    document.getElementById('sl-g-db').textContent = db + '%';
+    document.getElementById('sl-g-db-bar').style.width = db + '%';
+  }, 1800);
+
+  document.getElementById('sl-live-toggle').addEventListener('click', function () {
+    live = !live;
+    this.lastChild.textContent = ' live: ' + (live ? 'вкл' : 'пауза');
+    this.style.opacity = live ? '' : '0.6';
+  });
+
+  /* module heatmap */
+  var mods = [
+    ['Пользователи', 'emoji_u1f465.svg', 84, 'hot', 88, 'очередь регистраций'],
+    ['Безопасность', 'emoji_u1f6e1.svg', 96, 'crit', 1, 'setup.php в корне'],
+    ['Новости', 'emoji_u1f4f0.svg', 41, '', 2, 'черновики за сегодня'],
+    ['Комментарии', 'emoji_u1f4ac.svg', 33, '', 3, 'ждут модерации'],
+    ['Магазин', 'emoji_u1f6d2.svg', 58, 'hot', 0, 'заказы за час: 4'],
+    ['Блоки', 'emoji_u1f9e9.svg', 22, '', 0, '31 активный блок'],
+    ['Статьи', 'emoji_u1f4c4.svg', 17, '', 0, 'без изменений'],
+    ['Форум', 'emoji_u1f5e8.svg', 46, '', 0, '12 новых постов'],
+    ['Рассылка', 'emoji_u1f4ec.svg', 8, '', 0, 'кампаний нет'],
+    ['Статистика', 'emoji_u1f4ca.svg', 64, 'hot', 0, 'пик трафика 14:02'],
+    ['Загрузки', 'emoji_u1f4e5.svg', 28, '', 0, '2 файла в обработке'],
+    ['Поиск', 'emoji_u1f50d.svg', 37, '', 0, 'индекс актуален']
+  ];
+  var grid = document.getElementById('sl-heat-grid');
+  var detail = document.getElementById('sl-heat-detail');
+  mods.forEach(function (m, idx) {
+    var cell = document.createElement('button');
+    cell.className = 'sl-heat-cell';
+    cell.type = 'button';
+    if (m[3]) cell.setAttribute('data-tone', m[3]);
+    cell.innerHTML = '<span class="sl-heat-ico"><img src="' + ICO + m[1] + '" alt=""></span>' +
+      '<span class="sl-heat-name">' + m[0] + '</span>' +
+      '<span class="sl-heat-bar"><i style="width:' + m[2] + '%"></i></span>' +
+      (m[4] ? '<span class="sl-heat-n">' + m[4] + '</span>' : '');
+    cell.addEventListener('click', function () {
+      if (detail.classList.contains('sl-open') && detail.getAttribute('data-idx') == idx) {
+        detail.classList.remove('sl-open');
+        return;
+      }
+      detail.setAttribute('data-idx', idx);
+      detail.innerHTML = '<b>' + m[0] + ':</b> ' + m[5] + ' · активность ' + m[2] + '%' +
+        ' <button class="sl-mini" type="button" data-toast="Открываем раздел «' + m[0] + '»">открыть</button>' +
+        ' <button class="sl-mini sl-ghost" type="button" data-toast="«' + m[0] + '» добавлен в фавориты">в фавориты</button>';
+      detail.classList.add('sl-open');
+    });
+    grid.appendChild(cell);
+  });
+
+  /* live feed */
+  var feed = document.getElementById('sl-feed');
+  var feedKinds = {
+    info: ['emoji_u1f464.svg', [
+      '<b>Гость</b> зарегистрировался на сайте',
+      '<b>Andrej</b> оставил комментарий к новости',
+      'Открыта страница <b>Каталог файлов</b>',
+      '<b>Sypex Dumper</b> завершил резервную копию',
+      'Планировщик выполнил задачу <b>sitemap</b>',
+      '<b>Elena</b> скачала файл из каталога'
+    ]],
+    warn: ['emoji_u26a0.svg', [
+      'Медленный запрос: <b>0.8 сек</b> в модуле shop',
+      'Очередь регистраций выросла до <b>88</b>',
+      'Устаревший блок <b>Sape</b> отключён более года'
+    ]],
+    crit: ['emoji_u1f6a8.svg', [
+      'Файл <b>setup.php</b> всё ещё доступен',
+      'Неудачный вход в админку с IP <b>93.12.4.8</b>'
+    ]]
+  };
+  var filter = 'all';
+  function addFeed(kind, first) {
+    var pool = feedKinds[kind];
+    var item = document.createElement('div');
+    item.className = 'sl-feed-item';
+    item.setAttribute('data-kind', kind);
+    var d = new Date();
+    item.innerHTML = '<span class="sl-feed-ico"><img src="' + ICO + pool[0] + '" alt=""></span>' +
+      '<p>' + pool[1][Math.floor(Math.random() * pool[1].length)] + '</p>' +
+      '<time>' + two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds()) + '</time>';
+    item.style.display = (filter === 'all' || filter === kind) ? '' : 'none';
+    if (first) feed.appendChild(item); else feed.insertBefore(item, feed.firstChild);
+    while (feed.children.length > 24) feed.removeChild(feed.lastChild);
+  }
+  for (var i = 0; i < 8; i++) addFeed(Math.random() < 0.75 ? 'info' : (Math.random() < 0.7 ? 'warn' : 'crit'), true);
+  setInterval(function () {
+    if (!live) return;
+    var r = Math.random();
+    addFeed(r < 0.72 ? 'info' : (r < 0.93 ? 'warn' : 'crit'));
+  }, 3400);
+  document.getElementById('sl-feed-filters').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    this.querySelectorAll('button').forEach(function (b) { b.classList.remove('sl-on'); });
+    btn.classList.add('sl-on');
+    filter = btn.getAttribute('data-f');
+    feed.querySelectorAll('.sl-feed-item').forEach(function (it) {
+      it.style.display = (filter === 'all' || it.getAttribute('data-kind') === filter) ? '' : 'none';
+    });
+  });
+
+  /* toasts */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-toast]');
+    if (!btn) return;
+    var t = document.createElement('div');
+    t.className = 'sl-toast';
+    t.innerHTML = '<img src="' + ICO + 'emoji_u2705.svg" alt="">' + btn.getAttribute('data-toast');
+    document.getElementById('sl-toasts').appendChild(t);
+    setTimeout(function () { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; }, 2600);
+    setTimeout(function () { t.remove(); }, 3100);
+  });
+})();
+</script>
+</body>
+</html>

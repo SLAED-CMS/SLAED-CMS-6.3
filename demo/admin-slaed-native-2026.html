@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="ru" data-sl-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Native Admin 2026 Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+:root {
+  --sl-native-page: #e9f6fb;
+  --sl-native-shell: #ffffff;
+  --sl-native-surface: #ffffff;
+  --sl-native-soft: #f3f8fb;
+  --sl-native-soft-strong: #e8f2f7;
+  --sl-native-border: #d6e5ee;
+  --sl-native-border-strong: #b8cedc;
+  --sl-native-text: #183044;
+  --sl-native-heading: #061b2e;
+  --sl-native-muted: #60758a;
+  --sl-native-blue: #0783bd;
+  --sl-native-blue-deep: #006da2;
+  --sl-native-green: #2aa747;
+  --sl-native-orange: #dc7a00;
+  --sl-native-red: #d33535;
+  --sl-native-violet: #8060b8;
+  --sl-native-shadow: 0 2px 7px rgba(33, 76, 104, 0.11);
+  --sl-native-shadow-hover: 0 8px 18px rgba(33, 76, 104, 0.16);
+}
+
+html[data-sl-theme="night"] {
+  --sl-native-page: #10151b;
+  --sl-native-shell: #151c25;
+  --sl-native-surface: #19222d;
+  --sl-native-soft: #111820;
+  --sl-native-soft-strong: #202b38;
+  --sl-native-border: #2c3a4a;
+  --sl-native-border-strong: #46596f;
+  --sl-native-text: #d9e8f2;
+  --sl-native-heading: #f6fbff;
+  --sl-native-muted: #91a6b9;
+  --sl-native-blue: #48b6ed;
+  --sl-native-blue-deep: #1d92cf;
+  --sl-native-green: #65ca78;
+  --sl-native-orange: #ffb24c;
+  --sl-native-red: #ff7474;
+  --sl-native-violet: #b69ae2;
+  --sl-native-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+  --sl-native-shadow-hover: 0 10px 22px rgba(0, 0, 0, 0.34);
+}
+
+html[data-sl-theme="night"],
+html[data-sl-theme="night"] body {
+  background: var(--sl-native-page);
+  color: var(--sl-native-text);
+}
+
+html[data-sl-theme="night"] .sl-wrapper,
+html[data-sl-theme="night"] .sl-wrapmid,
+html[data-sl-theme="night"] .sl-header,
+html[data-sl-theme="night"] .sl-admin-content {
+  background: var(--sl-native-shell);
+  border-color: var(--sl-native-border-strong);
+}
+
+html[data-sl-theme="night"] .sl-toolbar,
+html[data-sl-theme="night"] .sl-toolbar div {
+  background: var(--sl-native-surface);
+  border-color: var(--sl-native-border);
+}
+
+html[data-sl-theme="night"] .sl-toolbar li a,
+html[data-sl-theme="night"] a {
+  color: var(--sl-native-blue);
+}
+
+.sl-native {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 10px;
+  color: var(--sl-native-text);
+}
+
+.sl-native-side,
+.sl-native-main {
+  min-width: 0;
+}
+
+.sl-native-side {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.sl-native-main {
+  display: grid;
+  gap: 10px;
+}
+
+.sl-native-box {
+  overflow: hidden;
+  border: 1px solid var(--sl-native-border);
+  border-radius: 8px;
+  background: var(--sl-native-surface);
+  box-shadow: var(--sl-native-shadow);
+}
+
+.sl-native-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: linear-gradient(to bottom, #1fa0d2 0%, #077db4 48%, #00689d 100%);
+  font-weight: bold;
+}
+
+.sl-native-head-orange {
+  background: linear-gradient(to bottom, #ffad2d 0%, #e47b00 48%, #c76300 100%);
+}
+
+.sl-native-head-green {
+  background: linear-gradient(to bottom, #53c766 0%, #26a541 48%, #16872e 100%);
+}
+
+.sl-native-head-soft {
+  color: var(--sl-native-heading);
+  border-bottom: 1px solid var(--sl-native-border);
+  background: linear-gradient(to bottom, var(--sl-native-soft) 0%, var(--sl-native-soft-strong) 100%);
+}
+
+.sl-native-head:not(.sl-native-head-soft) > .sl-native-chip {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sl-native-body {
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  background: var(--sl-native-soft);
+}
+
+.sl-native-link,
+.sl-native-module,
+.sl-native-status,
+.sl-native-alert,
+.sl-native-strip {
+  border: 1px solid var(--sl-native-border);
+  border-radius: 8px;
+  background: var(--sl-native-surface);
+  box-shadow: 0 1px 2px rgba(33, 76, 104, 0.06);
+}
+
+.sl-native-link {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  min-height: 48px;
+  padding: 7px 8px;
+  color: var(--sl-native-text);
+  text-decoration: none;
+}
+
+.sl-native-link:hover,
+.sl-native-module:hover {
+  border-color: var(--sl-native-border-strong);
+  box-shadow: var(--sl-native-shadow-hover);
+  text-decoration: none;
+}
+
+.sl-native-title {
+  display: block;
+  overflow: hidden;
+  color: var(--sl-native-blue-deep);
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-native-note {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: var(--sl-native-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-native-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--sl-native-blue) 24%, var(--sl-native-border));
+  border-radius: 8px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sl-native-blue) 7%, var(--sl-native-surface)) 0%, var(--sl-native-surface) 100%);
+}
+
+.sl-native-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: saturate(0.84) contrast(0.95) drop-shadow(0 1px 1px rgba(20, 67, 96, 0.16));
+}
+
+.sl-native-icon-muted img {
+  filter: saturate(0.44) contrast(0.88) opacity(0.76);
+}
+
+html[data-sl-theme="night"] .sl-native-icon img {
+  filter: saturate(0.66) contrast(0.9) brightness(0.96) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.28));
+}
+
+html[data-sl-theme="night"] .sl-native-icon-muted img {
+  filter: saturate(0.22) contrast(0.82) brightness(1.12) opacity(0.72);
+}
+
+.sl-native-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--sl-native-soft-strong);
+  color: var(--sl-native-heading);
+  font: 13px/1 Arial, Tahoma, sans-serif;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sl-native-chip-info {
+  color: var(--sl-native-blue-deep);
+  background: color-mix(in srgb, var(--sl-native-blue) 13%, transparent);
+}
+
+.sl-native-chip-success {
+  color: var(--sl-native-green);
+  background: color-mix(in srgb, var(--sl-native-green) 15%, transparent);
+}
+
+.sl-native-chip-warn {
+  color: var(--sl-native-orange);
+  background: color-mix(in srgb, var(--sl-native-orange) 17%, transparent);
+}
+
+.sl-native-chip-danger {
+  color: var(--sl-native-red);
+  background: color-mix(in srgb, var(--sl-native-red) 13%, transparent);
+}
+
+.sl-native-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sl-native-border-strong);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.sl-native-mini-active,
+.sl-native-mini:hover {
+  background: var(--sl-native-blue);
+  color: #ffffff;
+}
+
+.sl-native-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 10px;
+}
+
+.sl-native-alert {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 56px;
+  padding: 8px 10px;
+  border-left: 4px solid var(--sl-native-orange);
+}
+
+.sl-native-alert-danger {
+  border-left-color: var(--sl-native-red);
+  background: color-mix(in srgb, var(--sl-native-red) 5%, var(--sl-native-surface));
+}
+
+.sl-native-alert-info {
+  border-left-color: var(--sl-native-blue);
+  background: color-mix(in srgb, var(--sl-native-blue) 5%, var(--sl-native-surface));
+}
+
+.sl-native-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+}
+
+.sl-native-toolbar-main,
+.sl-native-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
+.sl-native-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--sl-native-border-strong);
+  border-radius: 999px;
+  background: linear-gradient(to top, var(--sl-native-surface) 0%, var(--sl-native-soft-strong) 100%);
+  color: var(--sl-native-heading);
+  box-shadow: 0 1px 2px rgba(33, 76, 104, 0.09);
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sl-native-button-primary {
+  border-color: color-mix(in srgb, var(--sl-native-blue-deep) 70%, #000000);
+  background: linear-gradient(to top, var(--sl-native-blue-deep) 0%, var(--sl-native-blue) 100%);
+  color: #ffffff;
+}
+
+.sl-native-button-primary,
+html[data-sl-theme="night"] .sl-native-button-primary,
+html[data-sl-theme="night"] a.sl-native-button-primary {
+  color: #ffffff;
+}
+
+.sl-native-button:hover {
+  opacity: 0.88;
+  text-decoration: none;
+}
+
+.sl-native-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(116px, 1fr));
+  gap: 7px;
+}
+
+.sl-native-module {
+  display: grid;
+  grid-template-rows: 42px auto auto;
+  justify-items: center;
+  align-content: start;
+  min-height: 106px;
+  padding: 10px 8px 8px;
+  color: var(--sl-native-text);
+  text-align: center;
+  text-decoration: none;
+}
+
+.sl-native-module .sl-native-title {
+  max-width: 100%;
+  margin-top: 7px;
+  color: var(--sl-native-blue-deep);
+}
+
+.sl-native-module .sl-native-note {
+  max-width: 100%;
+}
+
+.sl-native-module-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.sl-native-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.sl-native-status {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 54px;
+  padding: 8px;
+}
+
+.sl-native-watch {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--sl-native-border);
+}
+
+.sl-native-watch:last-child {
+  border-bottom: 0;
+}
+
+.sl-native-theme {
+  margin-left: 8px;
+}
+
+@media (max-width: 1240px) {
+  .sl-native {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-native-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sl-native-grid {
+    grid-template-columns: repeat(4, minmax(116px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .sl-native-side,
+  .sl-native-grid,
+  .sl-native-kpi {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-native-alert,
+  .sl-native-strip {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .sl-native-alert > .sl-native-chip,
+  .sl-native-strip > .sl-native-chip {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand"><h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1></div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-grid-3x3-gap"></i><b>Блоки и баннеры</b></a></li>
+              <li><a href="#"><i class="bi bi-puzzle"></i><b>Модули</b></a></li>
+              <li><a href="#"><i class="bi bi-tags"></i><b>Категории</b></a></li>
+              <li><a href="#"><i class="bi bi-globe"></i><b>Сайт</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/de.svg" alt="DE"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/fr.svg" alt="FR"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-native">
+      <aside class="sl-native-side">
+        <section class="sl-native-box">
+          <div class="sl-native-head sl-native-head-orange"><span><i class="bi bi-stars"></i> Новые</span><span class="sl-native-mini">104</span></div>
+          <div class="sl-native-body">
+            <a class="sl-native-link" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span><span><span class="sl-native-title">Пользователи</span><span class="sl-native-note">регистрация и группы</span></span><span class="sl-native-chip sl-native-chip-danger">88</span></a>
+            <a class="sl-native-link" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""></span><span><span class="sl-native-title">Новости</span><span class="sl-native-note">черновики сегодня</span></span><span class="sl-native-chip sl-native-chip-info">2</span></a>
+            <a class="sl-native-link" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4bc.svg" alt=""></span><span><span class="sl-native-title">Клиенты</span><span class="sl-native-note">новые CRM записи</span></span><span class="sl-native-chip sl-native-chip-warn">10</span></a>
+          </div>
+        </section>
+        <section class="sl-native-box">
+          <div class="sl-native-head sl-native-head-orange"><span><i class="bi bi-hourglass-split"></i> Ждут проверки</span><span class="sl-native-mini">3</span></div>
+          <div class="sl-native-body">
+            <a class="sl-native-link" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span><span><span class="sl-native-title">Комментарии</span><span class="sl-native-note">очередь модерации</span></span><span class="sl-native-chip sl-native-chip-warn">3</span></a>
+          </div>
+        </section>
+        <section class="sl-native-box">
+          <div class="sl-native-head sl-native-head-green"><span><i class="bi bi-pencil-square"></i> Редактор</span></div>
+          <div class="sl-native-body">
+            <div class="sl-native-strip"><span><strong>Plain Textarea</strong><span class="sl-native-note">выбранный режим</span></span><span class="sl-native-mini sl-native-mini-active"><i class="bi bi-check2"></i></span></div>
+          </div>
+        </section>
+        <section class="sl-native-box">
+          <div class="sl-native-head sl-native-head-green"><span><i class="bi bi-shield-check"></i> Наблюдение</span></div>
+          <div class="sl-native-body">
+            <div class="sl-native-watch"><span><i class="bi bi-person-check"></i> Администрация</span><strong>1</strong></div>
+            <div class="sl-native-watch"><span><i class="bi bi-people"></i> Пользователей</span><strong>0</strong></div>
+            <div class="sl-native-watch"><span><i class="bi bi-eye"></i> Гостей</span><strong>0</strong></div>
+            <div class="sl-native-watch"><span><i class="bi bi-diagram-3"></i> Всего</span><strong>1</strong></div>
+          </div>
+        </section>
+      </aside>
+      <main class="sl-native-main">
+        <section class="sl-native-box">
+          <div class="sl-native-head sl-native-head-soft">
+            <span><i class="bi bi-speedometer2"></i> Панель администратора</span>
+            <button class="sl-native-button sl-native-theme" id="slThemeToggle" type="button" aria-pressed="false"><i class="bi bi-moon-stars"></i> Ночь</button>
+          </div>
+          <div class="sl-native-toolbar">
+            <div class="sl-native-toolbar-main">
+              <span class="sl-native-chip sl-native-chip-info"><i class="bi bi-filetype-svg"></i> icons/ SVG</span>
+              <span class="sl-native-chip sl-native-chip-success"><i class="bi bi-ui-checks-grid"></i> плотная сетка</span>
+              <span class="sl-native-chip sl-native-chip-warn"><i class="bi bi-palette"></i> стиль SLAED</span>
+            </div>
+            <div class="sl-native-toolbar-actions">
+              <a class="sl-native-button sl-native-button-primary" href="#"><i class="bi bi-plus-circle"></i> Добавить</a>
+              <a class="sl-native-button" href="#"><i class="bi bi-arrow-clockwise"></i> Обновить</a>
+              <a class="sl-native-button" href="#"><i class="bi bi-sliders"></i> Настроить</a>
+            </div>
+          </div>
+        </section>
+        <section class="sl-native-alert sl-native-alert-danger">
+          <span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span>
+          <span><span class="sl-native-title">Необходимо удалить или переименовать setup.php</span><span class="sl-native-note">Критическое сообщение остаётся в рабочем потоке, но не ломает всю панель.</span></span>
+          <span class="sl-native-chip sl-native-chip-danger">важно</span>
+        </section>
+        <section class="sl-native-alert sl-native-alert-info">
+          <span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span>
+          <span><span class="sl-native-title">Новые SVG-иконки сглажены контейнером</span><span class="sl-native-note">Единый размер, фон, рамка, тень и фильтр убирают конфликт разных emoji-образов.</span></span>
+          <span class="sl-native-chip sl-native-chip-info">готово</span>
+        </section>
+        <section class="sl-native-box">
+          <div class="sl-native-head"><span><i class="bi bi-puzzle"></i> Панель управления модулями</span><span class="sl-native-chip sl-native-chip-info">24 раздела</span></div>
+          <div class="sl-native-body">
+            <div class="sl-native-kpi">
+              <div class="sl-native-status"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></span><span><span class="sl-native-title">50</span><span class="sl-native-note">модулей</span></span></div>
+              <div class="sl-native-status"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span><span><span class="sl-native-title">1</span><span class="sl-native-note">критично</span></span></div>
+              <div class="sl-native-status"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></span><span><span class="sl-native-title">0.314 сек.</span><span class="sl-native-note">генерация</span></span></div>
+              <div class="sl-native-status"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f5c3.svg" alt=""></span><span><span class="sl-native-title">17</span><span class="sl-native-note">запросов БД</span></span></div>
+            </div>
+            <div class="sl-native-grid">
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""></span><span class="sl-native-title">Конфигурации</span><span class="sl-native-note">ядро</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-pencil"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span class="sl-native-title">Блоки</span><span class="sl-native-note">позиции</span><span class="sl-native-module-meta"><span class="sl-native-mini">31</span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""></span><span class="sl-native-title">Категории</span><span class="sl-native-note">структура</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-tags"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></span><span class="sl-native-title">Модули</span><span class="sl-native-note">компоненты</span><span class="sl-native-module-meta"><span class="sl-native-mini sl-native-mini-active">50</span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f4dd.svg" alt=""></span><span class="sl-native-title">Редактор</span><span class="sl-native-note">тексты</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-code-slash"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""></span><span class="sl-native-title">Безопасность</span><span class="sl-native-note">защита</span><span class="sl-native-module-meta"><span class="sl-native-mini sl-native-mini-active"><i class="bi bi-shield"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f4e8.svg" alt=""></span><span class="sl-native-title">Рассылка</span><span class="sl-native-note">почта</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-send"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f6d2.svg" alt=""></span><span class="sl-native-title">Магазин</span><span class="sl-native-note">заказы</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-cart"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""></span><span class="sl-native-title">Поиск</span><span class="sl-native-note">индекс</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-search"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u2b50.svg" alt=""></span><span class="sl-native-title">Рейтинги</span><span class="sl-native-note">оценки</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-star"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f4bb.svg" alt=""></span><span class="sl-native-title">Шаблон</span><span class="sl-native-note">тема</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-window"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span><span class="sl-native-title">Комментарии</span><span class="sl-native-note">модерация</span><span class="sl-native-module-meta"><span class="sl-native-mini">3</span></span></a>
+            </div>
+          </div>
+        </section>
+        <section class="sl-native-box">
+          <div class="sl-native-head"><span><i class="bi bi-layout-three-columns"></i> Панель управления блоками</span><span class="sl-native-chip sl-native-chip-success">активно</span></div>
+          <div class="sl-native-body">
+            <div class="sl-native-grid">
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span class="sl-native-title">Левый блок</span><span class="sl-native-note">позиция</span><span class="sl-native-module-meta"><span class="sl-native-mini">12</span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span class="sl-native-title">Правый блок</span><span class="sl-native-note">позиция</span><span class="sl-native-module-meta"><span class="sl-native-mini">11</span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon sl-native-icon-muted"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></span><span class="sl-native-title">Баннеры</span><span class="sl-native-note">ротация</span><span class="sl-native-module-meta"><span class="sl-native-mini">8</span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f441.svg" alt=""></span><span class="sl-native-title">Видимость</span><span class="sl-native-note">условия</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-eye"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></span><span class="sl-native-title">Статистика</span><span class="sl-native-note">показы</span><span class="sl-native-module-meta"><span class="sl-native-mini"><i class="bi bi-graph-up"></i></span></span></a>
+              <a class="sl-native-module" href="#"><span class="sl-native-icon"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span><span class="sl-native-title">Быстрый старт</span><span class="sl-native-note">мастер</span><span class="sl-native-module-meta"><span class="sl-native-mini sl-native-mini-active"><i class="bi bi-lightning"></i></span></span></a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Native 2026 demo.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+<script>
+(() => {
+  const root = document.documentElement;
+  const button = document.getElementById('slThemeToggle');
+  const key = 'slaed-native-demo-theme';
+  const applyTheme = (theme) => {
+    root.dataset.slTheme = theme;
+    button.setAttribute('aria-pressed', theme === 'night' ? 'true' : 'false');
+    button.innerHTML = theme === 'night' ? '<i class="bi bi-sun"></i> День' : '<i class="bi bi-moon-stars"></i> Ночь';
+    localStorage.setItem(key, theme);
+  };
+  applyTheme(localStorage.getItem(key) === 'night' ? 'night' : 'day');
+  button.addEventListener('click', () => applyTheme(root.dataset.slTheme === 'night' ? 'day' : 'night'));
+})();
+</script>
+</body>
+</html>

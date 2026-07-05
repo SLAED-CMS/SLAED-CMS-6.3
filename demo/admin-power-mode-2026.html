@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="ru" data-sl-theme="day" data-sl-density="dense">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Power Mode 2026</title>
+<style>
+:root {
+  --sl-page: #edf4f9;
+  --sl-panel: #ffffff;
+  --sl-soft: #f2f7fb;
+  --sl-soft2: #e9f1f7;
+  --sl-line: #d7e4ee;
+  --sl-line-hard: #b6cddc;
+  --sl-text: #1d3446;
+  --sl-head: #08202f;
+  --sl-mute: #64798c;
+  --sl-blue: #0783bd;
+  --sl-blue-hot: #0f9fdd;
+  --sl-green: #23a04a;
+  --sl-orange: #dd7d05;
+  --sl-red: #d63a3a;
+  --sl-glow: rgba(15, 159, 221, 0.2);
+  --sl-shadow: 0 2px 8px rgba(23, 62, 90, 0.09);
+  --sl-row-h: 40px;
+  --sl-fs: 13px;
+}
+html[data-sl-density="comfort"] { --sl-row-h: 52px; --sl-fs: 13.5px; }
+html[data-sl-theme="night"] {
+  --sl-page: #0b1219;
+  --sl-panel: #101b27;
+  --sl-soft: #0d1722;
+  --sl-soft2: #16232f;
+  --sl-line: #1f3345;
+  --sl-line-hard: #33526c;
+  --sl-text: #c6dae8;
+  --sl-head: #eff7fd;
+  --sl-mute: #7690a5;
+  --sl-blue: #35aede;
+  --sl-blue-hot: #4cc4ff;
+  --sl-green: #46c76d;
+  --sl-orange: #f5a53a;
+  --sl-red: #ff6d6d;
+  --sl-glow: rgba(76, 196, 255, 0.15);
+  --sl-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  background: var(--sl-page);
+  color: var(--sl-text);
+  font: var(--sl-fs)/1.45 "Segoe UI", Tahoma, Arial, sans-serif;
+}
+button { font: inherit; }
+
+/* duotone icon trick: grayscale + blue tint, full color on hover/active */
+.sl-duo {
+  filter: grayscale(1) brightness(0.92) sepia(0.4) hue-rotate(158deg) saturate(2.6) opacity(0.82);
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+html[data-sl-theme="night"] .sl-duo { filter: grayscale(1) brightness(1.35) sepia(0.4) hue-rotate(158deg) saturate(2.2) opacity(0.8); }
+.sl-row:hover .sl-duo, .sl-row.sl-cur .sl-duo, a:hover > .sl-duo, button:hover > .sl-duo { filter: none; transform: scale(1.12); }
+
+/* ---------- top bar ---------- */
+.sl-pm-top {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--sl-line);
+  background: color-mix(in srgb, var(--sl-panel) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+.sl-pm-logo { font-size: 17px; font-weight: 800; letter-spacing: 2px; color: var(--sl-head); }
+.sl-pm-logo b { color: var(--sl-blue-hot); }
+.sl-pm-crumb { display: flex; align-items: center; gap: 6px; color: var(--sl-mute); font-size: 12.5px; }
+.sl-pm-crumb b { color: var(--sl-head); }
+.sl-pm-search {
+  display: flex;
+  flex: 1;
+  max-width: 430px;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  margin-left: auto;
+  padding: 0 12px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 8px;
+  background: var(--sl-soft);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.sl-pm-search:focus-within { border-color: var(--sl-blue); box-shadow: 0 0 0 3px var(--sl-glow); }
+.sl-pm-search img { width: 14px; height: 14px; }
+.sl-pm-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; color: var(--sl-head); font-size: 13px; }
+.sl-pm-search kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 5px;
+  font: 10.5px Consolas, monospace;
+  color: var(--sl-mute);
+}
+.sl-tbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 8px;
+  background: var(--sl-panel);
+  color: var(--sl-text);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.sl-tbtn:hover { border-color: var(--sl-blue); box-shadow: 0 0 0 3px var(--sl-glow); }
+.sl-tbtn img { width: 15px; height: 15px; }
+.sl-tbtn.sl-on { background: var(--sl-blue); border-color: var(--sl-blue); color: #fff; }
+
+/* ---------- counters strip ---------- */
+.sl-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 10px 14px 0;
+}
+.sl-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--sl-line);
+  border-radius: 999px;
+  background: var(--sl-panel);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sl-mute);
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.15s ease;
+}
+.sl-count:hover { border-color: var(--sl-blue); transform: translateY(-1px); }
+.sl-count img { width: 14px; height: 14px; }
+.sl-count b { color: var(--sl-head); font-variant-numeric: tabular-nums; }
+.sl-count.sl-hot { border-color: color-mix(in srgb, var(--sl-orange) 50%, var(--sl-line)); }
+.sl-count.sl-hot b { color: var(--sl-orange); }
+.sl-count.sl-crit { border-color: color-mix(in srgb, var(--sl-red) 55%, var(--sl-line)); animation: sl-blink 2.6s ease-in-out infinite; }
+.sl-count.sl-crit b { color: var(--sl-red); }
+@keyframes sl-blink {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--sl-red) 18%, transparent); }
+}
+
+/* ---------- layout ---------- */
+.sl-pm-wrap {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 12px;
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 12px 14px 60px;
+}
+.sl-pm-nav {
+  position: sticky;
+  top: 56px;
+  align-self: start;
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--sl-line);
+  border-radius: 12px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-shadow);
+}
+.sl-pm-nav h5 { margin: 6px 8px 3px; font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--sl-mute); }
+.sl-pm-nav a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  color: var(--sl-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.sl-pm-nav a img { width: 15px; height: 15px; }
+.sl-pm-nav a:hover { background: var(--sl-soft); }
+.sl-pm-nav a.sl-on { background: var(--sl-blue); color: #fff; }
+.sl-pm-nav a.sl-on img { filter: none; }
+.sl-pm-nav a s {
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sl-red) 14%, transparent);
+  color: var(--sl-red);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ---------- table panel ---------- */
+.sl-panelbox {
+  border: 1px solid var(--sl-line);
+  border-radius: 12px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-shadow);
+  overflow: hidden;
+  min-width: 0;
+}
+.sl-panel-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--sl-line);
+}
+.sl-panel-tools h2 { display: flex; align-items: center; gap: 8px; margin: 0 auto 0 0; font-size: 14.5px; color: var(--sl-head); }
+.sl-panel-tools h2 img { width: 17px; height: 17px; }
+.sl-seg { display: flex; border: 1px solid var(--sl-line-hard); border-radius: 8px; overflow: hidden; }
+.sl-seg button {
+  height: 28px;
+  padding: 0 11px;
+  border: none;
+  background: transparent;
+  color: var(--sl-mute);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sl-seg button.sl-on { background: var(--sl-blue); color: #fff; }
+.sl-kbd-hint { display: flex; gap: 10px; color: var(--sl-mute); font-size: 11px; }
+.sl-kbd-hint kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 5px;
+  background: var(--sl-soft);
+  font: 10.5px Consolas, monospace;
+}
+
+.sl-thead {
+  display: grid;
+  grid-template-columns: 34px 30px minmax(180px, 1.4fr) 90px minmax(110px, 1fr) 76px 108px 96px;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--sl-line);
+  background: var(--sl-soft);
+  color: var(--sl-mute);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.sl-rows { min-width: 0; }
+.sl-row {
+  display: grid;
+  grid-template-columns: 34px 30px minmax(180px, 1.4fr) 90px minmax(110px, 1fr) 76px 108px 96px;
+  gap: 8px;
+  align-items: center;
+  min-height: var(--sl-row-h);
+  padding: 3px 12px;
+  border-bottom: 1px solid var(--sl-line);
+  cursor: pointer;
+  transition: background-color 0.13s ease;
+}
+.sl-row:hover { background: var(--sl-soft); }
+.sl-row.sl-cur { background: color-mix(in srgb, var(--sl-blue) 8%, var(--sl-panel)); box-shadow: inset 3px 0 0 var(--sl-blue-hot); }
+.sl-row.sl-picked { background: color-mix(in srgb, var(--sl-blue) 13%, var(--sl-panel)); }
+.sl-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--sl-blue); cursor: pointer; }
+.sl-row-ico { display: grid; place-items: center; }
+.sl-row-ico img { width: 19px; height: 19px; }
+.sl-row-name { min-width: 0; }
+.sl-row-name b { display: block; color: var(--sl-head); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-row-name small { display: block; color: var(--sl-mute); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[data-sl-density="dense"] .sl-row-name small { display: none; }
+.sl-row code {
+  overflow: hidden;
+  color: var(--sl-mute);
+  font: 11.5px Consolas, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sl-row-vis { color: var(--sl-mute); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-spark { width: 76px; height: 22px; }
+.sl-spark polyline { fill: none; stroke: var(--sl-blue-hot); stroke-width: 1.6; }
+.sl-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.14s ease;
+}
+.sl-state:hover { transform: scale(1.06); }
+.sl-state i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.sl-state.sl-ok { background: color-mix(in srgb, var(--sl-green) 14%, transparent); color: var(--sl-green); }
+.sl-state.sl-ok i { animation: sl-glowdot 2s ease-in-out infinite; }
+@keyframes sl-glowdot {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--sl-green) 30%, transparent); }
+}
+.sl-state.sl-off { background: color-mix(in srgb, var(--sl-mute) 14%, transparent); color: var(--sl-mute); }
+.sl-state.sl-warn { background: color-mix(in srgb, var(--sl-orange) 16%, transparent); color: var(--sl-orange); }
+.sl-row-act { display: flex; gap: 4px; justify-content: flex-end; opacity: 0; transition: opacity 0.15s ease; }
+.sl-row:hover .sl-row-act, .sl-row.sl-cur .sl-row-act { opacity: 1; }
+.sl-abtn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.14s ease, background-color 0.14s ease;
+}
+.sl-abtn:hover { border-color: var(--sl-line-hard); background: var(--sl-panel); }
+.sl-abtn img { width: 14px; height: 14px; }
+.sl-rows-empty { padding: 30px; text-align: center; color: var(--sl-mute); }
+
+/* ---------- bulk bar ---------- */
+.sl-bulk {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border: 1px solid var(--sl-line-hard);
+  border-radius: 14px;
+  background: var(--sl-panel);
+  box-shadow: 0 14px 34px rgba(10, 40, 60, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, 26px);
+  transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.sl-bulk.sl-show { opacity: 1; visibility: visible; transform: translateX(-50%); }
+.sl-bulk b { color: var(--sl-head); font-variant-numeric: tabular-nums; }
+.sl-bulk .sl-tbtn { height: 28px; }
+.sl-bulk .sl-tbtn.sl-red { border-color: color-mix(in srgb, var(--sl-red) 55%, var(--sl-line-hard)); color: var(--sl-red); }
+
+/* ---------- toast ---------- */
+#sl-toasts { position: fixed; right: 16px; bottom: 16px; z-index: 100; display: grid; gap: 8px; }
+.sl-toast {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  border: 1px solid var(--sl-line-hard);
+  border-left: 3px solid var(--sl-green);
+  border-radius: 10px;
+  background: var(--sl-panel);
+  box-shadow: var(--sl-shadow);
+  color: var(--sl-head);
+  font-size: 12.5px;
+  font-weight: 600;
+  animation: sl-toast-in 0.25s ease;
+}
+.sl-toast img { width: 15px; height: 15px; }
+@keyframes sl-toast-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .sl-thead { display: none; }
+  .sl-row { grid-template-columns: 30px 30px minmax(0, 1fr) auto; }
+  .sl-row code, .sl-row-vis, .sl-spark, .sl-row-act { display: none; }
+  .sl-row > .sl-state { justify-self: end; }
+}
+@media (max-width: 860px) {
+  .sl-pm-top { flex-wrap: wrap; row-gap: 8px; }
+  .sl-pm-search { order: 5; flex-basis: 100%; max-width: none; }
+  .sl-bulk { max-width: calc(100vw - 16px); flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+  .sl-pm-wrap { grid-template-columns: minmax(0, 1fr); }
+  .sl-pm-nav { position: static; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .sl-pm-nav h5 { grid-column: 1 / -1; }
+  .sl-kbd-hint { display: none; }
+  .sl-pm-crumb { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="sl-pm-top">
+  <div class="sl-pm-logo">SLA<b>E</b>D</div>
+  <span class="sl-pm-crumb">админ / <b>модули</b> / power mode</span>
+  <label class="sl-pm-search">
+    <img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt="" class="sl-duo">
+    <input type="text" id="sl-q" placeholder="Фильтр по названию, ключу, статусу…" autocomplete="off">
+    <kbd>/</kbd>
+  </label>
+  <button class="sl-tbtn" id="sl-density" type="button" title="Плотность"><img src="../templates/admin/images/icons/emoji_u1f39b.svg" alt="" class="sl-duo"><span>плотно</span></button>
+  <button class="sl-tbtn" id="sl-theme" type="button" title="Тема"><img src="../templates/admin/images/icons/emoji_u1f319.svg" alt="" class="sl-duo" id="sl-theme-ico"><span id="sl-theme-txt">ночь</span></button>
+</header>
+
+<div class="sl-strip" aria-label="Счётчики">
+  <span class="sl-count sl-crit"><img src="../templates/admin/images/icons/emoji_u1f6a8.svg" alt=""> setup.php <b>риск</b></span>
+  <span class="sl-count sl-hot"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt="" class="sl-duo"> регистрации <b id="sl-c-users">88</b></span>
+  <span class="sl-count"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt="" class="sl-duo"> модерация <b>3</b></span>
+  <span class="sl-count"><img src="../templates/admin/images/icons/emoji_u1f4bc.svg" alt="" class="sl-duo"> клиенты <b>10</b></span>
+  <span class="sl-count"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt="" class="sl-duo"> черновики <b>2</b></span>
+  <span class="sl-count"><img src="../templates/admin/images/icons/emoji_u26a1.svg" alt="" class="sl-duo"> генерация <b id="sl-c-gen">0.31s</b></span>
+  <span class="sl-count"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt="" class="sl-duo"> онлайн <b id="sl-c-online">7</b></span>
+</div>
+
+<div class="sl-pm-wrap">
+
+  <nav class="sl-pm-nav" aria-label="Разделы">
+    <h5>Администратор</h5>
+    <a href="#" class="sl-on"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt="">Модули</a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt="" class="sl-duo">Блоки и баннеры</a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f4c2.svg" alt="" class="sl-duo">Категории</a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt="" class="sl-duo">Конфигурации</a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f5c4.svg" alt="" class="sl-duo">База данных</a>
+    <h5>Очереди</h5>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt="" class="sl-duo">Пользователи<s>88</s></a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt="" class="sl-duo">Комментарии<s>3</s></a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f4bc.svg" alt="" class="sl-duo">Клиенты<s>10</s></a>
+    <h5>Система</h5>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt="" class="sl-duo">Безопасность<s>1</s></a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt="" class="sl-duo">Статистика</a>
+    <a href="#"><img src="../templates/admin/images/icons/emoji_u23f0.svg" alt="" class="sl-duo">Планировщик</a>
+  </nav>
+
+  <main class="sl-panelbox">
+    <div class="sl-panel-tools">
+      <h2><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""> Модули <span style="color: var(--sl-mute); font-weight: 400; font-size: 12px" id="sl-total"></span></h2>
+      <div class="sl-seg" id="sl-status-seg">
+        <button type="button" class="sl-on" data-s="all">все</button>
+        <button type="button" data-s="on">включены</button>
+        <button type="button" data-s="off">выключены</button>
+        <button type="button" data-s="warn">внимание</button>
+      </div>
+      <div class="sl-kbd-hint"><span><kbd>j</kbd><kbd>k</kbd> ходить</span><span><kbd>x</kbd> отметить</span><span><kbd>e</kbd> вкл/выкл</span></div>
+    </div>
+
+    <div class="sl-thead">
+      <span><input type="checkbox" id="sl-all" title="Выбрать все"></span>
+      <span></span><span>Название</span><span>Ключ</span><span>Кто видит</span><span>7 дней</span><span>Статус</span>
+      <span style="text-align: right">Действия</span>
+    </div>
+    <div class="sl-rows" id="sl-rows"></div>
+  </main>
+</div>
+
+<div class="sl-bulk" id="sl-bulk">
+  <b id="sl-bulk-n">0</b> выбрано
+  <button class="sl-tbtn" type="button" data-bulk="Включены выбранные модули"><img src="../templates/admin/images/icons/emoji_u2705.svg" alt="">включить</button>
+  <button class="sl-tbtn" type="button" data-bulk="Выключены выбранные модули"><img src="../templates/admin/images/icons/emoji_u23f8.svg" alt="" onerror="this.remove()">выключить</button>
+  <button class="sl-tbtn sl-red" type="button" data-bulk="Выбранные модули в карантине"><img src="../templates/admin/images/icons/emoji_u1f5d1.svg" alt="">карантин</button>
+</div>
+
+<div id="sl-toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var ICO = '../templates/admin/images/icons/';
+
+  /* theme + density */
+  var root = document.documentElement;
+  function applyTheme(t) {
+    root.setAttribute('data-sl-theme', t);
+    document.getElementById('sl-theme-txt').textContent = t === 'night' ? 'день' : 'ночь';
+    document.getElementById('sl-theme-ico').src = ICO + (t === 'night' ? 'emoji_u2600.svg' : 'emoji_u1f319.svg');
+    try { localStorage.setItem('sl-pm-theme', t); } catch (e) {}
+  }
+  document.getElementById('sl-theme').addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-sl-theme') === 'night' ? 'day' : 'night');
+  });
+  try { var sv = localStorage.getItem('sl-pm-theme'); if (sv) applyTheme(sv); } catch (e) {}
+  document.getElementById('sl-density').addEventListener('click', function () {
+    var d = root.getAttribute('data-sl-density') === 'dense' ? 'comfort' : 'dense';
+    root.setAttribute('data-sl-density', d);
+    this.querySelector('span').textContent = d === 'dense' ? 'плотно' : 'просторно';
+  });
+
+  function toast(msg) {
+    var t = document.createElement('div');
+    t.className = 'sl-toast';
+    t.innerHTML = '<img src="' + ICO + 'emoji_u2705.svg" alt="">' + msg;
+    document.getElementById('sl-toasts').appendChild(t);
+    setTimeout(function () { t.style.opacity = '0'; t.style.transition = 'opacity 0.4s'; }, 2400);
+    setTimeout(function () { t.remove(); }, 2900);
+  }
+
+  /* data */
+  var mods = [
+    ['Администрация', 'admins', 'emoji_u1f6e1.svg', 'Все посетители', 'ok'],
+    ['Блоки и баннеры', 'blocks', 'emoji_u1f9e9.svg', 'Все посетители', 'ok'],
+    ['Категории', 'categories', 'emoji_u1f4c2.svg', 'Все посетители', 'ok'],
+    ['Комментарии', 'comments', 'emoji_u1f4ac.svg', 'Все посетители', 'ok'],
+    ['Конфигурации', 'config', 'emoji_u2699.svg', 'Все посетители', 'ok'],
+    ['База данных', 'database', 'emoji_u1f5c4.svg', 'Все посетители', 'ok'],
+    ['Редактор', 'editor', 'emoji_u1f4dd.svg', 'Все посетители', 'ok'],
+    ['Фавориты', 'favorites', 'emoji_u2b50.svg', 'Все посетители', 'ok'],
+    ['Группы', 'groups', 'emoji_u1f465.svg', 'Все посетители', 'ok'],
+    ['Сообщения', 'messages', 'emoji_u2709.svg', 'Только пользователи', 'ok'],
+    ['Мониторинг', 'monitor', 'emoji_u1f4e1.svg', 'Все посетители', 'ok'],
+    ['Рассылка', 'newsletter', 'emoji_u1f4ec.svg', 'Все посетители', 'ok'],
+    ['Обмен ссылками', 'auto_links', 'emoji_u1f517.svg', 'Все посетители', 'off'],
+    ['Пользователи', 'account', 'emoji_u1f464.svg', 'Все посетители', 'warn'],
+    ['Новости', 'news', 'emoji_u1f4f0.svg', 'Все посетители', 'ok'],
+    ['Статьи', 'pages', 'emoji_u1f4c4.svg', 'Все посетители', 'ok'],
+    ['Форум', 'forum', 'emoji_u1f5e8.svg', 'Все посетители', 'ok'],
+    ['Анекдоты', 'jokes', 'emoji_u1f921.svg', 'Все посетители', 'off'],
+    ['Каталог файлов', 'files', 'emoji_u1f4c1.svg', 'Все посетители', 'ok'],
+    ['Каталог сайтов', 'links', 'emoji_u1f310.svg', 'Все посетители', 'ok'],
+    ['Медиа каталог', 'media', 'emoji_u1f5bc.svg', 'Все посетители', 'off'],
+    ['Магазин', 'shop', 'emoji_u1f6d2.svg', 'Все посетители', 'warn'],
+    ['Опросы', 'voting', 'emoji_u1f4ca.svg', 'Все посетители', 'ok'],
+    ['Поиск', 'search', 'emoji_u1f50d.svg', 'Все посетители', 'ok'],
+    ['Карта сайта', 'sitemap', 'emoji_u1f5fa.svg', 'Все посетители', 'ok'],
+    ['Жалобы', 'whois', 'emoji_u1f6a8.svg', 'Только пользователи', 'ok']
+  ];
+  var stateName = { ok: 'вкл', off: 'выкл', warn: 'медленно' };
+  var stateCls = { ok: 'sl-ok', off: 'sl-off', warn: 'sl-warn' };
+
+  function sparkline() {
+    var pts = [], v = 10 + Math.random() * 8;
+    for (var i = 0; i < 14; i++) {
+      v = Math.max(2, Math.min(20, v + (Math.random() - 0.5) * 7));
+      pts.push((i * 76 / 13).toFixed(1) + ',' + (22 - v).toFixed(1));
+    }
+    return '<svg class="sl-spark" viewBox="0 0 76 22" preserveAspectRatio="none"><polyline points="' + pts.join(' ') + '"></polyline></svg>';
+  }
+
+  var rowsBox = document.getElementById('sl-rows');
+  var q = '', statf = 'all', cur = 0;
+  function render() {
+    rowsBox.innerHTML = '';
+    var shown = 0;
+    mods.forEach(function (m, i) {
+      var hay = (m[0] + ' ' + m[1] + ' ' + stateName[m[4]]).toLowerCase();
+      if (q && hay.indexOf(q) === -1) return;
+      if (statf === 'on' && m[4] !== 'ok') return;
+      if (statf === 'off' && m[4] !== 'off') return;
+      if (statf === 'warn' && m[4] !== 'warn') return;
+      shown++;
+      var row = document.createElement('div');
+      row.className = 'sl-row';
+      row.setAttribute('data-i', i);
+      row.innerHTML = '<span onclick="event.stopPropagation()"><input type="checkbox" data-pick></span>' +
+        '<span class="sl-row-ico"><img src="' + ICO + m[2] + '" alt="" class="sl-duo"></span>' +
+        '<span class="sl-row-name"><b>' + m[0] + '</b><small>modules/' + m[1] + '</small></span>' +
+        '<code>' + m[1] + '</code>' +
+        '<span class="sl-row-vis">' + m[3] + '</span>' +
+        sparkline() +
+        '<span class="sl-state ' + stateCls[m[4]] + '" data-flip title="Кликните для переключения"><i></i>' + stateName[m[4]] + '</span>' +
+        '<span class="sl-row-act">' +
+        '<button class="sl-abtn" type="button" title="Открыть" data-act="Открываем «' + m[0] + '»"><img src="' + ICO + 'emoji_u1f4c2.svg" alt=""></button>' +
+        '<button class="sl-abtn" type="button" title="Настройки" data-act="Настройки «' + m[0] + '»"><img src="' + ICO + 'emoji_u2699.svg" alt=""></button>' +
+        '<button class="sl-abtn" type="button" title="Права" data-act="Права «' + m[0] + '»"><img src="' + ICO + 'emoji_u1f511.svg" alt=""></button>' +
+        '</span>';
+      rowsBox.appendChild(row);
+    });
+    if (!shown) rowsBox.innerHTML = '<div class="sl-rows-empty">Ничего не найдено — измените фильтр</div>';
+    document.getElementById('sl-total').textContent = '· показано ' + shown + ' из ' + mods.length;
+    cur = Math.min(cur, shown - 1);
+    highlight();
+  }
+  function rows() { return rowsBox.querySelectorAll('.sl-row'); }
+  function highlight() {
+    rows().forEach(function (r, i) { r.classList.toggle('sl-cur', i === cur); });
+  }
+  render();
+
+  /* filters */
+  document.getElementById('sl-q').addEventListener('input', function () {
+    q = this.value.trim().toLowerCase();
+    cur = 0;
+    render();
+  });
+  document.getElementById('sl-status-seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.remove('sl-on'); });
+    b.classList.add('sl-on');
+    statf = b.getAttribute('data-s');
+    cur = 0;
+    render();
+  });
+
+  /* row interactions */
+  function flipState(row) {
+    var i = +row.getAttribute('data-i');
+    mods[i][4] = mods[i][4] === 'off' ? 'ok' : 'off';
+    toast('«' + mods[i][0] + '» теперь ' + stateName[mods[i][4]]);
+    render();
+  }
+  function updateBulk() {
+    var n = rowsBox.querySelectorAll('[data-pick]:checked').length;
+    document.getElementById('sl-bulk-n').textContent = n;
+    document.getElementById('sl-bulk').classList.toggle('sl-show', n > 0);
+    rows().forEach(function (r) {
+      r.classList.toggle('sl-picked', !!r.querySelector('[data-pick]:checked'));
+    });
+  }
+  rowsBox.addEventListener('click', function (e) {
+    var act = e.target.closest('[data-act]');
+    if (act) { toast(act.getAttribute('data-act')); return; }
+    var flip = e.target.closest('[data-flip]');
+    var row = e.target.closest('.sl-row');
+    if (!row) return;
+    cur = Array.prototype.indexOf.call(rows(), row);
+    highlight();
+    if (flip) flipState(row);
+  });
+  rowsBox.addEventListener('change', function (e) {
+    if (e.target.matches('[data-pick]')) updateBulk();
+  });
+  document.getElementById('sl-all').addEventListener('change', function () {
+    var on = this.checked;
+    rowsBox.querySelectorAll('[data-pick]').forEach(function (c) { c.checked = on; });
+    updateBulk();
+  });
+  document.querySelectorAll('[data-bulk]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      toast(this.getAttribute('data-bulk') + ' (' + document.getElementById('sl-bulk-n').textContent + ' шт.)');
+      rowsBox.querySelectorAll('[data-pick]').forEach(function (c) { c.checked = false; });
+      document.getElementById('sl-all').checked = false;
+      updateBulk();
+    });
+  });
+
+  /* keyboard */
+  document.addEventListener('keydown', function (e) {
+    var tag = document.activeElement.tagName;
+    if (e.key === '/' && tag !== 'INPUT') { e.preventDefault(); document.getElementById('sl-q').focus(); return; }
+    if (tag === 'INPUT') {
+      if (e.key === 'Escape') document.activeElement.blur();
+      return;
+    }
+    var list = rows();
+    if (!list.length) return;
+    if (e.key === 'j') { cur = Math.min(cur + 1, list.length - 1); highlight(); list[cur].scrollIntoView({ block: 'nearest' }); }
+    else if (e.key === 'k') { cur = Math.max(cur - 1, 0); highlight(); list[cur].scrollIntoView({ block: 'nearest' }); }
+    else if (e.key === 'x') {
+      var c = list[cur].querySelector('[data-pick]');
+      c.checked = !c.checked;
+      updateBulk();
+    }
+    else if (e.key === 'e') flipState(list[cur]);
+  });
+
+  /* live counters */
+  var online = 7, users = 88;
+  setInterval(function () {
+    if (Math.random() < 0.4) {
+      online = Math.max(1, online + (Math.random() < 0.5 ? -1 : 1));
+      document.getElementById('sl-c-online').textContent = online;
+    }
+    if (Math.random() < 0.15) {
+      users++;
+      document.getElementById('sl-c-users').textContent = users;
+    }
+    document.getElementById('sl-c-gen').textContent = (0.28 + Math.random() * 0.07).toFixed(2) + 's';
+  }, 2400);
+})();
+</script>
+</body>
+</html>

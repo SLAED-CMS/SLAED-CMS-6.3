@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Admin Category Icon Selector Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+.sl-demo-space {
+  display: grid;
+  gap: var(--sl-space-lg);
+}
+
+.sl-demo-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--sl-space-lg);
+  align-items: start;
+}
+
+.sl-demo-panel {
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-card);
+  overflow: hidden;
+}
+
+.sl-demo-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-lg);
+  padding: 10px 12px;
+  background: linear-gradient(180deg, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-muted) 100%);
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-demo-panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  color: var(--sl-color-primary-hover);
+  font-weight: bold;
+}
+
+.sl-demo-panel-title img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.sl-demo-picker {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+  padding: var(--sl-space-md);
+}
+
+.sl-demo-pick {
+  position: relative;
+  display: grid;
+  gap: var(--sl-space-xs);
+  justify-items: center;
+  min-height: 88px;
+  padding: var(--sl-space-md) var(--sl-space-sm);
+  color: var(--sl-color-primary-hover);
+  text-align: center;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-soft);
+  background: linear-gradient(180deg, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
+  box-shadow: var(--sl-shadow-xs);
+  box-sizing: border-box;
+}
+
+.sl-demo-pick:hover,
+.sl-demo-pick-active {
+  border-color: var(--sl-color-primary-soft);
+  background: linear-gradient(180deg, var(--sl-color-bg-soft) 0%, var(--sl-color-info-soft) 100%);
+}
+
+.sl-demo-pick-active::after {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--sl-color-bg);
+  background: var(--sl-color-success);
+  border-radius: 50%;
+  font-family: bootstrap-icons;
+  font-size: 12px;
+  content: "\f26a";
+}
+
+.sl-demo-pick img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 2px rgba(32, 75, 102, 0.14));
+}
+
+.sl-demo-pick span {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--sl-color-text-soft);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-demo-preview {
+  display: grid;
+  gap: var(--sl-space-lg);
+  padding: var(--sl-space-lg);
+}
+
+.sl-demo-preview-main {
+  display: grid;
+  justify-items: center;
+  gap: var(--sl-space-md);
+  padding: 18px 10px;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-demo-preview-main img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 8px rgba(32, 75, 102, 0.16));
+}
+
+.sl-demo-preview-main strong,
+.sl-demo-preview-main span {
+  display: block;
+  text-align: center;
+}
+
+.sl-demo-preview-main span {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-demo-mini-list {
+  display: grid;
+  gap: var(--sl-space-xs);
+}
+
+.sl-demo-mini-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  gap: var(--sl-space-sm);
+  align-items: center;
+  min-height: 34px;
+  padding: var(--sl-space-xs) var(--sl-space-sm);
+  border-radius: var(--sl-radius-soft);
+  background: var(--sl-color-bg);
+}
+
+.sl-demo-mini-row img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.sl-demo-mini-row span {
+  overflow: hidden;
+  color: var(--sl-color-text-soft);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-demo-mini-row b {
+  color: var(--sl-color-muted);
+  font-size: 12px;
+}
+
+.sl-demo-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-md);
+  padding: var(--sl-space-md);
+  border-top: 1px solid var(--sl-color-border);
+  background: var(--sl-color-bg-soft);
+}
+
+@media (max-width: 1100px) {
+  .sl-demo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-demo-picker {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .sl-demo-space .sl-module-head-body {
+    grid-template-columns: 1fr;
+    gap: var(--sl-space-md);
+  }
+
+  .sl-demo-space .sl-module-head-subtitle {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .sl-demo-space .sl-module-head-subtitle .sl-searchbox,
+  .sl-demo-space .sl-module-head-subtitle .sl-searchbox form {
+    width: 100%;
+  }
+
+  .sl-demo-space .sl-module-head-subtitle .sl-searchbox input[type="text"] {
+    max-width: none;
+  }
+
+  .sl-demo-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand">
+        <h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1>
+      </div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-tags"></i><b>Категории</b></a></li>
+              <li><a href="#"><i class="bi bi-image"></i><b>Библиотека</b></a></li>
+              <li><a href="#"><i class="bi bi-check2-square"></i><b>Проверка</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-admin-main">
+      <aside class="sl-admin-sidebar">
+        <div class="sl-block-sidebar">
+          <h3 class="sl-is-open"><b><i class="bi bi-sliders"></i> Фильтры</b></h3>
+          <div class="sl-block-sidebar-content">
+            <div class="sl-block-sidebar-count-list">
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-book"></i> Контент</a></span><span class="sl-block-sidebar-count-value"><span>8</span></span></div>
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-shield"></i> Система</a></span><span class="sl-block-sidebar-count-value"><span>4</span></span></div>
+              <div class="sl-block-sidebar-count-row"><span class="sl-block-sidebar-count-label"><a href="#"><i class="bi bi-cart"></i> Коммерция</a></span><span class="sl-block-sidebar-count-value"><span>3</span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="sl-block-sidebar">
+          <h3 class="sl-is-open"><b><i class="bi bi-info-circle"></i> Подсказка</b></h3>
+          <div class="sl-block-sidebar-content">
+            <div class="sl-small">Сценарий показывает, как может выглядеть выбор SVG-иконки при редактировании категории.</div>
+          </div>
+        </div>
+      </aside>
+      <main class="sl-admin-content">
+        <div class="sl-admin-content-inner sl-demo-space">
+          <div class="sl-module-head">
+            <span class="sl-module-head-icon"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""></span>
+            <div class="sl-module-head-body">
+              <h2 class="sl-module-head-title">Выбор иконки</h2>
+              <div class="sl-module-head-subtitle">
+                <span class="sl-searchbox">
+                  <form action="#">
+                    <input type="text" value="поиск: новости">
+                    <input class="sl-but-blue" type="submit" value="OK">
+                  </form>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="sl-alert sl-alert-info">
+            <div class="sl-alert-body">
+              <div class="sl-alert-title">Формат: SVG</div>
+              <div class="sl-alert-text">Превью можно сделать крупнее, но хранить выбор как обычное имя файла категории.</div>
+            </div>
+          </div>
+          <div class="sl-demo-layout">
+            <section class="sl-demo-panel">
+              <div class="sl-demo-panel-head">
+                <div class="sl-demo-panel-title"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt="">Библиотека категорий</div>
+                <span class="sl-demo-panel-title"><i class="bi bi-grid-3x3-gap"></i> 12 из 1000+</span>
+              </div>
+              <div class="sl-div-grid">
+                <div class="sl-div-item">
+                  <div class="sl-div-label"><span class="sl-div-label-main">Название</span></div>
+                  <div class="sl-div-field"><input type="text" value="Новости SLAED"></div>
+                </div>
+                <div class="sl-div-item">
+                  <div class="sl-div-label"><span class="sl-div-label-main">Иконка</span></div>
+                  <div class="sl-div-field"><select><option>emoji_u1f4f0.svg</option><option>emoji_u1f4da.svg</option><option>emoji_u1f4bb.svg</option></select></div>
+                </div>
+              </div>
+              <div class="sl-demo-picker">
+                <a class="sl-demo-pick sl-demo-pick-active" href="#"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""><span>Новости</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f4da.svg" alt=""><span>Статьи</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f4bb.svg" alt=""><span>Софт</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""><span>Файлы</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f3ac.svg" alt=""><span>Медиа</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f4b0.svg" alt=""><span>Магазин</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""><span>Защита</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f30d.svg" alt=""><span>Сайты</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f3eb.svg" alt=""><span>Обучение</span></a>
+                <a class="sl-demo-pick" href="#"><img src="../templates/admin/images/icons/emoji_u1f4e2.svg" alt=""><span>Анонсы</span></a>
+              </div>
+              <div class="sl-demo-form-actions">
+                <a class="sl-but-blue" href="#"><i class="bi bi-check2-circle"></i>&nbsp;Применить</a>
+                <a class="sl-but" href="#"><i class="bi bi-arrow-counterclockwise"></i>&nbsp;Сбросить</a>
+                <a class="sl-but-back" href="#"><i class="bi bi-folder2-open"></i>&nbsp;Открыть папку</a>
+              </div>
+            </section>
+            <aside class="sl-demo-panel">
+              <div class="sl-demo-panel-head">
+                <div class="sl-demo-panel-title"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt="">Превью</div>
+              </div>
+              <div class="sl-demo-preview">
+                <div class="sl-demo-preview-main">
+                  <img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt="">
+                  <strong>Новости SLAED</strong>
+                  <span>emoji_u1f4f0.svg</span>
+                </div>
+                <div class="sl-alert sl-alert-success">
+                  <div class="sl-alert-body">
+                    <div class="sl-alert-title">Готово к сохранению</div>
+                    <div class="sl-alert-text">Файл найден в текущей теме администратора.</div>
+                  </div>
+                </div>
+                <div class="sl-demo-mini-list">
+                  <div class="sl-demo-mini-row"><img src="../templates/admin/images/icons/emoji_u1f4da.svg" alt=""><span>Похожие: статьи</span><b>18</b></div>
+                  <div class="sl-demo-mini-row"><img src="../templates/admin/images/icons/emoji_u1f4dd.svg" alt=""><span>Похожие: заметки</span><b>7</b></div>
+                  <div class="sl-demo-mini-row"><img src="../templates/admin/images/icons/emoji_u1f4e2.svg" alt=""><span>Похожие: анонсы</span><b>4</b></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Demo SVG selector.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+</body>
+</html>

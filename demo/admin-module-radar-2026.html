@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ru" data-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Module Radar 2026</title>
+<style>
+:root {
+  --page: #eaf5fb;
+  --panel: #ffffff;
+  --soft: #f4f8fb;
+  --line: #d5e4ee;
+  --hard: #aac8dc;
+  --text: #203548;
+  --head: #071f34;
+  --muted: #62798b;
+  --blue: #0784bd;
+  --blue-hot: #17a6e1;
+  --green: #27a951;
+  --orange: #dd7b00;
+  --red: #d63a3a;
+  --violet: #765fb6;
+  --shadow: 0 10px 30px rgba(25, 72, 101, 0.12);
+}
+html[data-theme="night"] {
+  --page: #08131d;
+  --panel: #122130;
+  --soft: #0d1823;
+  --line: #21384b;
+  --hard: #3d5a72;
+  --text: #d4e6f2;
+  --head: #f6fbff;
+  --muted: #8ea6b8;
+  --blue: #44b8ee;
+  --blue-hot: #6bd2ff;
+  --green: #5ed380;
+  --orange: #ffb04a;
+  --red: #ff7474;
+  --violet: #b9a0ea;
+  --shadow: 0 16px 42px rgba(0, 0, 0, 0.45);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; overflow-x: hidden; }
+body {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--blue) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(0deg, color-mix(in srgb, var(--blue) 7%, transparent) 1px, transparent 1px),
+    var(--page);
+  background-size: 34px 34px;
+  color: var(--text);
+  font: 14px/1.45 Arial, Tahoma, sans-serif;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+.sl-shell { max-width: 1480px; margin: 0 auto; padding: 16px; }
+.sl-top {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+.sl-logo img { display: block; width: 176px; max-width: 42vw; height: auto; }
+.sl-nav { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.sl-nav a, .sl-chip, .sl-mini, .sl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.sl-nav a {
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: var(--text);
+  font-weight: 800;
+}
+.sl-nav a:hover, .sl-nav a.is-active, .sl-btn.primary { background: var(--blue); color: #fff; box-shadow: 0 8px 24px color-mix(in srgb, var(--blue) 24%, transparent); }
+.sl-ico {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--blue) 27%, var(--line));
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.55), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--blue) 8%, var(--panel)), var(--panel));
+  box-shadow: inset 0 -10px 16px rgba(7, 132, 189, 0.07);
+}
+.sl-ico img, .sl-nav img, .sl-mini img, .sl-btn img { width: 24px; height: 24px; object-fit: contain; filter: saturate(0.74) contrast(0.96); }
+.sl-ico img { width: 29px; height: 29px; transition: transform 0.2s ease, filter 0.2s ease; }
+.sl-module:hover .sl-ico img { transform: scale(1.14) rotate(-3deg); filter: saturate(1.08); }
+.sl-controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.sl-btn {
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--hard);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--head);
+  font-weight: 800;
+}
+.sl-btn:hover { border-color: var(--blue); color: var(--blue); }
+.sl-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; }
+.sl-panel, .sl-radar, .sl-drawer {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.sl-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    radial-gradient(520px 160px at 80% -20%, color-mix(in srgb, var(--violet) 18%, transparent), transparent 70%),
+    linear-gradient(120deg, color-mix(in srgb, var(--blue) 12%, var(--panel)), var(--panel));
+}
+.sl-hero h1 { margin: 0 0 4px; color: var(--head); font-size: 24px; }
+.sl-hero p { margin: 0; color: var(--muted); }
+.sl-kpis { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.sl-kpi { min-width: 96px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); text-align: center; }
+.sl-kpi b { display: block; color: var(--head); font-size: 21px; font-variant-numeric: tabular-nums; }
+.sl-kpi span { color: var(--muted); font-size: 11px; }
+.sl-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--soft);
+}
+.sl-panel-head strong { color: var(--head); font-size: 16px; margin-right: auto; }
+.sl-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 32px;
+  min-width: min(240px, 100%);
+  padding: 0 12px;
+  border: 1px solid var(--hard);
+  border-radius: 999px;
+  background: var(--panel);
+}
+.sl-search img { width: 17px; height: 17px; opacity: 0.74; }
+.sl-search input { min-width: 0; width: 100%; border: 0; outline: 0; background: transparent; color: var(--head); }
+.sl-chip {
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--blue) 12%, transparent);
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 800;
+}
+.sl-chip.green { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+.sl-chip.orange { background: color-mix(in srgb, var(--orange) 18%, transparent); color: var(--orange); }
+.sl-chip.red { background: color-mix(in srgb, var(--red) 14%, transparent); color: var(--red); }
+.sl-chip.muted { background: var(--soft); color: var(--muted); }
+.sl-mini {
+  min-width: 27px;
+  height: 27px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--blue) 18%, var(--line));
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.sl-modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  background: var(--soft);
+}
+.sl-modules.list { grid-template-columns: 1fr; gap: 7px; }
+.sl-module {
+  position: relative;
+  display: grid;
+  gap: 9px;
+  min-height: 148px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  text-align: left;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.sl-module:hover, .sl-module.active { transform: translateY(-4px); border-color: var(--blue); box-shadow: 0 14px 30px color-mix(in srgb, var(--blue) 18%, transparent); z-index: 2; }
+.sl-modules.list .sl-module { grid-template-columns: 50px minmax(0, 1fr) auto auto; align-items: center; min-height: 58px; padding: 8px 10px; }
+.sl-modules.list .sl-module:hover { transform: none; }
+.sl-title { display: block; overflow: hidden; color: var(--head); font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.sl-note { display: block; overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-module-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.sl-status-dot { position: absolute; top: 12px; right: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 5px color-mix(in srgb, var(--green) 12%, transparent); }
+.sl-status-dot.off { background: var(--red); box-shadow: 0 0 0 5px color-mix(in srgb, var(--red) 12%, transparent); }
+.sl-modules.list .sl-status-dot { position: static; }
+.sl-drawer { position: sticky; top: 16px; align-self: start; }
+.sl-drawer-head { padding: 14px; border-bottom: 1px solid var(--line); background: linear-gradient(120deg, var(--blue), var(--blue-hot)); color: #fff; }
+.sl-drawer-head h2 { margin: 7px 0 3px; font-size: 20px; }
+.sl-drawer-head p { margin: 0; opacity: 0.88; }
+.sl-drawer-body { display: grid; gap: 10px; padding: 12px; background: var(--soft); }
+.sl-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.sl-empty { grid-column: 1 / -1; padding: 24px; color: var(--muted); text-align: center; }
+.sl-toastbox { position: fixed; right: 16px; bottom: 16px; z-index: 50; display: grid; gap: 8px; width: min(350px, calc(100vw - 28px)); }
+.sl-toast { padding: 10px 12px; border: 1px solid var(--hard); border-left: 3px solid var(--green); border-radius: 10px; background: var(--panel); box-shadow: var(--shadow); color: var(--head); font-weight: 800; animation: toast 3s ease forwards; }
+@keyframes toast { 0% { opacity: 0; transform: translateY(10px); } 12%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(10px); } }
+@media (max-width: 1080px) { .sl-layout { grid-template-columns: 1fr; } .sl-drawer { position: static; } }
+@media (max-width: 760px) { .sl-shell { padding: 10px; } .sl-top, .sl-hero { grid-template-columns: 1fr; } .sl-controls, .sl-kpis { justify-content: flex-start; } .sl-nav { flex-wrap: nowrap; overflow-x: auto; } .sl-modules { grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); } .sl-modules.list .sl-module { grid-template-columns: 44px minmax(0, 1fr); } .sl-modules.list .sl-module-foot, .sl-modules.list .sl-status-dot { grid-column: 2; } }
+</style>
+</head>
+<body>
+<div class="sl-shell">
+  <header class="sl-top">
+    <a class="sl-logo" href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a>
+    <nav class="sl-nav" aria-label="Навигация">
+      <a href="#"><img src="../templates/admin/images/icons/emoji_u1f3e0.svg" alt="">Главная</a>
+      <a href="#"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt="">Блоки</a>
+      <a class="is-active" href="#"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt="">Модули</a>
+      <a href="#"><img src="../templates/admin/images/icons/emoji_u1f3f7.svg" alt="">Категории</a>
+    </nav>
+    <div class="sl-controls">
+      <button class="sl-btn" id="themeToggle" type="button"><img id="themeIcon" src="../templates/admin/images/icons/emoji_u1f319.svg" alt="">Тема</button>
+    </div>
+  </header>
+  <section class="sl-hero">
+    <div>
+      <h1>Module Radar</h1>
+      <p>Табличная панель модулей превращена в рабочий радар: поиск, категории, режим списка, статусы и быстрый preview без ухода со страницы.</p>
+    </div>
+    <div class="sl-kpis">
+      <div class="sl-kpi"><b id="visibleCount">12</b><span>показано</span></div>
+      <div class="sl-kpi"><b>50</b><span>всего</span></div>
+      <div class="sl-kpi"><b id="alertCount">4</b><span>сигнала</span></div>
+      <div class="sl-kpi"><b id="liveLoad">0.12</b><span>сек.</span></div>
+    </div>
+  </section>
+  <div class="sl-layout">
+    <main class="sl-panel">
+      <div class="sl-panel-head">
+        <strong>Панель управления модулями</strong>
+        <button class="sl-chip" data-filter="all" type="button">все</button>
+        <button class="sl-chip muted" data-filter="system" type="button">система</button>
+        <button class="sl-chip muted" data-filter="content" type="button">контент</button>
+        <button class="sl-chip muted" data-filter="community" type="button">сообщество</button>
+        <button class="sl-chip muted" data-filter="commerce" type="button">коммерция</button>
+        <label class="sl-search"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""><input id="search" type="text" placeholder="Найти модуль"></label>
+        <button class="sl-btn primary" id="gridBtn" type="button">grid</button>
+        <button class="sl-btn" id="listBtn" type="button">list</button>
+      </div>
+      <div class="sl-modules" id="modules"></div>
+    </main>
+    <aside class="sl-drawer" id="drawer">
+      <div class="sl-drawer-head">
+        <span class="sl-ico"><img id="drawerIcon" src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></span>
+        <h2 id="drawerTitle">Модули</h2>
+        <p id="drawerText">Выберите карточку, чтобы увидеть живые действия и состояние.</p>
+      </div>
+      <div class="sl-drawer-body">
+        <div class="sl-row"><span><span class="sl-title">Статус</span><span class="sl-note">активность в системе</span></span><span class="sl-chip green" id="drawerStatus">готово</span></div>
+        <div class="sl-row"><span><span class="sl-title">Очередь</span><span class="sl-note">новые записи или задачи</span></span><span class="sl-chip" id="drawerQueue">0</span></div>
+        <div class="sl-row"><span><span class="sl-title">Доступ</span><span class="sl-note">кто видит модуль</span></span><span class="sl-chip muted" id="drawerAccess">Все</span></div>
+        <button class="sl-btn primary" type="button" data-action="Открыть модуль">Открыть</button>
+        <button class="sl-btn" type="button" data-action="Настройки модуля">Настройки</button>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="sl-toastbox" id="toasts"></div>
+<script>
+(() => {
+  const ico = '../templates/admin/images/icons/';
+  const data = [
+    ['Конфигурации', 'ядро и параметры', 'system', 'emoji_u2699.svg', true, 0, 'Все'],
+    ['Безопасность', 'токены, сессии, логи', 'system', 'emoji_u1f6e1.svg', true, 1, 'Все'],
+    ['База данных', 'бэкапы и оптимизация', 'system', 'emoji_u1f5c4.svg', true, 0, 'Все'],
+    ['Планировщик', 'cron и очереди', 'system', 'emoji_u23f0.svg', true, 0, 'Все'],
+    ['Новости', 'лента и черновики', 'content', 'emoji_u1f4f0.svg', true, 2, 'Все'],
+    ['Статьи', 'страницы и разделы', 'content', 'emoji_u1f4c4.svg', true, 0, 'Все'],
+    ['Каталог файлов', 'загрузки и доступ', 'content', 'emoji_u1f4c2.svg', true, 0, 'Все'],
+    ['Комментарии', 'модерация и жалобы', 'community', 'emoji_u1f4ac.svg', true, 3, 'Все'],
+    ['Пользователи', 'аккаунты и группы', 'community', 'emoji_u1f465.svg', true, 88, 'Все'],
+    ['Форум', 'темы и сообщения', 'community', 'emoji_u1f5e8.svg', true, 0, 'Все'],
+    ['Магазин', 'заказы и товары', 'commerce', 'emoji_u1f6d2.svg', true, 4, 'Все'],
+    ['Клиенты', 'CRM и заявки', 'commerce', 'emoji_u1f4cb.svg', true, 10, 'Пользователи'],
+    ['Рассылка', 'почтовые кампании', 'community', 'emoji_u1f4e8.svg', false, 0, 'Все'],
+    ['Медиа каталог', 'галереи и видео', 'content', 'emoji_u1f5bc.svg', false, 0, 'Все']
+  ];
+  const root = document.documentElement;
+  const modules = document.getElementById('modules');
+  const search = document.getElementById('search');
+  let filter = 'all';
+  let query = '';
+  const toast = (text) => {
+    const node = document.createElement('div');
+    node.className = 'sl-toast';
+    node.textContent = text;
+    document.getElementById('toasts').appendChild(node);
+    setTimeout(() => node.remove(), 3200);
+  };
+  const setTheme = (theme) => {
+    root.dataset.theme = theme;
+    document.getElementById('themeIcon').src = ico + (theme === 'night' ? 'emoji_u2600.svg' : 'emoji_u1f319.svg');
+    localStorage.setItem('slaed-radar-theme', theme);
+  };
+  const selectModule = (item, button) => {
+    document.querySelectorAll('.sl-module').forEach((node) => node.classList.remove('active'));
+    if (button) button.classList.add('active');
+    document.getElementById('drawerIcon').src = ico + item[3];
+    document.getElementById('drawerTitle').textContent = item[0];
+    document.getElementById('drawerText').textContent = item[1];
+    document.getElementById('drawerStatus').textContent = item[4] ? 'активен' : 'выключен';
+    document.getElementById('drawerStatus').className = 'sl-chip ' + (item[4] ? 'green' : 'red');
+    document.getElementById('drawerQueue').textContent = item[5];
+    document.getElementById('drawerQueue').className = 'sl-chip ' + (item[5] > 20 ? 'red' : item[5] > 0 ? 'orange' : '');
+    document.getElementById('drawerAccess').textContent = item[6];
+  };
+  const render = () => {
+    modules.innerHTML = '';
+    const shown = data.filter((item) => (filter === 'all' || item[2] === filter) && (!query || (item[0] + ' ' + item[1]).toLowerCase().includes(query)));
+    document.getElementById('visibleCount').textContent = shown.length;
+    shown.forEach((item, index) => {
+      const node = document.createElement('button');
+      node.className = 'sl-module';
+      node.type = 'button';
+      node.innerHTML = `<span class="sl-status-dot${item[4] ? '' : ' off'}"></span><span class="sl-ico"><img src="${ico}${item[3]}" alt=""></span><span><span class="sl-title">${item[0]}</span><span class="sl-note">${item[1]}</span></span><span class="sl-module-foot"><span class="sl-chip muted">${item[2]}</span>${item[5] ? `<span class="sl-chip ${item[5] > 20 ? 'red' : 'orange'}">${item[5]}</span>` : '<span class="sl-chip green">ok</span>'}<span class="sl-mini">edit</span></span>`;
+      node.addEventListener('click', () => selectModule(item, node));
+      modules.appendChild(node);
+      if (index === 0) selectModule(item, node);
+    });
+    if (!shown.length) modules.innerHTML = '<div class="sl-empty">Ничего не найдено</div>';
+  };
+  setTheme(localStorage.getItem('slaed-radar-theme') === 'night' ? 'night' : 'day');
+  document.getElementById('themeToggle').addEventListener('click', () => setTheme(root.dataset.theme === 'night' ? 'day' : 'night'));
+  document.querySelectorAll('[data-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      filter = button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach((item) => item.className = 'sl-chip muted');
+      button.className = 'sl-chip';
+      render();
+    });
+  });
+  search.addEventListener('input', () => { query = search.value.trim().toLowerCase(); render(); });
+  document.getElementById('gridBtn').addEventListener('click', () => { modules.classList.remove('list'); document.getElementById('gridBtn').classList.add('primary'); document.getElementById('listBtn').classList.remove('primary'); });
+  document.getElementById('listBtn').addEventListener('click', () => { modules.classList.add('list'); document.getElementById('listBtn').classList.add('primary'); document.getElementById('gridBtn').classList.remove('primary'); });
+  document.addEventListener('click', (event) => { const action = event.target.closest('[data-action]'); if (action) toast(action.dataset.action + ': ' + document.getElementById('drawerTitle').textContent); });
+  setInterval(() => { document.getElementById('liveLoad').textContent = (0.08 + Math.random() * 0.08).toFixed(2); }, 1800);
+  render();
+})();
+</script>
+</body>
+</html>

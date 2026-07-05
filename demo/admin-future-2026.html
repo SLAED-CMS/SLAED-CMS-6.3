@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="ru" data-sl-theme="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Admin Future 2026 Demo</title>
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+:root {
+  --sl-future-page: #eaf4f8;
+  --sl-future-shell: #f9fcfe;
+  --sl-future-surface: #ffffff;
+  --sl-future-surface-alt: #f3f7fa;
+  --sl-future-surface-strong: #e8f1f6;
+  --sl-future-border: #dce7ee;
+  --sl-future-border-strong: #bfd1dc;
+  --sl-future-text: #172331;
+  --sl-future-text-soft: #435366;
+  --sl-future-muted: #738293;
+  --sl-future-primary: #0877b1;
+  --sl-future-primary-strong: #075b8c;
+  --sl-future-info: #1d8ed3;
+  --sl-future-success: #24973a;
+  --sl-future-warning: #c46a00;
+  --sl-future-danger: #c73535;
+  --sl-future-accent: #8e44ad;
+  --sl-future-icon-plate: #f8fbfd;
+  --sl-future-icon-ring: rgba(8, 119, 177, 0.14);
+  --sl-future-shadow: 0 14px 34px rgba(27, 75, 106, 0.13);
+  --sl-future-shadow-soft: 0 1px 2px rgba(27, 75, 106, 0.08);
+}
+
+html[data-sl-theme="night"] {
+  --sl-future-page: #0f1217;
+  --sl-future-shell: #141922;
+  --sl-future-surface: #181f2a;
+  --sl-future-surface-alt: #111720;
+  --sl-future-surface-strong: #202938;
+  --sl-future-border: #2b3646;
+  --sl-future-border-strong: #405065;
+  --sl-future-text: #eef4f8;
+  --sl-future-text-soft: #c8d2dc;
+  --sl-future-muted: #8fa0b2;
+  --sl-future-primary: #50aee0;
+  --sl-future-primary-strong: #7bc9f3;
+  --sl-future-info: #69bde9;
+  --sl-future-success: #68c777;
+  --sl-future-warning: #ffb957;
+  --sl-future-danger: #ff7474;
+  --sl-future-accent: #c48ce0;
+  --sl-future-icon-plate: #202a36;
+  --sl-future-icon-ring: rgba(105, 189, 233, 0.18);
+  --sl-future-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  --sl-future-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+
+html[data-sl-theme="night"],
+html[data-sl-theme="night"] body {
+  background: var(--sl-future-page);
+  color: var(--sl-future-text);
+}
+
+html[data-sl-theme="night"] .sl-wrapper {
+  background: var(--sl-future-shell);
+  border-color: var(--sl-future-border-strong);
+}
+
+html[data-sl-theme="night"] .sl-wrapmid,
+html[data-sl-theme="night"] .sl-admin-main,
+html[data-sl-theme="night"] .sl-admin-content,
+html[data-sl-theme="night"] .sl-header {
+  background: var(--sl-future-shell);
+}
+
+html[data-sl-theme="night"] .sl-toolbar,
+html[data-sl-theme="night"] .sl-toolbar div {
+  background: var(--sl-future-surface);
+  border-color: var(--sl-future-border);
+}
+
+html[data-sl-theme="night"] .sl-toolbar li a,
+html[data-sl-theme="night"] a {
+  color: var(--sl-future-primary);
+}
+
+html[data-sl-theme="night"] .sl-admin-header::after {
+  opacity: 0.38;
+}
+
+.sl-future {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 12px;
+  color: var(--sl-future-text);
+}
+
+.sl-future-side,
+.sl-future-main,
+.sl-future-panel,
+.sl-future-tile,
+.sl-future-row,
+.sl-future-command,
+.sl-future-hero {
+  border: 1px solid var(--sl-future-border);
+  border-radius: 8px;
+  background: var(--sl-future-surface);
+  box-shadow: var(--sl-future-shadow-soft);
+}
+
+.sl-future-side {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 8px;
+  background: var(--sl-future-surface-alt);
+}
+
+.sl-future-main {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  background: var(--sl-future-shell);
+}
+
+.sl-future-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sl-future-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sl-future-title h2 {
+  margin: 0;
+  color: var(--sl-future-text);
+  font-size: 26px;
+  line-height: 1.12;
+}
+
+.sl-future-title span {
+  display: block;
+  margin-top: 3px;
+  color: var(--sl-future-muted);
+  font-size: 12px;
+}
+
+.sl-future-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  color: var(--sl-future-text);
+  border: 1px solid var(--sl-future-border);
+  border-radius: 999px;
+  background: var(--sl-future-surface);
+  box-shadow: var(--sl-future-shadow-soft);
+  cursor: pointer;
+}
+
+.sl-future-theme i {
+  color: var(--sl-future-primary);
+}
+
+.sl-future-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 12px;
+  padding: 14px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--sl-future-primary) 18%, var(--sl-future-surface)) 0%, var(--sl-future-surface) 62%);
+  box-shadow: var(--sl-future-shadow);
+}
+
+.sl-future-hero-main {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sl-future-hero h3 {
+  margin: 0;
+  color: var(--sl-future-text);
+  font-size: 34px;
+  line-height: 1.02;
+}
+
+.sl-future-hero p {
+  max-width: 720px;
+  margin: 0;
+  color: var(--sl-future-text-soft);
+  line-height: 1.48;
+}
+
+.sl-future-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sl-future-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 14px;
+  color: var(--sl-future-text);
+  border: 0;
+  border-radius: 15px;
+  background: linear-gradient(to top, var(--sl-future-surface) 0%, var(--sl-future-surface-strong) 100%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sl-future-surface) 78%, transparent), 0 0 0 1px var(--sl-future-border), 0 2px 4px rgba(42, 48, 60, 0.14);
+  text-decoration: none;
+}
+
+.sl-future-button-primary {
+  color: #ffffff;
+  background: linear-gradient(to top, var(--sl-future-primary-strong) 0%, var(--sl-future-primary) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 1px color-mix(in srgb, var(--sl-future-primary-strong) 82%, #000000), 0 2px 6px rgba(8, 119, 177, 0.28);
+}
+
+.sl-future-button:hover {
+  opacity: 0.86;
+  text-decoration: none;
+}
+
+.sl-future-focus {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 12px;
+  border: 1px solid var(--sl-future-border);
+  border-radius: 8px;
+  background: var(--sl-future-surface-alt);
+}
+
+.sl-future-focus strong {
+  color: var(--sl-future-text);
+  font-size: 16px;
+}
+
+.sl-future-focus p {
+  color: var(--sl-future-muted);
+  font-size: 12px;
+}
+
+.sl-future-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sl-future-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 12px;
+}
+
+.sl-future-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.sl-future-panel {
+  overflow: hidden;
+}
+
+.sl-future-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--sl-future-border);
+  background: var(--sl-future-surface-alt);
+}
+
+.sl-future-panel-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--sl-future-text);
+}
+
+.sl-future-panel-body {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.sl-future-tile {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 72px;
+  padding: 10px;
+  color: var(--sl-future-text);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sl-future-tile:hover {
+  border-color: var(--sl-future-border-strong);
+  box-shadow: var(--sl-future-shadow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.sl-future-tile > span:not(.sl-future-icon) > strong,
+.sl-future-row > span:not(.sl-future-icon) > strong,
+.sl-future-command > span:not(.sl-future-icon) > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
+.sl-future-tile > span:not(.sl-future-icon) > span:not(.sl-future-meta),
+.sl-future-row > span:not(.sl-future-icon) > span:not(.sl-future-meta),
+.sl-future-command > span:not(.sl-future-icon) > span:not(.sl-future-meta) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
+.sl-future-tile > span:not(.sl-future-icon) > span:not(.sl-future-meta),
+.sl-future-row > span:not(.sl-future-icon) > span:not(.sl-future-meta),
+.sl-future-command > span:not(.sl-future-icon) > span:not(.sl-future-meta) {
+  margin-top: 3px;
+  color: var(--sl-future-muted);
+  font-size: 12px;
+}
+
+html[data-sl-theme="night"] .sl-future-button-primary {
+  color: #ffffff;
+  background: linear-gradient(to top, #0871aa 0%, #21a2df 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 1px #0a6f9c, 0 2px 8px rgba(80, 174, 224, 0.28);
+}
+
+.sl-future-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--sl-future-icon-ring);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--sl-future-icon-plate) 92%, #ffffff) 0%, var(--sl-future-icon-plate) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 1px 2px rgba(27, 75, 106, 0.08);
+}
+
+.sl-future-icon img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: saturate(0.92) contrast(0.96) drop-shadow(0 2px 2px rgba(32, 75, 102, 0.16));
+}
+
+html[data-sl-theme="night"] .sl-future-icon img {
+  filter: saturate(0.72) contrast(0.92) brightness(0.96) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.24));
+}
+
+.sl-future-icon-soft img {
+  filter: saturate(0.46) contrast(0.9) opacity(0.78);
+}
+
+html[data-sl-theme="night"] .sl-future-icon-soft img {
+  filter: saturate(0.22) contrast(0.82) brightness(1.22) opacity(0.72);
+}
+
+.sl-future-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 11px;
+  color: var(--sl-future-text);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--sl-future-surface-alt);
+  font: 13px/1 Arial, Tahoma, sans-serif;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sl-future-chip-info {
+  color: var(--sl-future-primary-strong);
+  background: color-mix(in srgb, var(--sl-future-info) 14%, transparent);
+}
+
+.sl-future-chip-success {
+  color: var(--sl-future-success);
+  background: color-mix(in srgb, var(--sl-future-success) 16%, transparent);
+}
+
+.sl-future-chip-warn {
+  color: var(--sl-future-warning);
+  background: color-mix(in srgb, var(--sl-future-warning) 18%, transparent);
+}
+
+.sl-future-chip-danger {
+  color: var(--sl-future-danger);
+  background: color-mix(in srgb, var(--sl-future-danger) 14%, transparent);
+}
+
+.sl-future-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  color: #ffffff;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sl-future-border-strong);
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sl-future-mini:hover,
+.sl-future-mini-active {
+  color: #ffffff;
+  background: var(--sl-future-primary);
+  text-decoration: none;
+}
+
+.sl-future-row,
+.sl-future-command {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-height: 62px;
+  padding: 9px;
+}
+
+.sl-future-command {
+  grid-template-columns: 46px minmax(0, 1fr);
+}
+
+.sl-future-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sl-future-side-title {
+  padding: 4px 4px 0;
+  color: var(--sl-future-muted);
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1180px) {
+  .sl-future,
+  .sl-future-hero,
+  .sl-future-content {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-future-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .sl-future-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sl-future-hero h3 {
+    font-size: 26px;
+  }
+
+  .sl-future-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-future-row {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .sl-future-row > .sl-future-chip {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+</style>
+</head>
+<body>
+<div class="sl-wrapper sl-admin-shell">
+  <div class="sl-wraptop"></div>
+  <div class="sl-wrapmid">
+    <div class="sl-header sl-admin-header">
+      <div class="sl-admin-brand"><h1><a href="#"><img src="../templates/admin/images/logos/slaed-logo-wordmark-gradient-blue.svg" alt="SLAED CMS"></a></h1></div>
+      <div class="sl-admin-toolbar">
+        <div class="sl-toolbar">
+          <div>
+            <ul class="sl-reset">
+              <li><a href="#"><i class="bi bi-house-door"></i><b>Главная</b></a></li>
+              <li><a href="#"><i class="bi bi-lightning-charge"></i><b>Очередь</b></a></li>
+              <li><a href="#"><i class="bi bi-grid-3x3-gap"></i><b>Модули</b></a></li>
+              <li><a href="#"><i class="bi bi-shield-check"></i><b>Статус</b></a></li>
+            </ul>
+            <span class="sl-language sl-admin-language">
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/ru.svg" alt="RU"></a>
+              <a class="sl-admin-language-link" href="#"><img class="sl-menu-list-image" src="../templates/admin/images/flags/gb.svg" alt="EN"></a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sl-future">
+      <aside class="sl-future-side">
+        <div class="sl-future-side-title">Быстрые действия</div>
+        <a class="sl-future-command" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span><span><strong>Безопасность</strong><span>setup.php, токены, сессии</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-danger">критично</span><span class="sl-future-mini">1</span></span></span></a>
+        <a class="sl-future-command" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span><span><strong>Пользователи</strong><span>регистрации и группы</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-warn">проверка</span><span class="sl-future-mini">88</span></span></span></a>
+        <a class="sl-future-command" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span><span><strong>Комментарии</strong><span>очередь модерации</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-info">ожидают</span><span class="sl-future-mini">3</span></span></span></a>
+        <a class="sl-future-command" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span><strong>Блоки</strong><span>позиции и баннеры</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-success">стабильно</span><span class="sl-future-mini">31</span></span></span></a>
+        <div class="sl-future-side-title">Система</div>
+        <div class="sl-future-command"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span><span><strong>Иконки</strong><span>templates/admin/images/icons</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-success">сглажено</span></span></span></div>
+      </aside>
+      <main class="sl-future-main">
+        <div class="sl-future-top">
+          <div class="sl-future-title">
+            <span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span>
+            <div><h2>SLAED Admin 2026</h2><span>Рабочая панель на будущее: плотная, адаптивная, с нормализованными SVG и режимом день/ночь</span></div>
+          </div>
+          <button class="sl-future-theme" id="slThemeToggle" type="button" aria-pressed="false"><i class="bi bi-moon-stars"></i><span>Ночь</span></button>
+        </div>
+        <section class="sl-future-hero">
+          <div class="sl-future-hero-main">
+            <div class="sl-future-meta">
+              <span class="sl-future-chip sl-future-chip-danger"><i class="bi bi-shield-exclamation"></i> Важное первым</span>
+              <span class="sl-future-chip sl-future-chip-info"><i class="bi bi-filetype-svg"></i> SVG иконки</span>
+              <span class="sl-future-chip sl-future-chip-success"><i class="bi bi-layout-sidebar"></i> Адаптивно</span>
+            </div>
+            <h3>Не главная страница, а пульт управления</h3>
+            <p>На первом экране видны приоритеты, состояние системы, быстрые действия и разделы. Emoji SVG приведены к одному визуальному ритму через одинаковые plate-контейнеры.</p>
+            <div class="sl-future-actions">
+              <a class="sl-future-button sl-future-button-primary" href="#"><i class="bi bi-shield-check"></i> Проверка защиты</a>
+              <a class="sl-future-button" href="#"><i class="bi bi-person-check"></i> Очередь пользователей</a>
+              <a class="sl-future-button" href="#"><i class="bi bi-plus-circle"></i> Новый материал</a>
+            </div>
+          </div>
+          <aside class="sl-future-focus">
+            <span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span>
+            <strong>Обнаружен setup.php</strong>
+            <p>Критический сигнал не теряется, но панель не превращается в один большой alert.</p>
+            <span class="sl-future-chip sl-future-chip-danger">устранить сейчас</span>
+          </aside>
+        </section>
+        <div class="sl-future-content">
+          <section class="sl-future-stack">
+            <div class="sl-future-grid">
+              <div class="sl-future-tile"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span><span><strong>88</strong><span>новых пользователей</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-warn">проверить</span></span></span></div>
+              <div class="sl-future-tile"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""></span><span><strong>2</strong><span>новости сегодня</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-info">черновики</span></span></span></div>
+              <div class="sl-future-tile"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span><span><strong>3</strong><span>комментария</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-warn">модерация</span></span></span></div>
+              <div class="sl-future-tile"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4ca.svg" alt=""></span><span><strong>0.31s</strong><span>генерация</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-success">быстро</span></span></span></div>
+            </div>
+            <section class="sl-future-panel">
+              <div class="sl-future-panel-head"><strong><i class="bi bi-grid-3x3-gap"></i> Приоритетные модули</strong><span class="sl-future-chip sl-future-chip-success">онлайн</span></div>
+              <div class="sl-future-panel-body">
+                <div class="sl-future-grid">
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u2699.svg" alt=""></span><span><strong>Настройки</strong><span>основные параметры</span></span><span class="sl-future-mini"><i class="bi bi-pencil-square"></i></span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f9e9.svg" alt=""></span><span><strong>Блоки</strong><span>баннеры и позиции</span></span><span class="sl-future-mini"><i class="bi bi-boxes"></i></span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f4c1.svg" alt=""></span><span><strong>Категории</strong><span>структура и иконки</span></span><span class="sl-future-mini"><i class="bi bi-tags"></i></span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f4e6.svg" alt=""></span><span><strong>Модули</strong><span>50 компонентов</span></span><span class="sl-future-mini">50</span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4dd.svg" alt=""></span><span><strong>Редактор</strong><span>контент и код</span></span><span class="sl-future-mini"><i class="bi bi-code-slash"></i></span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f6d2.svg" alt=""></span><span><strong>Магазин</strong><span>заказы и товары</span></span><span class="sl-future-mini"><i class="bi bi-cart"></i></span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f50d.svg" alt=""></span><span><strong>Поиск</strong><span>индекс и запросы</span></span><span class="sl-future-mini"><i class="bi bi-search"></i></span></a>
+                  <a class="sl-future-tile" href="#"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f6e1.svg" alt=""></span><span><strong>Безопасность</strong><span>токены и журналы</span></span><span class="sl-future-mini sl-future-mini-active"><i class="bi bi-shield-check"></i></span></a>
+                </div>
+              </div>
+            </section>
+            <section class="sl-future-panel">
+              <div class="sl-future-panel-head"><strong><i class="bi bi-activity"></i> Пульс системы</strong><span class="sl-future-chip sl-future-chip-info">live</span></div>
+              <div class="sl-future-panel-body">
+                <div class="sl-future-grid">
+                  <div class="sl-future-tile"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f5c3.svg" alt=""></span><span><strong>База данных</strong><span>17 запросов</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-success">OK</span></span></span></div>
+                  <div class="sl-future-tile"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4bb.svg" alt=""></span><span><strong>Память</strong><span>11 MB / 1 GB</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-info">1%</span></span></span></div>
+                  <div class="sl-future-tile"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f680.svg" alt=""></span><span><strong>Иконки</strong><span>единые контейнеры</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-success">готово</span></span></span></div>
+                  <div class="sl-future-tile"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f441.svg" alt=""></span><span><strong>Сессия</strong><span>администратор активен</span><span class="sl-future-meta"><span class="sl-future-chip sl-future-chip-success">защищено</span></span></span></div>
+                </div>
+              </div>
+            </section>
+          </section>
+          <aside class="sl-future-panel">
+            <div class="sl-future-panel-head"><strong><i class="bi bi-lightning-charge"></i> Очередь решений</strong><span class="sl-future-mini sl-future-mini-active">95</span></div>
+            <div class="sl-future-panel-body">
+              <div class="sl-future-row"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f512.svg" alt=""></span><span><strong>Удалить setup.php</strong><span>граница безопасности</span></span><span class="sl-future-chip sl-future-chip-danger">сейчас</span></div>
+              <div class="sl-future-row"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f465.svg" alt=""></span><span><strong>Одобрить пользователей</strong><span>очередь регистрации</span></span><span class="sl-future-chip sl-future-chip-warn">88</span></div>
+              <div class="sl-future-row"><span class="sl-future-icon"><img src="../templates/admin/images/icons/emoji_u1f4ac.svg" alt=""></span><span><strong>Проверить комментарии</strong><span>сообщения пользователей</span></span><span class="sl-future-chip sl-future-chip-info">3</span></div>
+              <div class="sl-future-row"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4bc.svg" alt=""></span><span><strong>Проверить клиентов</strong><span>новые CRM записи</span></span><span class="sl-future-chip sl-future-chip-info">10</span></div>
+              <div class="sl-future-row"><span class="sl-future-icon sl-future-icon-soft"><img src="../templates/admin/images/icons/emoji_u1f4f0.svg" alt=""></span><span><strong>Опубликовать новости</strong><span>черновики и проверки</span></span><span class="sl-future-chip sl-future-chip-info">2</span></div>
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+    <div class="sl-footer sl-admin-footer">
+      <div class="sl-copyright">SLAED CMS © 2005-2026 Eduard Laas. Демо панели 2026.</div>
+      <span><a class="sl-thide sl-slaed-home" href="#">Home</a><a class="sl-thide" href="#">Top</a></span>
+    </div>
+  </div>
+  <div class="sl-wrapfoot"></div>
+</div>
+<script>
+(() => {
+  const root = document.documentElement;
+  const button = document.getElementById('slThemeToggle');
+  const key = 'slaed-demo-theme';
+  const stored = localStorage.getItem(key);
+  const setTheme = (theme) => {
+    root.dataset.slTheme = theme;
+    button.setAttribute('aria-pressed', theme === 'night' ? 'true' : 'false');
+    button.innerHTML = theme === 'night' ? '<i class="bi bi-sun"></i><span>День</span>' : '<i class="bi bi-moon-stars"></i><span>Ночь</span>';
+    localStorage.setItem(key, theme);
+  };
+  setTheme(stored === 'night' ? 'night' : 'day');
+  button.addEventListener('click', () => setTheme(root.dataset.slTheme === 'night' ? 'day' : 'night'));
+})();
+</script>
+</body>
+</html>
