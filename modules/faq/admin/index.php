@@ -93,7 +93,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
-        $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.body, s.ihome, s.acomm, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE id = :fid', ['fid' => $fid]);
+        $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.body, s.ihome, s.acomm, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.id = :fid', ['fid' => $fid]);
         [$cat, $uname, $subject, $time, $hometext, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {

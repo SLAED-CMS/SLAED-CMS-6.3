@@ -98,7 +98,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
-        $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.intro, f.body, f.url, f.time, f.filesize, f.version, f.email, f.website, f.ihome, f.acomm, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE id = :id', ['id' => $fid]);
+        $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.intro, f.body, f.url, f.time, f.filesize, f.version, f.email, f.website, f.ihome, f.acomm, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.id = :id', ['id' => $fid]);
         [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $website, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
         $pathsel = '';
