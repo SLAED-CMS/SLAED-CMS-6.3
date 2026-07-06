@@ -67,7 +67,7 @@ function add(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $path = 'templates/'.$conf['theme'].'/images/categories/';
+    $path = 'templates/'.$conf['theme'].'/images/icons/';
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -152,7 +152,7 @@ function subadd(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $path = 'templates/'.$conf['theme'].'/images/categories/';
+    $path = 'templates/'.$conf['theme'].'/images/icons/';
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
@@ -294,7 +294,7 @@ function addedit(): void {
 function edit(): void {
     global $db, $conf, $afile, $tpl;
     $cid = getVar('req', 'cid', 'num');
-    $path = 'templates/'.$conf['theme'].'/images/categories/';
+    $path = 'templates/'.$conf['theme'].'/images/icons/';
     $result = $db->getSqlQuery('SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
     [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
     $modlink = '&amp;modul='.$modul;
@@ -395,7 +395,7 @@ function addsave(): void {
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
     $cid = getVar('post', 'cid', 'num', 0);
-    $imgcat = str_replace('templates/'.$conf['theme'].'/images/categories/', '', $imgcat);
+    $imgcat = str_replace('templates/'.$conf['theme'].'/images/icons/', '', $imgcat);
     $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
     $status = getVar('post', 'status', 'num');
     [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
@@ -432,7 +432,7 @@ function save(): void {
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
     $parent = getVar('post', 'parent', 'num');
-    $imgcat = str_replace('templates/'.$conf['theme'].'/images/categories/', '', $imgcat);
+    $imgcat = str_replace('templates/'.$conf['theme'].'/images/icons/', '', $imgcat);
     $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
     $status = getVar('post', 'status', 'num');
     $pview_raw = getVar('post', 'pview[]', 'var', []);

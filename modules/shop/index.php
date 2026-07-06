@@ -80,7 +80,7 @@ function shop(): void {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = $cdesc ?: $ctitle;
-			$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('categories/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
+			$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('icons/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
 			$post = '';
 			$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 			$rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
@@ -239,7 +239,7 @@ function view(): void {
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
 		$cont .= $tpl->getHtmlFrag('block-content', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$cdesc = $cdesc ?: $ctitle;
-		$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('categories/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
+		$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('icons/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
 		$post = '';
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');

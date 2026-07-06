@@ -984,7 +984,7 @@ function getAdminUploadFiles(): void {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
                         'image_url' => $pub.$entry[1],
-                        'fallback_url' => 'templates/admin/images/admin/no.png',
+                        'fallback_url' => 'templates/admin/images/icons/no.png',
                         'image_title' => _IMG,
                         'no_title' => _NO,
                         'show_toggle' => true,
@@ -995,7 +995,7 @@ function getAdminUploadFiles(): void {
                     $img = $tpl->getHtmlFrag('image-preview', [
                         'preview_id' => 'sf-form-'.$a,
                         'image_url' => '',
-                        'fallback_url' => 'templates/admin/images/admin/no.png',
+                        'fallback_url' => 'templates/admin/images/icons/no.png',
                         'image_title' => _IMG,
                         'no_title' => _NO,
                         'show_toggle' => false,

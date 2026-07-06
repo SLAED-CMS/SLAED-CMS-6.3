@@ -246,6 +246,8 @@ define('_GTIME',"Globale de l'heure système");
 define('_HOMCAT','Afficher les catégories sur la principale?');
 define('_HOMEPAGE','Votre site');
 define('_HOURLY','Horaire');
+define('_ICON','Icône');
+define('_ICONPICK','Choisir une icône');
 define('_IGNORE','Ignorer');
 define('_INFLY','Bloc libre');
 define('_INFOCATDEL',"Suppression d'une catégorie est impossible tant qu'il a lié le contenu du module de matériaux ou il comprend d'autres sous-catégories.");

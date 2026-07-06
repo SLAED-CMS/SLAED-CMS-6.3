@@ -10,70 +10,49 @@ getLang('admin');
 Cache::setHeaders(false);
 checkAccess();
 
-function getAdminMenu(string $url, string $title, string $image, string $class = ''): string {
- global $conf, $panel, $count, $tpl;
-    $ltitle = ($class !== '') ? $title.' - '._DEACT : $title;
-    $path = img_find('admin/'.$image);
-    $image = file_exists($path) ? $path : img_find('admin/components.png');
-    $imglink = [
-        'href' => $url,
-        'title' => $ltitle,
-        'img_src' => $image,
-        'img_alt' => $ltitle,
-        'is_menu_list_image' => true,
-    ];
-    $titlink = [
-        'href' => $url,
-        'title' => $ltitle,
-        'label' => $title,
-    ];
+# Build one dashboard module card or one sidebar menu row from a module config entry
+function getAdminMenu(string $name, array $mod): string {
+ global $panel, $afile, $tpl;
+    $url = $afile.'.php?name='.$name;
+    $title = defined($mod['lang']) ? constant($mod['lang']) : $mod['lang'];
+    $icon = preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle';
+    $off = empty($mod['active']);
+    $ltitle = $off ? $title.' - '._DEACT : $title;
     if ($panel) {
-        $count++;
-        $grdlink = [
-            'href' => $url,
-            'title' => $ltitle,
-            'is_menu_grid_link' => true,
-            'img_src' => $image,
-            'img_alt' => $ltitle,
-            'is_menu_grid_image' => true,
-            'label' => $title,
-            'label_span' => true,
-        ];
+        $view = (int)($mod['view'] ?? 0);
+        $who = ($view === 2) ? _MVADMIN : (($view === 1) ? _MVUSERS : _MVALL);
+        $dial = [];
+        if (isAdmin(true)) {
+            $dial = [
+                ['href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'],
+                ['href' => $afile.'.php?name=modules&amp;op=status&amp;mod='.$name.'&amp;act='.($off ? '1' : '0').'&amp;refer=1&amp;token='.getSiteToken(), 'title' => $off ? _ACTIVATE : _DEACTIVATE, 'icon_name' => 'power'],
+            ];
+        }
         return $tpl->getHtmlFrag('menu-grid-item', [
-            'image' => $image,
+            'url' => $url,
             'title' => $title,
             'title_attr' => $ltitle,
-            'url' => $url,
-            'wrap_class' => ltrim($class),
-            'link' => $grdlink,
+            'icon_name' => $icon,
+            'subtitle' => $name.' · '.$who,
+            'is_off' => $off,
+            'led_title' => $off ? _DEACT : _ACT,
+            'dial' => $dial,
+            'dial_title' => _FUNCTIONS,
         ]);
     }
     return $tpl->getHtmlFrag('menu-list-item', [
-        'image' => $image,
-        'title' => $title,
-        'title_attr' => $ltitle,
-        'url' => $url,
-        'wrap_class' => ltrim($class),
-        'image_link' => $imglink,
-        'title_link' => $titlink,
+        'is_off' => $off,
+        'link' => ['href' => $url, 'title' => $ltitle, 'icon_name' => $icon, 'label' => $title],
     ]);
 }
 
 function getAdminPanelBlocks(): string {
- global $panel, $afile, $conf, $tpl;
+ global $panel, $conf, $tpl;
     if (!$panel) {
         $cont = '';
         if (isAdmin(true)) {
             foreach ($conf['modules'] as $name => $mod) {
-                if (($mod['type'] ?? 1) == 0) {
-                    $class = (!$mod['active']) ? ' sl-dimmed' : '';
-                    $cont .= getAdminMenu(
-                        $afile.'.php?name='.$name,
-                        (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
-                        $mod['img'],
-                        $class,
-                    );
-                }
+                if (($mod['type'] ?? 1) == 0) $cont .= getAdminMenu($name, $mod);
             }
             $block = $tpl->getHtmlPart('block-sidebar', ['title' => _ADMIN, 'icon_name' => 'shield-lock', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
             $cont = '';
@@ -83,13 +62,7 @@ function getAdminPanelBlocks(): string {
                 if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
-                        $class = (!$mod['active']) ? ' sl-dimmed' : '';
-                        $cont .= getAdminMenu(
-                            $afile.'.php?name='.$name,
-                            (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
-                            $mod['img'],
-                            $class,
-                        );
+                        $cont .= getAdminMenu($name, $mod);
                         getLang($name, true);
                     }
                 }
@@ -102,7 +75,7 @@ function getAdminPanelBlocks(): string {
 }
 
 function getAdminPanel(): void {
- global $conf, $panel, $count, $afile, $class, $tpl;
+ global $conf, $panel, $tpl;
     setHead();
     $content = '';
     $minver = '8.1.0';
@@ -111,36 +84,20 @@ function getAdminPanel(): void {
     if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
     if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $conf['admininfo']]);
     if ($panel) {
-        $count = 1;
         if (isAdmin(true)) {
             $items = [];
             foreach ($conf['modules'] as $name => $mod) {
-                if (($mod['type'] ?? 1) == 0) {
-                    $class = (!$mod['active']) ? ' sl-dimmed' : '';
-                    $items[] = getAdminMenu(
-                        $afile.'.php?name='.$name,
-                        (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
-                        $mod['img'],
-                        $class,
-                    );
-                }
+                if (($mod['type'] ?? 1) == 0) $items[] = getAdminMenu($name, $mod);
             }
             $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
         }
-        $count = 1;
         $items = [];
         foreach ($conf['modules'] as $name => $mod) {
             if (($mod['type'] ?? 1) == 1) {
                 if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
-                        $class = (!$mod['active']) ? ' sl-dimmed' : '';
-                        $items[] = getAdminMenu(
-                            $afile.'.php?name='.$name,
-                            (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
-                            $mod['img'],
-                            $class,
-                        );
+                        $items[] = getAdminMenu($name, $mod);
                         getLang($name, true);
                     }
                 }

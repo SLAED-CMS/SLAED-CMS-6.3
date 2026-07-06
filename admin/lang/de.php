@@ -246,6 +246,8 @@ define('_GTIME','Die Globale Systemzeit');
 define('_HOMCAT','Kategorie auf der Homepage?');
 define('_HOMEPAGE','Ihre Website');
 define('_HOURLY','Stündlich');
+define('_ICON','Icon');
+define('_ICONPICK','Icon auswählen');
 define('_IGNORE','Ignorieren');
 define('_INFLY','Freies Block');
 define('_INFOCATDEL','Löschen einer Kategorie ist nicht möglich, solange der Inhalt der Materialien von dem Modul angebunden ist oder es enthält weitere Unterkategorien.');

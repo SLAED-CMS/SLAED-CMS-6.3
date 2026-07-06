@@ -42,7 +42,7 @@ function modules(): void {
             if (!isset($conf['modules'][$module])) {
                 $conf['modules'][$module] = [
                     'lang' => '_'.strtoupper($module),
-                    'img' => strtolower($module).'.png',
+                    'icon' => 'puzzle',
                     'active' => 1,
                     'view' => 0,
                     'menu' => 1,
@@ -62,7 +62,7 @@ function modules(): void {
             if (!isset($conf['modules'][$file])) {
                 $conf['modules'][$file] = [
                     'lang' => '_'.strtoupper($file),
-                    'img' => strtolower($file).'.png',
+                    'icon' => 'puzzle',
                     'active' => 0,
                     'view' => 0,
                     'menu' => 1,
@@ -216,7 +216,7 @@ function edit(): void {
         return;
     }
     $lang = $conf['modules'][$mod]['lang'] ?? '_'.strtoupper($mod);
-    $img = $conf['modules'][$mod]['img'] ?? $mod.'.png';
+    $icon = $conf['modules'][$mod]['icon'] ?? 'puzzle';
     $active = $conf['modules'][$mod]['active'];
     $view = $conf['modules'][$mod]['view'];
     $menu = $conf['modules'][$mod]['menu'];
@@ -243,14 +243,6 @@ function edit(): void {
     ]);
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&amp;type='.$mtype : ''), 'name=modules&amp;op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
-    $path = 'templates/admin/images/admin/';
-    $entries = is_dir($path) ? scandir($path) : [];
-    $pickopts = '';
-    foreach ($entries as $entry) {
-        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-            $pickopts .= $tpl->getHtmlFrag('select-option', ['value_attr' => $path.$entry, 'label_text' => $entry, 'is_selected' => $img == $entry]);
-        }
-    }
     $grpopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NONE, 'is_selected' => (int)$group === 0]);
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
@@ -261,8 +253,7 @@ function edit(): void {
     }
     $rows = [
         ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'lang', 'value_attr' => $lang, 'maxlength_num' => 50, 'placeholder_text' => _LANGUAGE, 'is_config' => true])],
-        ['label_html' => _LOGO, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'img', 'options_html' => $pickopts, 'is_config' => true, 'select_attr' => 'id="img_replace"'])],
-        ['label_html' => _PREVIEW, 'field_html' => $tpl->getHtmlFrag('image-preview', ['src_attr' => $path.$img, 'image_id' => 'picture', 'alt_text' => _LOGO])],
+        ['label_html' => _ICON, 'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'icon', 'value_attr' => $icon, 'placeholder_text' => _ICON, 'button_label' => _ICONPICK])],
         ['label_html' => _STATUS, 'field_html' => getTplRadioGroup(['name' => 'active', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
             'name_attr' => 'view',
@@ -305,7 +296,7 @@ function edit(): void {
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
     setFoot();
 }
 
@@ -319,7 +310,7 @@ function status(): void {
         $conf['modules'][$mod]['active'] = $act;
         setConfigFile('modules.php', $conf['modules']);
     }
-    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
+    setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), true, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
 function save(): void {
@@ -329,11 +320,12 @@ function save(): void {
     $warn = !checkSiteToken();
     if (!$warn && isset($conf['modules'][$mod])) {
         $view = getVar('post', 'view', 'num');
-        $img = str_replace('templates/admin/images/admin/', '', getVar('post', 'img', 'text'));
+        $icon = strtolower(getVar('post', 'icon', 'var'));
+        if (!preg_match('/^[a-z0-9-]+$/', $icon)) $icon = 'puzzle';
         $type = $conf['modules'][$mod]['type'] ?? 1;
         $conf['modules'][$mod] = [
             'lang' => getVar('post', 'lang', 'var', '_'.strtoupper($mod)),
-            'img' => $img ?: strtolower($mod).'.png',
+            'icon' => $icon,
             'active' => getVar('post', 'active', 'num'),
             'view' => $view,
             'menu' => getVar('post', 'menu', 'num'),

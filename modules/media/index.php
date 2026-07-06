@@ -87,7 +87,7 @@ function media(): void {
         while ([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $cdesc = $cdesc ?: $ctitle;
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $cimg = ($cimg) ? img_find('icons/'.$cimg) : '';
             $mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $mtitle, 'ctitle' => $ctitle]);
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
@@ -264,7 +264,7 @@ function view(): void {
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = $cdesc ?: $ctitle;
-        $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+        $cimg = ($cimg) ? img_find('icons/'.$cimg) : '';
         $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['media']['date']) ? format_time($time) : '';
         $iso  = ($conf['media']['date']) ? date('c', strtotime($time)) : '';

@@ -8,7 +8,7 @@ return [
     'modules' => [
         'account' => [
             'lang' => '_USERS',
-            'img' => 'users.png',
+            'icon' => 'person-circle',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -19,9 +19,9 @@ return [
         ],
         'admins' => [
             'lang' => '_ADMINS',
-            'img' => 'admins.png',
+            'icon' => 'person-gear',
             'active' => '1',
-            'view' => '0',
+            'view' => '2',
             'menu' => '1',
             'group' => '0',
             'side' => '0',
@@ -30,7 +30,7 @@ return [
         ],
         'auto_links' => [
             'lang' => '_A_LINKS',
-            'img' => 'auto_links.png',
+            'icon' => 'link',
             'active' => '0',
             'view' => '0',
             'menu' => '1',
@@ -41,7 +41,7 @@ return [
         ],
         'blocks' => [
             'lang' => '_BLOCKS',
-            'img' => 'blocks.png',
+            'icon' => 'grid-3x3-gap',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -52,7 +52,7 @@ return [
         ],
         'categories' => [
             'lang' => '_CATEGORIES',
-            'img' => 'categories.png',
+            'icon' => 'folder',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -63,7 +63,7 @@ return [
         ],
         'changelog' => [
             'lang' => '_CHANGELOG',
-            'img' => 'editor.png',
+            'icon' => 'journal-text',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -74,7 +74,7 @@ return [
         ],
         'clients' => [
             'lang' => '_CLIENTS',
-            'img' => 'clients.png',
+            'icon' => 'briefcase',
             'active' => '1',
             'view' => '1',
             'menu' => '1',
@@ -85,7 +85,7 @@ return [
         ],
         'comments' => [
             'lang' => '_COMMENTS',
-            'img' => 'comments.png',
+            'icon' => 'chat-dots',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -96,7 +96,7 @@ return [
         ],
         'config' => [
             'lang' => '_PREFERENCES',
-            'img' => 'config.png',
+            'icon' => 'gear',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -107,7 +107,7 @@ return [
         ],
         'contact' => [
             'lang' => '_FEEDBACK',
-            'img' => 'contact.png',
+            'icon' => 'envelope-open',
             'active' => '1',
             'view' => '1',
             'menu' => '1',
@@ -118,7 +118,7 @@ return [
         ],
         'content' => [
             'lang' => '_CONTENT',
-            'img' => 'content.png',
+            'icon' => 'file-earmark-text',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -129,7 +129,7 @@ return [
         ],
         'database' => [
             'lang' => '_DATABASE',
-            'img' => 'database.png',
+            'icon' => 'database',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -140,7 +140,7 @@ return [
         ],
         'editor' => [
             'lang' => '_EDITOR',
-            'img' => 'editor.png',
+            'icon' => 'pencil-square',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -151,7 +151,7 @@ return [
         ],
         'faq' => [
             'lang' => '_FAQ',
-            'img' => 'faq.png',
+            'icon' => 'question-circle',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -162,7 +162,7 @@ return [
         ],
         'favorites' => [
             'lang' => '_FAVORITES',
-            'img' => 'favorites.png',
+            'icon' => 'star',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -173,7 +173,7 @@ return [
         ],
         'fields' => [
             'lang' => '_FIELDS',
-            'img' => 'fields.png',
+            'icon' => 'input-cursor-text',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -184,7 +184,7 @@ return [
         ],
         'files' => [
             'lang' => '_FILES',
-            'img' => 'files.png',
+            'icon' => 'folder2-open',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -195,7 +195,7 @@ return [
         ],
         'forum' => [
             'lang' => '_FORUM',
-            'img' => 'forum.png',
+            'icon' => 'chat-square-text',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -206,7 +206,7 @@ return [
         ],
         'groups' => [
             'lang' => '_GROUPS',
-            'img' => 'groups.png',
+            'icon' => 'people-fill',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -217,7 +217,7 @@ return [
         ],
         'help' => [
             'lang' => '_HELP',
-            'img' => 'help.png',
+            'icon' => 'info-circle',
             'active' => '1',
             'view' => '1',
             'menu' => '1',
@@ -228,7 +228,7 @@ return [
         ],
         'jokes' => [
             'lang' => '_JOKES',
-            'img' => 'jokes.png',
+            'icon' => 'emoji-laughing',
             'active' => '0',
             'view' => '0',
             'menu' => '1',
@@ -239,7 +239,7 @@ return [
         ],
         'lang' => [
             'lang' => '_LANG',
-            'img' => 'lang.png',
+            'icon' => 'translate',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -250,7 +250,7 @@ return [
         ],
         'links' => [
             'lang' => '_LINKS',
-            'img' => 'links.png',
+            'icon' => 'link-45deg',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -261,7 +261,7 @@ return [
         ],
         'main' => [
             'lang' => '_MAIN',
-            'img' => 'favorites.png',
+            'icon' => 'house-door',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -272,7 +272,7 @@ return [
         ],
         'media' => [
             'lang' => '_MEDIA',
-            'img' => 'media.png',
+            'icon' => 'image',
             'active' => '0',
             'view' => '0',
             'menu' => '1',
@@ -283,7 +283,7 @@ return [
         ],
         'messages' => [
             'lang' => '_MESSAGES',
-            'img' => 'messages.png',
+            'icon' => 'envelope',
             'active' => '1',
             'view' => '1',
             'menu' => '1',
@@ -294,7 +294,7 @@ return [
         ],
         'modules' => [
             'lang' => '_MODULES',
-            'img' => 'modules.png',
+            'icon' => 'puzzle',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -305,7 +305,7 @@ return [
         ],
         'money' => [
             'lang' => '_MONEY',
-            'img' => 'money.png',
+            'icon' => 'currency-exchange',
             'active' => '0',
             'view' => '0',
             'menu' => '1',
@@ -316,7 +316,7 @@ return [
         ],
         'monitor' => [
             'lang' => '_MONITOR',
-            'img' => 'monitor.png',
+            'icon' => 'display',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -327,7 +327,7 @@ return [
         ],
         'news' => [
             'lang' => '_NEWS',
-            'img' => 'news.png',
+            'icon' => 'newspaper',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -338,7 +338,7 @@ return [
         ],
         'newsletter' => [
             'lang' => '_NEWSLETTER',
-            'img' => 'newsletter.png',
+            'icon' => 'send',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -349,7 +349,7 @@ return [
         ],
         'order' => [
             'lang' => '_ORDER',
-            'img' => 'order.png',
+            'icon' => 'receipt',
             'active' => '0',
             'view' => '0',
             'menu' => '1',
@@ -360,7 +360,7 @@ return [
         ],
         'pages' => [
             'lang' => '_PAGES',
-            'img' => 'pages.png',
+            'icon' => 'card-text',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -371,7 +371,7 @@ return [
         ],
         'privat' => [
             'lang' => '_PRIVAT',
-            'img' => 'privat.png',
+            'icon' => 'incognito',
             'active' => '1',
             'view' => '1',
             'menu' => '1',
@@ -382,7 +382,7 @@ return [
         ],
         'ratings' => [
             'lang' => '_RATINGS',
-            'img' => 'ratings.png',
+            'icon' => 'star-half',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -393,7 +393,7 @@ return [
         ],
         'recommend' => [
             'lang' => '_RECOMMEND',
-            'img' => 'contact.png',
+            'icon' => 'share',
             'active' => '1',
             'view' => '1',
             'menu' => '1',
@@ -404,7 +404,7 @@ return [
         ],
         'referers' => [
             'lang' => '_REFERERS',
-            'img' => 'referers.png',
+            'icon' => 'box-arrow-in-right',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -415,7 +415,7 @@ return [
         ],
         'replace' => [
             'lang' => '_REPLACE',
-            'img' => 'replace.png',
+            'icon' => 'arrow-left-right',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -426,7 +426,7 @@ return [
         ],
         'rss' => [
             'lang' => '_RSS',
-            'img' => 'rss.png',
+            'icon' => 'rss',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -437,7 +437,7 @@ return [
         ],
         'scheduler' => [
             'lang' => '_SCHEDULER',
-            'img' => 'scheduler.png',
+            'icon' => 'clock-history',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -448,7 +448,7 @@ return [
         ],
         'search' => [
             'lang' => '_SEARCH',
-            'img' => 'find.png',
+            'icon' => 'search',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -459,7 +459,7 @@ return [
         ],
         'security' => [
             'lang' => '_SECURITY',
-            'img' => 'security.png',
+            'icon' => 'shield-lock',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -470,7 +470,7 @@ return [
         ],
         'shop' => [
             'lang' => '_SHOP',
-            'img' => 'shop.png',
+            'icon' => 'cart3',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -481,7 +481,7 @@ return [
         ],
         'sitemap' => [
             'lang' => '_SITEMAP',
-            'img' => 'sitemap.png',
+            'icon' => 'diagram-3',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -492,7 +492,7 @@ return [
         ],
         'statistic' => [
             'lang' => '_STATISTIC',
-            'img' => 'statistic.png',
+            'icon' => 'graph-up',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -503,7 +503,7 @@ return [
         ],
         'template' => [
             'lang' => '_TEMPLATE',
-            'img' => 'template.png',
+            'icon' => 'palette',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -514,7 +514,7 @@ return [
         ],
         'uploads' => [
             'lang' => '_UPLOADS',
-            'img' => 'uploads.png',
+            'icon' => 'cloud-arrow-up',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -525,7 +525,7 @@ return [
         ],
         'users' => [
             'lang' => '_TOPUSERS',
-            'img' => 'users.png',
+            'icon' => 'people',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -536,7 +536,7 @@ return [
         ],
         'voting' => [
             'lang' => '_VOTING',
-            'img' => 'voting.png',
+            'icon' => 'bar-chart',
             'active' => '1',
             'view' => '0',
             'menu' => '1',
@@ -547,7 +547,7 @@ return [
         ],
         'whois' => [
             'lang' => '_WHOIS',
-            'img' => 'whois.png',
+            'icon' => 'geo-alt',
             'active' => '1',
             'view' => '1',
             'menu' => '1',

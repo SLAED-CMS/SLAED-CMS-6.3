@@ -86,7 +86,7 @@ function help(): void {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
-            $cimg  = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $cimg  = ($cimg) ? img_find('icons/'.$cimg) : '';
             $date  = ($conf['help']['date']) ? format_time($time) : '';
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
@@ -246,7 +246,7 @@ function view(): void {
             if (!$pid) {
                 $reads    = $counter;
                 $cdesc    = $cdesc ?: $ctitle;
-                $cimg     = ($cimg) ? img_find('categories/'.$cimg) : '';
+                $cimg     = ($cimg) ? img_find('icons/'.$cimg) : '';
                 $favorites = getFavoriteButton($hid, $conf['name']);
                 $cont .= $tpl->getHtmlPart('view', [
                     'id'            => $hid,

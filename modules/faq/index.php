@@ -115,7 +115,7 @@ function faq(): void {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
-            $cimg  = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $cimg  = ($cimg) ? img_find('icons/'.$cimg) : '';
             $post  = ($conf['faq']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date  = ($conf['faq']['date']) ? format_time($time) : '';
             $iso   = ($conf['faq']['date']) ? date('c', strtotime($time)) : '';
@@ -280,7 +280,7 @@ function view(): void {
         if ($pag > $pageno) $pag = $pageno;
         $pagei = (int)$pag - 1;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg  = ($cimg) ? img_find('categories/'.$cimg) : '';
+        $cimg  = ($cimg) ? img_find('icons/'.$cimg) : '';
         $post  = ($conf['faq']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date  = ($conf['faq']['date']) ? format_time($time) : '';
         $iso   = ($conf['faq']['date']) ? date('c', strtotime($time)) : '';

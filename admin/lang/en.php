@@ -246,6 +246,8 @@ define('_GTIME','The global system time');
 define('_HOMCAT','Display category on the home?');
 define('_HOMEPAGE','Your site');
 define('_HOURLY','Hourly');
+define('_ICON','Icon');
+define('_ICONPICK','Choose icon');
 define('_IGNORE','Ignore');
 define('_INFLY','Free block');
 define('_INFOCATDEL','Deleting a category is impossible as long as it has tied the content of materials module or it includes other subcategories.');

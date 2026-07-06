@@ -246,6 +246,8 @@ define('_GTIME','Globalny czas systemowy');
 define('_HOMCAT','Wyświetl kategorii na głównej?');
 define('_HOMEPAGE','Witryny');
 define('_HOURLY','Co godzinę');
+define('_ICON','Ikona');
+define('_ICONPICK','Wybierz ikonę');
 define('_IGNORE','Ignorować');
 define('_INFLY','Wolny blok');
 define('_INFOCATDEL','Usunięcie kategorii jest niemożliwe tak długo, jak to jest związane zawartość modułu materiałów lub zawiera inne podkategorie.');

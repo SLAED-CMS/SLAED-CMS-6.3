@@ -11,7 +11,9 @@ class Database {
     public PDOStatement|false|null $qresult = null;
     public array $qrow = [];
     public array $qrowset = [];
+    public array $qlog = [];
     public int $qnum = 0;
+    public int $qpos = 0;
     public float $sqltime = 0;
     public string $qtime = '';
     public ?string $qid = null;
@@ -74,6 +76,39 @@ class Database {
         return $this->filterSqlValue($value);
     }
 
+    # Store one SQL debug row and render pending rows only when debug output is visible
+    private function addSqlTrace(float $etime, string $ttime, string $type, string $query, array $params): void {
+        global $tpl;
+        $this->qlog[] = ['etime' => $etime, 'ttime' => $ttime, 'type' => $type, 'query' => $query, 'params' => $params];
+        if ($tpl instanceof Template && function_exists('checkDebugView') && checkDebugView()) $this->addSqlTraceHtml();
+    }
+
+    # Render pending SQL debug rows into the legacy qtime HTML buffer
+    private function addSqlTraceHtml(): void {
+        global $tpl;
+        if (!$tpl instanceof Template) return;
+        while (isset($this->qlog[$this->qpos])) {
+            $row = $this->qlog[$this->qpos];
+            $sql = $this->filterSqlQuery($row['query'], $row['params']);
+            $this->qtime .= $tpl->getHtmlFrag('span', [
+                'text' => $row['ttime'].' '._SEC.'.',
+                'is_success' => $row['etime'] <= 0.01,
+                'is_danger' => $row['etime'] > 0.01,
+            ]).$tpl->getHtmlFrag('span', [
+                'text' => ' - ['.$row['type'].'] - '.$sql.';',
+                'is_line_break' => true,
+            ]);
+            unset($this->qlog[$this->qpos]);
+            $this->qpos++;
+        }
+    }
+
+    # Return rendered SQL debug rows after flushing deferred trace entries
+    public function getSqlTraceHtml(): string {
+        if (function_exists('checkDebugView') && checkDebugView()) $this->addSqlTraceHtml();
+        return $this->qtime;
+    }
+
     # Closes the connection
     function getSqlClose(): bool {
         $this->sqlconnid = null;
@@ -103,19 +138,11 @@ class Database {
         $etime = microtime(true) - $stime;
         $ttime = sprintf('%.5f', $etime);
         $this->sqltime += $etime;
-        $debug = $tpl instanceof Template && function_exists('checkDebugView') && checkDebugView() && !empty(explode(',', $conf['variables'])[8]);
+        $cvar = explode(',', $conf['variables'] ?? '');
+        $trace = !empty($cvar[8]);
         $log = !$this->qresult && $conf['security']['error_log'] && function_exists('addSqlLog');
-        $sql = ($debug || $log) ? $this->filterSqlQuery($query, $params) : '';
-        if ($debug) {
-            $this->qtime .= $tpl->getHtmlFrag('span', [
-                'text' => $ttime.' '._SEC.'.',
-                'is_success' => $etime <= 0.01,
-                'is_danger' => $etime > 0.01,
-            ]).$tpl->getHtmlFrag('span', [
-                'text' => ' - ['.$type.'] - '.$sql.';',
-                'is_line_break' => true,
-            ]);
-        }
+        $sql = $log ? $this->filterSqlQuery($query, $params) : '';
+        if ($trace) $this->addSqlTrace($etime, $ttime, $type, $query, $params);
         if ($this->qresult) {
             $this->qnum++;
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);

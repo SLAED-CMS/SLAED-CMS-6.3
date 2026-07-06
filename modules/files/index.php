@@ -86,7 +86,7 @@ function files(): void {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
-            $cimg   = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $cimg   = ($cimg) ? img_find('icons/'.$cimg) : '';
             $post   = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date   = ($conf['files']['date']) ? format_time($time) : '';
             $iso    = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
@@ -261,7 +261,7 @@ function view(): void {
         if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg  = ($cimg) ? img_find('categories/'.$cimg) : '';
+        $cimg  = ($cimg) ? img_find('icons/'.$cimg) : '';
         $post  = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date  = ($conf['files']['date']) ? format_time($time) : '';
         $iso   = ($conf['files']['date']) ? date('c', strtotime($time)) : '';

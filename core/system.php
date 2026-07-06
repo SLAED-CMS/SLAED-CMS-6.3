@@ -61,11 +61,11 @@ function getConfig(): array {
     $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
-        $out = '['.PHP_EOL;
+        $out = '['."\n";
         foreach ($arr as $key => $val) {
             $out .= $ind.var_export($key, true).' => ';
             $out .= is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
-            $out .= ','.PHP_EOL;
+            $out .= ','."\n";
         }
         return $out.$pad.']';
     };
@@ -79,12 +79,12 @@ function getConfig(): array {
     ];
     $tmp = $local_file.'.tmp';
     $is_new = !file_exists($local_file);
-    $cnt = '<?php'.PHP_EOL
-    .'# Author: Eduard Laas'.PHP_EOL
-    .'# 2005 - '.date('Y').' SLAED'.PHP_EOL
-    .'# License: MIT'.PHP_EOL
-    .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'return '.$export($data).';'.PHP_EOL;
+    $cnt = '<?php'."\n"
+    .'# Author: Eduard Laas'."\n"
+    .'# 2005 - '.date('Y').' SLAED'."\n"
+    .'# License: MIT'."\n"
+    .'# Website: slaed.net'."\n\n"
+    .'return '.$export($data).';'."\n";
     if (file_put_contents($tmp, $cnt, LOCK_EX) !== false) {
         if (!rename($tmp, $local_file)) {
             unlink($tmp);
@@ -2162,13 +2162,13 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                     if (is_acess($val[6])) {
                         $is_hidden = false;
                         $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
-                        $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
+                        $isrc = $val[3] ? img_find('icons/'.$val[3]) : '';
                         $ilink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'is_cat_image' => true, 'img_src' => $isrc, 'img_alt' => $val[1]]);
                         $alink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'label' => $val[1], 'is_cat_name' => true]);
                     } else {
                         $is_hidden = true;
                         $htitle = $val[1].' - '._CCLOSED;
-                        $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
+                        $isrc = $val[3] ? img_find('icons/'.$val[3]) : '';
                         $ilink = $tpl->getHtmlFrag('span', ['title' => $htitle, 'is_cat_image' => true, 'img_src' => $isrc, 'img_alt' => $htitle]);
                         $alink = $tpl->getHtmlFrag('span', ['title' => $val[1], 'text' => $val[1], 'is_cat_name' => true]);
                     }
@@ -2298,20 +2298,20 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
-        $out = '['.PHP_EOL;
+        $out = '['."\n";
         foreach ($arr as $key => $val) {
             $out .= $ind.var_export($key, true).' => ';
             $out .= is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
-            $out .= ','.PHP_EOL;
+            $out .= ','."\n";
         }
         return $out.$pad.']';
     };
-    $cnt = '<?php'.PHP_EOL
-    .'# Author: Eduard Laas'.PHP_EOL
-    .'# 2005 - '.date('Y').' SLAED'.PHP_EOL
-    .'# License: MIT'.PHP_EOL
-    .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'return '.$export($data).';'.PHP_EOL;
+    $cnt = '<?php'."\n"
+    .'# Author: Eduard Laas'."\n"
+    .'# 2005 - '.date('Y').' SLAED'."\n"
+    .'# License: MIT'."\n"
+    .'# Website: slaed.net'."\n\n"
+    .'return '.$export($data).';'."\n";
     file_put_contents($fp, $cnt, LOCK_EX);
     @unlink(CONFIG_DIR.'/local.php');
     getConfig();
@@ -3133,7 +3133,7 @@ function getVariables(): string {
             'content' => ($var[3]) ? htmlspecialchars($text) : $text,
         ];
     }
-    if ($cvar[8]) $rows[] = ['legend' => _AQUERY_DB, 'tone' => 'success', 'content' => $db->qtime];
+    if ($cvar[8]) $rows[] = ['legend' => _AQUERY_DB, 'tone' => 'success', 'content' => $db->getSqlTraceHtml()];
     foreach ($rows as $row) $cont .= $tpl->getHtmlFrag('debug-section', $row);
     return $cont;
 }

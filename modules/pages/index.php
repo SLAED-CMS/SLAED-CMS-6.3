@@ -93,7 +93,7 @@ function pages(): void {
             ]);
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
-            $cimg   = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $cimg   = ($cimg) ? img_find('icons/'.$cimg) : '';
             $post   = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date   = ($conf['pages']['date']) ? format_time($time) : '';
             $iso    = ($conf['pages']['date']) ? date('c', strtotime($time)) : '';
@@ -268,7 +268,7 @@ function view(): void {
         if ($pag > $pageno) $pag = $pageno;
         $pagei = (int)$pag - 1;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+        $cimg = ($cimg) ? img_find('icons/'.$cimg) : '';
         $post = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['pages']['date']) ? format_time($time) : '';
         $iso  = ($conf['pages']['date']) ? date('c', strtotime($time)) : '';

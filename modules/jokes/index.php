@@ -88,7 +88,7 @@ function jokes(): void {
         while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
-            $cimg   = ($cimg) ? img_find('categories/'.$cimg) : '';
+            $cimg   = ($cimg) ? img_find('icons/'.$cimg) : '';
             $post   = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
             $date   = ($conf['jokes']['date']) ? format_time($time) : '';
             $iso    = ($conf['jokes']['date']) ? date('c', strtotime($time)) : '';

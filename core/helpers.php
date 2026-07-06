@@ -275,14 +275,14 @@ function getTplPager(array $data = []): string {
 function getTplAdminTabs(array $data = []): string {
     global $afile, $conf, $tpl;
     $title = _ADMINMENU;
-    $icon = 'components.png';
+    $icon = 'grid';
     $subtitle = (string)($data['subtitle_html'] ?? '');
     $name = filterWord(getVar('req', 'name', 'text', ''));
     if ($name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name])) {
         $lang = trim((string)($conf['modules'][$name]['lang'] ?? ''));
         if ($lang !== '') $title = defined($lang) ? constant($lang) : $lang;
-        $img = basename(trim((string)($conf['modules'][$name]['img'] ?? '')));
-        if ($img !== '' && file_exists(BASE_DIR.'/templates/admin/images/admin/'.$img)) $icon = $img;
+        $ico = trim((string)($conf['modules'][$name]['icon'] ?? ''));
+        if (preg_match('/^[a-z0-9-]+$/', $ico)) $icon = $ico;
     }
     $links = $data['links'] ?? [];
     if (!$links) {

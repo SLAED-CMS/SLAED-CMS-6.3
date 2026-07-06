@@ -1,10 +1,9 @@
 {% if is_forum_heading %}
 <h1 class="sl-heading">{{ title }}</h1>
-{% elseif content or icon or subtitle %}
+{% elseif content or subtitle %}
 <div class="sl-basecont">
   <div class="sl-bpad">
     <div class="sl-headmodule">
-      {% if icon %}<span class="sl-lcolomn"><img src="templates/admin/images/admin/{{ icon }}" title="{{ title }}" alt="{{ title }}"></span>{% endif %}
       <div class="sl-rcolomn"><h1>{{ title }}</h1>{{{ subtitle }}}</div>
       <div class="sl-clr"></div>
     </div>
