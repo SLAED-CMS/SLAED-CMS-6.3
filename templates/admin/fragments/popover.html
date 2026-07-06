@@ -3,12 +3,12 @@
   <ul>
     <li class="sl-float">
       <span
-        class="sl-row-actions-trigger"
+        class="sl-but-mini"
         title="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}"
         aria-label="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}"
         role="button"
         tabindex="0"
-      ><i class="bi bi-menu-button-wide-fill" aria-hidden="true"></i></span>
+      ><i class="bi {% if is_user_menu %}bi-three-dots{% else %}bi-gear-fill{% endif %}" aria-hidden="true"></i></span>
       <ul class="sl-float-panel">
         {% if items_html %}
           {{{ items_html }}}

@@ -26,6 +26,7 @@
   --sl-color-warning-soft: #fff4e5;
   --sl-color-accent: #8e44ad;
   --sl-color-info-soft: #e8f4fd;
+  --sl-color-on-dark: #ffffff;
   --sl-changelog-card: #ffffff;
   --sl-changelog-text: #374151;
   --sl-changelog-meta: #6b7280;
@@ -37,9 +38,11 @@
   --sl-size-control: 28px;
   --sl-size-pager: 30px;
   --sl-size-head: 32px;
-  --sl-size-icon: 18px;
+  --sl-size-chip: 26px;
+  --sl-size-icon-xs: 16px;
+  --sl-size-icon-sm: 18px;
   --sl-size-tile: 44px;
-  --sl-size-tile-icon: 20px;
+  --sl-size-tile-icon: 32px;
   --sl-img-placeholder-size: 64px;
   --sl-img-placeholder-icon-size: 48px;
   --sl-hover-opacity: 0.8;
@@ -52,7 +55,6 @@
   --sl-hover-bg-primary: #207fb6;
   --sl-hover-color-primary: #207fb6;
   --sl-hover-color-soft: #58a0c8;
-  --sl-hover-color-inverse: #ffffff;
   --sl-hover-color-tint: #d9eef6;
   --sl-hover-border-strong: #cad2da;
   --sl-hover-border-soft: #8fc5d9;
