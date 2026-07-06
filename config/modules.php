@@ -8,7 +8,7 @@ return [
     'modules' => [
         'account' => [
             'lang' => '_USERS',
-            'icon' => 'person-circle',
+            'icon' => 'people',
             'active' => '1',
             'view' => '0',
             'menu' => '1',

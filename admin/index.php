@@ -10,6 +10,14 @@ getLang('admin');
 Cache::setHeaders(false);
 checkAccess();
 
+# Check that a module exposes an editable configuration: a config file plus a config handler in its admin routing
+function checkModuleConfig(string $name, int $typ): bool {
+    if (!is_file(BASE_DIR.'/config/'.$name.'.php')) return false;
+    $file = ($typ === 0) ? BASE_DIR.'/admin/modules/'.$name.'.php' : BASE_DIR.'/modules/'.$name.'/admin/index.php';
+    if (!is_file($file)) return false;
+    return strpos((string)file_get_contents($file), "case 'config'") !== false;
+}
+
 # Build one dashboard module card or one sidebar menu row from a module config entry
 function getAdminMenu(string $name, array $mod): string {
  global $panel, $afile, $tpl;
@@ -23,10 +31,14 @@ function getAdminMenu(string $name, array $mod): string {
         $who = ($view === 2) ? _MVADMIN : (($view === 1) ? _MVUSERS : _MVALL);
         $dial = [];
         if (isAdmin(true)) {
-            $dial = [
-                ['href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'],
-                ['href' => $afile.'.php?name=modules&amp;op=status&amp;mod='.$name.'&amp;act='.($off ? '1' : '0').'&amp;refer=1&amp;token='.getSiteToken(), 'title' => $off ? _ACTIVATE : _DEACTIVATE, 'icon_name' => 'power'],
-            ];
+            $typ = (int)($mod['type'] ?? 1);
+            $dial[] = ['href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
+            if (checkModuleConfig($name, $typ)) $dial[] = ['href' => $url.'&amp;op=config', 'title' => _PREFERENCES, 'icon_name' => 'gear'];
+            if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&amp;modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
+            if ($typ === 1 && !$off) $dial[] = ['href' => 'index.php?name='.$name, 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
+            $dial[] = ['href' => $url.'&amp;op=info', 'title' => _DOCS, 'icon_name' => 'info-circle'];
+            $stat = $afile.'.php?name=modules&amp;op=status&amp;mod='.$name.'&amp;act='.($off ? '1' : '0').'&amp;refer=1&amp;token='.getSiteToken();
+            $dial[] = ['href' => $stat, 'title' => $off ? _ACTIVATE : _DEACTIVATE, 'icon_name' => 'power'];
         }
         return $tpl->getHtmlFrag('menu-grid-item', [
             'url' => $url,
@@ -89,7 +101,7 @@ function getAdminPanel(): void {
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) $items[] = getAdminMenu($name, $mod);
             }
-            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
+            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODADMINPANEL, 'icon_name' => 'tools', 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
         }
         $items = [];
         foreach ($conf['modules'] as $name => $mod) {
@@ -103,7 +115,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODULESADMIN, 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
+        $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODSITEPANEL, 'icon_name' => 'people', 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
     }
     echo $content;
     setFoot();

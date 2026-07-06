@@ -852,12 +852,17 @@ function getTplModuleSelect(string $name, string $mod, string $no = '', array $a
     return $tpl->getHtmlFrag('select', ['name_attr' => $name, 'is_config' => true, 'options_html' => $cont, 'is_multiple' => true, 'is_name_array' => true]);
 }
 
+# Return the names of modules that support categories
+function getCategoryModules(): array {
+    return ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
+}
+
 # Render a select with category-enabled modules
 function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false): string {
     global $tpl;
     $attr = $auto ? 'OnChange="submit()"' : '';
     $cont = '';
-    $mods = ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
+    $mods = getCategoryModules();
     foreach ($mods as $mod) {
         $cont .= $tpl->getHtmlFrag('select-option', [
             'value_attr' => $mod,
