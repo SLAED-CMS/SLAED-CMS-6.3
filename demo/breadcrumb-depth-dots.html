@@ -1,0 +1,287 @@
+<title>SLAED — крошки «сжатые точки глубины» (расширение J)</title>
+<style>
+  /* Faithful lite-theme tokens (templates/lite/assets/css/base.css) */
+  :root {
+    --sl-space-xs: 4px; --sl-space-sm: 6px; --sl-space-md: 8px; --sl-space-lg: 12px;
+    --sl-color-bg: #ffffff;
+    --sl-color-surface: #f8f9fb;
+    --sl-color-surface-alt: #f2f4f7;
+    --sl-color-text: #222222;
+    --sl-color-text-heading: #223345;
+    --sl-color-text-muted: #6e7c8b;
+    --sl-color-text-subtle: #a5b2bf;
+    --sl-color-brand-link: #30a2f6;
+    --sl-color-brand-strong: #207fb6;
+    --sl-color-border: #e8ebee;
+    --sl-color-border-strong: #cad2da;
+    --sl-radius-control: 4px;
+    --sl-radius-card: 10px;
+    --sl-size-tile: 40px;
+    /* tone rotation — identical to .sl-cat-tone-0..5 */
+    --sl-color-tone-info: #1d9bf0;
+    --sl-color-tone-success: #5c9425;
+    --sl-color-tone-warning: #ffa024;
+    --sl-color-tone-accent: #8c2ca9;
+    --sl-color-tone-primary: #4c75a3;
+    --sl-color-tone-danger: #fd3b3b;
+
+    --pg-bg: #eef1f5; --pg-panel: #ffffff; --pg-ink: #223345; --pg-muted: #6e7c8b; --pg-line: #e2e6ec; --pg-code-bg: #f2f4f7;
+  }
+  :root[data-theme="dark"] { --pg-bg:#171b22; --pg-panel:#1e232c; --pg-ink:#e7edf4; --pg-muted:#9aa8b6; --pg-line:#2c333e; --pg-code-bg:#262c36; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --pg-bg:#171b22; --pg-panel:#1e232c; --pg-ink:#e7edf4; --pg-muted:#9aa8b6; --pg-line:#2c333e; --pg-code-bg:#262c36; }
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--pg-bg); color: var(--pg-ink); font: 15px/1.55 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 40px 24px 80px; }
+  .eyebrow { font: 600 11px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; color: var(--sl-color-brand-strong); margin: 0 0 12px; }
+  h1 { font-size: 30px; line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.02em; text-wrap: balance; }
+  .lede { color: var(--pg-muted); max-width: 64ch; margin: 0 0 6px; }
+  code { font: 500 13px/1 ui-monospace, Menlo, Consolas, monospace; background: var(--pg-code-bg); padding: 2px 6px; border-radius: 4px; }
+
+  .toggle { position: fixed; top: 16px; right: 16px; z-index: 5; display: inline-flex; gap: 2px; padding: 3px; background: var(--pg-panel); border: 1px solid var(--pg-line); border-radius: 999px; }
+  .toggle button { border: 0; background: transparent; color: var(--pg-muted); cursor: pointer; font: 600 12px/1 inherit; padding: 6px 12px; border-radius: 999px; }
+  .toggle button[aria-pressed="true"] { background: var(--sl-color-brand-link); color: #fff; }
+
+  .variant { margin-top: 26px; background: var(--pg-panel); border: 1px solid var(--pg-line); border-radius: 14px; overflow: hidden; }
+  .variant > .meta { padding: 18px 22px 4px; }
+  .variant .tag { display: inline-block; font: 600 11px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; color: var(--pg-muted); border: 1px solid var(--pg-line); border-radius: 999px; padding: 4px 9px; margin-bottom: 10px; }
+  .variant h2 { font-size: 18px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .variant .note { color: var(--pg-muted); font-size: 13.5px; margin: 0; max-width: 66ch; }
+  .stage { margin: 16px 0 0; padding: 22px; background: var(--sl-color-bg); border-top: 1px solid var(--pg-line); color: var(--sl-color-text); }
+  .stage + .stage { border-top: 1px dashed var(--pg-line); }
+  .stage .cap { font: 600 10px/1 ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--sl-color-text-subtle); margin-bottom: 14px; }
+
+  /* ===== tone map (= .sl-cat-tone-0..5) ===== */
+  .c0 { --sl-cat-tone: var(--sl-color-tone-info); }
+  .c1 { --sl-cat-tone: var(--sl-color-tone-success); }
+  .c2 { --sl-cat-tone: var(--sl-color-tone-warning); }
+  .c3 { --sl-cat-tone: var(--sl-color-tone-accent); }
+  .c4 { --sl-cat-tone: var(--sl-color-tone-primary); }
+  .c5 { --sl-cat-tone: var(--sl-color-tone-danger); }
+
+  /* ==================================================================
+     EXPANDED J — depth dots that carry the REAL category colour + icon
+     Anatomy: an icon tile (tone-tinted) is always visible; the label
+     slides open on hover / focus. Current level stays open + filled.
+     ================================================================== */
+  .dots { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 13px/1 Arial, Tahoma, sans-serif; }
+  .crumb {
+    --sl-cat-tone: var(--sl-color-tone-info);
+    display: inline-flex; align-items: center; height: 30px; border-radius: 999px; text-decoration: none;
+    background: color-mix(in srgb, var(--sl-cat-tone) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--sl-cat-tone) 24%, var(--sl-color-border));
+    color: color-mix(in srgb, var(--sl-cat-tone) 74%, var(--sl-color-text-heading));
+    max-width: 30px; overflow: hidden; padding: 0;
+    transition: max-width .3s cubic-bezier(.4,0,.2,1), background-color .2s ease, border-color .2s ease;
+  }
+  /* icon tile is the always-visible anchor — carries the category colour */
+  .crumb .ico { display: grid; place-items: center; width: 28px; height: 28px; flex: none; color: var(--sl-cat-tone); }
+  .crumb .ico svg { width: 16px; height: 16px; }
+  .crumb .lbl { white-space: nowrap; padding-right: 12px; padding-left: 2px; }
+  a.crumb:hover, a.crumb:focus-visible { max-width: 320px; background: color-mix(in srgb, var(--sl-cat-tone) 16%, transparent); border-color: color-mix(in srgb, var(--sl-cat-tone) 40%, var(--sl-color-border)); outline: none; }
+  .crumb.cur { max-width: 320px; background: var(--sl-cat-tone); border-color: var(--sl-cat-tone); color: #fff; font-weight: 700; }
+  .crumb.cur .ico { color: #fff; }
+  .sep { color: var(--sl-color-text-subtle); display: inline-flex; }
+  .sep svg { width: 14px; height: 14px; }
+  @media (prefers-reduced-motion: reduce) { .crumb { transition: none; } }
+
+  /* variant: count chip inside the open crumb (mirrors category tile count) */
+  .crumb .cnt { margin-left: 6px; margin-right: 10px; height: 18px; min-width: 18px; padding: 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font: 700 11px/1 Arial, sans-serif; background: color-mix(in srgb, var(--sl-cat-tone) 22%, #fff); color: var(--sl-cat-tone); }
+  .crumb.cur .cnt { background: rgba(255,255,255,.24); color: #fff; }
+  .crumb.hascnt .lbl { padding-right: 0; }
+
+  /* variant: pure dot when collapsed (icon only appears once open) */
+  .dots.mode-dot .crumb { max-width: 30px; }
+  .dots.mode-dot .crumb .ico { position: relative; }
+  .dots.mode-dot .crumb:not(.cur):not(:hover):not(:focus-within) .ico svg { display: none; }
+  .dots.mode-dot .crumb:not(.cur):not(:hover):not(:focus-within) .ico::before { content: ""; width: 9px; height: 9px; border-radius: 999px; background: var(--sl-cat-tone); }
+
+  /* variant: always-open (no collapse) — for wide screens */
+  .dots.mode-open .crumb { max-width: 320px; }
+
+  /* mini category tile to prove colour+icon parity with the grid */
+  .parity { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .tile { --sl-cat-tone: var(--sl-color-tone-warning); display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+  .tile .tico { display: grid; place-items: center; width: var(--sl-size-tile); height: var(--sl-size-tile); border-radius: var(--sl-radius-card); background: color-mix(in srgb, var(--sl-cat-tone) 12%, #fff); border: 1px solid color-mix(in srgb, var(--sl-cat-tone) 26%, var(--sl-color-border)); color: var(--sl-cat-tone); }
+  .tile .tico svg { width: 22px; height: 22px; }
+  .tile b { color: var(--sl-color-text-heading); }
+  .arrow { color: var(--sl-color-text-subtle); }
+
+  .foot { margin-top: 40px; color: var(--pg-muted); font-size: 13px; border-top: 1px solid var(--pg-line); padding-top: 18px; }
+  .foot b { color: var(--pg-ink); }
+  .foot code, .foot pre { background: var(--pg-code-bg); }
+  pre { overflow-x: auto; padding: 14px 16px; border-radius: 10px; font: 12.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--pg-ink); border: 1px solid var(--pg-line); }
+  .kbd { font: 600 11px/1 ui-monospace, monospace; border: 1px solid var(--pg-line); border-bottom-width: 2px; border-radius: 5px; padding: 3px 6px; color: var(--pg-ink); background: var(--pg-panel); }
+
+  /* SVG icon defs reused via <use> */
+  .icons { position: absolute; width: 0; height: 0; overflow: hidden; }
+</style>
+
+<svg class="icons" aria-hidden="true"><defs>
+  <g id="i-folder"><path d="M1.5 3.5A1.5 1.5 0 0 1 3 2h3l1.5 1.5H13A1.5 1.5 0 0 1 14.5 5v6A1.5 1.5 0 0 1 13 12.5H3A1.5 1.5 0 0 1 1.5 11z"/></g>
+  <g id="i-palette"><path d="M8 1a7 7 0 0 0 0 14c.9 0 1.4-.7 1.4-1.4 0-.4-.2-.7-.4-1-.2-.2-.4-.5-.4-.9 0-.6.5-1 1.1-1H11a4 4 0 0 0 4-4c0-3.3-3.1-5.7-7-5.7zM4 8.5A1.2 1.2 0 1 1 4 6a1.2 1.2 0 0 1 0 2.5zm2.4-3A1.2 1.2 0 1 1 6.4 3a1.2 1.2 0 0 1 0 2.5zm3.2 0A1.2 1.2 0 1 1 9.6 3a1.2 1.2 0 0 1 0 2.5zm2.4 3A1.2 1.2 0 1 1 12 6a1.2 1.2 0 0 1 0 2.5z"/></g>
+  <g id="i-image"><path d="M2.5 2h11A1.5 1.5 0 0 1 15 3.5v9A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9A1.5 1.5 0 0 1 2.5 2zm8.5 3.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2zM2.5 12.5h11l-3.6-4.3-2.4 2.9-1.7-1.8z"/></g>
+  <g id="i-zip"><path d="M4 1.5A1.5 1.5 0 0 1 5.5 0h5A1.5 1.5 0 0 1 12 1.5V14a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 14zm3 0v1h1v-1zm1 1v1h1v-1zm-1 1v1h1v-1zm1 1v1h1v-1zm-1 1v1h1v-1zm0 2.5a1 1 0 0 0-1 1v1.5h2V10a1 1 0 0 0-1-1z"/></g>
+  <g id="i-brush"><path d="M13.5 1.4c.6.5.7 1.4.2 2L9 8.9 7.1 7 11.6 1.6c.5-.6 1.4-.7 1.9-.2zM6.3 7.9l1.8 1.9c-.4 1-1 1.8-1.9 2.4-1 .7-2.3.9-3.7.8.6-.5.9-.9 1-1.5.2-1 .8-2.6 2.8-3.6z"/></g>
+  <g id="i-collection"><path d="M2 5h12v1H2zm1-2h10v1H3zM1.5 7h13A1.5 1.5 0 0 1 16 8.5v3A1.5 1.5 0 0 1 14.5 13h-13A1.5 1.5 0 0 1 0 11.5v-3A1.5 1.5 0 0 1 1.5 7z"/></g>
+  <g id="i-puzzle"><path d="M8.5 1a1.5 1.5 0 0 1 1.5 1.5V3h2.5A1.5 1.5 0 0 1 14 4.5V7h-.5a1.5 1.5 0 0 0 0 3h.5v2.5a1.5 1.5 0 0 1-1.5 1.5H10v-.5a1.5 1.5 0 0 0-3 0v.5H4.5A1.5 1.5 0 0 1 3 12.5V10h.5a1.5 1.5 0 0 0 0-3H3V4.5A1.5 1.5 0 0 1 4.5 3H7v-.5A1.5 1.5 0 0 1 8.5 1z"/></g>
+  <g id="i-grid"><path d="M2 2h5v5H2zm7 0h5v5H9zm-7 7h5v5H2zm7 0h5v5H9z"/></g>
+  <g id="i-chev"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6"/></g>
+</defs></svg>
+
+<div class="toggle" role="group" aria-label="Тема">
+  <button data-t="light" aria-pressed="false">Светлая</button>
+  <button data-t="dark" aria-pressed="false">Тёмная</button>
+</div>
+
+<div class="wrap">
+  <p class="eyebrow">SLAED CMS · lite · вариант J расширенный</p>
+  <h1>Сжатые точки глубины — с реальным цветом и иконкой категории</h1>
+  <p class="lede">Каждая крошка несёт <b>свой</b> тон (тот же <code>ordern % 6</code>, что категория показывает в сетке) и <b>свою</b> иконку (поле <code>img</code> категории). Свёрнутый уровень — это иконка в цвете категории; наведи/сфокусируй — раскроется название. Текущий уровень всегда открыт и залит.</p>
+
+  <!-- Parity proof -->
+  <section class="variant">
+    <div class="meta">
+      <span class="tag">СВЯЗЬ С СЕТКОЙ</span>
+      <h2>Цвет и иконка совпадают с плиткой категории</h2>
+      <p class="note">Пользователь кликнул плитку «Темы и графика» (тон warning, иконка палитры) — и та же пара цвет+иконка узнаётся в крошке. Ничего нового не выдумываем: берём <code>tone</code> и <code>icon_name</code> ровно как <code>setCategories</code>.</p>
+    </div>
+    <div class="stage">
+      <div class="parity">
+        <span class="tile c2"><span class="tico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span>Плитка: <b>Темы и графика</b></span></span>
+        <span class="arrow">→</span>
+        <nav class="dots">
+          <span class="crumb cur c2"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span class="lbl">Темы и графика</span></span>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- J1: icon-anchored (recommended) -->
+  <section class="variant">
+    <div class="meta">
+      <span class="tag">J · основной</span>
+      <h2>Иконка всегда видна, имя раскрывается</h2>
+      <p class="note">Свёрнутая крошка = цветная иконка своей категории (виден «след иконок»). Наведи — выедет название. Текущий залит своим тоном. Иконки и тона у уровней разные (folder / palette / zip), как у реальных категорий.</p>
+    </div>
+    <div class="stage">
+      <div class="cap">Наведи на свёрнутый уровень</div>
+      <nav class="dots">
+        <a class="crumb c0" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-folder"/></svg></span><span class="lbl">Каталог файлов</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb c2" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span class="lbl">Темы и графика</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <span class="crumb cur c3"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-zip"/></svg></span><span class="lbl">Темы для версий 1.6 Free — 2.0 Lite</span></span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- J2: with count -->
+  <section class="variant">
+    <div class="meta">
+      <span class="tag">J · со счётчиком</span>
+      <h2>+ количество материалов в уровне</h2>
+      <p class="note">Раскрытая крошка может показать счётчик материалов категории — та же цифра, что на плитке (<code>count</code>). Полезно, чтобы прикинуть «насколько большой раздел».</p>
+    </div>
+    <div class="stage">
+      <div class="cap">Счётчик в тон категории</div>
+      <nav class="dots">
+        <a class="crumb hascnt c0" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-folder"/></svg></span><span class="lbl">Каталог файлов</span><span class="cnt">248</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb hascnt c2" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span class="lbl">Темы и графика</span><span class="cnt">57</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <span class="crumb cur hascnt c3"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-zip"/></svg></span><span class="lbl">Темы для версий 1.6 Free — 2.0 Lite</span><span class="cnt">31</span></span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- J3: pure dot collapse -->
+  <section class="variant">
+    <div class="meta">
+      <span class="tag">J · точки</span>
+      <h2>Свёртка в чистую точку (как в исходном J)</h2>
+      <p class="note">Если хочется максимально компактно: свёрнутый уровень — просто цветная точка (тон категории), иконка + имя появляются только при раскрытии. Самый узкий след.</p>
+    </div>
+    <div class="stage">
+      <div class="cap">Точка = тон категории</div>
+      <nav class="dots mode-dot">
+        <a class="crumb c0" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-folder"/></svg></span><span class="lbl">Каталог файлов</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb c2" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span class="lbl">Темы и графика</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <span class="crumb cur c3"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-zip"/></svg></span><span class="lbl">Темы для версий 1.6 Free — 2.0 Lite</span></span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- J4: long path -->
+  <section class="variant">
+    <div class="meta">
+      <span class="tag">J · длинный путь</span>
+      <h2>Где выигрыш заметен: 5 уровней</h2>
+      <p class="note">На глубоком дереве видно ради чего всё: пять уровней умещаются в одну строку как цепочка цветных иконок, а полное имя — по требованию. Тона берутся из <code>ordern</code> каждой категории, поэтому цвета не «радуга по порядку», а настоящие.</p>
+    </div>
+    <div class="stage">
+      <div class="cap">Каждый тон = ordern своей категории</div>
+      <nav class="dots">
+        <a class="crumb c0" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-folder"/></svg></span><span class="lbl">Каталог файлов</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb c4" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-grid"/></svg></span><span class="lbl">Дизайн и оформление</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb c2" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span class="lbl">Темы и графика</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb c1" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-brush"/></svg></span><span class="lbl">Шаблоны</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <span class="crumb cur c3"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-zip"/></svg></span><span class="lbl">Темы для версий 1.6 Free — 2.0 Lite</span></span>
+      </nav>
+    </div>
+  </section>
+
+  <!-- J5: always open -->
+  <section class="variant">
+    <div class="meta">
+      <span class="tag">J · широкий экран</span>
+      <h2>Без свёртки (десктоп)</h2>
+      <p class="note">Тот же компонент, но все уровни раскрыты — для широкой раскладки. Свёртка включается медиа-запросом на узких экранах, разметка одна.</p>
+    </div>
+    <div class="stage">
+      <div class="cap">Все имена видны</div>
+      <nav class="dots mode-open">
+        <a class="crumb c0" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-folder"/></svg></span><span class="lbl">Каталог файлов</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <a class="crumb c2" href="#"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-image"/></svg></span><span class="lbl">Темы и графика</span></a>
+        <span class="sep"><svg viewBox="0 0 16 16"><use href="#i-chev"/></svg></span>
+        <span class="crumb cur c3"><span class="ico"><svg viewBox="0 0 16 16" fill="currentColor"><use href="#i-zip"/></svg></span><span class="lbl">Темы для версий 1.6 Free — 2.0 Lite</span></span>
+      </nav>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Что нужно в коде (когда одобришь):</b></p>
+    <pre>1) core/helpers.php · getTplCategoryTrail()
+   SELECT id, title, parent, img, ordern   ← добавить img, ordern
+   на каждый уровень отдать: tone = ordern % 6, icon_name = img|'folder'
+   (та же логика, что уже есть в setCategories)
+
+2) templates/lite/fragments/category-nav.html
+   вывести цепочку крошек: иконка + имя + класс sl-cat-tone-{{ tone }}
+   (PHP отдаёт данные и семантический tone — классы маппит шаблон)
+
+3) templates/lite/assets/css/theme.css
+   стили .sl-crumb рядом с блоком .sl-cat-tone-*; переиспользуют
+   существующие токены и уже готовую карту тонов</pre>
+    <p><b>Консолидация:</b> новых палитр/компонентов нет — тот же <code>--sl-cat-tone</code> и карта <code>.sl-cat-tone-0…5</code>, иконки — те же bootstrap-icons (<code>&lt;i class="bi bi-{{ icon_name }}"&gt;</code>), что и в плитках. В демо иконки — инлайн-SVG (CSP блокирует шрифт).</p>
+    <p style="margin-top:10px"><span class="kbd">Tab</span> по крошкам тоже раскрывает уровень (focus-visible) — доступно с клавиатуры.</p>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement, btns = document.querySelectorAll('.toggle button');
+    function set(t) { root.setAttribute('data-theme', t); btns.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.t === t ? 'true' : 'false'); }); }
+    btns.forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.t); }); });
+    set(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  })();
+</script>
