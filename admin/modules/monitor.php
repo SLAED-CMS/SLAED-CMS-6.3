@@ -1506,7 +1506,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'userson' => $ctx['userson'],
             'servsoftname' => $ctx['servname'],
             'servver' => $ctx['servver'],
-            'mysql' => (string)db_version(),
+            'mysql' => (string)getDbVersion(),
             'phpver' => PHP_VERSION,
             'opmode' => $status(!($conf['close'] ?? 0)),
             'statact' => $status(is_active('stat')),

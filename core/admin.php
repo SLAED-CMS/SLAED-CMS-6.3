@@ -265,126 +265,59 @@ function getAdminLayoutVars(): array {
     return [
         'admin_langs' => getAdminLanguageLinks(),
         'menu' => getAdminTopMenu(),
-        'admin_blocks' => getAdminPanelBlocks().admininfo().adminblock(),
+        'admin_blocks' => getAdminPanelBlocks().getAdminInfo().adminblock(),
     ];
 }
 
-function admininfo() {
- global $db, $admin, $afile, $conf, $panel, $tpl;
+# Render one sidebar pending-count row: active-content link plus a live COUNT chip; title and label are constant names resolved here for the active module
+function getAdminCountRow(string $href, string $titlec, string $labelc, string $icon, string $table, string $where): string {
+    global $db, $afile, $tpl;
+    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_'.$table.($where !== '' ? ' WHERE '.$where : '')));
+    return $tpl->getHtmlFrag('block-sidebar-count-row', [
+        'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.$href, 'title' => constant($titlec), 'label' => constant($labelc), 'icon_name' => $icon]),
+        'value_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => (int)$num >= 1 ? 'warn' : 'success', 'label' => (string)$num]),
+    ]);
+}
+
+# Build the admin sidebar info blocks: pending-content counters, waiting content, and the editor selector
+function getAdminInfo() {
+ global $admin, $afile, $conf, $panel, $tpl;
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
+            $groups = [
+                'account' => [['name=account&op=newuser', '_NEW_USER', '_USERS', 'person-plus', 'users_temp', '']],
+                'faq'     => [['name=faq&status=1', '_FAQ', '_FAQ', 'question-circle', 'faq', "status = '0'"]],
+                'files'   => [
+                    ['name=files&status=1', '_FILES', '_FILES', 'file-earmark-plus', 'files', "status = '0'"],
+                    ['name=files&status=2', '_BROCFILES', '_BROCFILES', 'file-earmark-x', 'files', "status = '2'"],
+                ],
+                'help'    => [['name=help', '_HELP', '_HELP', 'info-circle', 'help', "pid = '0' AND status = '0'"]],
+                'jokes'   => [['name=jokes&status=1', '_JOKES', '_JOKES', 'emoji-laughing', 'jokes', "status = '0'"]],
+                'links'   => [
+                    ['name=links&status=1', '_LINKS', '_LINKS', 'link-45deg', 'links', "status = '0'"],
+                    ['name=links&status=2', '_BROCLINKS', '_BROCLINKS', 'slash-circle', 'links', "status = '2'"],
+                ],
+                'media'   => [
+                    ['name=media&status=1', '_MEDIA', '_MEDIA', 'camera', 'media', "status = '0'"],
+                    ['name=media&status=2', '_BROCMFILES', '_BROCMFILES', 'camera-video-off', 'media', "status = '2'"],
+                ],
+                'news'    => [['name=news&status=1', '_NEWS', '_NEWS', 'newspaper', 'news', "status = '0'"]],
+                'pages'   => [['name=pages&status=1', '_PAGES', '_PAGES', 'file-richtext', 'pages', "status = '0'"]],
+                'shop'    => [
+                    ['name=shop&op=clients', '_CLIENTS', '_CLIENTS', 'bag-plus', 'clients', "status = '2'"],
+                    ['name=shop&op=partners', '_PARTNERS', '_PARTNERS', 'shop', 'partners', "status = '2'"],
+                ],
+                'whois'   => [['name=whois&status=1', '_WHOIS', '_WHOIS', 'person-badge', 'whois', "status = '0'"]],
+            ];
             $newRows = [];
-            if (is_active('account') && is_admin_modul('account')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp'));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=newuser', 'title' => _NEW_USER, 'label' => _USERS, 'icon_name' => 'person-plus']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('album') && is_admin_modul('album')) {
-                #$num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
-            }
-            if (is_active('faq') && is_admin_modul('faq')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_faq WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=faq&status=1', 'title' => _FAQ, 'label' => _FAQ, 'icon_name' => 'question-circle']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('files') && is_admin_modul('files')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=files&status=1', 'title' => _FILES, 'label' => _FILES, 'icon_name' => 'file-earmark-plus']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '2'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=files&status=2', 'title' => _BROCFILES, 'label' => _BROCFILES, 'icon_name' => 'file-earmark-x']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('help') && is_admin_modul('help')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=help', 'title' => _HELP, 'label' => _HELP, 'icon_name' => 'info-circle']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('jokes') && is_admin_modul('jokes')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_jokes WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=jokes&status=1', 'title' => _JOKES, 'label' => _JOKES, 'icon_name' => 'emoji-laughing']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('links') && is_admin_modul('links')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=links&status=1', 'title' => _LINKS, 'label' => _LINKS, 'icon_name' => 'link-45deg']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '2'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=links&status=2', 'title' => _BROCLINKS, 'label' => _BROCLINKS, 'icon_name' => 'slash-circle']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('media') && is_admin_modul('media')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=media&status=1', 'title' => _MEDIA, 'label' => _MEDIA, 'icon_name' => 'camera']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '2'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=media&status=2', 'title' => _BROCMFILES, 'label' => _BROCMFILES, 'icon_name' => 'camera-video-off']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('news') && is_admin_modul('news')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_news WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=news&status=1', 'title' => _NEWS, 'label' => _NEWS, 'icon_name' => 'newspaper']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('pages') && is_admin_modul('pages')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_pages WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=pages&status=1', 'title' => _PAGES, 'label' => _PAGES, 'icon_name' => 'file-richtext']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('shop') && is_admin_modul('shop')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_clients WHERE status = '2'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=shop&op=clients', 'title' => _CLIENTS, 'label' => _CLIENTS, 'icon_name' => 'bag-plus']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_partners WHERE status = '2'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=shop&op=partners', 'title' => _PARTNERS, 'label' => _PARTNERS, 'icon_name' => 'shop']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
-            }
-            if (is_active('whois') && is_admin_modul('whois')) {
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_whois WHERE status = '0'"));
-                $newRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                    'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=whois&status=1', 'title' => _WHOIS, 'label' => _WHOIS, 'icon_name' => 'person-badge']),
-                    'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-                ]);
+            foreach ($groups as $mod => $defs) {
+                if (!is_active($mod) || !is_admin_modul($mod)) continue;
+                foreach ($defs as $d) $newRows[] = getAdminCountRow(...$d);
             }
             $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
-
-            $waitingRows = [];
-            $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
-            $waitingRows[] = $tpl->getHtmlFrag('block-sidebar-count-row', [
-                'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=comments&status=1', 'title' => _COMMENTS, 'label' => _COMMENTS, 'icon_name' => 'chat-dots']),
-                'value_html' => is_numeric($num) ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => (int)$num >= 1, 'is_success' => (int)$num < 1, 'label' => (string)$num]) : '-',
-            ]);
+            $waitingRows = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', 'comment', "status = '0'")];
             $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
-            
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');
         $edit = Editor::getSelect('editor', $key, 'content', 'admin', 'onchange="this.form.submit()"');
@@ -399,9 +332,11 @@ function admininfo() {
         $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _EDITOR, 'icon_name' => 'pencil-square', 'content_html' => $econt, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
+    return '';
 }
 
-function db_version() {
+# Return the database server version string reported by the SQL engine
+function getDbVersion() {
     global $db;
     list($dbv) = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     return $dbv;

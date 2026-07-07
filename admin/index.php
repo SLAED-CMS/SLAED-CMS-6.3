@@ -26,20 +26,20 @@ function getAdminMenu(string $name, array $mod): string {
     $icon = preg_match('/^[a-z0-9-]+$/', $mod['icon'] ?? '') ? $mod['icon'] : 'puzzle';
     $off = empty($mod['active']);
     $ltitle = $off ? $title.' - '._DEACT : $title;
+    $dial = [];
+    if (isAdmin(true)) {
+        $typ = (int)($mod['type'] ?? 1);
+        $dial[] = ['href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
+        if (checkModuleConfig($name, $typ)) $dial[] = ['href' => $url.'&amp;op=config', 'title' => _PREFERENCES, 'icon_name' => 'gear'];
+        if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&amp;modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
+        if ($typ === 1 && !$off) $dial[] = ['href' => 'index.php?name='.$name, 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
+        $dial[] = ['href' => $url.'&amp;op=info', 'title' => _DOCS, 'icon_name' => 'info-circle'];
+        $stat = $afile.'.php?name=modules&amp;op=status&amp;mod='.$name.'&amp;act='.($off ? '1' : '0').'&amp;refer=1&amp;token='.getSiteToken();
+        $dial[] = ['href' => $stat, 'title' => $off ? _ACTIVATE : _DEACTIVATE, 'icon_name' => 'power'];
+    }
     if ($panel) {
         $view = (int)($mod['view'] ?? 0);
         $who = ($view === 2) ? _MVADMIN : (($view === 1) ? _MVUSERS : _MVALL);
-        $dial = [];
-        if (isAdmin(true)) {
-            $typ = (int)($mod['type'] ?? 1);
-            $dial[] = ['href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
-            if (checkModuleConfig($name, $typ)) $dial[] = ['href' => $url.'&amp;op=config', 'title' => _PREFERENCES, 'icon_name' => 'gear'];
-            if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&amp;modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
-            if ($typ === 1 && !$off) $dial[] = ['href' => 'index.php?name='.$name, 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
-            $dial[] = ['href' => $url.'&amp;op=info', 'title' => _DOCS, 'icon_name' => 'info-circle'];
-            $stat = $afile.'.php?name=modules&amp;op=status&amp;mod='.$name.'&amp;act='.($off ? '1' : '0').'&amp;refer=1&amp;token='.getSiteToken();
-            $dial[] = ['href' => $stat, 'title' => $off ? _ACTIVATE : _DEACTIVATE, 'icon_name' => 'power'];
-        }
         return $tpl->getHtmlFrag('menu-grid-item', [
             'url' => $url,
             'title' => $title,
@@ -55,6 +55,8 @@ function getAdminMenu(string $name, array $mod): string {
     return $tpl->getHtmlFrag('menu-list-item', [
         'is_off' => $off,
         'link' => ['href' => $url, 'title' => $ltitle, 'icon_name' => $icon, 'label' => $title],
+        'dial' => $dial,
+        'dial_title' => _FUNCTIONS,
     ]);
 }
 
