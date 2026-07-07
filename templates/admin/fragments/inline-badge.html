@@ -4,6 +4,7 @@
     {% if is_pager_dots %}sl-pnum-dots
     {% else %}
       {{ class }}
+      {% if chip_tone %} sl-chip sl-chip-{{ chip_tone }}{% endif %}
       {% if is_note %} sl-note{% endif %}
       {% if is_dimmed %} sl-dimmed{% endif %}
       {% if is_success %} sl-text-success{% endif %}

@@ -1330,36 +1330,33 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-primary);
 }
 
+/* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */
+.sl-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 var(--sl-space-sm);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--sl-chip-tone, var(--sl-color-muted)) 13%, transparent);
+  color: var(--sl-chip-tone, var(--sl-color-muted));
+  font-size: 0.78em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sl-chip-success { --sl-chip-tone: var(--sl-color-success-strong); }
+.sl-chip-warn { --sl-chip-tone: var(--sl-color-warning-strong); }
+
 .sl-block-sidebar-count-value {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-}
-
-.sl-block-sidebar-count-value > span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  padding: 1px var(--sl-space-xs);
-  background: var(--sl-color-bg-subtle);
-  border: 1px solid var(--sl-color-border);
-  border-radius: 9999px;
-  font-size: 0.78em;
-  font-weight: 700;
-  line-height: 1.4;
-  box-shadow: var(--sl-shadow-card);
-}
-
-.sl-block-sidebar-count-value > .sl-text-danger {
-  color: var(--sl-color-warning-strong);
-  border-color: var(--sl-color-border-strong);
-}
-
-.sl-block-sidebar-count-value > .sl-text-success {
-  background: var(--sl-color-bg-subtle);
-  color: var(--sl-color-muted);
-  border: 1px solid var(--sl-color-border);
 }
 
 .sl-block-sidebar:has([data-sl-toggle-control="sl-block-3"]) h3,
@@ -1380,10 +1377,8 @@ input.sl-but-blue[value="ОК"] {
   --sl-admin-tight-title-gap: 6px;
   --sl-admin-tight-title-pad: 6px;
   --sl-admin-tight-title-radius: 4px;
-  --sl-admin-tight-item-gap: 1px;
   --sl-admin-tight-row-pad: 6px;
   --sl-admin-tight-radius: 6px;
-  --sl-admin-tight-line-height: 20.3px;
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar {
@@ -1433,7 +1428,6 @@ input.sl-but-blue[value="ОК"] {
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar :is(.sl-block-sidebar-count-row, .sl-admin-block-link, .sl-session-line, .sl-block-sidebar .sl-session-row, .sl-menu-list-item) {
-  margin: var(--sl-space-xs) 0 0 0;
   border-radius: var(--sl-admin-tight-radius);
   line-height: var(--sl-admin-tight-line-height);
 }
@@ -1454,12 +1448,6 @@ input.sl-but-blue[value="ОК"] {
   line-height: 1;
   width: var(--sl-size-icon-xs);
   height: var(--sl-size-icon-xs);
-}
-
-.sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-block-sidebar-count-value > span {
-  min-width: 22px;
-  padding: 1px var(--sl-space-sm);
-  box-shadow: none;
 }
 
 .sl-wrapper.sl-admin-shell .sl-admin-sidebar .sl-admin-block-links {
@@ -1497,8 +1485,9 @@ input.sl-but-blue[value="ОК"] {
   display: flex;
   align-items: center;
   gap: var(--sl-space-sm);
-  min-height: 34px;
+  min-height: 36px;
   margin: var(--sl-admin-tight-title-gap) 0;
+  padding-right: calc(var(--sl-size-chip) + var(--sl-space-sm) * 2);
   border: 1px solid var(--sl-color-border);
   border-radius: var(--sl-radius-card);
   background: linear-gradient(to bottom, var(--sl-color-bg) 0%, var(--sl-color-bg-muted) 100%);
@@ -1748,6 +1737,7 @@ input.sl-but-blue[value="ОК"] {
 }
 
 .sl-menu-list-item {
+  position: relative;
   width: 100%;
   text-align: left;
   display: flex;
@@ -3101,22 +3091,12 @@ input.sl-but-blue[value="ОК"] {
 .sl-module-head-icon {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex: 0 0 36px;
-  width: 36px;
-  min-height: 41px;
+  flex: 0 0 auto;
 }
 
 .sl-module-head-icon .bi {
-  display: grid;
-  place-items: center;
-  width: var(--sl-size-head);
-  height: var(--sl-size-head);
-  border: 1px solid color-mix(in srgb, var(--sl-color-primary) 26%, var(--sl-color-border));
-  border-radius: var(--sl-radius-card);
-  background: color-mix(in srgb, var(--sl-color-primary) 10%, var(--sl-color-bg));
   color: var(--sl-color-primary);
-  font-size: var(--sl-size-tile-icon);
+  font-size: var(--sl-size-icon-lg);
   line-height: 1;
 }
 
