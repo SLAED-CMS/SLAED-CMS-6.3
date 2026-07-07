@@ -781,35 +781,41 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
     return '';
 }
 
-# Render the shared category breadcrumb trail
-function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', string $home = ''): string {
+# Render the shared category breadcrumb trail; rich mode emits tone-aware crumbs, plain mode keeps flat links for the head banner
+function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', string $home = '', bool $rich = true): string {
     global $db, $conf, $tpl;
     $mod = filterVar($mod);
-    $sep = $sep ? ' '.urldecode($sep).' ' : ' '.urldecode($conf['defis']).' ';
-    $cont = $home ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => $home, 'label_html' => $home]).$sep : '';
-    if ($mod) {
-        $where = 'WHERE modul = :modul';
-        $pars = ['modul' => $mod];
-    } else {
-        $where = '';
-        $pars = [];
+    $name = $mod ?: $conf['name'];
+    $symbol = urldecode($sep ?: $conf['defis']);
+    $where = $mod ? 'WHERE modul = :modul' : '';
+    $pars = $mod ? ['modul' => $mod] : [];
+    $res = $db->getSqlQuery('SELECT id, title, parent, ordern FROM '.PREFIX_DB.'_categories '.$where, $pars);
+    $mass = [];
+    while ([$cid, $title, $parent, $ordern] = $db->getSqlRow($res)) $mass[(int)$cid] = [getConst($title), (int)$parent, (int)$ordern];
+    $chain = [];
+    $cur = $id;
+    $guard = 0;
+    while ($cur && isset($mass[$cur]) && $guard++ < 50) {
+        $chain[] = $cur;
+        $cur = $mass[$cur][1];
     }
-    $res = $db->getSqlQuery('SELECT id, title, parent FROM '.PREFIX_DB.'_categories '.$where, $pars);
-    if ($db->getSqlRowCount($res) > 0) {
-        $mass = [];
-        while ([$cid, $title, $parent] = $db->getSqlRow($res)) $mass[$cid] = [getConst($title), $parent];
-        foreach ($mass as $key => $val) {
-            $flag = $val[1];
-            $path[$key] = ($flag != 0) ? $val[0] : $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$key, 'title' => $val[0], 'label_html' => $val[0]]);
-            while ($flag != 0) {
-                $path[$key] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$flag, 'title' => $mass[$flag][0], 'label_html' => $mass[$flag][0]]).$sep
-                    .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$key, 'title' => $val[0], 'label_html' => $path[$key]]);
-                $flag = intval($mass[$flag][1]);
-            }
-            if ($id == $key) $cont .= $path[$key];
-        }
+    $chain = array_reverse($chain);
+    if (!$chain && !$home) return '';
+    $crumbs = [];
+    if ($home) $crumbs[] = $rich
+        ? $tpl->getHtmlFrag('category-crumb', ['is_sep' => false, 'href' => getSeoUrl(['name' => $name]), 'name' => $home, 'tone' => 0, 'is_current' => false])
+        : $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $name]), 'title' => $home, 'label_html' => $home]);
+    foreach ($chain as $key) {
+        $iscur = $key === $id;
+        $crumbs[] = $rich
+            ? $tpl->getHtmlFrag('category-crumb', [
+                'is_sep' => (bool)$crumbs, 'sep_html' => $symbol,
+                'href' => $iscur ? '' : getSeoUrl(['name' => $mod, 'cat' => $key]),
+                'name' => $mass[$key][0], 'tone' => $mass[$key][2] % 6, 'is_current' => $iscur,
+            ])
+            : $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $mod, 'cat' => $key]), 'title' => $mass[$key][0], 'label_html' => $mass[$key][0]]);
     }
-    return $cont;
+    return $rich ? implode('', $crumbs) : implode(' '.$symbol.' ', $crumbs);
 }
 
 # Render language options from installed language files

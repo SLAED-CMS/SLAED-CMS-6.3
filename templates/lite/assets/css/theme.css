@@ -487,11 +487,65 @@ thead tr th[data-sort-method="none"]::after {
   font-size: 16px;
 }
 
-/* Breadcrumbs: category trail */
+/* Breadcrumbs: minimal text trail; the category tone surfaces on hover (underline slides in, separator nudges forward) */
 .sl-category-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-md);
   margin-bottom: 10px;
   font-size: 0.9em;
   color: var(--sl-color-text-muted);
+}
+
+.sl-crumb {
+  --sl-cat-tone: var(--sl-color-tone-info);
+  position: relative;
+  color: var(--sl-color-text-heading);
+  text-decoration: none;
+}
+
+a.sl-crumb::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sl-cat-tone);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.24s ease;
+}
+
+a.sl-crumb:hover {
+  color: var(--sl-cat-tone);
+}
+
+a.sl-crumb:hover::after {
+  transform: scaleX(1);
+}
+
+.sl-crumb-cur {
+  color: var(--sl-color-text-muted);
+  font-weight: bold;
+}
+
+.sl-crumb-sep {
+  color: var(--sl-color-text-subtle);
+  transition: transform 0.24s ease;
+}
+
+a.sl-crumb:hover + .sl-crumb-sep {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.sl-crumb::after,
+  .sl-crumb-sep {
+    transition: none;
+  }
 }
 
 /* Section divider: horizontal rule */

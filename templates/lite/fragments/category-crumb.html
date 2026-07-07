@@ -1,0 +1,1 @@
+{% if is_sep %}<span class="sl-crumb-sep">{{{ sep_html }}}</span>{% endif %}{% if is_current %}<span class="sl-crumb sl-crumb-cur">{{ name }}</span>{% else %}<a class="sl-crumb sl-cat-tone-{{ tone }}"{% if href %} href="{{ href }}"{% endif %} title="{{ name }}">{{ name }}</a>{% endif %}

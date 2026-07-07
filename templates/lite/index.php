@@ -44,7 +44,7 @@ function getThemeHeadVars(): array {
         $ctitle = (string)($sitevars['head_item'] ?? '');
     }
     $sep = $conf[$conf['name']]['defis'] ?? ($conf['files']['defis'] ?? $conf['defis']);
-    $cname = ($fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname) : '';
+    $cname = ($fcat && $conf['name']) ? getTplCategoryTrail($conf['name'], $fcat, $sep, $mname, false) : '';
     if ($cname !== '' && $ctitle !== '') {
         $cname .= ' '.urldecode($sep).' '.htmlspecialchars(getDecodedText($ctitle), ENT_QUOTES, 'UTF-8');
     }
