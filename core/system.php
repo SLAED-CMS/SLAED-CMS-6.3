@@ -2130,116 +2130,102 @@ function checkCaptcha(string $act): bool {
     return Captcha::check($act);
 }
 
-# Generating categories for modules
+# Build the module categories block: fluid tiles with tinted icon, aggregated per-category count and subcategory chips
 function setCategories(string $mod, int $sub, bool $desc, string $id = ''): string {
- global $db, $user, $conf, $locale, $tpl;
-    if (filterVar($mod)) {
-        $id = (intval($id)) ? $id : 0;
-        $params = ['mod' => $mod];
-        if ($id) {
-            $where = 'WHERE modul = :mod AND parent = :pid';
-            $params['pid'] = $id;
-        } elseif ($conf['multilingual']) {
-            $where = "WHERE modul = :mod AND (lang = :loc OR lang = '')";
-            $params['loc'] = $locale;
-        } else {
-            $where = 'WHERE modul = :mod';
-        }
-        $cnum = 0;
-        $result = $db->getSqlQuery('SELECT id, title, intro, img, parent, pview, pread FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
-        while (list($cid, $title, $intro, $img, $parentid, $pview, $pread) = $db->getSqlRow($result)) {
-            $massiv[] = [$cid, $title, $intro, $img, $parentid, $pview, $pread];
-            unset($cid, $title, $intro, $img, $parentid, $pview, $pread);
-            $cnum++;
-        }
-        if ($massiv) {
-            $cont = '';
-            foreach ($massiv as $val) {
-                if ($val[4] == $id && is_acess($val[5])) {
-                    $catid[] = $val[0];
-                    $val[1] = getConst($val[1]);
-                    $val[2] = getConst($val[2]);
-                    if (is_acess($val[6])) {
-                        $is_hidden = false;
-                        $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
-                        $isrc = $val[3] ? img_find('icons/'.$val[3]) : '';
-                        $ilink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'is_cat_image' => true, 'img_src' => $isrc, 'img_alt' => $val[1]]);
-                        $alink = $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $val[1], 'label' => $val[1], 'is_cat_name' => true]);
-                    } else {
-                        $is_hidden = true;
-                        $htitle = $val[1].' - '._CCLOSED;
-                        $isrc = $val[3] ? img_find('icons/'.$val[3]) : '';
-                        $ilink = $tpl->getHtmlFrag('span', ['title' => $htitle, 'is_cat_image' => true, 'img_src' => $isrc, 'img_alt' => $htitle]);
-                        $alink = $tpl->getHtmlFrag('span', ['title' => $val[1], 'text' => $val[1], 'is_cat_name' => true]);
-                    }
-                    $subcat = '';
-                    foreach ($massiv as $sval) {
-                        if ($val[0] == $sval[4] && is_acess($sval[5])) {
-                            $catid[] = $sval[0];
-                            if ($sub == 1) {
-                                $sval[1] = getConst($sval[1]);
-                                $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
-                                $sublink = is_acess($sval[6]) ? $tpl->getHtmlFrag('link', ['href' => $shref, 'title' => $sval[1], 'label' => $sval[1], 'is_category' => true]) : '';
-                                $subcat .= $tpl->getHtmlFrag('block-content', ['content' => $sublink]);
-                            }
-                        }
-                    }
-                    $description = $desc ? $val[2] : '';
-                    $cont .= $tpl->getHtmlFrag('category-row', [
-                        'description_text' => $description,
-                        'image_html' => $ilink,
-                        'is_hidden' => $is_hidden,
-                        'subitems_html' => $subcat,
-                        'title_html' => $alink,
-                    ]);
-                }
+ global $db, $conf, $locale, $tpl;
+    if (!filterVar($mod)) return '';
+    $id = intval($id) ?: 0;
+    $params = ['mod' => $mod];
+    if ($id) {
+        $where = 'WHERE modul = :mod AND parent = :pid';
+        $params['pid'] = $id;
+    } elseif ($conf['multilingual']) {
+        $where = "WHERE modul = :mod AND (lang = :loc OR lang = '')";
+        $params['loc'] = $locale;
+    } else {
+        $where = 'WHERE modul = :mod';
+    }
+    $massiv = [];
+    $result = $db->getSqlQuery('SELECT id, title, intro, img, parent, pview, pread, ordern FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
+    while (list($cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern) = $db->getSqlRow($result)) {
+        $massiv[] = [$cid, $title, $intro, $img, $parentid, $pview, $pread, $ordern];
+    }
+    if (!$massiv) return '';
+    $catid = [];
+    foreach ($massiv as $val) {
+        if ($val[4] == $id && is_acess($val[5])) {
+            $catid[] = (int)$val[0];
+            foreach ($massiv as $sval) {
+                if ($val[0] == $sval[4] && is_acess($sval[5])) $catid[] = (int)$sval[0];
             }
-        }
-        if ($cont) {
-            $cat_ids = array_values(array_unique(array_map('intval', $catid)));
-            $cat_ids = array_values(array_filter($cat_ids, static fn($v) => $v > 0));
-            if (!$cat_ids) return '';
-            $pp = [];
-            $pm = [];
-            foreach ($cat_ids as $k => $v) {
-                $ph = 'c'.$k;
-                $pp[] = ':'.$ph;
-                $pm[$ph] = $v;
-            }
-            $cin = implode(', ', $pp);
-            if ($mod == 'faq') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_faq WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INFA;
-            } elseif ($mod == 'files') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_files WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INF;
-            } elseif ($mod == 'help') {
-                $uid = is_user() ? intval($user[0]) : 0;
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_help WHERE cid IN ('.$cin.") AND time <= NOW() AND pid = '0' AND uid = :uid", array_merge($pm, ['uid' => $uid])));
-                $in = _INH;
-            } elseif ($mod == 'jokes') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_jokes WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INJ;
-            } elseif ($mod == 'links') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_links WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INL;
-            } elseif ($mod == 'media') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INM;
-            } elseif ($mod == 'news') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_news WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INN;
-            } elseif ($mod == 'pages') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_pages WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INP;
-            } elseif ($mod == 'shop') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
-                $in = _INS;
-            }
-            return $tpl->getHtmlPart('categories', ['categories' => _CATEGORIES, 'content' => $cont, 'total' => _ALLIN, 'pages' => $pnum, 'in' => $in, 'cat' => $cnum, 'category' => _ALLINC, 'mod' => $mod]);
         }
     }
-    return '';
+    $catid = array_values(array_filter(array_unique($catid), static fn($v) => $v > 0));
+    if (!$catid) return '';
+    [$counts, $total, $in] = getCategoryCounts($mod, $catid);
+    $cont = '';
+    foreach ($massiv as $val) {
+        if ($val[4] == $id && is_acess($val[5])) {
+            $name = getConst($val[1]);
+            $hidden = !is_acess($val[6]);
+            $num = $counts[(int)$val[0]] ?? 0;
+            $subs = [];
+            foreach ($massiv as $sval) {
+                if ($val[0] == $sval[4] && is_acess($sval[5])) {
+                    $num += $counts[(int)$sval[0]] ?? 0;
+                    if ($sub == 1 && is_acess($sval[6])) {
+                        $sname = getConst($sval[1]);
+                        $subs[] = ['href' => getSeoUrl(['name' => $mod, 'cat' => $sval[0]]), 'title' => $sname, 'name' => $sname];
+                    }
+                }
+            }
+            $cont .= $tpl->getHtmlFrag('category-row', [
+                'is_hidden' => $hidden,
+                'tone' => (int)$val[7] % 6,
+                'href' => $hidden ? '' : getSeoUrl(['name' => $mod, 'cat' => $val[0]]),
+                'title' => $hidden ? $name.' - '._CCLOSED : $name,
+                'name' => $name,
+                'icon_name' => preg_match('/^[a-z0-9-]+$/', (string)$val[3]) ? $val[3] : 'folder',
+                'count' => $num ? (string)$num : '',
+                'description' => $desc ? getConst($val[2]) : '',
+                'subs' => $subs,
+            ]);
+        }
+    }
+    if (!$cont) return '';
+    return $tpl->getHtmlPart('categories', ['categories' => _CATEGORIES, 'content' => $cont, 'total' => _ALLIN, 'pages' => $total, 'in' => $in, 'cat' => count($massiv), 'category' => _ALLINC, 'mod' => $mod]);
+}
+
+# Per-category published-material counts for a module (grouped by cid) plus the summed total and the unit label
+function getCategoryCounts(string $mod, array $catid): array {
+ global $db, $user;
+    switch ($mod) {
+        case 'faq':   $table = 'faq';      $cond = "time <= NOW() AND status != '0'"; $in = _INFA; break;
+        case 'files': $table = 'files';    $cond = "time <= NOW() AND status != '0'"; $in = _INF;  break;
+        case 'help':  $table = 'help';     $cond = "time <= NOW() AND pid = '0' AND uid = :uid"; $in = _INH; break;
+        case 'jokes': $table = 'jokes';    $cond = "time <= NOW() AND status != '0'"; $in = _INJ;  break;
+        case 'links': $table = 'links';    $cond = "time <= NOW() AND status != '0'"; $in = _INL;  break;
+        case 'media': $table = 'media';    $cond = "time <= NOW() AND status != '0'"; $in = _INM;  break;
+        case 'news':  $table = 'news';     $cond = "time <= NOW() AND status != '0'"; $in = _INN;  break;
+        case 'pages': $table = 'pages';    $cond = "time <= NOW() AND status != '0'"; $in = _INP;  break;
+        case 'shop':  $table = 'products'; $cond = "time <= NOW() AND status != '0'"; $in = _INS;  break;
+        default: return [[], 0, ''];
+    }
+    $ph = [];
+    $pm = [];
+    foreach ($catid as $k => $v) {
+        $ph[] = ':c'.$k;
+        $pm['c'.$k] = (int)$v;
+    }
+    if ($mod === 'help') $pm['uid'] = is_user() ? intval($user[0]) : 0;
+    $res = $db->getSqlQuery('SELECT cid, COUNT(id) FROM '.PREFIX_DB.'_'.$table.' WHERE cid IN ('.implode(', ', $ph).') AND '.$cond.' GROUP BY cid', $pm);
+    $counts = [];
+    $total = 0;
+    while ([$ccid, $cn] = $db->getSqlRow($res)) {
+        $counts[(int)$ccid] = (int)$cn;
+        $total += (int)$cn;
+    }
+    return [$counts, $total, $in];
 }
 
 # Load configuration file or directory and return chmod warning if needed
@@ -3557,10 +3543,10 @@ function getUserSessionAdminInfo(string $id = ''): string {
         }
         $content_who .= $tpl->getHtmlPart('session-summary', [
             'show_admins' => isAdmin(true),
-            'admins_icon_name'   => 'shield-check',
-            'members_icon_name'  => 'person-check',
+            'admins_icon_name'   => 'person-gear',
+            'members_icon_name'  => 'person',
             'bots_icon_name'     => 'robot',
-            'visitors_icon_name' => 'eye',
+            'visitors_icon_name' => 'person-slash',
             'overall_icon_name'  => 'people',
             'admins_label' => _ADMINS,
             'admins_count' => $a,
@@ -3609,7 +3595,7 @@ function adminblock(): string {
             'block_html'  => $block,
         ]);
         $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'icon_name' => 'shield-lock', 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
+        return $tpl->getHtmlPart('block-sidebar', ['title' => $a_title, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '7', 'close' => $cltit])
             .$tpl->getHtmlPart('block-sidebar', ['title' => _WHO, 'icon_name' => 'eye', 'content_html' => getUserSessionAdminInfo(1), 'content_id' => 'repsainfo', 'id' => '8', 'close' => $cltit]);
     }
     return '';
@@ -4038,6 +4024,12 @@ function img_find(string $img): string {
     static $base;
     if (!$base) $base = 'templates/'.getTheme().'/images/';
     return $base.$img;
+}
+
+# Render a category icon from its stored Bootstrap Icons name, empty string when no icon is set
+function getCategoryIcon(string $img): string {
+    global $tpl;
+    return ($img !== '' && preg_match('/^[a-z0-9-]+$/', $img)) ? $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $img]) : '';
 }
 
 # Format select RSS

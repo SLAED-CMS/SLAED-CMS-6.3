@@ -6,20 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getAdminCategoryImageSelect(string $path, string $selected = ''): string {
-    global $tpl;
-    $files = is_dir($path) ? scandir($path) : [];
-    $imgs  = [];
-    foreach ($files as $entry) {
-        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry !== 'no.png') {
-            $imgs[] = $tpl->getHtmlFrag('select-option', ['value_attr' => $path.$entry, 'label_text' => $entry, 'is_selected' => $selected === $entry]);
-        }
-    }
-    asort($imgs);
-    $opts = $tpl->getHtmlFrag('select-option', ['value_attr' => $path.'no.png', 'label_text' => _NO]).implode('', $imgs);
-    return $tpl->getHtmlFrag('select', ['name_attr' => 'imgcat', 'options_html' => $opts, 'select_attr' => 'id="img_replace"']);
-}
-
 function categories(): void {
     global $afile, $tpl;
     $modul = getVar('req', 'modul', 'var', 'forum');
@@ -67,7 +53,6 @@ function add(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $path = 'templates/'.$conf['theme'].'/images/icons/';
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -103,8 +88,7 @@ function add(): void {
             'value_text' => '',
             'is_config' => true,
         ])],
-        ['label_html' => _IMG, 'field_html' => getAdminCategoryImageSelect($path)],
-        ['label_html' => _PREVIEW, 'field_html' => $tpl->getHtmlFrag('image-preview', ['alt_text' => _IMG, 'image_id' => 'img_replace_img', 'src_attr' => $path.'no.png'])],
+        ['label_html' => _ICON, 'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'imgcat', 'value_attr' => '', 'placeholder_text' => _ICON, 'button_label' => _ICONPICK])],
         ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($conf['multilingual'] == 1) {
@@ -143,7 +127,7 @@ function add(): void {
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
         'submit_label' => _ADD,
-    ])]);
+    ])]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
     setFoot();
 }
 
@@ -152,7 +136,6 @@ function subadd(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
-    $path = 'templates/'.$conf['theme'].'/images/icons/';
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
@@ -190,8 +173,7 @@ function subadd(): void {
                 'value_text' => '',
                 'is_config' => true,
             ])],
-            ['label_html' => _IMG, 'field_html' => getAdminCategoryImageSelect($path)],
-            ['label_html' => _PREVIEW, 'field_html' => $tpl->getHtmlFrag('image-preview', ['alt_text' => _IMG, 'image_id' => 'img_replace_img', 'src_attr' => $path.'no.png'])],
+            ['label_html' => _ICON, 'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'imgcat', 'value_attr' => '', 'placeholder_text' => _ICON, 'button_label' => _ICONPICK])],
             ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
         ];
         if ($conf['multilingual'] == 1) {
@@ -230,7 +212,7 @@ function subadd(): void {
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ],
             'submit_label' => _ADD,
-        ])]);
+        ])]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
     } else {
         $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
@@ -294,9 +276,9 @@ function addedit(): void {
 function edit(): void {
     global $db, $conf, $afile, $tpl;
     $cid = getVar('req', 'cid', 'num');
-    $path = 'templates/'.$conf['theme'].'/images/icons/';
     $result = $db->getSqlQuery('SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
     [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
+    $imgcat = preg_match('/^[a-z0-9-]+$/', (string)$imgcat) ? $imgcat : '';
     $modlink = '&amp;modul='.$modul;
     $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
@@ -315,7 +297,6 @@ function edit(): void {
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['text' => _CACESSI]);
     $hint = _ACESSI.' '._CTRLINFO;
-    $imgcat = (!$imgcat) ? 'no.png' : $imgcat;
     $yesno = [
         ['value' => '1', 'label' => _YES],
         ['value' => '0', 'label' => _NO],
@@ -335,8 +316,7 @@ function edit(): void {
             'value_text' => (string)$desc,
             'is_config' => true,
         ])],
-        ['label_html' => _IMG, 'field_html' => getAdminCategoryImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
-        ['label_html' => _PREVIEW, 'field_html' => $tpl->getHtmlFrag('image-preview', ['alt_text' => _IMG, 'image_id' => 'img_replace_img', 'src_attr' => $path.$imgcat])],
+        ['label_html' => _ICON, 'field_html' => $tpl->getHtmlPart('icon-picker', ['name_attr' => 'imgcat', 'value_attr' => $imgcat, 'placeholder_text' => _ICON, 'button_label' => _ICONPICK])],
         ['label_html' => _MODUL, 'field_html' => getTplCategoryModule('modul', 'sl-form-control', $modul)],
     ];
     if ($parent != 0) {
@@ -382,12 +362,12 @@ function edit(): void {
             $parent == 0 ? [['nameattr' => 'parent', 'valueattr' => '0']] : []
         ),
         'submit_label' => _SAVECHANGES,
-    ])]);
+    ])]).$tpl->getHtmlPart('icon-picker-modal', ['search_text' => _SEARCH, 'close_text' => _CLOSE]);
     setFoot();
 }
 
 function addsave(): void {
-    global $db, $conf, $afile;
+    global $db, $afile;
     $warn = !checkSiteToken();
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -395,8 +375,8 @@ function addsave(): void {
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
     $cid = getVar('post', 'cid', 'num', 0);
-    $imgcat = str_replace('templates/'.$conf['theme'].'/images/icons/', '', $imgcat);
-    $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
+    $imgcat = strtolower($imgcat);
+    if (!preg_match('/^[a-z0-9-]+$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
     [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
     $ordern++;
@@ -423,7 +403,7 @@ function addsave(): void {
 }
 
 function save(): void {
-    global $db, $conf, $afile;
+    global $db, $afile;
     $warn = !checkSiteToken();
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
@@ -432,8 +412,8 @@ function save(): void {
     $imgcat = getVar('post', 'imgcat', 'var');
     $lang = getVar('post', 'lang', 'var');
     $parent = getVar('post', 'parent', 'num');
-    $imgcat = str_replace('templates/'.$conf['theme'].'/images/icons/', '', $imgcat);
-    $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
+    $imgcat = strtolower($imgcat);
+    if (!preg_match('/^[a-z0-9-]+$/', $imgcat)) $imgcat = '';
     $status = getVar('post', 'status', 'num');
     $pview_raw = getVar('post', 'pview[]', 'var', []);
     $pread_raw = getVar('post', 'pread[]', 'var', []);

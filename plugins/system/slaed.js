@@ -345,11 +345,6 @@
 
     function setImageReplace() {
         var selects = document.querySelectorAll('[data-sl-image-replace]');
-        var legacy = document.getElementById('img_replace');
-        if (!selects.length && legacy) {
-            legacy.setAttribute('data-sl-image-replace', 'picture');
-            selects = [legacy];
-        }
         selects.forEach(function (select) {
             var picture = document.getElementById(select.getAttribute('data-sl-image-replace') || '');
             if (!picture) return;

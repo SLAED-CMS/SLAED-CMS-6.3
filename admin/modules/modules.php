@@ -127,7 +127,7 @@ function modules(): void {
         } else {
             $who_view = _MVADMIN;
         }
-        $typel = ($type == 0) ? 'tools' : 'people-fill';
+        $typel = ($type == 0) ? 'person-gear' : 'people';
         $titlel = ($menu == 0)
             ? $tpl->getHtmlFrag('popover', [
                 'items' => [

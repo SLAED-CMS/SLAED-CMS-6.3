@@ -58,7 +58,7 @@ function autolink(): void {
                 'category_href' => '',
                 'category_attr' => '',
                 'category_text' => '',
-                'category_img'  => '',
+                'category_icon'  => '',
                 'text'          => filterTextHighlight($prs->filterContent($intro, false, $conf['name']), $word),
                 'read_href'     => $thref,
                 'read_text'     => _DOWNLLINK,

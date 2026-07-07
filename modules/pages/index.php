@@ -73,7 +73,7 @@ function pages(): void {
     }
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $unum);
-    $sql = 'SELECT s.id, s.cid, s.name, s.title, s.time, s.intro, s.body, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.intro, c.img, u.name'
+    $sql = 'SELECT s.id, s.cid, s.name, s.title, s.time, s.intro, s.body, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_pages AS s'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)'
@@ -83,7 +83,7 @@ function pages(): void {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $cid, $uname, $stitle, $time, $hometext, , $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$id, $cid, $uname, $stitle, $time, $hometext, , $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl([
                 'name'   => $conf['name'],
                 'op'     => 'view',
@@ -93,7 +93,7 @@ function pages(): void {
             ]);
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
-            $cimg   = ($cimg) ? img_find('icons/'.$cimg) : '';
+            $cimg   = getCategoryIcon($cimg);
             $post   = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date   = ($conf['pages']['date']) ? format_time($time) : '';
             $iso    = ($conf['pages']['date']) ? date('c', strtotime($time)) : '';
@@ -109,7 +109,8 @@ function pages(): void {
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                'category_img'  => $cimg,
+                'category_icon'  => $cimg,
+                'category_tone'  => $cordern % 6,
                 'text'          => $prs->filterContent($hometext, false, $conf['name']),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
@@ -237,7 +238,7 @@ function view(): void {
     $cwhere = catmids($conf['name'], 's.cid');
     $result = $db->getSqlQuery(
         'SELECT s.cid, s.name, s.title, s.time, s.intro, s.body, s.counter, s.acomm, s.score, s.ratings,'
-        .' c.title, c.intro, c.img, u.name'
+        .' c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_pages AS s'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)'
@@ -246,7 +247,7 @@ function view(): void {
     );
     if ($db->getSqlRowCount($result) == 1) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET counter = counter+1 WHERE id = :id', ['id' => $id]);
-        [$cid, $uname, $title, $time, $hometext, $bodytext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
+        [$cid, $uname, $title, $time, $hometext, $bodytext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result);
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);
@@ -268,7 +269,7 @@ function view(): void {
         if ($pag > $pageno) $pag = $pageno;
         $pagei = (int)$pag - 1;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg = ($cimg) ? img_find('icons/'.$cimg) : '';
+        $cimg = getCategoryIcon($cimg);
         $post = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['pages']['date']) ? format_time($time) : '';
         $iso  = ($conf['pages']['date']) ? date('c', strtotime($time)) : '';
@@ -285,7 +286,8 @@ function view(): void {
             'category_href' => $ctitle ? $chref : '',
             'category_attr' => $cdesc,
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-            'category_img'  => $cimg,
+            'category_icon'  => $cimg,
+            'category_tone'  => $cordern % 6,
             'text'          => filterTextHighlight($prs->filterContent($conpag[$pagei], false, $conf['name']), $word),
             'post_text'     => $post,
             'post_label'    => _POSTEDBY,

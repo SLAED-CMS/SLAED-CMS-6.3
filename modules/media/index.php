@@ -74,7 +74,7 @@ function media(): void {
     }
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $unum);
-    $sql = 'SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.intro, m.links, m.time, m.acomm, m.votes, m.tvotes, m.comments, m.hits, c.title, c.intro, c.img, u.name'
+    $sql = 'SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.intro, m.links, m.time, m.acomm, m.votes, m.tvotes, m.comments, m.hits, c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_media AS m'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id)'
@@ -84,10 +84,10 @@ function media(): void {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $cdesc = $cdesc ?: $ctitle;
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cimg = ($cimg) ? img_find('icons/'.$cimg) : '';
+            $cimg = getCategoryIcon($cimg);
             $mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $mtitle, 'ctitle' => $ctitle]);
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
@@ -107,7 +107,8 @@ function media(): void {
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                'category_img'  => $cimg,
+                'category_icon'  => $cimg,
+                'category_tone'  => $cordern % 6,
                 'text'          => cutstr($prs->filterContent($description, false, $conf['name']), 800),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
@@ -235,7 +236,7 @@ function view(): void {
     $sql = 'SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.intro, m.author,'
         .' m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links,'
         .' m.time, m.acomm, m.votes, m.tvotes, m.hits, m.status,'
-        .' c.title, c.intro, c.img, u.name'
+        .' c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_media AS m'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id)'
@@ -245,7 +246,7 @@ function view(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
         [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby,
             $duration, $lang, $note, $format, $quality, $size, $released, $links,
-            $time, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick
+            $time, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $cordern, $nick
         ] = $db->getSqlRow($result);
         $ptitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
@@ -264,7 +265,7 @@ function view(): void {
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = $cdesc ?: $ctitle;
-        $cimg = ($cimg) ? img_find('icons/'.$cimg) : '';
+        $cimg = getCategoryIcon($cimg);
         $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['media']['date']) ? format_time($time) : '';
         $iso  = ($conf['media']['date']) ? date('c', strtotime($time)) : '';
@@ -328,7 +329,8 @@ function view(): void {
             'category_href' => $ctitle ? $chref : '',
             'category_attr' => $cdesc,
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-            'category_img'  => $cimg,
+            'category_icon'  => $cimg,
+            'category_tone'  => $cordern % 6,
             'text'          => filterTextHighlight($prs->filterContent($description, false, $conf['name']), $word),
             'year'          => $year,
             'director'      => $director,

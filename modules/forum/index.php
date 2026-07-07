@@ -76,26 +76,11 @@ function forum(): void {
                     $tlink = ($val[5] || is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$val[0], 'title' => $ttit, 'label' => $val[1]]) : $val[1];
                     $cat_url = 'index.php?name='.$mod.'&amp;cat='.$val[0];
                     if (!$val[5]) {
-                        if ($val[3]) {
-                            $imglink = $tpl->getHtmlFrag('image', ['src' => img_find('icons/'.$val[3]), 'alt' => _FCLOSED, 'title' => _FCLOSED, 'is_hidden' => true]);
-                            $timg = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => $cat_url, 'title' => _FCLOSED, 'label_html' => $imglink]) : $imglink;
-                        } else {
-                            $timg = (is_moder($conf['name'])) ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
-                        }
+                        $timg = (is_moder($conf['name'])) ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
                     } elseif ($val[21] > $ulast) {
-                        if ($val[3]) {
-                            $imglink = $tpl->getHtmlFrag('image', ['src' => img_find('icons/'.$val[3]), 'alt' => _ISNEWPOST, 'title' => _ISNEWPOST]);
-                            $timg = $tpl->getHtmlFrag('link', ['href' => $cat_url, 'title' => _ISNEWPOST, 'label_html' => $imglink]);
-                        } else {
-                            $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
-                        }
+                        $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
                     } else {
-                        if ($val[3]) {
-                            $imglink = $tpl->getHtmlFrag('image', ['src' => img_find('icons/'.$val[3]), 'alt' => _NONEWPOST, 'title' => _NONEWPOST, 'is_hidden' => true]);
-                            $timg = $tpl->getHtmlFrag('link', ['href' => $cat_url, 'title' => _NONEWPOST, 'label_html' => $imglink]);
-                        } else {
-                            $timg = forumIcon($cat_url, _NONEWPOST, 'is_forum_old');
-                        }
+                        $timg = forumIcon($cat_url, _NONEWPOST, 'is_forum_old');
                     }
                     if ($val[9]) {
                         $data = _DATE.': '.format_time($val[21], _TIMESTRING);
@@ -110,7 +95,7 @@ function forum(): void {
                         $data = _NO_INFO;
                         $topic = $post = $lpost = '';
                     }
-                    $cont .= $tpl->getHtmlFrag('forum-category-row', ['icon' => $timg, 'link' => $tlink, 'desc' => $val[2], 'topics' => $val[7], 'posts' => $val[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
+                    $cont .= $tpl->getHtmlFrag('forum-category-row', ['icon' => $timg, 'link' => getCategoryIcon($val[3]).' '.$tlink, 'desc' => $val[2], 'topics' => $val[7], 'posts' => $val[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
                     echo $cont;
                 } else {
                     $heading = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$val[0], 'title' => $val[1], 'label' => $val[1]]);
@@ -121,26 +106,11 @@ function forum(): void {
                             $tlink = ($valb[5] || is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$valb[0], 'title' => $ttit, 'label' => $valb[1]]) : $valb[1];
                             $cat_url = 'index.php?name='.$mod.'&amp;cat='.$valb[0];
                             if (!$valb[5]) {
-                                if ($valb[3]) {
-                                    $imglink = $tpl->getHtmlFrag('image', ['src' => img_find('icons/'.$valb[3]), 'alt' => _FCLOSED, 'title' => _FCLOSED, 'is_hidden' => true]);
-                                    $timg = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => $cat_url, 'title' => _FCLOSED, 'label_html' => $imglink]) : $imglink;
-                                } else {
-                                    $timg = (is_moder($conf['name'])) ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
-                                }
+                                $timg = (is_moder($conf['name'])) ? forumIcon($cat_url, _FCLOSED, 'is_forum_closed') : $tpl->getHtmlFrag('inline-badge', ['title_text' => _FCLOSED, 'label' => '', 'is_forum_closed' => true]);
                             } elseif ($valb[21] > $ulast) {
-                                if ($valb[3]) {
-                                    $imglink = $tpl->getHtmlFrag('image', ['src' => img_find('icons/'.$valb[3]), 'alt' => _ISNEWPOST, 'title' => _ISNEWPOST]);
-                                    $timg = $tpl->getHtmlFrag('link', ['href' => $cat_url, 'title' => _ISNEWPOST, 'label_html' => $imglink]);
-                                } else {
-                                    $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
-                                }
+                                $timg = forumIcon($cat_url, _ISNEWPOST, 'is_forum_new');
                             } else {
-                                if ($valb[3]) {
-                                    $imglink = $tpl->getHtmlFrag('image', ['src' => img_find('icons/'.$valb[3]), 'alt' => _NONEWPOST, 'title' => _NONEWPOST, 'is_hidden' => true]);
-                                    $timg = $tpl->getHtmlFrag('link', ['href' => $cat_url, 'title' => _NONEWPOST, 'label_html' => $imglink]);
-                                } else {
-                                    $timg = forumIcon($cat_url, _NONEWPOST, 'is_forum_old');
-                                }
+                                $timg = forumIcon($cat_url, _NONEWPOST, 'is_forum_old');
                             }
                             if ($valb[9]) {
                                 $data = _DATE.': '.format_time($valb[21], _TIMESTRING);
@@ -155,7 +125,7 @@ function forum(): void {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
                             }
-                            $cont .= $tpl->getHtmlFrag('forum-category-row', ['icon' => $timg, 'link' => $tlink, 'desc' => $valb[2], 'topics' => $valb[7], 'posts' => $valb[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
+                            $cont .= $tpl->getHtmlFrag('forum-category-row', ['icon' => $timg, 'link' => getCategoryIcon($valb[3]).' '.$tlink, 'desc' => $valb[2], 'topics' => $valb[7], 'posts' => $valb[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
                         }
                     }
                     $cont .= $tpl->getHtmlFrag('forum-category-table', []);

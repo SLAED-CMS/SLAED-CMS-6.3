@@ -75,7 +75,7 @@ function jokes(): void {
     }
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $unum);
-    $sql = 'SELECT j.id, j.name, j.time, j.title, j.cid, j.body, j.rating, j.ratetot, c.title, c.intro, c.img, u.name'
+    $sql = 'SELECT j.id, j.name, j.time, j.title, j.cid, j.body, j.rating, j.ratetot, c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_jokes AS j'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id)'
@@ -85,10 +85,10 @@ function jokes(): void {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
-            $cimg   = ($cimg) ? img_find('icons/'.$cimg) : '';
+            $cimg   = getCategoryIcon($cimg);
             $post   = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
             $date   = ($conf['jokes']['date']) ? format_time($time) : '';
             $iso    = ($conf['jokes']['date']) ? date('c', strtotime($time)) : '';
@@ -105,7 +105,8 @@ function jokes(): void {
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                'category_img'  => $cimg,
+                'category_icon'  => $cimg,
+                'category_tone'  => $cordern % 6,
                 'text'          => filterTextHighlight($prs->filterContent($joke, false, $conf['name']), $word),
                 'read_href'     => '',
                 'read_text'     => '',

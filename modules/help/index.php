@@ -79,14 +79,14 @@ function help(): void {
     }
     $num    = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $unum);
-    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.body, s.comments, s.counter, c.title, c.intro, c.img FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.body, s.comments, s.counter, c.title, c.intro, c.img, c.ordern FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $cid, $stitle, $time, $hometext, $comm, $counter, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
+        while ([$id, $cid, $stitle, $time, $hometext, $comm, $counter, $ctitle, $cdesc, $cimg, $cordern] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
-            $cimg  = ($cimg) ? img_find('icons/'.$cimg) : '';
+            $cimg  = getCategoryIcon($cimg);
             $date  = ($conf['help']['date']) ? format_time($time) : '';
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
@@ -98,7 +98,8 @@ function help(): void {
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                'category_img'  => $cimg,
+                'category_icon'  => $cimg,
+                'category_tone'  => $cordern % 6,
                 'text'          => $prs->filterContent($hometext, false, $conf['name']),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
@@ -209,7 +210,7 @@ function view(): void {
     $word   = getVar('get', 'word', 'word');
     $uid    = (int)($user[0] ?? 0);
     $cwhere = catmids($conf['name'], 's.cid');
-    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE (s.id = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
+    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.intro, c.img, c.ordern, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE (s.id = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE id = :id', ['id' => $id]);
         [$seocid, $seotitle, $seohometext, $seotime, $seoctitle, $seoname] = $db->getSqlRow($db->getSqlQuery(
@@ -233,7 +234,7 @@ function view(): void {
         ]);
         $cont = getModuleNavi(['title' => _HELPINFO] + HELP_NAVI);
         $a = 0;
-        while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $title  = (string)$title;
             $title  = ($title !== '') ? $title : _MESSAGE.': '.$a;
@@ -246,7 +247,7 @@ function view(): void {
             if (!$pid) {
                 $reads    = $counter;
                 $cdesc    = $cdesc ?: $ctitle;
-                $cimg     = ($cimg) ? img_find('icons/'.$cimg) : '';
+                $cimg     = getCategoryIcon($cimg);
                 $favorites = getFavoriteButton($hid, $conf['name']);
                 $cont .= $tpl->getHtmlPart('view', [
                     'id'            => $hid,
@@ -264,7 +265,8 @@ function view(): void {
                     'category_href' => $ctitle ? $chref : '',
                     'category_attr' => $cdesc,
                     'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                    'category_img'  => $cimg,
+                    'category_icon'  => $cimg,
+                    'category_tone'  => $cordern % 6,
                     'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
                     'fields'        => $fields,
                     'voting'        => '',
@@ -284,7 +286,7 @@ function view(): void {
                     'category_href' => '',
                     'category_attr' => '',
                     'category_text' => '',
-                    'category_img'  => '',
+                    'category_icon'  => '',
                     'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
                     'read_href'     => '',
                     'read_text'     => '',

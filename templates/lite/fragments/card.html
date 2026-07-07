@@ -60,8 +60,7 @@
     {% endif %}
     {{{ voting }}}
     {% if image_html %}{{{ image_html }}}
-    {% elseif category_image_link %}{% include 'fragments/link.html' with category_image_link %}
-    {% elseif category_img %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-card-image"><img src="{{ category_img }}" alt="{{ category_attr }}" title="{{ category_attr }}"></a>
+    {% elseif category_icon %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-card-image sl-cat-tone-{{ category_tone }}">{{{ category_icon }}}</a>
     {% endif %}
     {{{ text }}}{% if body_text %}<br><br>{{{ body_text }}}{% endif %}
   </div>

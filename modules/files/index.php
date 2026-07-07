@@ -72,7 +72,7 @@ function files(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $unum);
     $sql = 'SELECT f.id, f.cid, f.name, f.title, f.intro, f.body, f.time, f.counter, f.acomm, f.votes, f.tvotes, f.comments, f.hits,'
-        .' c.title, c.intro, c.img, u.name'
+        .' c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_files AS f'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
@@ -82,11 +82,11 @@ function files(): void {
         $ismoder = is_moder($conf['name']);
         $token   = getSiteToken();
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-        while ([$id, $cid, $uname, $stitle, $description, , $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+        while ([$id, $cid, $uname, $stitle, $description, , $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc  = $cdesc ?: $ctitle;
-            $cimg   = ($cimg) ? img_find('icons/'.$cimg) : '';
+            $cimg   = getCategoryIcon($cimg);
             $post   = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date   = ($conf['files']['date']) ? format_time($time) : '';
             $iso    = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
@@ -104,7 +104,8 @@ function files(): void {
                 'category_href' => $ctitle ? $chref : '',
                 'category_attr' => $cdesc,
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                'category_img'  => $cimg,
+                'category_icon'  => $cimg,
+                'category_tone'  => $cordern % 6,
                 'text'          => $prs->filterContent($description, false, $conf['name']),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
@@ -232,7 +233,7 @@ function view(): void {
     $result = $db->getSqlQuery(
         'SELECT f.cid, f.name, f.title, f.url, f.intro, f.body, f.time, f.filesize, f.version, f.email, f.website,'
         .' f.counter, f.acomm, f.votes, f.tvotes, f.hits, f.status,'
-        .' c.title, c.intro, c.img, u.name'
+        .' c.title, c.intro, c.img, c.ordern, u.name'
         .' FROM '.PREFIX_DB.'_files AS f'
         .' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id)'
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
@@ -242,7 +243,7 @@ function view(): void {
     if ($db->getSqlRowCount($result) == 1) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET counter = counter+1 WHERE id = :id', ['id' => $id]);
         [$cid, $uname, $title, $url, $description, $bodytext, $time, $fsize, $fversion, $aemail, $awebsite,
-            $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick
+            $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $cordern, $nick
         ] = $db->getSqlRow($result);
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($description, false, $conf['name']))), 160);
@@ -261,7 +262,7 @@ function view(): void {
         if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg  = ($cimg) ? img_find('icons/'.$cimg) : '';
+        $cimg  = getCategoryIcon($cimg);
         $post  = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date  = ($conf['files']['date']) ? format_time($time) : '';
         $iso   = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
@@ -290,7 +291,8 @@ function view(): void {
             'category_href' => $ctitle ? $chref : '',
             'category_attr' => $cdesc,
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
-            'category_img'  => $cimg,
+            'category_icon'  => $cimg,
+            'category_tone'  => $cordern % 6,
             'text'          => filterTextHighlight($prs->filterContent($rawtext, false, $conf['name']), $word),
             'post_text'     => $post,
             'post_label'    => _POSTEDBY,

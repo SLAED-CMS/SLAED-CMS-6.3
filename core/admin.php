@@ -230,15 +230,15 @@ function getAdminTopMenu(): string {
         ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-badge'],
         ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
         ['href' => 'index.php', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
-        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person-circle'],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
         ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
     ] : [
         ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
         ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false, 'icon' => 'grid-3x3-gap'],
-        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => 'puzzle'],
-        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => 'tags'],
+        ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => 'gpu-card'],
+        ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => 'folder'],
         ['href' => 'index.php', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
-        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person-circle'],
+        ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
         ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
     ];
     $html = '';
@@ -397,11 +397,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                 'is_danger' => !$parentid,
                 'label' => $parentid ? _YES : _NO,
             ]);
-            $img = $tpl->getHtmlFrag('inline-badge', [
-                'is_success' => (bool)$imgcat,
-                'is_danger' => !$imgcat,
-                'label' => $imgcat ? _YES : _NO,
-            ]);
+            $img = $imgcat ? getCategoryIcon($imgcat) : $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _NO]);
             $flag = $parentid;
             while ($flag != '0') {
                 $title = $massiv[$flag][2].' / '.$title;
@@ -459,7 +455,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             ['content' => _CATEGORY],
             ['content' => cutstr(_CONTENT, 3, 1)],
             ['content' => cutstr(_SUBCATEGORY, 3, 1), 'nosort' => true],
-            ['content' => cutstr(_IMG, 2, 1), 'nosort' => true],
+            ['content' => cutstr(_ICON, 2, 1), 'nosort' => true],
             ['content' => _WEIGHT, 'colspan' => 2],
             ['content' => _STATUS, 'attr' => 'data-sort-column-key="category-status" data-sort-reverse'],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],

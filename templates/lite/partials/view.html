@@ -14,7 +14,7 @@
   </div>
   <div class="sl-entry-content">
     {{{ voting }}}
-    {% if category_img %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-icat"><img src="{{ category_img }}" alt="{{ category_attr }}" title="{{ category_attr }}"></a>{% endif %}
+    {% if category_icon %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-icat sl-cat-tone-{{ category_tone }}">{{{ category_icon }}}</a>{% endif %}
     {{{ text }}}{% if fields %}<div class="sl-section">{{{ fields }}}</div>{% endif %}
   </div>
   {% if year or director or roles or createdby or duration or lang or format or quality or size or version or released or email or home %}

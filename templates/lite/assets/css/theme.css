@@ -798,11 +798,34 @@ a.sl-crumb:hover + .sl-crumb-sep {
 
 .sl-icat,
 .sl-card-image {
-  padding: 10px;
-  margin: 0 0 10px 10px;
-  border: 1px solid var(--sl-color-border-subtle);
-  border-radius: 4px;
   float: right;
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  margin: 0 0 var(--sl-space-md) var(--sl-space-lg);
+  border-radius: var(--sl-radius-card);
+  background: color-mix(in srgb, var(--sl-cat-tone, var(--sl-color-tone-info)) 12%, #fff);
+  border: 1px solid color-mix(in srgb, var(--sl-cat-tone, var(--sl-color-tone-info)) 26%, var(--sl-color-border));
+  transition: box-shadow 0.18s ease;
+}
+
+.sl-icat:hover,
+.sl-card-image:hover {
+  box-shadow: var(--sl-shadow-soft);
+}
+
+.sl-icat .bi,
+.sl-card-image .bi {
+  font-size: var(--sl-size-icon-lg);
+  line-height: 1;
+  color: var(--sl-cat-tone, var(--sl-color-tone-info));
+  transition: transform 0.18s ease;
+}
+
+.sl-icat:hover .bi,
+.sl-card-image:hover .bi {
+  transform: scale(1.1);
 }
 
 .sl-mt-5 {
@@ -1103,50 +1126,6 @@ select.sl-field {
   color: var(--sl-color-text-muted);
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
-}
-
-.sl-catflex-box {
-  min-width: 150px;
-  min-height: 70px;
-  margin: 0 0 15px 0;
-  padding: 3px;
-  text-align: center;
-  border: 1px solid var(--sl-color-border-subtle);
-  border-radius: 4px;
-  vertical-align: middle;
-}
-
-.sl-catflex-box:hover {
-  background-color: var(--sl-color-surface);
-}
-
-.sl-catflex-box div {
-  text-align: left;
-}
-
-.sl-catflex-inbox {
-  width: 230px;
-  height: 90px;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.sl-catflex-inbox div {
-  padding: 0 3px 0 0;
-  text-align: left;
-}
-
-.sl-catflex-cont {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
 }
 
 .sl-table-faq {
@@ -6038,3 +6017,110 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
     inset: -7px;
   }
 }
+
+/* Category block: fluid tile grid with tinted icon tile, aggregated per-category count and subcategory chips.
+   Count and subcategory pills reuse the shared .sl-chip system; sizes/spacing use the lite design tokens. */
+.sl-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--sl-space-lg);
+  align-items: start;
+}
+
+.sl-cat-tile {
+  --sl-cat-tone: var(--sl-color-tone-info);
+  background: var(--sl-color-bg);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  padding: var(--sl-space-lg);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.sl-cat-tile:hover {
+  border-color: color-mix(in srgb, var(--sl-cat-tone) 45%, var(--sl-color-border));
+  box-shadow: var(--sl-shadow-medium);
+  transform: translateY(-2px);
+}
+
+.sl-cat-tile:hover .sl-cat-ico .bi {
+  transform: scale(1.1);
+}
+
+.sl-cat-main {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-lg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.sl-cat-ico {
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--sl-size-tile);
+  width: var(--sl-size-tile);
+  height: var(--sl-size-tile);
+  border-radius: var(--sl-radius-card);
+  background: color-mix(in srgb, var(--sl-cat-tone) 12%, #fff);
+  border: 1px solid color-mix(in srgb, var(--sl-cat-tone) 26%, var(--sl-color-border));
+  color: var(--sl-cat-tone);
+}
+
+.sl-cat-ico .bi {
+  font-size: var(--sl-size-icon-lg);
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.sl-cat-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sl-cat-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-md);
+}
+
+.sl-cat-name {
+  color: var(--sl-color-text-heading);
+  font-weight: bold;
+  transition: color 0.15s ease;
+}
+
+.sl-cat-main:hover .sl-cat-name {
+  color: var(--sl-color-brand-link);
+}
+
+.sl-cat-desc {
+  display: block;
+  margin-top: var(--sl-space-xs);
+  color: var(--sl-color-text-muted);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-cat-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-sm);
+  margin-top: var(--sl-space-md);
+  padding-top: var(--sl-space-md);
+  border-top: 1px dashed var(--sl-color-border);
+}
+
+.sl-cat-tile.sl-dimmed {
+  opacity: 0.6;
+}
+
+/* Category colour rotation: PHP passes the order index, the palette mapping lives here */
+.sl-cat-tone-0 { --sl-cat-tone: var(--sl-color-tone-info); }
+.sl-cat-tone-1 { --sl-cat-tone: var(--sl-color-tone-success); }
+.sl-cat-tone-2 { --sl-cat-tone: var(--sl-color-tone-warning); }
+.sl-cat-tone-3 { --sl-cat-tone: var(--sl-color-tone-accent); }
+.sl-cat-tone-4 { --sl-cat-tone: var(--sl-color-tone-primary); }
+.sl-cat-tone-5 { --sl-cat-tone: var(--sl-color-tone-danger); }

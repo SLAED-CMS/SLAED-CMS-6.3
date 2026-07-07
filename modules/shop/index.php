@@ -71,16 +71,16 @@ function shop(): void {
 	}
 	$num    = getVar('get', 'num', 'num', '1');
 	$offset = (int)(($num - 1) * $unum);
-	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img, c.ordern FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= $tpl->getHtmlFrag('block-content', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$columns = max(1, min(6, (int)$conf['shop']['bascol']));
 		$cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
-		while ([$id, $cid, $time, $stitle, $text, $bodytext, $pprice, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
+		while ([$id, $cid, $time, $stitle, $text, $bodytext, $pprice, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg, $cordern] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = $cdesc ?: $ctitle;
-			$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('icons/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
+			$cimg = getCategoryIcon($cimg);
 			$post = '';
 			$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 			$rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
@@ -114,7 +114,10 @@ function shop(): void {
 					['content_html' => $kasse],
 				],
 				'voting'       => '',
-				'image_html'   => $cimg,
+				'category_icon' => $cimg,
+				'category_href' => $chref,
+				'category_attr' => $cdesc,
+				'category_tone' => $cordern % 6,
 				'text'         => $prs->filterContent($text, false, $conf['name']),
 				'rating'       => $rating,
 				'footer_items' => [
@@ -212,10 +215,10 @@ function view(): void {
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.intro, p.body, p.price, p.vote, p.assoc, p.acomm, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.status != \'0\' '.$cwhere, ['id' => $id]);
+	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.intro, p.body, p.price, p.vote, p.assoc, p.acomm, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img, c.ordern FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->getSqlRowCount($result) == 1) {
 		$db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET counter = counter+1 WHERE id = :id', ['id' => $id]);
-		[$cid, $time, $title, $text, $bodytext, $pprice, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result);
+		[$cid, $time, $title, $text, $bodytext, $pprice, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg, $cordern] = $db->getSqlRow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
@@ -239,7 +242,7 @@ function view(): void {
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
 		$cont .= $tpl->getHtmlFrag('block-content', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$cdesc = $cdesc ?: $ctitle;
-		$cimg = ($cimg) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'img_src' => img_find('icons/'.$cimg), 'img_alt' => $cdesc, 'is_card_image' => true]) : '';
+		$cimg = getCategoryIcon($cimg);
 		$post = '';
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
@@ -272,7 +275,10 @@ function view(): void {
 				['content_html' => $kasse],
 			],
 			'voting'       => $voting,
-			'image_html'   => $cimg,
+			'category_icon' => $cimg,
+			'category_href' => $chref,
+			'category_attr' => $cdesc,
+			'category_tone' => $cordern % 6,
 			'text'         => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
 			'body_text'    => ($bodytext) ? filterTextHighlight($prs->filterContent($bodytext, false, $conf['name']), $word) : '',
 			'rating'       => $rating,
@@ -532,18 +538,16 @@ function clients(): void {
 }
 
 function rech(): void {
-	global $db, $conf, $theme, $tpl, $prs;
+	global $db, $conf, $tpl, $prs;
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.intro, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->getSqlRowCount($result) > 0) {
 			[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $pprice] = $db->getSqlRow($result);
-			$themeCss = file_exists(BASE_DIR.'/templates/'.$theme.'/assets/css/new.css') ? 'templates/'.$theme.'/assets/css/new.css' : '';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
 			echo $tpl->getHtmlFrag('shop-invoice', [
 				'charset' => _CHARSET,
-				'theme_css' => $themeCss,
 				'title' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
 				'logo_src' => img_find('logos/'.$conf['site_logo']),
 				'logo_alt' => $conf['sitename'],

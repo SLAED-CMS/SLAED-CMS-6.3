@@ -1,10 +1,10 @@
-<div class="sl-catflex-box{% if is_hidden %} sl-hidden{% endif %}">
-  <div class="sl-catflex-inbox">
-    <div>{{{ image_html }}}</div>
-    <div>
-      {{{ title_html }}}
-      {% if description_text %}<br><i>{{ description_text }}</i>{% endif %}
-    </div>
-  </div>
-  {{{ subitems_html }}}
+<div class="sl-cat-tile sl-cat-tone-{{ tone }}{% if is_hidden %} sl-dimmed{% endif %}">
+  <a class="sl-cat-main"{% if href %} href="{{{ href }}}"{% endif %} title="{{ title }}">
+    <span class="sl-cat-ico"><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i></span>
+    <span class="sl-cat-info">
+      <span class="sl-cat-line"><span class="sl-cat-name">{{ name }}</span>{% if count %}<span class="sl-chip sl-chip-info">{{ count }}</span>{% endif %}</span>
+      {% if description %}<span class="sl-cat-desc">{{ description }}</span>{% endif %}
+    </span>
+  </a>
+  {% if subs %}<span class="sl-cat-subs">{% for sub in subs %}<a class="sl-chip sl-chip-neutral" href="{{{ sub.href }}}" title="{{ sub.title }}"><i class="bi bi-folder" aria-hidden="true"></i>{{ sub.name }}</a>{% endfor %}</span>{% endif %}
 </div>

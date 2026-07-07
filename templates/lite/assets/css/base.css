@@ -86,6 +86,7 @@
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-radius-control: 4px;
+  --sl-radius-card: 10px;
   /* Form field tokens: shared look for input, textarea, select and file controls */
   --sl-shadow-input: inset 0 1px 2px rgba(0, 0, 0, 0.06);
   --sl-field-height: 30px;
@@ -111,6 +112,7 @@
   --sl-size-icon-md: 24px;
   --sl-size-icon-lg: 32px;
   --sl-size-chip: 26px;
+  --sl-size-tile: 46px;
   --sl-size-control: 34px;
   --sl-size-nav-control: var(--sl-size-control);
   --sl-size-meta-row: 24px;
@@ -161,7 +163,7 @@
   --sl-but-border-shadow: inset 0 0 0 1px var(--sl-but-border-light), 0 0 0 1px var(--sl-but-border-dark), var(--sl-but-shadow-control);
   --sl-color-on-dark: #ffffff;
   --sl-color-tone-neutral: #6b7280;
-  --sl-color-tone-danger: #fd3b3b;
+  --sl-color-tone-danger: #a92c2c;
   --sl-color-tone-info: #1d9bf0;
   --sl-color-tone-primary: #4c75a3;
   --sl-color-tone-warning: #ffa024;

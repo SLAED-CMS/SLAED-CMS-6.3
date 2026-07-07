@@ -68,7 +68,7 @@ function getAdminPanelBlocks(): string {
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) $cont .= getAdminMenu($name, $mod);
             }
-            $block = $tpl->getHtmlPart('block-sidebar', ['title' => _ADMIN, 'icon_name' => 'shield-lock', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
+            $block = $tpl->getHtmlPart('block-sidebar', ['title' => _ADMIN, 'icon_name' => 'person-gear', 'content_html' => $cont, 'id' => '1', 'close' => _OPCL]);
             $cont = '';
         }
         foreach ($conf['modules'] as $name => $mod) {
@@ -82,7 +82,7 @@ function getAdminPanelBlocks(): string {
                 }
             }
         }
-        $block .= $tpl->getHtmlPart('block-sidebar', ['title' => _MODULES, 'icon_name' => 'puzzle', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
+        $block .= $tpl->getHtmlPart('block-sidebar', ['title' => _MODULES, 'icon_name' => 'people', 'content_html' => $cont, 'id' => '2', 'close' => _OPCL]);
         return $block;
     }
     return '';
@@ -103,7 +103,7 @@ function getAdminPanel(): void {
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) $items[] = getAdminMenu($name, $mod);
             }
-            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODADMINPANEL, 'icon_name' => 'tools', 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
+            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODADMINPANEL, 'icon_name' => 'person-gear', 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
         }
         $items = [];
         foreach ($conf['modules'] as $name => $mod) {
