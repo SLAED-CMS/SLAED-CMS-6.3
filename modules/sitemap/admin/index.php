@@ -45,7 +45,7 @@ function sitemap(): void {
     setHead();
     $file = 'sitemap.xml';
     $cont = getTplAdminTabs([
-        'ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'],
+        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
         'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
     ]);
     $cont .= checkPerms(BASE_DIR.'/'.$file);
@@ -105,7 +105,7 @@ function xsledit(): void {
     setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = getTplAdminTabs([
-        'ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'],
+        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
         'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
@@ -151,7 +151,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'],
+        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
         'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
         'tab' => 2,
     ]);
@@ -236,7 +236,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'],
+        'ops' => ['name=sitemap', 'name=sitemap&op=xsledit', 'name=sitemap&op=config', 'name=sitemap&op=info'],
         'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _DOCS],
     ]);
 }

@@ -35,8 +35,8 @@ namespace Tests\Unit {
                 'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'placeholder_text' => 'Nickname'],
                 'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'placeholder_text' => 'Password'],
                 'submit_button' => ['button_type' => 'submit', 'label' => 'Send'],
-                'lost_link' => ['href' => 'index.php?name=account&amp;op=pass_lost', 'label' => 'Lost'],
-                'register_link' => ['href' => 'index.php?name=account&amp;op=registration', 'label' => 'Register'],
+                'lost_link' => ['href' => 'index.php?name=account&op=pass_lost', 'label' => 'Lost'],
+                'register_link' => ['href' => 'index.php?name=account&op=registration', 'label' => 'Register'],
                 'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
                 'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
             ]);
@@ -115,8 +115,8 @@ namespace Tests\Unit {
                 'name_field' => ['itype' => 'text', 'name_attr' => 'user_name'],
                 'password_field' => ['itype' => 'password', 'name_attr' => 'user_password'],
                 'submit_button' => ['button_type' => 'submit', 'label' => 'Send'],
-                'lost_link' => ['href' => 'index.php?name=account&amp;op=pass_lost', 'label' => 'Lost'],
-                'register_link' => ['href' => 'index.php?name=account&amp;op=registration', 'label' => 'Join'],
+                'lost_link' => ['href' => 'index.php?name=account&op=pass_lost', 'label' => 'Lost'],
+                'register_link' => ['href' => 'index.php?name=account&op=registration', 'label' => 'Join'],
                 'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
                 'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
             ]);

@@ -109,7 +109,7 @@ function fields(): void {
         $k++;
     }
     $links[] = [
-        'href' => $afile.'.php?name=fields&amp;op=info&amp;tab='.$ctab,
+        'href' => $afile.'.php?name=fields&op=info&tab='.$ctab,
         'label' => _DOCS,
         'link_attr' => 'data-sl-tab-info-link="fields-main"',
         'title' => _DOCS,
@@ -169,13 +169,13 @@ function save(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => [
-            'name=fields&amp;tab=0',
-            'name=fields&amp;tab=1',
-            'name=fields&amp;tab=2',
-            'name=fields&amp;tab=3',
-            'name=fields&amp;tab=4',
-            'name=fields&amp;tab=5',
-            'name=fields&amp;op=info',
+            'name=fields&tab=0',
+            'name=fields&tab=1',
+            'name=fields&tab=2',
+            'name=fields&tab=3',
+            'name=fields&tab=4',
+            'name=fields&tab=5',
+            'name=fields&op=info',
         ],
         'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _DOCS],
     ]);

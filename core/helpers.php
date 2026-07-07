@@ -330,7 +330,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $tabs = $data['tabs'] ?? [];
     $tab = array_key_exists('tab', $data) ? (int)$data['tab'] : ($tabs ? count($tabs) - 1 : 0);
     $mod = $data['mod'] ?? 'info';
-    $action = $data['action_url'] ?? ($afile.'.php?name='.$name.'&amp;op=info');
+    $action = $data['action_url'] ?? ($afile.'.php?name='.$name.'&op=info');
     $save = $data['save_flag'] ?? 'save_info';
     $submit = $data['submit_label'] ?? _SAVECHANGES;
     $fdoc = static function(string $path): string {
@@ -454,7 +454,7 @@ function getTplUserSearchInput(array $data = []): string {
     $name = $data['name'] ?? 'uname';
     $inpid = $data['input_id'] ?? $name;
     $list = $data['list_id'] ?? ($inpid.'_list');
-    $endpoint = $data['endpoint'] ?? 'index.php?go=1&amp;op=getUserList';
+    $endpoint = $data['endpoint'] ?? 'index.php?go=1&op=getUserList';
     $mlen = (int)($data['minlength'] ?? 1);
     $tip = (string)($data['tip'] ?? '');
     $tiphtml = '';
@@ -484,8 +484,8 @@ function getTplMoveControls(array $data = []): string {
     $target = (string)($data['target'] ?? '');
     $up = (string)($data['up'] ?? '');
     $down = (string)($data['down'] ?? '');
-    $up = ($up && !str_contains($up, 'token=')) ? $up.'&amp;token='.getSiteToken() : $up;
-    $down = ($down && !str_contains($down, 'token=')) ? $down.'&amp;token='.getSiteToken() : $down;
+    $up = ($up && !str_contains($up, 'token=')) ? $up.'&token='.getSiteToken() : $up;
+    $down = ($down && !str_contains($down, 'token=')) ? $down.'&token='.getSiteToken() : $down;
     return $tpl->getHtmlFrag('move-controls', [
         'down_query' => $down,
         'down_title' => _BLOCKDOWN,
@@ -602,7 +602,7 @@ function getTplAjaxTextarea(array $data = []): string {
     $formId  = 'form'.$obj;
     $fieldId = $formId.'_text';
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $query   = 'index.php?go='.$esc($go).'&amp;op='.$esc($op).'&amp;id='.$esc($id).'&amp;cid='.$esc($cid).'&amp;typ='.$esc($typ).'&amp;mod='.$esc($mod);
+    $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod);
     $cerror  = addslashes((string)_CERROR1);
     $content = $tpl->getHtmlFrag('textarea', [
             'name_attr'   => 'text',
@@ -725,7 +725,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
     $con = explode('|', $conf['ratings'][strtolower((string)$mod)] ?? '');
     if ($typ != 2 && !((($con[1] ?? '') && $id && $mod) || ($rat && $scor))) return '';
     $live = $typ != 2 && ($con[1] ?? '') && ($typ || !($con[2] ?? ''));
-    $vote = 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod;
+    $vote = 'go=1&op=getRatingView&id='.$id.'&typ='.$obj.'&mod='.$mod;
     $part = $stl == '1'
         ? ['rate1_title' => _RATE1, 'rate5_title' => _RATE5]
         : ['width' => (string)$width, 'stars' => getRatingStars($width), 'votes' => (string)$votnum, 'votes_title' => _VOTES];
@@ -880,8 +880,8 @@ function getTplCategoryModule(string $name, string $clas = '', string $sel = '',
 }
 
 # Build a query string fragment from key value pairs
-function getQueryString(array $data = [], bool $html = true, bool $tail = false, string $hash = ''): string {
-    $sep = $html ? '&amp;' : '&';
+function getQueryString(array $data = [], bool $tail = false, string $hash = ''): string {
+    $sep = '&';
     $qry = '';
     foreach ($data as $name => $value) {
         if ($value === '' || $value === null || $value === false) continue;

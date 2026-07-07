@@ -1,5 +1,5 @@
 {% if not is_live %}<span class="sl-none">{{ result }}</span>{% endif %}
 <div title="{{ title }}" class="sl-urating"{% if is_live %} hx-target="#{{ target_id }}" hx-swap="outerHTML transition:true" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'{% endif %}>
-  {% for star in stars %}{% if is_live %}<a class="sl-star" hx-post="index.php?{{{ vote_query }}}&amp;rate={{ star.value }}" hx-trigger="click" title="{{ star.value }}">{% else %}<span class="sl-star">{% endif %}<i class="bi bi-star{% if star.is_full %}-fill{% elseif star.is_half %}-half{% endif %}" aria-hidden="true"></i>{% if is_live %}</a>{% else %}</span>{% endif %}{% endfor %}
+  {% for star in stars %}{% if is_live %}<a class="sl-star" hx-post="index.php?{{ vote_query }}&amp;rate={{ star.value }}" hx-trigger="click" title="{{ star.value }}">{% else %}<span class="sl-star">{% endif %}<i class="bi bi-star{% if star.is_full %}-fill{% elseif star.is_half %}-half{% endif %}" aria-hidden="true"></i>{% if is_live %}</a>{% else %}</span>{% endif %}{% endfor %}
 </div>
 <span title="{{ votes_title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ votes }}</span>

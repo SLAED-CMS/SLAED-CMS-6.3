@@ -15,14 +15,14 @@ function faq(): void {
     $offset = (int)(($num - 1) * $anum);
     if (getVar('get', 'status', 'num', 0) == 1) {
         $status = '0';
-        $field = 'name=faq&amp;status=1&amp;';
+        $field = 'name=faq&status=1&';
         $refer = '&op=faq&status=1';
-        $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&op=add', 'name=faq&status=1', 'name=faq&op=config', 'name=faq&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 2]);
     } else {
         $status = '1';
-        $field = 'name=faq&amp;';
+        $field = 'name=faq&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS]]);
+        $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&op=add', 'name=faq&status=1', 'name=faq&op=config', 'name=faq&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, t.title, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -32,7 +32,7 @@ function faq(): void {
             $ip = ($ip) ? Geoip::getIpHtml($ip) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status == '1' && time() >= strtotime($time)) {
-                $view = 'index.php?name=faq&amp;op=view&amp;id='.$id;
+                $view = 'index.php?name=faq&op=view&id='.$id;
                 $active = '1';
             } else {
                 $view = '';
@@ -42,9 +42,9 @@ function faq(): void {
             if ($view) {
                 $items[] = ['href' => $view, 'label' => _MVIEW, 'title' => _MVIEW];
             }
-            $items[] = ['href' => $afile.'.php?name=faq&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=faq&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
             $items[] = [
-                'href' => $afile.'.php?name=faq&amp;op=delete&amp;id='.$id.($refer ? '&amp;refer=1' : '').'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=faq&op=delete&id='.$id.($refer ? '&refer=1' : '').'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -107,7 +107,7 @@ function add(): void {
         $acomm = getVar('post', 'acomm', 'num', 0);
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&op=add', 'name=faq&status=1', 'name=faq&op=config', 'name=faq&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'mod' => 'faq']);
@@ -149,7 +149,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($fid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=faq&amp;op=save',
+        'action_url' => $afile.'.php?name=faq&op=save',
         'hidden' => [
             ['nameattr' => 'fid', 'valueattr' => (string)$fid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -218,7 +218,7 @@ function delete(int $fid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&op=add', 'name=faq&status=1', 'name=faq&op=config', 'name=faq&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/faq.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -244,7 +244,7 @@ function config(): void {
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['faq']['link'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=faq&amp;op=configsave',
+        'action_url' => $afile.'.php?name=faq&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -286,7 +286,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'],
+        'ops' => ['name=faq', 'name=faq&op=add', 'name=faq&status=1', 'name=faq&op=config', 'name=faq&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }

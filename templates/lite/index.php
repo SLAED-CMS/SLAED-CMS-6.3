@@ -22,7 +22,7 @@ function setTemplateForum(): string {
     while ([$id, $title, $time, $luid, $lname, $lpost, $status] = $db->getSqlRow($result)) {
         $items .= $tpl->getHtmlFrag('forum-teaser-item', [
             'hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
-            'href' => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost,
+            'href' => 'index.php?name=forum&op=view&id='.$id.'&last#'.$lpost,
             'title' => getDecodedText($title),
             'by' => _POSTEDBY,
             'poster' => $luid ? user_info($lname) : htmlspecialchars($lname, ENT_QUOTES, 'UTF-8'),
@@ -53,7 +53,7 @@ function getThemeHeadVars(): array {
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
     $ftitle = getDecodedText((string)$title);
     $faq = $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
+        'href' => 'index.php?name=faq&op=view&id='.$fid,
         'title' => $ftitle,
         'icon_name' => 'stars',
         'label' => $ftitle,

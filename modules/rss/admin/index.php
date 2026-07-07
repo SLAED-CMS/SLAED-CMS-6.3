@@ -11,7 +11,7 @@ function rss(): void {
     setHead();
     $tab = getVar('get', 'tab', 'num', 0);
     if ($tab < 0 || $tab > 1) $tab = 0;
-    $ops = ['name=rss&amp;tab=0', 'name=rss&amp;tab=1', 'name=rss&amp;op=info'];
+    $ops = ['name=rss&tab=0', 'name=rss&tab=1', 'name=rss&op=info'];
     $tabs = [_RSS, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
@@ -51,7 +51,7 @@ function rss(): void {
     ];
     $content = $tab === 1 ? $tpl->getHtmlPart('div', ['rows' => $prefs]) : $sourcehtml;
     $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=rss&amp;op=save',
+        'action_url' => $afile.'.php?name=rss&op=save',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
             ['nameattr' => 'tab', 'valueattr' => (string)$tab],
@@ -95,7 +95,7 @@ function save(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=rss&amp;tab=0', 'name=rss&amp;tab=1', 'name=rss&amp;op=info'],
+        'ops' => ['name=rss&tab=0', 'name=rss&tab=1', 'name=rss&op=info'],
         'tabs' => [_RSS, _PREFERENCES, _DOCS],
     ]);
 }

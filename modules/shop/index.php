@@ -88,13 +88,13 @@ function shop(): void {
 			$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 			$opreis = '';
 			$discount = '';
-			$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
-			$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
+			$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&op=addCartItem&id='.$id, 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
+			$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 			$title = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label_html' => $stitle, 'suffix_html' => getTplNewGraphic($time)]);
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
-			$comm = ($acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom, 'is_comment' => true]) : '';
+			$comm = ($acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=view&id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom, 'is_comment' => true]) : '';
 			$read = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_read' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&typ=d&id='.$id.'&refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 			$cont .= $tpl->getHtmlFrag('card', [
 				'id'           => $id,
 				'columns'      => $columns,
@@ -252,11 +252,11 @@ function view(): void {
 		$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 		$opreis = '';
 		$discount = '';
-		$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
-		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
+		$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&op=addCartItem&id='.$id, 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
+		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&typ=d&id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 		$cont .= $tpl->getHtmlFrag('card', [
 			'id'           => $id,
 			'favorites'    => $favorites,
@@ -508,7 +508,7 @@ function clients(): void {
 					if ($cinfo) $tipItems[] = ['label' => _NOTE, 'value' => $cinfo, 'is_last' => true];
 					else $tipItems[count($tipItems) - 1]['is_last'] = true;
 					$cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _NO;
-					$rechn = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid, 'title' => _RECHN_B, 'label' => _RECHN_B, 'is_blank' => true]);
+					$rechn = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=rech&id='.$cid, 'title' => _RECHN_B, 'label' => _RECHN_B, 'is_blank' => true]);
 					$rows[] = ['id' => $cid, 'cells' => [
 						['href' => '#'.$cid, 'title' => $cid, 'text' => $cid, 'is_num' => true],
 						['prefix_html' => getTplTitleTip($tipItems), 'primary_title' => $stitle, 'primary_text' => cutstr($stitle, 35)],

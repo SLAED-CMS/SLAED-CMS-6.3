@@ -9,8 +9,8 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function categories(): void {
     global $afile, $tpl;
     $modul = getVar('req', 'modul', 'var', 'forum');
-    $modlink = '&amp;modul='.$modul;
-    $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
+    $modlink = '&modul='.$modul;
+    $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink];
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -51,8 +51,8 @@ function fix(): void {
 function add(): void {
     global $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
-    $modlink = '&amp;modul='.$modul;
-    $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
+    $modlink = '&modul='.$modul;
+    $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink];
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -134,8 +134,8 @@ function add(): void {
 function subadd(): void {
     global $db, $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
-    $modlink = '&amp;modul='.$modul;
-    $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
+    $modlink = '&modul='.$modul;
+    $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink];
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
@@ -236,8 +236,8 @@ function subadd(): void {
 function addedit(): void {
     global $db, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
-    $modlink = '&amp;modul='.$modul;
-    $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
+    $modlink = '&modul='.$modul;
+    $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink];
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -279,8 +279,8 @@ function edit(): void {
     $result = $db->getSqlQuery('SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
     [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
     $imgcat = preg_match('/^[a-z0-9-]+$/', (string)$imgcat) ? $imgcat : '';
-    $modlink = '&amp;modul='.$modul;
-    $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink];
+    $modlink = '&modul='.$modul;
+    $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink];
     $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
@@ -451,9 +451,9 @@ function delete(): void {
 
 function info(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
-    $modlink = '&amp;modul='.$modul;
+    $modlink = '&modul='.$modul;
     setTplAdminInfoPage([
-        'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix&amp;token='.getSiteToken().$modlink, 'name=categories&amp;op=info'.$modlink],
+        'ops' => ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink],
         'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _DOCS],
     ]);
 }

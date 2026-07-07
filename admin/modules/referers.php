@@ -68,7 +68,7 @@ function referers(): void {
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete&amp;token='.getSiteToken(), 'name=referers&amp;op=info'],
+        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=delete&token='.getSiteToken(), 'name=referers&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
         'subtitle_html' => getRefererSearch(),
     ]);
@@ -112,7 +112,7 @@ function referers(): void {
             ],
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,
-        ]).getPageNumbers('', $a, ceil($a / $conf['referers']['anum']), $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump'])]);
+        ]).getPageNumbers('', $a, ceil($a / $conf['referers']['anum']), $conf['referers']['anum'], 'name=referers&sort='.$sort.'&order='.$order.'&', $conf['referers']['anump'])]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['text' => _NO_INFO])]);
     }
@@ -124,7 +124,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete&amp;token='.getSiteToken(), 'name=referers&amp;op=info'],
+        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=delete&token='.getSiteToken(), 'name=referers&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
         'tab' => 1,
         'subtitle_html' => getRefererSearch(),
@@ -178,7 +178,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete&amp;token='.getSiteToken(), 'name=referers&amp;op=info'],
+        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=delete&token='.getSiteToken(), 'name=referers&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
     ]);
 }

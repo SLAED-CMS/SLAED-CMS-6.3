@@ -45,12 +45,12 @@ function pages(): void {
     $anum = $conf['pages']['anum'] ?? 25;
     $anump = $conf['pages']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
+    $ops = ['name=pages', 'name=pages&op=add', 'name=pages&status=1', 'name=pages&op=config', 'name=pages&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $sub = getPagesSearch();
     if (getVar('req', 'status', 'num', 0) == 1) {
         $status = '0';
-        $refer = '&amp;refer=1';
+        $refer = '&refer=1';
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2, 'subtitle_html' => $sub]);
     } else {
         $status = '1';
@@ -84,7 +84,7 @@ function pages(): void {
             $wcnt .= ' AND ip LIKE :find';
         }
     }
-    $field = 'name=pages'.($status === '0' ? '&amp;status=1' : '').'&amp;search='.$search.($chng !== '' ? '&amp;chng='.urlencode($chng) : '').'&amp;';
+    $field = 'name=pages'.($status === '0' ? '&status=1' : '').'&search='.$search.($chng !== '' ? '&chng='.urlencode($chng) : '').'&';
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE '.$where.' ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
@@ -94,14 +94,14 @@ function pages(): void {
             $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
             $items = [];
             if ($status && time() >= strtotime($time)) {
-                $items[] = ['href' => 'index.php?name=pages&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=pages&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
-            $items[] = ['href' => $afile.'.php?name=pages&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=pages&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
             $items[] = [
-                'href' => $afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=pages&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -149,7 +149,7 @@ function pages(): void {
         $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
         $body = $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=pages&amp;op=actions',
+            'action_url' => $afile.'.php?name=pages&op=actions',
             'hidden' => array_filter([
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
                 $status === '0' ? ['nameattr' => 'refer', 'valueattr' => '1'] : null,
@@ -201,7 +201,7 @@ function add(): void {
         $ihome = getVar('post', 'ihome', 'num', 0);
     }
     setHead();
-    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
+    $ops = ['name=pages', 'name=pages&op=add', 'name=pages&status=1', 'name=pages&op=config', 'name=pages&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
@@ -242,7 +242,7 @@ function add(): void {
         ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=pages&amp;op=save',
+        'action_url' => $afile.'.php?name=pages&op=save',
         'hidden' => [
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -357,7 +357,7 @@ function delete(int $did = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'];
+    $ops = ['name=pages', 'name=pages&op=add', 'name=pages&status=1', 'name=pages&op=config', 'name=pages&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
@@ -385,7 +385,7 @@ function config(): void {
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['pages']['link'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=pages&amp;op=configsave',
+        'action_url' => $afile.'.php?name=pages&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -427,7 +427,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'],
+        'ops' => ['name=pages', 'name=pages&op=add', 'name=pages&status=1', 'name=pages&op=config', 'name=pages&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }

@@ -93,8 +93,8 @@ function jokes(): void {
             $date   = ($conf['jokes']['date']) ? format_time($time) : '';
             $iso    = ($conf['jokes']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(1, $id, $conf['name'], $ratingtot, $rating, '');
-            $edit = $afile.'.php?name=jokes&amp;op=jokes_add&amp;id='.$id;
-            $del = $afile.'.php?name=jokes&amp;op=jokes_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=jokes&op=jokes_add&id='.$id;
+            $del = $afile.'.php?name=jokes&op=jokes_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,

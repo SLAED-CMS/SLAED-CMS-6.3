@@ -1,15 +1,15 @@
 {% if href %}
   <a
-    href="{{{ href }}}"
+    href="{{ href }}"
     title="{{ title }}"
     class="sl-pnum{% if is_nav %} sl-pnum-nav{% endif %}"
   >{{ label }}</a>
 {% elseif query %}
   <a
-    href="{{{ query }}}"
+    href="{{ query }}"
     title="{{ title }}"
     class="sl-pnum{% if is_nav %} sl-pnum-nav{% endif %}"
-    hx-get="{{{ query }}}"
+    hx-get="{{ query }}"
     hx-target="#{{ target_id }}"
     hx-swap="innerHTML"
     hx-push-url="{% if push_url %}{{ push_url }}{% else %}false{% endif %}"

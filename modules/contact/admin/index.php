@@ -10,7 +10,7 @@ function contact(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=contact', 'name=contact&amp;op=info'],
+        'ops' => ['name=contact', 'name=contact&op=info'],
         'tabs' => [_PREFERENCES, _DOCS],
     ]);
     $rows = [
@@ -36,7 +36,7 @@ function contact(): void {
     ];
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
     $body = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=contact&amp;op=save',
+        'action_url' => $afile.'.php?name=contact&op=save',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
@@ -63,7 +63,7 @@ function save(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=contact', 'name=contact&amp;op=info'],
+        'ops' => ['name=contact', 'name=contact&op=info'],
         'tabs' => [_PREFERENCES, _DOCS],
     ]);
 }

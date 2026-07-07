@@ -14,7 +14,7 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
     $date = $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]);
     $mlab = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod, 'title' => _MODUL, 'label' => getModuleName($mod), 'is_module' => true]);
     $cdes = $cdes ?: $ctit;
-    $ctit = $ctit ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$cid, 'title' => cutstr((string)$cdes, 50), 'label' => cutstr($ctit, 15), 'is_category' => true]) : '';
+    $ctit = $ctit ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$cid, 'title' => cutstr((string)$cdes, 50), 'label' => cutstr($ctit, 15), 'is_category' => true]) : '';
     $pout = '';
     if ($post) {
         $pval = $nick ? user_info($nick) : ($user ?: _ANONYM);
@@ -23,7 +23,7 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
     $menu = '';
     if (is_moder($mod)) {
         $items = [
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
             $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
         ];
         $menu = $tpl->getHtmlFrag('popover', [
@@ -229,7 +229,7 @@ function getSearchSimple(string $mod, array $cfg, array $state): array {
         $result = $db->getSqlQuery($sql, $pars);
     }
     while ([$mid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
-        $url = ($mod === 'jokes') ? 'index.php?name='.$mod.'&amp;cat='.$cid.'&amp;word='.urlencode($state['word']).'#'.$mid : 'index.php?name='.$mod.'&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
+        $url = ($mod === 'jokes') ? 'index.php?name='.$mod.'&cat='.$cid.'&word='.urlencode($state['word']).'#'.$mid : 'index.php?name='.$mod.'&op=view&id='.$mid.'&word='.urlencode($state['word']);
         $titl = $tpl->getHtmlFrag('link', [
             'href' => $url,
             'title' => $titl,
@@ -248,7 +248,7 @@ function getSearchAuto(array $state): array {
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
     $result = $db->getSqlQuery('SELECT id, title, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :worda OR description LIKE :wordb OR link LIKE :wordc) ORDER BY added DESC LIMIT :lim', $pars);
     while ([$mid, $titl, $time] = $db->getSqlRow($result)) {
-        $url = 'index.php?name=auto_links&amp;op=view&amp;id='.$mid;
+        $url = 'index.php?name=auto_links&op=view&id='.$mid;
         $titl = $tpl->getHtmlFrag('link', [
             'href' => $url,
             'title' => $titl,
@@ -260,7 +260,7 @@ function getSearchAuto(array $state): array {
         $edit = '';
         if (is_moder('auto_links')) {
             $items = [
-                $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&amp;id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+                $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
                 $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
             ];
             $edit = $tpl->getHtmlFrag('popover', [
@@ -288,7 +288,7 @@ function getSearchForum(array $state): array {
     $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', $pars);
     while ([$mid, $pid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
         $tid = !$pid ? $mid : $pid;
-        $url = 'index.php?name=forum&amp;op=view&amp;id='.$tid.'&amp;word='.urlencode($state['word']);
+        $url = 'index.php?name=forum&op=view&id='.$tid.'&word='.urlencode($state['word']);
         $titl = $tpl->getHtmlFrag('link', [
             'href' => $url,
             'title' => $titl,
@@ -298,7 +298,7 @@ function getSearchForum(array $state): array {
         [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, (int)$tid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
         if (is_moder('forum')) {
             $items = [
-                $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+                $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&op=add&cat='.$cid.'&id='.$tid.'&pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
                 $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
             ];
             $edit = $tpl->getHtmlFrag('popover', [
@@ -331,7 +331,7 @@ function getSearchMedia(array $state): array {
     $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$cond.' LIMIT :lim', $pars);
     while ([$mid, $user, $titl, $subt, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
         $titl = $subt ? $titl.' '.urldecode($conf['media']['mdefis']).' '.$subt : $titl;
-        $url = 'index.php?name=media&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
+        $url = 'index.php?name=media&op=view&id='.$mid.'&word='.urlencode($state['word']);
         $titl = $tpl->getHtmlFrag('link', [
             'href' => $url,
             'title' => $titl,
@@ -350,7 +350,7 @@ function getSearchShop(array $state): array {
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
     $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', $pars);
     while ([$mid, $time, $titl, $cid, $ctit, $cdes] = $db->getSqlRow($result)) {
-        $url = 'index.php?name=shop&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
+        $url = 'index.php?name=shop&op=view&id='.$mid.'&word='.urlencode($state['word']);
         $titl = $tpl->getHtmlFrag('link', [
             'href' => $url,
             'title' => $titl,

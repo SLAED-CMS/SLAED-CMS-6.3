@@ -1,5 +1,5 @@
 <a
-  href="{% if href %}{{{ href }}}{% else %}#{% endif %}"
+  href="{% if href %}{{ href }}{% else %}#{% endif %}"
   title="{{ title }}"
 
   {% if class or is_admin_language_link or rel or toggle_onclick or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_category or is_module or is_comment or is_read or is_card_image or is_shop_checkout or is_cart_checkout or is_votes or is_comments or is_last or is_top_hidden or isdebug or isslaed %}
@@ -47,7 +47,7 @@
   {% if onclick_attr %}{{{ onclick_attr }}}{% endif %}
 
   {% if is_htmx %}
-    hx-get="{{{ href }}}"
+    hx-get="{{ href }}"
     hx-target="{{ hx_target }}"
     hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}"
     hx-push-url="false"

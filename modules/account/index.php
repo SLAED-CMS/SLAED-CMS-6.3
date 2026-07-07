@@ -152,7 +152,7 @@ function finnewuser(): void {
         if (!$stop) {
             $check = md5(getRandomString(10));
             $time = time();
-            $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=activate&amp;user='.urlencode($nick).'&amp;num='.$check;
+            $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=activate&user='.urlencode($nick).'&num='.$check;
             $nick = filterText($nick);
             $mail = filterText($mail);
             $db->getSqlQuery(
@@ -177,7 +177,7 @@ function finnewuser(): void {
                     'submit' => $hidden.$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _ACTIVATIONSUB]),
                 ]);
             } else {
-                $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label_html' => str_replace('&amp;', '&', $finishlink), 'is_blank' => true]);
+                $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => $finishlink, 'is_blank' => true]);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -426,9 +426,9 @@ function view(): void {
             $tabs = getNaviTabs(0, 'tab', $title, $text);
             $acts = isAdmin() ? $tpl->getHtmlFrag('popover', [
                 'editor_label' => _EDITOR,
-                'items_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_add&amp;id='.$uid, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
-                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw, 'confirm_text' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?', 'title' => _BANIPSENDER, 'label' => _BANIPSENDER, 'is_delete' => true])
-                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_del&amp;id='.$uid, 'confirm_text' => _DELETE.' &quot;'.$nick.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
+                'items_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_add&id='.$uid, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
+                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=security_block&new_ip='.$userIpRaw, 'confirm_text' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?', 'title' => _BANIPSENDER, 'label' => _BANIPSENDER, 'is_delete' => true])
+                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_del&id='.$uid, 'confirm_text' => _DELETE.' &quot;'.$nick.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
             ]) : '';
             $report = getTplTitleTip([
                 ['label' => $id[0], 'value' => htmlspecialchars((string)$id[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
@@ -668,9 +668,9 @@ function privat(): void {
             'title' => _PRIVAT,
         ]);
         $title = [
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmessin', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=1', 'text' => _PRIN, 'is_htmx' => true]),
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmessou', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=2', 'text' => _PROUT, 'is_htmx' => true]),
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmesssa', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=3', 'text' => _PRSAVE, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmessin', 'request' => 'go=1&op=getPrivateMessageView&typ=1', 'text' => _PRIN, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmessou', 'request' => 'go=1&op=getPrivateMessageView&typ=2', 'text' => _PROUT, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmesssa', 'request' => 'go=1&op=getPrivateMessageView&typ=3', 'text' => _PRSAVE, 'is_htmx' => true]),
             _SEND
         ];
         $text = [
@@ -728,7 +728,7 @@ function passlost(): void {
         $after = $tpl->getHtmlFrag('block-content', [
             'is_form_submit' => true,
             'content' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
-                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
+                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=newuser', 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
@@ -776,7 +776,7 @@ function passmail(): void {
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
-            $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email]);
+            $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -939,7 +939,7 @@ function edithome(): void {
             if (preg_match("#(\.gif|\.png|\.jpg|\.jpeg)$#is", $file) && !preg_match("#(\b0\.gif\b|\b00\.gif\b)$#i", $file)) {
                 $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
                 $aset[] = [
-                    'href' => 'index.php?name='.$conf['name'].'&amp;op=saveavatar&amp;avatar='.$file,
+                    'href' => 'index.php?name='.$conf['name'].'&op=saveavatar&avatar='.$file,
                     'title' => _AVATARSAVE.' '._ID.' '.$filename,
                     'is_avatar_link' => true,
                     'img_src' => $adir.'/'.$file,

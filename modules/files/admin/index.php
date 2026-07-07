@@ -16,19 +16,19 @@ function files(): void {
     $offset = (int)(($num - 1) * $anum);
     if ($status == 1) {
         $st = '0';
-        $field = 'name=files&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
+        $field = 'name=files&status=1&';
+        $refer = '&refer=1';
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
     } elseif ($status == 2) {
         $st = '2';
-        $field = 'name=files&amp;status=2&amp;';
+        $field = 'name=files&status=2&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
     } else {
         $st = '1';
-        $field = 'name=files&amp;';
+        $field = 'name=files&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS]]);
+        $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -39,17 +39,17 @@ function files(): void {
             $ip = $ip ? Geoip::getIpHtml($ip) : _NO;
             $items = [];
             if ($st == '1' && time() >= strtotime($date)) {
-                $items[] = ['href' => 'index.php?name=files&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=files&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
             if ($st == '2') {
-                $items[] = ['href' => $afile.'.php?name=files&amp;op=approve&amp;id='.$id.'&amp;token='.getSiteToken(), 'label' => _IGNORE, 'title' => _IGNORE];
+                $items[] = ['href' => $afile.'.php?name=files&op=approve&id='.$id.'&token='.getSiteToken(), 'label' => _IGNORE, 'title' => _IGNORE];
             }
-            $items[] = ['href' => $afile.'.php?name=files&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=files&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
             $items[] = [
-                'href' => $afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=files&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -120,10 +120,10 @@ function add(): void {
         $website = getVar('post', 'website', 'url', 'http://');
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'files']);
-    $link = $url ? $tpl->getHtmlFrag('link', ['href' => htmlspecialchars($url, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
+    $link = $url ? $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
     $path = (string)($conf['files']['path'] ?? 'uploads/files');
     $pathdir = preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $path)) ? str_replace('\\', '/', $path) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $path), '/');
     $pathopts = $tpl->getHtmlFrag('select-option', [
@@ -196,7 +196,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($fid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=files&amp;op=save',
+        'action_url' => $afile.'.php?name=files&op=save',
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [
             ['nameattr' => 'fid', 'valueattr' => (string)$fid],
@@ -304,7 +304,7 @@ function approve(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
+    $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $streamopts =
         $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']) .
@@ -343,7 +343,7 @@ function config(): void {
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['files']['link'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=files&amp;op=configsave',
+        'action_url' => $afile.'.php?name=files&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -396,7 +396,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'],
+        'ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS]
     ]);
 }

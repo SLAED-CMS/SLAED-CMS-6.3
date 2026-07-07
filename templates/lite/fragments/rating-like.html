@@ -1,13 +1,13 @@
 <span class="sl-none">{{ result }}</span>
 <div class="sl-rate-like"{% if is_live %} hx-target="#{{ target_id }}" hx-swap="outerHTML transition:true" hx-push-url="false" hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'{% endif %}>
   <p
-    {% if is_live %}hx-post="index.php?{{{ vote_query }}}&amp;stl=1&amp;rate=1" hx-trigger="click"{% endif %}
+    {% if is_live %}hx-post="index.php?{{ vote_query }}&amp;stl=1&amp;rate=1" hx-trigger="click"{% endif %}
     title="{{ rate1_title }}"
     class="sl-but-mini sl-rate-minus{% if is_live %} sl-out{% endif %}"
   ><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></p>
   <span title="{{ title }}" class="sl-rate-num{% if has_score %} sl-rate-is{% endif %}">{{ result }}</span>
   <p
-    {% if is_live %}hx-post="index.php?{{{ vote_query }}}&amp;stl=1&amp;rate=5" hx-trigger="click"{% endif %}
+    {% if is_live %}hx-post="index.php?{{ vote_query }}&amp;stl=1&amp;rate=5" hx-trigger="click"{% endif %}
     title="{{ rate5_title }}"
     class="sl-but-mini sl-rate-plus{% if is_live %} sl-out{% endif %}"
   ><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></p>

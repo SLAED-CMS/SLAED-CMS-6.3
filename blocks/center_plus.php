@@ -31,7 +31,7 @@ $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_faq WHERE time <
 while (list($fid, $title) = $db->getSqlRow($result)) {
     $title = getDecodedText($title);
     $col2 .= $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
+        'href' => getSeoUrl(['name' => 'faq', 'op' => 'view', 'id' => $fid]),
         'title' => $title,
         'label' => cutstr($title, $strip),
         'is_line_break' => true,

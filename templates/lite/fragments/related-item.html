@@ -2,13 +2,13 @@
   {% if image_link %}
     {% include 'fragments/link.html' with image_link %}
   {% else %}
-    <a href="{{{ href }}}" title="{{ title_attr }}" class="sl-related-img"><img src="{{ img_src }}" alt="{{ title_attr }}" class="sl-related-img-inner"></a>
+    <a href="{{ href }}" title="{{ title_attr }}" class="sl-related-img"><img src="{{ img_src }}" alt="{{ title_attr }}" class="sl-related-img-inner"></a>
   {% endif %}
   <b>
     {% if title_link %}
       {% include 'fragments/link.html' with title_link %}
     {% else %}
-      <a href="{{{ href }}}" title="{{ title_attr }}">{{ title_text }}</a>
+      <a href="{{ href }}" title="{{ title_attr }}">{{ title_text }}</a>
     {% endif %}
   </b>
   <p>{{{ text }}}</p>

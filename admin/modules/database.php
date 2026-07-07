@@ -219,7 +219,7 @@ function getSqlsum(array $items, string $mode, string $name): string {
 function database(): void {
     global $db, $conf, $afile, $tpl;
     $type = getVar('get', 'type', 'var');
-    $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
+    $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
     $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _DOCS];
     $headtag = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
@@ -296,12 +296,12 @@ function database(): void {
             $stattag = $tpl->getHtmlFrag('popover', [
                 'trigger_label' => _EDITOR,
                 'items' => [[
-                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=1&token='.getSiteToken(),
                     'label' => _CLEAN,
                     'title' => _CLEAN,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ], [
-                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=2&token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -414,7 +414,7 @@ function dump(): void {
     $type = getVar('post', 'type', 'var', '');
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
-    $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
+    $ops = ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'];
     $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _DOCS];
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
@@ -477,7 +477,7 @@ function dump(): void {
         $tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'submit_label' => _DB_PARSE, 'is_green' => true])
         .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'name_attr' => 'action', 'value_attr' => 'exec', 'submit_label' => _EXECUTE, 'is_blue' => true]);
     $form = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=database&amp;op=dump',
+        'action_url' => $afile.'.php?name=database&op=dump',
         'hidden' => [
             ['nameattr' => 'type', 'valueattr' => 'dump'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -501,7 +501,7 @@ function dump(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'],
+        'ops' => ['name=database', 'name=database&type=optimize', 'name=database&type=repair', 'name=database&op=dump', 'name=database&op=info'],
         'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _DOCS],
     ]);
 }

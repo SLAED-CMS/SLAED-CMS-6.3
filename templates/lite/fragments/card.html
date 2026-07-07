@@ -7,7 +7,7 @@
       {% include 'fragments/link.html' with title_link %}
       {% if title_new %} {{{ title_new }}}{% endif %}
     {% else %}
-      <a href="{{{ title_href }}}" title="{{ title_attr }}">{{{ title_text }}}</a>
+      <a href="{{ title_href }}" title="{{ title_attr }}">{{{ title_text }}}</a>
       {% if title_new %} {{{ title_new }}}{% endif %}
     {% endif %}
   </h3>
@@ -16,7 +16,7 @@
       <li>
         {% if comm_html %}{{{ comm_html }}}
         {% elseif comm_link %}{% include 'fragments/link.html' with comm_link %}
-        {% elseif comm_href %}<a href="{{{ comm_href }}}" title="{{ comm_label }}" class="sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
+        {% elseif comm_href %}<a href="{{ comm_href }}" title="{{ comm_label }}" class="sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
         {% endif %}
       </li>
       <li>{{{ hits }}}</li>
@@ -47,7 +47,7 @@
       <li>
         {% if category_html %}{{{ category_html }}}
         {% elseif category_link %}{% include 'fragments/link.html' with category_link %}
-        {% elseif category_href %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ category_text }}</a>
+        {% elseif category_href %}<a href="{{ category_href }}" title="{{ category_attr }}" class="sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ category_text }}</a>
         {% endif %}
       </li>
     </ul>
@@ -60,7 +60,7 @@
     {% endif %}
     {{{ voting }}}
     {% if image_html %}{{{ image_html }}}
-    {% elseif category_icon %}<a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-card-image sl-cat-tone-{{ category_tone }}">{{{ category_icon }}}</a>
+    {% elseif category_icon %}<a href="{{ category_href }}" title="{{ category_attr }}" class="sl-card-image sl-cat-tone-{{ category_tone }}">{{{ category_icon }}}</a>
     {% endif %}
     {{{ text }}}{% if body_text %}<br><br>{{{ body_text }}}{% endif %}
   </div>
@@ -68,7 +68,7 @@
     <div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>
     {% if footer_items %}{% for item in footer_items %}{{{ item.content_html }}}{% endfor %}{% endif %}
     {% if read_link %}{% include 'fragments/link.html' with read_link %}
-    {% elseif read_href %}<a href="{{{ read_href }}}" title="{{ title_attr }}" class="sl-but">{{ read_text }}</a>
+    {% elseif read_href %}<a href="{{ read_href }}" title="{{ title_attr }}" class="sl-but">{{ read_text }}</a>
     {% endif %}
   </div>
 </article>

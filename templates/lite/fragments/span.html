@@ -39,7 +39,7 @@
   {% endif %}
 
   {% if is_htmx %}
-    hx-get="index.php?{{{ request }}}"
+    hx-get="index.php?{{ request }}"
     hx-trigger="click"
     hx-target="#rep{{ target_id }}"
     hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}"

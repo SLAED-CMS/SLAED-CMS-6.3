@@ -11,7 +11,7 @@ function modules(): void {
     global $conf, $db, $afile, $infos, $tpl;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
-    $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
+    $typelink = ($mtype !== 2) ? '&type='.$mtype : '';
     $search = $tpl->getHtmlPart('searchbox', [
         'searchbox' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
@@ -29,7 +29,7 @@ function modules(): void {
         ]),
     ]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.$typelink, 'name=modules&op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
     if (!empty($infos)) $cont .= $tpl->getHtmlFrag('alert', ['text' => $infos]);
     $config = false;
     $modlist = [];
@@ -144,11 +144,11 @@ function modules(): void {
             $group_name = _NONE;
         }
         $items = [[
-            'href' => $afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.($active ? '0' : '1').'&amp;type='.$mtype.'&amp;token='.getSiteToken(),
+            'href' => $afile.'.php?name=modules&op=status&mod='.$title.'&act='.($active ? '0' : '1').'&type='.$mtype.'&token='.getSiteToken(),
             'label' => $active ? _DEACTIVATE : _ACTIVATE,
             'title' => $active ? _DEACTIVATE : _ACTIVATE,
         ], [
-            'href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$title.'&amp;type='.$mtype,
+            'href' => $afile.'.php?name=modules&op=edit&mod='.$title.'&type='.$mtype,
             'label' => _FULLEDIT,
             'title' => _FULLEDIT,
         ]];
@@ -164,7 +164,7 @@ function modules(): void {
                 }
             }
             $items[] = [
-                'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id='.($install ? '1' : '2').'&amp;type='.$mtype.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id='.($install ? '1' : '2').'&type='.$mtype.'&token='.getSiteToken(),
                 'label' => $install ? _DB_DELETE : _DB_INSTALL,
                 'title' => $install ? _DB_DELETE : _DB_INSTALL,
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(($install ? _DB_DELETE : _DB_INSTALL).' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
@@ -172,7 +172,7 @@ function modules(): void {
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
             $items[] = [
-                'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3&amp;type='.$mtype.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id=3&type='.$mtype.'&token='.getSiteToken(),
                 'label' => _DB_UPDATE,
                 'title' => _DB_UPDATE,
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(_DB_UPDATE.' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
@@ -242,7 +242,7 @@ function edit(): void {
         ]),
     ]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&amp;type='.$mtype : ''), 'name=modules&amp;op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
+    $cont = getTplAdminTabs(['ops' => ['name=modules'.($mtype !== 2 ? '&type='.$mtype : ''), 'name=modules&op=info'], 'tabs' => [_HOME, _DOCS], 'subtitle_html' => $search]);
     $grpopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NONE, 'is_selected' => (int)$group === 0]);
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
@@ -376,7 +376,7 @@ function add(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=modules', 'name=modules&amp;op=info'],
+        'ops' => ['name=modules', 'name=modules&op=info'],
         'tabs' => [_HOME, _DOCS],
     ]);
 }

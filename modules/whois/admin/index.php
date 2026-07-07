@@ -16,17 +16,17 @@ function whois(): void {
     $status = getVar('get', 'status', 'num');
     if ($status == 1) {
         $status = 0;
-        $field = 'name=whois&amp;status=1&amp;';
+        $field = 'name=whois&status=1&';
         $cont = getTplAdminTabs([
-            'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+            'ops' => ['name=whois', 'name=whois&op=add', 'name=whois&status=1', 'name=whois&op=config', 'name=whois&op=info'],
             'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
             'tab' => 2,
         ]);
     } else {
         $status = 1;
-        $field = 'name=whois&amp;';
+        $field = 'name=whois&';
         $cont = getTplAdminTabs([
-            'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+            'ops' => ['name=whois', 'name=whois&op=add', 'name=whois&status=1', 'name=whois&op=config', 'name=whois&op=info'],
             'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         ]);
     }
@@ -50,11 +50,11 @@ function whois(): void {
             $dc = $dc ? domain($dc) : _NO_INFO;
             $domain = domain($domain);
             $items = [
-                ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1&amp;token='.getSiteToken(), 'label' => _SITE, 'title' => _SITE],
-                ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1&amp;token='.getSiteToken(), 'label' => _HOST, 'title' => _HOST],
-                ['href' => $afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1&amp;token='.getSiteToken(), 'label' => _DC, 'title' => _DC],
-                ['href' => $afile.'.php?name=whois&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=1&refer=1&token='.getSiteToken(), 'label' => _SITE, 'title' => _SITE],
+                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=2&refer=1&token='.getSiteToken(), 'label' => _HOST, 'title' => _HOST],
+                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=3&refer=1&token='.getSiteToken(), 'label' => _DC, 'title' => _DC],
+                ['href' => $afile.'.php?name=whois&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=whois&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$id],
@@ -117,7 +117,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+        'ops' => ['name=whois', 'name=whois&op=add', 'name=whois&status=1', 'name=whois&op=config', 'name=whois&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
@@ -194,7 +194,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+        'ops' => ['name=whois', 'name=whois&op=add', 'name=whois&status=1', 'name=whois&op=config', 'name=whois&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
         'tab' => 3,
     ]);
@@ -238,7 +238,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'],
+        'ops' => ['name=whois', 'name=whois&op=add', 'name=whois&status=1', 'name=whois&op=config', 'name=whois&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }

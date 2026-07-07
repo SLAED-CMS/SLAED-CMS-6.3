@@ -15,14 +15,14 @@ function help(): void {
     $offset = (int)(($num - 1) * $anum);
     if (getVar('get', 'status', 'num', 0) == 1) {
         $status = '1';
-        $field = 'name=help&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS], 'tab' => 1]);
+        $field = 'name=help&status=1&';
+        $refer = '&refer=1';
+        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&status=1', 'name=help&op=config', 'name=help&op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS], 'tab' => 1]);
     } else {
         $status = '0';
-        $field = 'name=help&amp;';
+        $field = 'name=help&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
+        $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&status=1', 'name=help&op=config', 'name=help&op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -30,9 +30,9 @@ function help(): void {
         while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : _ANONYM;
             $items = [
-                ['href' => $afile.'.php?name=help&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW],
+                ['href' => $afile.'.php?name=help&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW],
                 [
-                    'href' => $afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=help&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -84,7 +84,7 @@ function view(): void {
     $vid = (int)(getVar('get', 'id', 'num', 0) ?? 0);
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $vid, 'id2' => $vid]);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&status=1', 'name=help&op=config', 'name=help&op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
     $body = '';
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
@@ -102,9 +102,9 @@ function view(): void {
             $meta[] = $tpl->getHtmlFrag('link', ['href' => '#'.$id, 'is_num_anchor' => true, 'title' => _MESSAGE.': '.$a, 'label' => (string)$a]);
         }
         $actions = $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-            ['href' => $afile.'.php?name=help&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+            ['href' => $afile.'.php?name=help&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
             [
-                'href' => $afile.'.php?name=help&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=help&op=delete&id='.$id.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -131,7 +131,7 @@ function addview(int $id): string {
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
     return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=help&amp;op=save',
+        'action_url' => $afile.'.php?name=help&op=save',
         'hidden' => [
             ['nameattr' => 'pid', 'valueattr' => (string)$id],
             ['nameattr' => 'cat', 'valueattr' => (string)$cid],
@@ -177,7 +177,7 @@ function add(): void {
     }
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&status=1', 'name=help&op=config', 'name=help&op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'field' => $field, 'mod' => 'help']);
     $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
@@ -210,7 +210,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=help&amp;op=save',
+        'action_url' => $afile.'.php?name=help&op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
             ['nameattr' => 'pid', 'valueattr' => (string)$pid],
@@ -256,7 +256,7 @@ function save(): void {
                     $result = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
                     if ($db->getSqlRowCount($result) == 1) {
                         [$mail] = $db->getSqlRow($result);
-                        $finishlink = ($conf['homeurl'] ?? '').'/index.php?name=help&amp;op=view&amp;id='.$pid;
+                        $finishlink = ($conf['homeurl'] ?? '').'/index.php?name=help&op=view&id='.$pid;
                         $subject = ($conf['sitename'] ?? '').' - '._HELP;
                         $message = str_replace('[text]', sprintf(_ADDMAILU, substr($admin[1] ?? '', 0, 25), _HELP, $finishlink), $conf['mtemp'] ?? '');
                         addMail($mail, $conf['adminmail'] ?? '', $subject, $message, 0, 3);
@@ -296,7 +296,7 @@ function delete(int $fid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=help', 'name=help&status=1', 'name=help&op=config', 'name=help&op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -315,7 +315,7 @@ function config(): void {
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['help']['letter'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=help&amp;op=configsave',
+        'action_url' => $afile.'.php?name=help&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -350,7 +350,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'],
+        'ops' => ['name=help', 'name=help&status=1', 'name=help&op=config', 'name=help&op=info'],
         'tabs' => [_HOME, _CLOSED, _PREFERENCES, _DOCS],
     ]);
 }

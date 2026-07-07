@@ -24,7 +24,7 @@ $labels = [
 function security(): void {
     global $afile, $labels, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS]]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $head = [
         ['content' => _TITLE],
@@ -44,17 +44,17 @@ function security(): void {
                 'trigger_label' => _EDITOR,
                 'items' => [
                     [
-                        'href' => $afile.'.php?name=security&amp;op=logview&amp;file='.urlencode($name),
+                        'href' => $afile.'.php?name=security&op=logview&file='.urlencode($name),
                         'label' => _DOCS,
                         'title' => _DOCS,
                     ],
                     [
-                        'href' => $afile.'.php?name=security&amp;op=download&amp;file='.urlencode($name),
+                        'href' => $afile.'.php?name=security&op=download&file='.urlencode($name),
                         'label' => _DOWN,
                         'title' => _DOWN,
                     ],
                     [
-                        'href' => $afile.'.php?name=security&amp;op=delete&amp;file='.urlencode($name).'&amp;token='.getSiteToken(),
+                        'href' => $afile.'.php?name=security&op=delete&file='.urlencode($name).'&token='.getSiteToken(),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -86,7 +86,7 @@ function security(): void {
 function logview(): void {
     global $labels, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS]]);
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file] ?? $file;
@@ -118,7 +118,7 @@ function banlist(): void {
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text');
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $tabone = '';
@@ -147,7 +147,7 @@ function banlist(): void {
                 $acts = $tpl->getHtmlFrag('popover', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
-                        'href' => $afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1&amp;token='.getSiteToken(),
+                        'href' => $afile.'.php?name=security&op=bansave&cidr='.urlencode($tcidr).'&hash='.urlencode($binfo[1]).'&time='.(int)$binfo[2].'&id=1&token='.getSiteToken(),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($tcidr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -228,7 +228,7 @@ function banlist(): void {
                 $acts = $tpl->getHtmlFrag('popover', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
-                        'href' => $afile.'.php?name=security&amp;op=bansave&amp;name='.urlencode((string)$binfo[0]).'&amp;time='.(int)($binfo[1] ?? 0).'&amp;id=3&amp;token='.getSiteToken(),
+                        'href' => $afile.'.php?name=security&op=bansave&name='.urlencode((string)$binfo[0]).'&time='.(int)($binfo[1] ?? 0).'&id=3&token='.getSiteToken(),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$binfo[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -402,7 +402,7 @@ function bansave(): void {
 function passwd(): void {
     global $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password'])
         ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEC_AUTH_INFO])
@@ -483,7 +483,7 @@ function passsave(): void {
 function config(): void {
     global $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getRandomString('10')));
     $floodhtml = $tpl->getHtmlFrag('select', [
@@ -644,7 +644,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'],
+        'ops' => ['name=security', 'name=security&op=banlist', 'name=security&op=passwd', 'name=security&op=config', 'name=security&op=info'],
         'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _DOCS],
     ]);
 }

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('content')) die('Illegal file acce
 function content(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
+    $ops = ['name=content', 'name=content&op=add', 'name=content&op=config', 'name=content&op=info'];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS]]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['content']['anum'] ?? 10;
@@ -19,14 +19,14 @@ function content(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
-            $view = (time() >= strtotime($time)) ? 'index.php?name=content&amp;op=view&amp;id='.$id : '';
+            $view = (time() >= strtotime($time)) ? 'index.php?name=content&op=view&id='.$id : '';
             $active = $view ? '1' : '0';
             $acts = $tpl->getHtmlFrag('edit-actions', [
                 'editor_label' => _EDITOR,
                 'view_link' => $view ? ['href' => $view, 'title' => _MVIEW, 'label' => _MVIEW] : [],
-                'edit_link' => ['href' => $afile.'.php?name=content&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
+                'edit_link' => ['href' => $afile.'.php?name=content&op=add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
                 'delete_link' => [
-                    'href' => $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=content&op=delete&id='.$id.'&token='.getSiteToken(),
                     'confirm_text' => _DELETE.' "'.$title.'"?',
                     'title' => _ONDELETE,
                     'label' => _ONDELETE,
@@ -35,8 +35,8 @@ function content(): void {
             ]);
             $tip = $tpl->getHtmlFrag('popover', [
                 'items' => [
-                    ['label' => _URL, 'value' => $conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id, 'is_last' => false],
-                    ['label' => _ORTYPEURL, 'value' => $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, 'is_last' => true],
+                    ['label' => _URL, 'value' => $conf['homeurl'].'/index.php?name=content&op=view&id='.$id, 'is_last' => false],
+                    ['label' => _ORTYPEURL, 'value' => $conf['homeurl'].'/index.php?go=rss&name=content&id='.$id, 'is_last' => true],
                 ],
             ]);
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -63,7 +63,7 @@ function content(): void {
             ],
             'rows_html' => $rows,
         ]);
-        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=content&amp;', 'table' => '_content', 'field' => 'id']);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=content&', 'table' => '_content', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', [
@@ -91,7 +91,7 @@ function add(): void {
         $refresh = getVar('post', 'refresh', 'num', 0);
     }
     setHead();
-    $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
+    $ops = ['name=content', 'name=content&op=add', 'name=content&op=config', 'name=content&op=info'];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $prev = [
@@ -151,7 +151,7 @@ function add(): void {
         ['nameattr' => 'token', 'valueattr' => getSiteToken()],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=content&amp;op=add',
+        'action_url' => $afile.'.php?name=content&op=add',
         'actions' => $actions,
         'hidden' => $hide,
         'rows' => $rows,
@@ -212,7 +212,7 @@ function delete(int $cid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
+    $ops = ['name=content', 'name=content&op=add', 'name=content&op=config', 'name=content&op=info'];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $rows = [
@@ -222,7 +222,7 @@ function config(): void {
         ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => $conf['content']['anump']])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=content&amp;op=configsave',
+        'action_url' => $afile.'.php?name=content&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -248,7 +248,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'],
+        'ops' => ['name=content', 'name=content&op=add', 'name=content&op=config', 'name=content&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }

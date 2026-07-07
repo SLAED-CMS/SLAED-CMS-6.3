@@ -14,7 +14,7 @@ function privat(): void {
         return;
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&op=config', 'name=privat&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repadminPrivateList',
         'content_html' => getAdminPrivateList(1),
@@ -25,7 +25,7 @@ function privat(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=privat', 'name=privat&op=config', 'name=privat&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['privat']['num'], 'is_config' => true])],
@@ -105,7 +105,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'],
+        'ops' => ['name=privat', 'name=privat&op=config', 'name=privat&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
 }

@@ -1,12 +1,12 @@
 {% if show_layout %}
 <div class="sl-monitor-wrapper">
-  <div id="monitor-sync-poller" hx-get="{{{ syncurl }}}" hx-trigger="every 4s" hx-swap="none"></div>
+  <div id="monitor-sync-poller" hx-get="{{ syncurl }}" hx-trigger="every 4s" hx-swap="none"></div>
 {% endif %}
 
 {% if show_layout %}
   <!-- ROW 1: Sys Status + Software -->
   <div class="sl-monitor-top-split">
-    <div id="monitor-status-panel" class="sl-monitor-card" hx-get="{{{ statusurl }}}" hx-trigger="load" hx-swap="outerHTML">
+    <div id="monitor-status-panel" class="sl-monitor-card" hx-get="{{ statusurl }}" hx-trigger="load" hx-swap="outerHTML">
       <div class="sl-monitor-panel-head">
         <span class="sl-monitor-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
       </div>
@@ -90,7 +90,7 @@
 
 {% if show_layout %}
   <!-- ROW 2: Traffic -->
-  <div id="monitor-traffic-panel" class="sl-monitor-bottom-grid" hx-get="{{{ trafficurl }}}" hx-trigger="load" hx-swap="outerHTML">
+  <div id="monitor-traffic-panel" class="sl-monitor-bottom-grid" hx-get="{{ trafficurl }}" hx-trigger="load" hx-swap="outerHTML">
     <div class="sl-monitor-card">
       <div class="sl-monitor-panel-head">
         <span class="sl-monitor-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>

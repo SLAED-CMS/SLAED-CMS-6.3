@@ -97,8 +97,8 @@ function news(): void {
             $date = ($conf['news']['date']) ? format_time($time) : '';
             $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
-            $edit = $afile.'.php?name=news&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;refer=2&amp;token='.$token;
+            $edit = $afile.'.php?name=news&op=add&id='.$id;
+            $del = $afile.'.php?name=news&op=actions&typ=d&id='.$id.'&refer=2&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
                 'columns' => $columns,
@@ -200,8 +200,8 @@ function liste(): void {
             'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
         if ($ismoder) {
-            $edit = $afile.'.php?name=news&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;refer=2&amp;token='.$token;
+            $edit = $afile.'.php?name=news&op=add&id='.$id;
+            $del = $afile.'.php?name=news&op=actions&typ=d&id='.$id.'&refer=2&token='.$token;
             $row += getTplEditMenu($edit, $del, $title);
         }
         $rows[] = $row;
@@ -290,8 +290,8 @@ function view(): void {
         $favorites = getFavoriteButton($id, $conf['name']);
         $voting = ($vote) ? $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$conf['name'], 'is_section' => true, 'content' => getVotingView($vote, $conf['name']), 'has_hr' => true]) : '';
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=news&amp;op=add&amp;id='.$id;
-        $del = $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=news&op=add&id='.$id;
+        $del = $afile.'.php?name=news&op=actions&typ=d&id='.$id.'&token='.getSiteToken();
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder' => $ismoder,
             'id' => $id,

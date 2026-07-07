@@ -1,6 +1,6 @@
 <li class="sl-tabs-item">
   <a
-    href="{% if href %}{{{ href }}}{% else %}#{% endif %}"
+    href="{% if href %}{{ href }}{% else %}#{% endif %}"
     {% if rel %}data-sl-tab-target="{{ rel }}"{% endif %}
     {% if title %}title="{{ title }}"{% endif %}
     class="sl-tabs-link{% if is_active %} sl-is-active{% endif %}"

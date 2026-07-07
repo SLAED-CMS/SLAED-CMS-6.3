@@ -38,7 +38,7 @@ function getNewsSearch(): string {
 function news(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
+    $ops = ['name=news', 'name=news&op=add', 'name=news&status=1', 'name=news&op=config', 'name=news&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $search = getVar('req', 'search', 'num', 2);
     $chng = (string)getVar('req', 'chng');
@@ -50,7 +50,7 @@ function news(): void {
     $sub = getNewsSearch();
     if (getVar('req', 'status', 'num', 0) == 1) {
         $status = '0';
-        $refer = '&amp;refer=1';
+        $refer = '&refer=1';
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2, 'subtitle_html' => $sub]);
     } else {
         $status = '1';
@@ -84,7 +84,7 @@ function news(): void {
             $wcnt .= ' AND ip LIKE :find';
         }
     }
-    $field = 'name=news'.($status === '0' ? '&amp;status=1' : '').'&amp;search='.$search.($chng !== '' ? '&amp;chng='.urlencode($chng) : '').'&amp;';
+    $field = 'name=news'.($status === '0' ? '&status=1' : '').'&search='.$search.($chng !== '' ? '&chng='.urlencode($chng) : '').'&';
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE '.$where.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
@@ -93,15 +93,15 @@ function news(): void {
             $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
             $items = [];
             if ($status && time() >= strtotime($time)) {
-                $items[] = ['href' => 'index.php?name=news&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=news&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
-            if ($vote) $items[] = ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$vote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
-            $items[] = ['href' => $afile.'.php?name=news&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            if ($vote) $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$vote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
+            $items[] = ['href' => $afile.'.php?name=news&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
             $items[] = [
-                'href' => $afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=news&op=actions&typ=d&id='.$id.$refer.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -150,7 +150,7 @@ function news(): void {
         $actions = $tpl->getHtmlFrag('inline-badge', ['is_action_label' => true, 'label' => _CHECKOP]).' '.$tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => $actopts])
             .$tpl->getHtmlFrag('button', ['button_type' => 'submit', 'submit_label' => _OK]);
         $body = $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=news&amp;op=actions',
+            'action_url' => $afile.'.php?name=news&op=actions',
             'hidden' => array_filter([
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
                 $status === '0' ? ['nameattr' => 'refer', 'valueattr' => '1'] : null,
@@ -220,7 +220,7 @@ function add(): void {
         $fix = getVar('post', 'fix', 'num', 0);
     }
     setHead();
-    $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
+    $ops = ['name=news', 'name=news&op=add', 'name=news&status=1', 'name=news&op=config', 'name=news&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
@@ -294,7 +294,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($id ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=news&amp;op=save',
+        'action_url' => $afile.'.php?name=news&op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -415,7 +415,7 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'];
+    $ops = ['name=news', 'name=news&op=add', 'name=news&status=1', 'name=news&op=config', 'name=news&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
@@ -444,7 +444,7 @@ function config(): void {
         ['label_html' => _C_23, 'field_html' => getTplRadioGroup(['name' => 'assoc', 'value' => (string)($conf['news']['assoc'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=news&amp;op=configsave',
+        'action_url' => $afile.'.php?name=news&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -487,7 +487,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'],
+        'ops' => ['name=news', 'name=news&op=add', 'name=news&status=1', 'name=news&op=config', 'name=news&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }

@@ -10,9 +10,9 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
-    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
     $wargo = $tpl->getHtmlFrag('link', [
-        'href' => $afile.'.php?name=security&amp;op=config',
+        'href' => $afile.'.php?name=security&op=config',
         'label' => _SCHEDULER_WARN_GO,
         'title' => _SCHEDULER_WARN_GO,
     ]);
@@ -65,25 +65,25 @@ function scheduler(): void {
         if ($note !== '') $tips[] = ['label' => _DESCRIPTION, 'value' => $note, 'is_last' => true];
         $title = $job['title'];
         $acts = [[
-            'href' => $afile.'.php?name=scheduler&amp;op=add&amp;job='.$name,
+            'href' => $afile.'.php?name=scheduler&op=add&job='.$name,
             'label' => _EDIT,
             'title' => _EDIT,
         ]];
         if ((int)($job['manual'] ?? 0) === 1) {
             $acts[] = [
-                'href' => $afile.'.php?name=scheduler&amp;op=run&amp;job='.$name.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=scheduler&op=run&job='.$name.'&token='.getSiteToken(),
                 'label' => _SCHEDULER_RUN,
                 'title' => _SCHEDULER_RUN,
             ];
         }
         $acts[] = [
-            'href' => $afile.'.php?name=scheduler&amp;op=unlock&amp;job='.$name.'&amp;token='.getSiteToken(),
+            'href' => $afile.'.php?name=scheduler&op=unlock&job='.$name.'&token='.getSiteToken(),
             'label' => _SCHEDULER_UNLOCK,
             'title' => _SCHEDULER_UNLOCK,
         ];
         if (($job['type'] ?? '') === 'custom') {
             $acts[] = [
-                'href' => $afile.'.php?name=scheduler&amp;op=delete&amp;job='.$name.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=scheduler&op=delete&job='.$name.'&token='.getSiteToken(),
                 'label' => _DELETE,
                 'title' => _DELETE,
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -125,7 +125,7 @@ function add(string $name = ''): void {
     $schedule = (string)($job['schedule'] ?? '');
     $info = $iscustom ? _SCHEDULER_URLINFO : _SCHEDULER_SYSINFO;
     $readonly = $isnew ? '' : ' readonly';
-    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['text' => $info]);
     $rows = [[
@@ -343,7 +343,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'],
+        'ops' => ['name=scheduler', 'name=scheduler&op=add', 'name=scheduler&op=info'],
         'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }

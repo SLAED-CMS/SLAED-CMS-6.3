@@ -13,10 +13,10 @@ function changelog(): void {
     setHead();
     $exporten = $conf['changelog']['exporten'] ?? true;
     $cont = getTplAdminTabs($exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=export&id=txt', 'name=changelog&op=export&id=md', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _DOCS],
     ] : [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
@@ -94,11 +94,11 @@ function config(): void {
     setHead();
     $exporten = $conf['changelog']['exporten'] ?? true;
     $cont = getTplAdminTabs($exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=export&id=txt', 'name=changelog&op=export&id=md', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _DOCS],
         'tab'  => 1,
     ] : [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'tab'  => 1,
     ]);
@@ -140,7 +140,7 @@ function config(): void {
     ];
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
     $body = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=changelog&amp;op=configsave',
+        'action_url' => $afile.'.php?name=changelog&op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken('changelog')],
         ],
@@ -192,10 +192,10 @@ function info(): void {
     global $conf;
     $exporten = $conf['changelog']['exporten'] ?? true;
     setTplAdminInfoPage($exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=export&id=txt', 'name=changelog&op=export&id=md', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _DOCS],
     ] : [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&op=config', 'name=changelog&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
 }

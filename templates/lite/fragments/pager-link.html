@@ -1,15 +1,15 @@
 {% if href %}
   <a
-    href="{{{ href }}}"
+    href="{{ href }}"
     title="{{ title }}"
     class="sl-but-mini"
   >{% if is_nav and icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% else %}{{ label }}{% endif %}</a>
 {% elseif query %}
   <a
-    href="{{{ query }}}"
+    href="{{ query }}"
     title="{{ title }}"
     class="sl-but-mini"
-    hx-get="{{{ query }}}"
+    hx-get="{{ query }}"
     hx-target="#{{ target_id }}"
     hx-swap="innerHTML"
     hx-push-url="{% if push_url %}{{ push_url }}{% else %}false{% endif %}"

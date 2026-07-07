@@ -73,16 +73,16 @@ function comments(): void {
     $chng = trim((string)getVar('get', 'chng'));
     $subtitle = getCommentsSearch();
     $baseq = 'name=comments';
-    if ($modul !== '') $baseq .= '&amp;modul='.rawurlencode($modul);
-    $baseq .= '&amp;search='.$search;
-    if ($chng !== '') $baseq .= '&amp;chng='.rawurlencode($chng);
-    $curq = $baseq.($status ? '&amp;status=1' : '');
+    if ($modul !== '') $baseq .= '&modul='.rawurlencode($modul);
+    $baseq .= '&search='.$search;
+    if ($chng !== '') $baseq .= '&chng='.rawurlencode($chng);
+    $curq = $baseq.($status ? '&status=1' : '');
     $cont = getTplAdminTabs([
         'ops' => [
             $baseq,
-            $baseq.'&amp;status=1',
-            $curq.'&amp;op=config',
-            $curq.'&amp;op=info',
+            $baseq.'&status=1',
+            $curq.'&op=config',
+            $curq.'&op=info',
         ],
         'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
         'tab' => $status,
@@ -124,7 +124,7 @@ function comments(): void {
                 $wcnt .= ' AND ip LIKE :find';
             }
         }
-    $field = $curq.'&amp;';
+    $field = $curq.'&';
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name FROM '.PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE '.$where.' ORDER BY s.time '.$order.' LIMIT '.$offset.', '.$anum, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
@@ -138,17 +138,17 @@ function comments(): void {
             $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
             $act = ((int)$com_status) ? 0 : 1;
             $items = [
-                ['href' => 'index.php?name='.$com_modul.'&amp;op=view&amp;id='.$cid.'#'.$id, 'label' => _MVIEW, 'title' => _MVIEW],
-                ['href' => $afile.'.php?'.$curq.'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$cid.'#'.$id, 'label' => _MVIEW, 'title' => _MVIEW],
+                ['href' => $afile.'.php?'.$curq.'&op=edit&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
             ];
             $acttxt = ((int)$com_status) ? _DEACTIVATE : _ACTIVATE;
             $items[] = [
-                'href' => $afile.'.php?'.$curq.'&amp;op=approve&amp;id='.$id.'&amp;typ='.$act.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?'.$curq.'&op=approve&id='.$id.'&typ='.$act.'&token='.getSiteToken(),
                 'label' => $acttxt,
                 'title' => $acttxt,
             ];
             $items[] = [
-                'href' => $afile.'.php?'.$curq.'&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?'.$curq.'&op=delete&id='.$id.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($comment).'&quot;?\')"',
@@ -199,7 +199,7 @@ function comments(): void {
             'where_params' => $pars,
         ]);
         $body = $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=comments&amp;op=actions',
+            'action_url' => $afile.'.php?name=comments&op=actions',
             'hidden' => array_filter([
                 ['nameattr' => 'token', 'valueattr' => getSiteToken()],
                 ['nameattr' => 'status', 'valueattr' => (string)$status],
@@ -247,16 +247,16 @@ function edit(): void {
     $chng = (string)getVar('get', 'chng', 'raw', '');
     setHead();
     $baseq = 'name=comments';
-    if ($modul !== '') $baseq .= '&amp;modul='.rawurlencode($modul);
-    $baseq .= '&amp;search='.$search;
-    if ($chng !== '') $baseq .= '&amp;chng='.rawurlencode($chng);
-    $curq = $baseq.($status ? '&amp;status=1' : '');
+    if ($modul !== '') $baseq .= '&modul='.rawurlencode($modul);
+    $baseq .= '&search='.$search;
+    if ($chng !== '') $baseq .= '&chng='.rawurlencode($chng);
+    $curq = $baseq.($status ? '&status=1' : '');
     $cont = getTplAdminTabs([
         'ops' => [
             $baseq,
-            $baseq.'&amp;status=1',
-            $curq.'&amp;op=config',
-            $curq.'&amp;op=info',
+            $baseq.'&status=1',
+            $curq.'&op=config',
+            $curq.'&op=info',
         ],
         'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
         'tab' => $status,
@@ -286,7 +286,7 @@ function edit(): void {
         ],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?'.$curq.'&amp;op=editsave',
+        'action_url' => $afile.'.php?'.$curq.'&op=editsave',
         'hidden' => array_filter([
             ['nameattr' => 'id', 'valueattr' => (string)$id],
             ['nameattr' => 'name', 'valueattr' => 'comments'],
@@ -371,7 +371,7 @@ function actions(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['comments']['num']])],
@@ -407,7 +407,7 @@ function config(): void {
         ['label_html' => _VWEB, 'field_html' => getTplRadioGroup(['name' => 'web', 'value' => (string)(int)$conf['comments']['web'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=comments&amp;op=save',
+        'action_url' => $afile.'.php?name=comments&op=save',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'comments'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
@@ -511,7 +511,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'],
+        'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
         'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _DOCS],
     ]);
 }

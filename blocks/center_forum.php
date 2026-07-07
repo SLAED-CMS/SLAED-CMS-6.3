@@ -23,7 +23,7 @@ $rows = '';
 $result = getForumTopics('id, uid, name, title, time, comments, counter, luid, lname, lpost, ltime, status', '97, 98', 15);
 while ([$id, $uid, $uname, $title, $time, $comments, $counter, $luid, $lname, $lpost, $ltime, $status] = $db->getSqlRow($result)) {
     $thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'title' => $title]);
-    if (!($conf['rewrite'] ?? false)) $thref .= '&amp;last';
+    if (!($conf['rewrite'] ?? false)) $thref .= '&last';
     $title = getDecodedText($title);
 
     $tflag = getForumTopicState((int)$status, $time, $ltime, (int)$comments, (int)$pop, $ulast, $ismod);

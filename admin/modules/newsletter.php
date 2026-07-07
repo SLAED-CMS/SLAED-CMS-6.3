@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function newsletter(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=config', 'name=newsletter&op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS]]);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $rows = [];
@@ -33,11 +33,11 @@ function newsletter(): void {
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
-                            'href' => $afile.'.php?name=newsletter&amp;op=add&amp;id='.$id,
+                            'href' => $afile.'.php?name=newsletter&op=add&id='.$id,
                             'label' => _FULLEDIT,
                             'title' => _FULLEDIT,
                         ], [
-                            'href' => $afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                            'href' => $afile.'.php?name=newsletter&op=delete&id='.$id.'&token='.getSiteToken(),
                             'label' => _ONDELETE,
                             'title' => _ONDELETE,
                             'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -78,7 +78,7 @@ function add(): void {
     }
     $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=config', 'name=newsletter&op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
@@ -247,7 +247,7 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=newsletter', false, 302, _SUCCSAVE);
     } elseif ($warn) {
-        setRedirect($afile.'.php?name=newsletter&amp;op=add'.($nid ? '&amp;id='.$nid : ''), false, 302, _TOKENMISS, true);
+        setRedirect($afile.'.php?name=newsletter&op=add'.($nid ? '&id='.$nid : ''), false, 302, _TOKENMISS, true);
     } else {
         add();
     }
@@ -264,7 +264,7 @@ function delete(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=config', 'name=newsletter&op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -298,7 +298,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'],
+        'ops' => ['name=newsletter', 'name=newsletter&op=add', 'name=newsletter&op=config', 'name=newsletter&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }

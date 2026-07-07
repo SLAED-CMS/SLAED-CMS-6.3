@@ -10,7 +10,7 @@ function money(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
+        'ops' => ['name=money', 'name=money&op=add', 'name=money&op=config', 'name=money&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
     if (getVar('get', 'send', 'num', 0)) {
@@ -56,22 +56,22 @@ function money(): void {
             ];
             $items = [
                 [
-                    'href' => $afile.'.php?name=money&amp;op=activate&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=money&op=activate&id='.$id.'&act='.$act.'&token='.getSiteToken(),
                     'label' => $status ? _DEACTIVATE : _ACTIVATE,
                     'title' => $status ? _DEACTIVATE : _ACTIVATE,
                 ],
                 [
-                    'href' => $afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$rnum,
+                    'href' => $afile.'.php?name=money&op=invoice&id='.$id.'&rnum='.$rnum,
                     'label' => _RECHN_B,
                     'title' => _RECHN_B,
                 ],
                 [
-                    'href' => $afile.'.php?name=money&amp;op=add&amp;id='.$id,
+                    'href' => $afile.'.php?name=money&op=add&id='.$id,
                     'label' => _FULLEDIT,
                     'title' => _FULLEDIT,
                 ],
                 [
-                    'href' => $afile.'.php?name=money&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=money&op=delete&id='.$id.'&token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\')"',
@@ -117,7 +117,7 @@ function money(): void {
         $body .= getTplPager([
             'limit' => $anum,
             'maxpg' => $anump,
-            'url' => 'name=money&amp;',
+            'url' => 'name=money&',
             'table' => '_money',
             'field' => 'id',
         ]);
@@ -148,7 +148,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
+        'ops' => ['name=money', 'name=money&op=add', 'name=money&op=config', 'name=money&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
@@ -223,7 +223,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=money&amp;op=save',
+        'action_url' => $afile.'.php?name=money&op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -354,7 +354,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
+        'ops' => ['name=money', 'name=money&op=add', 'name=money&op=config', 'name=money&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 2,
     ]);
@@ -377,7 +377,7 @@ function config(): void {
         ['label_html' => _MA_14, 'field_html' => getTplTextarea(['id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_14, 'required' => '1']), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=money&amp;op=configsave',
+        'action_url' => $afile.'.php?name=money&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -417,7 +417,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'],
+        'ops' => ['name=money', 'name=money&op=add', 'name=money&op=config', 'name=money&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }

@@ -1,7 +1,7 @@
 <form
   {% if form_name %}name="{{ form_name }}"{% endif %}
   {% if form_id %}id="{{ form_id }}"{% endif %}
-  {% if action %}action="{{{ action }}}"{% endif %}
+  {% if action %}action="{{ action }}"{% endif %}
   method="{% if method %}{{ method }}{% else %}post{% endif %}"
   {% if form_class or is_block_languages %}
   class="

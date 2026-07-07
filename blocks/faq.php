@@ -15,7 +15,7 @@ $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_faq WHERE time <
 while (list($fid, $title) = $db->getSqlRow($result)) {
     $title = getDecodedText($title);
     $content .= $tpl->getHtmlFrag('block-list-item', [
-        'url' => 'index.php?name=faq&amp;op=view&amp;id='.$fid,
+        'url' => getSeoUrl(['name' => 'faq', 'op' => 'view', 'id' => $fid]),
         'title' => $title,
         'label' => $title,
         'target_attr' => '',

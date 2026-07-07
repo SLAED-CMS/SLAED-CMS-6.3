@@ -31,7 +31,7 @@ function lang(): void {
     }
 
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
     $rows = [];
     $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
         'cells' => [
@@ -43,8 +43,8 @@ function lang(): void {
             ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                 'trigger_label' => _FUNCTIONS,
                 'items' => [
-                    ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
-                    ['href' => $afile.'.php?name=lang&amp;op=fileedit', 'label' => _MODUL, 'title' => _FULLEDIT],
+                    ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
+                    ['href' => $afile.'.php?name=lang&op=fileedit', 'label' => _MODUL, 'title' => _FULLEDIT],
                 ],
             ])],
         ],
@@ -62,8 +62,8 @@ function lang(): void {
         $view = $who_view[$mod[$i]] ?? _MVALL;
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $items = [];
-        if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT];
-        if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], 'label' => _MODUL, 'title' => _FULLEDIT];
+        if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i].'&typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT];
+        if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i], 'label' => _MODUL, 'title' => _FULLEDIT];
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$a],
@@ -94,7 +94,7 @@ function lang(): void {
 function fileedit(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -260,7 +260,7 @@ function save(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => getTplLanguageOptions($conf['lang']['lang'], 1), 'is_config' => true]);
     $rows = [
@@ -300,7 +300,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'],
+        'ops' => ['name=lang', 'name=lang&op=config', 'name=lang&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
 }

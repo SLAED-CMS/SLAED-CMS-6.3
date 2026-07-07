@@ -50,7 +50,7 @@ function checkAdminlast(int $aid): bool {
 function admins(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
     $head = [
         ['content' => _NICKNAME],
         ['content' => _URANK],
@@ -77,12 +77,12 @@ function admins(): void {
             'trigger_label' => _EDITOR,
             'items' => [
                 [
-                    'href' => $afile.'.php?name=admins&amp;op=add&amp;id='.$aid,
+                    'href' => $afile.'.php?name=admins&op=add&id='.$aid,
                     'label' => _FULLEDIT,
                     'title' => _FULLEDIT,
                 ],
                 [
-                    'href' => $afile.'.php?name=admins&amp;op=delete&amp;aid='.$aid.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=admins&op=delete&aid='.$aid.'&token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -145,7 +145,7 @@ function add(): void {
     $need = $aid ? '' : ' required';
     $check = getVar('post', 'mail', 'bool', 0) ? '1' : '';
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     $items = '';
     $mods = getAdminModuleNames((string)$mods);
@@ -303,7 +303,7 @@ function add(): void {
         'is_full' => true,
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=admins&amp;op=save',
+        'action_url' => $afile.'.php?name=admins&op=save',
         'hidden' => [
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'aid', 'valueattr' => (string)$aid],
@@ -417,7 +417,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'],
+        'ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'],
         'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }

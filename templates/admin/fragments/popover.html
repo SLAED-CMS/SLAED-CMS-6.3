@@ -18,12 +18,12 @@
           {% if edit_link %}
             <li>{% include 'fragments/link.html' with edit_link %}</li>
           {% elseif edit_href %}
-            <li><a href="{{{ edit_href }}}" title="{{ edit_text }}">{{ edit_text }}</a></li>
+            <li><a href="{{ edit_href }}" title="{{ edit_text }}">{{ edit_text }}</a></li>
           {% endif %}
           {% if delete_link %}
             <li>{% include 'fragments/link.html' with delete_link %}</li>
           {% elseif delete_href %}
-            <li><a href="{{{ delete_href }}}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a></li>
+            <li><a href="{{ delete_href }}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a></li>
           {% endif %}
         {% endif %}
       </ul>

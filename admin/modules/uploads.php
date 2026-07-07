@@ -33,10 +33,10 @@ function uploads(): void {
     global $afile, $conf, $stop, $tpl;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
-    $token = '&amp;token='.getSiteToken();
+    $token = '&token='.getSiteToken();
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
         'subtitle_html' => getUploadsSearch(),
     ]);
@@ -168,7 +168,7 @@ function tplconfig(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 1,
         'subtitle_html' => getUploadsSearch(),
@@ -226,7 +226,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
         'tab' => 2,
         'subtitle_html' => getUploadsSearch(),
@@ -361,7 +361,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'],
+        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
         'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
         'subtitle_html' => getUploadsSearch(),
     ]);

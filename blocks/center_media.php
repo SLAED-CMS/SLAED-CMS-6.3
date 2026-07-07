@@ -18,7 +18,7 @@ $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_files WHERE time
 while (list($id, $title) = $db->getSqlRow($result)) {
     $title = getDecodedText($title);
     $col1 .= $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=files&amp;op=view&amp;id='.$id,
+        'href' => getSeoUrl(['name' => 'files', 'op' => 'view', 'id' => $id]),
         'title' => $title,
         'label' => cutstr($title, $strip),
         'is_line_break' => true,
@@ -31,7 +31,7 @@ $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_pages WHERE time
 while (list($pid, $title) = $db->getSqlRow($result)) {
     $title = getDecodedText($title);
     $col2 .= $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=pages&amp;op=view&amp;id='.$pid,
+        'href' => getSeoUrl(['name' => 'pages', 'op' => 'view', 'id' => $pid]),
         'title' => $title,
         'label' => cutstr($title, $strip),
         'is_line_break' => true,
@@ -44,7 +44,7 @@ $result = $db->getSqlQuery('SELECT id, title, subtitle FROM '.PREFIX_DB."_media 
 while (list($id, $title, $subtitle) = $db->getSqlRow($result)) {
     $mtitle = getDecodedText($title.' '.urldecode($conf['defis']).' '.$subtitle);
     $col3 .= $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=media&amp;op=view&amp;id='.$id,
+        'href' => getSeoUrl(['name' => 'media', 'op' => 'view', 'id' => $id]),
         'title' => $mtitle,
         'label' => cutstr($mtitle, $strip),
         'is_line_break' => true,

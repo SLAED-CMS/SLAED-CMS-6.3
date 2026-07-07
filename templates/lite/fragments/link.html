@@ -1,5 +1,5 @@
 <a
-  {% if href %}href="{{{ href }}}"{% endif %}
+  {% if href %}href="{{ href }}"{% endif %}
   title="{{ title }}"
 
   {% if class or chip_tone or is_login_button or is_login_profile or is_navi_button or is_navi_lower or is_plus or is_shop_add or is_shop_checkout or is_comment or is_read or is_card_image or is_card_comment or is_card_id or is_card_category or is_card_read or is_media_ed2k or is_media_http or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_cart_checkout or is_category or is_last or is_module or is_related_image or is_main_image or is_main_more or is_cat_image or is_cat_name or is_top_hidden or is_author %}
@@ -53,7 +53,7 @@
   {% if link_attr %}{{{ link_attr }}}{% endif %}
 
   {% if is_htmx %}
-    hx-get="{{{ href }}}"
+    hx-get="{{ href }}"
     hx-target="{{ hx_target }}"
     hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}"
     hx-push-url="false"

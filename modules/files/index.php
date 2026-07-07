@@ -92,8 +92,8 @@ function files(): void {
             $iso    = ($conf['files']['date']) ? date('c', strtotime($time)) : '';
             $hits   = ($conf['files']['hits']) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _FILEHITS, 'label' => $hits, 'is_download' => true]) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
-            $edit = $afile.'.php?name=files&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=files&amp;op=files_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=files&op=add&id='.$id;
+            $del = $afile.'.php?name=files&op=files_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -189,8 +189,8 @@ function liste(): void {
             'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
         if ($ismoder) {
-            $edit = $afile.'.php?name=files&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=files&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=files&op=add&id='.$id;
+            $del = $afile.'.php?name=files&op=delete&id='.$id.'&refer=1&token='.$token;
             $row += getTplEditMenu($edit, $del, $title);
         }
         $rows[] = $row;
@@ -270,8 +270,8 @@ function view(): void {
         $rating    = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=files&amp;op=add&amp;id='.$id;
-        $del = $afile.'.php?name=files&amp;op=files_delete&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=files&op=add&id='.$id;
+        $del = $afile.'.php?name=files&op=files_delete&id='.$id.'&token='.getSiteToken();
         if (is_user() || $conf['files']['down'] == '1') {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
             $download = $tpl->getHtmlPart('form-wrap', [
@@ -476,7 +476,7 @@ function broken(): void {
     if ($conf['files']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'secs' => 5]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&op=view&id='.$id, 'secs' => 5]);
         echo getModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
         setFoot();
     } else {

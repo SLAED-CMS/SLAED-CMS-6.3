@@ -71,33 +71,33 @@ function clients(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $a = ($num) ? $offset+1 : 1;
-    $_ops = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $subtabs = [
-        ['href' => $afile.'.php?name=shop&amp;op=clients', 'label' => _NEW, 'title' => _NEW],
-        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=1', 'label' => _AKTIVE, 'title' => _AKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=2', 'label' => _DEAKTIVE, 'title' => _DEAKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=clientadd', 'label' => _ADD, 'title' => _ADD],
+        ['href' => $afile.'.php?name=shop&op=clients', 'label' => _NEW, 'title' => _NEW],
+        ['href' => $afile.'.php?name=shop&op=clients&status=1', 'label' => _AKTIVE, 'title' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&op=clients&status=2', 'label' => _DEAKTIVE, 'title' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&op=clientadd', 'label' => _ADD, 'title' => _ADD],
     ];
     if ($csearch) {
         $sqlstatus = 'status != \'2\'';
-        $field = 'name=shop&amp;op=clients&amp;';
+        $field = 'name=shop&op=clients&';
         $refer = '';
         $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status = \'1\'';
-        $field = 'name=shop&amp;op=clients&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=clients&status=1&';
+        $refer = '&refer=1';
         $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 2) {
         $sqlstatus = 'status = \'0\'';
-        $field = 'name=shop&amp;op=clients&amp;status=2&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=clients&status=2&';
+        $refer = '&refer=1';
         $subtab = 2;
     } else {
         $sqlstatus = 'status = \'2\'';
-        $field = 'name=shop&amp;op=clients&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=clients&';
+        $refer = '&refer=1';
         $subtab = 0;
     }
     $tabs = '';
@@ -155,17 +155,17 @@ function clients(): void {
             ];
             $items = [
                 [
-                    'href' => $afile.'.php?name=shop&amp;op=clientset&amp;id='.$cid.$refer.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=shop&op=clientset&id='.$cid.$refer.'&token='.getSiteToken(),
                     'label' => $cactive ? _DEACTIVATE : _ACTIVATE,
                     'title' => $cactive ? _DEACTIVATE : _ACTIVATE,
                 ],
                 [
-                    'href' => $afile.'.php?name=shop&amp;op=clientadd&amp;cid='.$cid,
+                    'href' => $afile.'.php?name=shop&op=clientadd&cid='.$cid,
                     'label' => _FULLEDIT,
                     'title' => _FULLEDIT,
                 ],
                 [
-                    'href' => $afile.'.php?name=shop&amp;op=clientdel&amp;id='.$cid.$refer.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=shop&op=clientdel&id='.$cid.$refer.'&token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -238,7 +238,7 @@ function clientadd(): void {
         $cactive = getVar('post', 'cactive', 'num');
     }
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
@@ -247,10 +247,10 @@ function clientadd(): void {
     ]);
     $tabs = '';
     foreach ([
-        ['href' => $afile.'.php?name=shop&amp;op=clients', 'label' => _NEW],
-        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=1', 'label' => _AKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=clients&amp;status=2', 'label' => _DEAKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=clientadd', 'label' => _ADD],
+        ['href' => $afile.'.php?name=shop&op=clients', 'label' => _NEW],
+        ['href' => $afile.'.php?name=shop&op=clients&status=1', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&op=clients&status=2', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&op=clientadd', 'label' => _ADD],
     ] as $idx => $link) {
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
             'href' => $link['href'],
@@ -410,22 +410,22 @@ function products(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $subtabs = [
-        ['href' => $afile.'.php?name=shop&amp;op=products', 'label' => _AKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=products&amp;status=1', 'label' => _DEAKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=productadd', 'label' => _ADD],
+        ['href' => $afile.'.php?name=shop&op=products', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&op=products&status=1', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&op=productadd', 'label' => _ADD],
     ];
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=0';
-        $field = 'name=shop&amp;op=products&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=products&status=1&';
+        $refer = '&refer=1';
         $subtab = 1;
     } else {
         $sqlstatus = 'status=1';
-        $field = 'name=shop&amp;op=products&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=products&';
+        $refer = '&refer=1';
         $subtab = 0;
     }
     $tabs = '';
@@ -461,14 +461,14 @@ function products(): void {
             $typ = ($pactive) ? '0' : '1';
             $items = [];
             if ($pactive && time() >= strtotime($ptime)) {
-                $items[] = ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$pid, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=shop&op=view&id='.$pid, 'label' => _MVIEW, 'title' => _MVIEW];
             }
             if ($pvote) {
-                $items[] = ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
+                $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$pvote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
             }
-            $items[] = ['href' => $afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer.'&amp;token='.getSiteToken(), 'label' => $pactive ? _DEACTIVATE : _ACTIVATE, 'title' => $pactive ? _DEACTIVATE : _ACTIVATE];
-            $items[] = ['href' => $afile.'.php?name=shop&op=productadd&amp;id='.$pid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
-            $items[] = ['href' => $afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer.'&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=a'.$typ.'&id='.$pid.$refer.'&token='.getSiteToken(), 'label' => $pactive ? _DEACTIVATE : _ACTIVATE, 'title' => $pactive ? _DEACTIVATE : _ACTIVATE];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productadd&id='.$pid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=d&id='.$pid.$refer.'&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'];
             $prows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
@@ -549,7 +549,7 @@ function productadd(): void {
         $pactive = getVar('post', 'pactive', 'num');
     }
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
@@ -559,9 +559,9 @@ function productadd(): void {
     ]);
     $tabs = '';
     foreach ([
-        ['href' => $afile.'.php?name=shop&amp;op=products', 'label' => _AKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=products&amp;status=1', 'label' => _DEAKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=productadd', 'label' => _ADD],
+        ['href' => $afile.'.php?name=shop&op=products', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&op=products&status=1', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&op=productadd', 'label' => _ADD],
     ] as $idx => $link) {
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
             'href' => $link['href'],
@@ -720,28 +720,28 @@ function partners(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $subtabs = [
-        ['href' => $afile.'.php?name=shop&amp;op=partners', 'label' => _NEW],
-        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=1', 'label' => _AKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=2', 'label' => _DEAKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=partneradd', 'label' => _ADD],
+        ['href' => $afile.'.php?name=shop&op=partners', 'label' => _NEW],
+        ['href' => $afile.'.php?name=shop&op=partners&status=1', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&op=partners&status=2', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&op=partneradd', 'label' => _ADD],
     ];
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=1';
-        $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=partners&status=1&';
+        $refer = '&refer=1';
         $subtab = 1;
     } elseif (getVar('get', 'status', 'num') == 2) {
         $sqlstatus = 'status=0';
-        $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=partners&status=1&';
+        $refer = '&refer=1';
         $subtab = 2;
     } else {
         $sqlstatus = 'status=2';
-        $field = 'name=shop&amp;op=partners&amp;';
-        $refer = '&amp;refer=1';
+        $field = 'name=shop&op=partners&';
+        $refer = '&refer=1';
         $subtab = 0;
     }
     $tabs = '';
@@ -781,10 +781,10 @@ function partners(): void {
                 $nick = _ANONYM;
             }
             $items = [
-                ['href' => $afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer.'&amp;token='.getSiteToken(), 'label' => $paactive ? _DEACTIVATE : _ACTIVATE, 'title' => $paactive ? _DEACTIVATE : _ACTIVATE],
-                ['href' => $afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, 'label' => _MVIEW, 'title' => _MVIEW],
-                ['href' => $afile.'.php?name=shop&op=partneradd&amp;paid='.$paid, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer.'&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=shop&op=partnerset&id='.$paid.$refer.'&token='.getSiteToken(), 'label' => $paactive ? _DEACTIVATE : _ACTIVATE, 'title' => $paactive ? _DEACTIVATE : _ACTIVATE],
+                ['href' => $afile.'.php?name=shop&op=partnerinfo&paid='.$paid, 'label' => _MVIEW, 'title' => _MVIEW],
+                ['href' => $afile.'.php?name=shop&op=partneradd&paid='.$paid, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=shop&op=partnerdel&id='.$paid.$refer.'&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ];
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -848,7 +848,7 @@ function partneradd(): void {
         $paactive = getVar('post', 'paactive', 'num');
     }
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
@@ -858,10 +858,10 @@ function partneradd(): void {
     ]);
     $tabs = '';
     foreach ([
-        ['href' => $afile.'.php?name=shop&amp;op=partners', 'label' => _NEW],
-        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=1', 'label' => _AKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=partners&amp;status=2', 'label' => _DEAKTIVE],
-        ['href' => $afile.'.php?name=shop&amp;op=partneradd', 'label' => _ADD],
+        ['href' => $afile.'.php?name=shop&op=partners', 'label' => _NEW],
+        ['href' => $afile.'.php?name=shop&op=partners&status=1', 'label' => _AKTIVE],
+        ['href' => $afile.'.php?name=shop&op=partners&status=2', 'label' => _DEAKTIVE],
+        ['href' => $afile.'.php?name=shop&op=partneradd', 'label' => _ADD],
     ] as $idx => $link) {
         $tabs .= $tpl->getHtmlFrag('tabs-link', [
             'href' => $link['href'],
@@ -963,7 +963,7 @@ function partnerinfo(): void {
     $a = 0;
     $partsumges = 0;
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 2, 'subtitle_html' => buildShopSearchBox()]);
     $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
@@ -1183,7 +1183,7 @@ function export(): void {
         }
     } else {
         setHead();
-        $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+        $_ops  = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
         $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
         $cont = getTplAdminTabs(['ops' => $_ops, 'tabs' => $_lang, 'tab' => 3, 'subtitle_html' => buildShopSearchBox()]);
         $cont .= checkPerms(UPLOADS_DIR.'/shop/temp');
@@ -1264,7 +1264,7 @@ function export(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $_ops = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
+    $_ops = ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs([
         'ops' => $_ops,
@@ -1376,7 +1376,7 @@ function save(): void {
             'assoc' => getVar('post', 'assoc', 'num', (int)($conf['shop']['assoc'] ?? 1)),
             'mailsend' => getVar('post', 'mailsend', 'num', (int)($conf['shop']['mailsend'] ?? 1)),
             'part' => getVar('post', 'part', 'num', (int)($conf['shop']['part'] ?? 1)),
-            'partlink' => $conf['homeurl'].'/index.php?name=shop&amp;op=part&amp;id=[id]',
+            'partlink' => $conf['homeurl'].'/index.php?name=shop&op=part&id=[id]',
             'sende' => getVar('post', 'sende', 'text', $conf['shop']['sende'] ?? ''),
             'userinfo' => getVar('post', 'userinfo', 'text', $conf['shop']['userinfo'] ?? ''),
             'partinfo' => getVar('post', 'partinfo', 'text', $conf['shop']['partinfo'] ?? ''),
@@ -1390,7 +1390,7 @@ function save(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'],
+        'ops' => ['name=shop&op=clients', 'name=shop&op=products', 'name=shop&op=partners', 'name=shop&op=export', 'name=shop&op=config', 'name=shop&op=info'],
         'tabs' => [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _DOCS],
         'subtitle_html' => buildShopSearchBox(),
     ]);

@@ -15,14 +15,14 @@ function jokes(): void {
     $offset = (int)(($num - 1) * $anum);
     if (getVar('get', 'status', 'num', 0) == 1) {
         $status = '0';
-        $field = 'name=jokes&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 2]);
+        $field = 'name=jokes&status=1&';
+        $refer = '&refer=1';
+        $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&op=add', 'name=jokes&status=1', 'name=jokes&op=config', 'name=jokes&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 2]);
     } else {
         $status = '1';
-        $field = 'name=jokes&amp;';
+        $field = 'name=jokes&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS]]);
+        $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&op=add', 'name=jokes&status=1', 'name=jokes&op=config', 'name=jokes&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.ip, c.title, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.status = :status ORDER BY j.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -31,14 +31,14 @@ function jokes(): void {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $items = [];
             if ($status && time() >= strtotime($date)) {
-                $items[] = ['href' => 'index.php?name=jokes&amp;cat='.$cat.'#'.$jokeid, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=jokes&cat='.$cat.'#'.$jokeid, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
-            $items[] = ['href' => $afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=jokes&op=add&id='.$jokeid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
             $items[] = [
-                'href' => $afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=jokes&op=delete&id='.$jokeid.$refer.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -99,7 +99,7 @@ function add(): void {
         $joke = getVar('post', 'joke', 'text', '');
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&op=add', 'name=jokes&status=1', 'name=jokes&op=config', 'name=jokes&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($joke) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $joke, 'mod' => 'all']);
     $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cat]);
@@ -131,7 +131,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($jokeid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=jokes&amp;op=save',
+        'action_url' => $afile.'.php?name=jokes&op=save',
         'hidden' => [
             ['nameattr' => 'jokeid', 'valueattr' => (string)$jokeid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -201,7 +201,7 @@ function delete(int $fid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => ['name=jokes', 'name=jokes&op=add', 'name=jokes&status=1', 'name=jokes&op=config', 'name=jokes&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/jokes.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -220,7 +220,7 @@ function config(): void {
         ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['jokes']['rate'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=jokes&amp;op=configsave',
+        'action_url' => $afile.'.php?name=jokes&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -255,7 +255,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'],
+        'ops' => ['name=jokes', 'name=jokes&op=add', 'name=jokes&status=1', 'name=jokes&op=config', 'name=jokes&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS],
     ]);
 }

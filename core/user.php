@@ -77,16 +77,16 @@ function setMessageShow(): string {
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
-                    if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVADMIN, $exp, $afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
-                    if (is_moder()) $body .= $adminNote(_MVUSERS, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVUSERS, $exp, $afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
-                    if (is_moder()) $body .= $adminNote(_MVANON, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVANON, $exp, $afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 } elseif ($view == 1) {
-                    if (is_moder()) $body .= $adminNote(_MVALL, $exp, $afile.'.php?op=msg_add&amp;id='.$mid);
+                    if (is_moder()) $body .= $adminNote(_MVALL, $exp, $afile.'.php?op=msg_add&id='.$mid);
                     return $messageBox($title, $body);
                 }
             }
@@ -104,7 +104,7 @@ function getUserNav(): string {
     $navs = [[_HOME, _RETURNACCOUNT, 'index.php?name=account', 'account/home.png']];
 
     if ($conf['privat']['act']) {
-        $navs[] = [_MESSAGES, _PRIVAT, 'index.php?name=account&amp;op=privat', 'account/messages.png'];
+        $navs[] = [_MESSAGES, _PRIVAT, 'index.php?name=account&op=privat', 'account/messages.png'];
     }
     if (is_active('clients') && isModGroup('clients')) {
         getLang('clients');
@@ -112,9 +112,9 @@ function getUserNav(): string {
     }
     if (is_active('shop')) {
         getLang('shop');
-        $navs[] = [_CLIENT, _CLIENTINFO, 'index.php?name=shop&amp;op=clients', 'account/clients.png'];
+        $navs[] = [_CLIENT, _CLIENTINFO, 'index.php?name=shop&op=clients', 'account/clients.png'];
         if (($conf['shop']['part'] ?? 0) === 1) {
-            $navs[] = [_PARTNER, _PARTNERINFO, 'index.php?name=shop&amp;op=partners', 'account/partners.png'];
+            $navs[] = [_PARTNER, _PARTNERINFO, 'index.php?name=shop&op=partners', 'account/partners.png'];
         }
     }
     if (is_active('help') && isModGroup('help')) {
@@ -122,11 +122,11 @@ function getUserNav(): string {
         $navs[] = [_HELP, _HELPINFO, 'index.php?name=help', 'account/help.png'];
     }
     if ($conf['favorites']['favact']) {
-        $navs[] = [_FAVORITES, _FAVORITES, 'index.php?name=account&amp;op=favorites', 'account/favorites.png'];
+        $navs[] = [_FAVORITES, _FAVORITES, 'index.php?name=account&op=favorites', 'account/favorites.png'];
     }
-    $navs[] = [_INFO,   _PERSONALINFO, 'index.php?name=account&amp;op=view&amp;id='.$uid, 'account/account.png'];
-    $navs[] = [_CHANGE, _CHANGE,       'index.php?name=account&amp;op=edithome',           'account/preferences.png'];
-    $navs[] = [_LOGOUT, _LOGOUT,       'index.php?name=account&amp;op=logout',             'account/exit.png'];
+    $navs[] = [_INFO,   _PERSONALINFO, 'index.php?name=account&op=view&id='.$uid, 'account/account.png'];
+    $navs[] = [_CHANGE, _CHANGE,       'index.php?name=account&op=edithome',           'account/preferences.png'];
+    $navs[] = [_LOGOUT, _LOGOUT,       'index.php?name=account&op=logout',             'account/exit.png'];
 
     $items = '';
     foreach ($navs as [$titl, $itit, $link, $icon]) {
@@ -227,7 +227,7 @@ function addComment() {
         );
         if ($status) numcom($id, $mod, 0, $postid);
         [$lcom_id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
-        $finishlink = $conf['homeurl'].'/index.php?name='.$mod.'&amp;op=view&amp;id='.$id.'#'.$lcom_id;
+        $finishlink = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$lcom_id;
         $clink = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => '', 'label_html' => $finishlink]);
         addAdminMail($conf['comments']['addmail'], $mod, $postname, getModuleName($mod), 1, $clink);
         echo ashowcom($id, $mod);
@@ -329,14 +329,14 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
         while ($row = $db->getSqlRow($result)) {
             [$id, $uidin, $uidout, $title, $date, $status, $user_name] = $row;
             $ititle = $status ? _PROLD : _PRNEW;
-            $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1';
+            $url = 'index.php?go=1&op=getPrivateMessageView&id='.$id.'&cid=1&typ=4&mod=1';
             $title_html = $tpl->getHtmlFrag('span', ['title' => $ititle, 'is_message_in' => true, 'is_hidden' => (bool)$status, 'text' => ''])
                 .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmessin', 'title' => $title, 'label' => cutstr($title, 35)]);
             $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
             $items = [
-                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1', 'target' => 'prmessin', 'title' => _SHOW, 'label' => _SHOW]),
-                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=setPrivateMessageSaved&amp;id='.$id, 'target' => 'prmessin', 'title' => _SAVE, 'label' => _SAVE]),
-                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1', 'target' => 'prmessin', 'title' => _DELETE, 'label' => _DELETE]),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=getPrivateMessageView&id='.$id.'&cid=1&typ=4&mod=1', 'target' => 'prmessin', 'title' => _SHOW, 'label' => _SHOW]),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=setPrivateMessageSaved&id='.$id, 'target' => 'prmessin', 'title' => _SAVE, 'label' => _SAVE]),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=deletePrivateMessage&id='.$id.'&typ=1', 'target' => 'prmessin', 'title' => _DELETE, 'label' => _DELETE]),
             ];
             $rows[] = ['cells' => [
                 ['content_html' => $title_html],
@@ -354,12 +354,12 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
         while ($row = $db->getSqlRow($result)) {
             [$id, $uidin, $uidout, $title, $date, $status, $user_name] = $row;
             $ititle = $status ? _PROLD : _PROUTNEW;
-            $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2';
+            $url = 'index.php?go=1&op=getPrivateMessageView&id='.$id.'&cid=2&typ=4&mod=2';
             $title_html = $tpl->getHtmlFrag('span', ['title' => $ititle, 'is_message_out' => true, 'is_hidden' => (bool)$status, 'text' => ''])
                 .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmessou', 'title' => $title, 'label' => cutstr($title, 35)]);
             $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
-            $items = [$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2', 'target' => 'prmessou', 'title' => _SHOW, 'label' => _SHOW])];
-            if (!$status) $items[] = $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2', 'target' => 'prmessou', 'title' => _DELETE, 'label' => _DELETE]);
+            $items = [$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=getPrivateMessageView&id='.$id.'&cid=2&typ=4&mod=2', 'target' => 'prmessou', 'title' => _SHOW, 'label' => _SHOW])];
+            if (!$status) $items[] = $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=deletePrivateMessage&id='.$id.'&typ=2', 'target' => 'prmessou', 'title' => _DELETE, 'label' => _DELETE]);
             $rows[] = ['cells' => [
                 ['content_html' => $title_html],
                 ['content_html' => $post_html],
@@ -387,13 +387,13 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
         $rows = [];
         while ($row = $db->getSqlRow($result)) {
             [$id, $uidin, $uidout, $title, $date, $status, $user_name] = $row;
-            $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3';
+            $url = 'index.php?go=1&op=getPrivateMessageView&id='.$id.'&cid=1&typ=4&mod=3';
             $title_html = $tpl->getHtmlFrag('span', ['title' => _PRMOVE, 'is_message_save' => true, 'text' => ''])
                 .$tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => 'repprmesssa', 'title' => $title, 'label' => cutstr($title, 35)]);
             $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
             $items = [
-                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3', 'target' => 'prmesssa', 'title' => _SHOW, 'label' => _SHOW]),
-                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3', 'target' => 'prmesssa', 'title' => _DELETE, 'label' => _DELETE]),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=getPrivateMessageView&id='.$id.'&cid=1&typ=4&mod=3', 'target' => 'prmesssa', 'title' => _SHOW, 'label' => _SHOW]),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=deletePrivateMessage&id='.$id.'&typ=3', 'target' => 'prmesssa', 'title' => _DELETE, 'label' => _DELETE]),
             ];
             $rows[] = ['cells' => [
                 ['content_html' => $title_html],
@@ -449,13 +449,13 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $sig = ($user_sig) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
                 $uitems = [];
                 if ($conf['privat']['profil'] && $user_name) {
-                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=view&uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
                 }
                 if ($conf['privat']['web'] && $user_website) {
                     $uitems[] = $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
                 }
                 $usermenu = getActionMenu($uitems, true);
-                $edit =(($uidin == $uid) || ($uidout == $uid && !$status)) ? getActionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE])]) : '';
+                $edit =(($uidin == $uid) || ($uidout == $uid && !$status)) ? getActionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=deletePrivateMessage&id='.$idp.'&typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE])]) : '';
                 $rankHtml = ($rank) ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $rank]) : '';
                 $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_edit' => $edit, 'is_private_message' => true]);
             }
@@ -544,7 +544,7 @@ function addPrivateMessage() {
             if ($user_email && $user_psmail) {
                 [$id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidin' => $uidin, 'uidout' => $uidout]));
                 $uname = filterText(substr($user[1], 0, 25));
-                $finishlink = $conf['homeurl'].'/index.php?name=account&amp;op=privat&amp;id='.$id.'#prmess';
+                $finishlink = $conf['homeurl'].'/index.php?name=account&op=privat&id='.$id.'#prmess';
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => '', 'label_html' => $finishlink]);
                 $subject = $conf['sitename'].' - '._PRIVAT;
                 $message = str_replace('[text]', sprintf(_PRNEWMAIL, $uname, $link), $conf['mtemp']);
@@ -603,7 +603,7 @@ function getFavoriteButton(?int $fid, string $mod): string {
                 $content = $tpl->getHtmlFrag('span', ['title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']), 'is_favorite' => true, 'is_favorite_off' => true, 'text' => '']);
             } else {
                 $rep_id = 'rep'.$fid.$mod;
-                $url = 'index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod;
+                $url = 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod;
                 $content = $tpl->getHtmlFrag('span', [
                     'id' => $rep_id,
                     'content_html' => $tpl->getHtmlFrag('comment-action-ajax', ['query' => str_replace('index.php?', '', $url), 'target_id' => $rep_id, 'swap' => 'outerHTML', 'title' => _FAVOR_ADD, 'label' => '', 'is_favorite' => true]),
@@ -711,10 +711,10 @@ function getFavoriteList(int $obj = 0): string {
             $fid = $val[1];
             $modul = $val[2];
             $title = $val[3];
-            $surl = 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid;
+            $surl = 'index.php?name='.$modul.'&op=view&id='.$fid;
             $items = [
                 $tpl->getHtmlFrag('link', ['href' => $surl, 'title' => _SHOW, 'label' => _SHOW]),
-                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&amp;op=deleteFavorite&amp;id='.$id, 'target' => 'favorliste', 'title' => _DELETE, 'label' => _DELETE]),
+                $tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=deleteFavorite&id='.$id, 'target' => 'favorliste', 'title' => _DELETE, 'label' => _DELETE]),
             ];
             $rows[] = [
                 'id' => (string)$a,
@@ -825,10 +825,10 @@ function getRssChannel() {
             $content .= "<item>\n"
             .'<title>'.htmlspecialchars($rtitle)."</title>\n"
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
-            .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
-            .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
+            .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</guid>\n"
+            .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</link>\n"
             .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
-            .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid.'#'.$rid."</comments>\n";
+            .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= '<author>antispam@antispam.com ('.htmlspecialchars($rauthor).")</author>\n"
             ."</item>\n\n";
@@ -838,8 +838,8 @@ function getRssChannel() {
         $content .= "<item>\n"
         .'<title>'.htmlspecialchars($rtitle)."</title>\n"
         .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
-        .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
-        .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
+        .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</guid>\n"
+        .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</link>\n"
         .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
         ."</item>\n\n";
     } elseif ($name && $name == 'shop' && $result) {
@@ -847,10 +847,10 @@ function getRssChannel() {
             $content .= "<item>\n"
             .'<title>'.htmlspecialchars($rtitle)."</title>\n"
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
-            .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
-            .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
+            .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</guid>\n"
+            .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid."</link>\n"
             .'<description>'.htmlspecialchars($prs->filterContent($rhometext, false, $name))."</description>\n"
-            .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid.'#'.$rid."</comments>\n";
+            .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&op=view&id='.$rid.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= "</item>\n\n";
         }
@@ -868,9 +868,9 @@ function getOpenSearch() {
     ."<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n"
     .'<ShortName>'.htmlspecialchars($conf['sitename'])."</ShortName>\n"
     .'<Description>'.htmlspecialchars($conf['slogan'])."</Description>\n"
-    .'<Url type="application/atom+xml" template="'.$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
-    .'<Url type="application/rss+xml" template="'.$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
-    .'<Url type="text/html" template="'.$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
+    .'<Url type="application/atom+xml" template="'.$conf['homeurl']."/index.php?name=search&word={searchTerms}\"/>\n"
+    .'<Url type="application/rss+xml" template="'.$conf['homeurl']."/index.php?name=search&word={searchTerms}\"/>\n"
+    .'<Url type="text/html" template="'.$conf['homeurl']."/index.php?name=search&word={searchTerms}\"/>\n"
     .(is_file(BASE_DIR.'/templates/'.$conf['theme'].'/images/favicon.svg')
         ? '<Image height="16" width="16" type="image/svg+xml">'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/favicon.svg</Image>\n'
         : '')

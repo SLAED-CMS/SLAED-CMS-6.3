@@ -307,7 +307,7 @@ location ~* \.(?:woff2?|ttf)$ {
 
 ### Font caching caveat
 
-Font file names are static (for example `magistralb-wf.woff2`). A 1-year /
+Font file names are static (for example `Magistral-Book.woff2`). A 1-year /
 `immutable` policy is only safe if the font URL is versioned (`?v=filemtime`) or
 the file is renamed on change. Otherwise returning visitors keep the old font
 after a replacement.

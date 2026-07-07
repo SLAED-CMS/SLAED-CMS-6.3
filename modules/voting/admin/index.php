@@ -79,7 +79,7 @@ function voting(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
     $num = getVar('get', 'num', 'num', 1);
@@ -99,7 +99,7 @@ function voting(): void {
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $view = (!$modul) ? [['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW]] : [];
+                $view = (!$modul) ? [['href' => 'index.php?name=voting&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW]] : [];
                 $active = '1';
             } else {
                 $view = [];
@@ -107,8 +107,8 @@ function voting(): void {
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
             $items = array_merge($view, [
-                ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ]);
             $cells = [
                 ['is_col_id' => true, 'content_html' => (string)$id],
@@ -128,7 +128,7 @@ function voting(): void {
         }
         $head[1]['is_truncate'] = true;
         $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);
-        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=voting&amp;', 'table' => '_voting', 'field' => 'id']);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=voting&', 'table' => '_voting', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -161,7 +161,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 1,
     ]);
@@ -293,7 +293,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
         'tab' => 2,
     ]);
@@ -342,7 +342,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'],
+        'ops' => ['name=voting', 'name=voting&op=add', 'name=voting&op=config', 'name=voting&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }

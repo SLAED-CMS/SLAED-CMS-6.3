@@ -1,6 +1,6 @@
 {% if dial %}
 <span class="sl-dial">
   <button class="sl-dial-toggle sl-but-mini" type="button" title="{{ dial_title }}"><i class="bi bi-three-dots"></i></button>
-  {% for item in dial %}<a class="sl-dial-item sl-but-mini" href="{{{ item.href }}}" title="{{ item.title }}"><i class="bi bi-{{ item.icon_name }}"></i></a>{% endfor %}
+  {% for item in dial %}<a class="sl-dial-item sl-but-mini" href="{{ item.href }}" title="{{ item.title }}"><i class="bi bi-{{ item.icon_name }}"></i></a>{% endfor %}
 </span>
 {% endif %}

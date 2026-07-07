@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function ratings(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&amp;op=info'], 'tabs' => [_HOME, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=ratings', 'name=ratings&op=info'], 'tabs' => [_HOME, _DOCS]]);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $blocks = '';
@@ -94,7 +94,7 @@ function save(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=ratings', 'name=ratings&amp;op=info'],
+        'ops' => ['name=ratings', 'name=ratings&op=info'],
         'tabs' => [_HOME, _DOCS],
     ]);
 }

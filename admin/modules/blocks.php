@@ -9,11 +9,11 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function getBlockTabsOps(): array {
     return [
         'name=blocks',
-        'name=blocks&amp;op=add',
-        'name=blocks&amp;op=fileadd',
-        'name=blocks&amp;op=fileedit',
-        'name=blocks&amp;op=fix&amp;token='.getSiteToken(),
-        'name=blocks&amp;op=info',
+        'name=blocks&op=add',
+        'name=blocks&op=fileadd',
+        'name=blocks&op=fileedit',
+        'name=blocks&op=fix&token='.getSiteToken(),
+        'name=blocks&op=info',
     ];
 }
 
@@ -193,7 +193,7 @@ function add(): void {
         ]),
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=blocks&amp;op=addsave',
+        'action_url' => $afile.'.php?name=blocks&op=addsave',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
             ['nameattr' => 'op', 'valueattr' => 'addsave'],
@@ -228,7 +228,7 @@ function fileadd(): void {
         ],
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
+        'action_url' => $afile.'.php?name=blocks&op=filecode',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
             ['nameattr' => 'op', 'valueattr' => 'filecode'],
@@ -264,7 +264,7 @@ function fileedit(): void {
         ]),
     ]];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
+        'action_url' => $afile.'.php?name=blocks&op=filecode',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'blocks'],
             ['nameattr' => 'op', 'valueattr' => 'filecode'],
@@ -408,7 +408,7 @@ function filecode(): void {
             'is_full' => true,
         ]];
         echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=blocks&amp;op=filecodesave',
+            'action_url' => $afile.'.php?name=blocks&op=filecodesave',
             'hidden' => [
                 ['nameattr' => 'bf', 'valueattr' => $bf],
                 ['nameattr' => 'flag', 'valueattr' => $flaged],
@@ -628,7 +628,7 @@ function edit(): void {
         ]),
     ];
     echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=blocks&amp;op=editsave',
+        'action_url' => $afile.'.php?name=blocks&op=editsave',
         'hidden' => [
             ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],
             ['nameattr' => 'bid', 'valueattr' => (string)$bid],

@@ -348,7 +348,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     $modul = filterVar($modul);
     $where = ($modul) ? 'WHERE a.modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
-    $modlink = ($modul) ? '&amp;modul='.$modul : '';
+    $modlink = ($modul) ? '&modul='.$modul : '';
     $result = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.intro, a.img, a.lang, a.parent, a.ordern, a.status, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $prev, , , $next) = $db->getSqlRow($result)) {
@@ -412,16 +412,16 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             if ($language !== '') {
                 $tipItems[] = ['label' => _LANGUAGE, 'value' => getLangName($language), 'is_last' => true];
             }
-            $mup = ($prev) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$prev.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
-            $mdn = ($next) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$next.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
+            $mup = ($prev) ? 'go=5&op=updateAdminCategoryOrder&id='.$id.'&cid='.$prev.'&typ='.$ordernm.'&mod='.$modul.'&ordern='.$ordern : '';
+            $mdn = ($next) ? 'go=5&op=updateAdminCategoryOrder&id='.$id.'&cid='.$next.'&typ='.$ordernp.'&mod='.$modul.'&ordern='.$ordern : '';
             $items = [[
-                'href' => $afile.'.php?name=categories&amp;op=edit&amp;cid='.$id.$modlink,
+                'href' => $afile.'.php?name=categories&op=edit&cid='.$id.$modlink,
                 'label' => _FULLEDIT,
                 'title' => _FULLEDIT,
             ]];
             if (!$pnum && !$ispid) {
                 $items[] = [
-                    'href' => $afile.'.php?name=categories&amp;op=delete&amp;id='.$id.$modlink.'&amp;token='.getSiteToken(),
+                    'href' => $afile.'.php?name=categories&op=delete&id='.$id.$modlink.'&token='.getSiteToken(),
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -609,8 +609,8 @@ function getAdminBlockList(string $token = ''): string {
         } elseif ($view == 3) {
             $who_view = _MVANON;
         }
-        $mup = ($prev) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$prev.'&amp;typ='.$wminus.'&amp;ordern='.$weight : '';
-        $mdn = ($next) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$next.'&amp;typ='.$wplus.'&amp;ordern='.$weight : '';
+        $mup = ($prev) ? 'go=5&op=updateAdminBlockOrder&id='.$bid.'&cid='.$prev.'&typ='.$wminus.'&ordern='.$weight : '';
+        $mdn = ($next) ? 'go=5&op=updateAdminBlockOrder&id='.$bid.'&cid='.$next.'&typ='.$wplus.'&ordern='.$weight : '';
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string) $bid],
@@ -628,15 +628,15 @@ function getAdminBlockList(string $token = ''): string {
                 ['content_html' => $tpl->getHtmlFrag('popover', [
                     'trigger_label' => _EDITOR,
                     'items' => [[
-                        'href' => $afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active.'&amp;token='.getSiteToken(),
+                        'href' => $afile.'.php?name=blocks&op=change&id='.$bid.'&act='.$active.'&token='.getSiteToken(),
                         'label' => $active ? _DEACTIVATE : _ACTIVATE,
                         'title' => $active ? _DEACTIVATE : _ACTIVATE,
                     ], [
-                        'href' => $afile.'.php?name=blocks&amp;op=edit&amp;id='.$bid,
+                        'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
                         'label' => _FULLEDIT,
                         'title' => _FULLEDIT,
                     ], [
-                        'href' => $afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid.'&amp;token='.getSiteToken(),
+                        'href' => $afile.'.php?name=blocks&op=delete&id='.$bid.'&token='.getSiteToken(),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -740,7 +740,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $modul = $val[2];
                 $title = getDecodedText((string)$val[3]);
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
-                $delhref = 'admin.php?name=favorites&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
+                $delhref = 'admin.php?name=favorites&op=delete&id='.$id.'&num='.$cid.'&token='.getSiteToken();
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string) $id],
@@ -750,7 +750,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                         ['content_html' => $tpl->getHtmlFrag('popover', [
                             'trigger_label' => _FUNCTIONS,
                             'items' => [[
-                                'href' => 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid,
+                                'href' => 'index.php?name='.$modul.'&op=view&id='.$fid.'#'.$fid,
                                 'label' => _MVIEW,
                                 'title' => _MVIEW,
                             ], [
@@ -813,7 +813,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $date = format_time($date, _TIMESTRING);
             $info = $prs->filterContent($body, false, 'privat');
             $title = getDecodedText($title);
-            $delhref = 'admin.php?name=privat&amp;op=delete&amp;id='.$id.'&amp;num='.$cid.'&amp;token='.getSiteToken();
+            $delhref = 'admin.php?name=privat&op=delete&id='.$id.'&num='.$cid.'&token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
@@ -937,14 +937,14 @@ function getAdminUploadFiles(): void {
                 $show = [];
                 if (in_array(true, checkCompress(), true)) {
                     $show[] = [
-                        'href' => 'index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1],
+                        'href' => 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=1&file='.$entry[1],
                         'label' => _ZIP,
                         'title' => _ZIP,
                         'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
                     ];
                 }
                 $show[] = [
-                    'href' => 'index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1],
+                    'href' => 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=0&file='.$entry[1],
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
                     'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',

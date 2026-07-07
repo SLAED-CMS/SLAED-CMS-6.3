@@ -46,8 +46,8 @@ function autolink(): void {
             $date   = format_time($time);
             $iso    = date('c', strtotime($time));
             $hbadge = $tpl->getHtmlFrag('inline-badge', ['title_text' => _HITS, 'label' => $hits, 'is_hits' => true]);
-            $edit = $afile.'.php?name=auto_links&amp;op=auto_links_add&amp;id='.$id;
-            $del = $afile.'.php?name=auto_links&amp;op=auto_links_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=auto_links&op=auto_links_add&id='.$id;
+            $del = $afile.'.php?name=auto_links&op=auto_links_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,

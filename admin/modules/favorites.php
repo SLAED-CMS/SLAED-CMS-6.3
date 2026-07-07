@@ -14,7 +14,7 @@ function favorites(): void {
         return;
     }
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repadminFavoriteList',
         'content_html' => getAdminFavoriteList(1),
@@ -25,7 +25,7 @@ function favorites(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['favorites']['num'], 'is_config' => true])],
@@ -97,7 +97,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'],
+        'ops' => ['name=favorites', 'name=favorites&op=config', 'name=favorites&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
 }

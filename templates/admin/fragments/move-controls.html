@@ -1,8 +1,8 @@
 <span class="sl-move-controls">
   {% if up_query %}
     <a
-      href="index.php?{{{ up_query }}}"
-      hx-get="index.php?{{{ up_query }}}"
+      href="index.php?{{ up_query }}"
+      hx-get="index.php?{{ up_query }}"
       hx-target="#rep{{ target }}"
       hx-swap="innerHTML"
       hx-push-url="false"
@@ -12,8 +12,8 @@
   {% endif %}
   {% if down_query %}
     <a
-      href="index.php?{{{ down_query }}}"
-      hx-get="index.php?{{{ down_query }}}"
+      href="index.php?{{ down_query }}"
+      hx-get="index.php?{{ down_query }}"
       hx-target="#rep{{ target }}"
       hx-swap="innerHTML"
       hx-push-url="false"

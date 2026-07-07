@@ -259,10 +259,10 @@ function getStatExtPanel(string $file): string {
 function statistic(): void {
     global $afile, $tpl;
     $file = getVar('post', 'file', 'text');
-    $pfile = $file ? '&amp;file='.$file : '';
+    $pfile = $file ? '&file='.$file : '';
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'],
+        'ops' => ['name=statistic', 'name=statistic&op=config', 'name=statistic&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'subtitle_html' => getStatisticSearch(),
     ]);
@@ -373,7 +373,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'],
+        'ops' => ['name=statistic', 'name=statistic&op=config', 'name=statistic&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'tab' => 1,
         'subtitle_html' => getStatisticSearch(),
@@ -414,7 +414,7 @@ function save(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'],
+        'ops' => ['name=statistic', 'name=statistic&op=config', 'name=statistic&op=info'],
         'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'subtitle_html' => getStatisticSearch(),
     ]);

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access
 function order(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
+    $ops = ['name=order', 'name=order&op=add', 'name=order&op=config', 'name=order&op=info'];
     $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
     if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OR_8])]);
@@ -42,10 +42,10 @@ function order(): void {
                     ['is_col_date' => true, 'content_html' => format_time($date, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $status)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-                        ['href' => $afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
-                        ['href' => $afile.'.php?name=order&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                        ['href' => $afile.'.php?name=order&op=activate&id='.$id.'&act='.$act.'&token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
+                        ['href' => $afile.'.php?name=order&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                         [
-                            'href' => $afile.'.php?name=order&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                            'href' => $afile.'.php?name=order&op=delete&id='.$id.'&token='.getSiteToken(),
                             'label' => _ONDELETE,
                             'title' => _ONDELETE,
                             'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\')"',
@@ -67,7 +67,7 @@ function order(): void {
             ],
             'rows_html' => $rows,
         ]);
-        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=order&amp;', 'table' => '_order', 'field' => 'id']);
+        $body .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=order&', 'table' => '_order', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -92,7 +92,7 @@ function add(): void {
         $date = getVar('req', 'date', 'time');
     }
     setHead();
-    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
+    $ops = ['name=order', 'name=order&op=add', 'name=order&op=config', 'name=order&op=info'];
     $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
@@ -104,7 +104,7 @@ function add(): void {
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'order']));
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=order&amp;op=save',
+        'action_url' => $afile.'.php?name=order&op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -187,7 +187,7 @@ function activate(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'];
+    $ops = ['name=order', 'name=order&op=add', 'name=order&op=config', 'name=order&op=info'];
     $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
@@ -204,7 +204,7 @@ function config(): void {
         ['label_html' => _OR_7, 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => $conf['order']['sendinfo'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_7, 'required' => '1']), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=order&amp;op=configsave',
+        'action_url' => $afile.'.php?name=order&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -235,7 +235,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'],
+        'ops' => ['name=order', 'name=order&op=add', 'name=order&op=config', 'name=order&op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS],
     ]);
 }

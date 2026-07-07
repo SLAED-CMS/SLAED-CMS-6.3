@@ -169,7 +169,7 @@ select,
 input,
 textarea,
 button {
-  font: 14px/16px Tahoma, Arial, Verdana, sans-serif;
+  font: 14px/16px Tahoma, Arial, Verdana, sans-serif, system-ui;
   color: var(--sl-color-text);
   outline: none;
 }

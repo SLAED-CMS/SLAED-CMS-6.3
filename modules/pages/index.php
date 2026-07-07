@@ -98,8 +98,8 @@ function pages(): void {
             $date   = ($conf['pages']['date']) ? format_time($time) : '';
             $iso    = ($conf['pages']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
-            $edit = $afile.'.php?name=pages&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?op=page_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=pages&op=add&id='.$id;
+            $del = $afile.'.php?op=page_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'title_href'    => $thref,
@@ -194,8 +194,8 @@ function liste(): void {
             'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
         if ($ismoder) {
-            $edit = $afile.'.php?name=pages&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=pages&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=pages&op=add&id='.$id;
+            $del = $afile.'.php?name=pages&op=delete&id='.$id.'&refer=1&token='.$token;
             $row += getTplEditMenu($edit, $del, $title);
         }
         $rows[] = $row;
@@ -276,8 +276,8 @@ function view(): void {
         $rating    = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=pages&amp;op=add&amp;id='.$id;
-        $del = $afile.'.php?op=page_delete&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=pages&op=add&id='.$id;
+        $del = $afile.'.php?op=page_delete&id='.$id.'&token='.getSiteToken();
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder'      => $ismoder,
             'id'            => $id,

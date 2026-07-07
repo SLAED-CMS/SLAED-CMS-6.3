@@ -30,7 +30,7 @@ return [
         ],
         'auto_links' => [
             'lang' => '_A_LINKS',
-            'icon' => 'arrow-left-right',
+            'icon' => 'link',
             'active' => '0',
             'view' => '0',
             'menu' => '1',
@@ -294,7 +294,7 @@ return [
         ],
         'modules' => [
             'lang' => '_MODULES',
-            'icon' => 'gpu-card',
+            'icon' => 'puzzle',
             'active' => '1',
             'view' => '0',
             'menu' => '1',

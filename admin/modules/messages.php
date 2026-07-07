@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function messages(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
+    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _DOCS]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $rows = [];
@@ -41,15 +41,15 @@ function messages(): void {
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
                         'trigger_label' => _FUNCTIONS,
                         'items' => [[
-                            'href' => $afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.($active ? '0' : '1').'&amp;token='.getSiteToken(),
+                            'href' => $afile.'.php?name=messages&op=status&id='.$mid.'&act='.($active ? '0' : '1').'&token='.getSiteToken(),
                             'label' => $active ? _DEACTIVATE : _ACTIVATE,
                             'title' => $active ? _DEACTIVATE : _ACTIVATE,
                         ], [
-                            'href' => $afile.'.php?name=messages&amp;op=add&amp;id='.$mid,
+                            'href' => $afile.'.php?name=messages&op=add&id='.$mid,
                             'label' => _FULLEDIT,
                             'title' => _FULLEDIT,
                         ], [
-                            'href' => $afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.'&amp;token='.getSiteToken(),
+                            'href' => $afile.'.php?name=messages&op=delete&id='.$mid.'&token='.getSiteToken(),
                             'label' => _ONDELETE,
                             'title' => _ONDELETE,
                             'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -96,7 +96,7 @@ function add(): void {
     }
     $stoptext = is_array($stop) ? implode(PHP_EOL, $stop) : (string)$stop;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
     if ($stoptext !== '') $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stoptext]);
     if ($body) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $body, 'mod' => 'all']);
     $langsel = '';
@@ -178,7 +178,7 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=messages', false, 302, _SUCCSAVE);
     } elseif ($warn) {
-        setRedirect($afile.'.php?name=messages&amp;op=add'.($mid ? '&amp;id='.$mid : ''), false, 302, _TOKENMISS, true);
+        setRedirect($afile.'.php?name=messages&op=add'.($mid ? '&id='.$mid : ''), false, 302, _TOKENMISS, true);
     } elseif ($posttype == 'delete') {
         delete($mid);
     } else {
@@ -205,7 +205,7 @@ function delete(int $mid = 0): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'],
+        'ops' => ['name=messages', 'name=messages&op=add', 'name=messages&op=info'],
         'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }

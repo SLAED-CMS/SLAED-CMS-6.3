@@ -120,8 +120,8 @@ function faq(): void {
             $date  = ($conf['faq']['date']) ? format_time($time) : '';
             $iso   = ($conf['faq']['date']) ? date('c', strtotime($time)) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
-            $edit = $afile.'.php?name=faq&amp;op=faq_add&amp;id='.$id;
-            $del = $afile.'.php?name=faq&amp;op=faq_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=faq&op=faq_add&id='.$id;
+            $del = $afile.'.php?name=faq&op=faq_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -288,8 +288,8 @@ function view(): void {
         $rating    = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=faq&amp;op=faq_add&amp;id='.$id;
-        $del = $afile.'.php?name=faq&amp;op=faq_delete&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=faq&op=faq_add&id='.$id;
+        $del = $afile.'.php?name=faq&op=faq_delete&id='.$id.'&token='.getSiteToken();
         $cont .= $tpl->getHtmlPart('view', [
             'is_moder'      => $ismoder,
             'id'            => $id,

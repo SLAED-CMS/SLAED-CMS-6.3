@@ -1495,9 +1495,9 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
     $diskio = $ctx['diskio'];
     $storages = $ctx['storages'];
     $vars = [
-            'statusurl' => $afile.'.php?name=monitor&amp;op=status',
-            'trafficurl' => $afile.'.php?name=monitor&amp;op=traffic',
-            'syncurl' => $afile.'.php?name=monitor&amp;op=sync',
+            'statusurl' => $afile.'.php?name=monitor&op=status',
+            'trafficurl' => $afile.'.php?name=monitor&op=traffic',
+            'syncurl' => $afile.'.php?name=monitor&op=sync',
             'status_oob' => '',
             'traffic_oob' => '',
             'cntnews' => $ctx['cntnews'],
@@ -1605,7 +1605,7 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     global $tpl;
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
-    $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&amp;op=info'], 'tabs' => [_HOME, _DOCS]]);
+    $navi = getTplAdminTabs(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _DOCS]]);
     echo $navi.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('basic-monitor', $vars)]);
 }
 
@@ -1620,7 +1620,7 @@ function monitor(): void {
 # Renders monitor information page with standard admin info block and navigation tabs
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=monitor', 'name=monitor&amp;op=info'],
+        'ops' => ['name=monitor', 'name=monitor&op=info'],
         'tabs' => [_HOME, _DOCS],
     ]);
 }

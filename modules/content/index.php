@@ -33,8 +33,8 @@ function content(): void {
             ]);
             $menu = '';
             if ($ismoder) {
-                $edit = $afile.'.php?name=content&amp;op=add&amp;id='.$id;
-                $del = $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+                $edit = $afile.'.php?name=content&op=add&id='.$id;
+                $del = $afile.'.php?name=content&op=delete&id='.$id.'&refer=1&token='.$token;
                 $menu = $tpl->getHtmlFrag('popover', getTplEditMenu($edit, $del, $title));
             }
             $rows[] = [
@@ -95,8 +95,8 @@ function view(): void {
             'author' => $conf['sitename'],
         ]);
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=content&amp;op=add&amp;id='.$id;
-        $del = $afile.'.php?name=content&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=content&op=add&id='.$id;
+        $del = $afile.'.php?name=content&op=delete&id='.$id.'&token='.getSiteToken();
         $cont = $tpl->getHtmlPart('view', [
             'is_moder' => $ismoder,
             'title_text' => filterTextHighlight($title, $word),

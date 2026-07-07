@@ -8,15 +8,15 @@
     class="sl-image-preview-toggle sl-image-preview-mini"
     title="{{ image_title }}"
   >
-    <img class="sl-image-preview-thumb" src="{{{ image_url }}}" alt="{{ image_title }}">
+    <img class="sl-image-preview-thumb" src="{{ image_url }}" alt="{{ image_title }}">
     <span
       id="{{ preview_id }}"
       class="sl-image-preview-popup"
       data-sl-toggle="{{ preview_id }}"
       data-sl-toggle-default="closed"
     >
-      <img src="{{{ image_url }}}" alt="{{ image_title }}" title="{{ image_title }}">
+      <img src="{{ image_url }}" alt="{{ image_title }}" title="{{ image_title }}">
     </span>
   </a>
 {% endif %}
-{% if show_fallback %}<span class="sl-image-preview-mini" title="{{ no_title }}"><img class="sl-image-preview-thumb" src="{{{ fallback_url }}}" alt="{{ no_title }}"></span>{% endif %}
+{% if show_fallback %}<span class="sl-image-preview-mini" title="{{ no_title }}"><img class="sl-image-preview-thumb" src="{{ fallback_url }}" alt="{{ no_title }}"></span>{% endif %}

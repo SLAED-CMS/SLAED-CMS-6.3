@@ -16,19 +16,19 @@ function media(): void {
     $status = getVar('get', 'status', 'num', 0);
     if ($status == 1) {
         $status = '0';
-        $field = 'name=media&amp;status=1&amp;';
-        $refer = '&amp;refer=1';
-        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
+        $field = 'name=media&status=1&';
+        $refer = '&refer=1';
+        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
     } elseif ($status == 2) {
         $status = '2';
-        $field = 'name=media&amp;status=2&amp;';
+        $field = 'name=media&status=2&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
     } else {
         $status = '1';
-        $field = 'name=media&amp;';
+        $field = 'name=media&';
         $refer = '';
-        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS]]);
+        $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, m.ip, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.status = :status ORDER BY m.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -38,17 +38,17 @@ function media(): void {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $items = [];
             if ($status && time() >= strtotime($date)) {
-                $items[] = ['href' => 'index.php?name=media&amp;op=view&amp;id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=media&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
             if ($status == '2') {
-                $items[] = ['href' => $afile.'.php?name=media&amp;op=approve&amp;id='.$id.'&amp;token='.getSiteToken(), 'label' => _IGNORE, 'title' => _IGNORE];
+                $items[] = ['href' => $afile.'.php?name=media&op=approve&id='.$id.'&token='.getSiteToken(), 'label' => _IGNORE, 'title' => _IGNORE];
             }
-            $items[] = ['href' => $afile.'.php?name=media&amp;op=add&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=media&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
             $items[] = [
-                'href' => $afile.'.php?name=media&amp;op=delete&amp;id='.$id.$refer.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=media&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
                 'label' => _ONDELETE,
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($label).'&quot;?\')"',
@@ -128,7 +128,7 @@ function add(): void {
     }
     $mtitle = $subtitle ? $title.' '.urldecode($conf['media']['mdefis'] ?? '%7C').' '.$subtitle : $title;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $mtitle, 'texta' => $description, 'mod' => 'media']);
     $yearopts = '';
@@ -234,7 +234,7 @@ function add(): void {
         .$tpl->getHtmlFrag('select-option', ['value_attr' => 'save', 'label_text' => _SEND])
         .($mid ? $tpl->getHtmlFrag('select-option', ['value_attr' => 'delete', 'label_text' => _DELETE]) : '');
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=media&amp;op=save',
+        'action_url' => $afile.'.php?name=media&op=save',
         'hidden' => [
             ['nameattr' => 'mid', 'valueattr' => (string)$mid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -329,7 +329,7 @@ function approve(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
+    $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [
@@ -362,7 +362,7 @@ function config(): void {
         ['label_html' => _PAGELINK, 'field_html' => getTplRadioGroup(['name' => 'link', 'value' => (string)($conf['media']['link'] ?? 0), 'options' => $yesno])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=media&amp;op=configsave',
+        'action_url' => $afile.'.php?name=media&op=configsave',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -415,7 +415,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'],
+        'ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'],
         'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS],
     ]);
 }

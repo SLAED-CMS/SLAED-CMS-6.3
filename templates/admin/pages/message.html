@@ -3,13 +3,13 @@
 {% block content %}
 <div class="sl-msg">
   <div class="sl-msg-card">
-    <a class="sl-msg-brand" href="{{{ homeurl }}}" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}"></a>
+    <a class="sl-msg-brand" href="{{ homeurl }}" title="{{ adtitle }}"><img src="{{ adlogo }}" alt="{{ adalt }}"></a>
     <div class="sl-msg-line"></div>
     {% if title %}<h1 class="sl-msg-title">{{{ title }}}</h1>{% endif %}
     <div class="sl-msg-body">
       {% if message_html %}{{{ message_html }}}{% else %}{{{ content }}}{% endif %}
     </div>
-    {% if home %}<a class="sl-but sl-msg-home" href="{{{ homeurl }}}">{{ home }}</a>{% endif %}
+    {% if home %}<a class="sl-but sl-msg-home" href="{{ homeurl }}">{{ home }}</a>{% endif %}
     {% if license %}<div class="sl-msg-foot">{{{ license }}}</div>{% endif %}
   </div>
 </div>

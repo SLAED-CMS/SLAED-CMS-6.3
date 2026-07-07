@@ -30,7 +30,7 @@
     >
       {% if cell.href %}
         <a
-          href="{{{ cell.href }}}"
+          href="{{ cell.href }}"
           title="{{ cell.title }}"
           class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_avatar_link %}sl-avatar-link{% elseif cell.is_cart_id %}sl-but-mini sl-is-soft{% elseif cell.is_faq_link %}sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}"
         >
@@ -91,11 +91,11 @@
   {% else %}
     <td class="sl-table-cell sl-cell-ellipsis" data-sort="{{ title_text }}">
       {% if report %}{{{ report }}}{% endif %}{% if title_new %}{{{ title_new }}} {% endif %}
-      <a href="{{{ title_href }}}" title="{{ title_attr }}">{{ title_text }}</a>
+      <a href="{{ title_href }}" title="{{ title_attr }}">{{ title_text }}</a>
     </td>
     <td class="sl-table-cell">
       {% if category_href %}
-        <a href="{{{ category_href }}}" title="{{ category_attr }}" class="sl-chip"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</a>
+        <a href="{{ category_href }}" title="{{ category_attr }}" class="sl-chip"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</a>
       {% else %}
         <span class="sl-chip sl-chip-neutral"><i class="bi bi-folder" aria-hidden="true"></i>{{ category_text }}</span>
       {% endif %}

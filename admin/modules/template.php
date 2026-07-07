@@ -41,9 +41,9 @@ function getTemplateCssFiles(string $templ): array {
 
 function getTemplateTabsOps(string $templ): array {
     return [
-        'name=template&amp;templ='.$templ,
-        'name=template&amp;op=style&amp;templ='.$templ,
-        'name=template&amp;op=info&amp;templ='.$templ,
+        'name=template&templ='.$templ,
+        'name=template&op=style&templ='.$templ,
+        'name=template&op=info&templ='.$templ,
     ];
 }
 
@@ -74,7 +74,7 @@ function getTemplateSearch(string $templ): string {
 function getTemplateEditorBlock(string $templ, string $filelink, string $mode, string $op): string {
     global $afile, $tpl;
     $body = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=template&amp;op='.$op,
+        'action_url' => $afile.'.php?name=template&op='.$op,
         'hidden' => [
             ['nameattr' => 'templ', 'valueattr' => $templ],
             ['nameattr' => 'filelink', 'valueattr' => $filelink],

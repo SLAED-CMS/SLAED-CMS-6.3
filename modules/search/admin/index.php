@@ -206,7 +206,7 @@ function getSearchlink(int $sort = 3, int $order = 2, int $num = 1, string $find
 
 function getSearchnavi(string $sub = '', int $tab = 0): string {
     return getTplAdminTabs([
-        'ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'],
+        'ops' => ['name=search', 'name=search&op=toplist', 'name=search&op=config', 'name=search&op=delete', 'name=search&op=info'],
         'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _DOCS],
         'tab' => $tab,
         'subtitle_html' => $sub,
@@ -311,9 +311,9 @@ function search(): void {
                 ['is_col_count' => true, 'content_html' => (string)intval($hits)],
                 ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
                 ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-                    ['href' => $afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                    ['href' => $afile.'.php?'.$link.'&op=edit&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
-                        'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
+                        'href' => $afile.'.php?op=drop&id='.$id.'&sort='.$sort.'&order='.$order.'&num='.$num.($find !== '' ? '&find='.urlencode($find) : '').($fmod !== '' ? '&fmod='.urlencode($fmod) : '').'&token='.getSiteToken('search'),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
@@ -333,7 +333,7 @@ function search(): void {
             ],
             'rows_html' => $rows,
         ]);
-        $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&amp;sort='.$sort.'&amp;order='.$order.$clink.'&amp;', 'table' => '_search', 'field' => 'id']);
+        $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&sort='.$sort.'&order='.$order.$clink.'&', 'table' => '_search', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -374,9 +374,9 @@ function toplist(): void {
                 ['is_col_count' => true, 'content_html' => (string)intval($hits)],
                 ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
                 ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-                    ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&amp;op=edit&amp;id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                    ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&op=edit&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
                     [
-                        'href' => $afile.'.php?op=drop&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;num='.$num.($find !== '' ? '&amp;find='.urlencode($find) : '').($fmod !== '' ? '&amp;fmod='.urlencode($fmod) : '').'&amp;token='.getSiteToken('search'),
+                        'href' => $afile.'.php?op=drop&id='.$id.'&sort='.$sort.'&order='.$order.'&num='.$num.($find !== '' ? '&find='.urlencode($find) : '').($fmod !== '' ? '&fmod='.urlencode($fmod) : '').'&token='.getSiteToken('search'),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
                         'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
@@ -396,7 +396,7 @@ function toplist(): void {
             ],
             'rows_html' => $rows,
         ]);
-        $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&amp;op=toplist&amp;sort='.$sort.'&amp;order='.$order.$clink.'&amp;', 'table' => '_search', 'field' => 'id']);
+        $html .= getTplPager(['limit' => $anum, 'maxpg' => $anump, 'url' => 'name=search&op=toplist&sort='.$sort.'&order='.$order.$clink.'&', 'table' => '_search', 'field' => 'id']);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $html]);
     } else {
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO])]);
@@ -444,14 +444,14 @@ function config(): void {
         ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$anump])],
     ];
     $html = $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_PREFERENCES, $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=search&amp;op=save',
+        'action_url' => $afile.'.php?name=search&op=save',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $cfgrows,
         'submit_label' => _SAVECHANGES,
     ]))]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHENABLED, getSearchauditTable($elist, 'enabled'))]);
     $readyform = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=search&amp;op=modadd',
+        'action_url' => $afile.'.php?name=search&op=modadd',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'content_html' => getSearchauditTable($rlist, 'ready'),
         'actions_html' => $tpl->getHtmlFrag('checkbox', [
@@ -465,7 +465,7 @@ function config(): void {
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHREADY, $readyform)]);
     $html .= $tpl->getHtmlPart('box', ['content_html' => getSearchsection(_SEARCHINVALID, getSearchauditTable($ilist, 'invalid'))]);
     $reform = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=search&amp;op=reindex',
+        'action_url' => $afile.'.php?name=search&op=reindex',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'submit_label' => _SEARCHAUTO,
     ]);
@@ -569,7 +569,7 @@ function edit(): void {
             ['label_html' => _HITS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'hits', 'value_attr' => (string)$hits, 'placeholder_text' => _HITS])],
         ];
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-            'action_url' => $afile.'.php?name=search&amp;op=editsave',
+            'action_url' => $afile.'.php?name=search&op=editsave',
             'hidden' => [
                 ['nameattr' => 'id', 'valueattr' => (string)$id],
                 ['nameattr' => 'sort', 'valueattr' => (string)$sort],
@@ -627,7 +627,7 @@ function delete(): void {
         ['label_html' => _DELETE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mode', 'options_html' => $modeopts])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]).$tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=search&amp;op=clear',
+        'action_url' => $afile.'.php?name=search&op=clear',
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $rows,
         'submit_label' => _DELETE,
@@ -671,7 +671,7 @@ function drop(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'],
+        'ops' => ['name=search', 'name=search&op=toplist', 'name=search&op=config', 'name=search&op=delete', 'name=search&op=info'],
         'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _DOCS],
     ]);
 }

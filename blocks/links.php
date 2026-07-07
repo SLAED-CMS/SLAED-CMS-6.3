@@ -18,7 +18,7 @@ $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_lin
 while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
     $l_title = getDecodedText($l_title);
     $col1 .= $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
+        'href' => getSeoUrl(['name' => 'links', 'op' => 'view', 'id' => $l_lid]),
         'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
         'label' => cutstr($l_title, $strip),
         'is_line_break' => true,
@@ -31,7 +31,7 @@ $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_lin
 while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
     $l_title = getDecodedText($l_title);
     $col2 .= $tpl->getHtmlFrag('link', [
-        'href' => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
+        'href' => getSeoUrl(['name' => 'links', 'op' => 'view', 'id' => $l_lid]),
         'title' => filterText(cutstr($prs->filterContent($l_description, false, 'links'), 250), 1),
         'label' => cutstr($l_title, $strip),
         'is_line_break' => true,

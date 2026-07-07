@@ -16,9 +16,9 @@ function info(): void {
     $cat = getVar('post', 'cat', 'num');
     $num = getVar('post', 'num', 'num');
     
-    $rssmod = ($mod) ? '&amp;name='.$mod : '';
-    $rsscat = ($cat) ? '&amp;cat='.$cat : '';
-    $rssnum = ($num) ? '&amp;num='.$num : '';
+    $rssmod = ($mod) ? '&name='.$mod : '';
+    $rsscat = ($cat) ? '&cat='.$cat : '';
+    $rssnum = ($num) ? '&num='.$num : '';
     $rsslink = $conf['homeurl'].'/index.php?go=rss'.$rssmod.$rsscat.$rssnum;
     
     $modsOptions = '';

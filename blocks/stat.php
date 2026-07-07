@@ -14,7 +14,7 @@ $alt = 'Счетчик посещений страниц и уникальных
 $titl = 'SLAED CMS - Content Management System';
 $rss = 'Экспорт новостей в формате RSS';
 $content = $tpl->getHtmlFrag('image', [
-    'src' => 'index.php?stat=1&amp;img=2',
+    'src' => 'index.php?stat=1&img=2',
     'alt' => $alt,
     'title' => $alt,
 ]);
@@ -25,7 +25,7 @@ $content .= $tpl->getHtmlFrag('link', [
     'img_alt' => $titl,
 ]);
 $content .= $tpl->getHtmlFrag('link', [
-    'href' => 'index.php?go=rss&amp;num=50',
+    'href' => 'index.php?go=rss&num=50',
     'title' => $rss,
     'img_src' => img_find('banners/rss_2.gif'),
     'img_alt' => $rss,

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('auto_links')) die('Illegal file a
 
 function auto_links(): void {
     global $db, $afile, $conf, $tpl;
-    $ops = ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     setHead();
@@ -30,18 +30,18 @@ function auto_links(): void {
             $items = [];
             if ((int)$hits > 0) {
                 $items[] = [
-                    'href' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id,
+                    'href' => $afile.'.php?name=auto_links&op=stats&id='.$id,
                     'label' => _MVIEW,
                     'title' => _MVIEW,
                 ];
             }
             $items[] = [
-                'href' => $afile.'.php?name=auto_links&amp;op=add&amp;id='.$id,
+                'href' => $afile.'.php?name=auto_links&op=add&id='.$id,
                 'label' => _FULLEDIT,
                 'title' => _FULLEDIT,
             ];
             $items[] = [
-                'href' => $afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                'href' => $afile.'.php?name=auto_links&op=delete&id='.$id.'&token='.getSiteToken(),
                 'label' => _DELETE,
                 'title' => _DELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($name).'&quot;?\')"',
@@ -84,7 +84,7 @@ function auto_links(): void {
         $body .= getTplPager([
             'limit' => (int)$conf['auto_links']['anum'],
             'maxpg' => (int)$conf['auto_links']['anump'],
-            'url' => 'name=auto_links&amp;',
+            'url' => 'name=auto_links&',
             'table' => '_auto_links',
             'field' => 'id',
         ]);
@@ -159,7 +159,7 @@ function stats(): void {
         ]);
     }
     $subtitle = $id ? $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id,
+        'action_url' => $afile.'.php?name=auto_links&op=stats&id='.$id,
         'content_html' =>
             _SORTE.': '.
             $tpl->getHtmlFrag('select', ['name_attr' => 'sort', 'options_html' => $options]).
@@ -168,7 +168,7 @@ function stats(): void {
             ' '.
             $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ])]) : '';
-    $ops = ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
@@ -249,7 +249,7 @@ function add(): void {
         $hits = getVar('post', 'hits', 'num', 0);
         $outs = getVar('post', 'outs', 'num', 0);
     }
-    $ops = ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
     setHead();
     $cont = getTplAdminTabs([
         'ops' => $ops,
@@ -268,7 +268,7 @@ function add(): void {
         ['label_html' => _A_LINKS_TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'desc', 'value_text' => $desc, 'rows_num' => 5])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=auto_links&amp;op=save',
+        'action_url' => $afile.'.php?name=auto_links&op=save',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => (string)$id],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -348,7 +348,7 @@ function zerodel(): void {
 
 function config(): void {
     global $afile, $conf, $tpl;
-    $ops = ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'];
+    $ops = ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'];
     $path = 'templates/'.$conf['theme'].'/images/banners/';
     $pickopts = '';
     foreach (scandir($path) as $entry) {
@@ -383,7 +383,7 @@ function config(): void {
     }
     $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
     $body = $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=auto_links&amp;op=configsave',
+        'action_url' => $afile.'.php?name=auto_links&op=configsave',
         'hidden' => [
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
         ],
@@ -416,7 +416,7 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset&amp;token='.getSiteToken(), 'name=auto_links&amp;op=zerodel&amp;token='.getSiteToken(), 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
+        'ops' => ['name=auto_links', 'name=auto_links&op=add', 'name=auto_links&op=hitreset&token='.getSiteToken(), 'name=auto_links&op=zerodel&token='.getSiteToken(), 'name=auto_links&op=config', 'name=auto_links&op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _DOCS],
     ]);
 }

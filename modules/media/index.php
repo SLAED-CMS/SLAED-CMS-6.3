@@ -95,8 +95,8 @@ function media(): void {
             $iso  = ($conf['media']['date']) ? date('c', strtotime($time)) : '';
             $links = (url_types($links)) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _MDOWN.': '.url_types($links), 'label' => url_types($links), 'is_download' => true]) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
-            $edit = $afile.'.php?name=media&amp;op=media_add&amp;id='.$id;
-            $del = $afile.'.php?name=media&amp;op=media_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=media&op=media_add&id='.$id;
+            $del = $afile.'.php?name=media&op=media_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
                 'width'         => 100,
@@ -192,8 +192,8 @@ function liste(): void {
             'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
         if ($ismoder) {
-            $edit = $afile.'.php?name=media&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=media&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=media&op=add&id='.$id;
+            $del = $afile.'.php?name=media&op=delete&id='.$id.'&refer=1&token='.$token;
             $row += getTplEditMenu($edit, $del, $stitle);
         }
         $rows[] = $row;
@@ -272,8 +272,8 @@ function view(): void {
         $rating    = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=media&amp;op=media_add&amp;id='.$id;
-        $del = $afile.'.php?name=media&amp;op=media_delete&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=media&op=media_add&id='.$id;
+        $del = $afile.'.php?name=media&op=media_delete&id='.$id.'&token='.getSiteToken();
         $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'is_button_blue' => true]) : '';
         $year      = ($year)      ? _MYEAR.': '.$year           : '';
         $director  = ($director)  ? _MDIRECTOR.': '.$director   : '';
@@ -572,7 +572,7 @@ function broken(): void {
     if ($conf['media']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_media SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'secs' => 5]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&op=view&id='.$id, 'secs' => 5]);
         echo getModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
         setFoot();
     } else {

@@ -29,12 +29,12 @@ function getAdminMenu(string $name, array $mod): string {
     $dial = [];
     if (isAdmin(true)) {
         $typ = (int)($mod['type'] ?? 1);
-        $dial[] = ['href' => $afile.'.php?name=modules&amp;op=edit&amp;mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
-        if (checkModuleConfig($name, $typ)) $dial[] = ['href' => $url.'&amp;op=config', 'title' => _PREFERENCES, 'icon_name' => 'gear'];
-        if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&amp;modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
+        $dial[] = ['href' => $afile.'.php?name=modules&op=edit&mod='.$name, 'title' => _FULLEDIT, 'icon_name' => 'pencil-square'];
+        if (checkModuleConfig($name, $typ)) $dial[] = ['href' => $url.'&op=config', 'title' => _PREFERENCES, 'icon_name' => 'gear'];
+        if (in_array($name, getCategoryModules(), true)) $dial[] = ['href' => $afile.'.php?name=categories&modul='.$name, 'title' => _CATEGORIES, 'icon_name' => 'folder2'];
         if ($typ === 1 && !$off) $dial[] = ['href' => 'index.php?name='.$name, 'title' => _VIEWSITE, 'icon_name' => 'arrow-up-right-circle'];
-        $dial[] = ['href' => $url.'&amp;op=info', 'title' => _DOCS, 'icon_name' => 'info-circle'];
-        $stat = $afile.'.php?name=modules&amp;op=status&amp;mod='.$name.'&amp;act='.($off ? '1' : '0').'&amp;refer=1&amp;token='.getSiteToken();
+        $dial[] = ['href' => $url.'&op=info', 'title' => _DOCS, 'icon_name' => 'info-circle'];
+        $stat = $afile.'.php?name=modules&op=status&mod='.$name.'&act='.($off ? '1' : '0').'&refer=1&token='.getSiteToken();
         $dial[] = ['href' => $stat, 'title' => $off ? _ACTIVATE : _DEACTIVATE, 'icon_name' => 'power'];
     }
     if ($panel) {

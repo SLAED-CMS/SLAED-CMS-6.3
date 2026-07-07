@@ -52,8 +52,8 @@ function voting(): void {
                 'report' => $report,
             ];
             if ($ismoder) {
-                $edit = $afile.'.php?name=voting&amp;op=add&amp;id='.$id;
-                $del = $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1';
+                $edit = $afile.'.php?name=voting&op=add&id='.$id;
+                $del = $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1';
                 $row += getTplEditMenu($edit, $del, $stitle);
             }
             $rows .= $tpl->getHtmlPart('voting-home', $row);

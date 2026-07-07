@@ -1655,7 +1655,7 @@ function setHead(array $seo = []): void {
         $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
         $items = [
             $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _ACCOUNT, 'img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _ACCOUNT, 'label' => $uname, 'is_login_profile' => true, 'is_login_avatar' => true, 'is_bold_label' => true]),
-            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=logout&amp;refer=1', 'title' => _LOGOUT, 'label' => _LOGOUT]),
+            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=logout&refer=1', 'title' => _LOGOUT, 'label' => _LOGOUT]),
         ];
         $html = '';
         foreach ($items as $item) {
@@ -1676,8 +1676,8 @@ function setHead(array $seo = []): void {
             'name_field' => ['itype' => 'text', 'name_attr' => 'user_name', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _NICKNAME, 'is_required' => true],
             'password_field' => ['itype' => 'password', 'name_attr' => 'user_password', 'value_attr' => '', 'maxlength_num' => 25, 'placeholder_text' => _PASSWORD, 'is_required' => true],
             'submit_button' => ['button_type' => 'submit', 'label' => _LOGIN, 'title' => _LOGIN],
-            'lost_link' => ['href' => 'index.php?name=account&amp;op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
-            'register_link' => ['href' => 'index.php?name=account&amp;op=newuser', 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
+            'lost_link' => ['href' => 'index.php?name=account&op=passlost', 'title' => _PASSFOR, 'label' => _PASSFOR],
+            'register_link' => ['href' => 'index.php?name=account&op=newuser', 'title' => _REG, 'label' => _REG, 'is_account_button' => true],
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
             'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
@@ -2914,19 +2914,19 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     $admin = '';
     if (!$force && is_moder('voting') && $votid == 'voting') {
         $links = [
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
         ];
         $admin = getActionMenu($links);
     }
 
-    $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&amp;op=updateVotingResult&amp;votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true, 'hx_include' => '#form'.$votid]) : '';
+    $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&op=updateVotingResult&votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true, 'hx_include' => '#form'.$votid]) : '';
     $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'icon_name' => 'card-checklist', 'chip_tone' => 'accent']) : '';
     $votes = $force ? '' : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
     if (!$force && !$modul && $votid != 'voting') {
-        $votes = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
+        $votes = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&op=view&id='.$id, 'title' => _VOTES, 'label' => _VOTES.': '.$vote, 'is_votes' => true]);
     }
-    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comm, 'is_comments' => true, 'chip_tone' => 'info']) : '';
+    $com = (!$force && !$modul && $acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting&op=view&id='.$id.'#comm', 'title' => _COMMENTS, 'label' => _COMMENTS.': '.$comm, 'is_comments' => true, 'chip_tone' => 'info']) : '';
 
     return $tpl->getHtmlPart('voting-widget', [
         'has_form'   => !$rate,
@@ -3441,10 +3441,10 @@ function getUserSessionInfo(string $id = ''): string {
             if ($guest == 2) {
                 $who_online .= $tpl->getHtmlFrag('session-row', [
                     'geo_html' => Geoip::getFlagHtml($host),
-                    'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
+                    'name_href' => 'index.php?name=account&op=view&uname='.urlencode($uname),
                     'name_title' => getDuration($time),
                     'name_text' => $strip,
-                    'name_link' => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time), 'label' => $strip],
+                    'name_link' => ['href' => 'index.php?name=account&op=view&uname='.urlencode($uname), 'title' => getDuration($time), 'label' => $strip],
                     'module_title' => $module,
                     'module_text' => $linkstrip,
                 ]);
@@ -3483,7 +3483,7 @@ function getUserSessionInfo(string $id = ''): string {
             'has_rows' => $who_online !== '',
             'toggle_id' => 'u-block',
             'update_target' => 'sinfo',
-            'update_query' => 'go=1&amp;op=getUserSessionInfo&amp;token='.getSiteToken(),
+            'update_query' => 'go=1&op=getUserSessionInfo&token='.getSiteToken(),
         ]);
         if ($id) { return $content; } else { echo $content; }
     }
@@ -3502,7 +3502,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             $time = time() - $time;
             $namestrip = cutstr($uname, 15);
             $lstrip = cutstr($module, 15);
-            $alink = htmlspecialchars(urldecode($url));
+            $alink = urldecode($url);
             $alstrip = cutstr($alink, 15);
             $guest = intval($guest);
             if ($guest == 3) {
@@ -3516,7 +3516,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             } elseif ($guest == 2) {
                 $title_who = $tpl->getHtmlFrag('session-row', [
                     'geo_html'    => Geoip::getFlagHtml($host),
-                    'name_link'   => ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
+                    'name_link'   => ['href' => 'index.php?name=account&op=view&uname='.urlencode($uname), 'title' => getDuration($time).' - '._IP.': '.$host, 'label' => $namestrip, 'is_blank' => true],
                     'module_link' => ['href' => $alink, 'title' => $alink, 'label' => ($lstrip !== '' ? $lstrip : $alstrip), 'is_blank' => true],
                     'is_module_right' => true,
                 ]);
@@ -3570,7 +3570,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'update_target' => 'sainfo',
-            'update_query' => 'go=5&amp;op=getUserSessionAdminInfo&amp;token='.getSiteToken(),
+            'update_query' => 'go=5&op=getUserSessionAdminInfo&token='.getSiteToken(),
         ]);
         if ($id) { return $content_who; } else { echo $content_who; }
     }
@@ -3607,7 +3607,7 @@ function user_info(string $name, bool $icon = true): string {
     if (!$name) return '';
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         return $tpl->getHtmlFrag('link', [
-            'href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($name),
+            'href' => 'index.php?name=account&op=view&uname='.urlencode($name),
             'title' => (string)_PERSONALINFO,
             # No person icon next to the info tip: the "i" already marks the user block
             'is_author' => $icon,
@@ -3669,9 +3669,9 @@ function getCartSummary(string $info = ''): string {
             }
             $price = $price * $i;
             $ptotal += $price;
-            $titlink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=view&amp;id='.$id, 'title' => $title, 'label' => $title]);
-            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=addCartItem&amp;id='.$id, 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
-                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
+            $titlink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=view&id='.$id, 'title' => $title, 'label' => $title]);
+            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=addCartItem&id='.$id, 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=deleteCartItem&id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'id' => 'kasse-'.$id,
                 'is_cart_row' => true,
@@ -3687,7 +3687,7 @@ function getCartSummary(string $info = ''): string {
         $footer = $tpl->getHtmlFrag('table-row', [
             'is_cart_foot' => true,
             'cells' => [
-                ['colspan' => 2, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_cart_checkout' => true])],
+                ['colspan' => 2, 'content_html' => $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_cart_checkout' => true])],
                 ['colspan' => 3, 'content_html' => $tpl->getHtmlFrag('span', ['title' => _PARTNERGES, 'text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'], 'is_cart_total' => true])],
             ],
         ]);
@@ -3961,7 +3961,7 @@ function letter(string $mod): string {
     foreach (range(0, 9) as $num) {
         $label = $tpl->getHtmlFrag('span', ['text' => (string)$num, 'is_alpha_letter' => true]);
         $digits .= in_array((string)$num, $alpha)
-            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.$num, 'title' => (string)$num, 'label_html' => $label])
+            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&op=liste&let='.$num, 'title' => (string)$num, 'label_html' => $label])
             : $label;
     }
     $rows[] = $digits;
@@ -3969,7 +3969,7 @@ function letter(string $mod): string {
     foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
         $label = $tpl->getHtmlFrag('span', ['text' => $char, 'is_alpha_letter' => true]);
         $locale .= in_array($char, $alpha)
-            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char), 'title' => $char, 'label_html' => $label])
+            ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&op=liste&let='.urlencode($char), 'title' => $char, 'label_html' => $label])
             : $label;
     }
     $rows[] = $locale;
@@ -3978,7 +3978,7 @@ function letter(string $mod): string {
         foreach (range('A', 'Z') as $eng) {
             $label = $tpl->getHtmlFrag('span', ['text' => $eng, 'is_alpha_letter' => true]);
             $latin .= in_array($eng, $alpha)
-                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng, 'title' => $eng, 'label_html' => $label])
+                ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&op=liste&let='.$eng, 'title' => $eng, 'label_html' => $label])
                 : $label;
         }
         $rows[] = $latin;
@@ -4102,7 +4102,7 @@ function rss_read(mixed $url, mixed $id): string {
                     $cont .= $temp;
                 }
                 if (!$id) {
-                    $sourceLink = $tpl->getHtmlFrag('link', ['href' => htmlspecialchars($url), 'title' => _RSS_FROM.': '.$title, 'label' => $title, 'is_blank' => true]);
+                    $sourceLink = $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _RSS_FROM.': '.$title, 'label' => $title, 'is_blank' => true]);
                     $cont = $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title_html' => _RSS_FROM.': '.$sourceLink]).$cont;
                 }
             } else {
@@ -4171,6 +4171,7 @@ function domain(string $url, string $str = ''): string {
     $str = intval($str);
     $dom = [];
     foreach ($massiv as $val) {
+        $val = html_entity_decode($val, ENT_QUOTES, 'UTF-8');
         $label = ($str) ? cutstr(preg_replace("/http\:\/\/|www./", '', $val), $str) : preg_replace("/http\:\/\/|www./", '', $val);
         $dom[] = $tpl->getHtmlFrag('link', [
             'href' => $val,
@@ -5156,10 +5157,10 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $uitems[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)]);
             }
             if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) {
-                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE]);
+                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=privat&uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE]);
             }
             if ($conf['comments']['profil'] && !empty($user_name)) {
-                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=view&uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
             }
             if ($conf['comments']['web'] && !empty($user_website)) {
                 $uitems[] = $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
@@ -5173,17 +5174,17 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $acttyp = $com_status ? '0' : '1';
                     $acttxt = $com_status ? _DEACTIVATE : _ACTIVATE;
                     $items = [
-                        ['href' => 'index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id, 'title' => _MVIEW, 'label' => _MVIEW],
-                        ['href' => $afile.'.php?name=comments&amp;op=edit&amp;id='.$com_id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
-                        ['href' => $afile.'.php?name=comments&amp;op=approve&amp;id='.$com_id.'&amp;typ='.$acttyp.'&amp;refer=1&amp;token='.getSiteToken(), 'title' => $acttxt, 'label' => $acttxt],
-                        ['href' => $afile.'.php?name=comments&amp;op=delete&amp;id='.$com_id.'&amp;refer=1&amp;token='.getSiteToken(), 'title' => _ONDELETE, 'label' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'&quot;?\');"'],
+                        ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$com_cid.'#'.$com_id, 'title' => _MVIEW, 'label' => _MVIEW],
+                        ['href' => $afile.'.php?name=comments&op=edit&id='.$com_id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
+                        ['href' => $afile.'.php?name=comments&op=approve&id='.$com_id.'&typ='.$acttyp.'&refer=1&token='.getSiteToken(), 'title' => $acttxt, 'label' => $acttxt],
+                        ['href' => $afile.'.php?name=comments&op=delete&id='.$com_id.'&refer=1&token='.getSiteToken(), 'title' => _ONDELETE, 'label' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'&quot;?\');"'],
                     ];
                     $edit = getActionMenu(array_map(fn($item) => $tpl->getHtmlFrag('link', $item), $items));
                 } else {
                     $items = [
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, 'title' => _FMODC, 'label' => _FMODC]),
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE]),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateComment&id='.$com_id.'&typ=1&mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateCommentStatus&id='.$com_id.'&typ=0&mod='.$com_modul, 'title' => _FMODC, 'label' => _FMODC]),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateCommentStatus&id='.$com_id.'&typ=1&mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE]),
                     ];
                     $edit = getActionMenu($items);
                 }
@@ -5191,7 +5192,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
                 if (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) {
                     $items = [
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
+                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateComment&id='.$com_id.'&typ=1&mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
                     ];
                     $edit = getActionMenu($items);
                 } else {
@@ -5351,7 +5352,7 @@ function updateVotingResult(): void {
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->getSqlRowCount($result) > 0) {
         if (!$body) {
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&amp;op=view&amp;id='.$id]);
+            $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&op=view&id='.$id]);
             $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR1, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
         } else {
             $ip = getIp();
@@ -5362,7 +5363,7 @@ function updateVotingResult(): void {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
             list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
             if ($cookies == $id || $num > 0) {
-                $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&amp;op=view&amp;id='.$id]);
+                $meta = $tpl->getHtmlFrag('meta-refresh', ['secs' => '3', 'url' => 'index.php?name=voting&op=view&id='.$id]);
                 $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR2, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
             } else {
                 setcookie(substr('voting', 0, 2).'-'.$id, $id, time() + intval($conf['voting']['voting_t']));

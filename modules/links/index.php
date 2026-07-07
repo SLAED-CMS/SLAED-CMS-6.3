@@ -94,8 +94,8 @@ function links(): void {
             $iso = ($conf['links']['date']) ? date('c', strtotime($time)) : '';
             $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _LINKHITS, 'label' => $hits, 'is_download' => true]) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
-            $edit = $afile.'.php?name=links&amp;op=links_add&amp;id='.$id;
-            $del = $afile.'.php?name=links&amp;op=links_delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=links&op=links_add&id='.$id;
+            $del = $afile.'.php?name=links&op=links_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
                 'width' => 100,
@@ -191,8 +191,8 @@ function liste(): void {
             'report'        => getTplTitleTip([['label' => _DATE, 'value' => format_time($time, _TIMESTRING)]]),
         ];
         if ($ismoder) {
-            $edit = $afile.'.php?name=links&amp;op=add&amp;id='.$id;
-            $del = $afile.'.php?name=links&amp;op=delete&amp;id='.$id.'&amp;refer=1&amp;token='.$token;
+            $edit = $afile.'.php?name=links&op=add&id='.$id;
+            $del = $afile.'.php?name=links&op=delete&id='.$id.'&refer=1&token='.$token;
             $row += getTplEditMenu($edit, $del, $title);
         }
         $rows[] = $row;
@@ -266,8 +266,8 @@ function view(): void {
         $rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavoriteButton($id, $conf['name']);
         $ismoder = is_moder($conf['name']);
-        $edit = $afile.'.php?name=links&amp;op=links_add&amp;id='.$id;
-        $del = $afile.'.php?name=links&amp;op=links_delete&amp;id='.$id.'&amp;token='.getSiteToken();
+        $edit = $afile.'.php?name=links&op=links_add&id='.$id;
+        $del = $afile.'.php?name=links&op=links_delete&id='.$id.'&token='.getSiteToken();
         if (is_user() || $conf['links']['links'] == '1') {
             $onclick = ' OnClick="javascript:window.open(\''.str_replace(["\\", "'"], ["\\\\", "\\'"], $authorurl).'\')"';
             $download = $tpl->getHtmlPart('form-wrap', [
@@ -446,7 +446,7 @@ function broken(): void {
     if ($conf['links']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCLINK]);
-        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'secs' => 5]);
+        $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'].'&op=view&id='.$id, 'secs' => 5]);
         echo getModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
         setFoot();
     } else {

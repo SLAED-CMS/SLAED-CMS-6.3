@@ -59,8 +59,8 @@ function main(): void {
         }
         $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'news'))), ENT_QUOTES), 60);
-        $href = 'index.php?name=news&amp;op=view&amp;id='.$id;
-        $cat = 'index.php?name=news&amp;cat='.$cid;
+        $href = 'index.php?name=news&op=view&id='.$id;
+        $cat = 'index.php?name=news&cat='.$cid;
         $news_html .= $tpl->getHtmlFrag('main-content-item', [
             'url'        => $href,
             'title'      => $title,
@@ -90,8 +90,8 @@ function main(): void {
         }
         $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'files'))), ENT_QUOTES), 60);
-        $href = 'index.php?name=files&amp;op=view&amp;id='.$id;
-        $cat = 'index.php?name=files&amp;cat='.$cid;
+        $href = 'index.php?name=files&op=view&id='.$id;
+        $cat = 'index.php?name=files&cat='.$cid;
         $files_html .= $tpl->getHtmlFrag('main-content-item', [
             'url'        => $href,
             'title'      => $title,

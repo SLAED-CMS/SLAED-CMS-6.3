@@ -10,7 +10,7 @@ function clients(): void {
     global $db, $afile, $stop, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
+        'ops' => ['name=clients', 'name=clients&op=add', 'name=clients&op=info'],
         'tabs' => [_HOME, _ADD, _DOCS],
     ]);
     if ($stop) {
@@ -41,17 +41,17 @@ function clients(): void {
                             'trigger_label' => _FUNCTIONS,
                             'items' => [
                                 [
-                                    'href' => $afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act.'&amp;token='.getSiteToken(),
+                                    'href' => $afile.'.php?name=clients&op=status&id='.$id.'&act='.$act.'&token='.getSiteToken(),
                                     'label' => $status ? _DEACTIVATE : _ACTIVATE,
                                     'title' => $status ? _DEACTIVATE : _ACTIVATE,
                                 ],
                                 [
-                                    'href' => $afile.'.php?name=clients&amp;op=add&amp;id='.$id,
+                                    'href' => $afile.'.php?name=clients&op=add&id='.$id,
                                     'label' => _FULLEDIT,
                                     'title' => _FULLEDIT,
                                 ],
                                 [
-                                    'href' => $afile.'.php?name=clients&amp;op=delete&amp;id='.$id.'&amp;token='.getSiteToken(),
+                                    'href' => $afile.'.php?name=clients&op=delete&id='.$id.'&token='.getSiteToken(),
                                     'label' => _DELETE,
                                     'title' => _DELETE,
                                     'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
@@ -105,7 +105,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
+        'ops' => ['name=clients', 'name=clients&op=add', 'name=clients&op=info'],
         'tabs' => [_HOME, _ADD, _DOCS],
         'tab' => 1,
     ]);
@@ -125,7 +125,7 @@ function add(): void {
         ['label_html' => _TEXT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'body', 'value_text' => $body, 'rows_num' => 15])],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
-        'action_url' => $afile.'.php?name=clients&amp;op=save',
+        'action_url' => $afile.'.php?name=clients&op=save',
         'hidden' => [
             ['nameattr' => 'cid', 'valueattr' => (string)$cid],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -190,7 +190,7 @@ function status(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'],
+        'ops' => ['name=clients', 'name=clients&op=add', 'name=clients&op=info'],
         'tabs' => [_HOME, _ADD, _DOCS],
     ]);
 }

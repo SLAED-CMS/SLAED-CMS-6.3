@@ -6,9 +6,9 @@
 <div class="sl-msg">
   <div class="sl-msg-card">
     {% if logo %}
-    <a class="sl-msg-brand" href="{{{ homeurl }}}" title="{{ sitename }}"><img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{{ sitename }}"></a>
+    <a class="sl-msg-brand" href="{{ homeurl }}" title="{{ sitename }}"><img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{{ sitename }}"></a>
     {% else %}
-    <a class="sl-msg-brand sl-msg-brand-text" href="{{{ homeurl }}}" title="{{ sitename }}">{{ sitename }}</a>
+    <a class="sl-msg-brand sl-msg-brand-text" href="{{ homeurl }}" title="{{ sitename }}">{{ sitename }}</a>
     {% endif %}
     <div class="sl-msg-line"></div>
     {% if title %}<h1 class="sl-msg-title">{{{ title }}}</h1>{% endif %}
@@ -17,7 +17,7 @@
     </div>
     {% if search %}
     <form class="sl-search-form sl-msg-search" action="index.php?name=search" method="post" role="search">
-      {% if home %}<a class="sl-home-link sl-circle-action" href="{{{ homeurl }}}" title="{{ home }}" aria-label="{{ home }}"><i class="bi bi-house-door-fill" aria-hidden="true"></i></a>{% endif %}
+      {% if home %}<a class="sl-home-link sl-circle-action" href="{{ homeurl }}" title="{{ home }}" aria-label="{{ home }}"><i class="bi bi-house-door-fill" aria-hidden="true"></i></a>{% endif %}
       <input type="hidden" name="mod" value="">
       <input type="text" name="word" maxlength="100" placeholder="{{ search }}" class="sl-field" required>
       <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>

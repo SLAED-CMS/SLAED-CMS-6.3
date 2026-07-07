@@ -103,7 +103,7 @@ function config(): void {
         ];
     }
     $links[] = [
-        'href' => $afile.'.php?name=config&amp;op=info&amp;tab='.$ctab,
+        'href' => $afile.'.php?name=config&op=info&tab='.$ctab,
         'label' => _DOCS,
         'link_attr' => 'data-sl-tab-info-link="config-main"',
         'title' => _DOCS,
@@ -786,7 +786,7 @@ function clearcache(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=config&amp;tab=0', 'name=config&amp;tab=1', 'name=config&amp;tab=2', 'name=config&amp;tab=3', 'name=config&amp;tab=4', 'name=config&amp;tab=5', 'name=config&amp;tab=6', 'name=config&amp;op=info'],
+        'ops' => ['name=config&tab=0', 'name=config&tab=1', 'name=config&tab=2', 'name=config&tab=3', 'name=config&tab=4', 'name=config&tab=5', 'name=config&tab=6', 'name=config&op=info'],
         'tabs' => [_GENPREF, _SEO, _MULTILINGUAL.' / '._GEOLOCATION, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _DOCS],
     ]);
 }

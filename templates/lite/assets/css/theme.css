@@ -493,8 +493,7 @@ thead tr th[data-sort-method="none"]::after {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sl-space-md);
-  margin-bottom: 10px;
-  font-size: 0.9em;
+  margin-bottom: 12px;
   color: var(--sl-color-text-muted);
 }
 
@@ -513,7 +512,7 @@ a.sl-crumb::after {
   bottom: -2px;
   height: 2px;
   border-radius: 2px;
-  background: var(--sl-cat-tone);
+  background: currentColor;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.24s ease;
@@ -529,7 +528,7 @@ a.sl-crumb:hover::after {
 
 .sl-crumb-cur {
   color: var(--sl-color-text-muted);
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .sl-crumb-sep {
@@ -2840,7 +2839,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-slide-title {
-  font-weight: bold;
+  font-weight: normal;
   font-size: 48px;
   text-transform: uppercase;
   margin-bottom: var(--sl-space-sm);
@@ -2908,7 +2907,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-big-sl-icons li h4 {
-  font-weight: bold;
+  font-weight: normal;
   text-transform: uppercase;
   font-size: 18px;
   margin-bottom: 10px;
@@ -2971,7 +2970,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-heading-1 {
-  font-weight: bold;
+  font-weight: normal;
   color: var(--sl-login-link-color);
   font-size: 32px;
   margin: 50px 0 16px 0;
@@ -3211,8 +3210,8 @@ ol.sl-sublist-two li:hover:before {
   display: flex;
 }
 
-.sl-btn-idea b,
-.sl-btn-feedback b {
+.sl-btn-idea .sl-font,
+.sl-btn-feedback .sl-font {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3223,7 +3222,7 @@ ol.sl-sublist-two li:hover:before {
   padding: var(--sl-space-md) 7px;
   border-radius: 0 8px 8px 0;
   color: var(--sl-color-on-dark);
-  font-weight: bold;
+  font-weight: normal;
   white-space: nowrap;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -3233,18 +3232,18 @@ ol.sl-sublist-two li:hover:before {
 }
 
 /* Hover/focus: grow to the right (left edge stays pinned, so the gradient covers everything with no see-through strip); the label rides along with the extra left padding */
-.sl-btn-idea b:hover,
-.sl-btn-feedback b:hover,
-.sl-btn-idea:focus-visible b,
-.sl-btn-feedback:focus-visible b {
+.sl-btn-idea .sl-font:hover,
+.sl-btn-feedback .sl-font:hover,
+.sl-btn-idea:focus-visible .sl-font,
+.sl-btn-feedback:focus-visible .sl-font {
   padding-left: 15px;
 }
 
-.sl-btn-idea b {
+.sl-btn-idea .sl-font {
   background: linear-gradient(to right, var(--sl-grad-success-start) 0%, var(--sl-grad-success-end) 100%);
 }
 
-.sl-btn-feedback b {
+.sl-btn-feedback .sl-font {
   background: linear-gradient(to right, var(--sl-grad-info-start) 0%, var(--sl-grad-info-end) 100%);
 }
 
@@ -3286,6 +3285,7 @@ ol.sl-sublist-two li:hover:before {
 /* Utilities: shared helpers */
 .sl-font {
   font-family: "Magistral", Arial, Tahoma, sans-serif;
+  font-weight: normal;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -3712,7 +3712,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-slogan {
-  font-size: 23px;
+  font-size: 24px;
   line-height: 24px;
   margin: 0;
   color: var(--sl-color-text-muted);
@@ -3894,9 +3894,14 @@ ol.sl-sublist-two li:hover:before {
   color: var(--sl-color-text-muted);
 }
 
+.sl-d-version {
+  font-size: 20px;
+  font-weight: normal;
+}
+
 .sl-d-num {
   color: var(--sl-color-brand-link);
-  font-weight: bold;
+  font-weight: normal;
   font-size: 45px;
   line-height: 40px;
   transform: translateY(-1px);
@@ -4121,7 +4126,7 @@ ol.sl-sublist-two li:hover:before {
 
 #head-content .sl-font {
   font-size: var(--sl-font-display);
-  font-weight: bold;
+  font-weight: normal;
   text-transform: uppercase;
   margin: 0;
 }
@@ -4129,6 +4134,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-breadcrumbs {
   font-family: "Magistral", Arial, Tahoma, sans-serif;
   font-size: var(--sl-font-display);
+  font-weight: normal;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -4158,7 +4164,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-demo-line-title {
   font-size: var(--sl-font-display);
-  font-weight: 700;
+  font-weight: normal;
   text-shadow: 0 1px 1px var(--sl-overlay-10);
   text-transform: uppercase;
   margin: 0;
@@ -4229,7 +4235,7 @@ ol.sl-sublist-two li:hover:before {
   display: block;
   margin-top: 2px;
   color: var(--sl-color-text-subtle);
-  font-size: 16.6px;
+  font-size: 15.5px;
   line-height: 1.05;
   white-space: nowrap;
 }
@@ -4251,8 +4257,8 @@ ol.sl-sublist-two li:hover:before {
   width: 54px;
   margin-top: 0;
   color: var(--sl-color-text-subtle);
-  font-size: 13px;
-  line-height: 1.05;
+  font-size: 14px;
+  line-height: 1.0;
   text-transform: uppercase;
   white-space: normal;
 }
@@ -4286,7 +4292,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-f-title {
   font-size: 28px;
-  font-weight: bold;
+  font-weight: normal;
   margin: -4px 0 0;
 }
 
@@ -4427,7 +4433,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* News: titles */
 .sl-mtl {
-  font-weight: bold;
+  font-weight: normal;
   font-size: 32px;
   color: var(--sl-login-link-color);
   margin: 45px 0 15px 0;
@@ -5939,7 +5945,7 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
 }
 
 .sl-msg-brand-text {
-  font: bold 26px/1 "Magistral", Arial, sans-serif;
+  font: normal 26px/1 "Magistral", Arial, sans-serif;
   letter-spacing: 0.5px;
   color: var(--sl-color-brand-strong);
 }

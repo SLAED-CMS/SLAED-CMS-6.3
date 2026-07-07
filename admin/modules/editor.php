@@ -64,7 +64,7 @@ function isHtmxReq(): bool {
 
 function getEditbox(string $file, string $info, string $warn, string $mtype, string $edit, int $tab, bool $trim = false, string $extra = '', string $fallback = '', string $note = '', string $type = 'info'): string {
     global $afile, $tpl;
-    $ops = ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
+    $ops = ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'];
     $tabs = [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
@@ -148,7 +148,7 @@ function save(): void {
         }
         setHead();
         $cont = getTplAdminTabs([
-            'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
+            'ops' => ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'],
             'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS],
             'tab' => $edit === 'editheader' ? 1 : ($edit === 'htaccess' ? 2 : ($edit === 'robots' ? 3 : 0)),
         ]);
@@ -171,7 +171,7 @@ function save(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'],
+        'ops' => ['name=editor', 'name=editor&op=editheader', 'name=editor&op=htaccess', 'name=editor&op=robots', 'name=editor&op=info'],
         'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _DOCS],
     ]);
 }

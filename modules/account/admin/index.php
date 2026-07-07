@@ -38,7 +38,7 @@ function account(): void {
     $search = $search > 0 ? $search : 2;
     setHead();
     $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
     ]);
@@ -104,7 +104,7 @@ function account(): void {
                 ['label' => _GENDER, 'value' => getGenderText($gender)],
                 ['label' => _POINTS, 'value' => (string)$point, 'is_last' => true],
             ];
-            $delhref = $afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;token='.getSiteToken();
+            $delhref = $afile.'.php?name=account&op=delete&id='.$uid.'&token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$uid, $chng)],
@@ -119,12 +119,12 @@ function account(): void {
                         'trigger_label' => _FUNCTIONS,
                         'items' => [
                             [
-                                'href' => $afile.'.php?name=account&amp;op=add&amp;id='.$uid,
+                                'href' => $afile.'.php?name=account&op=add&id='.$uid,
                                 'label' => _FULLEDIT,
                                 'title' => _FULLEDIT,
                             ],
                             [
-                                'href' => $afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip,
+                                'href' => $afile.'.php?name=security&op=banlist&new_ip='.$ip,
                                 'label' => _BANIPSENDER,
                                 'title' => _BANIPSENDER,
                                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.htmlspecialchars($ip, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
@@ -219,7 +219,7 @@ function add(): void {
     $warn = is_array($warn) ? $warn : [];
     setHead();
     $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 1,
@@ -536,7 +536,7 @@ function newuser(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 2,
@@ -548,7 +548,7 @@ function newuser(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $rows = [];
         while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
-            $delhref = $afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;token='.getSiteToken();
+            $delhref = $afile.'.php?name=account&op=newdrop&id='.$uid.'&token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$uid],
@@ -560,7 +560,7 @@ function newuser(): void {
                         'trigger_label' => _FUNCTIONS,
                         'items' => [
                             [
-                                'href' => $conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check,
+                                'href' => $conf['homeurl'].'/index.php?name=account&op=activate&user='.urlencode($name).'&num='.$check,
                                 'label' => _ACTIVATE,
                                 'title' => _ACTIVATE,
                             ],
@@ -607,7 +607,7 @@ function pointreset(): void {
     global $afile, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 3,
@@ -692,7 +692,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
         'tab'  => 4,
@@ -888,7 +888,7 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
         'subtitle_html' => getAccountSearch(),
     ]);

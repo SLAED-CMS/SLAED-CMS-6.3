@@ -18,7 +18,7 @@ while ([$id, $title, $time, $lname, $lpost, $ltime, $status] = $db->getSqlRow($r
     $rows .= $tpl->getHtmlFrag('table-row', [
         'is_hidden' => $status <= 1 || $time > date('Y-m-d H:i:s'),
         'cells' => [
-            ['href' => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost, 'title' => $title, 'text' => $title, 'is_truncate' => true],
+            ['href' => 'index.php?name=forum&op=view&id='.$id.'&last#'.$lpost, 'title' => $title, 'text' => $title, 'is_truncate' => true],
             ['primary_text' => _POSTEDBY.': '.$lname, 'secondary_text' => _DATE.': '.format_time($ltime, _TIMESTRING)],
         ],
     ]);
