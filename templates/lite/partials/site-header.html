@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="format-detection" content="telephone=no">
+  {{{ meta }}}
+  {{{ preload }}}
+  {{{ links }}}
+  {{{ scripts }}}
+</head>
+<body{% if season %} class="{{ season }}"{% endif %}>
+  <div id="topbar">
+    <div class="sl-wrp">
+      <ul class="sl-top-contact"><li class="sl-head-marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
+      <div class="sl-top-right">
+        <div class="sl-top-social">
+          <a class="sl-thd sl-circle-action sl-i-gh" rel="me noopener" target="_blank" href="https://github.com/SLAED-CMS/SLAED-CMS-6.3" title="Мы в GitHub" aria-label="Мы в GitHub"><i class="bi bi-github" aria-hidden="true"></i>Мы в GitHub</a>
+          <a class="sl-thd sl-circle-action sl-i-yt" rel="me noopener" target="_blank" href="https://www.youtube.com/@SLAED-CMS" title="Мы в YouTube" aria-label="Мы в YouTube"><i class="bi bi-youtube" aria-hidden="true"></i>Мы в YouTube</a>
+          <a class="sl-thd sl-circle-action sl-i-tw" rel="me noopener" target="_blank" href="https://x.com/slaed_cms" title="Мы в X" aria-label="Мы в X"><i class="bi bi-twitter-x" aria-hidden="true"></i>Мы в X</a>
+          <a class="sl-thd sl-circle-action sl-i-vk" rel="me noopener" target="_blank" href="https://vk.com/slaed_cms" title="Мы вКонтакте" aria-label="Мы вКонтакте"><i class="bi bi-chat-square-text" aria-hidden="true"></i>Мы вКонтакте</a>
+          <a class="sl-thd sl-circle-action sl-i-rss" rel="alternate" type="application/rss+xml" href="index.php?go=rss&amp;name=news&amp;num=50" title="Читайте нашу RSS" aria-label="Читайте нашу RSS"><i class="bi bi-rss" aria-hidden="true"></i>Читайте нашу RSS</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-de" rel="me noopener" target="_blank" href="https://slaed.de" title="Документация на немецком" aria-label="Документация на немецком"><i class="bi bi-book-half" aria-hidden="true"></i>Документация на немецком</a>
+          <a class="sl-thd sl-circle-action sl-i-doc-en" rel="me noopener" target="_blank" href="https://slaed.info" title="Документация на английском" aria-label="Документация на английском"><i class="bi bi-book" aria-hidden="true"></i>Документация на английском</a>
+          <a class="sl-thd sl-circle-action sl-i-recom" href="index.php?name=recommend" title="{{ recommend }}" aria-label="{{ recommend }}"><i class="bi bi-star" aria-hidden="true"></i>{{ recommend }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <header id="header">
+    <div class="sl-wrp">
+      <a href="/" class="sl-thd sl-logo" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}">
+        <img src="templates/{{ theme }}/images/logos/{{ logo }}" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}"{% if logo_w %} width="{{ logo_w }}" height="{{ logo_h }}"{% endif %}>
+      </a>
+      <p class="sl-font sl-slogan">Все великое<br>просто</p>
+      {{{ login }}}
+      <ul class="sl-d-pane">
+        <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
+        <li class="sl-d-num sl-font">6.2</li>
+        <li class="sl-d-btns"><a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
+      </ul>
+    </div>
+  </header>
+  <nav id="hmenu" aria-label="Главное меню">
+    <div class="sl-wrp">
+      {% include 'partials/menu.html' %}
+      <form class="sl-search-form" role="search" action="index.php?name=search" method="post">
+        <input type="hidden" value="{{ modul }}" name="mod">
+        <input type="text" value="" name="word" maxlength="100" placeholder="{{ search }}" aria-label="{{ search }}" class="sl-field" required>
+        <button type="submit" class="sl-search-btn sl-circle-action" aria-label="{{ search }}" title="{{ search }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+      </form>
+    </div>
+  </nav>
+  {% if head_html %}
+  <div id="head-content">
+    <div class="sl-wrp">{{{ head_html }}}</div>
+  </div>
+  {% endif %}

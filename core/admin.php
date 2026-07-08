@@ -229,7 +229,7 @@ function getAdminTopMenu(): string {
     $items = !isAdmin(true) ? [
         ['href' => '#', 'label' => _HELLO.', '.substr((string)($admin[1] ?? ''), 0, 25).'!', 'blank' => false, 'icon' => 'person-badge'],
         ['href' => $afile.'.php', 'label' => _HOME, 'blank' => false, 'icon' => 'house-door'],
-        ['href' => 'index.php', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
+        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
         ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
         ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
     ] : [
@@ -237,7 +237,7 @@ function getAdminTopMenu(): string {
         ['href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false, 'icon' => 'grid-3x3-gap'],
         ['href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false, 'icon' => 'gpu-card'],
         ['href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false, 'icon' => 'folder'],
-        ['href' => 'index.php', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
+        ['href' => '/', 'label' => _SITE, 'blank' => true, 'icon' => 'globe2'],
         ['href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true, 'icon' => 'person'],
         ['href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false, 'icon' => 'box-arrow-right'],
     ];

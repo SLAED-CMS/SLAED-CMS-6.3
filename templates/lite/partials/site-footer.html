@@ -1,0 +1,74 @@
+  <section id="demo-line" aria-label="Хотите опробовать SLAED CMS в действии?">
+    <div class="sl-wrp">
+      <div class="sl-font sl-demo-line-title">Хотите опробовать SLAED CMS в действии?</div>
+      <ul class="sl-d-pane">
+        <li class="sl-d-info sl-d-version sl-font">Aктуальная версия</li>
+        <li class="sl-d-num sl-font">6.2</li>
+        <li class="sl-d-btns"><a class="sl-but" href="index.php?name=files&amp;op=view&amp;id=1529" title="Скачать бесплатно актуальную версию системы">Скачать систему</a></li>
+      </ul>
+    </div>
+  </section>
+  <footer id="footbox">
+    <div class="sl-wrp sl-grid-1-4">
+      <section class="sl-grid" aria-label="SLAED CMS">
+        <a href="index.php?name=content&amp;op=view&amp;id=1" class="sl-upper-wordmark" title="{{ sitename }} - {% if slogan %}{{ slogan }}{% else %}Все великое просто{% endif %}">
+          <img class="sl-upper-wordmark-img" src="templates/{{ theme }}/images/logos/slaed-logo-wordmark-outline-blue.svg" alt="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" title="{% if slogan %}{{ sitename }} - {{ slogan }}{% else %}{{ sitename }}{% endif %}" width="355" height="110">
+          <span class="sl-upper-tagline sl-font">Все великое просто</span>
+        </a>
+        {{{ foot_html }}}
+        <a class="sl-thd sl-madein sl-madein-brand" href="index.php?name=content&amp;op=view&amp;id=7" title="Официальный патент на бренд SLAED в Германии">
+          <img src="templates/{{ theme }}/images/flags/de.svg" alt="Официальная регистрация бренда SLAED в Германии" width="60" height="40">
+          <span class="sl-madein-label sl-font">Made<br>in<br>Germany</span>
+        </a>
+      </section>
+      {% if forumblock %}{{{ forumblock }}}{% endif %}
+      <section class="sl-grid" aria-label="Технологии">
+        <div class="sl-font sl-f-title">Технологии</div>
+        <div class="sl-partners">
+          <a href="index.php?name=content&amp;op=view&amp;id=20" title="SLAED CMS написана на языке PHP"><img src="templates/{{ theme }}/images/tmp/php.png" alt="PHP" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=21" title="SLAED CMS на СУБД MySQL"><img src="templates/{{ theme }}/images/tmp/mysql.png" alt="MySQL" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=18" title="Полная поддержка HTML5 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/html5.png" alt="HTML 5" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=19" title="Полная поддержка CSS3 в SLAED CMS"><img src="templates/{{ theme }}/images/tmp/css3.png" alt="CSS 3" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=22" title="SLAED CMS использует JavaScript Framework jQuery"><img src="templates/{{ theme }}/images/tmp/jquery.png" alt="jQuery" width="74" height="74"></a>
+          <a href="index.php?name=content&amp;op=view&amp;id=23" title="SLAED CMS использует JavaScript библиотеку jQuery UI"><img src="templates/{{ theme }}/images/tmp/jqueryui.png" alt="jQuery UI" width="74" height="74"></a>
+        </div>
+      </section>
+      <section class="sl-grid" aria-label="Контакты">
+        <div class="sl-font sl-f-title">Контакты</div>
+        <address>
+          <ul class="sl-block-contact">
+            <li><i class="bi bi-geo-alt sl-contact-icon" aria-hidden="true"></i>D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
+            <li><i class="bi bi-telephone sl-contact-icon" aria-hidden="true"></i>+49 176 61966679</li>
+            <li><i class="bi bi-envelope sl-contact-icon" aria-hidden="true"></i><a href="mailto:support@slaed.net">support@slaed.net</a></li>
+            <li><i class="bi bi-globe sl-contact-icon" aria-hidden="true"></i><a href="https://slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
+          </ul>
+        </address>
+      </section>
+    </div>
+    <div class="sl-wrp">
+      <nav class="sl-fmenu" aria-label="Нижнее меню">
+        <ul>
+          <li><a href="/" title="{{ home }}">{{ home }}</a></li>
+          <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Платные услуги проекта">Услуги</a></li>
+          <li><a href="index.php?name=news" title="Новости">Новости</a></li>
+          <li><a href="index.php?name=files" title="Каталог файлов">Файлы</a></li>
+          <li><a href="index.php?name=faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
+          <li><a href="index.php?name=pages" title="Центр документации">Документация</a></li>
+          <li><a href="index.php?name=main" title="Презентационная страница системы">Портфолио</a></li>
+          <li><a href="index.php?name=sitemap" title="Карта сайта">Карта сайта</a></li>
+        </ul>
+        <a class="sl-pull-right" href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">По вопросам рекламы</a>
+      </nav>
+    </div>
+  </footer>
+  <div id="block-idea"><a href="index.php?name=forum&amp;cat=95" title="Идеи и предложения для разработки" class="sl-btn-idea"><span class="sl-font">Идеи и предложения</span></a></div>
+  <div id="block-feedback"><a href="index.php?name=contact" title="{{ _FEEDBACK }}" class="sl-btn-feedback"><span class="sl-font">{{ _FEEDBACK }}</span></a></div>
+  {% if debug_html %}
+  <div class="sl-advantage">
+    <div class="sl-wrp">
+      {{{ debug_html }}}
+    </div>
+  </div>
+  {% endif %}
+</body>
+</html>
