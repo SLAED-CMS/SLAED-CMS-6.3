@@ -1425,9 +1425,9 @@ function filterCanonicalParams(): array {
 
 # Build one public site URL from normalized route parameters
 function getPublicUrl(array $vars = []): string {
- global $conf;
+    global $conf;
     $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
-    if ($vars === []) return $base;
+    if ($vars === []) return $base.'/';
     $path = ltrim(getSeoUrl($vars), '/');
     return $base.'/'.$path;
 }

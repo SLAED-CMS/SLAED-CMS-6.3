@@ -426,6 +426,8 @@ function config(): void {
         'is_config' => true,
     ])];
     $rows[] = ['label_html' => _REWRITE_MOD, 'field_html' => getTplRadioGroup(['name' => 'rewrite', 'value' => $conf['rewrite'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _FORCESSL, 'field_html' => getTplRadioGroup(['name' => 'forcessl', 'value' => $conf['forcessl'] ?? 0, 'options' => $yesno])];
+    $rows[] = ['label_html' => _FORCEHOST, 'field_html' => getTplRadioGroup(['name' => 'forcehost', 'value' => $conf['forcehost'] ?? 0, 'options' => $yesno])];
     $rows[] = ['label_html' => _SEOTITLE, 'field_html' => getTplRadioGroup(['name' => 'title', 'value' => $conf['title'] ?? 1, 'options' => $yesno])];
     $rows[] = ['label_html' => _SEOCTITLE, 'field_html' => getTplRadioGroup(['name' => 'ctitle', 'value' => $conf['ctitle'] ?? 1, 'options' => $yesno])];
     $rows[] = ['label_html' => _OGRAPH, 'field_html' => getTplRadioGroup(['name' => 'agraph', 'value' => $conf['agraph'] ?? 1, 'options' => $yesno])];
@@ -726,6 +728,8 @@ function save(): void {
             'sep' => urlencode(getVar('post', 'sep', 'let', '-')),
             'tsep' => urlencode(getVar('post', 'tsep', 'let', '-')),
             'rewrite' => getVar('post', 'rewrite', 'num'),
+            'forcessl' => getVar('post', 'forcessl', 'num'),
+            'forcehost' => getVar('post', 'forcehost', 'num'),
             'title' => getVar('post', 'title', 'num'),
             'ctitle' => getVar('post', 'ctitle', 'num'),
             'agraph' => getVar('post', 'agraph', 'num'),

@@ -376,6 +376,8 @@ define('_REPLACEINFO',"Dans le contenu de remplacement admissible à l'utilisati
 define('_REPLACE_FIELD','Remplacement de');
 define('_REPTEXT','Avec les tables InnoDB modernes, la récupération après un arrêt inattendu est généralement automatique. La fonction de réparation n\'est nécessaire qu\'en cas d\'erreurs réelles dans les tables.');
 define('_REWRITE_MOD','Activer les options de conversion dans la machine CNC?');
+define('_FORCESSL','Toujours utiliser HTTPS (rediriger depuis http)?');
+define('_FORCEHOST','Domaine unique (rediriger www vers le principal)?');
 define('_RIGHT','Droite');
 define('_RIGHTBLOCK','Le bloc de droite');
 define('_ROWS','Lignes');

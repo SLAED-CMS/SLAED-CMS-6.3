@@ -376,6 +376,8 @@ define('_REPLACEINFO','Im Inhalt ersetzen es zulässig, für die Verwendung als 
 define('_REPLACE_FIELD','Austauschen');
 define('_REPTEXT','Bei modernen InnoDB-Tabellen treten Beschädigungen nur selten auf, da MySQL die Wiederherstellung nach einem Absturz automatisch durchführt. Die Reparaturfunktion sollte nur bei tatsächlichen Fehlern eingesetzt werden, beispielsweise nach einem unerwarteten Serverabbruch oder wenn eine Tabelle beschädigt erscheint.');
 define('_REWRITE_MOD','Umwandlung der Links aktivieren - Rewrite Mod?');
+define('_FORCESSL','Immer HTTPS verwenden (von http umleiten)?');
+define('_FORCEHOST','Einheitliche Domain (www auf Haupt umleiten)?');
 define('_RIGHT','Rechts');
 define('_RIGHTBLOCK','Rechter Block');
 define('_ROWS','Zeilen');

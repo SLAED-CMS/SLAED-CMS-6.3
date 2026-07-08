@@ -376,6 +376,8 @@ define('_REPLACEINFO','In the content of the replacement of the permitted use, a
 define('_REPLACE_FIELD','Replacing');
 define('_REPTEXT','With modern InnoDB tables, most issues are automatically recovered after an unexpected shutdown. The repair function should only be used when real table errors are detected.');
 define('_REWRITE_MOD','Activate transformation of links - Mod rewrite?');
+define('_FORCESSL','Always use HTTPS (redirect from http)?');
+define('_FORCEHOST','Single site domain (redirect www to main)?');
 define('_RIGHT','Right');
 define('_RIGHTBLOCK','Right Block');
 define('_ROWS','Lines');

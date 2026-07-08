@@ -376,6 +376,8 @@ define('_REPLACEINFO','W treści wymiany dopuszczalne wykorzystania, jak zwykły
 define('_REPLACE_FIELD','Wymiana');
 define('_REPTEXT','W nowoczesnych tabelach InnoDB odzyskiwanie danych po awarii odbywa się automatycznie. Funkcja naprawy powinna być używana tylko w przypadku faktycznych błędów tabel.');
 define('_REWRITE_MOD','Aktywacja konwersja linków w Rewrite Mod?');
+define('_FORCESSL','Zawsze używaj HTTPS (przekieruj z http)?');
+define('_FORCEHOST','Jedna domena (przekieruj www na główną)?');
 define('_RIGHT','Po prawej stronie');
 define('_RIGHTBLOCK','Prawy blok');
 define('_ROWS','Wierszy');

@@ -18,6 +18,27 @@ if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
 # Ensure configuration exists when this file is analyzed or included directly
 if (!isset($conf) || !is_array($conf)) $conf = getConfig();
 
+# SEO: optional canonical host/scheme enforcement (opt-in per install; portable, proxy-aware via X-Forwarded-Proto)
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && (!empty($conf['forcessl']) || !empty($conf['forcehost']))) {
+    $rhost = strtolower((string)($_SERVER['HTTP_HOST'] ?? ''));
+    $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $chost = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
+    $badssl = !empty($conf['forcessl']) && !$secure;
+    $badhost = !empty($conf['forcehost']) && $rhost !== '' && $chost !== '' && $rhost !== $chost;
+    if ($badssl || $badhost) {
+        $scheme = (!empty($conf['forcessl']) || $secure) ? 'https' : 'http';
+        $target = !empty($conf['forcehost']) && $chost !== '' ? $chost : $rhost;
+        header('Location: '.$scheme.'://'.$target.((string)($_SERVER['REQUEST_URI'] ?? '/')), true, 301);
+        exit;
+    }
+}
+
+# SEO: consolidate the bare /index.php to its directory root to avoid a duplicate homepage URL
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && preg_match('#^(.*/)index\.php$#', (string)($_SERVER['REQUEST_URI'] ?? ''), $path)) {
+    header('Location: '.$path[1], true, 301);
+    exit;
+}
+
 # Set the default timezone
 date_default_timezone_set($conf['gtime']);
 

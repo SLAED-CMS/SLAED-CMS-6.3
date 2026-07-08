@@ -79,6 +79,8 @@ https://slaed.net
 support@slaed.net',
     'multilingual' => '1',
     'rewrite' => '0',
+    'forcessl' => '0',
+    'forcehost' => '0',
     'schema' => '<script type="application/ld+json">
 {
 	"@context": "https://schema.org",
