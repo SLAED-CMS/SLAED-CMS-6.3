@@ -124,9 +124,9 @@ function uploads(): void {
     }
     $tabthr .= $tpl->getHtmlPart('box', ['box_id' => 'repf2']);
     $tabs = [
-        ['label' => _EUPLOAD, 'target' => 'uploads-panel-0', 'active' => true, 'link_attr' => ''],
-        ['label' => _DGEN, 'target' => 'uploads-panel-1', 'active' => false, 'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=1&amp;dir='.$dir.$token.'" hx-target="#repf1" hx-swap="innerHTML" hx-push-url="false"'],
-        ['label' => _DTHUMB, 'target' => 'uploads-panel-2', 'active' => false, 'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=2&amp;dir='.$dir.$token.'" hx-target="#repf2" hx-swap="innerHTML" hx-push-url="false"'],
+        ['label' => _EUPLOAD, 'target' => 'uploads-panel-0', 'active' => true, 'hx_get' => '', 'hx_target' => ''],
+        ['label' => _DGEN, 'target' => 'uploads-panel-1', 'active' => false, 'hx_get' => 'index.php?go=5&op=getAdminUploadFiles&id=1&dir='.$dir.$token, 'hx_target' => '#repf1'],
+        ['label' => _DTHUMB, 'target' => 'uploads-panel-2', 'active' => false, 'hx_get' => 'index.php?go=5&op=getAdminUploadFiles&id=2&dir='.$dir.$token, 'hx_target' => '#repf2'],
     ];
     $tabsHtml = '';
     foreach ($tabs as $tab) {
@@ -135,7 +135,8 @@ function uploads(): void {
             'label' => $tab['label'],
             'rel' => $tab['target'],
             'is_active' => $tab['active'],
-            'link_attr' => $tab['link_attr'],
+            'hx_get' => $tab['hx_get'],
+            'hx_target' => $tab['hx_target'],
         ]);
     }
     $uplv = $tpl->getHtmlPart('tabs', [

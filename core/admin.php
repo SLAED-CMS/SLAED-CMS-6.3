@@ -940,14 +940,16 @@ function getAdminUploadFiles(): void {
                         'href' => 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=1&file='.$entry[1],
                         'label' => _ZIP,
                         'title' => _ZIP,
-                        'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
+                        'is_htmx' => true,
+                        'hx_target' => '#repf'.$id,
                     ];
                 }
                 $show[] = [
                     'href' => 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=0&file='.$entry[1],
                     'label' => _ONDELETE,
                     'title' => _ONDELETE,
-                    'link_attr' => 'hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1].'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
+                    'is_htmx' => true,
+                    'hx_target' => '#repf'.$id,
                 ];
                 $contents[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [

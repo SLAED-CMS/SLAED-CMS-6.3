@@ -6,5 +6,6 @@
     class="sl-tabs-link{% if is_active %} sl-is-active{% endif %}"
     {% if rel %}data-sl-tab-link{% endif %}
     {% if link_attr %}{{{ link_attr }}}{% endif %}
+    {% if hx_get %}hx-get="{{ hx_get }}" hx-target="{{ hx_target }}" hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% endif %}
   >{% if label_html %}{{{ label_html }}}{% else %}{{ label }}{% endif %}</a>
 </li>

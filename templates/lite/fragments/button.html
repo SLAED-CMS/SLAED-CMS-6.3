@@ -21,4 +21,5 @@
   {% elseif input_attr %}{{{ input_attr }}}
   {% elseif reload_query %}OnClick="htmx.ajax(&quot;GET&quot;, &quot;{{{ reload_query }}}&quot;, {target:&quot;#{{ list_id }}&quot;, swap:&quot;innerHTML&quot;}); return false;"
   {% endif %}
+  {% if hx_post %}hx-post="{{ hx_post }}" {% if hx_include %}hx-include="{{ hx_include }}" {% endif %}hx-target="{{ hx_target }}" hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% if hx_on_click %} hx-on:click="{{{ hx_on_click }}}"{% endif %}{% if hx_on_after %} hx-on:htmx:after-request="{{{ hx_on_after }}}"{% endif %}{% endif %}
 >

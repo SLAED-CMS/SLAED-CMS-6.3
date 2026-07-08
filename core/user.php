@@ -33,7 +33,11 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
-            'input_attr' => 'hx-post="index.php?go=1&amp;op=addComment&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'" hx-include="#formcsave" hx-target="#repcsave" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }" hx-on:htmx:after-request="document.getElementById(\'formcsave\').reset()"',
+            'hx_post' => 'index.php?go=1&op=addComment&id='.$id.'&cid='.$cid.'&mod='.$conf['name'],
+            'hx_include' => '#formcsave',
+            'hx_target' => '#repcsave',
+            'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }',
+            'hx_on_after' => 'document.getElementById(\'formcsave\').reset()',
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'no_action' => true,
@@ -484,7 +488,10 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
             $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
                 'label' => _SEND,
                 'title' => _SEND,
-                'input_attr' => 'hx-post="index.php?go=1&amp;op=addPrivateMessage" hx-include="#'.$formId.'" hx-target="#rep'.$prmid.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;name&quot;]\').value.trim()) { alert(\''._CERROR6.'\'); event.preventDefault(); }"',
+                'hx_post' => 'index.php?go=1&op=addPrivateMessage',
+                'hx_include' => '#'.$formId,
+                'hx_target' => '#rep'.$prmid,
+                'hx_on_click' => 'if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;name&quot;]\').value.trim()) { alert(\''._CERROR6.'\'); event.preventDefault(); }',
             ]);
             $cont .= $tpl->getHtmlPart('form-add', [
                 'no_action' => true,
