@@ -9,31 +9,6 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function getSearchRow(string $mod, string $afile, int $mid, string $time, int $cid, ?string $ctit, ?string $cdes, ?string $nick, ?string $user, string $edit, bool $post, string $url): array {
-    global $tpl;
-    $date = $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]);
-    $mlab = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod, 'title' => _MODUL, 'label' => getModuleName($mod), 'is_module' => true]);
-    $cdes = $cdes ?: $ctit;
-    $ctit = $ctit ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$mod.'&cat='.$cid, 'title' => cutstr((string)$cdes, 50), 'label' => cutstr($ctit, 15), 'is_category' => true]) : '';
-    $pout = '';
-    if ($post) {
-        $pval = $nick ? user_info($nick) : ($user ?: _ANONYM);
-        $pout = $tpl->getHtmlFrag('inline-badge', ['title_text' => _POSTEDBY, 'label_html' => $pval, 'is_media_post' => true]);
-    }
-    $menu = '';
-    if (is_moder($mod)) {
-        $items = [
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op='.$edit.'&id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-            $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
-        ];
-        $menu = $tpl->getHtmlFrag('popover', [
-            'editor_label' => _EDITOR,
-            'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
-        ]);
-    }
-    return [$date, $mlab, $ctit, $pout, $menu];
-}
-
 function getSearchMods(): array {
     global $conf;
     $mods = [];
@@ -86,35 +61,32 @@ function getSearchTypeList(int $typ): string {
     return $cont;
 }
 
+# One-row search panel: module select (+ media type), query input, submit
 function getSearchForm(array $state): string {
     global $conf, $tpl;
     $all_opt = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _SEARCHALL, 'is_selected' => false]);
-    $rows = $tpl->getHtmlFrag('form-field-row', [
-        'label' => _MODUL,
-        'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'mod', 'options_html' => $all_opt.getSearchModList($state['mods'], (string)$state['mod']), 'select_attr' => 'onchange="submit()"']),
+    $mod_html = $tpl->getHtmlFrag('select', [
+        'name_attr' => 'mod',
+        'options_html' => $all_opt.getSearchModList($state['mods'], (string)$state['mod']),
+        'select_attr' => 'onchange="submit()"',
     ]);
-    if ($state['mod'] === 'media') {
-        $rows .= $tpl->getHtmlFrag('form-field-row', [
-            'label' => _SEARCHFROM,
-            'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => getSearchTypeList((int)$state['typ'])]),
-        ]);
-    }
-    $rows .= $tpl->getHtmlFrag('form-field-row', [
-        'label' => _SEARCH,
-        'field_html' => $tpl->getHtmlFrag('input', [
-            'input_attr' => 'maxlength="100" placeholder="'._SEARCH.'" required',
-            'itype' => 'text',
-            'name_attr' => 'word',
-            'value_attr' => (string)$state['word'],
-        ]),
+    $typ_html = ($state['mod'] === 'media')
+        ? $tpl->getHtmlFrag('select', ['name_attr' => 'typ', 'options_html' => getSearchTypeList((int)$state['typ'])])
+        : '';
+    $word_html = $tpl->getHtmlFrag('input', [
+        'itype' => 'text',
+        'name_attr' => 'word',
+        'value_attr' => (string)$state['word'],
+        'maxlength_num' => '100',
+        'placeholder_text' => _SEARCH,
+        'is_required' => true,
     ]);
-    $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => '', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEARCH])]);
-    return $tpl->getHtmlPart('form-add', [
+    return $tpl->getHtmlFrag('search-form', [
         'action' => 'index.php?name='.$conf['name'],
-        'method' => 'post',
-        'form_name' => 'post',
-        'form_attr' => 'class="sl-forum-reply-form"',
-        'fields' => $rows,
+        'mod_html' => $mod_html,
+        'typ_html' => $typ_html,
+        'word_html' => $word_html,
+        'ok_label' => _SEARCH,
     ]);
 }
 
@@ -130,58 +102,39 @@ function addSearchStat(array $state): void {
     }
 }
 
-function getSearchEdit(string $mod): string {
-    $list = ['pages' => 'page_add'];
-    return $list[$mod] ?? $mod.'_add';
-}
-
-function getSearchCols(string $mod): array {
-    global $db, $conf;
-    $list = [];
-    $table = PREFIX_DB.'_'.$mod;
-    $result = $db->getSqlQuery(
-        'SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = :name AND table_name = :table ORDER BY ORDINAL_POSITION',
-        ['name' => $conf['db']['name'], 'table' => $table]
-    );
-    while ($row = $db->getSqlRow($result)) {
-        $name = (string)($row[0] ?? $row['COLUMN_NAME'] ?? '');
-        if ($name !== '') $list[] = $name;
-    }
-    return $list;
-}
-
-function getSearchSimpleCfg(string $mod): array {
-    $cols = getSearchCols($mod);
-    $need = ['id', 'title'];
-    foreach ($need as $col) {
-        if (!in_array($col, $cols, true)) return [];
-    }
-    $find = [];
-    foreach (['title', 'intro', 'body', 'url'] as $col) {
-        if (in_array($col, $cols, true)) $find[] = $col;
-    }
-    if (!$find) return [];
+function getSearchItem(string $mod, string $url, string $edithref, array $data): array {
     return [
-        'kind' => 'simple',
-        'table' => PREFIX_DB.'_'.$mod,
-        'find' => $find,
-        'edit' => getSearchEdit($mod),
-        'hasname' => in_array('name', $cols, true) ? 1 : 0,
-        'hastime' => in_array('time', $cols, true) ? 1 : 0,
-        'hascid' => in_array('cid', $cols, true) ? 1 : 0,
-        'hasuid' => in_array('uid', $cols, true) ? 1 : 0,
-        'hasstatus' => in_array('status', $cols, true) ? 1 : 0,
+        'mod' => $mod, 'url' => $url, 'edithref' => $edithref,
+        'title' => (string)($data['title'] ?? ''),
+        'time' => (string)($data['time'] ?? ''),
+        'cid' => (int)($data['cid'] ?? 0),
+        'content' => (string)($data['content'] ?? ''),
+        'nick' => $data['nick'] ?? null,
+        'user' => $data['user'] ?? null,
+        'post' => (bool)($data['post'] ?? false),
+        'comments' => isset($data['comments']) && $data['comments'] !== null ? (int)$data['comments'] : null,
+        'reads' => isset($data['reads']) && $data['reads'] !== null ? (int)$data['reads'] : null,
     ];
+}
+
+function getSearchUrl(array $params, string $word, string $anchor = ''): string {
+    $url = getSeoUrl($params);
+    if ($word !== '') $url .= (str_contains($url, '?') ? '&' : '?').'word='.urlencode($word);
+    return $url.$anchor;
+}
+
+function getSimpleCfg(string $mod, array $find, string $content, bool $count = true): array {
+    return ['kind' => 'simple', 'table' => PREFIX_DB.'_'.$mod, 'find' => $find, 'content' => $content, 'count' => $count];
 }
 
 function getSearchMap(): array {
     return [
-        'faq' => ['kind' => 'simple', 'sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', 'edit' => 'faq_add', 'cnt' => 2],
-        'files' => ['kind' => 'simple', 'sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.intro LIKE :wordb OR f.body LIKE :wordc) ORDER BY f.time DESC LIMIT :lim', 'edit' => 'files_add', 'cnt' => 3],
-        'jokes' => ['kind' => 'simple', 'sql' => 'SELECT j.id, j.name, j.title, j.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.time <= NOW() AND j.status != \'0\' AND (j.title LIKE :worda OR j.body LIKE :wordb) ORDER BY j.time DESC LIMIT :lim', 'edit' => 'jokes_add', 'cnt' => 2],
-        'links' => ['kind' => 'simple', 'sql' => 'SELECT l.id, l.name, l.title, l.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.time <= NOW() AND l.status != \'0\' AND (l.title LIKE :worda OR l.intro LIKE :wordb OR l.body LIKE :wordc OR l.url LIKE :wordd) ORDER BY l.time DESC LIMIT :lim', 'edit' => 'links_add', 'cnt' => 4],
-        'news' => ['kind' => 'simple', 'sql' => 'SELECT s.id, s.name, s.title, s.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.time <= NOW() AND s.status != \'0\' AND (s.title LIKE :worda OR s.intro LIKE :wordb OR s.body LIKE :wordc) ORDER BY s.time DESC LIMIT :lim', 'edit' => 'news_add', 'cnt' => 3],
-        'pages' => ['kind' => 'simple', 'sql' => 'SELECT p.id, p.name, p.title, p.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.time <= NOW() AND p.status != \'0\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', 'edit' => 'page_add', 'cnt' => 3],
+        'faq' => getSimpleCfg('faq', ['title', 'body'], 'body'),
+        'files' => getSimpleCfg('files', ['title', 'intro', 'body'], 'intro'),
+        'jokes' => getSimpleCfg('jokes', ['title', 'body'], 'body', false),
+        'links' => getSimpleCfg('links', ['title', 'intro', 'body', 'url'], 'intro'),
+        'news' => getSimpleCfg('news', ['title', 'intro', 'body'], 'intro'),
+        'pages' => getSimpleCfg('pages', ['title', 'intro', 'body'], 'intro'),
         'auto_links' => ['kind' => 'auto'],
         'forum' => ['kind' => 'forum'],
         'media' => ['kind' => 'media'],
@@ -190,91 +143,48 @@ function getSearchMap(): array {
 }
 
 function getSearchSimple(string $mod, array $cfg, array $state): array {
-    global $db, $afile, $tpl;
+    global $db, $afile;
     $rows = [];
-    if (isset($cfg['sql'])) {
-        $pars = ['lim' => $state['lim']];
-        $keys = ['worda', 'wordb', 'wordc', 'wordd', 'worde'];
-        for ($indx = 0; $indx < $cfg['cnt']; $indx++) $pars[$keys[$indx]] = '%'.$state['word'].'%';
-        $result = $db->getSqlQuery($cfg['sql'], $pars);
-    } else {
-        $pars = ['lim' => $state['lim']];
-        $cond = [];
-        $keys = ['worda', 'wordb', 'wordc', 'wordd', 'worde'];
-        foreach ($cfg['find'] as $indx => $col) {
-            $key = $keys[$indx];
-            $cond[] = 's.'.$col.' LIKE :'.$key;
-            $pars[$key] = '%'.$state['word'].'%';
-        }
-        $sels = [
-            's.id',
-            $cfg['hasname'] ? 's.name' : 'NULL AS name',
-            's.title',
-            $cfg['hastime'] ? 's.time' : 'NOW() AS time',
-            $cfg['hascid'] ? 'c.id' : '0 AS cid',
-            $cfg['hascid'] ? 'c.title' : 'NULL AS ctitle',
-            $cfg['hascid'] ? 'c.intro' : 'NULL AS cintro',
-            $cfg['hasuid'] ? 'u.name' : 'NULL AS uname',
-        ];
-        $sql = 'SELECT '.implode(', ', $sels).' FROM '.$cfg['table'].' AS s';
-        if ($cfg['hascid']) $sql .= ' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id)';
-        if ($cfg['hasuid']) $sql .= ' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)';
-        $whr = [];
-        if ($cfg['hastime']) $whr[] = 's.time <= NOW()';
-        if ($cfg['hasstatus']) $whr[] = 's.status != \'0\'';
-        $whr[] = '('.implode(' OR ', $cond).')';
-        $sql .= ' WHERE '.implode(' AND ', $whr);
-        $sql .= $cfg['hastime'] ? ' ORDER BY s.time DESC' : ' ORDER BY s.id DESC';
-        $sql .= ' LIMIT :lim';
-        $result = $db->getSqlQuery($sql, $pars);
+    $keys = ['worda', 'wordb', 'wordc', 'wordd', 'worde'];
+    $pars = ['lim' => $state['lim']];
+    $cond = [];
+    foreach ($cfg['find'] as $indx => $col) {
+        $cond[] = 's.'.$col.' LIKE :'.$keys[$indx];
+        $pars[$keys[$indx]] = '%'.$state['word'].'%';
     }
-    while ([$mid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
-        $url = ($mod === 'jokes') ? 'index.php?name='.$mod.'&cat='.$cid.'&word='.urlencode($state['word']).'#'.$mid : 'index.php?name='.$mod.'&op=view&id='.$mid.'&word='.urlencode($state['word']);
-        $titl = $tpl->getHtmlFrag('link', [
-            'href' => $url,
-            'title' => $titl,
-            'label_html' => filterTextHighlight($titl, $state['word']),
-            'suffix_html' => getTplNewGraphic($time),
+    $cnts = $cfg['count'] ? 's.comments, s.counter' : 'NULL, NULL';
+    $sql = 'SELECT s.id, s.name, s.title, s.time, s.cid, s.'.$cfg['content'].', '.$cnts.', u.name'
+        .' FROM '.$cfg['table'].' AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)'
+        .' WHERE s.time <= NOW() AND s.status != \'0\' AND ('.implode(' OR ', $cond).') ORDER BY s.time DESC LIMIT :lim';
+    $result = $db->getSqlQuery($sql, $pars);
+    while ([$mid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
+        $url = ($mod === 'jokes')
+            ? getSearchUrl(['name' => $mod, 'cat' => $cid], $state['word'], '#'.$mid)
+            : getSearchUrl(['name' => $mod, 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
+        $rows[] = getSearchItem($mod, $url, $afile.'.php?name='.$mod.'&op=add&id='.$mid, [
+            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
+            'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
         ]);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow($mod, $afile, (int)$mid, $time, (int)$cid, $ctit, $cdes, $nick, $user, $cfg['edit'], true, $url);
-        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;
 }
 
 function getSearchAuto(array $state): array {
-    global $db, $afile, $tpl;
+    global $db, $afile;
     $rows = [];
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT id, title, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :worda OR description LIKE :wordb OR link LIKE :wordc) ORDER BY added DESC LIMIT :lim', $pars);
-    while ([$mid, $titl, $time] = $db->getSqlRow($result)) {
-        $url = 'index.php?name=auto_links&op=view&id='.$mid;
-        $titl = $tpl->getHtmlFrag('link', [
-            'href' => $url,
-            'title' => $titl,
-            'label_html' => filterTextHighlight($titl, $state['word']),
-            'suffix_html' => getTplNewGraphic($time),
+    $result = $db->getSqlQuery('SELECT id, title, intro, added, hits FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :worda OR intro LIKE :wordb OR url LIKE :wordc) ORDER BY added DESC LIMIT :lim', $pars);
+    while ([$mid, $titl, $cont, $time, $hits] = $db->getSqlRow($result)) {
+        $url = getSearchUrl(['name' => 'auto_links', 'op' => 'view', 'id' => $mid, 'title' => $titl], '');
+        $rows[] = getSearchItem('auto_links', $url, $afile.'.php?name=auto_links&op=add&id='.$mid, [
+            'title' => $titl, 'time' => $time, 'content' => $cont, 'reads' => $hits,
         ]);
-        $date = $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]);
-        $mlab = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=auto_links', 'title' => _MODUL, 'label' => getModuleName('auto_links'), 'is_module' => true]);
-        $edit = '';
-        if (is_moder('auto_links')) {
-            $items = [
-                $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=auto_links_add&id='.$mid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
-            ];
-            $edit = $tpl->getHtmlFrag('popover', [
-                'editor_label' => _EDITOR,
-                'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
-            ]);
-        }
-        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => '', 'post' => '', 'edit' => $edit];
     }
     return $rows;
 }
 
 function getSearchForum(array $state): array {
-    global $db, $afile, $conf, $tpl;
+    global $db, $conf;
     $rows = [];
     $rid = (int)($conf['forum']['recycle'] ?? 0);
     if (is_moder('forum') || !$rid) {
@@ -285,80 +195,53 @@ function getSearchForum(array $state): array {
         $pars = ['rid' => $rid, 'worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
     }
     $pars['lim'] = $state['lim'];
-    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', $pars);
-    while ([$mid, $pid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
+    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, f.cid, f.body, f.comments, f.counter, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', $pars);
+    while ([$mid, $pid, $user, $titl, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
         $tid = !$pid ? $mid : $pid;
-        $url = 'index.php?name=forum&op=view&id='.$tid.'&word='.urlencode($state['word']);
-        $titl = $tpl->getHtmlFrag('link', [
-            'href' => $url,
-            'title' => $titl,
-            'label_html' => filterTextHighlight($titl, $state['word']),
-            'suffix_html' => getTplNewGraphic($time),
+        $url = getSearchUrl(['name' => 'forum', 'op' => 'view', 'id' => $tid, 'title' => $titl], $state['word']);
+        $edit = 'index.php?name=forum&op=add&cat='.$cid.'&id='.$tid.'&pid='.$pid;
+        $rows[] = getSearchItem('forum', $url, $edit, [
+            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
+            'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
         ]);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, (int)$tid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
-        if (is_moder('forum')) {
-            $items = [
-                $tpl->getHtmlFrag('link', ['href' => 'index.php?name=forum&op=add&cat='.$cid.'&id='.$tid.'&pid='.$pid, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-                $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
-            ];
-            $edit = $tpl->getHtmlFrag('popover', [
-                'editor_label' => _EDITOR,
-                'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
-            ]);
-        }
-        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;
 }
 
 function getSearchMedia(array $state): array {
-    global $db, $afile, $conf, $tpl;
+    global $db, $afile, $conf;
     $rows = [];
-    if ($state['typ'] === 1 && $state['word'] !== '') {
-        $cond = '(m.title LIKE :worda OR m.subtitle LIKE :wordb) ORDER BY m.title ASC';
-    } elseif ($state['typ'] === 2 && $state['word'] !== '') {
-        $cond = '(m.description LIKE :worda) ORDER BY m.description ASC';
-    } elseif ($state['typ'] === 3 && $state['word'] !== '') {
-        $cond = '(m.director LIKE :worda) ORDER BY m.director ASC';
-    } elseif ($state['typ'] === 4 && $state['word'] !== '') {
-        $cond = '(m.roles LIKE :worda) ORDER BY m.roles ASC';
-    } elseif ($state['typ'] === 5 && $state['word'] !== '') {
-        $cond = '(m.year LIKE :worda) ORDER BY m.year ASC';
-    } else {
-        $cond = '(m.title LIKE :worda OR m.subtitle LIKE :wordb OR m.description LIKE :wordc) ORDER BY m.time DESC';
-    }
+    $cond = match ($state['typ']) {
+        1 => '(m.title LIKE :worda OR m.subtitle LIKE :wordb) ORDER BY m.title ASC',
+        2 => '(m.intro LIKE :worda) ORDER BY m.intro ASC',
+        3 => '(m.director LIKE :worda) ORDER BY m.director ASC',
+        4 => '(m.roles LIKE :worda) ORDER BY m.roles ASC',
+        5 => '(m.year LIKE :worda) ORDER BY m.year ASC',
+        default => '(m.title LIKE :worda OR m.subtitle LIKE :wordb OR m.intro LIKE :wordc) ORDER BY m.time DESC',
+    };
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$cond.' LIMIT :lim', $pars);
-    while ([$mid, $user, $titl, $subt, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
+    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, m.cid, m.intro, m.comments, m.counter, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$cond.' LIMIT :lim', $pars);
+    while ([$mid, $user, $titl, $subt, $time, $cid, $cont, $comm, $reads, $nick] = $db->getSqlRow($result)) {
         $titl = $subt ? $titl.' '.urldecode($conf['media']['mdefis']).' '.$subt : $titl;
-        $url = 'index.php?name=media&op=view&id='.$mid.'&word='.urlencode($state['word']);
-        $titl = $tpl->getHtmlFrag('link', [
-            'href' => $url,
-            'title' => $titl,
-            'label_html' => filterTextHighlight($titl, $state['word']),
-            'suffix_html' => getTplNewGraphic($time),
+        $url = getSearchUrl(['name' => 'media', 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
+        $rows[] = getSearchItem('media', $url, $afile.'.php?name=media&op=add&id='.$mid, [
+            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont,
+            'nick' => $nick, 'user' => $user, 'post' => true, 'comments' => $comm, 'reads' => $reads,
         ]);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow('media', $afile, (int)$mid, $time, (int)$cid, $ctit, $cdes, $nick, $user, 'media_add', true, $url);
-        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;
 }
 
 function getSearchShop(array $state): array {
-    global $db, $afile, $tpl;
+    global $db, $afile;
     $rows = [];
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', $pars);
-    while ([$mid, $time, $titl, $cid, $ctit, $cdes] = $db->getSqlRow($result)) {
-        $url = 'index.php?name=shop&op=view&id='.$mid.'&word='.urlencode($state['word']);
-        $titl = $tpl->getHtmlFrag('link', [
-            'href' => $url,
-            'title' => $titl,
-            'label_html' => filterTextHighlight($titl, $state['word']),
-            'suffix_html' => getTplNewGraphic($time),
+    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, p.cid, p.intro, p.comments, p.counter FROM '.PREFIX_DB.'_products AS p WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', $pars);
+    while ([$mid, $time, $titl, $cid, $cont, $comm, $reads] = $db->getSqlRow($result)) {
+        $url = getSearchUrl(['name' => 'shop', 'op' => 'view', 'id' => $mid, 'title' => $titl], $state['word']);
+        $rows[] = getSearchItem('shop', $url, $afile.'.php?name=shop&op=productadd&id='.$mid, [
+            'title' => $titl, 'time' => $time, 'cid' => $cid, 'content' => $cont, 'comments' => $comm, 'reads' => $reads,
         ]);
-        [$date, $mlab, $clab, $post, $edit] = getSearchRow('shop', $afile, (int)$mid, $time, (int)$cid, $ctit, $cdes, '', '', 'shop_products_add', false, $url);
-        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;
 }
@@ -368,21 +251,75 @@ function getSearchRows(array $state): array {
     $list = getSearchMap();
     foreach ($state['mods'] as $mod) {
         if ($state['mod'] !== '' && $state['mod'] !== $mod) continue;
-        $cfg = $list[$mod] ?? getSearchSimpleCfg($mod);
+        $cfg = $list[$mod] ?? null;
         if (!$cfg) continue;
-        if ($cfg['kind'] === 'simple') {
-            $rows = array_merge($rows, getSearchSimple($mod, $cfg, $state));
-        } elseif ($cfg['kind'] === 'auto') {
-            $rows = array_merge($rows, getSearchAuto($state));
-        } elseif ($cfg['kind'] === 'forum') {
-            $rows = array_merge($rows, getSearchForum($state));
-        } elseif ($cfg['kind'] === 'media') {
-            $rows = array_merge($rows, getSearchMedia($state));
-        } elseif ($cfg['kind'] === 'shop') {
-            $rows = array_merge($rows, getSearchShop($state));
-        }
+        $rows = array_merge($rows, match ($cfg['kind']) {
+            'simple' => getSearchSimple($mod, $cfg, $state),
+            'auto' => getSearchAuto($state),
+            'forum' => getSearchForum($state),
+            'media' => getSearchMedia($state),
+            'shop' => getSearchShop($state),
+        });
     }
     return $rows;
+}
+
+function getSearchSnippet(string $html, string $word, string $mod, int $len = 180): string {
+    global $prs;
+    if ($html === '') return '';
+    $text = html_entity_decode(strip_tags($prs->filterContent($html, false, $mod)), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = trim((string)preg_replace('/\s+/u', ' ', $text));
+    if ($text === '') return '';
+    $needle = mb_strtolower(trim($word), 'UTF-8');
+    if ($needle !== '') {
+        $first = explode(' ', $needle)[0];
+        $pos = mb_strpos(mb_strtolower($text, 'UTF-8'), $first, 0, 'UTF-8');
+        if ($pos !== false && $pos > 60) $text = '…'.ltrim(mb_substr($text, $pos - 60, null, 'UTF-8'));
+    }
+    $text = cutstr($text, $len);
+    return filterTextHighlight(htmlspecialchars($text, ENT_QUOTES, 'UTF-8'), $word);
+}
+
+function getSearchLine(array $row, array $state, int $numb): string {
+    global $tpl, $conf;
+    $word = $state['word'];
+    $sep = $conf[$row['mod']]['defis'] ?? '';
+    $link = $tpl->getHtmlFrag('link', [
+        'href' => $row['url'],
+        'title' => $row['title'],
+        'label_html' => filterTextHighlight($row['title'], $word),
+        'suffix_html' => getTplNewGraphic($row['time']),
+    ]);
+    $meta = $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($row['time'])), 'title' => _CHNGSTORY, 'text' => format_time($row['time'])]);
+    if ($row['comments'] !== null) {
+        $meta .= $tpl->getHtmlFrag('link', ['href' => $row['url'].'#comm', 'title' => _COMMENTS, 'label' => (string)$row['comments'], 'is_comments' => true]);
+    }
+    if ($row['reads'] !== null) {
+        $meta .= $tpl->getHtmlFrag('span', ['is_card_reads' => true, 'title' => _READS, 'text' => (string)$row['reads']]);
+    }
+    if ($row['post']) {
+        $pval = $row['nick'] ? user_info($row['nick']) : ($row['user'] ?: _ANONYM);
+        $meta .= $tpl->getHtmlFrag('inline-badge', ['title_text' => _POSTEDBY, 'label_html' => $pval, 'is_media_post' => true]);
+    }
+    $aside = '';
+    if ($row['edithref'] !== '' && is_moder($row['mod'])) {
+        $items = [
+            $tpl->getHtmlFrag('link', ['href' => $row['edithref'], 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
+            $tpl->getHtmlFrag('link', ['href' => $row['url'], 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
+        ];
+        $aside = $tpl->getHtmlFrag('popover', [
+            'editor_label' => _EDITOR,
+            'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
+        ]);
+    }
+    $aside .= $tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]);
+    $snippet = getSearchSnippet($row['content'], $word, $row['mod']);
+    $body = $tpl->getHtmlFrag('block-content', ['is_pull_right' => true, 'content' => $aside])
+        .$tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($row['mod'], $row['cid'], $sep, getModuleName($row['mod']))])
+        .$tpl->getHtmlFrag('title', ['title_html' => $link])
+        .($snippet !== '' ? $tpl->getHtmlFrag('block-content', ['is_snippet' => true, 'content' => $snippet]) : '')
+        .$tpl->getHtmlFrag('block-content', ['is_search_meta' => true, 'content' => $meta]);
+    return $tpl->getHtmlFrag('block-content', ['id' => (string)$numb, 'is_search_line' => true, 'content' => $body]);
 }
 
 function getSearchList(array $rows, array $state): string {
@@ -396,23 +333,7 @@ function getSearchList(array $rows, array $state): string {
     $slice = array_slice($rows, $from, $snum);
     $numb = $from + 1;
     foreach ($slice as $row) {
-        $meta = $tpl->getHtmlFrag('list', [
-            'is_unordered' => true,
-            'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $row['date']])
-                .$tpl->getHtmlFrag('list-item', ['content_html' => $row['modul']])
-                .$tpl->getHtmlFrag('list-item', ['content_html' => $row['ctitle']])
-                .$tpl->getHtmlFrag('list-item', ['content_html' => $row['post']]),
-        ]);
-        $cont .= $tpl->getHtmlFrag('block-content', [
-            'id' => (string)$numb,
-            'is_search_line' => true,
-            'content' => $tpl->getHtmlFrag('block-content', [
-                    'is_pull_right' => true,
-                    'content' => $row['edit'].$tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]),
-                ])
-                .$tpl->getHtmlFrag('title', ['title' => $row['title'], 'is_level_four' => true])
-                .$tpl->getHtmlFrag('block-content', ['is_search_meta' => true, 'content' => $meta]),
-        ]);
+        $cont .= getSearchLine($row, $state, $numb);
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
@@ -429,15 +350,13 @@ function search(): void {
     global $conf, $tpl;
     $state = getSearchState();
     setHead(['title' => _SEARCH]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _SEARCH]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _SEARCH, 'is_level_one' => true]);
     $cont .= getSearchForm($state);
     if (!$state['stop'] && $state['word'] !== '') {
         addSearchStat($state);
         $cont .= getSearchList(getSearchRows($state), $state);
     } else {
-        $winfo = ($state['stop']) ? $state['stop'] : _SEARCHINFO;
-        $wtyp = ($state['stop']) ? 'warn' : 'info';
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => ($wtyp !== 'info'), 'text' => $winfo]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => $state['stop'] !== '', 'text' => $state['stop'] ?: _SEARCHINFO]);
     }
     echo $cont;
     setFoot();
