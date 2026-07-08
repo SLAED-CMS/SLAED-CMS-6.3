@@ -787,11 +787,16 @@ function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', st
     $mod = filterVar($mod);
     $name = $mod ?: $conf['name'];
     $symbol = urldecode($sep ?: $conf['defis']);
-    $where = $mod ? 'WHERE modul = :modul' : '';
-    $pars = $mod ? ['modul' => $mod] : [];
-    $res = $db->getSqlQuery('SELECT id, title, parent, ordern FROM '.PREFIX_DB.'_categories '.$where, $pars);
-    $mass = [];
-    while ([$cid, $title, $parent, $ordern] = $db->getSqlRow($res)) $mass[(int)$cid] = [getConst($title), (int)$parent, (int)$ordern];
+    static $cache = [];
+    if (!isset($cache[$name])) {
+        $where = $mod ? 'WHERE modul = :modul' : '';
+        $pars = $mod ? ['modul' => $mod] : [];
+        $res = $db->getSqlQuery('SELECT id, title, parent, ordern FROM '.PREFIX_DB.'_categories '.$where, $pars);
+        $mass = [];
+        while ([$cid, $title, $parent, $ordern] = $db->getSqlRow($res)) $mass[(int)$cid] = [getConst($title), (int)$parent, (int)$ordern];
+        $cache[$name] = $mass;
+    }
+    $mass = $cache[$name];
     $chain = [];
     $cur = $id;
     $guard = 0;
@@ -916,6 +921,7 @@ function getModuleNavi(array $p): string {
     $catshow = $p['catshow'] ?? $cat;
     return $tpl->getHtmlPart('navi', [
         'title' => $title,
+        'is_heading' => $p['is_heading'] ?? true,
         'home_link' => ['href' => $home, 'title' => $htitle, 'label' => _HOME, 'is_navi_button' => true],
         'best_link' => $best ? ['href' => $best, 'title' => $btit, 'label' => $btit, 'is_navi_button' => true] : [],
         'pop_link' => $pop ? ['href' => $pop, 'title' => $ptit, 'label' => $ptit, 'is_navi_button' => true] : [],

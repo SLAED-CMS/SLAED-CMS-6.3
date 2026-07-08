@@ -4,7 +4,7 @@
 {% else %}
 <div
   {% if id %}id="{{ id }}"{% endif %}
-  {% if class or is_catflex_cont or is_catflex_box or is_radio_group or is_form_submit or is_center or is_main_grid or is_section or is_hidden or is_search_line or is_search_meta or is_pull_right or is_post_vote or is_message_box or is_block_flags or is_block_modules or is_block_module_section %}
+  {% if class or is_catflex_cont or is_catflex_box or is_radio_group or is_form_submit or is_center or is_main_grid or is_section or is_hidden or is_search_line or is_search_meta or is_snippet or is_pull_right or is_post_vote or is_message_box or is_block_flags or is_block_modules or is_block_module_section %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_catflex_cont %}{% if class %} {% endif %}sl-catflex-cont{% endif %}
@@ -17,6 +17,7 @@
     {% if is_hidden %} sl-none{% endif %}
     {% if is_search_line %} sl-search-line{% endif %}
     {% if is_search_meta %} sl-search-meta{% endif %}
+    {% if is_snippet %} sl-sr-snip{% endif %}
     {% if is_pull_right %} sl-pull-right{% endif %}
     {% if is_post_vote %} sl-post-vote{% endif %}
     {% if is_message_box %} sl-message-box{% endif %}

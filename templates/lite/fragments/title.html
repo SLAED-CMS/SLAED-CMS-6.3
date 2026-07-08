@@ -11,16 +11,12 @@
     {{{ content }}}
   </div>
 </div>
-{% elseif is_level_two and title_html %}
-<h2>{{{ title_html }}}</h2>
-{% elseif is_level_two and title %}
-<h2>{{ title }}</h2>
-{% elseif is_level_four and title_html %}
-<h4>{{{ title_html }}}</h4>
-{% elseif is_level_four and title %}
-<h4>{{ title }}</h4>
-{% elseif title_html %}
-<h3 class="{% if title_class %}{{ title_class }}{% elseif is_plain %}sl-title{% else %}sl-title{% endif %}">{{{ title_html }}}</h3>
-{% elseif title %}
-<h3 class="{% if title_class %}{{ title_class }}{% elseif is_plain %}sl-title{% else %}sl-title{% endif %}">{{ title }}</h3>
+{% elseif is_level_one %}
+<h1 class="sl-title">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h1>
+{% elseif is_level_two %}
+<h2>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h2>
+{% elseif is_level_four %}
+<h4>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h4>
+{% else %}
+<h3 class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h3>
 {% endif %}

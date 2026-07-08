@@ -45,7 +45,7 @@ function contact(): void {
         $info = '';
     }
     setHead(['title' => $title]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => $title]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_one' => true]);
     $fields = $asend ? $tpl->getHtmlFrag('form-field-row', [
         'label' => _TO,
         'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'id', 'options_html' => $asend]),

@@ -273,7 +273,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = getModuleNavi(['title' => _FAQ]);
+        $cont = getModuleNavi(['title' => _FAQ, 'is_heading' => false]);
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
         if ($conf['faq']['viewcat']) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], 0);
         $conpag = explode('[pagebreak]', $hometext);

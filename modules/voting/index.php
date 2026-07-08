@@ -15,7 +15,7 @@ function voting(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $conf['voting']['num']);
     setHead(['title' => _VOTING]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]);
     $result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
     if ($db->getSqlRowCount($result) > 0) {
         $rows = '';
@@ -100,7 +100,7 @@ function view(): void {
             'time' => $date,
             'author' => $conf['sitename'],
         ]);
-        $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _VOTING, 'is_level_one' => true]).$tpl->getHtmlFrag('block-content', ['is_post_vote' => true, 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
         if ($acomm) $cont .= setComShow($id, $acomm);
     } else {
         setError(404);

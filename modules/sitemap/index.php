@@ -13,7 +13,7 @@ function sitemap(): void {
     global $tpl;
     $path = SITEMAP_DIR.'/sitemap.txt';
     setHead(['title' => _SITEMAP]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _SITEMAP]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _SITEMAP, 'is_level_one' => true]);
     if (is_readable($path)) {
         $map = file_get_contents($path);
         $map = ($map !== false) ? trim($map) : '';

@@ -109,6 +109,10 @@
   --sl-size-nav-control: var(--sl-size-control);
   --sl-size-meta-row: 24px;
   --sl-font-display: 32px;
+  --sl-h1: 28px;
+  --sl-h2: 22px;
+  --sl-h3: 18px;
+  --sl-h4: 16px;
   --sl-forum-icon-size: 64px;
   --sl-img-placeholder-size: 64px;
   --sl-img-placeholder-icon-size: 48px;
@@ -327,7 +331,7 @@ select,
 input,
 textarea,
 button {
-  font: 14px/1.4 Arial, Tahoma, sans-serif;
+  font: 14px/1.4 Arial, system-ui, -apple-system, sans-serif;
   color: var(--sl-color-text);
   outline: none;
 }
@@ -500,7 +504,7 @@ blockquote {
   border-left: 1px solid #b8c3cd;
   border-right: 1px solid #b8c3cd;
   color: #798086;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, system-ui, -apple-system, sans-serif;
   font-style: italic;
   margin: 4px;
   padding: 4px;

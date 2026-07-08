@@ -19,7 +19,7 @@ function order(): void {
     }
     $field = getVar('post', 'field', 'field');
     setHead(['title' => _ORDER]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _ORDER]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true]);
     $cont .= $prs->filterContent($conf['order']['text'], false, 'all');
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
@@ -87,7 +87,7 @@ function send(): void {
             updatePoints(34);
             setHead(['title' => _ORDER]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ORDER, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['order']['info'], false, 'all'), 'meta' => $meta]);
             setFoot();
         } else {
             order();

@@ -109,13 +109,23 @@ a .sl-letter:hover {
 }
 
 .sl-title {
-  font-size: 22px;
+  font-size: var(--sl-h2);
   color: var(--sl-color-text);
   margin: 0 0 10px 0;
 }
 
+h1.sl-title {
+  font-size: var(--sl-h1);
+  color: var(--sl-color-text-heading);
+}
+
 .sl-title a {
   color: var(--sl-color-text);
+  transition: color 0.2s ease;
+}
+
+.sl-title a:hover {
+  color: var(--sl-color-brand-link);
 }
 
 /* Utilities: reusable helpers */
@@ -174,8 +184,7 @@ a .sl-letter:hover {
   margin-right: 20px;
 }
 
-.sl-meta > ul.sl-pull-right > li,
-.sl-search-meta > ul.sl-pull-right > li {
+.sl-meta > ul.sl-pull-right > li {
   margin-right: 0;
   margin-left: 20px;
 }
@@ -1123,7 +1132,6 @@ select.sl-field {
 
 .sl-sig {
   color: var(--sl-color-text-muted);
-  font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
 }
 
@@ -1387,7 +1395,7 @@ button.sl-but-mini:hover,
 
 /* Content cards: related articles */
 .sl-related-title {
-  font-size: 24px;
+  font-size: var(--sl-h2);
   color: var(--sl-login-link-color);
   margin: 12px 0;
 }
@@ -1778,7 +1786,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-debug-section-danger li::before {
   content: "\f1db";
-  font-family: bootstrap-icons;
+  font-family: "bootstrap-icons";
   font-weight: normal;
   font-size: 1em;
   min-width: 0;
@@ -2106,7 +2114,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-editor-area {
-  font: 12px Verdana;
+  font: 12px Verdana, system-ui, -apple-system, sans-serif;
   width: 100%;
   height: 100px;
   padding: 5px;
@@ -2277,8 +2285,51 @@ ol.sl-sublist-two li:hover:before {
   margin-left: 3px;
 }
 
+/* Search module: one-row query panel */
+.sl-search-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-md);
+  margin: 0 0 24px;
+  padding: 14px 16px;
+  background: var(--sl-color-surface);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+}
+.sl-search-panel input.sl-field {
+  flex: 1 1 240px;
+  min-width: 180px;
+}
+
+/* Search module: result rows (divider list with breadcrumbs, title, snippet, chips) */
+.sl-search-line {
+  padding: 16px 0;
+}
+.sl-search-line + .sl-search-line {
+  border-top: 1px solid var(--sl-color-border);
+}
+.sl-search-line .sl-category-nav {
+  margin: 0 0 var(--sl-space-xs);
+  gap: var(--sl-space-sm);
+}
+.sl-sr-snip {
+  margin: 0 0 10px;
+  line-height: 1.55;
+  color: var(--sl-color-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sl-search-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sl-space-md);
+}
+
 .sl-changelog {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
   color: var(--sl-changelog-text);
   max-width: 1400px;
   margin: 0 auto;
@@ -2450,8 +2501,6 @@ ol.sl-sublist-two li:hover:before {
   color: var(--sl-color-warning-soft);
   padding: 3px var(--sl-space-md);
   border-radius: 4px;
-  font-size: 13px;
-  font-family: "Courier New", monospace;
 }
 
 .sl-changelog-commit-meta {
@@ -2511,7 +2560,6 @@ ol.sl-sublist-two li:hover:before {
   background: var(--sl-changelog-bg);
   border-radius: 4px;
   padding: 10px;
-  font-family: "Courier New", monospace;
   font-size: 12px;
   max-height: 300px;
   overflow-y: auto;
@@ -2568,7 +2616,6 @@ ol.sl-sublist-two li:hover:before {
   height: 30px;
   border-radius: 15px;
   cursor: pointer;
-  font-family: Arial, Tahoma, sans-serif;
   font-size: 14px;
   font-weight: 400;
   box-sizing: border-box;
@@ -3284,7 +3331,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* Utilities: shared helpers */
 .sl-font {
-  font-family: "Magistral", Arial, Tahoma, sans-serif;
+  font-family: "Magistral", Arial, system-ui, -apple-system, sans-serif;
   font-weight: normal;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -3316,7 +3363,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* Code highlighting: source code block colors */
 .sl-code {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, system-ui, -apple-system, sans-serif;
   font-style: italic;
   font-size: 0.9em;
   background: var(--sl-color-bg);
@@ -4132,7 +4179,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-breadcrumbs {
-  font-family: "Magistral", Arial, Tahoma, sans-serif;
+  font-family: "Magistral", Arial, system-ui, -apple-system, sans-serif;
   font-size: var(--sl-font-display);
   font-weight: normal;
   list-style: none;
@@ -4434,13 +4481,13 @@ ol.sl-sublist-two li:hover:before {
 /* News: titles */
 .sl-mtl {
   font-weight: normal;
-  font-size: 32px;
+  font-size: var(--sl-h2);
   color: var(--sl-login-link-color);
   margin: 45px 0 15px 0;
 }
 
 .sl-heading {
-  font-size: 22px;
+  font-size: var(--sl-h2);
   margin: 0 0 12px 0;
 }
 
@@ -4512,6 +4559,14 @@ ol.sl-sublist-two li:hover:before {
 .sl-carg {
   display: inline-block;
   margin-right: 15px;
+}
+
+.sl-carg h1 {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+  font-weight: bold;
 }
 
 .sl-cargs {
@@ -5004,7 +5059,7 @@ td.sl-fl-col-stat {
   border-radius: 999px;
   background: var(--sl-color-surface-alt);
   color: var(--sl-color-text-heading);
-  font: 13px/1 Arial, Tahoma, sans-serif;
+  font: 13px/1 Arial, system-ui, -apple-system, sans-serif;
   white-space: nowrap;
   vertical-align: middle;
   text-decoration: none;
@@ -5945,7 +6000,7 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
 }
 
 .sl-msg-brand-text {
-  font: normal 26px/1 "Magistral", Arial, sans-serif;
+  font: normal 26px/1 "Magistral", Arial, system-ui, -apple-system, sans-serif;
   letter-spacing: 0.5px;
   color: var(--sl-color-brand-strong);
 }

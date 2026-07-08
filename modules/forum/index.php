@@ -60,6 +60,7 @@ function forum(): void {
         $ulast = (is_array($uinfo) && !empty($uinfo['lastvis'])) ? (int)$uinfo['lastvis'] : 0;
         $head = ($id) ? _FORUM.' '.$rows[0][1] : _FORUM;
         setHead(['title' => $head]);
+        echo $tpl->getHtmlFrag('title', ['title' => $head, 'is_level_one' => true]);
         $cnt = 0;
         foreach ($rows as $val) {
             if ($val[4] == $id && is_acess($val[10])) {

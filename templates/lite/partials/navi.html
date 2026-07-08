@@ -6,4 +6,4 @@
   {% if add_link %}<li>{% include 'fragments/link.html' with add_link %}</li>{% endif %}
   {% if cat_link %}<li>{% include 'fragments/link.html' with cat_link %}</li>{% endif %}
 </ul>
-<h2 class="sl-none">{{ title }}</h2>
+{% if is_heading %}<h1 class="sl-title">{{ title }}</h1>{% endif %}

@@ -19,7 +19,7 @@ function money(): void {
         $email = getVar('post', 'email', 'text');
     }
     setHead(['title' => _MONEY]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY, 'is_level_one' => true]);
     $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
     $cont .= $prs->filterContent(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), false, 'all');
     $cont .= $tpl->getHtmlPart('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
@@ -160,7 +160,7 @@ function send(): void {
             }
             setHead(['title' => _MONEY]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);
-            echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['money']['info'], false, 'all'), 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _MONEY, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $prs->filterContent($conf['money']['info'], false, 'all'), 'meta' => $meta]);
             setFoot();
         } else {
             money();

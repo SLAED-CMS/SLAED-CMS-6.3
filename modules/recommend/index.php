@@ -23,7 +23,7 @@ function recommend(): void {
     $fname = getVar('post', 'fname', 'name');
     $femail = getVar('post', 'femail', 'text');
     setHead(['title' => _RECOMMTITLE]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $fields = $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOURNAME,
@@ -82,7 +82,7 @@ function send(): void {
         updatePoints(38);
         setHead(['title' => _RECOMMTITLE]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
-        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);
+        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [_FREFERENCE.' '.$fname.'.', _THANKSREC], 'meta' => $meta]);
         setFoot();
     } else {
         recommend();

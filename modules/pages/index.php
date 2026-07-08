@@ -260,7 +260,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = getModuleNavi(['title' => _PAGES]);
+        $cont = getModuleNavi(['title' => _PAGES, 'is_heading' => false]);
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
         if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;

@@ -253,7 +253,7 @@ function view(): void {
             'time'   => $time,
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
-        $cont = getModuleNavi(['title' => _LINKS]);
+        $cont = getModuleNavi(['title' => _LINKS, 'is_heading' => false]);
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $rawtext = $bodytext ? $description.$bodytext : $description;
@@ -463,7 +463,7 @@ function loading(): void {
         addPointsAction('linkout', $id, 23);
         $info = sprintf(_NOTELINKLOAD, $title, domain($url));
         setHead(['title' => _LINKS]);
-        $cont = getModuleNavi(['title' => _LINKS]);
+        $cont = getModuleNavi(['title' => _LINKS, 'is_heading' => false]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $cont .= $tpl->getHtmlPart('navi-lower', [
             'back_button' => ['button_type' => 'button', 'title' => _BACK, 'label' => _BACK, 'is_back' => true, 'is_navi_lower' => true],

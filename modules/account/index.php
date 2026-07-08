@@ -16,7 +16,7 @@ function account(): void {
     } else {
         setHead(['title' => _USERREGLOGIN]);
         $captcha = getCaptcha('login');
-        $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN, 'is_level_one' => true]);
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
             'label' => _NICKNAME,
@@ -69,10 +69,10 @@ function newuser(): void {
     } else {
         setHead(['title' => _REGNEWUSER]);
         if ($stop) {
-            $cont = $tpl->getHtmlFrag('title', ['title' => _NEWUSERERROR]);
+            $cont = $tpl->getHtmlFrag('title', ['title' => _NEWUSERERROR, 'is_level_one' => true]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         } else {
-            $cont = $tpl->getHtmlFrag('title', ['title' => _REGNEWUSER]);
+            $cont = $tpl->getHtmlFrag('title', ['title' => _REGNEWUSER, 'is_level_one' => true]);
         }
         if (!$conf['users']['reg']) {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
@@ -161,7 +161,7 @@ function finnewuser(): void {
             );
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
-                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]);
+                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]);
                 $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]);
                 $fields = $tpl->getHtmlFrag('field-value', ['label' => _UNICKNAME, 'value_text' => $nick])
                     .$tpl->getHtmlFrag('field-value', ['label' => _UPASSWORD, 'value_text' => $pass]);
@@ -183,7 +183,7 @@ function finnewuser(): void {
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 30]);
                 $brbr = '<br><br>';
-                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.$brbr._FINISHUSERCONF.$brbr._THANKSUSER, 'meta' => $meta]);
+                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.$brbr._FINISHUSERCONF.$brbr._THANKSUSER, 'meta' => $meta]);
             }
             echo $cont;
             setFoot();
@@ -265,7 +265,7 @@ function network(): void {
         } else {
             setHead(['title' => _ERRORINPUT]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ERRORINPUT]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERRORSESS, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ERRORINPUT, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERRORSESS, 'meta' => $meta]);
             setFoot();
         }
     } else {
@@ -291,14 +291,14 @@ function activate(): void {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
         } else {
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
         }
     } else {
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-        echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
+        echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
     }
     setFoot();
 }
@@ -515,7 +515,7 @@ function profil(): void {
     global $conf, $user, $tpl;
     if (is_user()) {
         setHead(['title' => _THISISYOURPAGE]);
-        $cont = $tpl->getHtmlFrag('title', ['title' => _THISISYOURPAGE]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _THISISYOURPAGE, 'is_level_one' => true]);
         $cont .= getUserNav();
         $title[] = _COMMENTS;
         $text[] = last($user[0], 'comm');
@@ -679,7 +679,7 @@ function privat(): void {
             $tpl->getHtmlFrag('block-content', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
             $tpl->getHtmlFrag('block-content', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
         ];
-        $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT, 'is_level_one' => true]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
     } else {
@@ -693,7 +693,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('block-content', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES, 'is_level_one' => true]).getUserNav().$tpl->getHtmlFrag('block-content', ['id' => 'repfavorliste', 'content' => getFavoriteList(1)]);
         setFoot();
     } else {
         account();
@@ -710,7 +710,7 @@ function passlost(): void {
         setHead([
             'title' => _PASSWORDLOST,
         ]);
-        $cont = $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true]);
         $info = ($email) ? _PASSLOSP : _PASSLOSC;
         $send = ($email) ? _SENDPASSWORD : _SEND;
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
@@ -773,7 +773,7 @@ function passmail(): void {
                 'title' => _PASSWORDLOST,
             ]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);
-            echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
+            echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
             $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email]);
@@ -986,7 +986,7 @@ function edithome(): void {
         } else {
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NETWORKPASS]);
         }
-        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE]).getUserNav().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
+        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
         setFoot();
     } else {
         account();
