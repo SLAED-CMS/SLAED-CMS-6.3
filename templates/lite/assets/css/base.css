@@ -1,7 +1,7 @@
 /* Fonts: Magistral regular @font-face declaration */
 @font-face {
   font-family: "Magistral";
-  src: url(fonts/Magistral-Book.woff2) format("woff2");
+  src: url(fonts/magistral.woff2) format("woff2");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
