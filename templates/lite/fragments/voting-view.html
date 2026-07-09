@@ -1,7 +1,7 @@
-<li>
+<li{% if is_lead %} class="sl-lead"{% endif %} data-sl-votes="{{ votes }}" data-sl-percent="{{ percent }}">
   <div class="sl-progress-info">
-    <span title="{{ text_safe }}">{{{ text }}}</span>
-    <span class="sl-pull-right" title="{{ text_safe }} - {{ percent }}%"><b>{{ percent }}%</b> <b>({{ votes_label }}: {{ votes }})</b></span>
+    <span title="{{ text_safe }}"><i class="bi bi-trophy-fill" aria-hidden="true"></i>{{{ text }}}</span>
+    <span class="sl-pull-right" title="{{ text_safe }} - {{ percent }}%"><b class="sl-vote-pct">{{ percent }}%</b> <b>({{ votes_label }}: <span class="sl-vote-num">{{ votes }}</span>)</b></span>
   </div>
   <div class="sl-progress-line sl-progress-{{ pn }}" title="{{ text_safe }} - {{ percent }}%"><div style="width: {{ percent }}%;">{{ percent }}%</div></div>
 </li>

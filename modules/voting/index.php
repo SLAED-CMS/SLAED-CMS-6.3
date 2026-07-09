@@ -50,6 +50,9 @@ function voting(): void {
                 'comm' => $comm,
                 'vote' => $vote,
                 'report' => $report,
+                'is_closed' => (strtotime($enddate) <= time()),
+                'act_label' => _VOTING_ACT,
+                'end_label' => _VOTING_END,
             ];
             if ($ismoder) {
                 $edit = $afile.'.php?name=voting&op=add&id='.$id;

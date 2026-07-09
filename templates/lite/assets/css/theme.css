@@ -1095,6 +1095,33 @@ select.sl-field {
   opacity: 0.8;
 }
 
+.sl-but:active {
+  transform: scale(0.96);
+}
+
+/* Any htmx button while its request is in flight: label yields to the system loader dots, clicks are blocked */
+.sl-but.htmx-request,
+.sl-but.htmx-request:hover {
+  position: relative;
+  color: transparent;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.sl-but.htmx-request::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -15px;
+  border-radius: 50%;
+  background: var(--sl-color-brand-strong);
+  box-shadow: 12px 0 0 var(--sl-color-brand), 24px 0 0 var(--sl-color-brand);
+  animation: sl-loading-dots 0.8s infinite linear;
+}
+
 .sl-hidden {
   opacity: 0.5;
 }
@@ -1516,21 +1543,38 @@ button.sl-but-mini:hover,
   gap: var(--sl-space-md);
 }
 
-.sl-session-table {
-  width: 100%;
-  border-collapse: collapse;
+.sl-session-line,
+.sl-session-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sl-space-md);
+  align-items: center;
+  padding: var(--sl-space-xs) 0;
 }
 
-.sl-session-table td {
+.sl-session-row--icon {
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+}
+
+.sl-session-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sl-session-name,
+.sl-session-module {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
+.sl-session-module,
 .sl-session-right {
   text-align: right;
 }
 
-.sl-session-center {
+.sl-session-action {
+  padding: var(--sl-space-xs) 0;
   text-align: center;
 }
 
@@ -2189,8 +2233,165 @@ ol.sl-sublist-two li:hover:before {
   padding: 0;
 }
 
-.sl-vote-list li input {
-  margin-right: 5px;
+/* Voting: interactive option rows with hover, selected highlight and native accent controls */
+.sl-vote-list li {
+  margin: 0 -7px 2px;
+  padding: 4px 7px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.sl-vote-list li:hover {
+  background: var(--sl-color-surface-alt);
+}
+
+.sl-vote-list label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.sl-vote-list input {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--sl-color-brand-strong);
+  transition: transform 0.18s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.sl-vote-list input:checked {
+  transform: scale(1.15);
+}
+
+.sl-vote-list input:focus-visible {
+  outline: 2px solid var(--sl-color-brand);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.sl-vote-list li:has(input:checked) {
+  background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent);
+  color: var(--sl-color-text-heading);
+  font-weight: bold;
+}
+
+/* Voting: result rows — animated bar width, leader trophy, stable digits */
+.sl-vote-list li:has(.sl-progress-line) {
+  padding-bottom: 8px;
+}
+
+.sl-progress-line div {
+  transition: width 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.sl-vote-list .sl-progress-info .bi-trophy-fill {
+  display: none;
+  margin-right: 4px;
+  color: var(--sl-color-warning);
+}
+
+.sl-vote-list li.sl-lead .sl-progress-info .bi-trophy-fill {
+  display: inline;
+}
+
+.sl-vote-list .sl-progress-info .sl-pull-right b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Voting: corner tool cluster (admin gear menu + live indicator); inside a sidebar block it rides up to the block title line */
+.sl-vote {
+  position: relative;
+}
+
+.sl-vote-tools {
+  position: absolute;
+  top: 0.5px;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sl-block {
+  position: relative;
+}
+
+.sl-block .sl-vote {
+  position: static;
+}
+
+.sl-block .sl-vote-tools {
+  top: 12px;
+  right: 15px;
+  min-height: 26px;
+}
+
+.sl-vote-tools .sl-editor-menu ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Voting status glyph: success play while active, warning stop when ended; bare inline glyph shares .sl-tip-icon typography so it pixel-snaps like the info tip */
+.sl-vote-live {
+  margin-right: 0;
+}
+
+.sl-vote-live-ico {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 50%;
+  color: var(--sl-color-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  animation: sl-live-pulse 2s ease-out infinite;
+}
+
+.sl-vote-end .sl-vote-live-ico {
+  color: var(--sl-color-warning);
+  animation: none;
+}
+
+.sl-vote-live .sl-float-panel {
+  left: auto;
+  right: 0;
+}
+
+/* Inline list marker before the info tip */
+.sl-vote-mark {
+  margin: 0 4px 0 0;
+  vertical-align: middle;
+}
+
+/* List cells: inline-middle sits ~1.5px under the optical text axis — lift the icon pair onto it */
+.sl-table-cell .sl-vote-mark,
+.sl-table-cell > .sl-tip {
+  position: relative;
+  top: -1.5px;
+}
+
+.sl-vote[data-sl-vote-live] .sl-vote-title {
+  padding-right: 56px;
+}
+
+.sl-block .sl-vote[data-sl-vote-live] .sl-vote-title {
+  padding-right: 0;
+}
+
+@keyframes sl-live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-success) 50%, transparent);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
 }
 
 .sl-vote-title {
@@ -2726,6 +2927,37 @@ ol.sl-sublist-two li:hover:before {
   border-radius: 50%;
   box-shadow: var(--sl-shadow-soft);
   background-color: var(--sl-color-bg);
+}
+
+.sl-block-user-ava p a {
+  color: var(--sl-color-text);
+  transition: color 0.2s ease;
+}
+
+.sl-block-user-ava p a:hover {
+  color: var(--sl-color-brand-link);
+}
+
+/* User blocks: group and points meta line under the greeting */
+.sl-block-user-meta {
+  margin: 0;
+  color: var(--sl-color-text-muted);
+  font-size: 12.5px;
+}
+
+/* User blocks: unread private-message counter pill with a soft attention pulse */
+.sl-pm-new {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--sl-color-danger);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  animation: sl-alert-pulse 1.8s ease-in-out infinite;
 }
 
 .sl-block-pm {

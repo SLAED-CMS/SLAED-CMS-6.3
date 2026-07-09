@@ -208,6 +208,11 @@
         }
     }
 
+    // One source of truth for the display a toggled block opens with: explicit data-sl-toggle-display wins, grid containers open as grid, everything else as block
+    function getToggleDisplay(element) {
+        return element.getAttribute('data-sl-toggle-display') || ((element.classList.contains('sl-div-item') || element.classList.contains('sl-div-grid')) ? 'grid' : 'block');
+    }
+
     // Float panels bypass the legacy display/slide/puff path: their visibility lives in CSS and placement in placeFloat, so toggling them never jumps
     function setToggleBlockState(element, id, isOpen, effect, duration) {
         element.classList.toggle('sl-is-open', isOpen);
@@ -220,7 +225,6 @@
             }
             return;
         }
-        var display = element.getAttribute('data-sl-toggle-display') || ((element.classList.contains('sl-div-item') || element.classList.contains('sl-div-grid')) ? 'grid' : 'block');
         if (effect === 'slide') {
             setSlideMotion(element, isOpen, duration || 400);
             return;
@@ -230,7 +234,7 @@
             return;
         }
         element.hidden = !isOpen;
-        element.style.display = isOpen ? display : 'none';
+        element.style.display = isOpen ? getToggleDisplay(element) : 'none';
     }
 
     function setToggleBlock(id, scoped, isOpen, effect, duration) {
@@ -282,7 +286,7 @@
         for (var i = 0; i < anims.length; i++) anims[i].cancel();
         if (show) {
             element.hidden = false;
-            element.style.display = 'block';
+            element.style.display = getToggleDisplay(element);
             element.style.height = '0px';
             element.style.overflow = 'hidden';
             element.offsetHeight;
@@ -311,7 +315,7 @@
     function setFadeScale(element, show, duration) {
         if (show) {
             element.hidden = false;
-            element.style.display = 'block';
+            element.style.display = getToggleDisplay(element);
         }
         element.animate([
             { opacity: show ? 0 : 1, transform: show ? 'scale(0.96)' : 'scale(1)' },
@@ -599,12 +603,14 @@
             var host = node.getBoundingClientRect();
             var width = rect.width;
             var height = rect.height;
-            var left = host.left + (host.width / 2) - (width / 2);
+            var anchor = node.closest('[data-sl-float-align]');
+            var align = anchor ? anchor.getAttribute('data-sl-float-align') : '';
+            var left = (align === 'end') ? host.right - width : host.left + (host.width / 2) - (width / 2);
             var top = host.bottom + floatGap;
             var center = host.left + (host.width / 2);
 
             if (left + width > window.innerWidth - floatEdge) {
-                left = Math.max(floatEdge, window.innerWidth - width - floatEdge);
+                left = Math.max(floatEdge, Math.min(host.right, window.innerWidth - floatEdge) - width);
                 node.classList.add('sl-float-right');
             } else if (left < floatEdge) {
                 left = floatEdge;
@@ -798,6 +804,107 @@
         }
     }
 
+    // Voting widgets: ease one numeric label from a start value to a target over 800ms
+    function setVoteNumber(el, from, to, unit) {
+        var start = performance.now();
+        function tick(now) {
+            var p = Math.min((now - start) / 800, 1);
+            var val = from + (to - from) * (1 - Math.pow(1 - p, 3));
+            el.textContent = unit ? val.toFixed(2) + unit : String(Math.round(val));
+            if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // Voting widgets: apply data-sl-percent/votes targets to bars and counters; first run counts up from zero
+    function setVoteValues(vote, first) {
+        var rows = vote.querySelectorAll('li[data-sl-percent]');
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        for (var i = 0; i < rows.length; i++) {
+            (function (row) {
+                var pct = parseFloat(row.getAttribute('data-sl-percent')) || 0;
+                var num = parseInt(row.getAttribute('data-sl-votes'), 10) || 0;
+                var pel = row.querySelector('.sl-vote-pct');
+                var vel = row.querySelector('.sl-vote-num');
+                var bar = row.querySelector('.sl-progress-line div');
+                if (bar) bar.style.width = pct.toFixed(2) + '%';
+                if (reduce) {
+                    if (pel) pel.textContent = pct.toFixed(2) + '%';
+                    if (vel) vel.textContent = String(num);
+                    return;
+                }
+                if (pel) setVoteNumber(pel, first ? 0 : parseFloat(pel.textContent) || 0, pct, '%');
+                if (vel) setVoteNumber(vel, first ? 0 : parseInt(vel.textContent, 10) || 0, num, '');
+            })(rows[i]);
+        }
+    }
+
+    // Voting widgets: cold-start intro — bars and counters rise from zero after the first painted frame
+    function setVoteIntro(vote) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var rows = vote.querySelectorAll('li[data-sl-percent]');
+        if (!rows.length) return;
+        for (var i = 0; i < rows.length; i++) {
+            var bar = rows[i].querySelector('.sl-progress-line div');
+            if (bar) bar.style.width = '0%';
+        }
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { setVoteValues(vote, true); });
+        });
+    }
+
+    // Voting widgets: poll the widget endpoint every data-sl-vote-live seconds and tween rows to fresh values
+    function setVoteLive(vote) {
+        var wait = parseInt(vote.getAttribute('data-sl-vote-live'), 10) || 0;
+        var url = vote.getAttribute('data-sl-vote-url') || '';
+        if (wait < 1 || url === '' || vote.getAttribute('data-sl-vote-ready') === '1') return;
+        vote.setAttribute('data-sl-vote-ready', '1');
+        var timer = window.setInterval(function () {
+            if (!document.body.contains(vote)) { window.clearInterval(timer); return; }
+            window.fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(function (response) {
+                if (!response.ok) throw new Error('Request failed');
+                return response.text();
+            }).then(function (html) {
+                var hold = document.createElement('template');
+                hold.innerHTML = html;
+                var fresh = hold.content.querySelector('.sl-vote');
+                if (!fresh) return;
+                var frows = fresh.querySelectorAll('li[data-sl-percent]');
+                var rows = vote.querySelectorAll('li[data-sl-percent]');
+                if (!frows.length || frows.length !== rows.length) {
+                    window.clearInterval(timer);
+                    vote.replaceWith(fresh);
+                    setVoteBlocks(document);
+                    return;
+                }
+                for (var i = 0; i < rows.length; i++) {
+                    rows[i].setAttribute('data-sl-percent', frows[i].getAttribute('data-sl-percent'));
+                    rows[i].setAttribute('data-sl-votes', frows[i].getAttribute('data-sl-votes'));
+                    rows[i].classList.toggle('sl-lead', frows[i].classList.contains('sl-lead'));
+                }
+                setVoteValues(vote, false);
+                var votes = vote.querySelector('.sl-votes');
+                var fvotes = fresh.querySelector('.sl-votes');
+                if (votes && fvotes) votes.innerHTML = fvotes.innerHTML;
+                var coms = vote.querySelector('.sl-coms');
+                var fcoms = fresh.querySelector('.sl-coms');
+                if (coms && fcoms) coms.innerHTML = fcoms.innerHTML;
+            }).catch(function () {});
+        }, wait * 1000);
+    }
+
+    // Voting widgets: entry point for initial load and htmx swaps
+    function setVoteBlocks(root) {
+        var votes = (root || document).querySelectorAll('.sl-vote');
+        for (var i = 0; i < votes.length; i++) {
+            if (votes[i].getAttribute('data-sl-vote-intro') !== '1') {
+                votes[i].setAttribute('data-sl-vote-intro', '1');
+                setVoteIntro(votes[i]);
+            }
+            setVoteLive(votes[i]);
+        }
+    }
+
     function setSlaedUi() {
         setTableSort(document);
         setLightbox();
@@ -809,6 +916,7 @@
         setEditorInsertHandler();
         setTabs(document);
         setAlerts(document);
+        setVoteBlocks(document);
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {
@@ -817,6 +925,7 @@
         setFloating(event.target);
         setTabs(event.target);
         setAlerts(event.target);
+        setVoteBlocks(event.target);
     });
 
     window.addEventListener('resize', refitFloating);

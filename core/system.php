@@ -1261,22 +1261,14 @@ function updateStatsTrack(string $request, int $guest): void {
     $cc = class_exists('Geoip') ? Geoip::getCountry($ip) : '';
     $sid = '';
     if ($guest !== 1 && $guest !== 3) {
-        if (isset($_COOKIE['stats_id']) && $_COOKIE['stats_id'] !== '') {
-            $sid = (string)$_COOKIE['stats_id'];
-        } elseif (!headers_sent()) {
+        $sid = getCookies('stats') ?: (string)($_COOKIE['stats_id'] ?? '');
+        if ($sid === '' && !headers_sent()) {
             try {
                 $sid = bin2hex(random_bytes(8));
             } catch (Exception) {
                 $sid = '';
             }
-            if ($sid !== '') {
-                setcookie('stats_id', $sid, [
-                    'expires' => time() + 31536000,
-                    'path' => '/',
-                    'httponly' => true,
-                    'samesite' => 'Lax',
-                ]);
-            }
+            if ($sid !== '') setCookies('stats', time() + 31536000, $sid);
         }
     }
     $sess = null;
@@ -1466,7 +1458,7 @@ function checkPageCache(): bool {
     if (empty($conf['cache'])) return false;
     if ($conf['cache'] == 2 && !$home) return false;
     if (is_user() || isAdmin()) return false;
-    if (!empty($_SESSION['slaed_flash'])) return false;
+    if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
     $url = str_replace('/', '', $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '');
     $url = $url ?: 'index.php';
     if ($conf['cache'] == 2) {
@@ -1651,10 +1643,9 @@ function setHead(array $seo = []): void {
     if (is_user()) {
         $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
         $userinfo = getUserInfo();
-        $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.($userinfo['avatar'] ?? '');
-        $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
+        $avatar = getUserAvatarUrl($userinfo);
         $items = [
-            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _ACCOUNT, 'img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _ACCOUNT, 'label' => $uname, 'is_login_profile' => true, 'is_login_avatar' => true, 'is_bold_label' => true]),
+            $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _ACCOUNT, 'img_src' => $avatar, 'img_alt' => _ACCOUNT, 'label' => $uname, 'is_login_profile' => true, 'is_login_avatar' => true, 'is_bold_label' => true]),
             $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=logout&refer=1', 'title' => _LOGOUT, 'label' => _LOGOUT]),
         ];
         $html = '';
@@ -1819,17 +1810,18 @@ function setFoot(): void {
 
 # Store one-time flash message in session
 function setFlash(string $text, bool $warn = false): void {
+    global $conf;
     if ($text === '' || session_status() !== PHP_SESSION_ACTIVE) return;
-    $_SESSION['slaed_flash'] = ['text' => $text, 'warn' => $warn ? 1 : 0];
+    $_SESSION[$conf['user_c'].'-flash'] = ['text' => $text, 'warn' => $warn ? 1 : 0];
 }
 
 # Render and clear one-time flash message
 function getFlashHtml(): string {
-    global $tpl;
+    global $conf, $tpl;
     if (session_status() !== PHP_SESSION_ACTIVE) return '';
-    $data = $_SESSION['slaed_flash'] ?? null;
+    $data = $_SESSION[$conf['user_c'].'-flash'] ?? null;
     if (!is_array($data)) return '';
-    unset($_SESSION['slaed_flash']);
+    unset($_SESSION[$conf['user_c'].'-flash']);
     $text = (string)($data['text'] ?? '');
     if ($text === '') return '';
     return $tpl->getHtmlFrag('alert', [
@@ -2892,6 +2884,8 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     $body = explode('|', $body);
     $answer = explode('|', $answer);
     $vote = array_sum($answer);
+    $ints = array_map('intval', $answer);
+    $top = ($rate && $vote > 0) ? array_search(max($ints), $ints) : -1;
     $items = '';
     foreach ($body as $idx => $text) {
         $ord = $idx + 1;
@@ -2900,7 +2894,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         $perc = ($vote > 0) ? number_format(100 * $cnt / $vote, 2) : '0.00';
 
         if ($rate) {
-            $items .= $tpl->getHtmlFrag('voting-view', ['text' => $text, 'text_safe' => filterText($text), 'n' => $ord, 'pn' => $pn, 'percent' => $perc, 'votes_label' => _VOTES, 'votes' => $cnt]);
+            $items .= $tpl->getHtmlFrag('voting-view', ['text' => $text, 'text_safe' => filterText($text), 'n' => $ord, 'pn' => $pn, 'percent' => $perc, 'votes_label' => _VOTES, 'votes' => $cnt, 'is_lead' => ($idx === $top)]);
             continue;
         }
 
@@ -2912,7 +2906,7 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
 
     [$vnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$qwhere, $qpars));
     $admin = '';
-    if (!$force && is_moder('voting') && $votid == 'voting') {
+    if (!$force && is_moder('voting')) {
         $links = [
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
             $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
@@ -2941,6 +2935,11 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'polls_html' => $polls,
         'votes_html' => $votes,
         'comm_html'  => $com,
+        'live_every' => (!$force && $rate && strtotime($end) > time()) ? intval($conf['live_u'] ?? 0) : 0,
+        'live_query' => 'go=1&op=getVotingView&id='.$id.'&votid='.$votid.'&token='.getSiteToken(),
+        'live_label' => _VOTING_LIVE,
+        'is_closed' => (!$force && $rate && strtotime($end) <= time()),
+        'end_label' => _VOTING_END,
     ]);
 }
 
@@ -3431,63 +3430,68 @@ function replace_break(string $text): string {
 function getUserSessionInfo(string $id = ''): string {
  global $db, $conf, $tpl;
     if ($conf['session']) {
-        $who_online = ''; $m = 0; $b = 0; $u = 0; $i = 0;
-        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul FROM '.PREFIX_DB.'_session ORDER BY uname');
-        while (list($uname, $time, $host, $guest, $module) = $db->getSqlRow($result)) {
-            $time = time() - $time;
-            $strip = cutstr($uname, 15);
-            $module = getModuleName($module);
-            $linkstrip = cutstr($module, 15);
-            if ($guest == 2) {
-                $who_online .= $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => Geoip::getFlagHtml($host),
-                    'name_href' => 'index.php?name=account&op=view&uname='.urlencode($uname),
-                    'name_title' => getDuration($time),
-                    'name_text' => $strip,
-                    'name_link' => ['href' => 'index.php?name=account&op=view&uname='.urlencode($uname), 'title' => getDuration($time), 'label' => $strip],
-                    'module_title' => $module,
-                    'module_text' => $linkstrip,
-                ]);
-                $m++;
-            } elseif ($guest == 1 && $conf['botsact']) {
-                $who_online .= $tpl->getHtmlFrag('session-row', [
-                    'geo_html' => Geoip::getFlagHtml($host),
-                    'name_title' => getDuration($time),
-                    'name_text' => $strip,
-                    'is_name_note' => true,
-                    'module_title' => $module,
-                    'module_text' => $linkstrip,
-                ]);
-                $b++;
-            } else {
-                $who_online .= '';
-                $u++;
-            }
-            $i++;
-        }
+        [$mem, $bots, $all] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(CASE WHEN guest = 2 THEN 1 END), COUNT(CASE WHEN guest = 1 THEN 1 END), COUNT(*) FROM '.PREFIX_DB.'_session'));
+        $mem = intval($mem);
+        $bot = ($conf['botsact']) ? intval($bots) : 0;
+        $all = intval($all);
+        $gst = $all - $mem - $bot;
         $content = $tpl->getHtmlPart('session-summary', [
             'members_label' => _BMEM,
-            'members_count' => $m,
+            'members_count' => $mem,
             'show_bots' => $conf['botsact'],
             'bots_label' => _BOTS,
-            'bots_count' => $b,
+            'bots_count' => $bot,
             'visitors_label' => _BVIS,
-            'visitors_count' => $u,
+            'visitors_count' => $gst,
             'overall_label' => _OVERALL,
-            'overall_count' => $i,
+            'overall_count' => $all,
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'toggle_title' => _READMORE,
             'toggle_label' => _READMORE,
-            'rows_html' => $who_online,
-            'has_rows' => $who_online !== '',
+            'has_rows' => ($mem > 0 || $bot > 0),
+            'rows_query' => 'go=1&op=getUserSessionRows&token='.getSiteToken(),
             'toggle_id' => 'u-block',
+            'update_every' => intval($conf['live_u'] ?? 0),
             'update_target' => 'sinfo',
             'update_query' => 'go=1&op=getUserSessionInfo&token='.getSiteToken(),
         ]);
         if ($id) { return $content; } else { echo $content; }
     }
     return '';
+}
+
+# Output the detailed online visitor rows (users and bots) for the sidebar session block; requested lazily via htmx on first expand
+function getUserSessionRows(): void {
+ global $db, $conf, $tpl;
+    if (!$conf['session']) return;
+    $where = ($conf['botsact']) ? 'guest IN (1, 2)' : 'guest = 2';
+    $rows = '';
+    $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul FROM '.PREFIX_DB.'_session WHERE '.$where.' ORDER BY uname');
+    while ([$uname, $time, $host, $guest, $module] = $db->getSqlRow($result)) {
+        $time = time() - $time;
+        $strip = cutstr($uname, 15);
+        $module = getModuleName($module);
+        $lstrip = cutstr($module, 15);
+        if ($guest == 2) {
+            $rows .= $tpl->getHtmlFrag('session-row', [
+                'geo_html' => Geoip::getFlagHtml($host),
+                'name_link' => ['href' => 'index.php?name=account&op=view&uname='.urlencode($uname), 'title' => getDuration($time), 'label' => $strip],
+                'module_title' => $module,
+                'module_text' => $lstrip,
+            ]);
+        } else {
+            $rows .= $tpl->getHtmlFrag('session-row', [
+                'geo_html' => Geoip::getFlagHtml($host),
+                'name_title' => getDuration($time),
+                'name_text' => $strip,
+                'is_name_note' => true,
+                'module_title' => $module,
+                'module_text' => $lstrip,
+            ]);
+        }
+    }
+    echo $rows;
 }
 
 # User information for admin
@@ -3644,7 +3648,7 @@ function getForumTopics(string $cols, string $bclos, int $limit): mixed {
 # Show cart
 function getCartSummary(string $info = ''): string {
  global $db, $conf, $tpl;
-    $shop = (isset($_COOKIE['shop'])) ? base64_decode($_COOKIE['shop']) : '';
+    $shop = base64_decode((string)($_COOKIE[$conf['user_c'].'-shop'] ?? $_COOKIE['shop'] ?? ''));
     $info = (empty($info)) ? $shop : base64_decode($info);
     $cookies = (preg_match('#[^0-9,]#', $info)) ? '' : $info;
     if ($cookies) {
@@ -3670,8 +3674,8 @@ function getCartSummary(string $info = ''): string {
             $price = $price * $i;
             $ptotal += $price;
             $titlink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=view&id='.$id, 'title' => $title, 'label' => $title]);
-            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=addCartItem&id='.$id, 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
-                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=deleteCartItem&id='.$id, 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
+            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=addCartItem&id='.$id.'&token='.getSiteToken(), 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
+                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=deleteCartItem&id='.$id.'&token='.getSiteToken(), 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'id' => 'kasse-'.$id,
                 'is_cart_row' => true,
@@ -3711,16 +3715,12 @@ function getCartSummary(string $info = ''): string {
 function addCartItem(): void {
     global $conf;
     $id = getVar('get', 'id', 'num', 0);
-    $cookies = (preg_match('#[^0-9,]#', base64_decode($_COOKIE['shop']))) ? '' : base64_decode($_COOKIE['shop']);
+    $carts = base64_decode((string)($_COOKIE[$conf['user_c'].'-shop'] ?? $_COOKIE['shop'] ?? ''));
+    $cookies = (preg_match('#[^0-9,]#', $carts)) ? '' : $carts;
+    $info = '';
     if ($id) {
-        setcookie('shop', false);
-        if ($cookies) {
-            $info = base64_encode($cookies.','.$id);
-            setcookie('shop', $info, time() + $conf['shop']['shop_t']);
-        } else {
-            $info = base64_encode($id);
-            setcookie('shop', $info, time() + $conf['shop']['shop_t']);
-        }
+        $info = ($cookies) ? base64_encode($cookies.','.$id) : base64_encode($id);
+        setCookies('shop', time() + $conf['shop']['shop_t'], $info);
     }
     echo getCartSummary($info);
 }
@@ -3729,29 +3729,26 @@ function addCartItem(): void {
 function deleteCartItem(): void {
     global $conf;
     $id = getVar('get', 'id', 'num', 0);
-    $cookies = (preg_match('#[^0-9,]#', base64_decode($_COOKIE['shop']))) ? '' : base64_decode($_COOKIE['shop']);
+    $carts = base64_decode((string)($_COOKIE[$conf['user_c'].'-shop'] ?? $_COOKIE['shop'] ?? ''));
+    $cookies = (preg_match('#[^0-9,]#', $carts)) ? '' : $carts;
+    $info = '';
     if ($id && $cookies) {
         $massiv = explode(',', $cookies);
-        setcookie('shop', false);
-        $i = 0;
         $a = 0;
-        $b = 0;
         foreach ($massiv as $val) {
             if ($val == $id && $a == 0) {
-                $i++;
                 $a++;
-                $val = '';
-            } else {
-                if ($b == 0) {
-                    $info = $val;
-                    $b++;
-                } else {
-                    $info .= ','.$val;
-                }
+                continue;
             }
+            $info .= ($info === '') ? $val : ','.$val;
         }
-        $info = base64_encode($info);
-        setcookie('shop', $info, time() + $conf['shop']['shop_t']);
+        if ($info === '') {
+            setCookiesDelete('shop');
+            unset($_COOKIE[$conf['user_c'].'-shop'], $_COOKIE['shop']);
+        } else {
+            $info = base64_encode($info);
+            setCookies('shop', time() + $conf['shop']['shop_t'], $info);
+        }
     }
     echo getCartSummary($info);
 }
@@ -5144,7 +5141,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($com_date, _TIMESTRING), 'is_comment_date' => true]);
             $ip = (is_moder($com_modul)) ? Geoip::getIpHtml($com_host) : '';
             $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_card_id' => true]);
-            $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
+            $avatar = (!empty($user_name)) ? getUserAvatarUrl(['avatar' => $user_avatar]) : getUserAvatarUrl([], (int)$com_uid > 0 && empty($com_name));
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
             $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';

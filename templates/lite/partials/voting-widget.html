@@ -1,11 +1,22 @@
+<div class="sl-vote"{% if live_every %} data-sl-vote-live="{{ live_every }}" data-sl-vote-url="index.php?{{ live_query }}"{% endif %}>
+{% if live_every or is_closed %}
+<span class="sl-vote-tools" data-sl-float-align="end">
+  {% if admin_html %}{{{ admin_html }}}{% endif %}
+  <span class="sl-tip sl-float sl-vote-live{% if is_closed %} sl-vote-end{% endif %}" tabindex="0">
+    <span class="sl-vote-live-ico"><i class="bi {% if is_closed %}bi-stop-circle-fill{% else %}bi-play-circle-fill{% endif %}" aria-hidden="true"></i></span>
+    <div class="sl-float-panel">{% if is_closed %}{{ end_label }}{% else %}{{ live_label }}{% endif %}</div>
+  </span>
+</span>
+{% endif %}
 {% if has_form %}<form name="voting" id="{{ form_id }}" method="post"><input type="hidden" name="id" value="{{ poll_id }}"><input type="hidden" name="token" value="{{ token }}">{% endif %}
 <h4 class="sl-vote-title">{{ title }}</h4>
 <ul class="sl-vote-list">{{{ items_html }}}</ul>
 {% if is_view %}
 <div class="sl-vote-links sl-vote-links-center">{{{ votes_html }}} {{{ comm_html }}} {{{ polls_html }}}</div>
-{% if admin_html or post_html %}<div class="sl-vote-actions">{{{ admin_html }}}{{{ post_html }}}</div>{% endif %}
+{% if not live_every and not is_closed %}{% if admin_html or post_html %}<div class="sl-vote-actions">{{{ admin_html }}}{{{ post_html }}}</div>{% endif %}{% endif %}
 {% else %}
-{% if admin_html or post_html %}<div class="sl-vote-actions sl-vote-actions-center">{{{ admin_html }}}{{{ post_html }}}</div>{% endif %}
+{% if not live_every and not is_closed %}{% if admin_html or post_html %}<div class="sl-vote-actions sl-vote-actions-center">{{{ admin_html }}}{{{ post_html }}}</div>{% endif %}{% endif %}
 <div class="sl-vote-links sl-vote-links-center">{{{ votes_html }}} {{{ comm_html }}} {{{ polls_html }}}</div>
 {% endif %}
 {% if has_form %}</form>{% endif %}
+</div>
