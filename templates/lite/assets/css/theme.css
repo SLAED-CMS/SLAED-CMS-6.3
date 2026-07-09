@@ -946,10 +946,10 @@ input[type="checkbox"]:disabled {
 }
 
 .sl-radio-group {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sl-space-sm) var(--sl-space-lg);
+  gap: var(--sl-space-md);
 }
 
 .sl-radio-group.sl-radio-switch {
@@ -1082,61 +1082,12 @@ select.sl-field {
   display: inline;
 }
 
-.sl-but {
-  color: var(--sl-but-neutral-text);
-  background: linear-gradient(to top, var(--sl-but-neutral-start) 0%, var(--sl-but-neutral-end) 100%);
-  --sl-but-border-light: var(--sl-but-neutral-border-inner);
-  --sl-but-border-dark: var(--sl-but-neutral-border-outer);
-  text-shadow: var(--sl-but-text-shadow-neutral);
-}
-
-.sl-but:hover {
-  color: var(--sl-color-brand-link);
-  opacity: 0.8;
-}
-
-.sl-but:active {
-  transform: scale(0.96);
-}
-
-/* Any htmx button while its request is in flight: label yields to the system loader dots, clicks are blocked */
-.sl-but.htmx-request,
-.sl-but.htmx-request:hover {
-  position: relative;
-  color: transparent;
-  text-shadow: none;
-  pointer-events: none;
-}
-
-.sl-but.htmx-request::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 6px;
-  height: 6px;
-  margin: -3px 0 0 -15px;
-  border-radius: 50%;
-  background: var(--sl-color-brand-strong);
-  box-shadow: 12px 0 0 var(--sl-color-brand), 24px 0 0 var(--sl-color-brand);
-  animation: sl-loading-dots 0.8s infinite linear;
-}
-
 .sl-hidden {
-  opacity: 0.5;
-}
-
-.sl-hidden.sl-but:hover {
-  cursor: not-allowed;
   opacity: 0.5;
 }
 
 .sl-avatar {
   max-width: 100%;
-}
-
-.sl-login-avatar {
-  object-fit: cover;
 }
 
 .sl-com-ava .sl-avatar {
@@ -1271,6 +1222,7 @@ select.sl-field {
 }
 
 .sl-menu .sl-float-panel {
+  --sl-float-arrow-color: var(--sl-color-surface-dark);
   position: absolute;
   top: 10px;
   margin-top: 30px;
@@ -1540,12 +1492,6 @@ button.sl-but-mini:hover,
 }
 
 /* Associations: assoc-wrap and assoc-item layout */
-.sl-radio-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-md);
-}
-
 .sl-session-line,
 .sl-session-row {
   display: grid;
@@ -2007,6 +1953,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-tip > .sl-float-panel {
+  --sl-float-arrow-color: var(--sl-color-bg);
   position: absolute;
   top: 100%;
   left: 0;
@@ -2077,20 +2024,12 @@ ol.sl-sublist-two li:hover:before {
   border-top: 8px solid var(--sl-float-arrow-color, transparent);
 }
 
-.sl-tip > .sl-float-panel {
-  --sl-float-arrow-color: var(--sl-color-bg);
-}
-
 .sl-tip > .sl-float-panel::after {
   filter: drop-shadow(0 -1px 0 var(--sl-color-border-muted));
 }
 
 .sl-tip.sl-float-up > .sl-float-panel::after {
   filter: drop-shadow(0 1px 0 var(--sl-color-border-muted));
-}
-
-.sl-menu .sl-float-panel {
-  --sl-float-arrow-color: var(--sl-color-surface-dark);
 }
 
 /* Floating popovers: JS-driven viewport-fixed placement (shared by tip, menu, dropdowns) */
@@ -2284,10 +2223,6 @@ ol.sl-sublist-two li:hover:before {
   padding-bottom: 8px;
 }
 
-.sl-progress-line div {
-  transition: width 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
-}
-
 .sl-vote-list .sl-progress-info .bi-trophy-fill {
   display: none;
   margin-right: 4px;
@@ -2315,10 +2250,6 @@ ol.sl-sublist-two li:hover:before {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.sl-block {
-  position: relative;
 }
 
 .sl-block .sl-vote {
@@ -2448,6 +2379,7 @@ ol.sl-sublist-two li:hover:before {
   border-radius: calc(var(--sl-progress-track-radius) - 1px);
   overflow: hidden;
   text-indent: -9999px;
+  transition: width 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 .sl-progress-1 div {
@@ -2829,10 +2761,54 @@ ol.sl-sublist-two li:hover:before {
   appearance: none;
   box-shadow: var(--sl-but-border-shadow);
   transition: opacity 0.2s ease, box-shadow 0.2s ease;
+  color: var(--sl-but-neutral-text);
+  background: linear-gradient(to top, var(--sl-but-neutral-start) 0%, var(--sl-but-neutral-end) 100%);
   background-clip: padding-box;
+  --sl-but-border-light: var(--sl-but-neutral-border-inner);
+  --sl-but-border-dark: var(--sl-but-neutral-border-outer);
+  text-shadow: var(--sl-but-text-shadow-neutral);
 }
 
+.sl-but:hover {
+  color: var(--sl-color-brand-link);
+  opacity: 0.8;
+}
+
+.sl-but:active {
+  transform: scale(0.96);
+}
+
+.sl-hidden.sl-but:hover {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Any htmx button while its request is in flight: label yields to the system loader dots, clicks are blocked */
+.sl-but.htmx-request,
+.sl-but.htmx-request:hover {
+  position: relative;
+  color: transparent;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.sl-but.htmx-request::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -15px;
+  border-radius: 50%;
+  background: var(--sl-color-brand-strong);
+  box-shadow: 12px 0 0 var(--sl-color-brand), 24px 0 0 var(--sl-color-brand);
+  animation: sl-loading-dots 0.8s infinite linear;
+}
+
+/* Blocks are positioning anchors for corner tool clusters like .sl-vote-tools */
 .sl-block {
+  position: relative;
   background: var(--sl-color-surface);
   display: flow-root;
   padding: 15px;
@@ -5024,8 +5000,6 @@ td.sl-fl-col-stat {
 }
 
 .sl-fp-nickname {
-  display: flex;
-  align-items: center;
   justify-content: center;
   border-radius: 8px;
   position: relative;
