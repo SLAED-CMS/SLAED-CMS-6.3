@@ -206,6 +206,7 @@ input.sl-but-blue[value="ОК"] {
   text-align: center;
 }
 
+/* Reserved: danger-action button variant (delete, reset, uninstall); no permanent emitter yet by design */
 .sl-but-red {
   color: var(--sl-color-bg);
   text-shadow: var(--sl-text-shadow-dark);
@@ -2336,40 +2337,6 @@ input.sl-but-blue[value="ОК"] {
 
 .sl-alert-body > div + div {
   margin-top: var(--sl-space-sm);
-}
-
-.sl-alert-title {
-  font-weight: bold;
-}
-
-.sl-alert-text {
-  color: var(--sl-color-text-soft);
-}
-
-.sl-alert-close {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  margin: -2px -4px 0 0;
-  padding: 2px var(--sl-space-xs);
-  border: 0;
-  background: none;
-  color: var(--sl-color-muted);
-  font-size: var(--sl-size-icon-sm);
-  line-height: 1;
-  cursor: pointer;
-  border-radius: var(--sl-radius-control);
-}
-
-.sl-alert-close:hover {
-  color: var(--sl-color-text);
-  background: var(--sl-color-bg-muted);
-}
-
-.sl-alert-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sl-space-md);
-  margin-top: var(--sl-space-md);
 }
 
 .sl-alert-info {
