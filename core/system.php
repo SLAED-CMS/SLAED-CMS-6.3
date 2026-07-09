@@ -5139,7 +5139,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             }
             $avname = (!empty($user_name)) ? $user_name : ($com_name ?: (string)_ANONYM);
             $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($com_date, _TIMESTRING), 'is_comment_date' => true]);
-            $ip = (is_moder($com_modul)) ? Geoip::getIpHtml($com_host) : '';
+            $ip = (is_moder($com_modul)) ? Geoip::getIpHtml($com_host, true) : '';
             $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_card_id' => true]);
             $avatar = (!empty($user_name)) ? getUserAvatarUrl(['avatar' => $user_avatar]) : getUserAvatarUrl([], (int)$com_uid > 0 && empty($com_name));
             $rank = (!empty($user_rank)) ? $user_rank : '';

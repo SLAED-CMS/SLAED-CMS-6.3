@@ -80,8 +80,8 @@ class Geoip {
         return $flags[$key];
     }
 
-    # Return IP link with optional flag for one IP
-    public static function getIpHtml(string $ip): string {
+    # Return IP link with optional flag for one IP; meta renders it as a success chip for comment/forum/pm meta rows
+    public static function getIpHtml(string $ip, bool $meta = false): string {
         global $conf, $tpl;
         $link = $tpl->getHtmlFrag('link', [
             'href' => $conf['ip_link'].$ip,
@@ -89,7 +89,7 @@ class Geoip {
             'label' => $ip,
             'is_blank' => true,
         ]);
-        return $tpl->getHtmlFrag('span', ['is_geo_ip' => true, 'content_html' => self::getFlagHtml($ip).$link]);
+        return $tpl->getHtmlFrag('span', ['is_geo_ip' => true, 'is_geo_meta' => $meta, 'content_html' => self::getFlagHtml($ip).$link]);
     }
 
     # Return database file status for admin UI

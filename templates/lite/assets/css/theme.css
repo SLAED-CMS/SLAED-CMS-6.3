@@ -5037,30 +5037,6 @@ td.sl-fl-col-stat {
   order: 0;
 }
 
-/* Forum post & comment meta: date/edit are canonical info chips (emitted by inline-badge), IP keeps a scoped rule until Geoip::getIpHtml() learns the meta context */
-.sl-fp-meta .sl-grey > .sl-geo-ip,
-.sl-cargs > .sl-geo-ip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  box-sizing: border-box;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
-  color: var(--sl-color-success);
-  font-size: 13px;
-  vertical-align: middle;
-  text-decoration: none;
-}
-
-.sl-fp-meta .sl-grey > .sl-geo-ip a,
-.sl-cargs > .sl-geo-ip a {
-  color: inherit;
-  text-decoration: none;
-}
-
 .sl-fp-meta .sl-pull-right {
   display: flex;
   align-items: center;
@@ -5272,6 +5248,12 @@ a.sl-chip {
 .sl-favor:hover, .sl-favor-on:hover, .sl-favor-off:hover,
 .sl-chip:has(> a):hover {
   background: var(--sl-chip-hover-bg);
+}
+
+/* IP meta chip (moderators): the inner IP link inherits the chip tone */
+.sl-chip.sl-geo-ip a {
+  color: inherit;
+  text-decoration: none;
 }
 
 /* Plain icon controls (not chips): cart/shop actions + forum/topic state glyphs */
