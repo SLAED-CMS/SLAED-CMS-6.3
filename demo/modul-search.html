@@ -260,11 +260,11 @@ const R = [
 
 const chip = r => {
   let s = '';
-  s += `<time datetime="" title="Дата публикации" class="sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> ${r.date}</time>`;
-  s += `<a href="${r.catUrl}" title="${r.cat}" class="sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> ${r.cat}</a>`;
-  if (r.coms) s += `<a href="${r.modUrl}&op=view&id=${r.id}#comm" title="Комментарии" class="sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> ${r.coms}</a>`;
-  if (r.reads) s += `<span title="Прочитано" class="sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> ${r.reads}</span>`;
-  s += `<span class="sl-card-post"><a href="index.php?name=account&op=view&uname=${encodeURIComponent(r.author)}" title="Разместил" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> ${r.author}</a></span>`;
+  s += `<time datetime="" title="Дата публикации" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> ${r.date}</time>`;
+  s += `<a href="${r.catUrl}" title="${r.cat}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> ${r.cat}</a>`;
+  if (r.coms) s += `<a href="${r.modUrl}&op=view&id=${r.id}#comm" title="Комментарии" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> ${r.coms}</a>`;
+  if (r.reads) s += `<span title="Прочитано" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> ${r.reads}</span>`;
+  s += `<span class="sl-chip sl-chip-info sl-card-post"><a href="index.php?name=account&op=view&uname=${encodeURIComponent(r.author)}" title="Разместил" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> ${r.author}</a></span>`;
   return s;
 };
 
