@@ -5066,12 +5066,8 @@ td.sl-fl-col-stat {
   order: 0;
 }
 
-/* Forum post & comment meta as chips: date/edit = info, flag+IP = neutral (white+border) */
-.sl-fp-meta .sl-grey > .sl-topic-post,
-.sl-fp-meta .sl-grey > .sl-topic-edit,
+/* Forum post & comment meta: date/edit are canonical info chips (emitted by inline-badge), IP keeps a scoped rule until Geoip::getIpHtml() learns the meta context */
 .sl-fp-meta .sl-grey > .sl-geo-ip,
-.sl-cargs > .sl-topic-post,
-.sl-cargs > .sl-topic-edit,
 .sl-cargs > .sl-geo-ip {
   display: inline-flex;
   align-items: center;
@@ -5079,38 +5075,13 @@ td.sl-fl-col-stat {
   box-sizing: border-box;
   height: 26px;
   padding: 0 8px;
-  border: 1px solid var(--sl-color-border);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--sl-color-bg);
-  color: var(--sl-color-text-heading);
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
   font-size: 13px;
   vertical-align: middle;
   text-decoration: none;
-}
-
-.sl-fp-meta .sl-grey > .sl-topic-post,
-.sl-fp-meta .sl-grey > .sl-topic-edit,
-.sl-cargs > .sl-topic-post,
-.sl-cargs > .sl-topic-edit {
-  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
-  color: var(--sl-color-brand-strong);
-  border-color: transparent;
-}
-
-.sl-fp-meta .sl-grey > .sl-topic-post .bi,
-.sl-fp-meta .sl-grey > .sl-topic-edit .bi,
-.sl-cargs > .sl-topic-post .bi,
-.sl-cargs > .sl-topic-edit .bi {
-  color: inherit;
-  font-size: 13px;
-  top: 0;
-}
-
-.sl-fp-meta .sl-grey > .sl-geo-ip,
-.sl-cargs > .sl-geo-ip {
-  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
-  color: var(--sl-color-success);
-  border-color: transparent;
 }
 
 .sl-fp-meta .sl-grey > .sl-geo-ip a,
@@ -5366,7 +5337,7 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
 .sl-cart-checkout .bi, .sl-shop-checkout .bi, .sl-shop-add .bi,
 .sl-plus .bi, .sl-cart-plus .bi, .sl-cart-minus .bi,
 .sl-forum-new .bi, .sl-forum-old .bi, .sl-forum-closed .bi, .sl-forum-last .bi,
-.sl-topic-post .bi, .sl-topic-edit .bi, .sl-topic-new .bi, .sl-topic-old .bi,
+.sl-topic-new .bi, .sl-topic-old .bi,
 .sl-topic-popular-new .bi, .sl-topic-popular-old .bi, .sl-topic-announcement .bi,
 .sl-topic-hot .bi, .sl-topic-moderated .bi, .sl-topic-admin .bi,
 .sl-topic-closed .bi, .sl-topic-pending .bi {
@@ -5376,6 +5347,12 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
   vertical-align: middle;
   position: relative;
   top: -1px;
+}
+
+/* Comment date/edit chips keep the compact 13px glyph of the meta row */
+.sl-chip.sl-topic-post .bi,
+.sl-chip.sl-topic-edit .bi {
+  font-size: 13px;
 }
 
 .sl-forum-old .bi, .sl-topic-old .bi,
