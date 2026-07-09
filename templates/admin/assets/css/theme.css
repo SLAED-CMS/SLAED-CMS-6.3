@@ -19,13 +19,17 @@ html {
   box-sizing: border-box;
 }
 
-/* Utilities: text color helpers */
+/* Utilities: text color and weight helpers */
 .sl-red {
   color: var(--sl-color-danger);
 }
 
 .sl-green {
   color: var(--sl-color-success);
+}
+
+.sl-text-bold {
+  font-weight: bold;
 }
 
 /* Help docs: rendered markdown for admin info pages */

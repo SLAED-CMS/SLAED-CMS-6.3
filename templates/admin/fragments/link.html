@@ -2,7 +2,7 @@
   href="{% if href %}{{ href }}{% else %}#{% endif %}"
   title="{{ title }}"
 
-  {% if class or is_admin_language_link or rel or toggle_onclick or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_category or is_module or is_comment or is_read or is_card_image or is_shop_checkout or is_cart_checkout or is_votes or is_comments or is_last or is_top_hidden or isdebug or isslaed %}
+  {% if class or is_admin_language_link or rel or toggle_onclick or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_top_hidden or isdebug or isslaed %}
   class="
     {{ class }}
     {% if is_admin_language_link %} sl-admin-language-link{% endif %}
@@ -14,16 +14,8 @@
     {% if is_button_blue %} sl-but-blue{% endif %}
     {% if is_button_green %} sl-but-green{% endif %}
     {% if is_footer_button %} sl-but-foot{% endif %}
-    {% if is_category %} sl-cat{% endif %}
-    {% if is_module %} sl-module{% endif %}
-    {% if is_comment %} sl-comment-link{% endif %}
-    {% if is_read %} sl-read-link{% endif %}
-    {% if is_card_image %} sl-card-image{% endif %}
-    {% if is_shop_checkout %} sl-shop-checkout{% endif %}
-    {% if is_cart_checkout %} sl-cart-checkout{% endif %}
     {% if is_votes %} sl-votes{% endif %}
     {% if is_comments %} sl-coms{% endif %}
-    {% if is_last %} sl-last{% endif %}
     {% if is_top_hidden %} sl-thide{% endif %}
     {% if isdebug %} sl-debugger-toggle{% endif %}
     {% if isslaed %} sl-slaed-home{% endif %}
