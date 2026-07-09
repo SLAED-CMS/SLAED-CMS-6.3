@@ -17,14 +17,14 @@
       {% if category_link %}
         {% include 'fragments/link.html' with category_link %}
       {% else %}
-        <a href="{{ cat_url }}" title="{{ cat_desc }}" class="sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> <b>{{ cat_title }}</b></a>
+        <a href="{{ cat_url }}" title="{{ cat_desc }}" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> <b>{{ cat_title }}</b></a>
       {% endif %}
     </li>
     <li>
       {% if date_badge %}
         {% include 'fragments/date-badge.html' with date_badge %}
       {% else %}
-        <span title="{{ date_label }}" class="sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</span>
+        <span title="{{ date_label }}" class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date }}</span>
       {% endif %}
     </li>
   </ul>

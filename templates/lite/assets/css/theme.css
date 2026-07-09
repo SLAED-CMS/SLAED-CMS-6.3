@@ -5210,20 +5210,8 @@ td.sl-fl-col-stat {
   }
 }
 
-/* Chips: one pill component for every meta label - 26px tall, tone by semantics; per-field meta hooks group onto the matching tone and the icon inherits size and colour */
-.sl-chip,
-.sl-date, .sl-card-date,
-.sl-views, .sl-card-reads, .sl-hits,
-.sl-post-icon, .sl-card-post, .sl-media-post,
-.sl-coms, .sl-card-comment, .sl-comment-link,
-.sl-cat, .sl-card-category,
-.sl-votes, .sl-rate-sites, .sl-cart-total,
-.sl-download, .sl-faq,
-.sl-message-in, .sl-message-out, .sl-message-save,
-.sl-favor, .sl-favor-on, .sl-favor-off,
-.sl-n-day, .sl-n-days, .sl-n-week,
-.sl-news-info, .sl-status-active, .sl-status-inactive,
-.sl-module, .sl-ed2k, .sl-http, .sl-last {
+/* Chips: one pill component for every meta label - 26px tall, tone by semantics; emitters add sl-chip plus a tone, legacy meta names stay in markup as semantic hooks only */
+.sl-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -5261,19 +5249,7 @@ a.sl-author {
 }
 
 /* Clickable meta chips (links) default to the system success tone and deepen their tone tint on hover */
-a.sl-chip,
-a.sl-date, a.sl-card-date,
-a.sl-views, a.sl-card-reads, a.sl-hits,
-a.sl-post-icon, a.sl-card-post, a.sl-media-post,
-a.sl-coms, a.sl-card-comment, a.sl-comment-link,
-a.sl-cat, a.sl-card-category,
-a.sl-votes, a.sl-rate-sites, a.sl-cart-total,
-a.sl-download, a.sl-faq,
-a.sl-message-in, a.sl-message-out, a.sl-message-save,
-a.sl-favor, a.sl-favor-on, a.sl-favor-off,
-a.sl-n-day, a.sl-n-days, a.sl-n-week,
-a.sl-news-info, a.sl-status-active, a.sl-status-inactive,
-a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
+a.sl-chip {
   background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
   color: var(--sl-color-success);
   --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-success) 24%, transparent);
@@ -5284,31 +5260,25 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
 }
 
 /* Tone classes come after the link default, so an explicit sl-chip-* tone wins on spans and links alike */
-.sl-chip-info, a.sl-chip-info,
-.sl-date, .sl-card-date,
-.sl-coms, .sl-card-comment, .sl-comment-link,
-.sl-post-icon, .sl-card-post, .sl-media-post {
+.sl-chip-info, a.sl-chip-info {
   background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
   color: var(--sl-color-brand-strong);
   --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-brand-link) 22%, transparent);
 }
 
-.sl-chip-success, a.sl-chip-success,
-.sl-votes, .sl-rate-sites, .sl-status-active {
+.sl-chip-success, a.sl-chip-success {
   background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
   color: var(--sl-color-success);
   --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-success) 24%, transparent);
 }
 
-.sl-chip-warn, a.sl-chip-warn,
-.sl-n-day, .sl-n-days, .sl-n-week {
+.sl-chip-warn, a.sl-chip-warn {
   background: color-mix(in srgb, var(--sl-color-warning) 16%, transparent);
   color: var(--sl-color-warning);
   --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-warning) 26%, transparent);
 }
 
-.sl-chip-danger, a.sl-chip-danger,
-.sl-favor, .sl-favor-on, .sl-favor-off {
+.sl-chip-danger, a.sl-chip-danger {
   background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
   color: var(--sl-color-danger);
   cursor: pointer;
@@ -5327,9 +5297,9 @@ a.sl-module, a.sl-ed2k, a.sl-http, a.sl-last {
   --sl-chip-hover-bg: color-mix(in srgb, var(--sl-color-text-heading) 8%, var(--sl-color-surface-alt));
 }
 
-/* Favourite toggles and chips wrapping the profile link are clickable too: same hover deepening */
+/* Favourite toggles and chips wrapping a link are clickable too: same hover deepening */
 .sl-favor:hover, .sl-favor-on:hover, .sl-favor-off:hover,
-.sl-post-icon:has(> a):hover, .sl-card-post:has(> a):hover, .sl-media-post:has(> a):hover {
+.sl-chip:has(> a):hover {
   background: var(--sl-chip-hover-bg);
 }
 

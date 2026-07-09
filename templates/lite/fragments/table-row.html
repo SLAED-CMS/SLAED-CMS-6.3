@@ -32,7 +32,7 @@
         <a
           href="{{ cell.href }}"
           title="{{ cell.title }}"
-          class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_avatar_link %}sl-avatar-link{% elseif cell.is_cart_id %}sl-but-mini sl-is-soft{% elseif cell.is_faq_link %}sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}"
+          class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_avatar_link %}sl-avatar-link{% elseif cell.is_cart_id %}sl-but-mini sl-is-soft{% elseif cell.is_faq_link %}sl-chip sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}"
         >
           {% if cell.is_faq_link %}<i class="bi bi-question-circle" aria-hidden="true"></i> {% endif %}
           {% if cell.link_label_html %}

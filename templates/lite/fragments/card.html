@@ -16,19 +16,19 @@
       <li>
         {% if comm_html %}{{{ comm_html }}}
         {% elseif comm_link %}{% include 'fragments/link.html' with comm_link %}
-        {% elseif comm_href %}<a href="{{ comm_href }}" title="{{ comm_label }}" class="sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
+        {% elseif comm_href %}<a href="{{ comm_href }}" title="{{ comm_label }}" class="sl-chip sl-card-comment"><i class="bi bi-chat-text" aria-hidden="true"></i> {{ comm_text }}</a>
         {% endif %}
       </li>
       <li>{{{ hits }}}</li>
       <li>
         {% if reads_html %}{{{ reads_html }}}
         {% elseif reads_span %}{% include 'fragments/span.html' with reads_span %}
-        {% elseif reads_text %}<span title="{{ reads_label }}" class="sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> {{ reads_text }}</span>
+        {% elseif reads_text %}<span title="{{ reads_label }}" class="sl-chip sl-card-reads"><i class="bi bi-eye" aria-hidden="true"></i> {{ reads_text }}</span>
         {% endif %}
       </li>
       <li>
         {% if post_span %}{% include 'fragments/span.html' with post_span %}
-        {% elseif post_text %}<span title="{{ post_label }}" class="sl-card-post">{{{ post_text }}}</span>
+        {% elseif post_text %}<span title="{{ post_label }}" class="sl-chip sl-chip-info sl-card-post">{{{ post_text }}}</span>
         {% endif %}
       </li>
       <li class="sl-meta-actions">
@@ -41,13 +41,13 @@
     <ul>
       <li>
         {% if date_html %}{{{ date_html }}}
-        {% elseif date_text %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date_text }}</time>
+        {% elseif date_text %}<time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-card-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date_text }}</time>
         {% endif %}
       </li>
       <li>
         {% if category_html %}{{{ category_html }}}
         {% elseif category_link %}{% include 'fragments/link.html' with category_link %}
-        {% elseif category_href %}<a href="{{ category_href }}" title="{{ category_attr }}" class="sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ category_text }}</a>
+        {% elseif category_href %}<a href="{{ category_href }}" title="{{ category_attr }}" class="sl-chip sl-card-category"><i class="bi bi-folder" aria-hidden="true"></i> {{ category_text }}</a>
         {% endif %}
       </li>
     </ul>

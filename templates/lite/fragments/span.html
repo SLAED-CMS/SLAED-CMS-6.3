@@ -8,33 +8,33 @@
     {% if class %}{{ class }}{% endif %}
     {% if back_text or has_back_button %} sl-but{% endif %}
     {% if is_shop_price %} sl-shop-price{% endif %}
-    {% if is_card_reads %} sl-card-reads{% endif %}
-    {% if is_card_post %} sl-card-post{% endif %}
+    {% if is_card_reads %} sl-chip sl-card-reads{% endif %}
+    {% if is_card_post %} sl-chip sl-chip-info sl-card-post{% endif %}
     {% if is_back %} sl-but{% endif %}
     {% if is_highlight %} sl-highlight{% endif %}
     {% if is_geo_flag %} sl-geo-flag{% endif %}
     {% if is_geo_ip %} sl-geo-ip{% endif %}
     {% if is_alpha_letter %} sl-letter{% endif %}
     {% if is_success %} sl-text-success{% endif %}
-    {% if is_message_in %} sl-message-in{% endif %}
-    {% if is_message_out %} sl-message-out{% endif %}
-    {% if is_message_save %} sl-message-save{% endif %}
-    {% if is_favorite %} sl-favor{% endif %}
-    {% if is_favorite_on %} sl-favor-on{% endif %}
-    {% if is_favorite_off %} sl-favor-off{% endif %}
-    {% if is_votes %} sl-votes{% endif %}
-    {% if is_cart_total %} sl-cart-total{% endif %}
+    {% if is_message_in %} sl-chip sl-message-in{% endif %}
+    {% if is_message_out %} sl-chip sl-message-out{% endif %}
+    {% if is_message_save %} sl-chip sl-message-save{% endif %}
+    {% if is_favorite %} sl-chip sl-chip-danger sl-favor{% endif %}
+    {% if is_favorite_on %} sl-chip sl-chip-danger sl-favor-on{% endif %}
+    {% if is_favorite_off %} sl-chip sl-chip-danger sl-favor-off{% endif %}
+    {% if is_votes %} sl-chip sl-chip-success sl-votes{% endif %}
+    {% if is_cart_total %} sl-chip sl-cart-total{% endif %}
     {% if is_hidden %} sl-hidden{% endif %}
     {% if is_bold %} sl-text-bold{% endif %}
     {% if is_danger %} sl-text-danger{% endif %}
     {% if is_form_value %} sl-form-value{% endif %}
-    {% if is_views %} sl-views{% endif %}
+    {% if is_views %} sl-chip sl-views{% endif %}
     {% if is_line_stack_item %} sl-line-stack-item{% endif %}
     {% if is_cat_image %} sl-catimg{% endif %}
     {% if is_cat_name %} sl-catname{% endif %}
-    {% if is_new_today %} sl-n-day{% endif %}
-    {% if is_new_days %} sl-n-days{% endif %}
-    {% if is_new_week %} sl-n-week{% endif %}
+    {% if is_new_today %} sl-chip sl-chip-warn sl-n-day{% endif %}
+    {% if is_new_days %} sl-chip sl-chip-warn sl-n-days{% endif %}
+    {% if is_new_week %} sl-chip sl-chip-warn sl-n-week{% endif %}
   "
   {% endif %}
 
