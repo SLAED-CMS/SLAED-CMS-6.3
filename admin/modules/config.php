@@ -380,6 +380,13 @@ function config(): void {
     ])];
     $rows[] = ['label_html' => _DB_SYNC, 'field_html' => getTplRadioGroup(['name' => 'dbsync', 'value' => $conf['dbsync'], 'options' => $yesno])];
     $rows[] = ['label_html' => _SESSION, 'field_html' => getTplRadioGroup(['name' => 'session', 'value' => $conf['session'], 'options' => $yesno])];
+    $rows[] = ['label_html' => _LIVE_UPD, 'field_html' => $tpl->getHtmlFrag('input', [
+        'itype' => 'number',
+        'name_attr' => 'live_u',
+        'value_attr' => (string)($conf['live_u'] ?? 0),
+        'placeholder_text' => _LIVE_UPD,
+        'is_config' => true,
+    ])];
     $rows[] = ['label_html' => _MESSAGE_BOX, 'field_html' => getTplRadioGroup(['name' => 'message', 'value' => $conf['message'], 'options' => $yesno])];
     $rows[] = ['label_html' => _TIME_DB, 'field_html' => getTplRadioGroup(['name' => 'db_t', 'value' => $conf['db_t'], 'options' => $yesno])];
     $rows[] = ['label_html' => _ADMINFOEDIT, 'field_html' => getTplRadioGroup(['name' => 'adminfo', 'value' => $conf['adminfo'], 'options' => $yesno])];
@@ -717,6 +724,7 @@ function save(): void {
             'admcol' => getVar('post', 'admcol', 'num', 6),
             'dbsync' => getVar('post', 'dbsync', 'num'),
             'session' => getVar('post', 'session', 'num'),
+            'live_u' => getVar('post', 'live_u', 'num'),
             'message' => getVar('post', 'message', 'num'),
             'db_t' => getVar('post', 'db_t', 'num'),
             'adminfo' => getVar('post', 'adminfo', 'num'),

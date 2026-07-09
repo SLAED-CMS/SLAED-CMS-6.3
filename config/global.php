@@ -47,6 +47,8 @@ return [
     ],
     'fbots' => '21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com',
     'flags' => '1',
+    'forcehost' => '0',
+    'forcessl' => '0',
     'geoip_anon' => '1',
     'geoip_asn' => 'storage/geoip/asn.mmdb',
     'geoip_cache' => '86400',
@@ -65,6 +67,7 @@ return [
     'homeurl' => 'https://slaed.loc',
     'ip_link' => 'https://whatismyipaddress.com/ip/',
     'language' => 'ru',
+    'live_u' => '4',
     'ltitle' => '1',
     'message' => '1',
     'module' => 'news',
@@ -79,8 +82,6 @@ https://slaed.net
 support@slaed.net',
     'multilingual' => '1',
     'rewrite' => '0',
-    'forcessl' => '0',
-    'forcehost' => '0',
     'schema' => '<script type="application/ld+json">
 {
 	"@context": "https://schema.org",

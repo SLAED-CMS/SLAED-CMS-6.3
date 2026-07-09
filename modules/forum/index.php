@@ -391,7 +391,7 @@ function view(): void {
                     }
                 }
                 $avname = (!empty($nick)) ? $nick : ($val[4] ?: (string)_ANONYM);
-                $avatar = (!empty($nick)) ? (($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
+                $avatar = (!empty($nick)) ? getUserAvatarUrl(['avatar' => $avatar]) : getUserAvatarUrl([], (int)$val[3] > 0 && empty($val[4]));
                 $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'is_comment_date' => true, 'label' => format_time($val[6], _TIMESTRING)]);
                 if (($ismod || $conf['forum']['ledit']) && $val[16]) {
                     $date .= $tpl->getHtmlFrag('inline-badge', ['title_text' => _PEDIT, 'is_topic_edit' => true, 'label' => format_time($val[16], _TIMESTRING)]);

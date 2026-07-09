@@ -110,6 +110,7 @@ if (empty($go)) {
             case 'getRatingView': getRatingView(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
             case 'getUserSessionInfo': getUserSessionInfo(); break;
+            case 'getUserSessionRows': getUserSessionRows(); break;
             case 'getUserList': getUserList(); break;
             case 'updateComment': updateComment(); break;
             case 'addComment': addComment(); break;
@@ -122,7 +123,7 @@ if (empty($go)) {
             case 'addFavorite': addFavorite(); break;
             case 'getFavoriteList': getFavoriteList(); break;
             case 'deleteFavorite': deleteFavorite(); break;
-            case 'getVotingView': getVotingView(); break;
+            case 'getVotingView': echo getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
         }
         if (in_array($op, ['addComment', 'updateComment', 'updateCommentStatus', 'updatePost', 'updateVotingResult'], true)) Cache::addEpoch();

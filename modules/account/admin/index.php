@@ -460,7 +460,7 @@ function addsave(): void {
         $rank = getVar('post', 'rank');
         $email = getVar('post', 'email');
         $site = getVar('post', 'site', 'url');
-        $avatar = getVar('post', 'avatar', '', 'default/00.gif');
+        $avatar = getVar('post', 'avatar', '', '');
         $reg = getVar('req', 'reg', 'time');
         $occ = getVar('post', 'occ');
         $from = getVar('post', 'from');

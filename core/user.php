@@ -178,6 +178,22 @@ function getUserInfo() {
     }
 }
 
+# Resolve the avatar URL for a user record; falls back to user.svg (no avatar chosen), guest.svg (no record) or deleted.svg (orphaned uid of a removed account)
+function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
+    global $conf;
+    $dir = $conf['users']['adirectory'];
+    if ($deleted) return $dir.'/default/deleted.svg';
+    if (!$userinfo) return $dir.'/default/guest.svg';
+    $ava = $userinfo['avatar'] ?? '';
+    return ($ava && file_exists($dir.'/'.$ava)) ? $dir.'/'.$ava : $dir.'/default/user.svg';
+}
+
+# Drop the cached sidebar private-message counters so the next page render recounts them after a mailbox mutation
+function deletePrivatCounts(): void {
+    global $conf;
+    unset($_SESSION[$conf['user_c'].'-privat']);
+}
+
 # Render the user's custom sidebar block if enabled
 function getUserBlock(): string {
     global $db, $user, $tpl, $prs;
@@ -432,7 +448,10 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 [$idp, $uidin, $uidout, $title, $body, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.body, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
             } else {
                 [$idp, $uidin, $uidout, $title, $body, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.body, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
-                if (!$status) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 1 WHERE id = :id AND uidin = :uid AND status != 2', ['id' => $id, 'uid' => $uid]);
+                if (!$status) {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 1 WHERE id = :id AND uidin = :uid AND status != 2', ['id' => $id, 'uid' => $uid]);
+                    deletePrivatCounts();
+                }
             }
             if ($idp) {
                 # UNBEKANTE VARIABLEN INITIALISIERUNG VERHINDERN
@@ -443,7 +462,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $avname = ($user_name) ? $user_name : ($com_name ?: (string)_ANONYM);
                 $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => _PADD, 'label' => format_time($date, _TIMESTRING), 'is_comment_date' => true]);
                 $ip = (is_moder($conf['name'])) ? Geoip::getIpHtml($ip_sender) : '';
-                $avatar = ($user_name) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
+                $avatar = ($user_name) ? getUserAvatarUrl(['avatar' => $user_avatar]) : getUserAvatarUrl([], true);
                 $rank = ($user_rank) ? $user_rank : '';
                 $trank = ($user_gname) ? _GROUP.': '.$user_gname : _RANK;
                 $rlink = ($user_grank && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
@@ -545,6 +564,7 @@ function addPrivateMessage() {
         $title = filterHtml($title, 1);
         $text = filterHtml($text);
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :body, NOW(), :ip, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'body' => $text, 'ip' => $ip]);
+        deletePrivatCounts();
         updatePoints(45);
         if ($conf['privat']['newmail']) {
             [$user_email, $user_psmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :uidin', ['uidin' => $uidin]));
@@ -581,7 +601,10 @@ function setPrivateMessageSaved() {
         $acmess = ($conf['privat']['messsav'] - $pr_numi);
         $info = sprintf(_PRSAVEMAX, $conf['privat']['messsav'], $pr_numi, $acmess);
     }
-    if (!$stop && $conf['privat']['act'] && $uid && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
+    if (!$stop && $conf['privat']['act'] && $uid && $id) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
+        deletePrivatCounts();
+    }
     return getPrivateMessageView(0, $stop, $info, 1);
 }
 
@@ -591,7 +614,10 @@ function deletePrivateMessage() {
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id  = getVar('get', 'id',  'num', 0);
     $typ = getVar('get', 'typ', 'num', 1);
-    if ($conf['privat']['act'] && $uid && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
+    if ($conf['privat']['act'] && $uid && $id) {
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
+        deletePrivatCounts();
+    }
     return getPrivateMessageView(0, '', '', $typ);
 }
 

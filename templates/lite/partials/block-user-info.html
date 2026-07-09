@@ -1,17 +1,20 @@
-<div class="sl-block-user-ava"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i><p>{{ greeting_label }}<br>{{ greeting_name }}</p></div>
-{% if audio_src %}<audio src="{{ audio_src }}" autoplay></audio>{% endif %}
+<div class="sl-block-user-ava">
+  {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
+  <p>{{ greeting_label }}<br>{% if is_user %}<a href="index.php?name=account">{{ greeting_name }}</a>{% else %}{{ greeting_name }}{% endif %}</p>
+  {% if has_meta %}<p class="sl-block-user-meta">{% if group_name %}{{ group_name }}{% endif %}{% if group_name and points_label %} &middot; {% endif %}{% if points_label %}{{ points_label }}: <b>{{ points_count }}</b>{% endif %}</p>{% endif %}
+</div>
 {% if is_user %}
   {% if has_privat %}
   <ul class="sl-block-pm">
     <li><b>{{ privat_label }}</b></li>
-    <li><a href="index.php?name=privat">{{ inbox_label }}: <b>{{ inbox_count }}</b></a></li>
-    <li>{{ outbox_label }}: <b>{{ outbox_count }}</b></li>
+    <li><a href="index.php?name=account&amp;op=privat">{{ inbox_label }}: <b{% if has_new_in %} class="sl-pm-new"{% endif %}>{{ inbox_count }}</b></a></li>
+    <li><a href="index.php?name=account&amp;op=privat">{{ outbox_label }}: <b>{{ outbox_count }}</b></a></li>
   </ul>
   {% endif %}
   <ul class="sl-login-top sl-login-top--block sl-logged">
     {% if has_fav %}<li><a href="index.php?name=account&amp;op=favorites">{{ favorites_label }}</a></li>{% endif %}
-    <li><a href="index.php?name=account">{{ change_label }}</a></li>
-    <li><a href="index.php?name=account&amp;op=sl-logout&amp;refer=1">{{ logout_label }}</a></li>
+    <li><a href="index.php?name=account&amp;op=edithome">{{ change_label }}</a></li>
+    <li><a href="index.php?name=account&amp;op=logout&amp;refer=1">{{ logout_label }}</a></li>
   </ul>
 {% else %}
   <ul class="sl-login-top sl-login-top--block">
@@ -20,11 +23,11 @@
   </ul>
   <form action="index.php?name=account" method="post" class="sl-block-login">
     <p><label>{{ nickname_label }}: {{{ name_input }}}</label></p>
-    <p><label>{{ password_label }}: <input type="password" name="user_pass" maxlength="32" class="sl-field sl-field--block" required></label></p>
+    <p><label>{{ password_label }}: <input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></label></p>
     {% if captcha_html %}{{{ captcha_html }}}{% endif %}
     {{{ hidden_inputs }}}
     {% if has_network %}<p class="sl-net-login">{{ network_label }}: {{{ networks_html }}}</p>{% endif %}
     <p><button type="submit" class="sl-but">{{ login_label }}</button></p>
   </form>
 {% endif %}
-{% if session_html %}<div class="sl-block-session">{{{ session_html }}}</div>{% endif %}
+{% if session_html %}<div class="sl-block-session" id="repsinfo">{{{ session_html }}}</div>{% endif %}

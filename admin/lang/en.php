@@ -267,6 +267,7 @@ define('_LANGTR','Language, which will be used translation');
 define('_LANG','Language editor');
 define('_LEFT','Left');
 define('_LEFTBLOCK','Left Block');
+define('_LIVE_UPD','Live blocks auto-refresh (seconds, 0 = off)');
 define('_LHOME','Publish on the main');
 define('_LNFIX','Remove the lock');
 define('_LNHOME','Remove a publication on the main');

@@ -88,7 +88,7 @@ function shop(): void {
 			$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 			$opreis = '';
 			$discount = '';
-			$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&op=addCartItem&id='.$id, 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
+			$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&op=addCartItem&id='.$id.'&token='.getSiteToken(), 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
 			$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 			$title = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label_html' => $stitle, 'suffix_html' => getTplNewGraphic($time)]);
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
@@ -252,7 +252,7 @@ function view(): void {
 		$price = $tpl->getHtmlFrag('span', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute'], 'is_shop_price' => true]);
 		$opreis = '';
 		$discount = '';
-		$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&op=addCartItem&id='.$id, 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
+		$cart = $tpl->getHtmlFrag('link', ['href' => 'index.php?go=2&op=addCartItem&id='.$id.'&token='.getSiteToken(), 'title' => _SCART, 'label' => _SCART, 'is_shop_add' => true, 'is_htmx' => true, 'hx_target' => '#repkasse', 'onclick_attr' => 'onclick="AddBasket(\''.$id.'\');"']);
 		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);

@@ -72,12 +72,11 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
     $ctime = time();
     $ftime = $ctime - intval($conf['security']['flood_t']);
-    $flood = (isset($_SESSION['flood']) && $_SESSION['flood'] > $ftime) ? 1 : 0;
+    $flood = (isset($_SESSION[$conf['user_c'].'-flood']) && $_SESSION[$conf['user_c'].'-flood'] > $ftime) ? 1 : 0;
     if ($conf['security']['flood'] == 3 && $flood) addWarnReport('Flood attack');
     if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) addWarnReport('Flood in GET - '.print_r($_GET, true));
     if (isset($_POST) && $flood) addWarnReport('Flood in POST - '.print_r($_POST, true));
-    unset($_SESSION['flood']);
-    $_SESSION['flood'] = $ctime;
+    $_SESSION[$conf['user_c'].'-flood'] = $ctime;
 }
 
 # Format admin variable

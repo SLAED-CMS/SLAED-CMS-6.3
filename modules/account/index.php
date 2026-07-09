@@ -243,7 +243,7 @@ function network(): void {
             } else {
                 $uemail = isset($ulog['email']) ? mb_strtolower($ulog['email']) : '';
                 $upass = getPassHash(getRandomString(32));
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, ip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :ip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => 'default/00.gif', 'password' => $upass, 'ip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, ip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :ip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => '', 'password' => $upass, 'ip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
                 [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]));
                 setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
@@ -287,7 +287,7 @@ function activate(): void {
             $uip = getIp();
             $uagent = getAgent();
             $rank = '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => 'default/00.gif', 'regdate' => $reg, 'pwd' => getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
@@ -352,7 +352,7 @@ function view(): void {
             $urank = ($rank) ? [_URANK, $rank] : [_URANK, ''];
             $mail = ((isAdmin() || $view) && $mail) ? [_EMAIL, htmlspecialchars($mail, ENT_QUOTES, 'UTF-8')] : [_EMAIL, _HIDE];
             $site = ($site) ? ((isAdmin() || is_user()) ? [_SITEURL, domain($site)] : [_SITEURL, _HIDE]) : [_SITEURL, _NO_INFO];
-            $avatar = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif';
+            $avatar = getUserAvatarUrl(['avatar' => $avatar]);
             $occup = ($occ) ? [_OCCUPATION, $occ] : [_OCCUPATION, _NO_INFO];
             $from = ($from) ? [_LOCALITYLANG, $from] : [_LOCALITYLANG, _NO_INFO];
             $inter = ($inter) ? [_INTERESTS, $inter] : [_INTERESTS, _NO_INFO];
@@ -823,6 +823,7 @@ function login(): void {
 function logout(): void {
     global $db, $user;
     $nick = (is_array($user) && isset($user[1])) ? htmlspecialchars(substr((string)$user[1], 0, 25)) : '';
+    deletePrivatCounts();
     setCookiesDelete('account');
     if ($nick !== '') $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
     unset($user);
@@ -908,12 +909,12 @@ function edithome(): void {
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'extra' => $submitExtra, 'op' => 'savehome', 'label' => _SAVECHANGES]),
         ]);
-        $avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
+        $avatar = getUserAvatarUrl($userinfo);
         $asetup = $tpl->getHtmlPart('content-list', [
             'rows' => [[
                 'cells' => [
                     ['primary_text' => _AVATAR, 'secondary_text' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize']))],
-                    ['img_src' => $conf['users']['adirectory'].'/'.$avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
+                    ['img_src' => $avatar, 'img_alt' => _AVATAR, 'img_title' => _AVATAR, 'is_avatar' => true],
                 ],
             ]],
             'table_open' => ['open' => true, 'is_form' => true],
@@ -936,7 +937,7 @@ function edithome(): void {
         $adir = $conf['users']['adirectory'].'/default';
         $list = scandir($adir);
         foreach ($list ?: [] as $file) {
-            if (preg_match("#(\.gif|\.png|\.jpg|\.jpeg)$#is", $file) && !preg_match("#(\b0\.gif\b|\b00\.gif\b)$#i", $file)) {
+            if (preg_match("#\.(gif|png|jpe?g|svg)$#is", $file) && !preg_match("#^(guest|user|deleted)\.svg$#i", $file)) {
                 $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
                 $aset[] = [
                     'href' => 'index.php?name='.$conf['name'].'&op=saveavatar&avatar='.$file,
@@ -1041,7 +1042,7 @@ function saveavatar(): void {
             $uavatar = upload(1, $conf['users']['adirectory'], $conf['users']['atypefile'], $conf['users']['amaxsize'], $conf['name'], $conf['users']['awidth'], $conf['users']['aheight'], $uid);
             $avatar = (!$uavatar) ? $avatar : $uavatar;
         } elseif ($avatar) {
-            $avatar = (preg_match("#(\.gif|\.png|\.jpg|\.jpeg)$#is", $avatar) && !preg_match("#(\b0\.gif\b|\b00\.gif\b)$#i", $avatar) && file_exists($conf['users']['adirectory'].'/default/'.$avatar)) ? 'default/'.$avatar : '';
+            $avatar = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avatar) && !preg_match("#^(guest|user|deleted)\.svg$#i", $avatar) && file_exists($conf['users']['adirectory'].'/default/'.$avatar)) ? 'default/'.$avatar : '';
         }
         if (!$stop && $avatar) {
             $avatar = filterText($avatar);

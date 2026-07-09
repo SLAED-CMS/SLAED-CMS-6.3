@@ -1,46 +1,17 @@
-<tr>
-  <td>
-    {{{ geo_html }}}
+<div class="sl-session-row{% if geo_html %} sl-session-row--icon{% endif %}">
+  {% if geo_html %}<div class="sl-session-icon">{{{ geo_html }}}</div>{% endif %}
+  <div class="sl-session-name">
     {% if name_link %}
-      {% include 'fragments/link.html' with name_link %}
-    {% elseif name_href %}
-      <a
-        href="{{ name_href }}"
-        title="{{ name_title }}"
-        {% if name_target %}{{{ name_target }}}{% endif %}
-        {% if name_class or is_name_note %}
-        class="
-          {% if name_class %}{{ name_class }}{% endif %}
-          {% if is_name_note %}{% if name_class %} {% endif %}sl-session-note{% endif %}
-        "
-        {% endif %}
-      >{{ name_text }}</a>
+    {% include 'fragments/link.html' with name_link %}
     {% else %}
-      <span
-        title="{{ name_title }}"
-        {% if name_class or is_name_note %}
-        class="
-          {% if name_class %}{{ name_class }}{% endif %}
-          {% if is_name_note %}{% if name_class %} {% endif %}sl-session-note{% endif %}
-        "
-        {% endif %}
-      >{{ name_text }}</span>
+    <span title="{{ name_title }}"{% if is_name_note %} class="sl-session-note"{% endif %}>{{ name_text }}</span>
     {% endif %}
-  </td>
-  <td
-    title="{{ module_title }}"
-    class="{% if module_class %}{{ module_class }}{% elseif is_module_right %}sl-session-right{% else %}sl-session-right sl-session-note{% endif %}"
-  >
+  </div>
+  <div title="{{ module_title }}" class="sl-session-module sl-session-note">
     {% if module_link %}
-      {% include 'fragments/link.html' with module_link %}
-    {% elseif module_href %}
-      <a
-        href="{{ module_href }}"
-        title="{{ module_title }}"
-        {% if module_target %}{{{ module_target }}}{% endif %}
-      >{{ module_text }}</a>
+    {% include 'fragments/link.html' with module_link %}
     {% else %}
-      {{ module_text }}
+    {{ module_text }}
     {% endif %}
-  </td>
-</tr>
+  </div>
+</div>

@@ -267,6 +267,7 @@ define('_LANGTR','Sprache, von der die Übersetzung erfolgt');
 define('_LANG','Sprach Editor');
 define('_LEFT','Links');
 define('_LEFTBLOCK','Linker Block');
+define('_LIVE_UPD','Automatische Aktualisierung der Live-Blöcke (Sekunden, 0 = aus)');
 define('_LHOME','Veröffentlichen, auf der Hauptseite');
 define('_LNFIX','Ausbauen halt');
 define('_LNHOME','Veröffentlichung auf der Hauptseite ausschalten');

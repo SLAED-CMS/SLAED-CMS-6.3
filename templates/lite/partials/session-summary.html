@@ -1,64 +1,37 @@
-{% if show_admins %}
-<table class="sl-session-table">
-  <tr>
-    <td><a data-sl-toggle-control="{{ admins_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{{ admins_label }}:</a></td>
-    <td class="sl-session-right">{{ admins_count }}</td>
-  </tr>
-</table>
-<table id="{{ admins_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ admins_rows_html }}}</table>
+<div class="sl-session-line">
+  <div>{{ members_label }}:</div>
+  <div class="sl-session-right">{{ members_count }}</div>
+</div>
+{% if show_bots %}
+<div class="sl-session-line">
+  <div>{{ bots_label }}:</div>
+  <div class="sl-session-right">{{ bots_count }}</div>
+</div>
 {% endif %}
-<table class="sl-session-table">
-  <tr>
-    <td>{% if members_rows_html %}<a data-sl-toggle-control="{{ members_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ members_label }}:{% if members_rows_html %}</a>{% endif %}</td>
-    <td class="sl-session-right">{{ members_count }}</td>
-  </tr>
-</table>
-{% if members_rows_html %}<table id="{{ members_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ members_rows_html }}}</table>{% endif %}
-{% if show_bots or bots_rows_html %}
-<table class="sl-session-table">
-  <tr>
-    <td>{% if bots_rows_html %}<a data-sl-toggle-control="{{ bots_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ bots_label }}:{% if bots_rows_html %}</a>{% endif %}</td>
-    <td class="sl-session-right">{{ bots_count }}</td>
-  </tr>
-</table>
-{% if bots_rows_html %}<table id="{{ bots_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ bots_rows_html }}}</table>{% endif %}
-{% endif %}
-<table class="sl-session-table">
-  <tr>
-    <td>{% if visitors_rows_html %}<a data-sl-toggle-control="{{ visitors_toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ readmore_title }}" class="sl-session-toggle">{% endif %}{{ visitors_label }}:{% if visitors_rows_html %}</a>{% endif %}</td>
-    <td class="sl-session-right">{{ visitors_count }}</td>
-  </tr>
-</table>
-{% if visitors_rows_html %}<table id="{{ visitors_toggle_id }}" class="sl-session-table sl-session-hidden">{{{ visitors_rows_html }}}</table>{% endif %}
-<table class="sl-session-table">
-  <tr>
-    <td>{{ overall_label }}:</td>
-    <td class="sl-session-right">{{ overall_count }}</td>
-  </tr>
-</table>
+<div class="sl-session-line">
+  <div>{{ visitors_label }}:</div>
+  <div class="sl-session-right">{{ visitors_count }}</div>
+</div>
+<div class="sl-session-line">
+  <div>{{ overall_label }}:</div>
+  <div class="sl-session-right">{{ overall_count }}</div>
+</div>
 {% if has_rows %}
-<table class="sl-session-table">
-  <tr>
-    <td class="sl-session-center"><a data-sl-toggle-control="{{ toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ toggle_title }}" class="sl-session-toggle">{{ toggle_label }}</a></td>
-  </tr>
-</table>
-<table id="{{ toggle_id }}" class="sl-session-table sl-session-hidden">{{{ rows_html }}}</table>
+<div class="sl-session-action"><a data-sl-toggle-control="{{ toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ toggle_title }}" class="sl-session-toggle"{% if rows_query %} hx-get="index.php?{{ rows_query }}" hx-target="#{{ toggle_id }}" hx-swap="innerHTML" hx-trigger="click once" hx-push-url="false"{% endif %}>{{ toggle_label }}</a></div>
+<div id="{{ toggle_id }}" class="sl-session-list sl-session-hidden">{% if rows_html %}{{{ rows_html }}}{% endif %}</div>
 {% endif %}
 <hr>
-<table class="sl-session-table">
-  <tr>
-    <td class="sl-session-center">
-      <a
-        href="index.php?{{ update_query }}"
+<div class="sl-session-action">
+  <a
+    href="index.php?{{ update_query }}"
 
-        hx-get="index.php?{{ update_query }}"
-        hx-target="#rep{{ update_target }}"
-        hx-swap="innerHTML"
-        hx-push-url="false"
+    hx-get="index.php?{{ update_query }}"
+    hx-target="#rep{{ update_target }}"
+    hx-swap="innerHTML"
+    hx-push-url="false"
+    {% if update_every %}hx-trigger="click, every {{ update_every }}s"{% endif %}
 
-        title="{{ update_title }}"
-        class="sl-session-button"
-      >{{ update_label }}</a>
-    </td>
-  </tr>
-</table>
+    title="{{ update_title }}"
+    class="sl-session-button"
+  >{{ update_label }}</a>
+</div>

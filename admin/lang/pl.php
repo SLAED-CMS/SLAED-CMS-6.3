@@ -267,6 +267,7 @@ define('_LANGTR','Język, który będzie używany tłumaczenie');
 define('_LANG','Edytor języków');
 define('_LEFT','Po lewej stronie');
 define('_LEFTBLOCK','Lewy blok');
+define('_LIVE_UPD','Automatyczne odświeżanie bloków na żywo (sekundy, 0 = wył.)');
 define('_LHOME','Publikować na głównej');
 define('_LNFIX','Zdjąć zabezpieczenia');
 define('_LNHOME','Zdjąć publikacji na głównej');
