@@ -2532,35 +2532,6 @@ ol.sl-sublist-two li:hover:before {
   margin-left: auto;
 }
 
-.sl-changelog-button {
-  padding: var(--sl-space-md) 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.sl-changelog-button-primary {
-  background: linear-gradient(135deg, var(--sl-grad-info-start) 0%, var(--sl-grad-info-end) 100%);
-  color: var(--sl-color-on-dark);
-  border: none;
-}
-
-.sl-changelog-button-primary:hover {
-  background: linear-gradient(135deg, var(--sl-grad-info-start) 0%, var(--sl-color-brand-strong) 100%);
-}
-
-.sl-changelog-button-secondary {
-  background: var(--sl-color-surface-alt);
-  color: var(--sl-changelog-text);
-}
-
-.sl-changelog-button-secondary:hover {
-  background: var(--sl-color-border-muted);
-}
-
 .sl-changelog-results {
   background: var(--sl-changelog-header);
   border: 1px solid var(--sl-changelog-border);
@@ -5477,7 +5448,7 @@ a.sl-chip {
     flex-wrap: wrap;
   }
 
-  .sl-changelog-filter-actions .sl-changelog-button {
+  .sl-changelog-filter-actions .sl-but {
     flex: 1 1 160px;
   }
 
