@@ -688,7 +688,6 @@
                 var show = item === link;
                 var target = item.getAttribute('data-sl-tab-target');
                 var pane = group.querySelector('[data-sl-tab-panel="' + target + '"]') || document.getElementById(target);
-                item.classList.toggle('selected', show);
                 item.classList.toggle('sl-is-active', show);
                 item.setAttribute('aria-selected', show ? 'true' : 'false');
                 item.setAttribute('tabindex', show ? '0' : '-1');
@@ -755,7 +754,7 @@
         }
         if (isNaN(idx) || !list[idx]) {
             idx = list.findIndex(function (item) {
-                return item.classList.contains('sl-is-active') || item.classList.contains('selected');
+                return item.classList.contains('sl-is-active');
             });
         }
         if (idx < 0) idx = 0;

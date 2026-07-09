@@ -3674,7 +3674,6 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-tabs-link.sl-is-active,
-.sl-tabs-link.selected,
 .sl-tabs-link[aria-selected="true"] {
   background: var(--sl-color-bg);
   border-color: var(--sl-color-border-strong);
@@ -3758,10 +3757,6 @@ ol.sl-sublist-two li:hover:before {
   line-height: 0;
   color: transparent;
   white-space: nowrap;
-}
-
-.sl-thide {
-  display: none;
 }
 
 .sl-visually-hidden {
