@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED Components — Fable</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/*
+  SLAED Components — Fable: живой каталог всех компонентов управления темы lite.
+  Компоненты рендерятся ПРОИЗВОДСТВЕННЫМИ классами из base.css + theme.css.
+  Каркас страницы изолирован в неймспейсе cf-* и не пересекается с sl-*.
+*/
+.cf-page { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
+.cf-head { padding: 26px 0 10px; border-bottom: 1px solid var(--sl-color-border-strong); margin-bottom: 8px; }
+.cf-head h1 { margin: 0 0 8px; font-size: var(--sl-font-display); color: var(--sl-color-text-heading); }
+.cf-head p { margin: 0 0 6px; color: var(--sl-color-text-muted); max-width: 900px; line-height: 1.5; }
+.cf-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; padding: 0; list-style: none; }
+.cf-stats li { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading); font-size: 13px; }
+.cf-stats b { color: var(--sl-color-brand-strong); }
+.cf-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 0; padding: 0; list-style: none; }
+.cf-toc a { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-brand-link) 10%, transparent); color: var(--sl-color-brand-strong); font-size: 13px; text-decoration: none; }
+.cf-toc a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 20%, transparent); }
+.cf-section { margin: 44px 0 0; }
+.cf-section > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-size: var(--sl-h2); color: var(--sl-color-text-heading); }
+.cf-section > h2 .bi { color: var(--sl-color-brand-link); font-size: 20px; }
+.cf-section > .cf-lead { margin: 0 0 18px; color: var(--sl-color-text-muted); line-height: 1.5; max-width: 920px; }
+.cf-card { margin: 0 0 18px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); overflow: hidden; }
+.cf-card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 12px 16px; background: var(--sl-color-surface); border-bottom: 1px solid var(--sl-color-border-subtle); }
+.cf-card-head h3 { margin: 0; font-size: 15px; font-weight: bold; color: var(--sl-color-text-heading); }
+.cf-card-head code { font: 12px/1.6 Consolas, Menlo, monospace; color: var(--sl-color-brand-strong); background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent); padding: 1px 6px; border-radius: 4px; }
+.cf-demo { padding: 18px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+.cf-demo.cf-col { flex-direction: column; align-items: stretch; gap: 12px; }
+.cf-demo.cf-plain { display: block; }
+.cf-usage { padding: 10px 16px 12px; border-top: 1px dashed var(--sl-color-border); background: var(--sl-color-surface); font-size: 13px; color: var(--sl-color-text-muted); line-height: 1.55; }
+.cf-usage b { color: var(--sl-color-text-heading); font-weight: bold; }
+.cf-usage code { font: 12px/1.5 Consolas, Menlo, monospace; color: var(--sl-color-text-heading); }
+.cf-dark { background: var(--sl-color-surface-dark); border-radius: var(--sl-radius-card); padding: 12px 16px; display: inline-flex; align-items: center; gap: 8px; }
+.cf-label { flex: 0 0 100%; margin: 4px 0 -2px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sl-color-text-subtle); }
+.cf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cf-table th { text-align: left; padding: 9px 12px; background: var(--sl-color-surface-alt); border-bottom: 1px solid var(--sl-color-border-stronger); font-weight: bold; white-space: nowrap; }
+.cf-table td { padding: 8px 12px; border-bottom: 1px solid var(--sl-color-border-subtle); vertical-align: top; line-height: 1.5; }
+.cf-table code { font: 12px/1.5 Consolas, Menlo, monospace; color: var(--sl-color-brand-strong); }
+.cf-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.cf-sw { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px 0 6px; border: 1px solid var(--sl-color-border); border-radius: 999px; font: 12px/1 Consolas, Menlo, monospace; color: var(--sl-color-text-heading); background: var(--sl-color-bg); }
+.cf-sw i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--sl-overlay-15); }
+/* Demo hosts: floating tabs are position:fixed in production, here they sit in the flow */
+.cf-demo .sl-btn-idea, .cf-demo .sl-btn-feedback { position: static; }
+/* Demo host for the vote result list: production markup lives inside .sl-vote-list */
+.cf-demo ul.sl-vote-list { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 560px; }
+.cf-demo ul.sl-radio-list { list-style: none; margin: 0; padding: 0; width: 100%; max-width: 560px; }
+</style>
+</head>
+<body>
+<div class="cf-page">
+
+<header class="cf-head">
+  <h1>SLAED Components — Fable</h1>
+  <p>Живой каталог компонентов управления темы <b>lite</b>: кнопки, чипсы, подсказки, формы, навигация, рейтинг. Все примеры отрисованы производственными классами из <code>templates/lite/assets/css/base.css</code> и <code>theme.css</code> — страница показывает реальный вид компонентов без копий стилей.</p>
+  <ul class="cf-stats">
+    <li>theme.css: <b>~6 400</b> строк</li>
+    <li>base.css: <b>~170</b> токенов --sl-*</li>
+    <li>фрагментов: <b>84</b></li>
+    <li>партиалов: <b>30</b></li>
+    <li>страниц/лейаутов: <b>10</b></li>
+    <li>классов sl-* в шаблонах: <b>~380</b></li>
+  </ul>
+  <ul class="cf-toc">
+    <li><a href="#buttons">Кнопки</a></li>
+    <li><a href="#chips">Чипсы и бейджи</a></li>
+    <li><a href="#tips">Подсказки и поповеры</a></li>
+    <li><a href="#alerts">Уведомления</a></li>
+    <li><a href="#forms">Формы</a></li>
+    <li><a href="#nav">Навигация</a></li>
+    <li><a href="#rating">Рейтинг и голосование</a></li>
+    <li><a href="#glyphs">Статус-глифы</a></li>
+    <li><a href="#tones">Тоновая палитра</a></li>
+    <li><a href="#inventory">Сводная таблица</a></li>
+  </ul>
+</header>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="buttons">
+  <h2><i class="bi bi-hand-index-thumb"></i>Кнопки и действия</h2>
+  <p class="cf-lead">Три семейства: основная пилюля <code>.sl-but</code> (формы, навигация модулей, «читать далее»), компактный чип-баттон <code>.sl-but-mini</code> (пагинация, номера строк, шестерёнка, лайки) и круглый иконный контрол <code>.sl-circle-action</code> (соцпанель, «домой» в меню).</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Основная кнопка</h3><code>.sl-but</code></div>
+    <div class="cf-demo">
+      <button type="button" class="sl-but">Сохранить</button>
+      <a href="#buttons" class="sl-but">Читать далее</a>
+      <input type="submit" class="sl-but" value="Отправить">
+      <span class="cf-label">Состояния</span>
+      <button type="button" class="sl-but sl-hidden">Недоступна (.sl-hidden)</button>
+      <button type="button" class="sl-but htmx-request" id="cf-htmx-btn">Загрузка…</button>
+      <button type="button" class="sl-but" id="cf-htmx-toggle" title="Переключить состояние htmx-request у соседней кнопки">Показать/убрать загрузку</button>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> сабмиты форм (<code>fragments/button.html</code>, <code>form-submit.html</code>), кнопка «ОК» поиска (<code>search-form.html</code>), навигация модулей и футера (<code>link.html</code>: <code>is_navi_button</code>, <code>is_footer_button</code>, <code>is_account_button</code>), «читать далее» карточек (<code>is_card_read</code>, <code>is_main_more</code>), ajax-действия (<code>comment-action-ajax.html</code>: <code>is_button_blue</code>). Нейтральный градиент и рамка — токены <code>--sl-but-neutral-*</code>, <code>--sl-but-border-shadow</code>. Класс <code>.htmx-request</code> вешает htmx на время запроса: подпись прячется, идут три точки (<code>@keyframes sl-loading-dots</code>).</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Мини-кнопка (чип-баттон)</h3><code>.sl-but-mini</code> <code>.sl-is-active</code> <code>.sl-is-muted</code> <code>.sl-is-soft</code></div>
+    <div class="cf-demo">
+      <a href="#buttons" class="sl-but-mini">2</a>
+      <span class="sl-but-mini sl-is-active">3</span>
+      <a href="#buttons" class="sl-but-mini">14</a>
+      <span class="sl-but-mini sl-is-muted">&hellip;</span>
+      <a href="#buttons" class="sl-but-mini" title="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <a href="#buttons" class="sl-but-mini" title="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      <span class="sl-but-mini sl-is-soft">128</span>
+      <a href="#buttons" class="sl-but-mini" title="Настройки"><i class="bi bi-gear-fill" aria-hidden="true"></i></a>
+      <a href="#buttons" class="sl-but-mini" title="Меню"><i class="bi bi-three-dots" aria-hidden="true"></i></a>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> страницы пагинации (<code>pager-link.html</code>: активная — <code>.sl-is-active</code>, многоточие — <code>.sl-is-muted</code> через <code>inline-badge.html</code>), якорь номера строки в таблицах (<code>link.html</code>: <code>is_num_anchor</code>, <code>is_card_id</code>), триггер шестерёнки редакторского меню (<code>popover.html</code>), большие пальцы рейтинга (<code>rating-like.html</code>). Размер — токен <code>--sl-size-chip</code> (26px), многозначное число растягивает круг в пилюлю. <code>.sl-is-soft</code> — приглушённый серый фон-счётчик.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Круглый иконный контрол</h3><code>.sl-circle-action</code> + тоновые ховеры <code>.sl-i-*</code></div>
+    <div class="cf-demo">
+      <div class="cf-dark sl-top-social">
+        <a href="#buttons" class="sl-circle-action sl-i-gh" title="GitHub"><i class="bi bi-github" aria-hidden="true"></i></a>
+        <a href="#buttons" class="sl-circle-action sl-i-yt" title="YouTube"><i class="bi bi-youtube" aria-hidden="true"></i></a>
+        <a href="#buttons" class="sl-circle-action sl-i-tw" title="X / Twitter"><i class="bi bi-twitter-x" aria-hidden="true"></i></a>
+        <a href="#buttons" class="sl-circle-action sl-i-vk" title="VK"><i class="bi bi-chat-square-text" aria-hidden="true"></i></a>
+        <a href="#buttons" class="sl-circle-action sl-i-rss" title="RSS"><i class="bi bi-rss" aria-hidden="true"></i></a>
+        <a href="#buttons" class="sl-circle-action sl-i-doc-de" title="Документация DE"><i class="bi bi-book" aria-hidden="true"></i></a>
+        <a href="#buttons" class="sl-circle-action sl-i-doc-en" title="Документация EN"><i class="bi bi-book-half" aria-hidden="true"></i></a>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> соцпанель топ-бара и кнопка «домой» главного меню (<code>partials/site-header.html</code>). Размер — <code>--sl-size-control</code> (34px), при ховере глянец <code>--sl-bg-hover-gloss</code> плюс тоновая заливка по сети: <code>.sl-i-gh</code> — нейтральный, <code>.sl-i-yt</code> — danger, <code>.sl-i-doc-de</code> — success, <code>.sl-i-doc-en</code> — accent.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Плавающие вкладки «Идея» / «Обратная связь»</h3><code>.sl-btn-idea</code> <code>.sl-btn-feedback</code></div>
+    <div class="cf-demo">
+      <a href="#buttons" class="sl-btn-idea"><span class="sl-font">Идея</span></a>
+      <a href="#buttons" class="sl-btn-feedback"><span class="sl-font">Обратная связь</span></a>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> блоки <code>#block-idea</code> / <code>#block-feedback</code> на главной — в продакшене прижаты <code>position: fixed</code> к левому краю экрана (здесь показаны в потоке). Вертикальный текст (<code>writing-mode: sideways-lr</code>), градиенты success / info из токенов <code>--sl-grad-*</code>, при ховере вкладка «выезжает» вправо.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="chips">
+  <h2><i class="bi bi-tags"></i>Чипсы и бейджи</h2>
+  <p class="cf-lead">Единый пилюльный компонент высотой 26px: базовый класс <code>.sl-chip</code> с шестью тонами плюс ~30 семантических алиасов (<code>.sl-date</code>, <code>.sl-hits</code>, <code>.sl-cat</code>…), которые маппятся на те же тона. Ссылки-чипсы по умолчанию зелёные и темнеют при ховере.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Базовые тона</h3><code>.sl-chip</code> <code>.sl-chip-info|success|warn|danger|accent|neutral</code></div>
+    <div class="cf-demo">
+      <span class="cf-label">Статические (span)</span>
+      <span class="sl-chip sl-chip-info"><i class="bi bi-info-circle" aria-hidden="true"></i> Info</span>
+      <span class="sl-chip sl-chip-success"><i class="bi bi-check-circle" aria-hidden="true"></i> Success</span>
+      <span class="sl-chip sl-chip-warn"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Warn</span>
+      <span class="sl-chip sl-chip-danger"><i class="bi bi-x-octagon" aria-hidden="true"></i> Danger</span>
+      <span class="sl-chip sl-chip-accent"><i class="bi bi-stars" aria-hidden="true"></i> Accent</span>
+      <span class="sl-chip sl-chip-neutral"><i class="bi bi-circle" aria-hidden="true"></i> Neutral</span>
+      <span class="cf-label">Кликабельные (a) — по умолчанию success, тон-класс побеждает</span>
+      <a href="#chips" class="sl-chip"><i class="bi bi-link-45deg" aria-hidden="true"></i> Ссылка-чип</a>
+      <a href="#chips" class="sl-chip sl-chip-info"><i class="bi bi-folder" aria-hidden="true"></i> Info-ссылка</a>
+      <a href="#chips" class="sl-chip sl-chip-danger"><i class="bi bi-heart" aria-hidden="true"></i> Danger-ссылка</a>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> универсальный словарь меты по всем модулям; в шаблонах чип задаётся либо напрямую (<code>link.html</code>: <code>chip_tone</code> → <code>sl-chip sl-chip-{tone}</code>), либо семантическим алиасом. Тонирование через <code>color-mix</code> от токенов <code>--sl-color-tone-*</code>; ховер-затемнение — переменная <code>--sl-chip-hover-bg</code>.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Семантические хуки меты</h3><code>sl-chip sl-chip-&lt;тон&gt; + хук</code> (<code>sl-date</code>, <code>sl-hits</code>, <code>sl-favor</code>…)</div>
+    <div class="cf-demo">
+      <span class="cf-label">Info: дата, посты (span/time — тон явный)</span>
+      <time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 09.07.2026</time>
+      <span class="sl-chip sl-chip-info sl-topic-post"><i class="bi bi-clock-history" aria-hidden="true"></i> 12:41</span>
+      <span class="sl-chip sl-chip-info sl-card-post"><i class="bi bi-person" aria-hidden="true"></i> Автор</span>
+      <span class="cf-label">Ссылки — чистый sl-chip (системный зелёный дефолт)</span>
+      <a href="#chips" class="sl-coms sl-chip sl-chip-info"><i class="bi bi-chat-text" aria-hidden="true"></i> Комментарии: 14</a>
+      <a href="#chips" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> Категория</a>
+      <a href="#chips" class="sl-chip sl-download"><i class="bi bi-download" aria-hidden="true"></i> Скачать</a>
+      <a href="#chips" class="sl-chip sl-module"><i class="bi bi-eye" aria-hidden="true"></i> Модуль</a>
+      <span class="cf-label">Success / нейтральные span</span>
+      <span class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> 1 024</span>
+      <span class="sl-chip sl-chip-success sl-votes"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> 37</span>
+      <span class="sl-chip sl-chip-success sl-status-active"><i class="bi bi-check-circle" aria-hidden="true"></i> Активен</span>
+      <span class="sl-chip sl-status-inactive"><i class="bi bi-x-circle" aria-hidden="true"></i> Отключен</span>
+      <span class="cf-label">Warn: свежесть материала</span>
+      <span class="sl-chip sl-chip-warn sl-n-day"><i class="bi bi-clock" aria-hidden="true"></i> Сегодня</span>
+      <span class="sl-chip sl-chip-warn sl-n-days"><i class="bi bi-clock" aria-hidden="true"></i> На этой неделе</span>
+      <span class="cf-label">Danger: избранное (кликабельный toggle)</span>
+      <span class="sl-chip sl-chip-danger sl-favor"><i class="bi bi-heart" aria-hidden="true"></i> В избранное</span>
+      <span class="sl-chip sl-chip-danger sl-favor-on"><i class="bi bi-heart-fill" aria-hidden="true"></i> В избранном</span>
+    </div>
+    <div class="cf-usage"><b>Контракт после консолидации:</b> эмиттеры (<code>span.html</code>, <code>link.html</code>, <code>inline-badge.html</code>, <code>date-badge.html</code>, <code>card.html</code>, <code>view.html</code>…) выводят канонические <code>sl-chip [sl-chip-&lt;тон&gt;]</code>; семантические имена (<code>sl-date</code>, <code>sl-votes</code>, <code>sl-coms</code>, <code>sl-favor</code>…) остаются в разметке <b>только как хуки</b> для JS/htmx и контекстных правил — собственных стилей у них больше нет. Ссылки-чипы получают чистый <code>sl-chip</code> (зелёный дефолт <code>a.sl-chip</code>), тон на ссылке задаётся явным <code>sl-chip-&lt;тон&gt;</code> (например, <code>chip_tone</code> в <code>link.html</code>). Хуки-потребители: <code>.sl-votes</code>/<code>.sl-coms</code> — live-обновление голосования в <code>slaed.js</code>, <code>.sl-favor</code> — ajax-тоггл избранного.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Мета форума и комментариев</h3><code>sl-chip sl-chip-info sl-topic-post|sl-topic-edit</code> <code>sl-chip sl-chip-success sl-geo-ip</code></div>
+    <div class="cf-demo">
+      <div class="sl-cargs">
+        <span class="sl-chip sl-chip-info sl-topic-post"><i class="bi bi-clock-history" aria-hidden="true"></i> 09.07.2026 в 12:41</span>
+        <span class="sl-chip sl-chip-info sl-topic-edit"><i class="bi bi-pencil-square" aria-hidden="true"></i> изменено 13:05</span>
+        <span class="sl-chip sl-chip-success sl-geo-ip"><a href="#chips">192.0.2.17</a></span>
+      </div>
+      <span class="cf-label">Автор и счётчик непрочитанных ЛС</span>
+      <a href="#chips" class="sl-author"><i class="bi bi-person" aria-hidden="true"></i> Eduard</a>
+      <span class="sl-pm-new">3</span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> шапка комментария (<code>fragments/comment.html</code>, контейнер <code>.sl-cargs</code>) и мета поста форума (<code>fragments/forum-post.html</code>): дата/правка эмитятся <code>inline-badge.html</code> (<code>is_comment_date</code>/<code>is_topic_edit</code>) как канонические info-чипы, IP — <code>Geoip::getIpHtml($ip, true)</code> как success-чип (<code>is_geo_meta</code> в <code>span.html</code>); глиф даты/правки уменьшен до 13px правилом <code>.sl-chip.sl-topic-post .bi</code>. <code>.sl-author</code> выравнивает иконку с именем в один ряд с чипсами. <code>.sl-pm-new</code> — пульсирующий danger-счётчик ЛС в блоке пользователя (<code>partials/block-user-info.html</code>).</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Бейдж оценки</h3><code>.sl-rate-num</code> <code>.sl-rate-is</code></div>
+    <div class="cf-demo">
+      <span class="sl-rate-num">0</span>
+      <span class="sl-rate-num sl-rate-is">7.5</span>
+      <div class="sl-rate-like">
+        <p class="sl-but-mini sl-rate-minus sl-out" title="Не нравится"><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></p>
+        <span class="sl-rate-num sl-rate-is" title="Оценка">12</span>
+        <p class="sl-but-mini sl-rate-plus sl-out" title="Нравится"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></p>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> пилюля со счётом у рейтингов (<code>fragments/rating-like.html</code>, <code>rating-bar.html</code>): угловые указатели ::before/::after целятся в большие пальцы; <code>.sl-rate-is</code> заливает success-тоном при наличии оценки. Внутри <code>.sl-rate-like</code> оба угла активны, снаружи — только левый.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="tips">
+  <h2><i class="bi bi-chat-square-dots"></i>Подсказки и всплывающие панели</h2>
+  <p class="cf-lead">Одна модель открытия для всех «флоатов»: hover или focus внутри <code>.sl-float</code> показывает <code>.sl-float-panel</code>; JS <code>placeFloat</code> при необходимости пинит панель к вьюпорту через <code>.sl-is-open</code>. Стрелка — общая геометрия <code>.sl-float-panel::after</code>, цвет задаёт контекст.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Инфо-подсказка</h3><code>.sl-float.sl-tip</code> + <code>.sl-tip-icon</code> + <code>.sl-float-panel</code></div>
+    <div class="cf-demo">
+      <span>Наведите на иконку:</span>
+      <nav class="sl-float sl-tip" tabindex="0">
+        <span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span>
+        <div class="sl-float-panel">Простая текстовая подсказка: описание поля, примечание к строке списка.</div>
+      </nav>
+      <span>Вариант со словарём (dl):</span>
+      <nav class="sl-float sl-tip" tabindex="0">
+        <span class="sl-tip-icon"><i class="bi bi-info-circle-fill" aria-hidden="true"></i></span>
+        <div class="sl-float-panel">
+          <dl>
+            <dt>Автор</dt><dd>Eduard</dd>
+            <dt>Создано</dt><dd>09.07.2026</dd>
+            <dt>Статус</dt><dd>Опубликовано</dd>
+          </dl>
+        </div>
+      </nav>
+      <span>Нативный title:</span>
+      <span class="sl-note" title="Простейшая подсказка через атрибут title">.sl-note (курсор help)</span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/popover.html</code> (ветки <code>content</code> / <code>items</code>) — подсказки у полей форм (<code>tip_html</code> в <code>input.html</code>), информация о материале в списках, карточка пользователя на форуме. Зелёный глиф — <code>.sl-tip-icon</code>; сетка «термин: значение» — грид <code>dl</code> внутри панели. <code>.sl-debug-value</code> в панели отладки использует тот же курсор help.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Редакторское меню (шестерёнка)</h3><code>.sl-menu.sl-editor-menu</code> + <code>.sl-but-mini</code> + тёмная <code>.sl-float-panel</code></div>
+    <div class="cf-demo" style="padding-bottom: 120px;">
+      <nav class="sl-menu sl-editor-menu">
+        <ul>
+          <li class="sl-float">
+            <span class="sl-but-mini" role="button" tabindex="0" title="Редактор"><i class="bi bi-gear-fill" aria-hidden="true"></i></span>
+            <ul class="sl-float-panel">
+              <li><a href="#tips">Просмотр</a></li>
+              <li><a href="#tips">Редактировать</a></li>
+              <li><a href="#tips">Удалить</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <nav class="sl-menu sl-editor-menu">
+        <ul>
+          <li class="sl-float">
+            <span class="sl-but-mini" role="button" tabindex="0" title="Меню пользователя"><i class="bi bi-three-dots" aria-hidden="true"></i></span>
+            <ul class="sl-float-panel">
+              <li><a href="#tips">Профиль</a></li>
+              <li><a href="#tips">Написать сообщение</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <span style="color: var(--sl-color-text-muted);">← наведите: тёмная выпадающая панель, как у главного меню</span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/popover.html</code> (ветка editor) — инлайн-администрирование по всему сайту: строки списков контента, комментарии, посты форума, инструменты голосования (<code>.sl-vote-tools</code>). Триггер — <code>.sl-but-mini</code> с <code>bi-gear-fill</code> (для юзер-меню — <code>bi-three-dots</code>), панель наследует тёмный стиль <code>.sl-menu .sl-float-panel</code> (--sl-color-surface-dark).</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Live-индикатор голосования</h3><code>.sl-vote-live-ico</code> + <code>.sl-vote-end</code></div>
+    <div class="cf-demo">
+      <span class="sl-vote-live-ico" title="Голосование идёт"><i class="bi bi-play-circle-fill" aria-hidden="true"></i></span>
+      <span>идёт (пульс success)</span>
+      <span class="sl-vote-end" style="display: inline-flex;"><span class="sl-vote-live-ico" title="Голосование завершено"><i class="bi bi-stop-circle-fill" aria-hidden="true"></i></span></span>
+      <span>завершено (warning, без анимации)</span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> угловой кластер инструментов опроса (<code>partials/voting-widget.html</code>, <code>voting-home.html</code>): глиф статуса рядом с шестерёнкой админа, в сайдбар-блоке поднимается на линию заголовка. Пульс — <code>@keyframes sl-live-pulse</code>; свой <code>.sl-float-panel</code> с пояснением открывается вправо.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="alerts">
+  <h2><i class="bi bi-bell"></i>Уведомления</h2>
+  <p class="cf-lead">Единый инлайн-нотис <code>.sl-alert</code> с пятью семантическими тонами. Иконка — псевдоэлемент ::before с постоянной микро-анимацией (pulse/shake/beat). Словарь общий с админ-темой и GFM-callout'ами парсера.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Тона</h3><code>.sl-alert-info|success|warn|error|accent</code></div>
+    <div class="cf-demo cf-col">
+      <div class="sl-alert sl-alert-info"><div class="sl-alert-body"><p class="sl-alert-text">Информация: материал появится на сайте после проверки модератором.</p></div></div>
+      <div class="sl-alert sl-alert-success"><div class="sl-alert-body"><p class="sl-alert-text">Успех: настройки сохранены.</p></div></div>
+      <div class="sl-alert sl-alert-warn"><div class="sl-alert-body"><p class="sl-alert-text">Внимание: не заполнены обязательные поля.</p></div></div>
+      <div class="sl-alert sl-alert-error"><div class="sl-alert-body"><p class="sl-alert-text">Ошибка: неверный код безопасности.</p></div></div>
+      <div class="sl-alert sl-alert-accent"><div class="sl-alert-body"><p class="sl-alert-text">Акцент: доступна новая версия SLAED CMS.</p></div></div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/alert.html</code> — сообщения форм и модулей (тип приходит семантическим флагом <code>type</code>, не CSS-классом из PHP); страницы <code>message.html</code> / <code>error.html</code>; callout'ы <code>[!NOTE]</code>… из <code>filterMarkdown()</code>.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Составной алерт: заголовок, список, закрытие, действия</h3><code>.sl-alert-title</code> <code>.sl-alert-list</code> <code>.sl-alert-close</code> <code>.sl-alert-actions</code></div>
+    <div class="cf-demo cf-col">
+      <div class="sl-alert sl-alert-warn" id="cf-alert-rich">
+        <div class="sl-alert-body">
+          <div class="sl-alert-title">Проверьте форму</div>
+          <ul class="sl-alert-list">
+            <li>Поле «Заголовок» не заполнено</li>
+            <li>Текст короче 10 символов</li>
+          </ul>
+          <div class="sl-alert-actions">
+            <button type="button" class="sl-but">Исправить</button>
+            <a href="#alerts" class="sl-but">Справка</a>
+          </div>
+        </div>
+        <button type="button" class="sl-alert-close" title="Закрыть" onclick="document.getElementById('cf-alert-rich').style.display='none';"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> списочные ошибки валидации (<code>messages</code> в <code>alert.html</code>), нотисы с действиями в модулях; крестик закрытия обрабатывает системный JS.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Flash-уведомление с таймером</h3><code>.sl-alert-flash</code> + <code>.sl-alert-flash-bar</code></div>
+    <div class="cf-demo cf-col">
+      <div id="cf-flash-host">
+        <div class="sl-alert sl-alert-success sl-alert-flash">
+          <div class="sl-alert-body"><p class="sl-alert-text">Комментарий добавлен. Это сообщение скроется через 5 секунд.</p></div>
+          <span class="sl-alert-flash-bar"></span>
+        </div>
+      </div>
+      <div><button type="button" class="sl-but" id="cf-flash-replay">Показать заново</button></div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> ajax-подтверждения (htmx-ответы модулей): полоска-таймер <code>.sl-alert-flash-bar</code> «сгорает» за 5 секунд (<code>@keyframes sl-alert-flash-frame</code>), затем JS вешает <code>.sl-is-hiding</code> и блок плавно схлопывается.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="forms">
+  <h2><i class="bi bi-ui-checks"></i>Формы</h2>
+  <p class="cf-lead">Все поля разделяют один вид через токены <code>--sl-field-*</code>: класс <code>.sl-field</code> на input/textarea/select/file. Чекбокс полностью кастомный (appearance: none), радио-группа умеет режим сегментного переключателя «Да/Нет».</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Текстовые поля и селекты</h3><code>.sl-field</code> <code>.sl-field--block</code> <code>.sl-field--auto</code></div>
+    <div class="cf-demo cf-col" style="max-width: 640px;">
+      <div class="sl-form-row">
+        <label class="sl-form-label">Заголовок</label>
+        <input type="text" class="sl-field" placeholder="Введите заголовок" value="">
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Обязательное</label>
+        <input type="text" class="sl-field" required placeholder="Пустым не сохранится">
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Недоступное</label>
+        <input type="text" class="sl-field" disabled value="Только чтение">
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Категория</label>
+        <select class="sl-field sl-field--auto"><option>Новости</option><option>Статьи</option><option>Файлы</option></select>
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Текст</label>
+        <textarea class="sl-field" rows="3" placeholder="Текст материала"></textarea>
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Файл</label>
+        <input type="file" class="sl-field">
+      </div>
+      <div class="sl-form-row">
+        <label class="sl-form-label">Значение</label>
+        <span class="sl-form-value">Просто текст вместо поля (<code>field-value.html</code>)</span>
+      </div>
+      <div class="sl-form-submit"><button type="button" class="sl-but">Сохранить</button></div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> фрагменты <code>input.html</code>, <code>select.html</code>, <code>textarea.html</code>, <code>file-input.html</code>; ряды — <code>form-field-row.html</code> (<code>.sl-form-row</code> + <code>.sl-form-label</code> с автодвоеточием), сабмит-блок — <code>form-submit.html</code>. Состояния :focus / :user-invalid / :user-valid подсвечиваются кольцами из токенов <code>--sl-field-*-ring</code> без JS.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Чекбоксы, радио и переключатель «Да/Нет»</h3><code>input[type=checkbox]</code> <code>.sl-radio</code> <code>.sl-radio-group.sl-radio-switch</code></div>
+    <div class="cf-demo">
+      <label><input type="checkbox" class="sl-check" checked> Запомнить меня</label>
+      <label><input type="checkbox" class="sl-check"> Подписка на ответы</label>
+      <label><input type="checkbox" class="sl-check" disabled> Недоступно</label>
+      <span class="cf-label">Радио-группа</span>
+      <span class="sl-radio-group">
+        <label class="sl-radio"><input type="radio" name="cfr" checked> Все</label>
+        <label class="sl-radio"><input type="radio" name="cfr"> Только новые</label>
+        <label class="sl-radio"><input type="radio" name="cfr"> Избранные</label>
+      </span>
+      <span class="cf-label">Сегментный switch (Да/Нет)</span>
+      <span class="sl-radio-group sl-radio-switch">
+        <label class="sl-radio"><input type="radio" name="cfsw1" value="1" checked> Да</label>
+        <label class="sl-radio"><input type="radio" name="cfsw1" value="0"> Нет</label>
+      </span>
+      <span class="sl-radio-group sl-radio-switch">
+        <label class="sl-radio"><input type="radio" name="cfsw2" value="1"> Да</label>
+        <label class="sl-radio"><input type="radio" name="cfsw2" value="0" checked> Нет</label>
+      </span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/checkbox.html</code> (массовые отметки строк — <code>data-sl-check-item</code>), <code>fragments/radio.html</code>; switch собирается из той же радио-группы классом <code>.sl-radio-switch</code> — состояние читается селектором <code>:has(input[value="1"]:checked)</code>, ползунок едет на CSS-переходе, зелёная заливка при «Да». Настройки аккаунта и опции форм добавления.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Панель поиска модуля</h3><code>.sl-search-panel</code></div>
+    <div class="cf-demo cf-plain">
+      <form class="sl-search-panel" onsubmit="return false;">
+        <select class="sl-field sl-field--auto"><option>Все модули</option><option>Новости</option><option>Форум</option></select>
+        <input type="text" class="sl-field" placeholder="Что ищем?">
+        <button type="submit" class="sl-but">Искать</button>
+      </form>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/search-form.html</code> — однострочная панель модуля поиска: селект области, растягивающееся поле запроса и кнопка <code>.sl-but</code> на подложке <code>--sl-color-surface</code>.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="nav">
+  <h2><i class="bi bi-signpost-split"></i>Навигация</h2>
+  <p class="cf-lead">Пагинация на мини-кнопках, табы с ленивой htmx-подгрузкой, хлебные крошки с тоновым подчёркиванием и сортировочные индикаторы таблиц.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Пагинация</h3><code>.sl-pager</code> <code>.sl-pager-info</code> + <code>.sl-but-mini</code></div>
+    <div class="cf-demo cf-plain">
+      <p class="sl-pager-info">Всего: <b>124</b> на <b>13</b> страницах по <b>10</b> на страницу</p>
+      <div class="sl-pager">
+        <div class="sl-pager-main">
+          <div class="sl-pager-pages">
+            <a href="#nav" class="sl-but-mini">1</a>
+            <span class="sl-but-mini sl-is-active">2</span>
+            <a href="#nav" class="sl-but-mini">3</a>
+            <a href="#nav" class="sl-but-mini">4</a>
+            <span class="sl-but-mini sl-is-muted" title="&hellip;">&hellip;</span>
+            <a href="#nav" class="sl-but-mini">13</a>
+          </div>
+          <div class="sl-pager-nextprev">
+            <b class="sl-pager-prev"><a href="#nav" class="sl-but-mini" title="Назад"><i class="bi bi-chevron-left" aria-hidden="true"></i></a></b>
+            <b class="sl-pager-next"><a href="#nav" class="sl-but-mini" title="Вперёд"><i class="bi bi-chevron-right" aria-hidden="true"></i></a></b>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/pager.html</code> + <code>pager-link.html</code> — все списки (контент, форум, комментарии, поиск); страницы умеют грузиться через htmx (<code>hx-get</code> в цель списка). Prev/next через <code>display: contents</code> + <code>order</code> встают по краям цифр.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Табы</h3><code>.sl-tabs</code> <code>.sl-tabs-nav</code> <code>.sl-tabs-link</code> <code>.sl-tab-panel</code></div>
+    <div class="cf-demo cf-plain">
+      <div class="sl-tabs" id="cf-tabs">
+        <ul class="sl-tabs-nav">
+          <li class="sl-tabs-item"><a href="#nav" class="sl-tabs-link sl-is-active" data-cf-tab="p1">Описание</a></li>
+          <li class="sl-tabs-item"><a href="#nav" class="sl-tabs-link" data-cf-tab="p2">Комментарии</a></li>
+          <li class="sl-tabs-item"><a href="#nav" class="sl-tabs-link" data-cf-tab="p3">История</a></li>
+        </ul>
+        <div class="sl-tabs-content">
+          <div class="sl-tab-panel" id="cf-p1" style="display: block;">Панель «Описание» — контент первой вкладки.</div>
+          <div class="sl-tab-panel" id="cf-p2">Панель «Комментарии» — в продакшене может подгружаться через <code>hx-get</code>.</div>
+          <div class="sl-tab-panel" id="cf-p3">Панель «История».</div>
+        </div>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>partials/tabs.html</code> + фрагменты <code>tabs-link.html</code> / <code>tabs-panel.html</code> — страницы модулей, аккаунт, BB-тег <code>[tabs]</code> парсера. Активная вкладка — <code>.sl-is-active</code> + <code>aria-selected</code> (легаси-класс <code>.selected</code> удалён из JS и CSS); переключение — системный JS по <code>data-sl-tab-link</code> / <code>data-sl-tab-target</code>.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Хлебные крошки</h3><code>.sl-category-nav</code> <code>.sl-crumb</code> <code>.sl-crumb-sep</code> <code>.sl-crumb-cur</code> <code>.sl-cat-tone-N</code></div>
+    <div class="cf-demo cf-plain">
+      <nav class="sl-category-nav">
+        <a class="sl-crumb sl-cat-tone-0" href="#nav" title="Новости">Новости</a>
+        <span class="sl-crumb-sep">&raquo;</span>
+        <a class="sl-crumb sl-cat-tone-2" href="#nav" title="Разработка">Разработка</a>
+        <span class="sl-crumb-sep">&raquo;</span>
+        <span class="sl-crumb sl-crumb-cur">SLAED CMS</span>
+      </nav>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/category-nav.html</code> + <code>category-crumb.html</code> (собирает <code>getCategoryPath()</code> в <code>core/helpers.php</code>) — списки контента и результаты поиска. Тон категории (<code>sl-cat-tone-0…5</code>, ротация по порядковому индексу) проявляется на ховере: цвет + выезжающее подчёркивание, разделитель сдвигается вперёд.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Сортировка таблиц</h3><code>.sl-sort</code> <code>.sl-sort-asc</code> <code>.sl-sort-desc</code></div>
+    <div class="cf-demo cf-plain">
+      <table class="sl-table-list">
+        <thead>
+          <tr class="sl-table-head">
+            <th class="sl-sort">Название</th>
+            <th class="sl-sort-asc">Дата</th>
+            <th class="sl-sort-desc">Просмотры</th>
+            <th data-sort-method="none">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sl-table-row"><td class="sl-table-cell">Первый материал</td><td class="sl-table-cell">08.07.2026</td><td class="sl-table-cell">512</td><td class="sl-table-cell"><a href="#nav" class="sl-but-mini"><i class="bi bi-gear-fill" aria-hidden="true"></i></a></td></tr>
+          <tr class="sl-table-row"><td class="sl-table-cell">Второй материал</td><td class="sl-table-cell">09.07.2026</td><td class="sl-table-cell">1 024</td><td class="sl-table-cell"><a href="#nav" class="sl-but-mini"><i class="bi bi-gear-fill" aria-hidden="true"></i></a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> заголовки списочных таблиц (<code>fragments/table.html</code> / <code>table-row.html</code>, партиал <code>content-list.html</code>): нейтральный индикатор ↕ у сортируемых колонок, ▲/▼ у активной; <code>data-sort-method="none"</code> отключает сортировку и курсор.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="rating">
+  <h2><i class="bi bi-star-half"></i>Рейтинг и голосование</h2>
+  <p class="cf-lead">Два вида рейтинга — «пальцы» с бейджем счёта и пятизвёздная шкала — плюс опросы с прогресс-барами. Живые версии шлют <code>hx-post</code> с CSRF-заголовком.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Лайк-рейтинг</h3><code>.sl-rate-like</code> <code>.sl-rate-minus/.sl-rate-plus</code> <code>.sl-out</code></div>
+    <div class="cf-demo">
+      <div class="sl-min-rate"><div class="sl-rate-like-box">
+        <div class="sl-rate-like">
+          <p class="sl-but-mini sl-rate-minus sl-out" title="Не нравится"><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></p>
+          <span class="sl-rate-num" title="Оценка">0</span>
+          <p class="sl-but-mini sl-rate-plus sl-out" title="Нравится"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></p>
+        </div>
+      </div></div>
+      <div class="sl-min-rate"><div class="sl-rate-like-box">
+        <div class="sl-rate-like">
+          <p class="sl-but-mini sl-rate-minus sl-out" title="Не нравится"><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></p>
+          <span class="sl-rate-num sl-rate-is" title="Оценка">24</span>
+          <p class="sl-but-mini sl-rate-plus sl-out" title="Нравится"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></p>
+        </div>
+      </div></div>
+      <span style="color: var(--sl-color-text-muted);">ховер: минус краснеет, плюс зеленеет (<code>.sl-out</code>)</span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/rating-like.html</code> в обёртке <code>rating-box.html</code> — комментарии, посты форума, материалы с типом рейтинга «лайки». Живая версия шлёт <code>hx-post</code> (<code>rate=1|5</code>) c <code>X-CSRF-TOKEN</code> и заменяет себя по <code>hx-swap="outerHTML"</code>.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Звёздный рейтинг</h3><code>.sl-urating</code> <code>.sl-star</code></div>
+    <div class="cf-demo">
+      <span class="cf-label">Статичный (span) — 3.5 из 5</span>
+      <div class="sl-urating" title="Оценка: 3.5">
+        <span class="sl-star"><i class="bi bi-star-fill" aria-hidden="true"></i></span><span class="sl-star"><i class="bi bi-star-fill" aria-hidden="true"></i></span><span class="sl-star"><i class="bi bi-star-fill" aria-hidden="true"></i></span><span class="sl-star"><i class="bi bi-star-half" aria-hidden="true"></i></span><span class="sl-star"><i class="bi bi-star" aria-hidden="true"></i></span>
+      </div>
+      <span class="sl-rate-num sl-rate-is" title="Голосов">18</span>
+      <span class="cf-label">Живой (a) — наведите: трек до курсора заполняется, оценка не пропадает</span>
+      <div class="sl-urating" title="Оцените">
+        <a class="sl-star" href="#rating" title="1"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" href="#rating" title="2"><i class="bi bi-star-fill" aria-hidden="true"></i></a><a class="sl-star" href="#rating" title="3"><i class="bi bi-star" aria-hidden="true"></i></a><a class="sl-star" href="#rating" title="4"><i class="bi bi-star" aria-hidden="true"></i></a><a class="sl-star" href="#rating" title="5"><i class="bi bi-star" aria-hidden="true"></i></a>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/rating-bar.html</code> — материалы с пятибалльным рейтингом (статьи, файлы, ссылки). Полузвёзды — иконки <code>bi-star-half</code>; ховер-превью реализовано селектором <code>:has(~ a.sl-star:hover)</code> без JS; клик — <code>hx-post</code> с номером звезды.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Прогресс-бары</h3><code>.sl-progress-line</code> <code>.sl-progress-1…5</code></div>
+    <div class="cf-demo cf-col" style="max-width: 560px;">
+      <div class="sl-progress-line sl-progress-1" title="60%"><div style="width: 60%;">60%</div></div>
+      <div class="sl-progress-line sl-progress-2" title="45%"><div style="width: 45%;">45%</div></div>
+      <div class="sl-progress-line sl-progress-3" title="30%"><div style="width: 30%;">30%</div></div>
+      <div class="sl-progress-line sl-progress-4" title="20%"><div style="width: 20%;">20%</div></div>
+      <div class="sl-progress-line sl-progress-5" title="10%"><div style="width: 10%;">10%</div></div>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> результаты опросов (<code>fragments/voting-view.html</code>), статистика. Пять градиентных заливок — токены <code>--sl-progress-fill-N-*</code> из base.css; ширина анимируется CSS-переходом 0.8s.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Опрос: варианты и результаты</h3><code>.sl-vote-list</code> <code>.sl-lead</code> <code>.sl-progress-info</code></div>
+    <div class="cf-demo cf-col">
+      <span class="cf-label">Режим голосования (интерактивные строки)</span>
+      <ul class="sl-vote-list sl-radio-list">
+        <li><label><input type="radio" name="cfv" checked> Нравится новый дизайн</label></li>
+        <li><label><input type="radio" name="cfv"> Нужен тёмный режим</label></li>
+        <li><label><input type="radio" name="cfv"> Всё устраивает</label></li>
+      </ul>
+      <span class="cf-label">Режим результатов (лидер с трофеем)</span>
+      <ul class="sl-vote-list">
+        <li class="sl-lead">
+          <div class="sl-progress-info">
+            <span><i class="bi bi-trophy-fill" aria-hidden="true"></i>Нравится новый дизайн</span>
+            <span class="sl-pull-right"><b class="sl-vote-pct">60%</b> <b>(голосов: <span class="sl-vote-num">12</span>)</b></span>
+          </div>
+          <div class="sl-progress-line sl-progress-1"><div style="width: 60%;">60%</div></div>
+        </li>
+        <li>
+          <div class="sl-progress-info">
+            <span><i class="bi bi-trophy-fill" aria-hidden="true"></i>Нужен тёмный режим</span>
+            <span class="sl-pull-right"><b class="sl-vote-pct">30%</b> <b>(голосов: <span class="sl-vote-num">6</span>)</b></span>
+          </div>
+          <div class="sl-progress-line sl-progress-2"><div style="width: 30%;">30%</div></div>
+        </li>
+        <li>
+          <div class="sl-progress-info">
+            <span><i class="bi bi-trophy-fill" aria-hidden="true"></i>Всё устраивает</span>
+            <span class="sl-pull-right"><b class="sl-vote-pct">10%</b> <b>(голосов: <span class="sl-vote-num">2</span>)</b></span>
+          </div>
+          <div class="sl-progress-line sl-progress-3"><div style="width: 10%;">10%</div></div>
+        </li>
+      </ul>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> модуль голосований (<code>partials/voting-widget.html</code>, <code>voting-home.html</code>, строки — <code>fragments/voting-view.html</code>). Выбранная строка подсвечивается через <code>:has(input:checked)</code>; трофей показывается только у <code>li.sl-lead</code>; цифры табличные (<code>tabular-nums</code>) — не прыгают при live-обновлении.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="glyphs">
+  <h2><i class="bi bi-collection"></i>Иконные статус-глифы</h2>
+  <p class="cf-lead">Не-чипсовые иконные контролы: состояния форумов и тем (<code>inline-badge.html</code>) и действия корзины/магазина (<code>link.html</code>, <code>comment-action-ajax.html</code>). Цвет кодирует состояние: brand — новое, серый — прочитанное, warn — горячее/админ, success — модерируемое.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Форум и темы</h3><code>.sl-forum-*</code> <code>.sl-topic-*</code></div>
+    <div class="cf-demo">
+      <span class="sl-forum-new" title="Новые сообщения"><i class="bi bi-chat-dots-fill" aria-hidden="true"></i></span>
+      <span class="sl-forum-old" title="Нет новых"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
+      <span class="sl-forum-closed" title="Форум закрыт"><i class="bi bi-chat-fill" aria-hidden="true"></i></span>
+      <a href="#glyphs" class="sl-forum-last" title="Последнее сообщение"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i></a>
+      <span class="sl-topic-new" title="Новая тема"><i class="bi bi-record-circle" aria-hidden="true"></i></span>
+      <span class="sl-topic-old" title="Прочитанная тема"><i class="bi bi-record-circle" aria-hidden="true"></i></span>
+      <span class="sl-topic-popular-new" title="Популярная, новая"><i class="bi bi-record-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-popular-old" title="Популярная, прочитанная"><i class="bi bi-record-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-announcement" title="Анонс"><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-hot" title="Горячая тема"><i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-moderated" title="Модерируется"><i class="bi bi-x-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-admin" title="Тема администрации"><i class="bi bi-x-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-closed" title="Тема закрыта"><i class="bi bi-x-circle-fill" aria-hidden="true"></i></span>
+      <span class="sl-topic-pending" title="Ожидает"><i class="bi bi-play-circle-fill" aria-hidden="true"></i></span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> списки форумов и тем (<code>fragments/forum-category-row.html</code>, <code>forum-topic-view.html</code>, <code>forum-teaser-item.html</code>), генерируются через <code>fragments/inline-badge.html</code> семантическими флагами <code>is_topic_*</code> / <code>is_forum_*</code> — PHP не передаёт CSS-классов.</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Корзина и магазин</h3><code>.sl-plus</code> <code>.sl-cart-plus/minus</code> <code>.sl-cart-checkout</code> <code>.sl-shop-add/checkout</code></div>
+    <div class="cf-demo">
+      <a href="#glyphs" class="sl-plus" title="Добавить"><i class="bi bi-plus-lg" aria-hidden="true"></i> Добавить</a>
+      <a href="#glyphs" class="sl-cart-plus" title="В корзину"><i class="bi bi-cart-plus" aria-hidden="true"></i> В корзину</a>
+      <a href="#glyphs" class="sl-cart-minus" title="Убрать"><i class="bi bi-dash-lg" aria-hidden="true"></i> Убрать</a>
+      <a href="#glyphs" class="sl-cart-checkout" title="Оформить"><i class="bi bi-cart-check" aria-hidden="true"></i> Оформить заказ</a>
+      <a href="#glyphs" class="sl-shop-add" title="Купить"><i class="bi bi-cart-plus" aria-hidden="true"></i> Купить</a>
+      <span class="sl-chip sl-cart-total"><i class="bi bi-cart3" aria-hidden="true"></i> Товаров: 3</span>
+    </div>
+    <div class="cf-usage"><b>Где используется:</b> модуль магазина и корзина: ссылки через <code>fragments/link.html</code> (<code>is_plus</code>, <code>is_shop_add</code>, <code>is_cart_checkout</code>…) и ajax-действия <code>comment-action-ajax.html</code> (<code>is_cart_plus</code>, <code>is_cart_minus</code>); итог корзины — чип <code>sl-cart-total</code>.</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="tones">
+  <h2><i class="bi bi-palette"></i>Тоновая палитра и утилиты</h2>
+  <p class="cf-lead">Шесть семантических тонов из base.css питают чипсы, алерты, кнопки и категории. Утилитарные классы управляют видимостью и выравниванием.</p>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Тоны</h3><code>--sl-color-tone-*</code></div>
+    <div class="cf-demo cf-plain">
+      <div class="cf-swatches">
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-info);"></i>--sl-color-tone-info</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-success);"></i>--sl-color-tone-success</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-warning);"></i>--sl-color-tone-warning</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-danger);"></i>--sl-color-tone-danger</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-accent);"></i>--sl-color-tone-accent</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-neutral);"></i>--sl-color-tone-neutral</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-tone-primary);"></i>--sl-color-tone-primary</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-brand-link);"></i>--sl-color-brand-link</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-brand-strong);"></i>--sl-color-brand-strong</span>
+      </div>
+    </div>
+    <div class="cf-usage"><b>Правило:</b> цвета, радиусы, тени и размеры берутся только из токенов base.css (<code>--sl-&lt;category&gt;-&lt;role&gt;[-&lt;scale&gt;]</code>); размеры иконок — шкала <code>--sl-size-icon-xs|sm|md|lg</code> (16/18/24/32). Тон-классы для отладочной панели: <code>.sl-debug-info|success|warn|danger</code> (переменная <code>--sl-debug-tone</code>).</div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-head"><h3>Утилиты состояния</h3></div>
+    <div class="cf-demo cf-plain">
+      <table class="cf-table">
+        <thead><tr><th>Класс</th><th>Действие</th><th>Типичное место</th></tr></thead>
+        <tbody>
+          <tr><td><code>.sl-hidden</code></td><td>полупрозрачность 0.5; на кнопке — курсор not-allowed</td><td>скрытые материалы в списках, недоступные действия</td></tr>
+          <tr><td><code>.sl-none</code></td><td>display: none (единственная утилита скрытия; <code>.sl-thide</code> удалён из lite)</td><td>скрытые ряды форм, текст лого, дублирующий текст результата рейтинга</td></tr>
+          <tr><td><code>.sl-visually-hidden</code></td><td>визуально скрыт, доступен скринридерам</td><td>подписи иконных ссылок</td></tr>
+          <tr><td><code>.sl-thd</code></td><td>текст схлопнут (font-size: 0), виден только иконочный потомок</td><td>иконные ссылки соцсетей</td></tr>
+          <tr><td><code>.sl-muted</code></td><td>приглушённый цвет текста и ссылок</td><td>вторичная мета</td></tr>
+          <tr><td><code>.sl-pull-right</code> / <code>.sl-center</code></td><td>float: right / центрирование</td><td>мета-ряды, сабмиты</td></tr>
+          <tr><td><code>.sl-is-active</code> / <code>.sl-is-muted</code> / <code>.sl-is-soft</code> / <code>.sl-is-open</code> / <code>.sl-is-hiding</code></td><td>модификаторы состояния компонентов</td><td>пагинация, флоаты, flash-алерты</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="cf-section" id="inventory">
+  <h2><i class="bi bi-list-columns"></i>Сводная таблица компонентов</h2>
+  <p class="cf-lead">Карта «компонент → классы → источник разметки → потребители». Разметку владеют шаблоны, классы — theme.css, PHP передаёт только данные и семантические флаги.</p>
+  <div class="cf-card">
+    <div class="cf-demo cf-plain" style="overflow-x: auto;">
+      <table class="cf-table">
+        <thead><tr><th>Компонент</th><th>Базовые классы</th><th>Варианты / состояния</th><th>Фрагмент-источник</th><th>Основные потребители</th></tr></thead>
+        <tbody>
+          <tr><td>Кнопка</td><td><code>.sl-but</code></td><td><code>.sl-hidden</code>, <code>.htmx-request</code></td><td>button.html, link.html, search-form.html</td><td>формы, навигация модулей, «читать далее», футер</td></tr>
+          <tr><td>Мини-кнопка</td><td><code>.sl-but-mini</code></td><td><code>.sl-is-active|muted|soft</code></td><td>pager-link.html, popover.html, rating-like.html, inline-badge.html</td><td>пагинация, номера строк, шестерёнка, лайки</td></tr>
+          <tr><td>Круглый контрол</td><td><code>.sl-circle-action</code></td><td><code>.sl-i-gh|yt|tw|vk|rss|recom|doc-*</code></td><td>site-header.html</td><td>топ-бар, главное меню (домой)</td></tr>
+          <tr><td>Плавающие вкладки</td><td><code>.sl-btn-idea</code>, <code>.sl-btn-feedback</code></td><td>ховер-расширение</td><td>block-center-link.html (блоки главной)</td><td>главная страница</td></tr>
+          <tr><td>Чип</td><td><code>.sl-chip</code></td><td><code>.sl-chip-info|success|warn|danger|accent|neutral</code></td><td>link.html (chip_tone), date-badge.html, inline-badge.html</td><td>вся мета: списки, карточки, просмотр, поиск</td></tr>
+          <tr><td>Семантические хуки чипа</td><td><code>sl-date sl-hits sl-coms sl-cat sl-votes sl-favor* sl-n-* sl-status-* sl-message-* sl-module sl-http sl-ed2k sl-last sl-cart-total sl-download sl-faq</code></td><td>без собственных стилей: канонический <code>sl-chip [sl-chip-&lt;тон&gt;]</code> + хук; <code>sl-votes</code>/<code>sl-coms</code>/<code>sl-favor</code> — JS/ajax-хуки</td><td>span.html, link.html, inline-badge.html, date-badge.html, card.html, view.html</td><td>контент, форум, ЛС, магазин, медиа</td></tr>
+          <tr><td>Чипы форума</td><td><code>sl-chip sl-chip-info sl-topic-post|edit</code>, <code>sl-chip sl-chip-success sl-geo-ip</code></td><td>13px-глиф даты/правки; IP — <code>getIpHtml($ip, true)</code></td><td>inline-badge.html, span.html (geoip.php)</td><td>мета комментариев, постов, ЛС</td></tr>
+          <tr><td>Счётчик ЛС</td><td><code>.sl-pm-new</code></td><td>пульс</td><td>block-user-info.html</td><td>блок пользователя</td></tr>
+          <tr><td>Инфо-подсказка</td><td><code>.sl-float.sl-tip</code> + <code>.sl-tip-icon</code> + <code>.sl-float-panel</code></td><td>текст / dl-грид; <code>.sl-float-up</code>, <code>.sl-is-open</code></td><td>popover.html</td><td>поля форм, списки, профиль на форуме</td></tr>
+          <tr><td>Редакторское меню</td><td><code>.sl-menu.sl-editor-menu</code> + <code>.sl-but-mini</code></td><td>gear / three-dots</td><td>popover.html (edit-actions.html)</td><td>инлайн-администрирование всех списков</td></tr>
+          <tr><td>Алерт</td><td><code>.sl-alert</code></td><td><code>-info|success|warn|error|accent</code>, <code>-flash</code>, title/list/close/actions</td><td>alert.html</td><td>формы, message/error, callouts парсера</td></tr>
+          <tr><td>Поле</td><td><code>.sl-field</code></td><td><code>--block</code>, <code>--auto</code>, :user-invalid/:user-valid</td><td>input.html, select.html, textarea.html, file-input.html</td><td>все формы</td></tr>
+          <tr><td>Чекбокс</td><td><code>input[type=checkbox].sl-check</code></td><td>checked / disabled / focus-ring</td><td>checkbox.html</td><td>формы, массовые отметки</td></tr>
+          <tr><td>Радио / switch</td><td><code>.sl-radio</code>, <code>.sl-radio-group.sl-radio-switch</code></td><td>Да/Нет сегменты</td><td>radio.html</td><td>настройки, опции форм</td></tr>
+          <tr><td>Пагинация</td><td><code>.sl-pager</code> + <code>.sl-pager-info|main|pages|nextprev</code></td><td>htmx-подгрузка</td><td>pager.html + pager-link.html</td><td>все списки</td></tr>
+          <tr><td>Табы</td><td><code>.sl-tabs</code> + <code>.sl-tabs-nav|item|link</code>, <code>.sl-tab-panel</code></td><td><code>.sl-is-active</code>, hx-get</td><td>tabs.html, tabs-link.html, tabs-panel.html</td><td>модули, аккаунт, BB [tabs]</td></tr>
+          <tr><td>Крошки</td><td><code>.sl-category-nav</code> + <code>.sl-crumb|sep|cur</code></td><td><code>.sl-cat-tone-0…5</code></td><td>category-nav.html + category-crumb.html</td><td>списки, поиск</td></tr>
+          <tr><td>Сортировка</td><td><code>.sl-sort</code></td><td><code>-asc</code>, <code>-desc</code>, <code>data-sort-method="none"</code></td><td>table.html</td><td>списочные таблицы</td></tr>
+          <tr><td>Лайк-рейтинг</td><td><code>.sl-rate-like</code> + <code>.sl-rate-minus|plus</code> + <code>.sl-rate-num</code></td><td><code>.sl-rate-is</code>, <code>.sl-out</code></td><td>rating-like.html, rating-box.html</td><td>комментарии, форум, материалы</td></tr>
+          <tr><td>Звёзды</td><td><code>.sl-urating</code> + <code>.sl-star</code></td><td>полузвёзды, hover-превью</td><td>rating-bar.html</td><td>статьи, файлы, ссылки</td></tr>
+          <tr><td>Прогресс</td><td><code>.sl-progress-line</code></td><td><code>.sl-progress-1…5</code></td><td>voting-view.html</td><td>опросы, статистика</td></tr>
+          <tr><td>Опрос</td><td><code>.sl-vote-list</code> + <code>.sl-vote-tools|live-ico|title</code></td><td><code>.sl-lead</code>, <code>.sl-vote-end</code></td><td>voting-view.html, voting-widget.html</td><td>модуль голосований, сайдбар, главная</td></tr>
+          <tr><td>Статус-глифы</td><td><code>.sl-forum-*</code>, <code>.sl-topic-*</code>, <code>.sl-plus</code>, <code>.sl-cart-*</code>, <code>.sl-shop-*</code></td><td>цвет = состояние</td><td>inline-badge.html, link.html, comment-action-ajax.html</td><td>форум, магазин, корзина</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* Demo-only wiring: tab switching, flash replay and htmx-request state toggle */
+document.querySelectorAll('#cf-tabs .sl-tabs-link').forEach(function (link) {
+  link.addEventListener('click', function (e) {
+    e.preventDefault();
+    document.querySelectorAll('#cf-tabs .sl-tabs-link').forEach(function (l) { l.classList.remove('sl-is-active'); });
+    link.classList.add('sl-is-active');
+    document.querySelectorAll('#cf-tabs .sl-tab-panel').forEach(function (p) { p.style.display = 'none'; });
+    document.getElementById('cf-' + link.dataset.cfTab).style.display = 'block';
+  });
+});
+var flashhost = document.getElementById('cf-flash-host');
+var flashsrc = flashhost.innerHTML;
+function cfFlashRun() {
+  var alert = flashhost.querySelector('.sl-alert-flash');
+  if (!alert) return;
+  setTimeout(function () { alert.classList.add('sl-is-hiding'); }, 5000);
+}
+document.getElementById('cf-flash-replay').addEventListener('click', function () {
+  flashhost.innerHTML = flashsrc;
+  cfFlashRun();
+});
+cfFlashRun();
+document.getElementById('cf-htmx-toggle').addEventListener('click', function () {
+  document.getElementById('cf-htmx-btn').classList.toggle('htmx-request');
+});
+</script>
+</body>
+</html>
