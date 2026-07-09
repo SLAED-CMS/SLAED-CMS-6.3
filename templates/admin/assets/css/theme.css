@@ -444,6 +444,46 @@ input.sl-but-blue[value="ОК"] {
   vertical-align: -0.125em;
 }
 
+/* Meta glyphs: plus toggle and list meta icons share sizing and colour; contextual toggle override lives in the forms section */
+.sl-plus::before,
+.sl-post-icon::before,
+.sl-date::before,
+.sl-cat::before,
+.sl-views::before {
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+  margin: 0 var(--sl-space-sm) 0 0;
+  color: var(--sl-color-primary-hover);
+  font-size: var(--sl-size-icon-sm);
+  line-height: 1;
+  text-align: center;
+}
+
+.sl-plus::before {
+  cursor: pointer;
+  content: "\f4f9";
+}
+
+.sl-plus.sl-is-open::before {
+  content: "\f2e5";
+}
+
+.sl-post-icon::before {
+  content: "\f4da";
+}
+
+.sl-views::before {
+  content: "\f33e";
+}
+
+.sl-date::before {
+  content: "\f1e8";
+}
+
+.sl-cat::before {
+  content: "\f3d1";
+}
+
 .sl-status-active {
   color: var(--sl-color-success);
 }
@@ -642,15 +682,6 @@ input.sl-but-blue[value="ОК"] {
 
 .sl-code-row-cell {
   width: 100%;
-}
-
-.sl-plus::before {
-  cursor: pointer;
-  content: "\f4f9";
-}
-
-.sl-plus.sl-is-open::before {
-  content: "\f2e5";
 }
 
 /* Tooltips: inline hints and popovers */
@@ -3526,37 +3557,6 @@ input.sl-but-blue[value="ОК"] {
 .sl-muted,
 .sl-muted a {
   color: var(--sl-color-muted);
-}
-
-.sl-plus::before,
-.sl-post-icon::before,
-.sl-date::before,
-.sl-cat::before,
-.sl-views::before {
-  width: var(--sl-size-icon-sm);
-  height: var(--sl-size-icon-sm);
-  margin: 0 var(--sl-space-sm) 0 0;
-  color: var(--sl-color-primary-hover);
-  font-size: var(--sl-size-icon-sm);
-  line-height: 1;
-  text-align: center;
-  vertical-align: -0.125em;
-}
-
-.sl-post-icon::before {
-  content: "\f4da";
-}
-
-.sl-views::before {
-  content: "\f33e";
-}
-
-.sl-date::before {
-  content: "\f1e8";
-}
-
-.sl-cat::before {
-  content: "\f3d1";
 }
 
 .sl-generates,
