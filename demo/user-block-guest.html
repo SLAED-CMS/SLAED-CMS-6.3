@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Блок «Пользователи»: варианты (гость)</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body {
+	margin: 0;
+	padding: 0 0 60px;
+	background: var(--sl-color-surface);
+	color: var(--sl-color-text);
+	font: 15px/1.5 Arial, Tahoma, sans-serif;
+}
+a { text-decoration: none; color: inherit; }
+.demo-head {
+	padding: 26px clamp(14px, 4vw, 48px);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	border-bottom: 1px solid var(--sl-color-border);
+}
+.demo-head h1 {
+	margin: 0 0 6px;
+	font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-head p { margin: 0; max-width: 900px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1560px; margin: 0 auto; }
+.demo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: 26px;
+	align-items: start;
+	margin-top: 34px;
+}
+.demo-cell > .demo-label { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; }
+.demo-label .n {
+	flex: 0 0 auto;
+	display: inline-grid; place-items: center; width: 24px; height: 24px;
+	border-radius: 999px; background: var(--sl-color-brand-strong); color: #fff;
+	font-size: 12px; font-weight: bold;
+}
+.demo-label b { font-size: 14px; color: var(--sl-color-text-heading); }
+.demo-label span { font-size: 12px; color: var(--sl-color-text-muted); }
+.demo-cell .sl-block { margin-bottom: 0; }
+
+/* ---- общие демо-примитивы ---- */
+.g-ava {
+	width: 76px; height: 76px; border-radius: 50%;
+	background-size: cover; background-position: center;
+	background-color: var(--sl-color-surface-alt);
+	display: inline-grid; place-items: center;
+	color: var(--sl-color-text-subtle); font-size: 34px;
+}
+.g-hello { font-size: 12.5px; color: var(--sl-color-text-muted); }
+.g-name { font-weight: bold; color: var(--sl-color-text-heading); }
+.g-field { position: relative; }
+.g-field > .bi {
+	position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+	color: var(--sl-color-text-subtle); font-size: var(--sl-size-icon-xs);
+	pointer-events: none;
+}
+.g-field .sl-field { width: 100%; padding-left: 34px; }
+.g-form { display: grid; gap: 8px; }
+.g-form .sl-but { width: 100%; text-align: center; }
+.g-links { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.g-divider {
+	display: flex; align-items: center; gap: 10px;
+	color: var(--sl-color-text-subtle); font-size: 12px; text-transform: lowercase;
+}
+.g-divider::before, .g-divider::after {
+	content: ""; flex: 1 1 auto; height: 1px; background: var(--sl-color-border-subtle);
+}
+.g-net { display: flex; justify-content: center; gap: 8px; }
+.g-net a {
+	display: inline-grid; place-items: center;
+	width: 38px; height: 38px; border-radius: 50%;
+	background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading);
+	font-size: var(--sl-size-icon-sm);
+	transition: background .18s, color .18s, transform .18s;
+}
+.g-net a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 16%, transparent); color: var(--sl-color-brand-strong); transform: translateY(-1px); }
+
+/* ---------- G1: Классика+ ---------- */
+.g1-head { text-align: center; margin-bottom: 14px; }
+.g1-head .g-ava { border: 3px solid #fff; box-shadow: var(--sl-shadow-soft); }
+
+/* ---------- G2: Табы ---------- */
+.g2-tabs {
+	display: flex; margin-bottom: 14px;
+	background: var(--sl-color-surface-alt); border-radius: 999px; padding: 3px;
+}
+.g2-tabs a {
+	flex: 1 1 0; text-align: center; padding: 7px 4px; border-radius: 999px;
+	font-size: 13px; color: var(--sl-color-text-muted);
+	transition: background .15s, color .15s, box-shadow .15s;
+}
+.g2-tabs a.on { background: #fff; color: var(--sl-color-text-heading); font-weight: bold; box-shadow: var(--sl-shadow-soft); }
+.g2-tabs a:not(.on):hover { color: var(--sl-color-brand-strong); }
+.g2-foot { text-align: center; font-size: 12.5px; color: var(--sl-color-text-muted); }
+.g2-foot a { color: var(--sl-color-brand-strong); }
+.g2-foot a:hover { text-decoration: underline; }
+
+/* ---------- G3: Соцсети-первые ---------- */
+.g3-net { display: grid; gap: 8px; margin-bottom: 12px; }
+.g3-net a {
+	display: flex; align-items: center; justify-content: center; gap: 8px;
+	height: var(--sl-field-height, 38px); border-radius: var(--sl-radius-control);
+	border: 1px solid var(--sl-color-border); background: #fff;
+	font-size: 13.5px; color: var(--sl-color-text-heading);
+	transition: border-color .15s, box-shadow .15s;
+}
+.g3-net a:hover { border-color: var(--sl-color-brand); box-shadow: var(--sl-shadow-soft); }
+.g3-net .bi { font-size: var(--sl-size-icon-xs); color: var(--sl-color-brand-strong); }
+
+/* ---------- G4: Минимал-центр ---------- */
+.g4 .g-form input.g4-line {
+	width: 100%; border: 0; border-bottom: 2px solid var(--sl-color-border);
+	background: transparent; padding: 9px 2px; font-size: 14px; outline: 0;
+	transition: border-color .18s;
+}
+.g4 .g-form input.g4-line:focus { border-color: var(--sl-color-brand-link); }
+.g4-links { display: flex; justify-content: space-between; font-size: 12.5px; margin-top: 4px; }
+.g4-links a { color: var(--sl-color-text-muted); }
+.g4-links a:hover { color: var(--sl-color-brand-strong); }
+
+/* ---------- G5: CTA-карта ---------- */
+.g5.sl-block { padding: 0; overflow: hidden; border: 0; }
+.g5-hero {
+	padding: 22px 15px; text-align: center; color: #fff;
+	background:
+		radial-gradient(160px 90px at 85% -10%, rgb(255 255 255 / 0.25), transparent),
+		linear-gradient(135deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 100%);
+}
+.g5-hero .sl-title { color: #fff; }
+.g5-hero p { margin: 6px 0 0; font-size: 13px; color: rgb(255 255 255 / 0.85); }
+.g5-benefits { list-style: none; margin: 0; padding: 14px 15px 4px; display: grid; gap: 8px; }
+.g5-benefits li { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--sl-color-text); }
+.g5-benefits .bi { color: var(--sl-color-success); font-size: var(--sl-size-icon-xs); }
+.g5-body { padding: 12px 15px 15px; display: grid; gap: 8px; }
+
+/* ---------- Полные варианты (форма + онлайн-статистика) ---------- */
+.demo-sec-h {
+	margin: 44px 0 18px; padding-bottom: 8px;
+	border-bottom: 2px solid var(--sl-color-border);
+	font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.flg {
+	width: 21px; height: 15px; border-radius: 3px; flex: 0 0 auto;
+	object-fit: cover; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+.live-dot {
+	width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-success);
+	display: inline-block; flex: 0 0 auto;
+	animation: livePulse 2s ease-out infinite;
+}
+@keyframes livePulse {
+	0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-success) 50%, transparent); }
+	70% { box-shadow: 0 0 0 8px transparent; }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes rowIn {
+	from { opacity: 0; transform: translateY(7px); }
+	to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+}
+.f-stats { list-style: none; margin: 0; padding: 0; }
+.f-stats li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13.5px; }
+.f-stats .d { width: 9px; height: 9px; border-radius: 50%; background: var(--t); flex: 0 0 auto; }
+.f-stats .k { color: var(--sl-color-text-muted); flex: 1 1 auto; }
+.f-stats b { color: var(--sl-color-text-heading); }
+.f-stats li.total { border-top: 1px solid var(--sl-color-border-subtle); margin-top: 3px; padding-top: 7px; }
+.f-acc { border-top: 1px solid var(--sl-color-border-subtle); margin-top: 8px; }
+.f-acc summary {
+	list-style: none; cursor: pointer;
+	display: flex; align-items: center; justify-content: center; gap: 7px;
+	padding: 9px 0 3px; font-size: 13px; color: var(--sl-color-brand-strong);
+	transition: color .15s;
+}
+.f-acc summary::-webkit-details-marker { display: none; }
+.f-acc summary:hover { color: var(--sl-color-brand-link); }
+.f-acc summary .bi { transition: transform .3s; font-size: var(--sl-size-icon-xs); }
+.f-acc[open] summary .bi { transform: rotate(180deg); }
+.f-rows { display: grid; gap: 2px; padding-top: 5px; }
+.f-acc[open] .f-row { animation: rowIn .35s both; }
+.f-acc[open] .f-row:nth-child(2) { animation-delay: .07s; }
+.f-acc[open] .f-row:nth-child(3) { animation-delay: .14s; }
+.f-acc[open] .f-row:nth-child(4) { animation-delay: .21s; }
+.f-row {
+	display: flex; align-items: center; gap: 8px;
+	padding: 5px 8px; border-radius: 7px; font-size: 13px;
+	transition: background .15s;
+}
+.f-row:hover { background: var(--sl-color-surface-alt); }
+.f-row .who { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.f-row .mod { font-size: 12px; color: var(--sl-color-text-muted); white-space: nowrap; }
+.f-refresh { display: flex; justify-content: center; margin-top: 10px; }
+.f-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; background: var(--sl-color-surface-alt); margin: 2px 0 8px; }
+.f-bar i { display: block; background: var(--t); width: var(--w); animation: fGrow 1s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes fGrow { from { width: 0; } }
+.f-leg { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 12.5px; color: var(--sl-color-text-muted); }
+.f-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.f-leg .d { width: 8px; height: 8px; border-radius: 50%; background: var(--t); }
+.f-leg b { color: var(--sl-color-text-heading); }
+.f-online { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sl-color-text-muted); margin-bottom: 6px; }
+.f-online b { color: var(--sl-color-text-heading); }
+
+/* ---------- G6: Сплит вход/рега ---------- */
+.g6-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.g6-head .g-ava { width: 50px; height: 50px; font-size: 24px; }
+.g6-cta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.g6-cta .sl-but { text-align: center; }
+.g6-alt {
+	display: flex; flex-direction: column; align-items: center; gap: 2px;
+	padding: 12px 6px; border-radius: 10px; text-align: center;
+	background: color-mix(in srgb, var(--sl-color-success) 8%, #fff);
+	border: 1px dashed color-mix(in srgb, var(--sl-color-success) 35%, var(--sl-color-border));
+	margin-bottom: 12px;
+}
+.g6-alt b { color: var(--sl-color-success); font-size: 13.5px; }
+.g6-alt span { font-size: 12px; color: var(--sl-color-text-muted); }
+</style>
+</head>
+<body>
+
+<header class="demo-head">
+	<h1>Блок «Пользователи» — гость (вход)</h1>
+	<p>6 вариантов гостевого состояния + 2 полных блока (форма + онлайн-статистика, как на slaed.net).
+	Поля — системный <code>sl-field</code>, кнопки — <code>sl-but</code>.
+	Ещё: <a href="user-block-variants.html" style="color:var(--sl-color-brand-strong)"><u>залогинен</u></a> ·
+	<a href="user-block-live.html" style="color:var(--sl-color-brand-strong)"><u>«Подробнее» и эффекты</u></a>.</p>
+</header>
+
+<div class="demo-wrap">
+<div class="demo-grid">
+
+	<!-- G1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">1</span><b>Классика+</b><span>иконки в полях, чипсы-ссылки</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="g1-head">
+					<i class="g-ava"><span class="bi bi-person"></span></i><br>
+					<span class="g-hello">Добро пожаловать,</span><br>
+					<span class="g-name">Гость</span>
+				</div>
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" maxlength="25" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" maxlength="32" required></label>
+					<button type="submit" class="sl-but">Войти</button>
+					<div class="g-links">
+						<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-person-plus"></i> Регистрация</a>
+						<a href="#" class="sl-chip sl-chip-neutral"><i class="bi bi-question-circle"></i> Забыли пароль?</a>
+					</div>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- G2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">2</span><b>Сегмент-табы</b><span>Вход | Регистрация</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="g2-tabs">
+					<a href="#" class="on">Вход</a>
+					<a href="#">Регистрация</a>
+				</div>
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" required></label>
+					<button type="submit" class="sl-but">Войти</button>
+					<p class="g2-foot" style="margin:2px 0 0">Не помните пароль? <a href="#">Восстановить</a></p>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- G3 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">3</span><b>Соцсети-первые</b><span>сети сверху, разделитель «или»</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="g3-net">
+					<a href="#"><i class="bi bi-google"></i> Войти через Google</a>
+					<a href="#"><i class="bi bi-telegram"></i> Войти через Telegram</a>
+				</div>
+				<p class="g-divider" style="margin:0 0 12px">или</p>
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" required></label>
+					<button type="submit" class="sl-but">Войти</button>
+					<div class="g-links">
+						<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-person-plus"></i> Регистрация</a>
+						<a href="#" class="sl-chip sl-chip-neutral"><i class="bi bi-question-circle"></i> Пароль?</a>
+					</div>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- G4 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">4</span><b>Минимал</b><span>подчёркнутые поля, текст-ссылки</span></p>
+		<aside class="sl-block g4">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="g1-head">
+					<i class="g-ava"><span class="bi bi-person"></span></i>
+				</div>
+				<form class="g-form" onsubmit="return false">
+					<input type="text" class="g4-line" placeholder="Ник" required>
+					<input type="password" class="g4-line" placeholder="Пароль" required>
+					<button type="submit" class="sl-but" style="margin-top:8px">Войти</button>
+					<div class="g4-links">
+						<a href="#">Регистрация</a>
+						<a href="#">Забыли пароль?</a>
+					</div>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- G5 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">5</span><b>CTA-карта</b><span>градиент-шапка + выгоды регистрации</span></p>
+		<aside class="sl-block g5">
+			<div class="g5-hero">
+				<h2 class="sl-title" style="margin:0">Присоединяйтесь!</h2>
+				<p>Вход в сообщество за 30 секунд</p>
+			</div>
+			<ul class="g5-benefits">
+				<li><i class="bi bi-check-circle"></i> Личные сообщения и фавориты</li>
+				<li><i class="bi bi-check-circle"></i> Комментарии и оценки</li>
+				<li><i class="bi bi-check-circle"></i> Загрузка файлов и очки</li>
+			</ul>
+			<div class="g5-body">
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" required></label>
+					<button type="submit" class="sl-but">Войти</button>
+				</form>
+				<div class="g-links">
+					<a href="#" class="sl-chip sl-chip-success"><i class="bi bi-person-plus"></i> Создать аккаунт</a>
+					<a href="#" class="sl-chip sl-chip-neutral"><i class="bi bi-question-circle"></i> Пароль?</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- G6 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">6</span><b>Сплит-CTA</b><span>приглашение + две равные кнопки</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="g6-head">
+					<i class="g-ava"><span class="bi bi-person"></span></i>
+					<span><span class="g-name">Гость</span><br><span class="g-hello">вы не авторизованы</span></span>
+				</div>
+				<div class="g6-alt">
+					<b><i class="bi bi-gift"></i> Бонус новичкам</b>
+					<span>очки за регистрацию и первый комментарий</span>
+				</div>
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" required></label>
+					<div class="g6-cta">
+						<button type="submit" class="sl-but">Войти</button>
+						<a href="#" class="sl-but">Регистрация</a>
+					</div>
+					<p class="g2-foot" style="margin:2px 0 0"><a href="#">Забыли пароль?</a> · <span class="g-hello">вход через</span></p>
+					<div class="g-net">
+						<a href="#" title="Google"><i class="bi bi-google"></i></a>
+						<a href="#" title="Telegram"><i class="bi bi-telegram"></i></a>
+						<a href="#" title="VK"><i class="bi bi-chat-fill"></i></a>
+					</div>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+</div>
+
+<h2 class="demo-sec-h">Полные варианты — как на slaed.net (форма + онлайн-статистика)</h2>
+<div class="demo-grid" style="margin-top:0">
+
+	<!-- F1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">7</span><b>Полный классика+</b><span>вход + легенда + аккордеон «Подробнее» (кликни!)</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="g1-head">
+					<i class="g-ava"><span class="bi bi-person"></span></i><br>
+					<span class="g-hello">Добро пожаловать,</span><br>
+					<span class="g-name">Гость</span>
+				</div>
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" maxlength="25" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" maxlength="32" required></label>
+					<button type="submit" class="sl-but">Войти</button>
+					<div class="g-links">
+						<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-person-plus"></i> Регистрация</a>
+						<a href="#" class="sl-chip sl-chip-neutral"><i class="bi bi-question-circle"></i> Пароль?</a>
+					</div>
+				</form>
+				<p class="g-divider" style="margin:14px 0 8px">сейчас на сайте</p>
+				<ul class="f-stats">
+					<li style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>0</b></li>
+					<li style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>5</b></li>
+					<li style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>46</b></li>
+					<li class="total" style="--t:var(--sl-color-text-heading)"><span class="d"></span><span class="k">Всего</span><b>51</b></li>
+				</ul>
+				<details class="f-acc">
+					<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+					<div class="f-rows">
+						<div class="f-row">
+							<img class="flg" src="../templates/lite/images/flags/cn.svg" alt="China" title="China">
+							<span class="who" title="2 мин. 20 сек.">Baidu Spider</span>
+							<span class="mod">Каталог файлов</span>
+						</div>
+						<div class="f-row">
+							<img class="flg" src="../templates/lite/images/flags/us.svg" alt="United States" title="United States">
+							<span class="who" title="1 мин. 11 сек.">Google Bot</span>
+							<span class="mod">Каталог файлов</span>
+						</div>
+						<div class="f-row">
+							<img class="flg" src="../templates/lite/images/flags/ru.svg" alt="Russia" title="Russia">
+							<span class="who" title="3 мин. 6 сек.">Yandex Bot</span>
+							<span class="mod">Форум</span>
+						</div>
+						<div class="f-row">
+							<img class="flg" src="../templates/lite/images/flags/fr.svg" alt="France" title="France">
+							<span class="who" title="8 мин. 3 сек.">Majestic-12 Bot</span>
+							<span class="mod">Поиск</span>
+						</div>
+					</div>
+				</details>
+				<div class="f-refresh"><a href="#" class="sl-chip sl-chip-info"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- F2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">8</span><b>Полный CTA + доли</b><span>hero-шапка + стек-бар аудитории + «Подробнее»</span></p>
+		<aside class="sl-block g5">
+			<div class="g5-hero">
+				<h2 class="sl-title" style="margin:0">Присоединяйтесь!</h2>
+				<p>Вход в сообщество за 30 секунд</p>
+			</div>
+			<div class="g5-body">
+				<form class="g-form" onsubmit="return false">
+					<label class="g-field"><i class="bi bi-person"></i><input type="text" class="sl-field" placeholder="Ник" required></label>
+					<label class="g-field"><i class="bi bi-key"></i><input type="password" class="sl-field" placeholder="Пароль" required></label>
+					<button type="submit" class="sl-but">Войти</button>
+				</form>
+				<div class="g-links">
+					<a href="#" class="sl-chip sl-chip-success"><i class="bi bi-person-plus"></i> Создать аккаунт</a>
+					<a href="#" class="sl-chip sl-chip-neutral"><i class="bi bi-question-circle"></i> Пароль?</a>
+				</div>
+				<div style="margin-top:6px">
+					<div class="f-online"><span class="live-dot"></span> <b>51</b>&nbsp;посетитель онлайн</div>
+					<div class="f-bar">
+						<i style="--t:var(--sl-color-brand-link); --w:90%"></i>
+						<i style="--t:var(--sl-color-warning); --w:10%"></i>
+					</div>
+					<div class="f-leg">
+						<span style="--t:var(--sl-color-brand-link)"><i class="d"></i>Гости <b>46</b></span>
+						<span style="--t:var(--sl-color-warning)"><i class="d"></i>Боты <b>5</b></span>
+						<span style="--t:var(--sl-color-success)"><i class="d"></i>Юзеры <b>0</b></span>
+					</div>
+					<details class="f-acc">
+						<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+						<div class="f-rows">
+							<div class="f-row">
+								<img class="flg" src="../templates/lite/images/flags/cn.svg" alt="China" title="China">
+								<span class="who" title="2 мин. 20 сек.">Baidu Spider</span>
+								<span class="mod">Каталог файлов</span>
+							</div>
+							<div class="f-row">
+								<img class="flg" src="../templates/lite/images/flags/us.svg" alt="United States" title="United States">
+								<span class="who" title="1 мин. 11 сек.">Google Bot</span>
+								<span class="mod">Каталог файлов</span>
+							</div>
+							<div class="f-row">
+								<img class="flg" src="../templates/lite/images/flags/ua.svg" alt="Ukraine" title="Ukraine">
+								<span class="who"><a href="#" title="12 сек.">Eduard</a></span>
+								<span class="mod">Главная</span>
+							</div>
+						</div>
+					</details>
+					<div class="f-refresh"><a href="#" class="sl-chip sl-chip-info"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+
+<p style="max-width:1180px; margin:30px auto 0; font-size:12px; color:var(--sl-color-text-muted);">
+Капча (<code>captcha_html</code>) и скрытые поля (<code>op=login</code>, <code>refer</code>) в демо опущены — в реальном шаблоне встают между полями и кнопкой.
+Демо-классы <code>g*-</code> — кандидаты в <code>theme.css</code> с префиксом <code>sl-</code> после выбора варианта.
+</p>
+
+</div>
+</body>
+</html>

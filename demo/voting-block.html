@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Блок «Голосование»: варианты</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body {
+	margin: 0;
+	padding: 0 0 70px;
+	background: var(--sl-color-surface);
+	color: var(--sl-color-text);
+	font: 15px/1.5 Arial, Tahoma, sans-serif;
+}
+a { text-decoration: none; color: inherit; }
+button { font: inherit; }
+.demo-head {
+	padding: 26px clamp(14px, 4vw, 48px);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	border-bottom: 1px solid var(--sl-color-border);
+}
+.demo-head h1 {
+	margin: 0 0 6px;
+	font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-head p { margin: 0; max-width: 960px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1560px; margin: 0 auto; }
+.demo-sec { margin: 42px 0 0; }
+.demo-sec > h2 {
+	margin: 0 0 18px; padding-bottom: 8px;
+	border-bottom: 2px solid var(--sl-color-border);
+	font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+	gap: 26px;
+	align-items: start;
+}
+.demo-cell > .demo-label { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; }
+.demo-label .n {
+	flex: 0 0 auto;
+	display: inline-grid; place-items: center; width: 24px; height: 24px;
+	border-radius: 999px; background: var(--sl-color-brand-strong); color: #fff;
+	font-size: 12px; font-weight: bold;
+}
+.demo-label b { font-size: 14px; color: var(--sl-color-text-heading); }
+.demo-label span { font-size: 12px; color: var(--sl-color-text-muted); }
+.demo-cell .sl-block { margin-bottom: 0; }
+@keyframes rowIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@keyframes grow { from { width: 0; } }
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+}
+@keyframes spin { to { rotate: 360deg; } }
+
+/* ==================================================================
+   Секция «Системные классы»: слой эффектов поверх реальной разметки
+   (кандидаты в theme.css — селекторы целятся в системные классы)
+   ================================================================== */
+.sys-fx .sl-vote-list li { border-radius: 8px; padding: 4px 7px; margin: 0 -7px 2px; transition: background .15s; }
+.sys-fx .sl-vote-list li:hover { background: var(--sl-color-surface-alt); }
+.sys-fx .sl-vote-list label { cursor: pointer; display: flex; align-items: center; gap: 7px; }
+.sys-fx .sl-vote-list input { accent-color: var(--sl-color-brand-strong); width: 15px; height: 15px; flex: 0 0 auto; transition: transform .18s cubic-bezier(.3,1.6,.5,1); }
+.sys-fx .sl-vote-list input:checked { transform: scale(1.15); }
+.sys-fx .sl-vote-list li:has(input:checked) { background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent); font-weight: bold; color: var(--sl-color-text-heading); }
+.sys-fx .sl-vote-list input:focus-visible { outline: 2px solid var(--sl-color-brand); outline-offset: 2px; border-radius: 3px; }
+.sys-fx .sl-but { transition: transform .15s, opacity .2s; }
+.sys-fx .sl-but:active { transform: scale(.96); }
+.sys-fx .sl-but .spin { display: none; }
+.sys-fx .sl-but.busy { pointer-events: none; opacity: .75; }
+.sys-fx .sl-but.busy .spin { display: inline-block; animation: spin .8s linear infinite; }
+/* результаты: рост полос, ховер строки, лидер */
+.sys-fx .sl-progress-line div { animation: grow 1s cubic-bezier(.2,.7,.3,1) both; }
+.sys-fx .sl-vote-list li:has(.sl-progress-line) { padding: 4px 7px 8px; }
+.sys-fx .sl-progress-info { font-size: 12.5px; }
+.sys-fx .sl-vote-list li.lead .sl-progress-info .bi { color: var(--sl-color-warning); margin-right: 4px; }
+.sys-live .sl-progress-line div { animation: none; transition: width .8s cubic-bezier(.2,.7,.3,1); }
+.sys-live .sl-progress-info .sl-pull-right b { font-variant-numeric: tabular-nums; }
+/* live-индикатор в углу блока: sl-tip + sl-float из темы (hover/focus раскрывает панель) */
+.sl-block.sys-live { position: relative; }
+.sys-live-ind { position: absolute; top: 11px; right: 13px; z-index: 5; margin-right: 0; }
+.sys-live-ind .ico {
+	width: 26px; height: 26px; border-radius: 50%;
+	display: grid; place-items: center;
+	background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+	color: var(--sl-color-success); font-size: var(--sl-size-icon-xs);
+	animation: r6pulse 2s ease-out infinite;
+}
+.sys-live-ind .sl-float-panel { left: auto; right: 0; }
+.sys14-results { display: none; }
+.sys14.done .sys14-form { display: none; }
+.sys14.done .sys14-results { display: block; }
+.sys17 .sl-progress-info .bi-trophy-fill { display: none; }
+.sys17 li.lead .sl-progress-info .bi-trophy-fill { display: inline; }
+.sys17 .sl-progress-info .sl-pull-right b { font-variant-numeric: tabular-nums; }
+
+/* ---- общая анатомия опроса ---- */
+.vt-q { font-size: 14px; font-weight: bold; color: var(--sl-color-text-heading); margin: 0 0 12px; line-height: 1.35; }
+.vt-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.vt-tones { --t1: var(--sl-color-brand-link); --t2: var(--sl-color-success); --t3: var(--sl-color-warning); --t4: var(--sl-color-accent); --t5: var(--sl-color-danger); }
+
+/* ---------- V1: Карточки-варианты ---------- */
+.f1-list { display: grid; gap: 7px; }
+.f1-opt {
+	position: relative; display: flex; align-items: center; gap: 10px;
+	padding: 10px 12px; border-radius: 11px; cursor: pointer;
+	background: #fff; border: 1.5px solid var(--sl-color-border-subtle);
+	font-size: 13.5px; transition: border-color .18s, box-shadow .18s, transform .18s;
+}
+.f1-opt:hover { transform: translateY(-1px); box-shadow: var(--sl-shadow-soft); }
+.f1-opt input { position: absolute; opacity: 0; }
+.f1-opt .mark {
+	width: 19px; height: 19px; border-radius: 50%; flex: 0 0 auto;
+	border: 2px solid var(--sl-color-border-muted);
+	display: grid; place-items: center; transition: border-color .18s, background .18s;
+}
+.f1-opt .mark::after {
+	content: ""; width: 9px; height: 9px; border-radius: 50%;
+	background: #fff; transform: scale(0); transition: transform .18s cubic-bezier(.3,1.6,.5,1);
+}
+.f1-opt:has(input:checked) { border-color: var(--sl-color-brand); background: color-mix(in srgb, var(--sl-color-brand-link) 7%, #fff); }
+.f1-opt:has(input:checked) .mark { border-color: var(--sl-color-brand-strong); background: var(--sl-color-brand-strong); }
+.f1-opt:has(input:checked) .mark::after { transform: scale(1); }
+.f1-vote { width: 100%; margin-top: 12px; }
+.f1-vote .sl-but { width: 100%; text-align: center; }
+
+/* ---------- V2: Пилюли ---------- */
+.f2-list { display: flex; flex-wrap: wrap; gap: 7px; }
+.f2-opt { position: relative; cursor: pointer; }
+.f2-opt input { position: absolute; opacity: 0; }
+.f2-opt span {
+	display: inline-flex; align-items: center; gap: 6px;
+	padding: 8px 14px; border-radius: 999px; font-size: 13px;
+	background: var(--sl-color-surface-alt); color: var(--sl-color-text);
+	border: 1.5px solid transparent;
+	transition: background .18s, color .18s, border-color .18s, transform .15s;
+}
+.f2-opt:hover span { transform: translateY(-1px); border-color: var(--sl-color-border-muted); }
+.f2-opt:has(input:checked) span {
+	background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent);
+	color: var(--sl-color-brand-strong); border-color: var(--sl-color-brand);
+	font-weight: bold;
+}
+
+/* ---------- V3: Liquid glass ---------- */
+.f3.sl-block {
+	position: relative; overflow: hidden; border: 0;
+	background:
+		radial-gradient(280px 200px at 8% 0%, color-mix(in srgb, var(--sl-color-brand) 42%, transparent), transparent 70%),
+		radial-gradient(280px 240px at 100% 60%, color-mix(in srgb, var(--sl-color-accent) 30%, transparent), transparent 70%),
+		linear-gradient(160deg, #dfe9f5 0%, #e9e2f2 100%);
+}
+.f3-card {
+	position: relative; overflow: hidden;
+	border-radius: 18px; padding: 14px;
+	background: radial-gradient(120% 90% at 50% -20%, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.16) 60%), rgb(255 255 255 / 0.2);
+	backdrop-filter: blur(9px) saturate(1.6);
+	box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.8), inset -1px 0 1px rgb(180 220 255 / 0.3), inset 1px 0 1px rgb(255 200 220 / 0.25), 0 10px 26px rgb(31 45 61 / 0.16);
+}
+.f3-opt {
+	position: relative; display: flex; align-items: center; gap: 10px;
+	padding: 9px 12px; border-radius: 999px; cursor: pointer; font-size: 13px;
+	background: rgb(255 255 255 / 0.3); margin-bottom: 7px;
+	box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.6);
+	transition: background .2s, transform .25s cubic-bezier(.3,1.5,.5,1);
+}
+.f3-opt:hover { background: rgb(255 255 255 / 0.55); transform: scale(1.02); }
+.f3-opt input { position: absolute; opacity: 0; }
+.f3-opt:has(input:checked) { background: rgb(255 255 255 / 0.75); font-weight: bold; box-shadow: inset 0 1px 1px #fff, 0 4px 12px rgb(31 45 61 / 0.15); }
+.f3-opt .bi { color: var(--sl-color-brand-strong); opacity: 0; transition: opacity .2s; margin-left: auto; }
+.f3-opt:has(input:checked) .bi { opacity: 1; }
+.f3-vote {
+	display: block; width: 100%; margin-top: 10px; border: 0; cursor: pointer;
+	height: 36px; border-radius: 999px; font-weight: bold; font-size: 13.5px;
+	color: var(--sl-color-text-heading);
+	background: radial-gradient(100% 160% at 50% -30%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.35));
+	box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.9), 0 5px 12px rgb(31 45 61 / 0.15);
+	transition: transform .25s cubic-bezier(.3,1.5,.5,1);
+}
+.f3-vote:hover { transform: scale(1.03); }
+.f3-vote:active { transform: scale(0.97); }
+.f3 .vt-foot a, .f3 .vt-foot span { background: rgb(255 255 255 / 0.4) !important; }
+
+/* ---------- V4: Neumorphism ---------- */
+.f4.sl-block { background: #e4e9f0; border: 0; box-shadow: 9px 9px 22px #c9cfd8, -9px -9px 22px #ffffff; }
+.f4-opt {
+	position: relative; display: flex; align-items: center; gap: 10px;
+	padding: 10px 13px; border-radius: 12px; cursor: pointer; font-size: 13px;
+	background: #e4e9f0; margin-bottom: 8px;
+	box-shadow: 5px 5px 10px #c3c9d2, -5px -5px 10px #ffffff;
+	transition: box-shadow .18s, color .18s;
+}
+.f4-opt input { position: absolute; opacity: 0; }
+.f4-opt:has(input:checked) {
+	box-shadow: inset 4px 4px 8px #c9cfd8, inset -4px -4px 8px #ffffff;
+	color: var(--sl-color-brand-strong); font-weight: bold;
+}
+.f4-vote {
+	display: block; width: 100%; border: 0; cursor: pointer; margin-top: 10px;
+	height: 38px; border-radius: 12px; font-weight: bold; font-size: 13.5px;
+	color: var(--sl-color-brand-strong); background: #e4e9f0;
+	box-shadow: 5px 5px 10px #c3c9d2, -5px -5px 10px #ffffff;
+}
+.f4-vote:active { box-shadow: inset 4px 4px 8px #c9cfd8, inset -4px -4px 8px #ffffff; }
+
+/* ---------- V5: Мультивыбор ---------- */
+.f5-opt {
+	position: relative; display: flex; align-items: center; gap: 10px;
+	padding: 9px 12px; border-radius: 10px; cursor: pointer; font-size: 13.5px;
+	background: #fff; border: 1.5px solid var(--sl-color-border-subtle); margin-bottom: 6px;
+	transition: border-color .18s, background .18s;
+}
+.f5-opt input { position: absolute; opacity: 0; }
+.f5-opt .box {
+	width: 18px; height: 18px; border-radius: 5px; flex: 0 0 auto;
+	border: 2px solid var(--sl-color-border-muted);
+	display: grid; place-items: center; color: #fff; font-size: 11px;
+	transition: background .15s, border-color .15s;
+}
+.f5-opt:has(input:checked) { border-color: var(--sl-color-success); background: color-mix(in srgb, var(--sl-color-success) 7%, #fff); }
+.f5-opt:has(input:checked) .box { background: var(--sl-color-success); border-color: var(--sl-color-success); }
+.f5-count { font-size: 12px; color: var(--sl-color-text-muted); margin: 4px 0 10px; }
+.f5-count b { color: var(--sl-color-success); }
+
+/* ---------- V6: Интерактивный переход ---------- */
+.f6-stage { position: relative; }
+.f6-results { display: none; }
+.f6.done .f6-form { display: none; }
+.f6.done .f6-results { display: block; }
+.f6.done .f6-results .r1-fill { animation: grow 1s cubic-bezier(.2,.7,.3,1) both; }
+
+/* ---------- R1: Полосы+ (лидер с короной) ---------- */
+.r1-item { margin-bottom: 11px; }
+.r1-top { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; margin-bottom: 4px; }
+.r1-top .txt { color: var(--sl-color-text); min-width: 0; }
+.r1-top .pct { color: var(--sl-color-text-heading); font-weight: bold; white-space: nowrap; }
+.r1-top .pct small { color: var(--sl-color-text-subtle); font-weight: normal; }
+.r1-track { height: 12px; border-radius: 999px; background: var(--sl-color-surface-alt); overflow: hidden; }
+.r1-fill {
+	display: block; height: 100%; border-radius: inherit; width: var(--w);
+	background: linear-gradient(90deg, color-mix(in srgb, var(--t) 75%, #fff) 0%, var(--t) 100%);
+	animation: grow 1s cubic-bezier(.2,.7,.3,1) both;
+	position: relative; overflow: hidden;
+}
+.r1-item.lead .r1-fill::after {
+	content: ""; position: absolute; inset: 0;
+	background: linear-gradient(115deg, transparent 40%, rgb(255 255 255 / 0.5) 50%, transparent 60%);
+	transform: translateX(-100%);
+	animation: r1shine 2.6s ease-in-out infinite;
+}
+@keyframes r1shine { 60%, 100% { transform: translateX(100%); } }
+.r1-item.lead .txt { font-weight: bold; color: var(--sl-color-text-heading); }
+.r1-item.lead .txt .bi { color: var(--sl-color-warning); margin-right: 4px; }
+
+/* ---------- R2: Тонкие треки с маркером ---------- */
+.r2-item { margin-bottom: 13px; }
+.r2-top { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 7px; }
+.r2-track { position: relative; height: 5px; border-radius: 999px; background: var(--sl-color-surface-alt); }
+.r2-fill { display: block; height: 100%; border-radius: inherit; width: var(--w); background: var(--t); animation: grow 1s cubic-bezier(.2,.7,.3,1) both; }
+.r2-dot {
+	position: absolute; top: 50%; left: var(--w); transform: translate(-50%, -50%);
+	width: 13px; height: 13px; border-radius: 50%;
+	background: #fff; border: 3px solid var(--t);
+	box-shadow: 0 1px 4px rgb(31 45 61 / 0.25);
+}
+.r2-pct { font-weight: bold; color: var(--t); }
+
+/* ---------- R3: Донат ---------- */
+.r3-wrap { display: flex; align-items: center; gap: 18px; }
+.r3-donut {
+	width: 118px; height: 118px; border-radius: 50%; flex: 0 0 auto;
+	background:
+		radial-gradient(closest-side, var(--sl-color-surface) 74%, transparent 75% 100%),
+		conic-gradient(var(--t1) 0 43%, var(--t2) 43% 71.5%, var(--t3) 71.5% 89.5%, var(--t4) 89.5% 100%);
+	display: grid; place-items: center; text-align: center;
+}
+.r3-donut b { font-size: 20px; color: var(--sl-color-text-heading); line-height: 1; }
+.r3-donut small { font-size: 10px; color: var(--sl-color-text-muted); }
+.r3-leg { display: grid; gap: 7px; font-size: 12.5px; min-width: 0; }
+.r3-leg span { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.r3-leg i { width: 10px; height: 10px; border-radius: 3px; background: var(--t); flex: 0 0 auto; }
+.r3-leg .txt { color: var(--sl-color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r3-leg b { margin-left: auto; color: var(--sl-color-text-heading); padding-left: 8px; }
+
+/* ---------- R4: Колонки ---------- */
+.r4-chart { display: flex; align-items: flex-end; gap: 12px; height: 120px; padding: 0 4px; }
+.r4-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+.r4-bar {
+	width: 100%; max-width: 46px; border-radius: 8px 8px 3px 3px;
+	background: linear-gradient(180deg, var(--t) 0%, color-mix(in srgb, var(--t) 70%, #fff) 100%);
+	height: var(--h);
+	animation: r4up 1s cubic-bezier(.2,.7,.3,1) both;
+	transform-origin: bottom;
+}
+@keyframes r4up { from { transform: scaleY(0); } }
+.r4-pct { font-size: 12px; font-weight: bold; color: var(--sl-color-text-heading); }
+.r4-cap { font-size: 10.5px; color: var(--sl-color-text-muted); text-align: center; line-height: 1.25; }
+
+/* ---------- R5: Медали ---------- */
+.r5-item {
+	display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+	padding: 8px 10px; border-radius: 10px; margin-bottom: 5px; font-size: 13px;
+	background: #fff; border: 1px solid var(--sl-color-border-subtle);
+}
+.r5-item .medal {
+	width: 30px; height: 30px; border-radius: 50%;
+	display: grid; place-items: center; font-size: 13px; font-weight: bold;
+	background: color-mix(in srgb, var(--t) 14%, transparent); color: var(--t);
+}
+.r5-item.first { border-color: color-mix(in srgb, var(--sl-color-warning) 45%, var(--sl-color-border)); background: color-mix(in srgb, var(--sl-color-warning) 6%, #fff); }
+.r5-item .txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.r5-item .val { font-weight: bold; color: var(--sl-color-text-heading); white-space: nowrap; }
+.r5-item .val small { color: var(--sl-color-text-subtle); font-weight: normal; }
+
+/* ---------- R6: Live ---------- */
+.r6-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sl-color-text-muted); margin-bottom: 10px; }
+.r6-badge .d {
+	width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-success);
+	animation: r6pulse 2s ease-out infinite;
+}
+@keyframes r6pulse {
+	0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-success) 50%, transparent); }
+	70% { box-shadow: 0 0 0 7px transparent; }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+.r6-fill { transition: width .8s cubic-bezier(.2,.7,.3,1); }
+.r6-pct, .r6-votes { font-variant-numeric: tabular-nums; }
+.r6-flash { animation: rowIn .5s; }
+</style>
+</head>
+<body>
+
+<header class="demo-head">
+	<h1>Блок «Голосование» — варианты</h1>
+	<p>17 вариантов на реальной анатомии <code>blocks/voting.php</code> + <code>getVotingView()</code>: вопрос, варианты (radio / checkbox при multi),
+	кнопка «Голосовать» (htmx), чипы «Голосов: N» / «Опросы» / «Комментарии», результаты — проценты и голоса по вариантам (5 тонов, как sl-progress-1..5).
+	Витрины блока «Пользователи»: <a href="user-block-variants.html" style="color:var(--sl-color-brand-strong)"><u>тут</u></a>.</p>
+</header>
+
+<div class="demo-wrap">
+
+<section class="demo-sec">
+<h2>Форма голосования</h2>
+<div class="demo-grid">
+
+	<!-- 1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">1</span><b>Карточки-варианты</b><span>radio как карточки, анимированная точка</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<form class="f1-list" onsubmit="return false">
+					<label class="f1-opt"><input type="radio" name="v1"><span class="mark"></span>После реализации десяти модификаций</label>
+					<label class="f1-opt"><input type="radio" name="v1" checked><span class="mark"></span>На основании решения разработчика</label>
+					<label class="f1-opt"><input type="radio" name="v1"><span class="mark"></span>Раз в несколько месяцев</label>
+					<label class="f1-opt"><input type="radio" name="v1"><span class="mark"></span>Один раз в год</label>
+					<span class="f1-vote"><button type="submit" class="sl-but">Голосовать</button></span>
+				</form>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Опросы</a>
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-chat-square-text"></i> Комментарии: 3</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">2</span><b>Пилюли</b><span>варианты-чипсы, выбор заливкой</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<form class="f2-list" onsubmit="return false">
+					<label class="f2-opt"><input type="radio" name="v2"><span>Десять модификаций</span></label>
+					<label class="f2-opt"><input type="radio" name="v2" checked><span>Решение разработчика</span></label>
+					<label class="f2-opt"><input type="radio" name="v2"><span>Раз в несколько месяцев</span></label>
+					<label class="f2-opt"><input type="radio" name="v2"><span>Раз в год</span></label>
+				</form>
+				<p style="margin:12px 0 0"><button type="button" class="sl-but" style="width:100%">Голосовать</button></p>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Опросы</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 3 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">3</span><b>Liquid glass</b><span>стеклянные варианты, капля-кнопка</span></p>
+		<aside class="sl-block f3">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<div class="f3-card">
+					<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+					<form onsubmit="return false">
+						<label class="f3-opt"><input type="radio" name="v3">Десять модификаций <i class="bi bi-check-lg"></i></label>
+						<label class="f3-opt"><input type="radio" name="v3" checked>Решение разработчика <i class="bi bi-check-lg"></i></label>
+						<label class="f3-opt"><input type="radio" name="v3">Раз в несколько месяцев <i class="bi bi-check-lg"></i></label>
+						<label class="f3-opt"><input type="radio" name="v3">Раз в год <i class="bi bi-check-lg"></i></label>
+						<button type="submit" class="f3-vote">Голосовать</button>
+					</form>
+				</div>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Опросы</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 4 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">4</span><b>Neumorphism</b><span>выбранный вариант вдавливается</span></p>
+		<aside class="sl-block f4">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<form onsubmit="return false">
+					<label class="f4-opt"><input type="radio" name="v4">Десять модификаций</label>
+					<label class="f4-opt"><input type="radio" name="v4" checked>Решение разработчика</label>
+					<label class="f4-opt"><input type="radio" name="v4">Раз в несколько месяцев</label>
+					<label class="f4-opt"><input type="radio" name="v4">Раз в год</label>
+					<button type="submit" class="f4-vote">Голосовать</button>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 5 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">5</span><b>Мультивыбор</b><span>checkbox-режим (multi) со счётчиком</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Какие модули вы используете? <span style="font-weight:normal; color:var(--sl-color-text-muted)">(несколько)</span></p>
+				<p class="f5-count">Выбрано: <b id="f5num">2</b></p>
+				<form id="f5form" onsubmit="return false">
+					<label class="f5-opt"><input type="checkbox" checked><span class="box"><i class="bi bi-check-lg"></i></span>Новости</label>
+					<label class="f5-opt"><input type="checkbox" checked><span class="box"><i class="bi bi-check-lg"></i></span>Форум</label>
+					<label class="f5-opt"><input type="checkbox"><span class="box"><i class="bi bi-check-lg"></i></span>Каталог файлов</label>
+					<label class="f5-opt"><input type="checkbox"><span class="box"><i class="bi bi-check-lg"></i></span>Магазин</label>
+					<p style="margin:10px 0 0"><button type="submit" class="sl-but" style="width:100%">Голосовать</button></p>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 6 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">6</span><b>Живой переход</b><span>проголосуй — увидишь результаты (кликай!)</span></p>
+		<aside class="sl-block f6 vt-tones" id="f6">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content f6-stage">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<div class="f6-form">
+					<form class="f1-list" onsubmit="return false">
+						<label class="f1-opt"><input type="radio" name="v6"><span class="mark"></span>Десять модификаций</label>
+						<label class="f1-opt"><input type="radio" name="v6"><span class="mark"></span>Решение разработчика</label>
+						<label class="f1-opt"><input type="radio" name="v6"><span class="mark"></span>Раз в несколько месяцев</label>
+						<label class="f1-opt"><input type="radio" name="v6"><span class="mark"></span>Раз в год</label>
+						<span class="f1-vote"><button type="button" class="sl-but" id="f6vote">Голосовать</button></span>
+					</form>
+				</div>
+				<div class="f6-results">
+					<div class="r1-item" style="--t:var(--t1)"><div class="r1-top"><span class="txt">Десять модификаций</span><span class="pct">42.86% <small>(12)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:42.86%"></span></div></div>
+					<div class="r1-item" style="--t:var(--t2)"><div class="r1-top"><span class="txt">Решение разработчика</span><span class="pct">28.57% <small>(8)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:28.57%"></span></div></div>
+					<div class="r1-item" style="--t:var(--t3)"><div class="r1-top"><span class="txt">Раз в несколько месяцев</span><span class="pct">17.86% <small>(5)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:17.86%"></span></div></div>
+					<div class="r1-item" style="--t:var(--t4)"><div class="r1-top"><span class="txt">Раз в год</span><span class="pct">10.71% <small>(3)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:10.71%"></span></div></div>
+					<div class="vt-foot">
+						<span class="sl-chip sl-chip-success"><i class="bi bi-check-circle"></i> Ваш голос учтён</span>
+						<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 29</span>
+					</div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<section class="demo-sec">
+<h2>Результаты</h2>
+<div class="demo-grid">
+
+	<!-- 7 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">7</span><b>Полосы+</b><span>рост при загрузке, лидер с короной и шимером</span></p>
+		<aside class="sl-block vt-tones">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<div class="r1-item lead" style="--t:var(--t1)"><div class="r1-top"><span class="txt"><i class="bi bi-trophy-fill"></i>Десять модификаций</span><span class="pct">42.86% <small>(12)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:42.86%"></span></div></div>
+				<div class="r1-item" style="--t:var(--t2)"><div class="r1-top"><span class="txt">Решение разработчика</span><span class="pct">28.57% <small>(8)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:28.57%; animation-delay:.1s"></span></div></div>
+				<div class="r1-item" style="--t:var(--t3)"><div class="r1-top"><span class="txt">Раз в несколько месяцев</span><span class="pct">17.86% <small>(5)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:17.86%; animation-delay:.2s"></span></div></div>
+				<div class="r1-item" style="--t:var(--t4)"><div class="r1-top"><span class="txt">Раз в год</span><span class="pct">10.71% <small>(3)</small></span></div><div class="r1-track"><span class="r1-fill" style="--w:10.71%; animation-delay:.3s"></span></div></div>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Опросы</a>
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-chat-square-text"></i> Комментарии: 3</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 8 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">8</span><b>Тонкие треки</b><span>маркер-точка на проценте</span></p>
+		<aside class="sl-block vt-tones">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<div class="r2-item" style="--t:var(--t1); --w:42.86%"><div class="r2-top"><span>Десять модификаций</span><span class="r2-pct">42.86%</span></div><div class="r2-track"><span class="r2-fill"></span><span class="r2-dot"></span></div></div>
+				<div class="r2-item" style="--t:var(--t2); --w:28.57%"><div class="r2-top"><span>Решение разработчика</span><span class="r2-pct">28.57%</span></div><div class="r2-track"><span class="r2-fill"></span><span class="r2-dot"></span></div></div>
+				<div class="r2-item" style="--t:var(--t3); --w:17.86%"><div class="r2-top"><span>Раз в несколько месяцев</span><span class="r2-pct">17.86%</span></div><div class="r2-track"><span class="r2-fill"></span><span class="r2-dot"></span></div></div>
+				<div class="r2-item" style="--t:var(--t4); --w:10.71%"><div class="r2-top"><span>Раз в год</span><span class="r2-pct">10.71%</span></div><div class="r2-track"><span class="r2-fill"></span><span class="r2-dot"></span></div></div>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 9 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">9</span><b>Донат</b><span>conic-диаграмма + легенда</span></p>
+		<aside class="sl-block vt-tones">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<div class="r3-wrap">
+					<span class="r3-donut"><span><b>28</b><br><small>голосов</small></span></span>
+					<div class="r3-leg">
+						<span style="--t:var(--t1)"><i></i><span class="txt">Десять модификаций</span><b>42.9%</b></span>
+						<span style="--t:var(--t2)"><i></i><span class="txt">Решение разработчика</span><b>28.6%</b></span>
+						<span style="--t:var(--t3)"><i></i><span class="txt">Раз в несколько месяцев</span><b>17.9%</b></span>
+						<span style="--t:var(--t4)"><i></i><span class="txt">Раз в год</span><b>10.7%</b></span>
+					</div>
+				</div>
+				<div class="vt-foot">
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Опросы</a>
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-chat-square-text"></i> Комментарии: 3</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 10 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">10</span><b>Колонки</b><span>вертикальный мини-чарт</span></p>
+		<aside class="sl-block vt-tones">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<div class="r4-chart">
+					<div class="r4-col" style="--t:var(--t1)"><span class="r4-pct">43%</span><span class="r4-bar" style="--h:86%"></span><span class="r4-cap">10 мод.</span></div>
+					<div class="r4-col" style="--t:var(--t2)"><span class="r4-pct">29%</span><span class="r4-bar" style="--h:58%; animation-delay:.1s"></span><span class="r4-cap">Разраб.</span></div>
+					<div class="r4-col" style="--t:var(--t3)"><span class="r4-pct">18%</span><span class="r4-bar" style="--h:36%; animation-delay:.2s"></span><span class="r4-cap">Месяцы</span></div>
+					<div class="r4-col" style="--t:var(--t4)"><span class="r4-pct">11%</span><span class="r4-bar" style="--h:22%; animation-delay:.3s"></span><span class="r4-cap">Год</span></div>
+				</div>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 11 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">11</span><b>Рейтинг-места</b><span>компакт: место + вариант + голоса</span></p>
+		<aside class="sl-block vt-tones">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<div class="r5-item first" style="--t:var(--sl-color-warning)"><span class="medal"><i class="bi bi-trophy-fill"></i></span><span class="txt">Десять модификаций</span><span class="val">42.86% <small>(12)</small></span></div>
+				<div class="r5-item" style="--t:var(--sl-color-text-subtle)"><span class="medal">2</span><span class="txt">Решение разработчика</span><span class="val">28.57% <small>(8)</small></span></div>
+				<div class="r5-item" style="--t:var(--sl-color-text-subtle)"><span class="medal">3</span><span class="txt">Раз в несколько месяцев</span><span class="val">17.86% <small>(5)</small></span></div>
+				<div class="r5-item" style="--t:var(--sl-color-text-subtle)"><span class="medal">4</span><span class="txt">Раз в год</span><span class="val">10.71% <small>(3)</small></span></div>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: 28</span>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Опросы</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 12 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">12</span><b>Live-результаты</b><span>голоса капают, полосы перестраиваются</span></p>
+		<aside class="sl-block vt-tones">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<p class="vt-q">Как часто должна выходить новая версия CMS?</p>
+				<p class="r6-badge"><span class="d"></span> идёт голосование — обновляется вживую</p>
+				<div id="r6list">
+					<div class="r1-item" data-v="12" style="--t:var(--t1)"><div class="r1-top"><span class="txt">Десять модификаций</span><span class="pct"><span class="r6-pct">42.9</span>% <small>(<span class="r6-votes">12</span>)</small></span></div><div class="r1-track"><span class="r1-fill r6-fill" style="--w:42.9%"></span></div></div>
+					<div class="r1-item" data-v="8" style="--t:var(--t2)"><div class="r1-top"><span class="txt">Решение разработчика</span><span class="pct"><span class="r6-pct">28.6</span>% <small>(<span class="r6-votes">8</span>)</small></span></div><div class="r1-track"><span class="r1-fill r6-fill" style="--w:28.6%"></span></div></div>
+					<div class="r1-item" data-v="5" style="--t:var(--t3)"><div class="r1-top"><span class="txt">Раз в несколько месяцев</span><span class="pct"><span class="r6-pct">17.9</span>% <small>(<span class="r6-votes">5</span>)</small></span></div><div class="r1-track"><span class="r1-fill r6-fill" style="--w:17.9%"></span></div></div>
+					<div class="r1-item" data-v="3" style="--t:var(--t4)"><div class="r1-top"><span class="txt">Раз в год</span><span class="pct"><span class="r6-pct">10.7</span>% <small>(<span class="r6-votes">3</span>)</small></span></div><div class="r1-track"><span class="r1-fill r6-fill" style="--w:10.7%"></span></div></div>
+				</div>
+				<div class="vt-foot">
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-bar-chart"></i> Голосов: <b class="r6-votes" id="r6total" style="margin-left:3px">28</b></span>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<section class="demo-sec">
+<h2>Системные классы как есть + эффекты и механика</h2>
+<p style="margin:0 0 18px; color:var(--sl-color-text-muted); font-size:13px; max-width:960px;">Подлинная разметка блока (снята с живого сайта: <code>sl-vote-title/list</code>, <code>sl-progress-info/line sl-progress-1..5</code>, <code>sl-but</code>, чипы <code>sl-votes/sl-coms/sl-chip-*</code>) — слой эффектов целится только в системные селекторы, то есть это готовые кандидаты в <code>theme.css</code> без правки шаблонов.</p>
+<div class="demo-grid">
+
+	<!-- 13 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">13</span><b>Система: эталон</b><span>текущая разметка 1-в-1, без эффектов</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<form onsubmit="return false">
+					<h4 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h4>
+					<ul class="sl-vote-list">
+						<li><label><input type="checkbox" name="body[]" value="1"> После реализации не менее десяти модификаций</label></li>
+						<li><label><input type="checkbox" name="body[]" value="2"> На основании решения разработчика</label></li>
+						<li><label><input type="checkbox" name="body[]" value="3"> Раз в несколько месяцев</label></li>
+						<li><label><input type="checkbox" name="body[]" value="4"> Один раз в год</label></li>
+						<li><label><input type="checkbox" name="body[]" value="5"> Не важно, лишь бы без глюков</label></li>
+						<li><label><input type="checkbox" name="body[]" value="6"> Затрудняюсь ответить</label></li>
+					</ul>
+					<div class="sl-vote-actions sl-vote-actions-center"><a href="#" class="sl-but">Голосовать</a></div>
+					<div class="sl-vote-links sl-vote-links-center">
+						<a href="#" class="sl-votes"><i class="bi bi-hand-thumbs-up"></i> Голосов: 123</a>
+						<a href="#" class="sl-coms sl-chip sl-chip-info"><i class="bi bi-chat-text"></i> Комментарии: 3</a>
+						<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Другие опросы</a>
+					</div>
+				</form>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 14 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">14</span><b>Система + механика</b><span>ховер строк, спиннер, живой свап (кликай!)</span></p>
+		<aside class="sl-block sys-fx sys14" id="sys14">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<div class="sys14-form">
+					<form onsubmit="return false">
+						<h4 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h4>
+						<ul class="sl-vote-list">
+							<li><label><input type="checkbox" name="body[]" value="1"> После реализации не менее десяти модификаций</label></li>
+							<li><label><input type="checkbox" name="body[]" value="2"> На основании решения разработчика</label></li>
+							<li><label><input type="checkbox" name="body[]" value="3"> Раз в несколько месяцев</label></li>
+							<li><label><input type="checkbox" name="body[]" value="4"> Один раз в год</label></li>
+							<li><label><input type="checkbox" name="body[]" value="5"> Не важно, лишь бы без глюков</label></li>
+							<li><label><input type="checkbox" name="body[]" value="6"> Затрудняюсь ответить</label></li>
+						</ul>
+						<div class="sl-vote-actions sl-vote-actions-center"><a href="#" class="sl-but" id="sys14vote" onclick="return false"><i class="bi bi-arrow-repeat spin"></i> Голосовать</a></div>
+					</form>
+				</div>
+				<div class="sys14-results">
+					<h4 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h4>
+					<ul class="sl-vote-list">
+						<li class="lead"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>После реализации не менее десяти модификаций</span><span class="sl-pull-right"><b>31.71%</b> <b>(Голосов: 39)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 31.71%;">31.71%</div></div></li>
+						<li><div class="sl-progress-info"><span>На основании решения разработчика</span><span class="sl-pull-right"><b>22.76%</b> <b>(Голосов: 28)</b></span></div><div class="sl-progress-line sl-progress-2"><div style="width: 22.76%; animation-delay:.1s">22.76%</div></div></li>
+						<li><div class="sl-progress-info"><span>Раз в несколько месяцев</span><span class="sl-pull-right"><b>17.07%</b> <b>(Голосов: 21)</b></span></div><div class="sl-progress-line sl-progress-3"><div style="width: 17.07%; animation-delay:.2s">17.07%</div></div></li>
+						<li><div class="sl-progress-info"><span>Не важно, лишь бы без глюков</span><span class="sl-pull-right"><b>13.82%</b> <b>(Голосов: 17)</b></span></div><div class="sl-progress-line sl-progress-5"><div style="width: 13.82%; animation-delay:.3s">13.82%</div></div></li>
+						<li><div class="sl-progress-info"><span>Один раз в год</span><span class="sl-pull-right"><b>9.76%</b> <b>(Голосов: 12)</b></span></div><div class="sl-progress-line sl-progress-4"><div style="width: 9.76%; animation-delay:.4s">9.76%</div></div></li>
+						<li><div class="sl-progress-info"><span>Затрудняюсь ответить</span><span class="sl-pull-right"><b>4.88%</b> <b>(Голосов: 6)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 4.88%; animation-delay:.5s">4.88%</div></div></li>
+					</ul>
+					<div class="sl-vote-links sl-vote-links-center">
+						<span class="sl-chip sl-chip-success"><i class="bi bi-check-circle"></i> Ваш голос учтён</span>
+						<a href="#" class="sl-votes"><i class="bi bi-hand-thumbs-up"></i> Голосов: 124</a>
+					</div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 15 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">15</span><b>Система: результаты+</b><span>реальные sl-progress-1..5, рост, лидер</span></p>
+		<aside class="sl-block sys-fx">
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<h4 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h4>
+				<ul class="sl-vote-list">
+					<li class="lead"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>После реализации не менее десяти модификаций</span><span class="sl-pull-right"><b>31.71%</b> <b>(Голосов: 39)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 31.71%;">31.71%</div></div></li>
+					<li><div class="sl-progress-info"><span>На основании решения разработчика</span><span class="sl-pull-right"><b>22.76%</b> <b>(Голосов: 28)</b></span></div><div class="sl-progress-line sl-progress-2"><div style="width: 22.76%; animation-delay:.1s">22.76%</div></div></li>
+					<li><div class="sl-progress-info"><span>Раз в несколько месяцев</span><span class="sl-pull-right"><b>17.07%</b> <b>(Голосов: 21)</b></span></div><div class="sl-progress-line sl-progress-3"><div style="width: 17.07%; animation-delay:.2s">17.07%</div></div></li>
+					<li><div class="sl-progress-info"><span>Не важно, лишь бы без глюков</span><span class="sl-pull-right"><b>13.82%</b> <b>(Голосов: 17)</b></span></div><div class="sl-progress-line sl-progress-5"><div style="width: 13.82%; animation-delay:.3s">13.82%</div></div></li>
+					<li><div class="sl-progress-info"><span>Один раз в год</span><span class="sl-pull-right"><b>9.76%</b> <b>(Голосов: 12)</b></span></div><div class="sl-progress-line sl-progress-4"><div style="width: 9.76%; animation-delay:.4s">9.76%</div></div></li>
+					<li><div class="sl-progress-info"><span>Затрудняюсь ответить</span><span class="sl-pull-right"><b>4.88%</b> <b>(Голосов: 6)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 4.88%; animation-delay:.5s">4.88%</div></div></li>
+				</ul>
+				<div class="sl-vote-links sl-vote-links-center">
+					<a href="#" class="sl-votes"><i class="bi bi-hand-thumbs-up"></i> Голосов: 123</a>
+					<a href="#" class="sl-coms sl-chip sl-chip-info"><i class="bi bi-chat-text"></i> Комментарии: 3</a>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Другие опросы</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 16 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">16</span><b>Система: live</b><span>реальные полосы обновляются вживую</span></p>
+		<aside class="sl-block sys-fx sys-live">
+			<span class="sl-tip sl-float sys-live-ind" tabindex="0">
+				<span class="ico"><i class="bi bi-activity"></i></span>
+				<div class="sl-float-panel">Идёт живое голосование с автообновлением</div>
+			</span>
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<h4 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h4>
+				<ul class="sl-vote-list" id="sys16list">
+					<li data-v="39"><div class="sl-progress-info"><span>Десять модификаций</span><span class="sl-pull-right"><b class="p">31.7%</b> <b>(<span class="v">39</span>)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 31.7%;">31.7%</div></div></li>
+					<li data-v="28"><div class="sl-progress-info"><span>Решение разработчика</span><span class="sl-pull-right"><b class="p">22.8%</b> <b>(<span class="v">28</span>)</b></span></div><div class="sl-progress-line sl-progress-2"><div style="width: 22.8%;">22.8%</div></div></li>
+					<li data-v="21"><div class="sl-progress-info"><span>Раз в несколько месяцев</span><span class="sl-pull-right"><b class="p">17.1%</b> <b>(<span class="v">21</span>)</b></span></div><div class="sl-progress-line sl-progress-3"><div style="width: 17.1%;">17.1%</div></div></li>
+					<li data-v="17"><div class="sl-progress-info"><span>Лишь бы без глюков</span><span class="sl-pull-right"><b class="p">13.8%</b> <b>(<span class="v">17</span>)</b></span></div><div class="sl-progress-line sl-progress-5"><div style="width: 13.8%;">13.8%</div></div></li>
+					<li data-v="12"><div class="sl-progress-info"><span>Один раз в год</span><span class="sl-pull-right"><b class="p">9.8%</b> <b>(<span class="v">12</span>)</b></span></div><div class="sl-progress-line sl-progress-4"><div style="width: 9.8%;">9.8%</div></div></li>
+				</ul>
+				<div class="sl-vote-links sl-vote-links-center">
+					<a href="#" class="sl-votes"><i class="bi bi-hand-thumbs-up"></i> Голосов: <b id="sys16total">117</b></a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 17 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">17</span><b>Система: результаты+ live</b><span>15+16: рост, счёт цифр, кубок следует за лидером</span></p>
+		<aside class="sl-block sys-fx sys-live sys17">
+			<span class="sl-tip sl-float sys-live-ind" tabindex="0">
+				<span class="ico"><i class="bi bi-activity"></i></span>
+				<div class="sl-float-panel">Идёт живое голосование с автообновлением</div>
+			</span>
+			<h2 class="sl-title">Голосование</h2>
+			<div class="sl-block-content">
+				<h4 class="sl-vote-title">Как часто должна выходить новая версия CMS?</h4>
+				<ul class="sl-vote-list" id="sys17list">
+					<li data-v="39"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>После реализации не менее десяти модификаций</span><span class="sl-pull-right"><b class="p">0%</b> <b>(Голосов: <span class="v">0</span>)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 0;">31.7%</div></div></li>
+					<li data-v="28"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>На основании решения разработчика</span><span class="sl-pull-right"><b class="p">0%</b> <b>(Голосов: <span class="v">0</span>)</b></span></div><div class="sl-progress-line sl-progress-2"><div style="width: 0;">22.8%</div></div></li>
+					<li data-v="21"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>Раз в несколько месяцев</span><span class="sl-pull-right"><b class="p">0%</b> <b>(Голосов: <span class="v">0</span>)</b></span></div><div class="sl-progress-line sl-progress-3"><div style="width: 0;">17.1%</div></div></li>
+					<li data-v="17"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>Не важно, лишь бы без глюков</span><span class="sl-pull-right"><b class="p">0%</b> <b>(Голосов: <span class="v">0</span>)</b></span></div><div class="sl-progress-line sl-progress-5"><div style="width: 0;">13.8%</div></div></li>
+					<li data-v="12"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>Один раз в год</span><span class="sl-pull-right"><b class="p">0%</b> <b>(Голосов: <span class="v">0</span>)</b></span></div><div class="sl-progress-line sl-progress-4"><div style="width: 0;">9.8%</div></div></li>
+					<li data-v="6"><div class="sl-progress-info"><span><i class="bi bi-trophy-fill"></i>Затрудняюсь ответить</span><span class="sl-pull-right"><b class="p">0%</b> <b>(Голосов: <span class="v">0</span>)</b></span></div><div class="sl-progress-line sl-progress-1"><div style="width: 0;">4.9%</div></div></li>
+				</ul>
+				<div class="sl-vote-links sl-vote-links-center">
+					<a href="#" class="sl-votes"><i class="bi bi-hand-thumbs-up"></i> Голосов: <b id="sys17total">0</b></a>
+					<a href="#" class="sl-coms sl-chip sl-chip-info"><i class="bi bi-chat-text"></i> Комментарии: 3</a>
+					<a href="#" class="sl-chip sl-chip-accent"><i class="bi bi-card-checklist"></i> Другие опросы</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<p style="max-width:1180px; margin:32px auto 0; font-size:12px; color:var(--sl-color-text-muted);">
+Данные и чипы — реальный контракт <code>voting-widget</code>: title, items (radio/checkbox при multi), кнопка htmx-POST <code>updateVotingResult</code>, «Голосов: N», «Опросы» (если опросов &gt; 1), «Комментарии: N» (если включены).
+Результаты в системе — проценты с двумя знаками и счётчики голосов по вариантам, тона — как sl-progress-1..5. Секция 13–16 — на подлинной разметке: её слой эффектов переносится в <code>theme.css</code> без изменения шаблонов. Все анимации уважают <code>prefers-reduced-motion</code>.
+</p>
+
+</div>
+
+<script>
+// demo only: multi-select counter
+var f5 = document.getElementById('f5form');
+f5.addEventListener('change', function () {
+	document.getElementById('f5num').textContent = f5.querySelectorAll('input:checked').length;
+});
+
+// demo only: vote -> animated results swap (mimics htmx swap)
+document.getElementById('f6vote').addEventListener('click', function () {
+	var f6 = document.getElementById('f6');
+	if (!f6.querySelector('input:checked')) { f6.querySelector('.f1-opt').style.borderColor = 'var(--sl-color-danger)'; return; }
+	f6.classList.add('done');
+});
+
+// demo only: system button spinner + swap to system results (mimics htmx indicator + swap)
+document.getElementById('sys14vote').addEventListener('click', function () {
+	var box = document.getElementById('sys14');
+	if (!box.querySelector('.sys14-form input:checked')) return;
+	var btn = this;
+	btn.classList.add('busy');
+	setTimeout(function () { box.classList.add('done'); btn.classList.remove('busy'); }, 900);
+});
+
+// demo only: live system bars
+(function () {
+	var list = document.getElementById('sys16list');
+	var total = document.getElementById('sys16total');
+	setInterval(function () {
+		var items = Array.from(list.children);
+		var pick = items[Math.floor(Math.random() * items.length)];
+		pick.dataset.v = parseInt(pick.dataset.v, 10) + 1;
+		var sum = items.reduce(function (a, x) { return a + parseInt(x.dataset.v, 10); }, 0);
+		items.forEach(function (x) {
+			var v = parseInt(x.dataset.v, 10);
+			var pct = (100 * v / sum).toFixed(1);
+			x.querySelector('.p').textContent = pct + '%';
+			x.querySelector('.v').textContent = v;
+			x.querySelector('.sl-progress-line div').style.width = pct + '%';
+		});
+		total.textContent = sum;
+	}, 3000);
+})();
+
+// demo only: merged 15+16 — live system bars; bars, percents, vote counts and total all rise from zero on cold load
+(function () {
+	var list = document.getElementById('sys17list');
+	var total = document.getElementById('sys17total');
+	function ease(from, to, fn) {
+		var t0 = performance.now();
+		function tick(now) {
+			var p = Math.min((now - t0) / 800, 1);
+			fn(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+			if (p < 1) requestAnimationFrame(tick);
+		}
+		requestAnimationFrame(tick);
+	}
+	function render(first) {
+		var items = Array.from(list.children);
+		var sum = items.reduce(function (a, x) { return a + parseInt(x.dataset.v, 10); }, 0);
+		var max = items[0];
+		items.forEach(function (x) {
+			var v = parseInt(x.dataset.v, 10);
+			if (v > parseInt(max.dataset.v, 10)) max = x;
+			var pct = 100 * v / sum;
+			var pel = x.querySelector('.p');
+			var vel = x.querySelector('.v');
+			ease(first ? 0 : parseFloat(pel.textContent) || 0, pct, function (n) { pel.textContent = n.toFixed(1) + '%'; });
+			ease(first ? 0 : parseInt(vel.textContent, 10) || 0, v, function (n) { vel.textContent = Math.round(n); });
+			x.querySelector('.sl-progress-line div').style.width = pct.toFixed(1) + '%';
+		});
+		items.forEach(function (x) { x.classList.toggle('lead', x === max); });
+		total.textContent = sum;
+	}
+	requestAnimationFrame(function () { requestAnimationFrame(function () { render(true); }); });
+	setInterval(function () {
+		var items = list.children;
+		var pick = items[Math.floor(Math.random() * items.length)];
+		pick.dataset.v = parseInt(pick.dataset.v, 10) + 1;
+		render(false);
+	}, 3000);
+})();
+
+// demo only: live results ticker
+(function () {
+	var list = document.getElementById('r6list');
+	var total = document.getElementById('r6total');
+	setInterval(function () {
+		var items = Array.from(list.children);
+		var pick = items[Math.floor(Math.random() * items.length)];
+		pick.dataset.v = parseInt(pick.dataset.v, 10) + 1;
+		var sum = items.reduce(function (a, x) { return a + parseInt(x.dataset.v, 10); }, 0);
+		items.forEach(function (x) {
+			var v = parseInt(x.dataset.v, 10);
+			var pct = (100 * v / sum).toFixed(1);
+			x.querySelector('.r6-pct').textContent = pct;
+			x.querySelector('.r6-votes').textContent = v;
+			x.querySelector('.r6-fill').style.setProperty('--w', pct + '%');
+		});
+		var badge = pick.querySelector('.r6-votes');
+		badge.classList.remove('r6-flash');
+		void badge.offsetWidth;
+		badge.classList.add('r6-flash');
+		total.textContent = sum;
+	}, 3000);
+})();
+</script>
+</body>
+</html>

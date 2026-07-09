@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Блок «Пользователи»: гео-детали и эффекты</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body {
+	margin: 0;
+	padding: 0 0 60px;
+	background: var(--sl-color-surface);
+	color: var(--sl-color-text);
+	font: 15px/1.5 Arial, Tahoma, sans-serif;
+}
+a { text-decoration: none; color: inherit; }
+.demo-head {
+	padding: 26px clamp(14px, 4vw, 48px);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	border-bottom: 1px solid var(--sl-color-border);
+}
+.demo-head h1 {
+	margin: 0 0 6px;
+	font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-head p { margin: 0; max-width: 940px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1560px; margin: 0 auto; }
+.demo-sec { margin: 40px 0 0; }
+.demo-sec > h2 {
+	margin: 0 0 18px; padding-bottom: 8px;
+	border-bottom: 2px solid var(--sl-color-border);
+	font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: 26px;
+	align-items: start;
+}
+.demo-cell > .demo-label { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; }
+.demo-label .n {
+	flex: 0 0 auto;
+	display: inline-grid; place-items: center; width: 24px; height: 24px;
+	border-radius: 999px; background: var(--sl-color-brand-strong); color: #fff;
+	font-size: 12px; font-weight: bold;
+}
+.demo-label b { font-size: 14px; color: var(--sl-color-text-heading); }
+.demo-label span { font-size: 12px; color: var(--sl-color-text-muted); }
+.demo-cell .sl-block { margin-bottom: 0; }
+
+/* ---- общие демо-примитивы ---- */
+.u-ava {
+	width: 84px; height: 84px; border-radius: 50%;
+	background-size: cover; background-position: center;
+	background-color: var(--sl-color-bg);
+	display: inline-block; flex: 0 0 auto;
+}
+.u-icon-btn {
+	display: inline-grid; place-items: center;
+	width: 38px; height: 38px; border-radius: 12px;
+	background: var(--sl-color-surface-alt);
+	color: var(--sl-color-text-heading);
+	font-size: var(--sl-size-icon-sm);
+	transition: background .18s, color .18s, transform .18s;
+	position: relative; cursor: pointer; border: 0;
+}
+.u-icon-btn:hover {
+	background: color-mix(in srgb, var(--sl-color-brand-link) 16%, transparent);
+	color: var(--sl-color-brand-strong);
+	transform: translateY(-1px);
+}
+.flg {
+	width: 21px; height: 15px; border-radius: 3px; flex: 0 0 auto;
+	object-fit: cover; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
+}
+.flg-round { width: 22px; height: 22px; border-radius: 50%; }
+.live-dot {
+	width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-success);
+	display: inline-block; flex: 0 0 auto;
+	animation: livePulse 2s ease-out infinite;
+}
+@keyframes livePulse {
+	0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-success) 50%, transparent); }
+	70% { box-shadow: 0 0 0 8px transparent; }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes rowIn {
+	from { opacity: 0; transform: translateY(7px); }
+	to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+}
+
+/* ==================================================================
+   Секция 1: «Подробнее» — кто на сайте (флаги + модули)
+   ================================================================== */
+/* ---------- L1: Строки-карточки ---------- */
+.l1-sum { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.l1-rows { display: grid; gap: 6px; }
+.l1-row {
+	display: flex; align-items: center; gap: 9px;
+	padding: 8px 10px; border-radius: 9px;
+	background: #fff; border: 1px solid var(--sl-color-border-subtle);
+	transition: transform .18s, box-shadow .18s, border-color .18s;
+	animation: rowIn .4s both;
+}
+.l1-row:nth-child(2) { animation-delay: .06s; }
+.l1-row:nth-child(3) { animation-delay: .12s; }
+.l1-row:nth-child(4) { animation-delay: .18s; }
+.l1-row:nth-child(5) { animation-delay: .24s; }
+.l1-row:hover { transform: translateX(3px); border-color: var(--sl-color-brand); box-shadow: var(--sl-shadow-soft); }
+.l1-who { flex: 1 1 auto; min-width: 0; }
+.l1-who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.l1-who a:hover { text-decoration: underline; }
+.l1-who .bot { color: var(--sl-color-text-muted); }
+.l1-who small { display: block; font-size: 11px; color: var(--sl-color-text-subtle); }
+.l1-mod {
+	display: inline-flex; align-items: center; gap: 5px;
+	height: 22px; padding: 0 9px; border-radius: 999px;
+	font-size: 11.5px; white-space: nowrap;
+	background: color-mix(in srgb, var(--sl-color-brand-link) 10%, transparent);
+	color: var(--sl-color-brand-strong);
+}
+.l1-mod .bi { font-size: 11px; }
+
+/* ---------- L2: Рабочий аккордеон ---------- */
+.l2 details { border-top: 1px solid var(--sl-color-border-subtle); margin-top: 10px; }
+.l2 summary {
+	list-style: none; cursor: pointer;
+	display: flex; align-items: center; justify-content: center; gap: 7px;
+	padding: 10px 0 4px; font-size: 13px; color: var(--sl-color-brand-strong);
+	transition: color .15s;
+}
+.l2 summary::-webkit-details-marker { display: none; }
+.l2 summary:hover { color: var(--sl-color-brand-link); }
+.l2 summary .bi { transition: transform .3s; font-size: var(--sl-size-icon-xs); }
+.l2 details[open] summary .bi { transform: rotate(180deg); }
+.l2-rows { display: grid; gap: 2px; padding-top: 6px; }
+.l2 details[open] .l2-row { animation: rowIn .35s both; }
+.l2 details[open] .l2-row:nth-child(2) { animation-delay: .07s; }
+.l2 details[open] .l2-row:nth-child(3) { animation-delay: .14s; }
+.l2 details[open] .l2-row:nth-child(4) { animation-delay: .21s; }
+.l2-row {
+	display: flex; align-items: center; gap: 8px;
+	padding: 6px 8px; border-radius: 7px; font-size: 13px;
+	transition: background .15s;
+}
+.l2-row:hover { background: var(--sl-color-surface-alt); }
+.l2-row .who { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.l2-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.l2-row .mod { font-size: 12px; color: var(--sl-color-text-muted); white-space: nowrap; }
+.l2-stat { display: flex; justify-content: space-between; gap: 6px; }
+.l2-stat span { flex: 1 1 0; text-align: center; padding: 8px 4px; border-radius: 9px; background: var(--sl-color-surface-alt); font-size: 11.5px; color: var(--sl-color-text-muted); }
+.l2-stat b { display: block; font-size: 17px; color: var(--sl-color-text-heading); }
+
+/* ---------- L3: Группировка по странам ---------- */
+.l3-rows { display: grid; gap: 9px; }
+.l3-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; font-size: 13px; }
+.l3-row .name { color: var(--sl-color-text); }
+.l3-row b { color: var(--sl-color-text-heading); }
+.l3-bar { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--sl-color-surface-alt); overflow: hidden; }
+.l3-bar i {
+	display: block; height: 100%; border-radius: inherit; width: var(--w);
+	background: linear-gradient(90deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 100%);
+	animation: l3Grow 1s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes l3Grow { from { width: 0; } }
+.l3-row:nth-child(2) .l3-bar i { animation-delay: .12s; }
+.l3-row:nth-child(3) .l3-bar i { animation-delay: .24s; }
+.l3-row:nth-child(4) .l3-bar i { animation-delay: .36s; }
+
+/* ---------- L4: Live-тикер ---------- */
+.l4-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; color: var(--sl-color-text-muted); }
+.l4-head b { color: var(--sl-color-text-heading); }
+.l4-view { height: 132px; overflow: hidden; position: relative; }
+.l4-view::before, .l4-view::after {
+	content: ""; position: absolute; left: 0; right: 0; height: 18px; z-index: 1; pointer-events: none;
+}
+.l4-view::before { top: 0; background: linear-gradient(180deg, var(--sl-color-surface), transparent); }
+.l4-view::after { bottom: 0; background: linear-gradient(0deg, var(--sl-color-surface), transparent); }
+.l4-feed { display: grid; gap: 4px; animation: l4Scroll 14s linear infinite; }
+.l4-view:hover .l4-feed { animation-play-state: paused; }
+@keyframes l4Scroll { to { transform: translateY(-50%); } }
+.l4-row {
+	display: flex; align-items: center; gap: 8px;
+	padding: 5px 8px; border-radius: 7px; font-size: 13px; background: #fff;
+	border: 1px solid var(--sl-color-border-subtle);
+}
+.l4-row .who { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.l4-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.l4-row .mod { font-size: 11.5px; color: var(--sl-color-text-subtle); white-space: nowrap; }
+
+/* ---------- L5: Радар ---------- */
+.l5-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.l5-radar {
+	position: relative; width: 74px; height: 74px; border-radius: 50%; flex: 0 0 auto;
+	background:
+		radial-gradient(circle, color-mix(in srgb, var(--sl-color-success) 14%, transparent) 0%, transparent 70%),
+		conic-gradient(from 0deg, color-mix(in srgb, var(--sl-color-success) 55%, transparent) 0deg, transparent 70deg);
+	border: 2px solid color-mix(in srgb, var(--sl-color-success) 35%, var(--sl-color-border));
+	animation: l5Spin 4s linear infinite;
+}
+@keyframes l5Spin { to { rotate: 360deg; } }
+.l5-radar::before, .l5-radar::after {
+	content: ""; position: absolute; border-radius: 50%;
+	border: 1px solid color-mix(in srgb, var(--sl-color-success) 30%, transparent);
+	inset: 16px;
+}
+.l5-radar::after { inset: 30px; background: var(--sl-color-success); }
+.l5-num { font-size: 26px; font-weight: bold; color: var(--sl-color-text-heading); line-height: 1; }
+.l5-cap { font-size: 12px; color: var(--sl-color-text-muted); }
+.l5-list { display: grid; gap: 4px; }
+.l5-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; font-size: 13px; }
+.l5-row .who { flex: 1 1 auto; }
+.l5-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.l5-row .t { font-size: 11.5px; color: var(--sl-color-text-subtle); white-space: nowrap; }
+
+/* ---------- L6: Компакт-таблица 2.0 ---------- */
+.l6 table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.l6 td { padding: 7px 8px; }
+.l6 tbody tr { transition: background .15s; }
+.l6 tbody tr:nth-child(odd) { background: var(--sl-color-surface-alt); }
+.l6 tbody tr:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 9%, transparent); }
+.l6 tbody tr:first-child td:first-child { border-radius: 8px 0 0 0; }
+.l6 tbody tr:first-child td:last-child { border-radius: 0 8px 0 0; }
+.l6 tbody tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+.l6 tbody tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+.l6 .who { display: flex; align-items: center; gap: 8px; }
+.l6 .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.l6 .kind { width: 18px; text-align: center; color: var(--sl-color-text-subtle); font-size: 12px; }
+.l6 .mod { text-align: right; color: var(--sl-color-text-muted); white-space: nowrap; }
+.l6-foot { display: flex; justify-content: center; margin-top: 10px; }
+
+/* ==================================================================
+   Секция 2: Эффекты
+   ================================================================== */
+/* ---------- E1: Живая рамка ---------- */
+@property --e1a { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.e1.sl-block { position: relative; border: 0; }
+.e1.sl-block::before {
+	content: ""; position: absolute; inset: 0; border-radius: 8px; padding: 2px;
+	background: conic-gradient(from var(--e1a), var(--sl-color-brand), var(--sl-color-accent), var(--sl-color-brand-link), var(--sl-color-brand));
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor; mask-composite: exclude;
+	animation: e1Spin 5s linear infinite;
+}
+@keyframes e1Spin { to { --e1a: 360deg; } }
+.e1-head { text-align: center; }
+.e1-ava-wrap { position: relative; width: 84px; margin: 0 auto 8px; }
+.e1-ava-wrap .u-ava { border: 3px solid #fff; box-shadow: var(--sl-shadow-soft); }
+.e1-ava-wrap .live-dot { position: absolute; right: 5px; bottom: 5px; width: 13px; height: 13px; border: 2.5px solid #fff; }
+.e1-chips { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ---------- E2: Аватар-эффекты + колокольчик ---------- */
+.e2-head { display: flex; align-items: center; gap: 14px; }
+.e2-ring {
+	position: relative; width: 70px; height: 70px; border-radius: 50%; padding: 3px; flex: 0 0 auto;
+	background: conic-gradient(var(--sl-color-brand), var(--sl-color-accent), var(--sl-color-brand-link), var(--sl-color-brand));
+	transition: transform .3s;
+}
+.e2-ring .u-ava { width: 100%; height: 100%; border: 3px solid #fff; transition: transform .3s; }
+.e2-ring:hover { transform: rotate(12deg) scale(1.05); }
+.e2-ring:hover .u-ava { transform: rotate(-12deg); }
+.e2-bell { margin-left: auto; }
+.e2-bell:hover .bi { animation: e2Shake .6s; transform-origin: top center; }
+@keyframes e2Shake {
+	0%, 100% { rotate: 0deg; } 20% { rotate: 13deg; } 40% { rotate: -11deg; } 60% { rotate: 7deg; } 80% { rotate: -5deg; }
+}
+.e2-badge {
+	position: absolute; top: -5px; right: -5px;
+	min-width: 18px; height: 18px; padding: 0 5px;
+	display: inline-grid; place-items: center; border-radius: 999px;
+	background: var(--sl-color-danger); color: #fff;
+	font-size: 11px; font-weight: bold; border: 2px solid #fff;
+	animation: e2Pop .5s cubic-bezier(.3,1.6,.5,1) .4s both;
+}
+@keyframes e2Pop { from { transform: scale(0); } }
+.e2-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+.e2-links .sl-chip { transition: transform .18s, background .2s; }
+.e2-links .sl-chip:hover { transform: translateY(-2px); }
+
+/* ---------- E3: Счётчики count-up ---------- */
+.e3-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.e3-head .u-ava { width: 52px; height: 52px; }
+.e3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; perspective: 600px; }
+.e3-tile {
+	display: flex; flex-direction: column; gap: 4px;
+	padding: 11px 12px; border-radius: 10px;
+	background: color-mix(in srgb, var(--t) 9%, #fff);
+	border: 1px solid color-mix(in srgb, var(--t) 22%, var(--sl-color-border-subtle));
+	transition: transform .25s, box-shadow .25s;
+}
+.e3-tile:hover { transform: rotateX(6deg) rotateY(-4deg) translateY(-2px); box-shadow: var(--sl-shadow-medium); }
+.e3-tile .bi { font-size: var(--sl-size-icon-sm); color: var(--t); }
+.e3-tile b { font-size: 19px; line-height: 1; color: var(--sl-color-text-heading); font-variant-numeric: tabular-nums; }
+.e3-tile span { font-size: 11.5px; color: var(--sl-color-text-muted); }
+
+/* ---------- E4: Shimmer-обновление ---------- */
+.e4-rows { display: grid; gap: 6px; min-height: 132px; }
+.e4-skel {
+	height: 36px; border-radius: 9px;
+	background: linear-gradient(90deg, var(--sl-color-surface-alt) 25%, #fff 40%, var(--sl-color-surface-alt) 55%);
+	background-size: 400% 100%;
+	animation: e4Shimmer 1.1s linear infinite;
+}
+@keyframes e4Shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.e4-foot { display: flex; justify-content: center; margin-top: 12px; }
+.e4-btn.is-busy .bi { animation: e4Spin .8s linear infinite; }
+@keyframes e4Spin { to { rotate: 360deg; } }
+
+/* ---------- E5: Aurora glass ---------- */
+.e5.sl-block { position: relative; overflow: hidden; }
+.e5-blob {
+	position: absolute; width: 220px; height: 220px; border-radius: 50%;
+	filter: blur(46px); opacity: .5; pointer-events: none;
+}
+.e5-blob.b1 { background: var(--sl-color-brand); top: -90px; left: -60px; animation: e5Float 9s ease-in-out infinite alternate; }
+.e5-blob.b2 { background: var(--sl-color-accent); bottom: -110px; right: -70px; animation: e5Float 11s ease-in-out infinite alternate-reverse; }
+@keyframes e5Float { to { transform: translate(34px, 22px) scale(1.15); } }
+.e5-in { position: relative; text-align: center; }
+.e5-in .u-ava { width: 80px; height: 80px; border: 3px solid rgb(255 255 255 / 0.8); box-shadow: var(--sl-shadow-medium); }
+.e5-chips { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.e5-chips a, .e5-chips span {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 27px; padding: 0 12px; border-radius: 999px; font-size: 12.5px;
+	background: rgb(255 255 255 / 0.55); border: 1px solid rgb(255 255 255 / 0.7);
+	color: var(--sl-color-text-heading);
+	backdrop-filter: blur(6px);
+	transition: background .2s, transform .18s;
+}
+.e5-chips a:hover { background: rgb(255 255 255 / 0.85); transform: translateY(-2px); }
+
+/* ---------- E6: Neon midnight ---------- */
+.e6.sl-block {
+	background: linear-gradient(160deg, var(--sl-color-surface-dark) 0%, var(--sl-color-surface-darker) 100%);
+	border-color: var(--sl-color-surface-divider);
+}
+.e6 .sl-title { color: #fff; }
+.e6-head { display: flex; align-items: center; gap: 12px; }
+.e6-ava-wrap { position: relative; flex: 0 0 auto; }
+.e6-head .u-ava {
+	width: 56px; height: 56px; border: 2px solid var(--sl-color-brand);
+	box-shadow: 0 0 12px color-mix(in srgb, var(--sl-color-brand) 55%, transparent);
+	animation: e6Glow 3s ease-in-out infinite alternate;
+}
+@keyframes e6Glow {
+	from { box-shadow: 0 0 6px color-mix(in srgb, var(--sl-color-brand) 35%, transparent); }
+	to { box-shadow: 0 0 18px color-mix(in srgb, var(--sl-color-brand) 75%, transparent); }
+}
+.e6-ava-wrap .live-dot { position: absolute; right: 1px; bottom: 1px; border: 2px solid var(--sl-color-surface-darker); }
+.e6-name { color: #fff; font-weight: bold; }
+.e6-sub { color: var(--sl-color-text-subtle); font-size: 12.5px; }
+.e6-menu { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 3px; }
+.e6-menu a {
+	display: flex; align-items: center; gap: 10px;
+	padding: 8px 10px; border-radius: 8px; font-size: 13.5px; color: #cfd8e3;
+	transition: background .18s, color .18s, padding-left .18s, text-shadow .18s;
+}
+.e6-menu a:hover {
+	background: rgb(255 255 255 / 0.07); color: #fff; padding-left: 15px;
+	text-shadow: 0 0 8px color-mix(in srgb, var(--sl-color-brand) 80%, transparent);
+}
+.e6-menu .bi { width: 18px; text-align: center; color: var(--sl-color-brand); font-size: var(--sl-size-icon-xs); }
+.e6-menu .cnt { margin-left: auto; font-size: 12px; font-weight: bold; color: #fff; background: rgb(255 255 255 / 0.12); border-radius: 999px; min-width: 21px; height: 19px; display: inline-grid; place-items: center; padding: 0 6px; }
+</style>
+</head>
+<body>
+
+<header class="demo-head">
+	<h1>Блок «Пользователи» — «Подробнее» и эффекты</h1>
+	<p>Расширение витрины: 6 вариантов раскрытого списка посетителей (флаги стран + модуль, как на slaed.net)
+	и 6 карточек с живыми эффектами. Флаги — системные <code>templates/lite/images/flags/*.svg</code>.
+	Остальные витрины: <a href="user-block-variants.html" style="color:var(--sl-color-brand-strong)"><u>залогинен</u></a> ·
+	<a href="user-block-guest.html" style="color:var(--sl-color-brand-strong)"><u>гость</u></a>.</p>
+</header>
+
+<div class="demo-wrap">
+
+<section class="demo-sec">
+<h2>«Подробнее»: кто на сайте — флаги и модули</h2>
+<div class="demo-grid">
+
+	<!-- L1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">1</span><b>Строки-карточки</b><span>stagger-появление, ховер-сдвиг</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="l1-sum">
+					<span class="sl-chip sl-chip-success"><i class="bi bi-person"></i> 1</span>
+					<span class="sl-chip sl-chip-warn"><i class="bi bi-robot"></i> 3</span>
+					<span class="sl-chip sl-chip-info"><i class="bi bi-eye"></i> 2</span>
+				</div>
+				<div class="l1-rows">
+					<div class="l1-row">
+						<img class="flg" src="../templates/lite/images/flags/ru.svg" alt="Russia" title="Russia">
+						<span class="l1-who"><a href="#">SLAED CMS</a><small>2 мин. 20 сек.</small></span>
+						<span class="l1-mod"><i class="bi bi-folder"></i> Каталог файлов</span>
+					</div>
+					<div class="l1-row">
+						<img class="flg" src="../templates/lite/images/flags/us.svg" alt="United States" title="United States">
+						<span class="l1-who"><span class="bot">Google Bot</span><small>1 мин. 11 сек.</small></span>
+						<span class="l1-mod"><i class="bi bi-search"></i> Поиск</span>
+					</div>
+					<div class="l1-row">
+						<img class="flg" src="../templates/lite/images/flags/cn.svg" alt="China" title="China">
+						<span class="l1-who"><span class="bot">Baidu Spider</span><small>2 мин. 20 сек.</small></span>
+						<span class="l1-mod"><i class="bi bi-folder"></i> Каталог файлов</span>
+					</div>
+					<div class="l1-row">
+						<img class="flg" src="../templates/lite/images/flags/de.svg" alt="Germany" title="Germany">
+						<span class="l1-who"><span class="bot">Гость</span><small>44 сек.</small></span>
+						<span class="l1-mod"><i class="bi bi-newspaper"></i> Новости</span>
+					</div>
+					<div class="l1-row">
+						<img class="flg" src="../templates/lite/images/flags/fr.svg" alt="France" title="France">
+						<span class="l1-who"><span class="bot">Majestic-12 Bot</span><small>8 мин. 3 сек.</small></span>
+						<span class="l1-mod"><i class="bi bi-chat-square-text"></i> Форум</span>
+					</div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- L2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">2</span><b>Аккордеон</b><span>рабочий toggle: шеврон + stagger (кликни!)</span></p>
+		<aside class="sl-block l2">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="l2-stat">
+					<span><b>0</b>Юзеры</span>
+					<span><b>5</b>Боты</span>
+					<span><b>46</b>Гости</span>
+					<span><b>51</b>Всего</span>
+				</div>
+				<details>
+					<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+					<div class="l2-rows">
+						<div class="l2-row">
+							<img class="flg" src="../templates/lite/images/flags/cn.svg" alt="China" title="China">
+							<span class="who" title="2 мин. 20 сек.">Baidu Spider</span>
+							<span class="mod">Каталог файлов</span>
+						</div>
+						<div class="l2-row">
+							<img class="flg" src="../templates/lite/images/flags/us.svg" alt="United States" title="United States">
+							<span class="who" title="1 мин. 11 сек.">Google Bot</span>
+							<span class="mod">Каталог файлов</span>
+						</div>
+						<div class="l2-row">
+							<img class="flg" src="../templates/lite/images/flags/ru.svg" alt="Russia" title="Russia">
+							<span class="who" title="3 мин. 6 сек.">Yandex Bot</span>
+							<span class="mod">Форум</span>
+						</div>
+						<div class="l2-row">
+							<img class="flg" src="../templates/lite/images/flags/ua.svg" alt="Ukraine" title="Ukraine">
+							<span class="who"><a href="#" title="12 сек.">Eduard</a></span>
+							<span class="mod">Главная</span>
+						</div>
+					</div>
+				</details>
+			</div>
+		</aside>
+	</div>
+
+	<!-- L3 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">3</span><b>География</b><span>группировка по странам, анимация полос</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="l3-rows">
+					<div class="l3-row">
+						<img class="flg" src="../templates/lite/images/flags/de.svg" alt="Germany" title="Germany">
+						<span class="name">Германия</span><b>21</b>
+						<span class="l3-bar"><i style="--w:78%"></i></span>
+					</div>
+					<div class="l3-row">
+						<img class="flg" src="../templates/lite/images/flags/ru.svg" alt="Russia" title="Russia">
+						<span class="name">Россия</span><b>14</b>
+						<span class="l3-bar"><i style="--w:52%"></i></span>
+					</div>
+					<div class="l3-row">
+						<img class="flg" src="../templates/lite/images/flags/us.svg" alt="United States" title="United States">
+						<span class="name">США</span><b>9</b>
+						<span class="l3-bar"><i style="--w:33%"></i></span>
+					</div>
+					<div class="l3-row">
+						<img class="flg" src="../templates/lite/images/flags/ua.svg" alt="Ukraine" title="Ukraine">
+						<span class="name">Украина</span><b>7</b>
+						<span class="l3-bar"><i style="--w:26%"></i></span>
+					</div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- L4 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">4</span><b>Live-тикер</b><span>автопрокрутка, пауза на ховер</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="l4-head"><span class="live-dot"></span> <b>51</b>&nbsp;посетитель онлайн</div>
+				<div class="l4-view">
+					<div class="l4-feed">
+						<!-- набор ×2 для бесшовной прокрутки -->
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a></span><span class="mod">Каталог файлов</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot</span><span class="mod">Поиск</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/cn.svg" alt="CN"><span class="who">Baidu Spider</span><span class="mod">Каталог файлов</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость</span><span class="mod">Новости</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/fr.svg" alt="FR"><span class="who">Majestic-12 Bot</span><span class="mod">Форум</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/ua.svg" alt="UA"><span class="who"><a href="#">Eduard</a></span><span class="mod">Главная</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a></span><span class="mod">Каталог файлов</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot</span><span class="mod">Поиск</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/cn.svg" alt="CN"><span class="who">Baidu Spider</span><span class="mod">Каталог файлов</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость</span><span class="mod">Новости</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/fr.svg" alt="FR"><span class="who">Majestic-12 Bot</span><span class="mod">Форум</span></div>
+						<div class="l4-row"><img class="flg" src="../templates/lite/images/flags/ua.svg" alt="UA"><span class="who"><a href="#">Eduard</a></span><span class="mod">Главная</span></div>
+					</div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- L5 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">5</span><b>Радар</b><span>сканирующий луч + список с длительностью</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="l5-top">
+					<span class="l5-radar"></span>
+					<span><span class="l5-num">51</span><br><span class="l5-cap">посетитель на сайте</span></span>
+				</div>
+				<div class="l5-list">
+					<div class="l5-row"><img class="flg flg-round" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> · Каталог файлов</span><span class="t">2 мин.</span></div>
+					<div class="l5-row"><img class="flg flg-round" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot · Поиск</span><span class="t">1 мин.</span></div>
+					<div class="l5-row"><img class="flg flg-round" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость · Новости</span><span class="t">44 сек.</span></div>
+					<div class="l5-row"><img class="flg flg-round" src="../templates/lite/images/flags/fr.svg" alt="FR"><span class="who">Majestic-12 Bot · Форум</span><span class="t">8 мин.</span></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- L6 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">6</span><b>Таблица 2.0</b><span>zebra + иконки типа + скруглённые углы</span></p>
+		<aside class="sl-block l6">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<table>
+					<tbody>
+						<tr>
+							<td class="kind" title="Пользователь"><i class="bi bi-person-fill" style="color:var(--sl-color-success)"></i></td>
+							<td><span class="who"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><a href="#" title="2 мин. 20 сек.">SLAED CMS</a></span></td>
+							<td class="mod">Каталог файлов</td>
+						</tr>
+						<tr>
+							<td class="kind" title="Бот"><i class="bi bi-robot" style="color:var(--sl-color-warning)"></i></td>
+							<td><span class="who"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span title="1 мин. 11 сек.">Google Bot</span></span></td>
+							<td class="mod">Поиск</td>
+						</tr>
+						<tr>
+							<td class="kind" title="Бот"><i class="bi bi-robot" style="color:var(--sl-color-warning)"></i></td>
+							<td><span class="who"><img class="flg" src="../templates/lite/images/flags/cn.svg" alt="CN"><span title="2 мин. 20 сек.">Baidu Spider</span></span></td>
+							<td class="mod">Каталог файлов</td>
+						</tr>
+						<tr>
+							<td class="kind" title="Гость"><i class="bi bi-eye" style="color:var(--sl-color-brand-link)"></i></td>
+							<td><span class="who"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span title="44 сек.">Гость</span></span></td>
+							<td class="mod">Новости</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="l6-foot"><a href="#" class="sl-chip sl-chip-info"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<section class="demo-sec">
+<h2>Карточка пользователя — эффекты</h2>
+<div class="demo-grid">
+
+	<!-- E1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">7</span><b>Живая рамка</b><span>вращающийся conic-градиент по контуру</span></p>
+		<aside class="sl-block e1">
+			<div class="sl-block-content e1-head">
+				<div class="e1-ava-wrap">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="live-dot"></i>
+				</div>
+				<span style="font-size:12.5px; color:var(--sl-color-text-muted)">Здравствуйте,</span><br>
+				<b style="color:var(--sl-color-text-heading); font-size:16px">SLAED CMS</b>
+				<div class="e1-chips">
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> 0</a>
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> 5</span>
+					<a href="#" class="sl-chip sl-chip-warn"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#" class="sl-chip sl-chip-danger"><i class="bi bi-box-arrow-right"></i> Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- E2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">8</span><b>Игривый аватар</b><span>ховер: поворот кольца; колокольчик трясётся</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="e2-head">
+					<span class="e2-ring"><i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i></span>
+					<span>
+						<span style="font-size:12.5px; color:var(--sl-color-text-muted)">Здравствуйте,</span><br>
+						<b style="color:var(--sl-color-text-heading)">SLAED CMS</b>
+					</span>
+					<a href="#" class="u-icon-btn e2-bell" title="Личные сообщения">
+						<i class="bi bi-bell"></i>
+						<span class="e2-badge">5</span>
+					</a>
+				</div>
+				<div class="e2-links">
+					<a href="#" class="sl-chip sl-chip-warn"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#" class="sl-chip sl-chip-danger"><i class="bi bi-box-arrow-right"></i> Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- E3 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">9</span><b>Count-up + 3D</b><span>цифры набегают, плитки наклоняются</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="e3-head">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<span><span style="font-size:12.5px; color:var(--sl-color-text-muted)">Здравствуйте,</span><br><b style="color:var(--sl-color-text-heading)">SLAED CMS</b></span>
+				</div>
+				<div class="e3-grid">
+					<span class="e3-tile" style="--t:var(--sl-color-brand-link)"><i class="bi bi-envelope"></i><b data-count="17">0</b><span>Новые входящие</span></span>
+					<span class="e3-tile" style="--t:var(--sl-color-accent)"><i class="bi bi-send"></i><b data-count="5">0</b><span>Новые исходящие</span></span>
+					<span class="e3-tile" style="--t:var(--sl-color-warning)"><i class="bi bi-star"></i><b data-count="128">0</b><span>Фавориты</span></span>
+					<span class="e3-tile" style="--t:var(--sl-color-success)"><i class="bi bi-people"></i><b data-count="51">0</b><span>Онлайн</span></span>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- E4 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">10</span><b>Shimmer-обновление</b><span>кликни «Обновить»: скелетон → список</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="e4-rows" id="e4rows">
+					<div class="l1-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="l1-who"><a href="#">SLAED CMS</a><small>2 мин.</small></span><span class="l1-mod"><i class="bi bi-folder"></i> Каталог файлов</span></div>
+					<div class="l1-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="l1-who"><span class="bot">Google Bot</span><small>1 мин.</small></span><span class="l1-mod"><i class="bi bi-search"></i> Поиск</span></div>
+					<div class="l1-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="l1-who"><span class="bot">Гость</span><small>44 сек.</small></span><span class="l1-mod"><i class="bi bi-newspaper"></i> Новости</span></div>
+				</div>
+				<div class="e4-foot">
+					<button type="button" class="u-icon-btn e4-btn" id="e4btn" title="Обновить" style="width:auto; padding:0 16px; gap:7px; display:inline-flex; align-items:center; font-size:13px;">
+						<i class="bi bi-arrow-repeat"></i> Обновить
+					</button>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- E5 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">11</span><b>Aurora glass</b><span>плавающие цветовые пятна + стекло</span></p>
+		<aside class="sl-block e5">
+			<i class="e5-blob b1"></i>
+			<i class="e5-blob b2"></i>
+			<div class="sl-block-content e5-in">
+				<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+				<div style="margin-top:8px">
+					<span style="font-size:12.5px; color:var(--sl-color-text-muted)">Здравствуйте,</span><br>
+					<b style="color:var(--sl-color-text-heading); font-size:16px">SLAED CMS</b>
+				</div>
+				<div class="e5-chips">
+					<a href="#"><i class="bi bi-envelope"></i> Входящие <b>0</b></a>
+					<span><i class="bi bi-send"></i> Исходящие <b>5</b></span>
+					<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- E6 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">12</span><b>Neon midnight</b><span>дышащий glow, ховер-свечение пунктов</span></p>
+		<aside class="sl-block e6">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="e6-head">
+					<span class="e6-ava-wrap">
+						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="live-dot"></i>
+					</span>
+					<span><span class="e6-name">SLAED CMS</span><br><span class="e6-sub">в сети · Каталог файлов</span></span>
+				</div>
+				<ul class="e6-menu">
+					<li><a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt">0</span></a></li>
+					<li><a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a></li>
+					<li><a href="#"><i class="bi bi-star"></i> Фавориты</a></li>
+					<li><a href="#"><i class="bi bi-gear"></i> Настройки</a></li>
+					<li><a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></li>
+				</ul>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<p style="max-width:1180px; margin:30px auto 0; font-size:12px; color:var(--sl-color-text-muted);">
+Данные — реальная структура «Подробнее» из <code>getUserSessionInfo()</code>: флаг (<code>Geoip::getFlagHtml</code>), имя с title-длительностью, модуль справа.
+Все анимации уважают <code>prefers-reduced-motion</code>. Демо-классы <code>l*-</code>/<code>e*-</code> — кандидаты в <code>theme.css</code> с префиксом <code>sl-</code>.
+</p>
+
+</div>
+
+<script>
+// demo only: count-up counters + shimmer refresh
+document.querySelectorAll('[data-count]').forEach(el => {
+	const end = +el.dataset.count, t0 = performance.now(), dur = 1100;
+	const tick = now => {
+		const p = Math.min((now - t0) / dur, 1);
+		el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+		if (p < 1) requestAnimationFrame(tick);
+	};
+	requestAnimationFrame(tick);
+});
+const e4btn = document.getElementById('e4btn'), e4rows = document.getElementById('e4rows');
+if (e4btn) e4btn.addEventListener('click', () => {
+	if (e4btn.classList.contains('is-busy')) return;
+	e4btn.classList.add('is-busy');
+	const saved = e4rows.innerHTML;
+	e4rows.innerHTML = '<div class="e4-skel"></div>'.repeat(3);
+	setTimeout(() => {
+		e4rows.innerHTML = saved;
+		e4rows.querySelectorAll('.l1-row').forEach((r, i) => { r.style.animation = 'rowIn .4s both'; r.style.animationDelay = (i * .07) + 's'; });
+		e4btn.classList.remove('is-busy');
+	}, 1200);
+});
+</script>
+</body>
+</html>

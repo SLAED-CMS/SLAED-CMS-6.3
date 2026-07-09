@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Блок «Пользователи»: тренды 2026</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body {
+	margin: 0;
+	padding: 0 0 70px;
+	background: var(--sl-color-surface);
+	color: var(--sl-color-text);
+	font: 15px/1.5 Arial, Tahoma, sans-serif;
+}
+a { text-decoration: none; color: inherit; }
+button { font: inherit; }
+.demo-head {
+	padding: 26px clamp(14px, 4vw, 48px);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	border-bottom: 1px solid var(--sl-color-border);
+}
+.demo-head h1 {
+	margin: 0 0 6px;
+	font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-head p { margin: 0; max-width: 960px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1560px; margin: 0 auto; }
+.demo-sec { margin: 42px 0 0; }
+.demo-sec > h2 {
+	margin: 0 0 6px; padding-bottom: 8px;
+	border-bottom: 2px solid var(--sl-color-border);
+	font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-sec > p { margin: 0 0 18px; color: var(--sl-color-text-muted); font-size: 13px; max-width: 960px; }
+.demo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+	gap: 26px;
+	align-items: start;
+}
+.demo-cell > .demo-label { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; }
+.demo-label .n {
+	flex: 0 0 auto;
+	display: inline-grid; place-items: center; width: 24px; height: 24px;
+	border-radius: 999px; background: var(--sl-color-brand-strong); color: #fff;
+	font-size: 12px; font-weight: bold;
+}
+.demo-label b { font-size: 14px; color: var(--sl-color-text-heading); }
+.demo-label span { font-size: 12px; color: var(--sl-color-text-muted); }
+.demo-cell .sl-block { margin-bottom: 0; }
+@keyframes rowIn {
+	from { opacity: 0; transform: translateY(-8px); }
+	to { opacity: 1; transform: none; }
+}
+@keyframes livePulse {
+	0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-success) 50%, transparent); }
+	70% { box-shadow: 0 0 0 8px transparent; }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after { animation-duration: .01s !important; animation-iteration-count: 1 !important; transition-duration: .01s !important; }
+}
+
+/* ==================================================================
+   Реальная структура блока (одна семантика на все скины)
+   ================================================================== */
+.rb-profile { display: flex; align-items: center; gap: 12px; }
+.rb-ava {
+	width: 62px; height: 62px; border-radius: 50%; flex: 0 0 auto;
+	background-size: cover; background-position: center; background-color: var(--sl-color-bg);
+	display: inline-block; position: relative;
+}
+.rb-dot {
+	position: absolute; right: 2px; bottom: 2px;
+	width: 12px; height: 12px; border-radius: 50%;
+	background: var(--sl-color-success); border: 2px solid #fff;
+	animation: livePulse 2s ease-out infinite;
+}
+.rb-hello { font-size: 12.5px; color: var(--sl-color-text-muted); }
+.rb-name { font-weight: bold; color: var(--sl-color-text-heading); font-size: 15px; }
+.rb-meta { font-size: 12px; color: var(--sl-color-text-muted); }
+.rb-pm { display: grid; gap: 5px; margin: 14px 0; }
+.rb-pm a {
+	display: flex; align-items: center; gap: 9px;
+	padding: 7px 10px; border-radius: 9px; font-size: 13px;
+	color: var(--sl-color-text); transition: background .15s, color .15s;
+}
+.rb-pm a:hover { color: var(--sl-color-brand-strong); }
+.rb-pm .bi { width: 17px; text-align: center; font-size: 13px; color: var(--sl-color-text-muted); }
+.rb-pm .cnt {
+	margin-left: auto; min-width: 21px; height: 19px; padding: 0 6px;
+	display: inline-grid; place-items: center; border-radius: 999px; font-size: 11.5px; font-weight: bold;
+	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	color: var(--sl-color-brand-strong);
+}
+.rb-pm .cnt.zero { background: var(--sl-color-surface-alt); color: var(--sl-color-text-subtle); }
+.rb-actions { display: flex; gap: 8px; margin: 0 0 14px; }
+.rb-actions a {
+	flex: 1 1 0;
+	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+	height: 33px; border-radius: 10px; font-size: 12.5px;
+	color: var(--sl-color-text-heading); background: var(--sl-color-surface-alt);
+	transition: background .18s, color .18s, transform .18s;
+}
+.rb-actions a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent); color: var(--sl-color-brand-strong); transform: translateY(-1px); }
+.rb-actions a.exit:hover { background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent); color: var(--sl-color-danger); }
+.rb-stats { display: grid; gap: 2px; }
+.rb-line { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
+.rb-line .d { width: 8px; height: 8px; border-radius: 50%; background: var(--t, var(--sl-color-text-subtle)); flex: 0 0 auto; }
+.rb-line .k { color: var(--sl-color-text-muted); flex: 1 1 auto; }
+.rb-line b { color: var(--sl-color-text-heading); }
+.rb-line.total { border-top: 1px solid var(--sl-color-border-subtle); margin-top: 3px; padding-top: 6px; }
+.rb-more { border: 0; }
+.rb-more summary {
+	list-style: none; cursor: pointer;
+	display: flex; align-items: center; justify-content: center; gap: 7px;
+	padding: 8px 0 4px; font-size: 13px; color: var(--sl-color-brand-strong);
+}
+.rb-more summary::-webkit-details-marker { display: none; }
+.rb-more summary .bi { transition: transform .3s; font-size: 12px; }
+.rb-more[open] summary .bi { transform: rotate(180deg); }
+.rb-rows { display: grid; gap: 2px; padding-top: 4px; }
+.rb-more[open] .rb-row { animation: rowIn .35s both; }
+.rb-more[open] .rb-row:nth-child(2) { animation-delay: .07s; }
+.rb-more[open] .rb-row:nth-child(3) { animation-delay: .14s; }
+.rb-row {
+	display: grid; grid-template-columns: 21px minmax(0, 1fr) auto; gap: 8px; align-items: center;
+	padding: 5px 7px; border-radius: 8px; font-size: 12.5px;
+	transition: background .15s;
+}
+.rb-row:hover { background: var(--sl-color-surface-alt); }
+.rb-row .flg { width: 21px; height: 15px; border-radius: 3px; object-fit: cover; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08); }
+.rb-row .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rb-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
+.rb-row .who small { color: var(--sl-color-text-subtle); }
+.rb-row .mod { font-size: 11.5px; color: var(--sl-color-text-subtle); white-space: nowrap; }
+.rb-update { text-align: center; padding-top: 8px; }
+.rb-update a {
+	display: inline-flex; align-items: center; gap: 7px;
+	height: 27px; padding: 0 13px; border-radius: 999px; font-size: 12.5px;
+	background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+	color: var(--sl-color-brand-strong);
+	transition: background .2s;
+}
+.rb-update a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 22%, transparent); }
+.rb-hr { border: 0; border-top: 1px solid var(--sl-color-border-subtle); margin: 12px 0; }
+
+/* ==================================================================
+   Скин 1: Liquid Glass (залогинен)
+   ================================================================== */
+.v1.sl-block {
+	position: relative; overflow: hidden; border: 0; padding: 15px;
+	background:
+		radial-gradient(300px 220px at 10% 0%, color-mix(in srgb, var(--sl-color-brand) 45%, transparent), transparent 70%),
+		radial-gradient(280px 240px at 100% 40%, color-mix(in srgb, var(--sl-color-accent) 32%, transparent), transparent 70%),
+		radial-gradient(300px 260px at 40% 115%, color-mix(in srgb, var(--sl-color-warning) 28%, transparent), transparent 70%),
+		linear-gradient(160deg, #dfe9f5 0%, #e9e2f2 100%);
+}
+.v1 .sl-title { color: var(--sl-color-text-heading); position: relative; }
+.v1-card {
+	position: relative; overflow: hidden;
+	border-radius: 18px; padding: 13px;
+	background: radial-gradient(120% 90% at 50% -20%, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.16) 60%), rgb(255 255 255 / 0.2);
+	backdrop-filter: blur(9px) saturate(1.6);
+	box-shadow:
+		inset 0 1px 1px rgb(255 255 255 / 0.8),
+		inset 0 -1px 1px rgb(255 255 255 / 0.25),
+		inset 1px 0 1px rgb(255 200 220 / 0.25),
+		inset -1px 0 1px rgb(180 220 255 / 0.3),
+		0 10px 26px rgb(31 45 61 / 0.16);
+}
+.v1-card + .v1-card { margin-top: 10px; }
+.v1-card.spec::before {
+	content: ""; position: absolute; inset: -60% -30%;
+	background: linear-gradient(115deg, transparent 42%, rgb(255 255 255 / 0.45) 50%, transparent 58%);
+	transform: translateX(-70%) rotate(6deg);
+	animation: v1spec 6s ease-in-out infinite;
+	pointer-events: none;
+}
+@keyframes v1spec {
+	0%, 55% { transform: translateX(-70%) rotate(6deg); }
+	85%, 100% { transform: translateX(70%) rotate(6deg); }
+}
+.v1 .rb-ava { box-shadow: 0 3px 10px rgb(31 45 61 / 0.25), inset 0 1px 1px rgb(255 255 255 / 0.6); }
+.v1 .rb-dot { border-color: #eef2f8; }
+.v1 .rb-pm { margin: 10px 0 0; }
+.v1 .rb-pm a { background: rgb(255 255 255 / 0.3); }
+.v1 .rb-pm a:hover { background: rgb(255 255 255 / 0.55); }
+.v1 .rb-actions { margin: 10px 0 0; }
+.v1 .rb-actions a {
+	border-radius: 999px;
+	background: radial-gradient(100% 160% at 50% -30%, rgb(255 255 255 / 0.7), rgb(255 255 255 / 0.25));
+	box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.85), 0 4px 10px rgb(31 45 61 / 0.12);
+	transition: transform .25s cubic-bezier(.3,1.5,.5,1), box-shadow .25s;
+}
+.v1 .rb-actions a:hover { transform: scale(1.06); background: radial-gradient(100% 160% at 50% -30%, rgb(255 255 255 / 0.85), rgb(255 255 255 / 0.4)); }
+.v1 .rb-actions a:active { transform: scale(0.95); }
+.v1 .rb-line .k { color: var(--sl-color-text); opacity: .75; }
+.v1 .rb-line.total { border-color: rgb(255 255 255 / 0.5); }
+.v1 .rb-row:hover { background: rgb(255 255 255 / 0.35); }
+.v1 .rb-update a { background: rgb(255 255 255 / 0.4); box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.8); }
+.v1 .rb-update a:hover { background: rgb(255 255 255 / 0.65); }
+
+/* ==================================================================
+   Скин 2: Neumorphism (залогинен)
+   ================================================================== */
+.v2.sl-block { background: #e4e9f0; border: 0; box-shadow: 9px 9px 22px #c9cfd8, -9px -9px 22px #ffffff; }
+.v2-ring {
+	width: 76px; height: 76px; border-radius: 50%; flex: 0 0 auto;
+	display: grid; place-items: center; background: #e4e9f0;
+	box-shadow: 6px 6px 12px #c3c9d2, -6px -6px 12px #ffffff;
+	position: relative;
+}
+.v2-ring .rb-ava { width: 58px; height: 58px; }
+.v2 .rb-dot { border-color: #e4e9f0; }
+.v2-counts { display: flex; gap: 10px; margin: 14px 0; }
+.v2-count {
+	flex: 1 1 0; text-align: center; padding: 9px 5px; border-radius: 13px;
+	box-shadow: inset 5px 5px 10px #c9cfd8, inset -5px -5px 10px #ffffff;
+}
+.v2-count b { display: block; font-size: 17px; color: var(--sl-color-text-heading); }
+.v2-count span { font-size: 10.5px; color: var(--sl-color-text-muted); }
+.v2-count a { display: block; }
+.v2 .rb-actions a {
+	background: #e4e9f0; border-radius: 12px;
+	box-shadow: 5px 5px 10px #c3c9d2, -5px -5px 10px #ffffff;
+}
+.v2 .rb-actions a:hover { transform: none; color: var(--sl-color-brand-strong); background: #e4e9f0; }
+.v2 .rb-actions a:active { box-shadow: inset 4px 4px 8px #c9cfd8, inset -4px -4px 8px #ffffff; }
+.v2-online { border-radius: 14px; padding: 10px 12px; box-shadow: inset 5px 5px 10px #c9cfd8, inset -5px -5px 10px #ffffff; }
+.v2 .rb-line.total { border-color: #d4dae2; }
+.v2 .rb-row:hover { background: rgb(255 255 255 / 0.5); }
+.v2 .rb-update a { background: #e4e9f0; box-shadow: 4px 4px 8px #c3c9d2, -4px -4px 8px #ffffff; color: var(--sl-color-brand-strong); }
+.v2 .rb-update a:active { box-shadow: inset 3px 3px 7px #c9cfd8, inset -3px -3px 7px #ffffff; }
+
+/* ==================================================================
+   Скин 3: Glassmorphism (гость: форма входа + статистика)
+   ================================================================== */
+.v3.sl-block {
+	position: relative; overflow: hidden; border: 0; padding: 15px;
+	background:
+		radial-gradient(280px 200px at 90% 0%, color-mix(in srgb, var(--sl-color-brand) 50%, transparent), transparent 70%),
+		radial-gradient(300px 260px at 0% 100%, color-mix(in srgb, var(--sl-color-accent) 35%, transparent), transparent 70%),
+		linear-gradient(200deg, #dfe9f5 0%, #ece4f0 100%);
+}
+.v3-card {
+	border-radius: 16px; padding: 14px;
+	background: rgb(255 255 255 / 0.38);
+	border: 1px solid rgb(255 255 255 / 0.55);
+	backdrop-filter: blur(14px) saturate(1.4);
+	box-shadow: 0 8px 28px rgb(31 45 61 / 0.14);
+}
+.v3-card + .v3-card { margin-top: 10px; }
+.v3-head { text-align: center; margin-bottom: 12px; }
+.v3-head .rb-ava { width: 72px; height: 72px; border: 3px solid rgb(255 255 255 / 0.8); }
+.v3-links { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.v3-links a {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 26px; padding: 0 11px; border-radius: 999px; font-size: 12px;
+	color: var(--sl-color-text-heading);
+	background: rgb(255 255 255 / 0.45); border: 1px solid rgb(255 255 255 / 0.6);
+	transition: background .2s, transform .18s;
+}
+.v3-links a:hover { background: rgb(255 255 255 / 0.75); transform: translateY(-2px); }
+.v3-form { display: grid; gap: 8px; }
+.v3-field { position: relative; }
+.v3-field .bi {
+	position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+	color: var(--sl-color-text-muted); font-size: 13px; pointer-events: none;
+}
+.v3-form input {
+	width: 100%; height: 36px; padding: 0 12px 0 33px;
+	border-radius: 11px; border: 1px solid rgb(255 255 255 / 0.65);
+	background: rgb(255 255 255 / 0.5); outline: 0; font-size: 13.5px;
+	transition: background .2s, border-color .2s;
+}
+.v3-form input:focus { background: rgb(255 255 255 / 0.8); border-color: var(--sl-color-brand); }
+.v3-form button {
+	height: 36px; border: 0; border-radius: 11px; cursor: pointer;
+	background: linear-gradient(135deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 100%);
+	color: #fff; font-weight: bold; font-size: 13.5px;
+	box-shadow: 0 6px 14px color-mix(in srgb, var(--sl-color-brand-strong) 45%, transparent);
+	transition: transform .18s, box-shadow .18s;
+}
+.v3-form button:hover { transform: translateY(-1px); box-shadow: 0 9px 18px color-mix(in srgb, var(--sl-color-brand-strong) 55%, transparent); }
+.v3 .rb-line.total { border-color: rgb(255 255 255 / 0.55); }
+.v3 .rb-row:hover { background: rgb(255 255 255 / 0.4); }
+.v3 .rb-update a { background: rgb(255 255 255 / 0.45); }
+.v3 .rb-update a:hover { background: rgb(255 255 255 / 0.75); }
+
+/* ==================================================================
+   Скин 4: Bento (залогинен)
+   ================================================================== */
+.v4-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; margin-bottom: 12px; }
+.v4-cell {
+	border-radius: 13px; background: #fff;
+	border: 1px solid var(--sl-color-border-subtle);
+	padding: 11px 12px;
+	display: flex; flex-direction: column; justify-content: space-between; gap: 4px;
+	transition: transform .2s, box-shadow .2s;
+}
+.v4-cell:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft); }
+.v4-profile { grid-column: span 2; flex-direction: row; align-items: center; gap: 12px; justify-content: flex-start; }
+.v4-k { font-size: 11px; color: var(--sl-color-text-muted); display: flex; align-items: center; gap: 5px; }
+.v4-k .bi { font-size: 12px; color: var(--t, var(--sl-color-brand-link)); }
+.v4-v { font-size: 20px; font-weight: bold; line-height: 1; color: var(--sl-color-text-heading); }
+.v4-acts { grid-column: span 2; flex-direction: row; gap: 6px; padding: 8px; }
+.v4-acts a {
+	flex: 1 1 0;
+	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+	height: 30px; border-radius: 9px; font-size: 12px;
+	color: var(--sl-color-text-heading); background: var(--sl-color-surface-alt);
+	transition: background .15s, color .15s;
+}
+.v4-acts a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent); color: var(--sl-color-brand-strong); }
+.v4-online { border-radius: 13px; border: 1px solid var(--sl-color-border-subtle); background: #fff; padding: 11px 12px; }
+
+/* ==================================================================
+   Скин 5: Аккордеон (залогинен, single-open + aria)
+   ================================================================== */
+.v5-group { display: grid; gap: 6px; }
+.v5-item { border: 1px solid var(--sl-color-border-subtle); border-radius: 11px; background: #fff; overflow: hidden; }
+.v5-btn {
+	width: 100%; border: 0; background: transparent; cursor: pointer; text-align: left;
+	display: flex; align-items: center; gap: 10px; padding: 11px 13px;
+	color: var(--sl-color-text-heading); font-size: 13.5px; font-weight: bold;
+	transition: background .15s;
+}
+.v5-btn:hover { background: var(--sl-color-surface-alt); }
+.v5-btn > .bi:first-child { color: var(--sl-color-brand-strong); font-size: 14px; }
+.v5-cnt {
+	min-width: 21px; height: 19px; padding: 0 6px; margin-left: auto;
+	display: inline-grid; place-items: center; border-radius: 999px;
+	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	color: var(--sl-color-brand-strong); font-size: 11.5px;
+}
+.v5-chev { transition: transform .3s; font-size: 12px; color: var(--sl-color-text-subtle); }
+.v5-btn:not(:has(.v5-cnt)) .v5-chev { margin-left: auto; }
+.v5-btn[aria-expanded="true"] .v5-chev { transform: rotate(180deg); }
+.v5-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+.v5-btn[aria-expanded="true"] + .v5-panel { grid-template-rows: 1fr; }
+.v5-panel > div { overflow: hidden; }
+.v5-body { padding: 2px 13px 12px; }
+.v5-body .rb-pm { margin: 0; }
+.v5-body .rb-actions { margin: 0; }
+
+/* ==================================================================
+   Скин 6: Плотность данных (залогинен)
+   ================================================================== */
+.v6-switch {
+	display: inline-flex; margin: 0 0 10px;
+	background: var(--sl-color-surface-alt); border-radius: 999px; padding: 3px; gap: 2px;
+}
+.v6-switch button {
+	border: 0; background: transparent; cursor: pointer;
+	padding: 4px 12px; border-radius: 999px; font-size: 12px; color: var(--sl-color-text-muted);
+	transition: background .15s, color .15s, box-shadow .15s;
+}
+.v6-switch button.on { background: #fff; color: var(--sl-color-text-heading); font-weight: bold; box-shadow: var(--sl-shadow-soft); }
+.v6[data-density="compact"] .rb-row { padding: 2px 7px; }
+.v6[data-density="compact"] .rb-row .who small { display: none; }
+.v6[data-density="compact"] .rb-line { padding: 1px 0; font-size: 12.5px; }
+.v6[data-density="compact"] .rb-pm a { padding: 3px 10px; }
+.v6[data-density="compact"] .rb-ava { width: 44px; height: 44px; }
+.v6[data-density="spacious"] .rb-row { padding: 10px 9px; }
+.v6[data-density="spacious"] .rb-line { padding: 6px 0; }
+.v6[data-density="spacious"] .rb-pm a { padding: 11px 10px; }
+
+/* ==================================================================
+   Скин 7: Живой блок (залогинен)
+   ================================================================== */
+.v7-pulse { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.v7-num { font-size: 30px; font-weight: bold; line-height: 1; color: var(--sl-color-text-heading); font-variant-numeric: tabular-nums; }
+.v7-cap { font-size: 11.5px; color: var(--sl-color-text-muted); }
+.v7-bars { display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-left: auto; }
+.v7-bars i {
+	width: 6px; border-radius: 3px 3px 0 0;
+	background: color-mix(in srgb, var(--sl-color-brand-link) 55%, transparent);
+	animation: v7bar 1.6s ease-in-out infinite alternate;
+}
+@keyframes v7bar { from { transform: scaleY(0.4); } to { transform: scaleY(1); } }
+.v7 .rb-row.is-new { animation: rowIn .45s both; }
+.v7 .rb-row.leave { opacity: .45; }
+.v7 .rb-row.leave .who { text-decoration: line-through; }
+
+/* ==================================================================
+   Скин 8: Конструктор (залогинен, drag секций)
+   ================================================================== */
+.v8-hint { font-size: 11.5px; color: var(--sl-color-text-subtle); margin: 0 0 10px; display: flex; align-items: center; gap: 6px; }
+.v8-sec {
+	border: 1px solid var(--sl-color-border-subtle); border-radius: 11px; background: #fff;
+	padding: 11px 12px; margin-bottom: 8px; position: relative;
+	transition: box-shadow .15s, border-color .15s, opacity .15s;
+}
+.v8-sec.dragging { opacity: .45; border-style: dashed; }
+.v8-sec.dragover { border-color: var(--sl-color-brand); box-shadow: var(--sl-shadow-soft); }
+.v8-grab {
+	position: absolute; top: 9px; right: 9px; cursor: grab;
+	color: var(--sl-color-text-subtle); font-size: 13px;
+	padding: 3px; border-radius: 6px;
+}
+.v8-grab:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading); }
+.v8-sec .rb-pm, .v8-sec .rb-actions { margin: 0; }
+.v8-reset { font-size: 11.5px; color: var(--sl-color-text-subtle); text-align: center; padding-top: 4px; }
+.v8-reset a { color: var(--sl-color-brand-strong); cursor: pointer; }
+
+/* ==================================================================
+   Скин 9: Прогресс группы (залогинен)
+   ================================================================== */
+.v9-ring {
+	--p: 0;
+	width: 84px; height: 84px; border-radius: 50%; flex: 0 0 auto;
+	padding: 5px;
+	background: conic-gradient(var(--sl-color-brand-strong) calc(var(--p) * 1%), var(--sl-color-surface-alt) 0);
+	display: grid; place-items: center; position: relative;
+}
+.v9-ring .rb-ava { width: 100%; height: 100%; border: 3px solid #fff; }
+.v9-badge {
+	position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+	padding: 1px 8px; border-radius: 999px; white-space: nowrap;
+	background: var(--sl-color-brand-strong); color: #fff;
+	font-size: 10.5px; font-weight: bold;
+	box-shadow: 0 2px 6px rgb(31 45 61 / 0.25);
+	font-variant-numeric: tabular-nums;
+}
+.v9-next { margin: 12px 0 0; }
+.v9-next .t { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--sl-color-text-muted); margin-bottom: 4px; }
+.v9-next .t b { color: var(--sl-color-text-heading); }
+.v9-bar { height: 7px; border-radius: 999px; background: var(--sl-color-surface-alt); overflow: hidden; }
+.v9-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 100%); transition: width 1.2s cubic-bezier(.2,.7,.3,1); }
+</style>
+</head>
+<body>
+
+<header class="demo-head">
+	<h1>Блок «Пользователи» — тренды 2026</h1>
+	<p>9 полных дизайнов блока с его реальной начинкой: профиль (аватар, группа, пункты), счётчики ЛС, действия,
+	онлайн-статистика с «Подробнее» (флаги + модули) и «Обновить». Тренд — скин и механика поверх реальных данных:
+	liquid glass / neumorphism / glassmorphism (Setproduct), bento и плотность (Muzli, SaaSFrame), live-блок (Dribbble), аккордеон (Eleken).
+	Остальные витрины:
+	<a href="user-block-variants.html" style="color:var(--sl-color-brand-strong)"><u>залогинен</u></a> ·
+	<a href="user-block-guest.html" style="color:var(--sl-color-brand-strong)"><u>гость</u></a> ·
+	<a href="user-block-live.html" style="color:var(--sl-color-brand-strong)"><u>гео и эффекты</u></a>.</p>
+</header>
+
+<div class="demo-wrap">
+
+<!-- ============ Поверхности ============ -->
+<section class="demo-sec">
+<h2>Поверхности: полный блок в трёх техниках</h2>
+<p>Один и тот же реальный состав блока — три материала. Liquid glass: рефракция + specular-блик + капли-кнопки; glassmorphism: матовое стекло; neumorphism: мягкий рельеф.</p>
+<div class="demo-grid">
+
+	<!-- 1. Liquid Glass -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">1</span><b>Liquid Glass</b><span>залогинен, весь блок — живое стекло</span></p>
+		<aside class="sl-block v1">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="v1-card spec">
+					<div class="rb-profile">
+						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+						<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+					</div>
+					<div class="rb-pm">
+						<a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt zero">0</span></a>
+						<a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a>
+					</div>
+					<div class="rb-actions">
+						<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+						<a href="#"><i class="bi bi-gear"></i></a>
+						<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+					</div>
+				</div>
+				<div class="v1-card">
+					<div class="rb-stats">
+						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+					</div>
+					<details class="rb-more">
+						<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+						<div class="rb-rows">
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> <small>· 2 мин.</small></span><span class="mod">Каталог файлов</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· 1 мин.</small></span><span class="mod">Поиск</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость <small>· 44 сек.</small></span><span class="mod">Новости</span></div>
+						</div>
+					</details>
+					<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 2. Neumorphism -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">2</span><b>Neumorphism</b><span>залогинен, рельеф + inset-счётчики</span></p>
+		<aside class="sl-block v2">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="rb-profile">
+					<span class="v2-ring"><i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i></span>
+					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+				</div>
+				<div class="v2-counts">
+					<span class="v2-count"><a href="#"><b>0</b><span>Входящие</span></a></span>
+					<span class="v2-count"><a href="#"><b>5</b><span>Исходящие</span></a></span>
+					<span class="v2-count"><b>3</b><span>Онлайн</span></span>
+				</div>
+				<div class="rb-actions">
+					<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+				<div class="v2-online">
+					<div class="rb-stats">
+						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+					</div>
+					<details class="rb-more">
+						<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+						<div class="rb-rows">
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> <small>· 2 мин.</small></span><span class="mod">Каталог файлов</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· 1 мин.</small></span><span class="mod">Поиск</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость <small>· 44 сек.</small></span><span class="mod">Новости</span></div>
+						</div>
+					</details>
+					<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 3. Glassmorphism (гость) -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">3</span><b>Glassmorphism</b><span>гость: вход + статистика в стекле</span></p>
+		<aside class="sl-block v3">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="v3-card">
+					<div class="v3-head">
+						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/guest.svg)"></i><br>
+						<span class="rb-hello">Добро пожаловать,</span><br><span class="rb-name">Гость</span>
+					</div>
+					<form class="v3-form" onsubmit="return false">
+						<label class="v3-field"><i class="bi bi-person"></i><input type="text" placeholder="Ник" maxlength="25" autocomplete="username" required></label>
+						<label class="v3-field"><i class="bi bi-key"></i><input type="password" placeholder="Пароль" maxlength="25" autocomplete="current-password" required></label>
+						<button type="submit">Войти</button>
+					</form>
+					<div class="v3-links">
+						<a href="#"><i class="bi bi-person-plus"></i> Регистрация</a>
+						<a href="#"><i class="bi bi-question-circle"></i> Пароль?</a>
+					</div>
+				</div>
+				<div class="v3-card">
+					<div class="rb-stats">
+						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>0</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>5</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>46</b></div>
+						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>51</b></div>
+					</div>
+					<details class="rb-more">
+						<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+						<div class="rb-rows">
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/cn.svg" alt="CN"><span class="who">Baidu Spider <small>· 2 мин.</small></span><span class="mod">Каталог файлов</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· 1 мин.</small></span><span class="mod">Поиск</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/fr.svg" alt="FR"><span class="who">Majestic-12 Bot <small>· 8 мин.</small></span><span class="mod">Форум</span></div>
+						</div>
+					</details>
+					<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<!-- ============ Модульность ============ -->
+<section class="demo-sec">
+<h2>Модульность и плотность</h2>
+<p>Bento-раскладка реальных зон блока; плотность, влияющая на все секции; конструктор, где перетаскиваются настоящие секции блока (localStorage).</p>
+<div class="demo-grid">
+
+	<!-- 4. Bento -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">4</span><b>Bento</b><span>зоны блока плитками + онлайн-секция</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="v4-grid">
+					<div class="v4-cell v4-profile">
+						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+						<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+					</div>
+					<a href="#" class="v4-cell" style="--t:var(--sl-color-brand-link)">
+						<span class="v4-k"><i class="bi bi-envelope"></i> Новые входящие</span>
+						<span class="v4-v">0</span>
+					</a>
+					<a href="#" class="v4-cell" style="--t:var(--sl-color-accent)">
+						<span class="v4-k"><i class="bi bi-send"></i> Новые исходящие</span>
+						<span class="v4-v">5</span>
+					</a>
+					<span class="v4-cell v4-acts">
+						<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+						<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+						<a href="#"><i class="bi bi-box-arrow-right"></i></a>
+					</span>
+				</div>
+				<div class="v4-online">
+					<div class="rb-stats">
+						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+					</div>
+					<details class="rb-more">
+						<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+						<div class="rb-rows">
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> <small>· 2 мин.</small></span><span class="mod">Каталог файлов</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· 1 мин.</small></span><span class="mod">Поиск</span></div>
+							<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость <small>· 44 сек.</small></span><span class="mod">Новости</span></div>
+						</div>
+					</details>
+					<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 5. Плотность -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">5</span><b>Плотность данных</b><span>compact / обычно / просторно — весь блок</span></p>
+		<aside class="sl-block v6" id="v6" data-density="cozy">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="v6-switch" role="group" aria-label="Плотность">
+					<button type="button" data-dn="compact">Компакт</button>
+					<button type="button" data-dn="cozy" class="on">Обычно</button>
+					<button type="button" data-dn="spacious">Просторно</button>
+				</div>
+				<div class="rb-profile">
+					<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+				</div>
+				<div class="rb-pm">
+					<a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt zero">0</span></a>
+					<a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a>
+				</div>
+				<div class="rb-actions">
+					<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+				<hr class="rb-hr">
+				<div class="rb-stats">
+					<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+					<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
+					<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+					<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+				</div>
+				<details class="rb-more" open>
+					<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+					<div class="rb-rows">
+						<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> <small>· Каталог файлов · 2 мин.</small></span><span class="mod">RU</span></div>
+						<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· Поиск · 1 мин.</small></span><span class="mod">US</span></div>
+						<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость <small>· Новости · 44 сек.</small></span><span class="mod">DE</span></div>
+					</div>
+				</details>
+				<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 6. Конструктор -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">6</span><b>Конструктор</b><span>перетащи реальные секции блока за ⠿</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<p class="v8-hint"><i class="bi bi-arrows-move"></i> Порядок секций — ваш, сохранится (localStorage)</p>
+				<div id="v8list">
+					<div class="v8-sec" draggable="true" data-key="profile">
+						<span class="v8-grab bi bi-grip-vertical" title="Перетащить"></span>
+						<div class="rb-profile">
+							<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+							<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+						</div>
+					</div>
+					<div class="v8-sec" draggable="true" data-key="pm">
+						<span class="v8-grab bi bi-grip-vertical" title="Перетащить"></span>
+						<div class="rb-pm">
+							<a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt zero">0</span></a>
+							<a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a>
+						</div>
+					</div>
+					<div class="v8-sec" draggable="true" data-key="actions">
+						<span class="v8-grab bi bi-grip-vertical" title="Перетащить"></span>
+						<div class="rb-actions">
+							<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+							<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+							<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+						</div>
+					</div>
+					<div class="v8-sec" draggable="true" data-key="online">
+						<span class="v8-grab bi bi-grip-vertical" title="Перетащить"></span>
+						<div class="rb-stats">
+							<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+							<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+							<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+						</div>
+						<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+					</div>
+				</div>
+				<p class="v8-reset"><a id="v8reset">Сбросить порядок</a></p>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<!-- ============ Живой блок + аккордеон + уровень ============ -->
+<section class="demo-sec">
+<h2>Живой блок, аккордеон, уровень</h2>
+<p>Онлайн-секция с настоящей механикой сессий вживую; блок-аккордеон по правилам Eleken; профиль с прогрессом до следующей группы (реальная points-механика).</p>
+<div class="demo-grid">
+
+	<!-- 7. Живой блок -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">7</span><b>Живой блок</b><span>посетители приходят и уходят сами</span></p>
+		<aside class="sl-block v7">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="rb-profile">
+					<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+				</div>
+				<div class="rb-pm">
+					<a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt zero">0</span></a>
+					<a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a>
+				</div>
+				<div class="rb-actions">
+					<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+				<hr class="rb-hr">
+				<div class="v7-pulse">
+					<span><span class="v7-num" id="v7num">3</span><br><span class="v7-cap">сейчас на сайте</span></span>
+					<span class="v7-bars" aria-hidden="true">
+						<i style="height:60%; animation-delay:0s"></i><i style="height:90%; animation-delay:.2s"></i><i style="height:45%; animation-delay:.4s"></i><i style="height:100%; animation-delay:.1s"></i><i style="height:70%; animation-delay:.3s"></i>
+					</span>
+				</div>
+				<div class="rb-rows" id="v7rows">
+					<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a></span><span class="mod">Каталог файлов</span></div>
+					<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot</span><span class="mod">Поиск</span></div>
+					<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/de.svg" alt="DE"><span class="who">Гость</span><span class="mod">Новости</span></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 8. Аккордеон -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">8</span><b>Аккордеон</b><span>секции блока, single-open, ARIA</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content v5-group" id="v5group">
+				<div class="v5-item">
+					<button type="button" class="v5-btn" aria-expanded="true" aria-controls="v5p1" id="v5b1">
+						<i class="bi bi-person-circle"></i> Профиль <span class="v5-chev bi bi-chevron-down"></span>
+					</button>
+					<div class="v5-panel" id="v5p1" role="region" aria-labelledby="v5b1"><div>
+						<div class="v5-body">
+							<div class="rb-profile">
+								<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+								<span><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
+							</div>
+						</div>
+					</div></div>
+				</div>
+				<div class="v5-item">
+					<button type="button" class="v5-btn" aria-expanded="false" aria-controls="v5p2" id="v5b2">
+						<i class="bi bi-envelope"></i> Личные сообщения <span class="v5-cnt">5</span><span class="v5-chev bi bi-chevron-down"></span>
+					</button>
+					<div class="v5-panel" id="v5p2" role="region" aria-labelledby="v5b2"><div>
+						<div class="v5-body">
+							<div class="rb-pm">
+								<a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt zero">0</span></a>
+								<a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a>
+							</div>
+						</div>
+					</div></div>
+				</div>
+				<div class="v5-item">
+					<button type="button" class="v5-btn" aria-expanded="false" aria-controls="v5p3" id="v5b3">
+						<i class="bi bi-lightning"></i> Действия <span class="v5-chev bi bi-chevron-down"></span>
+					</button>
+					<div class="v5-panel" id="v5p3" role="region" aria-labelledby="v5b3"><div>
+						<div class="v5-body">
+							<div class="rb-actions">
+								<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+								<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+								<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+							</div>
+						</div>
+					</div></div>
+				</div>
+				<div class="v5-item">
+					<button type="button" class="v5-btn" aria-expanded="false" aria-controls="v5p4" id="v5b4">
+						<i class="bi bi-people"></i> Кто на сайте <span class="v5-cnt">3</span><span class="v5-chev bi bi-chevron-down"></span>
+					</button>
+					<div class="v5-panel" id="v5p4" role="region" aria-labelledby="v5b4"><div>
+						<div class="v5-body">
+							<div class="rb-stats">
+								<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+								<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
+								<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+								<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+							</div>
+							<div class="rb-rows" style="padding-top:8px">
+								<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> <small>· 2 мин.</small></span><span class="mod">Каталог файлов</span></div>
+								<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· 1 мин.</small></span><span class="mod">Поиск</span></div>
+							</div>
+							<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+						</div>
+					</div></div>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- 9. Прогресс группы -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">9</span><b>Уровень</b><span>кольцо прогресса до следующей группы</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="rb-profile">
+					<span class="v9-ring" id="v9ring">
+						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<span class="v9-badge" id="v9badge">0%</span>
+					</span>
+					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Группа: <b>Клиент</b></span></span>
+				</div>
+				<div class="v9-next">
+					<span class="t"><span>50 078 пунктов</span><b>Эксперт: 60 000</b></span>
+					<span class="v9-bar"><i id="v9bar"></i></span>
+				</div>
+				<div class="rb-pm">
+					<a href="#"><i class="bi bi-envelope"></i> Новые входящие <span class="cnt zero">0</span></a>
+					<a href="#"><i class="bi bi-send"></i> Новые исходящие <span class="cnt">5</span></a>
+				</div>
+				<div class="rb-actions">
+					<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#" class="exit"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+				<hr class="rb-hr">
+				<div class="rb-stats">
+					<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
+					<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
+					<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+					<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
+				</div>
+				<details class="rb-more">
+					<summary>Подробнее <i class="bi bi-chevron-down"></i></summary>
+					<div class="rb-rows">
+						<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/ru.svg" alt="RU"><span class="who"><a href="#">SLAED CMS</a> <small>· 2 мин.</small></span><span class="mod">Каталог файлов</span></div>
+						<div class="rb-row"><img class="flg" src="../templates/lite/images/flags/us.svg" alt="US"><span class="who">Google Bot <small>· 1 мин.</small></span><span class="mod">Поиск</span></div>
+					</div>
+				</details>
+				<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<p style="max-width:1180px; margin:32px auto 0; font-size:12px; color:var(--sl-color-text-muted);">
+Каждый вариант — полный состав блока <code>blocks/user_info.php</code>: профиль (аватар/группа/пункты), счётчики ЛС (ссылки на <code>account&amp;op=privat</code>),
+Фавориты/Настройки/Выход, счётчики сессий, «Подробнее» (флаг + имя-длительность + модуль, лениво через <code>getUserSessionRows</code>) и «Обновить».
+Живой блок №7 в системе питается от существующего htmx-эндпоинта. Все анимации уважают <code>prefers-reduced-motion</code>.
+</p>
+
+</div>
+
+<script>
+// demo only: density switcher (whole block)
+var v6 = document.getElementById('v6');
+v6.querySelectorAll('.v6-switch button').forEach(function (b) {
+	b.addEventListener('click', function () {
+		v6.setAttribute('data-density', b.dataset.dn);
+		v6.querySelectorAll('.v6-switch button').forEach(function (x) { x.classList.toggle('on', x === b); });
+	});
+});
+
+// demo only: drag real block sections, order in localStorage
+(function () {
+	var list = document.getElementById('v8list');
+	var key = 'slaed-demo-block-order';
+	var saved = null;
+	try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+	if (saved) saved.forEach(function (k) {
+		var el = list.querySelector('[data-key="' + k + '"]');
+		if (el) list.appendChild(el);
+	});
+	var drag = null;
+	list.addEventListener('dragstart', function (e) {
+		drag = e.target.closest('.v8-sec');
+		if (drag) drag.classList.add('dragging');
+	});
+	list.addEventListener('dragend', function () {
+		if (!drag) return;
+		drag.classList.remove('dragging');
+		list.querySelectorAll('.v8-sec').forEach(function (x) { x.classList.remove('dragover'); });
+		localStorage.setItem(key, JSON.stringify(Array.from(list.querySelectorAll('.v8-sec')).map(function (x) { return x.dataset.key; })));
+		drag = null;
+	});
+	list.addEventListener('dragover', function (e) {
+		e.preventDefault();
+		var over = e.target.closest('.v8-sec');
+		if (!over || over === drag) return;
+		list.querySelectorAll('.v8-sec').forEach(function (x) { x.classList.toggle('dragover', x === over); });
+		var rect = over.getBoundingClientRect();
+		list.insertBefore(drag, e.clientY > rect.top + rect.height / 2 ? over.nextSibling : over);
+	});
+	document.getElementById('v8reset').addEventListener('click', function () {
+		localStorage.removeItem(key);
+		['profile', 'pm', 'actions', 'online'].forEach(function (k) { list.appendChild(list.querySelector('[data-key="' + k + '"]')); });
+	});
+})();
+
+// demo only: live visitors join and leave (real session mechanics simulated)
+(function () {
+	var rows = document.getElementById('v7rows');
+	var num = document.getElementById('v7num');
+	var pool = [
+		['ru', '<a href="#">Eduard</a>', 'Главная'],
+		['ua', 'Гость', 'Форум'],
+		['fr', 'Majestic-12 Bot', 'Поиск'],
+		['de', 'Гость', 'Каталог файлов'],
+		['us', 'Visitor7', 'Новости']
+	];
+	var i = 0, count = 3;
+	setInterval(function () {
+		var join = rows.children.length < 4 || Math.random() > 0.45;
+		if (join) {
+			var p = pool[i++ % pool.length];
+			var el = document.createElement('div');
+			el.className = 'rb-row is-new';
+			el.innerHTML = '<img class="flg" src="../templates/lite/images/flags/' + p[0] + '.svg" alt=""><span class="who">' + p[1] + '</span><span class="mod">' + p[2] + '</span>';
+			rows.prepend(el);
+			count++;
+			if (rows.children.length > 5) rows.lastElementChild.remove();
+		} else {
+			var last = rows.lastElementChild;
+			if (last) {
+				last.classList.add('leave');
+				setTimeout(function () { last.remove(); }, 900);
+				count = Math.max(1, count - 1);
+			}
+		}
+		num.textContent = count;
+	}, 4200);
+})();
+
+// demo only: single-open accordion with aria
+(function () {
+	var group = document.getElementById('v5group');
+	group.querySelectorAll('.v5-btn').forEach(function (btn) {
+		btn.addEventListener('click', function () {
+			var open = btn.getAttribute('aria-expanded') === 'true';
+			group.querySelectorAll('.v5-btn').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+			if (!open) btn.setAttribute('aria-expanded', 'true');
+		});
+	});
+})();
+
+// demo only: group progress ring + bar (50078 of 60000 = 83%)
+(function () {
+	var target = 83, ring = document.getElementById('v9ring'), badge = document.getElementById('v9badge');
+	var t0 = performance.now();
+	function tick(now) {
+		var p = Math.min((now - t0) / 1200, 1);
+		var cur = Math.round(target * (1 - Math.pow(1 - p, 3)));
+		ring.style.setProperty('--p', cur);
+		badge.textContent = cur + '%';
+		if (p < 1) requestAnimationFrame(tick);
+	}
+	requestAnimationFrame(tick);
+	document.getElementById('v9bar').style.width = target + '%';
+})();
+</script>
+</body>
+</html>

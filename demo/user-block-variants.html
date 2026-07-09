@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Блок «Пользователи»: варианты (залогинен)</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body {
+	margin: 0;
+	padding: 0 0 60px;
+	background: var(--sl-color-surface);
+	color: var(--sl-color-text);
+	font: 15px/1.5 Arial, Tahoma, sans-serif;
+}
+a { text-decoration: none; color: inherit; }
+.demo-head {
+	padding: 26px clamp(14px, 4vw, 48px);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	border-bottom: 1px solid var(--sl-color-border);
+}
+.demo-head h1 {
+	margin: 0 0 6px;
+	font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-head p { margin: 0; max-width: 900px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1560px; margin: 0 auto; }
+.demo-sec { margin: 40px 0 0; }
+.demo-sec > h2 {
+	margin: 0 0 18px; padding-bottom: 8px;
+	border-bottom: 2px solid var(--sl-color-border);
+	font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+	color: var(--sl-color-text-heading);
+}
+.demo-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+	gap: 26px;
+	align-items: start;
+}
+.demo-cell > .demo-label {
+	display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px;
+}
+.demo-label .n {
+	flex: 0 0 auto;
+	display: inline-grid; place-items: center; width: 24px; height: 24px;
+	border-radius: 999px; background: var(--sl-color-brand-strong); color: #fff;
+	font-size: 12px; font-weight: bold;
+}
+.demo-label b { font-size: 14px; color: var(--sl-color-text-heading); }
+.demo-label span { font-size: 12px; color: var(--sl-color-text-muted); }
+.demo-cell .sl-block { margin-bottom: 0; }
+.demo-dark-note { font-size: 12px; color: var(--sl-color-text-muted); margin-top: 8px; }
+
+/* ==================================================================
+   Общие демо-примитивы (кандидаты в theme.css при выборе варианта)
+   ================================================================== */
+.u-ava {
+	width: 84px; height: 84px; border-radius: 50%;
+	background-size: cover; background-position: center;
+	background-color: var(--sl-color-bg);
+	display: inline-block; flex: 0 0 auto;
+}
+.u-presence {
+	position: absolute; right: 4px; bottom: 4px;
+	width: 14px; height: 14px; border-radius: 50%;
+	background: var(--sl-color-success);
+	border: 2.5px solid #fff;
+}
+.u-name { font-weight: bold; color: var(--sl-color-text-heading); }
+.u-hello { font-size: 12.5px; color: var(--sl-color-text-muted); }
+.u-icon-btn {
+	display: inline-grid; place-items: center;
+	width: 38px; height: 38px; border-radius: 12px;
+	background: var(--sl-color-surface-alt);
+	color: var(--sl-color-text-heading);
+	font-size: var(--sl-size-icon-sm);
+	transition: background .18s, color .18s, transform .18s;
+	position: relative;
+}
+.u-icon-btn:hover {
+	background: color-mix(in srgb, var(--sl-color-brand-link) 16%, transparent);
+	color: var(--sl-color-brand-strong);
+	transform: translateY(-1px);
+}
+.u-icon-btn.is-danger:hover {
+	background: color-mix(in srgb, var(--sl-color-danger) 14%, transparent);
+	color: var(--sl-color-danger);
+}
+.u-badge {
+	position: absolute; top: -5px; right: -5px;
+	min-width: 18px; height: 18px; padding: 0 5px;
+	border-radius: 999px; display: inline-grid; place-items: center;
+	background: var(--sl-color-danger); color: #fff;
+	font-size: 11px; font-weight: bold; line-height: 1;
+	border: 2px solid #fff;
+}
+.u-badge.is-zero { background: var(--sl-color-text-subtle); }
+
+/* ---------- V1: Карта с баннером ---------- */
+.u1-banner {
+	height: 64px; margin: -15px -15px 0; border-radius: 8px 8px 0 0;
+	background:
+		radial-gradient(120px 60px at 80% 0%, color-mix(in srgb, #fff 30%, transparent), transparent),
+		linear-gradient(120deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 100%);
+}
+.u1-ava-wrap { position: relative; width: 84px; margin: -46px auto 8px; }
+.u1-ava-wrap .u-ava { border: 4px solid #fff; box-shadow: var(--sl-shadow-soft); }
+.u1-center { text-align: center; }
+.u1-center .u-name { font-size: 16px; }
+.u1-chips { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.u1-actions { display: flex; justify-content: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--sl-color-border-subtle); }
+
+/* ---------- V2: Компакт-строка ---------- */
+.u2-head { display: flex; align-items: center; gap: 12px; }
+.u2-head .u-ava { width: 52px; height: 52px; }
+.u2-ava-wrap { position: relative; flex: 0 0 auto; }
+.u2-ava-wrap .u-presence { right: 0; bottom: 0; width: 12px; height: 12px; }
+.u2-id { flex: 1 1 auto; min-width: 0; }
+.u2-id .u-name { display: block; font-size: 15px; }
+.u2-id .u-hello { display: flex; align-items: center; gap: 5px; }
+.u2-id .u-hello .bi { color: var(--sl-color-success); font-size: 9px; }
+.u2-tools { display: flex; gap: 6px; }
+.u2-tools .u-icon-btn { width: 34px; height: 34px; border-radius: 10px; }
+.u2-pm { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ---------- V3: Дашборд-плитки ---------- */
+.u3-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.u3-head .u-ava { width: 56px; height: 56px; }
+.u3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.u3-tile {
+	display: flex; flex-direction: column; gap: 4px;
+	padding: 10px 12px; border-radius: 10px;
+	background: color-mix(in srgb, var(--t, var(--sl-color-brand-link)) 9%, #fff);
+	border: 1px solid color-mix(in srgb, var(--t, var(--sl-color-brand-link)) 22%, var(--sl-color-border-subtle));
+	transition: transform .18s, box-shadow .18s;
+}
+a.u3-tile:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft); }
+.u3-tile .bi { font-size: var(--sl-size-icon-sm); color: var(--t, var(--sl-color-brand-link)); }
+.u3-tile b { font-size: 18px; line-height: 1; color: var(--sl-color-text-heading); }
+.u3-tile span { font-size: 11.5px; color: var(--sl-color-text-muted); }
+.u3-foot { display: flex; gap: 8px; margin-top: 12px; }
+.u3-foot .sl-but { flex: 1 1 auto; text-align: center; }
+
+/* ---------- V4: Меню с бейджами ---------- */
+.u4-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--sl-color-border-subtle); margin-bottom: 6px; }
+.u4-head .u-ava { width: 48px; height: 48px; }
+.u4-menu { list-style: none; margin: 0; padding: 0; }
+.u4-menu a {
+	display: flex; align-items: center; gap: 10px;
+	padding: 9px 10px; border-radius: 8px;
+	color: var(--sl-color-text); transition: background .15s, color .15s;
+}
+.u4-menu a:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-brand-strong); }
+.u4-menu a.is-danger:hover { background: color-mix(in srgb, var(--sl-color-danger) 10%, transparent); color: var(--sl-color-danger); }
+.u4-menu .bi { width: 20px; text-align: center; font-size: var(--sl-size-icon-xs); color: var(--sl-color-text-muted); }
+.u4-menu a:hover .bi { color: inherit; }
+.u4-menu .lbl { flex: 1 1 auto; }
+.u4-menu .cnt {
+	min-width: 22px; height: 20px; padding: 0 7px;
+	display: inline-grid; place-items: center; border-radius: 999px;
+	font-size: 12px; font-weight: bold;
+	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	color: var(--sl-color-brand-strong);
+}
+.u4-menu .cnt.is-zero { background: var(--sl-color-surface-alt); color: var(--sl-color-text-subtle); }
+
+/* ---------- V5: Чипсы-всё ---------- */
+.u5-head { text-align: center; margin-bottom: 12px; }
+.u5-ava-wrap { position: relative; width: 76px; margin: 0 auto 8px; }
+.u5-ava-wrap .u-ava { width: 76px; height: 76px; border: 3px solid #fff; box-shadow: var(--sl-shadow-soft); }
+.u5-rows { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+
+/* ---------- V6: Минимал ---------- */
+.u6-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.u6-head .u-ava { width: 44px; height: 44px; }
+.u6-rows { list-style: none; margin: 0; padding: 0; }
+.u6-rows li {
+	display: flex; align-items: center; justify-content: space-between; gap: 10px;
+	padding: 8px 2px; border-bottom: 1px solid var(--sl-color-border-subtle);
+	font-size: 13.5px;
+}
+.u6-rows li:last-child { border-bottom: 0; }
+.u6-rows .k { color: var(--sl-color-text-muted); }
+.u6-rows b { color: var(--sl-color-text-heading); }
+.u6-links { display: flex; gap: 14px; padding-top: 10px; font-size: 13px; }
+.u6-links a { color: var(--sl-color-brand-strong); }
+.u6-links a:hover { text-decoration: underline; }
+.u6-links a.is-danger { color: var(--sl-color-danger); margin-left: auto; }
+
+/* ---------- V7: Кольцо-статус + колокольчик ---------- */
+.u7-head { display: flex; align-items: center; gap: 14px; }
+.u7-ring {
+	position: relative; flex: 0 0 auto;
+	width: 66px; height: 66px; border-radius: 50%;
+	padding: 3px;
+	background: conic-gradient(var(--sl-color-success) 0 62%, var(--sl-color-border-muted) 62% 100%);
+}
+.u7-ring .u-ava { width: 100%; height: 100%; border: 3px solid #fff; }
+.u7-id { flex: 1 1 auto; }
+.u7-bell { margin-left: auto; }
+.u7-seg {
+	display: flex; margin-top: 14px;
+	border: 1px solid var(--sl-color-border); border-radius: 999px;
+	overflow: hidden; background: var(--sl-color-surface-alt);
+}
+.u7-seg a {
+	flex: 1 1 0; text-align: center; padding: 8px 4px;
+	font-size: 12.5px; color: var(--sl-color-text);
+	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+	transition: background .15s, color .15s;
+}
+.u7-seg a + a { border-left: 1px solid var(--sl-color-border); }
+.u7-seg a:hover { background: #fff; color: var(--sl-color-brand-strong); }
+.u7-seg .bi { font-size: var(--sl-size-icon-xs); }
+
+/* ---------- V8: Сплит-статистика ---------- */
+.u8-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.u8-top .u-ava { width: 50px; height: 50px; }
+.u8-top .u-icon-btn { margin-left: auto; }
+.u8-split { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--sl-color-border-subtle); border-radius: 10px; overflow: hidden; }
+.u8-split a, .u8-split span {
+	display: flex; flex-direction: column; align-items: center; gap: 2px;
+	padding: 12px 6px; background: #fff; transition: background .15s;
+}
+.u8-split a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 8%, #fff); }
+.u8-split > *:nth-child(2) { border-left: 1px solid var(--sl-color-border-subtle); }
+.u8-split b { font-size: 20px; line-height: 1.1; color: var(--sl-color-brand-strong); }
+.u8-split small { font-size: 11.5px; color: var(--sl-color-text-muted); }
+.u8-links { display: flex; justify-content: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+
+/* ---------- V9: Тёмная карточка ---------- */
+.u9.sl-block { background: linear-gradient(160deg, var(--sl-color-surface-dark) 0%, var(--sl-color-surface-darker) 100%); border-color: var(--sl-color-surface-divider); }
+.u9 .sl-title { color: #fff; }
+.u9-head { display: flex; align-items: center; gap: 12px; }
+.u9-ava-wrap { position: relative; }
+.u9-head .u-ava { width: 54px; height: 54px; border: 2px solid var(--sl-color-surface-divider); }
+.u9-head .u-presence { border-color: var(--sl-color-surface-darker); }
+.u9 .u-name { color: #fff; }
+.u9 .u-hello { color: var(--sl-color-text-subtle); }
+.u9-stats { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+.u9-chip {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 26px; padding: 0 11px; border-radius: 999px;
+	font-size: 13px; line-height: 1;
+	background: rgb(255 255 255 / 0.08); color: #dfe6ee;
+	border: 1px solid rgb(255 255 255 / 0.1);
+	transition: background .15s;
+}
+a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
+.u9-chip b { color: #fff; }
+.u9-chip .bi { color: var(--sl-color-brand); font-size: var(--sl-size-icon-xs); }
+.u9-actions { display: flex; gap: 8px; }
+.u9-actions .u-icon-btn { background: rgb(255 255 255 / 0.08); color: #dfe6ee; }
+.u9-actions .u-icon-btn:hover { background: rgb(255 255 255 / 0.18); color: #fff; }
+
+/* ---------- V10: Градиент-hero ---------- */
+.u10.sl-block { padding: 0; overflow: hidden; border: 0; }
+.u10-hero {
+	padding: 20px 15px 16px; color: #fff; text-align: center;
+	background:
+		radial-gradient(160px 90px at 15% -10%, rgb(255 255 255 / 0.28), transparent),
+		linear-gradient(135deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 60%, #1a6899 100%);
+}
+.u10-hero .sl-title { color: #fff; margin-bottom: 14px; }
+.u10-ava-wrap { position: relative; width: 78px; margin: 0 auto 8px; }
+.u10-ava-wrap .u-ava { width: 78px; height: 78px; border: 3px solid rgb(255 255 255 / 0.85); }
+.u10-hero .u-hello { color: rgb(255 255 255 / 0.8); }
+.u10-hero .u-name { color: #fff; font-size: 16px; }
+.u10-glass { display: flex; justify-content: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.u10-glass a, .u10-glass span {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 27px; padding: 0 12px; border-radius: 999px;
+	font-size: 12.5px; color: #fff;
+	background: rgb(255 255 255 / 0.18);
+	border: 1px solid rgb(255 255 255 / 0.25);
+	backdrop-filter: blur(4px);
+	transition: background .15s;
+}
+.u10-glass a:hover { background: rgb(255 255 255 / 0.3); }
+.u10-body { padding: 14px 15px 15px; background: #fff; }
+.u10-body .u4-menu a { padding: 8px 10px; }
+
+/* ---------- V11: Обложка-фон ---------- */
+.u11.sl-block { position: relative; overflow: hidden; }
+.u11-cover {
+	position: absolute; inset: 0 0 auto; height: 110px;
+	background-image: var(--cov); background-size: cover; background-position: center;
+	filter: blur(14px) saturate(1.3); opacity: .45; transform: scale(1.3);
+}
+.u11-fade { position: absolute; inset: 0 0 auto; height: 130px; background: linear-gradient(180deg, transparent 30%, var(--sl-color-surface) 100%); }
+.u11-in { position: relative; text-align: center; }
+.u11-in .u-ava { width: 88px; height: 88px; border: 4px solid #fff; box-shadow: var(--sl-shadow-medium); }
+.u11-meta { display: flex; justify-content: center; gap: 18px; margin: 12px 0; padding: 10px 0; border-block: 1px solid var(--sl-color-border-subtle); }
+.u11-meta a, .u11-meta span { display: flex; flex-direction: column; gap: 1px; font-size: 11.5px; color: var(--sl-color-text-muted); }
+.u11-meta b { font-size: 16px; color: var(--sl-color-text-heading); }
+.u11-meta a:hover b { color: var(--sl-color-brand-strong); }
+
+/* ---------- V12: Timeline-список ---------- */
+.u12-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.u12-head .u-ava { width: 50px; height: 50px; }
+.u12-list { list-style: none; margin: 0; padding: 0; position: relative; }
+.u12-list::before {
+	content: ""; position: absolute; left: 15px; top: 8px; bottom: 8px;
+	width: 2px; background: var(--sl-color-border-subtle); border-radius: 2px;
+}
+.u12-list li { position: relative; padding: 6px 0 6px 42px; }
+.u12-list .dot {
+	position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+	width: 16px; height: 16px; border-radius: 50%;
+	display: grid; place-items: center;
+	background: #fff; border: 2px solid var(--t, var(--sl-color-brand-link));
+}
+.u12-list .dot::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--t, var(--sl-color-brand-link)); }
+.u12-list a { color: var(--sl-color-text); }
+.u12-list a:hover { color: var(--sl-color-brand-strong); }
+.u12-list b { color: var(--sl-color-text-heading); }
+
+/* ==================================================================
+   Онлайн-статистика (низ блока)
+   ================================================================== */
+/* ---------- S1: Легенда с точками ---------- */
+.s1 { list-style: none; margin: 0; padding: 0; }
+.s1 li { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13.5px; }
+.s1 .d { width: 9px; height: 9px; border-radius: 50%; background: var(--t); flex: 0 0 auto; }
+.s1 .k { color: var(--sl-color-text-muted); flex: 1 1 auto; }
+.s1 b { color: var(--sl-color-text-heading); }
+.s1 li.total { border-top: 1px solid var(--sl-color-border-subtle); margin-top: 4px; padding-top: 8px; }
+
+/* ---------- S3: Стек-бар ---------- */
+.s3-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--sl-color-surface-alt); margin-bottom: 10px; }
+.s3-bar i { display: block; background: var(--t); }
+.s3-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--sl-color-text-muted); }
+.s3-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.s3-leg .d { width: 8px; height: 8px; border-radius: 50%; background: var(--t); }
+.s3-leg b { color: var(--sl-color-text-heading); }
+
+/* ---------- S4: Аватар-стек ---------- */
+.s4-row { display: flex; align-items: center; gap: 10px; }
+.s4-stack { display: flex; }
+.s4-stack .a {
+	width: 30px; height: 30px; border-radius: 50%;
+	border: 2px solid #fff; background-size: cover; background-position: center;
+	background-color: var(--sl-color-surface-soft);
+	display: grid; place-items: center;
+	font-size: 12px; color: var(--sl-color-text-muted);
+}
+.s4-stack .a + .a { margin-left: -9px; }
+.s4-stack .more { background: var(--sl-color-surface-alt); font-size: 11px; font-weight: bold; color: var(--sl-color-text-heading); }
+.s4-lbl { flex: 1 1 auto; font-size: 13px; color: var(--sl-color-text-muted); }
+.s4-lbl b { color: var(--sl-color-text-heading); }
+.s4-refresh { width: 30px; height: 30px; border-radius: 50%; font-size: var(--sl-size-icon-xs); }
+</style>
+</head>
+<body>
+
+<header class="demo-head">
+	<h1>Блок «Пользователи» — залогиненное состояние</h1>
+	<p>12 вариантов карточки пользователя + 4 варианта онлайн-статистики. Всё на токенах и классах темы lite
+	(<code>sl-block</code>, <code>sl-title</code>, <code>sl-chip-*</code>, <code>sl-but</code>, bootstrap-icons).
+	Ещё: <a href="user-block-guest.html" style="color:var(--sl-color-brand-strong)"><u>гость</u></a> ·
+	<a href="user-block-live.html" style="color:var(--sl-color-brand-strong)"><u>«Подробнее» и эффекты</u></a> ·
+	<a href="user-block-2026.html" style="color:var(--sl-color-brand-strong)"><u>тренды 2026</u></a>.</p>
+</header>
+
+<div class="demo-wrap">
+
+<section class="demo-sec">
+<h2>Карточка пользователя</h2>
+<div class="demo-grid">
+
+	<!-- V1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">1</span><b>Карта с баннером</b><span>градиент-шапка, аватар внахлёст</span></p>
+		<aside class="sl-block">
+			<div class="sl-block-content">
+				<div class="u1-banner"></div>
+				<div class="u1-ava-wrap">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-presence"></i>
+				</div>
+				<div class="u1-center">
+					<span class="u-hello">Здравствуйте,</span><br>
+					<span class="u-name">SLAED CMS</span>
+				</div>
+				<div class="u1-chips">
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> Входящие <b>0</b></a>
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> Исходящие <b>5</b></span>
+				</div>
+				<div class="u1-actions">
+					<a href="#" class="u-icon-btn" title="Фавориты"><i class="bi bi-star"></i></a>
+					<a href="#" class="u-icon-btn" title="Настройки"><i class="bi bi-gear"></i></a>
+					<a href="#" class="u-icon-btn is-danger" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">2</span><b>Компакт-строка</b><span>минимум высоты, иконки-действия</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u2-head">
+					<span class="u2-ava-wrap">
+						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="u-presence"></i>
+					</span>
+					<span class="u2-id">
+						<span class="u-name">SLAED CMS</span>
+						<span class="u-hello"><i class="bi bi-circle-fill"></i> в сети</span>
+					</span>
+					<span class="u2-tools">
+						<a href="#" class="u-icon-btn" title="Настройки"><i class="bi bi-gear"></i></a>
+						<a href="#" class="u-icon-btn is-danger" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+					</span>
+				</div>
+				<div class="u2-pm">
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> Новые входящие <b>0</b></a>
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> Исходящие <b>5</b></span>
+					<a href="#" class="sl-chip sl-chip-warn"><i class="bi bi-star"></i> Фавориты</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V3 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">3</span><b>Дашборд-плитки</b><span>2×2 счётчики + кнопки</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u3-head">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
+				</div>
+				<div class="u3-grid">
+					<a href="#" class="u3-tile" style="--t:var(--sl-color-brand-link)"><i class="bi bi-envelope"></i><b>0</b><span>Новые входящие</span></a>
+					<span class="u3-tile" style="--t:var(--sl-color-accent)"><i class="bi bi-send"></i><b>5</b><span>Новые исходящие</span></span>
+					<a href="#" class="u3-tile" style="--t:var(--sl-color-warning)"><i class="bi bi-star"></i><b>12</b><span>Фавориты</span></a>
+					<span class="u3-tile" style="--t:var(--sl-color-success)"><i class="bi bi-people"></i><b>1</b><span>Сейчас на сайте</span></span>
+				</div>
+				<div class="u3-foot">
+					<a href="#" class="sl-but">Настройки</a>
+					<a href="#" class="sl-but">Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V4 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">4</span><b>Меню с бейджами</b><span>вертикальный список, счётчики справа</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u4-head">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
+				</div>
+				<ul class="u4-menu">
+					<li><a href="#"><i class="bi bi-envelope"></i><span class="lbl">Новые входящие</span><span class="cnt is-zero">0</span></a></li>
+					<li><a href="#"><i class="bi bi-send"></i><span class="lbl">Новые исходящие</span><span class="cnt">5</span></a></li>
+					<li><a href="#"><i class="bi bi-star"></i><span class="lbl">Фавориты</span></a></li>
+					<li><a href="#"><i class="bi bi-gear"></i><span class="lbl">Настройки</span></a></li>
+					<li><a href="#" class="is-danger"><i class="bi bi-box-arrow-right"></i><span class="lbl">Выход</span></a></li>
+				</ul>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V5 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">5</span><b>Чипсы-всё</b><span>системные sl-chip-* без новых классов</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u5-head">
+					<span class="u5-ava-wrap">
+						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="u-presence"></i>
+					</span>
+					<span class="u-hello">Здравствуйте,</span><br>
+					<span class="u-name">SLAED CMS</span>
+				</div>
+				<div class="u5-rows">
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> Входящие <b>0</b></a>
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> Исходящие <b>5</b></span>
+					<a href="#" class="sl-chip sl-chip-warn"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#" class="sl-chip sl-chip-success"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#" class="sl-chip sl-chip-danger"><i class="bi bi-box-arrow-right"></i> Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V6 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">6</span><b>Минимал</b><span>текст-первый, тонкие разделители</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u6-head">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<span><span class="u-name">SLAED CMS</span><br><span class="u-hello">добро пожаловать</span></span>
+				</div>
+				<ul class="u6-rows">
+					<li><span class="k">Новые входящие</span><b>0</b></li>
+					<li><span class="k">Новые исходящие</span><b>5</b></li>
+					<li><span class="k">Сейчас на сайте</span><b>1</b></li>
+				</ul>
+				<div class="u6-links">
+					<a href="#">Фавориты</a>
+					<a href="#">Настройки</a>
+					<a href="#" class="is-danger">Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V7 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">7</span><b>Кольцо-статус</b><span>активность на аватаре, сегмент-действия</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u7-head">
+					<span class="u7-ring"><i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i></span>
+					<span class="u7-id">
+						<span class="u-hello">Здравствуйте,</span><br>
+						<span class="u-name">SLAED CMS</span>
+					</span>
+					<a href="#" class="u-icon-btn u7-bell" title="Личные сообщения">
+						<i class="bi bi-bell"></i>
+						<span class="u-badge">5</span>
+					</a>
+				</div>
+				<div class="u7-seg">
+					<a href="#"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#"><i class="bi bi-gear"></i> Настройки</a>
+					<a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V8 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">8</span><b>Сплит-счётчики</b><span>крупные цифры почты</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u8-top">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<span><span class="u-name">SLAED CMS</span><br><span class="u-hello">Личные сообщения</span></span>
+					<a href="#" class="u-icon-btn is-danger" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+				<div class="u8-split">
+					<a href="#"><b>0</b><small>Новые входящие</small></a>
+					<span><b>5</b><small>Новые исходящие</small></span>
+				</div>
+				<div class="u8-links">
+					<a href="#" class="sl-chip sl-chip-warn"><i class="bi bi-star"></i> Фавориты</a>
+					<a href="#" class="sl-chip sl-chip-info"><i class="bi bi-gear"></i> Настройки</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V9 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">9</span><b>Midnight</b><span>тёмная карточка на токенах surface-dark</span></p>
+		<aside class="sl-block u9">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u9-head">
+					<span class="u9-ava-wrap">
+						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="u-presence"></i>
+					</span>
+					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
+				</div>
+				<div class="u9-stats">
+					<a href="#" class="u9-chip"><i class="bi bi-envelope"></i> Входящие <b>0</b></a>
+					<span class="u9-chip"><i class="bi bi-send"></i> Исходящие <b>5</b></span>
+					<span class="u9-chip"><i class="bi bi-people"></i> Онлайн <b>1</b></span>
+				</div>
+				<div class="u9-actions">
+					<a href="#" class="u-icon-btn" title="Фавориты"><i class="bi bi-star"></i></a>
+					<a href="#" class="u-icon-btn" title="Настройки"><i class="bi bi-gear"></i></a>
+					<a href="#" class="u-icon-btn" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V10 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">10</span><b>Градиент-hero</b><span>шапка-градиент + glass-чипсы + меню</span></p>
+		<aside class="sl-block u10">
+			<div class="u10-hero">
+				<h2 class="sl-title">Пользователи</h2>
+				<div class="u10-ava-wrap">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-presence"></i>
+				</div>
+				<span class="u-hello">Здравствуйте,</span><br>
+				<span class="u-name">SLAED CMS</span>
+				<div class="u10-glass">
+					<a href="#"><i class="bi bi-envelope"></i> 0</a>
+					<span><i class="bi bi-send"></i> 5</span>
+					<span><i class="bi bi-people"></i> 1 онлайн</span>
+				</div>
+			</div>
+			<div class="u10-body">
+				<ul class="u4-menu">
+					<li><a href="#"><i class="bi bi-star"></i><span class="lbl">Фавориты</span></a></li>
+					<li><a href="#"><i class="bi bi-gear"></i><span class="lbl">Настройки</span></a></li>
+					<li><a href="#" class="is-danger"><i class="bi bi-box-arrow-right"></i><span class="lbl">Выход</span></a></li>
+				</ul>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V11 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">11</span><b>Обложка из аватара</b><span>blur-фон, метрики в ряд</span></p>
+		<aside class="sl-block u11">
+			<div class="u11-cover" style="--cov:url(../uploads/avatars/default/51.png)"></div>
+			<div class="u11-fade"></div>
+			<div class="sl-block-content u11-in">
+				<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+				<div style="margin-top:8px">
+					<span class="u-hello">Здравствуйте,</span><br>
+					<span class="u-name" style="font-size:16px">SLAED CMS</span>
+				</div>
+				<div class="u11-meta">
+					<a href="#"><b>0</b>Входящие</a>
+					<span><b>5</b>Исходящие</span>
+					<a href="#"><b>12</b>Фавориты</a>
+				</div>
+				<div style="display:flex; justify-content:center; gap:8px">
+					<a href="#" class="sl-but">Настройки</a>
+					<a href="#" class="sl-but">Выход</a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- V12 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">12</span><b>Timeline</b><span>вертикальная линия с тонированными точками</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Пользователи</h2>
+			<div class="sl-block-content">
+				<div class="u12-head">
+					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
+				</div>
+				<ul class="u12-list">
+					<li style="--t:var(--sl-color-brand-link)"><span class="dot"></span><a href="#">Новые входящие: <b>0</b></a></li>
+					<li style="--t:var(--sl-color-accent)"><span class="dot"></span>Новые исходящие: <b>5</b></li>
+					<li style="--t:var(--sl-color-warning)"><span class="dot"></span><a href="#">Фавориты</a></li>
+					<li style="--t:var(--sl-color-success)"><span class="dot"></span><a href="#">Настройки</a></li>
+					<li style="--t:var(--sl-color-danger)"><span class="dot"></span><a href="#">Выход</a></li>
+				</ul>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<section class="demo-sec">
+<h2>Онлайн-статистика (нижняя часть блока)</h2>
+<div class="demo-grid">
+
+	<!-- S1 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">A</span><b>Легенда с точками</b><span>вместо таблиц — цветовые маркеры</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<ul class="s1">
+					<li style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></li>
+					<li style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>0</b></li>
+					<li style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>0</b></li>
+					<li class="total" style="--t:var(--sl-color-text-heading)"><span class="d"></span><span class="k">Всего</span><b>1</b></li>
+				</ul>
+			</div>
+		</aside>
+	</div>
+
+	<!-- S2 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">B</span><b>Чипсы-счётчики</b><span>системные тона, компактно</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div style="display:flex; flex-wrap:wrap; gap:6px">
+					<a href="#" class="sl-chip sl-chip-success"><i class="bi bi-person"></i> Пользователи <b>1</b></a>
+					<span class="sl-chip sl-chip-warn"><i class="bi bi-robot"></i> Боты <b>0</b></span>
+					<span class="sl-chip sl-chip-info"><i class="bi bi-eye"></i> Гости <b>0</b></span>
+					<span class="sl-chip sl-chip-neutral"><i class="bi bi-people"></i> Всего <b>1</b></span>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- S3 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">C</span><b>Стек-бар</b><span>доли аудитории одним взглядом</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="s3-bar">
+					<i style="--t:var(--sl-color-success); width:55%"></i>
+					<i style="--t:var(--sl-color-brand-link); width:30%"></i>
+					<i style="--t:var(--sl-color-warning); width:15%"></i>
+				</div>
+				<div class="s3-leg">
+					<span style="--t:var(--sl-color-success)"><i class="d"></i>Пользователи <b>11</b></span>
+					<span style="--t:var(--sl-color-brand-link)"><i class="d"></i>Гости <b>6</b></span>
+					<span style="--t:var(--sl-color-warning)"><i class="d"></i>Боты <b>3</b></span>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+	<!-- S4 -->
+	<div class="demo-cell">
+		<p class="demo-label"><span class="n">D</span><b>Аватар-стек</b><span>живое ощущение присутствия</span></p>
+		<aside class="sl-block">
+			<h2 class="sl-title">Сейчас на сайте</h2>
+			<div class="sl-block-content">
+				<div class="s4-row">
+					<span class="s4-stack">
+						<i class="a" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="a"><span class="bi bi-person"></span></i>
+						<i class="a"><span class="bi bi-person"></span></i>
+						<i class="a more">+4</i>
+					</span>
+					<span class="s4-lbl"><b>7</b> на сайте, из них <b>1</b> пользователь</span>
+					<a href="#" class="u-icon-btn s4-refresh" title="Обновить"><i class="bi bi-arrow-repeat"></i></a>
+				</div>
+			</div>
+		</aside>
+	</div>
+
+</div>
+</section>
+
+<p class="demo-dark-note" style="max-width:1180px; margin:30px auto 0;">
+Все счётчики и ссылки — реальные данные блока <code>blocks/user_info.php</code>: входящие/исходящие ЛС, фавориты, настройки, выход, онлайн-сессии.
+Демо-классы <code>u*-</code>/<code>s*-</code> — кандидаты в <code>theme.css</code> с префиксом <code>sl-</code> после выбора варианта.
+</p>
+
+</div>
+</body>
+</html>
