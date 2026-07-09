@@ -1335,6 +1335,9 @@ select.sl-field {
   line-height: 1;
   white-space: nowrap;
   text-decoration: none;
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
   cursor: pointer;
   vertical-align: middle;
   transition: background-color 0.2s ease, color 0.2s ease;
