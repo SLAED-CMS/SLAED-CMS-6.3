@@ -33,6 +33,8 @@ main execution model is:
 5. `setHead()` and `setFoot()` assemble the page shell through the shared
    `Template` instance
 
+`setHead()` is also the single serialization boundary for public SEO data. Modules pass facts (`kind`, title, description, dates, author, image, and optional JSON-LD objects); core resolves robots/canonical policy, Open Graph, route schema, and breadcrumbs. Configurable Graph/Schema templates are decoded before values are substituted and are re-rendered through safe fragments.
+
 There is no central application kernel, route registry, or framework middleware
 pipeline in the current codebase.
 

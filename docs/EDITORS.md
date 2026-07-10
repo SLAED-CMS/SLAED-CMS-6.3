@@ -116,3 +116,7 @@ echo Editor::getCode([
     'lang' => 'php'
 ]);
 ```
+
+## Content Heading Rule
+
+The module title field owns the page `H1`. Inside an article body, authors start with a first-level Markdown section (`# Section`); the rendering call uses heading offset `1`, so it becomes `H2` on the public detail page. Card, comment, block, and forum contexts apply their own deeper offsets. Do not copy the page title into the body and do not use headings only to change font size.

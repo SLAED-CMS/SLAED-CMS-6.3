@@ -39,6 +39,14 @@ Current theme directories:
 - contains frontend layouts, pages, partials, fragments, assets, and images
 - includes local Bootstrap assets under `assets/vendor/bootstrap/`
 
+## Theme Independence
+
+`templates/admin` and every installed frontend theme are independent runtime packages. Each theme owns its layouts, pages, partials, fragments, CSS, JavaScript, vendor assets, and images. A theme must not include templates or load assets from another theme, and the runtime must not provide cross-theme fallback or inheritance.
+
+Matching relative filenames do not imply a shared source file or byte-equal implementation. Theme inventories, DOM, selectors, and declaration values may evolve independently as long as each theme keeps its own runtime contract. `templates/common`, cross-theme `@import`, symbolic links, hard links, and copying assets from another theme at runtime are not supported.
+
+PHP may provide the same data keys and semantic flags to multiple themes, but each active theme owns its HTML structure and CSS class mapping. Theme-local asset URLs must use an explicitly passed `theme` value or a path relative to the current theme asset.
+
 ## Theme Structure
 Themes should follow this structure:
 
@@ -291,6 +299,17 @@ Do not:
 - add placeholder mapping helpers for new slices
 - copy theme inventories from installations or snapshots that are not present in the current repository
 
+### Admin Semantic Wrapper Variants
+
+`templates/admin/partials/div.html` owns two specialized wrappers through semantic flags:
+
+- `is_searchbox` renders `sl-searchbox` only when trusted `content_html` is non-empty
+- `is_menu_grid` always renders the `sl-menu-grid` wrapper, including an empty grid
+
+The branch order is `is_searchbox`, `is_menu_grid`, generic `content_html`, then generic `rows`. The generic content contract and the `rows`-driven `sl-div-grid` contract remain independent. PHP callers pass renderer-produced `content_html` and flags; they do not pass wrapper CSS classes.
+
+Frontend theme assets referenced by a partial must use an explicitly passed and escaped `theme` value. Page/layout variables are not implicitly injected into direct `getHtmlPart()` calls.
+
 ## Current Runtime Status
 
 Confirmed current usage:
@@ -332,21 +351,32 @@ The current runtime automatically injects CSS and JS files for components and bl
 
 Frontend modules normally prepare head data through `setHead()` before the final page is rendered.
 
-Confirmed current SEO overrides:
+Current SEO contract:
 
 ```php
 setHead([
     'title' => $title,
-    'canon' => 'index.php?name=news&op=view&id='.$id,
-    'robots' => 'noindex, follow',
+    'kind' => 'news',
+    'ctitle' => $category,
+    'desc' => $description,
+    'time' => $published,
+    'mtime' => $modified,
+    'author' => $author,
+    'img' => $image,
 ]);
 ```
 
 Behavior:
 
-- `canon` overrides the centrally generated canonical URL
-- `robots` overrides the default robots meta value
-- if `canon` is omitted, the runtime builds the canonical URL from normalized route parameters
+- supported page kinds are `website`, `collection`, `article`, `news`, `product`, `forum`, `profile`, and `utility`
+- `canon` and `robots` are explicit overrides; normal routes use route-aware defaults
+- search, account forms, add/send flows, and other service routes are `noindex, follow` without canonical
+- head values are rendered through context-specific fragments; raw HTML concatenation is not allowed
+- configurable Open Graph and Schema.org templates are parsed and re-serialized before output
+- `jsonld` accepts one object or a list of objects and is encoded centrally
+- `config/local.php` is a generated snapshot and must not be edited manually
+
+Heading components use explicit boolean context flags because the template engine does not compare string values. Cards use `is_detail` for `H1`, `is_nested` for `H3`, and `H2` by default. Voting uses exactly one of `is_page`, `is_section`, or `is_widget`.
 
 ## Engine Limitations
 - no advanced expression language

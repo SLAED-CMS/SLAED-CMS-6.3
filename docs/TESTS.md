@@ -88,6 +88,32 @@ npm run browser:inspect
 npm run browser:attach
 ```
 
+### Theme Independence Audits
+
+`TemplateValidationTest` discovers installed frontend themes dynamically, validates each theme's local runtime directories and CSS files, rejects cross-theme includes/assets, and requires non-zero PHP and template reference counters. Its mixed Windows/POSIX path cases protect the reference scan from silently becoming vacuous.
+
+`AdminCssClassUsageTest` is a theme-aware informational audit despite its legacy filename. It reports `admin` and `lite` independently and scans theme templates, theme hooks, PHP emitters, and shared JavaScript state classes. An item in its unused list is only a static signal; selector removal still requires a complete emitter audit and browser coverage.
+
+### CSS Normalization Verification
+
+CSS formatting must be verified per file with a parser-normalized, comment-independent token stream. Record line and comment counts, before/after SHA-256 hashes, property value changes, and removed selectors. Formatting and adjacent-rule consolidation are separate diffs: consolidation additionally compares the flattened at-rule, selector, and declaration stream and checks computed styles against captured DOM at desktop and mobile viewports.
+
+The `admin` and `lite` reports are independent. Never compare token values, selector inventories, or computed styles across themes.
+
+### Theme Browser Route Matrices
+
+Admin coverage includes login, dashboard/menu grid, module list/searchbox, config forms, monitor charts, voting tables, message/error UI, and desktop/mobile responsive states. Authenticate through the real admin form before checking protected routes.
+
+Frontend coverage includes home/main slider, news list and detail, voting page/widget, search, account forms, forum list/topic, category list, message/error UI, and desktop/mobile responsive states. Record HTTP status, console/page errors, failed resources, screenshots, and relevant DOM or computed-style assertions. Static fixture rendering alone is not a browser check.
+
+### SEO HTTP Audit
+```bash
+php tools/seo-audit.php https://slaed.loc
+php tools/seo-audit.php https://slaed.loc '/index.php?name=main'
+```
+
+The default audit discovers one current detail URL for each active content module from its landing page. Additional installation-specific routes may be passed as further arguments. The audit fails on HTTP errors, a missing or duplicate `H1` inside `main`, a heading level that deepens by more than one step, invalid JSON-LD, a missing schema type, an invalid canonical, an Open Graph URL mismatch, or an indexability mismatch. Each route report includes the full `main` heading sequence.
+
 ## PHPUnit Layout
 `phpunit.xml` defines two suites:
 
@@ -127,6 +153,7 @@ Current validation test files include:
 - `TextFileEncodingTest.php`
 - `SchemaUpdateValidationTest.php`
 - `SecurityValidationTest.php`
+- `SeoSemanticsValidationTest.php`
 - `SetupFileWarningTest.php`
 - `TemplateValidationTest.php`
 - `UnusedCodeAuditTest.php`
