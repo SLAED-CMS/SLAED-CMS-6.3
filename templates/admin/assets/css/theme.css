@@ -1247,6 +1247,72 @@ input.sl-but-blue[value="ОК"] {
   margin-top: 0;
 }
 
+/* Forms: rich editor integration (Toast UI, CKEditor, CodeMirror) inside div-based forms */
+.sl-div-form .ck.ck-editor__main > .ck-editor__editable,
+.sl-div-form .ck.ck-editor__main > .ck-editor__editable_inline {
+  min-height: 250px;
+}
+
+.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-defaultUI {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-main {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.sl-div-form .sl-div-item:has(.ck-editor):nth-child(2 of .sl-div-item:has(.ck-editor)) .ck.ck-editor__main > .ck-editor__editable,
+.sl-div-form .sl-div-item:has(.ck-editor):nth-child(2 of .sl-div-item:has(.ck-editor)) .ck.ck-editor__main > .ck-editor__editable_inline {
+  height: 500px !important;
+  min-height: 500px;
+}
+
+.sl-div-form .sl-div-item:has(.cm-editor) .cm-editor,
+.sl-div-form .sl-div-item:has(.sl-code-editor) .sl-code-editor {
+  min-height: 250px;
+}
+
+.sl-div-form .sl-div-item:has(.cm-editor):nth-child(2 of .sl-div-item:has(.cm-editor)) .cm-editor,
+.sl-div-form .sl-div-item:has(.sl-code-editor):nth-child(2 of .sl-div-item:has(.sl-code-editor)) .sl-code-editor {
+  min-height: 500px;
+}
+
+.sl-div-form .toastui-editor-defaultUI .toastui-editor-md-container,
+.sl-div-form .toastui-editor-defaultUI .toastui-editor-ww-container,
+.sl-div-form .toastui-editor-defaultUI .toastui-editor-contents,
+.sl-div-form .toastui-editor-defaultUI .ProseMirror,
+.sl-div-form .toastui-editor-defaultUI textarea,
+.sl-div-form .ck.ck-editor__editable,
+.sl-div-form .cm-editor .cm-content {
+  cursor: text;
+}
+
+.sl-div-form .toastui-editor-defaultUI .toastui-editor-contents,
+.sl-div-form .toastui-editor-defaultUI .ProseMirror,
+.sl-div-form .toastui-editor-defaultUI textarea:not(.toastui-editor-pseudo-clipboard),
+.sl-div-form .ck.ck-editor__editable,
+.sl-div-form .cm-editor .cm-content,
+.sl-div-form .sl-code-editor {
+  font-family: Tahoma, Arial, Verdana, sans-serif;
+  font-size: 14px;
+  line-height: 16px;
+}
+
+.sl-div-form .toastui-editor-defaultUI .toastui-editor-contents p,
+.sl-div-form .toastui-editor-defaultUI .ProseMirror p {
+  line-height: 16px;
+}
+
+.sl-div-form .toastui-editor-defaultUI button,
+.sl-div-form .toastui-editor-defaultUI .toastui-editor-toolbar-icons,
+.sl-div-form .ck.ck-button {
+  cursor: pointer;
+}
+
+/* List footer: pager band and mass-action cluster under list tables */
 .sl-list-bottom {
   display: flex;
   align-items: center;
@@ -1278,6 +1344,30 @@ input.sl-but-blue[value="ОК"] {
   box-sizing: border-box;
 }
 
+/* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */
+.sl-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 20px;
+  min-width: 20px;
+  padding: 0 var(--sl-space-sm);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--sl-chip-tone, var(--sl-color-muted)) 13%, transparent);
+  color: var(--sl-chip-tone, var(--sl-color-muted));
+  font-size: 0.78em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.sl-chip-success { --sl-chip-tone: var(--sl-color-success-strong); }
+.sl-chip-warn { --sl-chip-tone: var(--sl-color-warning-strong); }
+
+/* Sidebar blocks: collapsible panels, count rows and shared row hovers */
 .sl-block-sidebar {
   margin-bottom: var(--sl-space-lg);
   background-color: var(--sl-color-bg-muted);
@@ -1365,29 +1455,6 @@ input.sl-but-blue[value="ОК"] {
   gap: var(--sl-space-sm);
   color: var(--sl-color-primary);
 }
-
-/* Chips: unified tinted pill labels — shared vocabulary with the lite theme (sl-chip + tone modifiers) */
-.sl-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  height: 20px;
-  min-width: 20px;
-  padding: 0 var(--sl-space-sm);
-  border: 1px solid transparent;
-  border-radius: 9999px;
-  background: color-mix(in srgb, var(--sl-chip-tone, var(--sl-color-muted)) 13%, transparent);
-  color: var(--sl-chip-tone, var(--sl-color-muted));
-  font-size: 0.78em;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-  vertical-align: middle;
-}
-
-.sl-chip-success { --sl-chip-tone: var(--sl-color-success-strong); }
-.sl-chip-warn { --sl-chip-tone: var(--sl-color-warning-strong); }
 
 .sl-block-sidebar-count-value {
   display: flex;
@@ -1559,6 +1626,7 @@ input.sl-but-blue[value="ОК"] {
   background: linear-gradient(to bottom, var(--sl-color-warning) 0%, var(--sl-color-warning) 48%, var(--sl-color-warning-strong) 100%);
 }
 
+/* Admin home: menu grid, module cards and LED indicators */
 .sl-menu-grid {
   display: flex;
   flex-wrap: wrap;
@@ -1696,6 +1764,7 @@ input.sl-but-blue[value="ОК"] {
   white-space: nowrap;
 }
 
+/* Speed dial: floating quick-action cluster */
 .sl-dial {
   position: absolute;
   top: 50%;
@@ -1810,6 +1879,7 @@ input.sl-but-blue[value="ОК"] {
   transition: transform 0.18s ease;
 }
 
+/* Icon picker: trigger, modal dialog and icon cell grid */
 .sl-icon-picker {
   display: flex;
   width: 100%;
@@ -2009,6 +2079,7 @@ input.sl-but-blue[value="ОК"] {
   background: none;
 }
 
+/* Panel toggles: collapsible section headers */
 .sl-panel-toggle {
   flex: 0 0 auto;
   margin-left: auto;
@@ -2218,6 +2289,7 @@ input.sl-but-blue[value="ОК"] {
   display: none;
 }
 
+/* Language editor: translation key rows */
 .sl-lang-edit-row {
   grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr);
 }
@@ -2255,6 +2327,7 @@ input.sl-but-blue[value="ОК"] {
   min-width: 0;
 }
 
+/* Form actions: per-row action cluster in div forms */
 .sl-div-actions {
   display: flex;
   flex-wrap: wrap;
@@ -3088,7 +3161,7 @@ input.sl-but-blue[value="ОК"] {
   margin-top: var(--sl-space-sm);
 }
 
-/* Tabs: tab strip and panels */
+/* Module frame: page header with icon, title and subtitle */
 .sl-module-head {
   display: flex;
   align-items: center;
@@ -3237,6 +3310,7 @@ input.sl-but-blue[value="ОК"] {
   flex: 0 1 auto;
 }
 
+/* Tabs: tab strip and panels */
 .sl-tabs-nav {
   display: flex;
   flex-wrap: wrap;
@@ -3318,6 +3392,7 @@ input.sl-but-blue[value="ОК"] {
   }
 }
 
+/* Forms: classic row layout and inline filters */
 .sl-form-row {
   display: flex;
   align-items: flex-start;
@@ -3336,70 +3411,6 @@ input.sl-but-blue[value="ОК"] {
 
 .sl-form-value {
   padding-top: var(--sl-space-sm);
-}
-
-.sl-div-form .ck.ck-editor__main > .ck-editor__editable,
-.sl-div-form .ck.ck-editor__main > .ck-editor__editable_inline {
-  min-height: 250px;
-}
-
-.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-defaultUI {
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-.sl-div-form .sl-div-item:has(.toastui-editor-defaultUI) .toastui-editor-main {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.sl-div-form .sl-div-item:has(.ck-editor):nth-child(2 of .sl-div-item:has(.ck-editor)) .ck.ck-editor__main > .ck-editor__editable,
-.sl-div-form .sl-div-item:has(.ck-editor):nth-child(2 of .sl-div-item:has(.ck-editor)) .ck.ck-editor__main > .ck-editor__editable_inline {
-  height: 500px !important;
-  min-height: 500px;
-}
-
-.sl-div-form .sl-div-item:has(.cm-editor) .cm-editor,
-.sl-div-form .sl-div-item:has(.sl-code-editor) .sl-code-editor {
-  min-height: 250px;
-}
-
-.sl-div-form .sl-div-item:has(.cm-editor):nth-child(2 of .sl-div-item:has(.cm-editor)) .cm-editor,
-.sl-div-form .sl-div-item:has(.sl-code-editor):nth-child(2 of .sl-div-item:has(.sl-code-editor)) .sl-code-editor {
-  min-height: 500px;
-}
-
-.sl-div-form .toastui-editor-defaultUI .toastui-editor-md-container,
-.sl-div-form .toastui-editor-defaultUI .toastui-editor-ww-container,
-.sl-div-form .toastui-editor-defaultUI .toastui-editor-contents,
-.sl-div-form .toastui-editor-defaultUI .ProseMirror,
-.sl-div-form .toastui-editor-defaultUI textarea,
-.sl-div-form .ck.ck-editor__editable,
-.sl-div-form .cm-editor .cm-content {
-  cursor: text;
-}
-
-.sl-div-form .toastui-editor-defaultUI .toastui-editor-contents,
-.sl-div-form .toastui-editor-defaultUI .ProseMirror,
-.sl-div-form .toastui-editor-defaultUI textarea:not(.toastui-editor-pseudo-clipboard),
-.sl-div-form .ck.ck-editor__editable,
-.sl-div-form .cm-editor .cm-content,
-.sl-div-form .sl-code-editor {
-  font-family: Tahoma, Arial, Verdana, sans-serif;
-  font-size: 14px;
-  line-height: 16px;
-}
-
-.sl-div-form .toastui-editor-defaultUI .toastui-editor-contents p,
-.sl-div-form .toastui-editor-defaultUI .ProseMirror p {
-  line-height: 16px;
-}
-
-.sl-div-form .toastui-editor-defaultUI button,
-.sl-div-form .toastui-editor-defaultUI .toastui-editor-toolbar-icons,
-.sl-div-form .ck.ck-button {
-  cursor: pointer;
 }
 
 .sl-action-label::after {
@@ -3429,6 +3440,7 @@ input.sl-but-blue[value="ОК"] {
   margin: 0 var(--sl-space-lg) var(--sl-space-md) 0;
 }
 
+/* Search module admin: filter control widths */
 .sl-search-sort-select {
   width: 110px;
   max-width: 100%;
@@ -3452,6 +3464,7 @@ input.sl-but-blue[value="ОК"] {
   min-width: 4ch;
 }
 
+/* Admin sidebar links block: quick navigation list */
 .sl-admin-block-links {
   display: grid;
   gap: var(--sl-space-xs);
@@ -3469,6 +3482,7 @@ input.sl-but-blue[value="ОК"] {
   color: var(--sl-color-primary);
 }
 
+/* Sessions: whois/online rows shared by monitor and module lists */
 .sl-session-line,
 .sl-session-row {
   display: grid;
@@ -3572,6 +3586,7 @@ input.sl-but-blue[value="ОК"] {
   min-width: 0;
 }
 
+/* Changelog admin: filter card and commit cards */
 .sl-changelog {
   color: var(--sl-changelog-text);
   max-width: 1400px;
