@@ -10,12 +10,12 @@ if (!defined('MODULE_FILE')) {
 }
 
 function main(): void {
-    global $db, $tpl, $prs;
+    global $db, $home, $tpl, $prs;
     setHead([
         'title' => 'Простота Функциональность Эффективность Безопасность',
         'desc' => 'Система управления содержимым сайта, простая в использовании и настройке, имеющая при этом высокий уровень безопасности, высокую скорость работы, а также практически неограниченный потенциал в решении вопроса расширения функциональности.',
     ]);
-    $cont = $tpl->getHtmlPart('main-slider', []);
+    $cont = $tpl->getHtmlPart('main-slider', ['is_home' => (bool)$home, 'theme' => getTheme()]);
     $path = UPLOADS_DIR.'/screens';
     $path2 = $path.'/thumb';
     $pub = 'uploads/screens';
