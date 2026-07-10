@@ -7,6 +7,7 @@
   class="
     {% if button_class %}{{ button_class }}
     {% elseif class %}{{ class }}
+    {% elseif is_danger %}sl-but-red
     {% elseif is_green %}sl-but-green
     {% elseif is_blue or is_chlog_primary %}sl-but-blue
     {% elseif is_plain or is_chlog_secondary %}sl-but
@@ -29,6 +30,7 @@
   class="
     {% if button_class %}{{ button_class }}
     {% elseif class %}{{ class }}
+    {% elseif is_danger %}sl-but-red
     {% elseif is_green %}sl-but-green
     {% elseif is_blue or is_chlog_primary %}sl-but-blue
     {% elseif is_plain or is_chlog_secondary %}sl-but

@@ -631,6 +631,7 @@ function delete(): void {
         'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('search')]],
         'rows' => $rows,
         'submit_label' => _DELETE,
+        'is_danger' => true,
     ])]);
     echo $cont;
     setFoot();
