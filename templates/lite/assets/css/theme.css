@@ -4008,7 +4008,9 @@ ol.sl-sublist-two li:hover:before {
   position: relative;
 }
 
+/* Arrow colour rides the shared .sl-float-panel::after geometry */
 .sl-login-top--head .sl-login-dropdown-form {
+  --sl-float-arrow-color: var(--sl-color-bg);
   position: absolute;
   top: 100%;
   left: var(--sl-login-dropdown-form-left);
@@ -4029,11 +4031,6 @@ ol.sl-sublist-two li:hover:before {
   border-radius: var(--sl-login-dropdown-radius);
   box-shadow: var(--sl-login-dropdown-shadow);
   background-clip: padding-box;
-}
-
-/* Arrow via the shared .sl-float-panel::after geometry; only colour + outline here */
-.sl-login-top--head .sl-login-dropdown-form {
-  --sl-float-arrow-color: var(--sl-color-bg);
 }
 
 .sl-login-top--head .sl-login-dropdown-form::after {
@@ -5412,6 +5409,7 @@ a.sl-chip {
 
   #hmenu {
     overflow-x: clip;
+    padding: var(--sl-space-lg) 0;
   }
 
   .sl-changelog-filter-top {
@@ -5478,6 +5476,7 @@ a.sl-chip {
     min-width: 0;
     max-width: 100%;
     flex-wrap: wrap;
+    margin-top: 0;
   }
 
   .sl-top-contact,
@@ -5488,14 +5487,11 @@ a.sl-chip {
 
   .sl-top-right {
     flex: 1 1 auto;
+    margin-left: 0;
   }
 
   .sl-top-social {
     margin: 0;
-  }
-
-  .sl-top-right {
-    margin-left: 0;
   }
 
   #header {
@@ -5521,10 +5517,6 @@ a.sl-chip {
   .sl-login-top > li {
     float: none;
     display: inline-block;
-  }
-
-  #hmenu {
-    padding: var(--sl-space-lg) 0;
   }
 
   #topmenu > ul {
@@ -5569,10 +5561,6 @@ a.sl-chip {
   .sl-demo-line-title {
     margin-top: 0;
     margin-bottom: var(--sl-space-lg);
-  }
-
-  #demo-line .sl-d-pane {
-    margin-top: 0;
   }
 
   #demo-line .sl-wrp {
