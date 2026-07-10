@@ -1,4 +1,8 @@
-{% if content_html %}
+{% if is_searchbox %}
+{% if content_html %}<div class="sl-searchbox">{{{ content_html }}}</div>{% endif %}
+{% elseif is_menu_grid %}
+<div class="sl-menu-grid">{{{ content_html }}}</div>
+{% elseif content_html %}
 <div
   {% if id %}id="{{ id }}"{% endif %}
   {% if class or is_radio_group or is_collapsible or is_code or is_search_line or is_rate_box %}

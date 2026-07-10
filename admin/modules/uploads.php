@@ -26,7 +26,7 @@ function getUploadsSearch(): string {
             'select_attr' => ' onchange="submit()"',
         ]),
     ]);
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 function uploads(): void {

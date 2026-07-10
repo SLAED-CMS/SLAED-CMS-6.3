@@ -28,10 +28,10 @@ function getCommentsSearch(): string {
         ]);
     }
     $searchopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _COMMENT, 'is_selected' => $search === 2]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _MODUL, 'is_selected' => $search === 4]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _COMMENT, 'is_selected' => $search === 2]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _MODUL, 'is_selected' => $search === 4]).
         $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _IP, 'is_selected' => $search === 5]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
@@ -60,7 +60,7 @@ function getCommentsSearch(): string {
                 'button_type' => 'submit',
             ]),
     ]);
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 function comments(): void {

@@ -14,10 +14,10 @@ function getNewsSearch(): string {
     $stat = getVar('req', 'status', 'num', 0);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $opts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _TITLE, 'is_selected' => $search === 2]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _CATEGORY, 'is_selected' => $search === 4]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _TITLE, 'is_selected' => $search === 2]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _POSTEDBY, 'is_selected' => $search === 3]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _CATEGORY, 'is_selected' => $search === 4]).
         $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _IP, 'is_selected' => $search === 5]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=news',
@@ -32,7 +32,7 @@ function getNewsSearch(): string {
             ' '.
             $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ]);
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 function news(): void {

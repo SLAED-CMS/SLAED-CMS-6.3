@@ -12,10 +12,10 @@ function getAccountSearch(): string {
     $chng = getVar('req', 'chng');
     $search = $search > 0 ? $search : 2;
     $searchopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _NICKNAME, 'is_selected' => $search === 2]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _EMAIL, 'is_selected' => $search === 3]) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _IP, 'is_selected' => $search === 4]) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ID, 'is_selected' => $search === 1]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _NICKNAME, 'is_selected' => $search === 2]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _EMAIL, 'is_selected' => $search === 3]).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _IP, 'is_selected' => $search === 4]).
         $tpl->getHtmlFrag('select-option', ['value_attr' => '5', 'label_text' => _URL, 'is_selected' => $search === 5]);
     $form = $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=account',
@@ -27,7 +27,7 @@ function getAccountSearch(): string {
             ' '.
             $tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
     ]);
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 
@@ -748,7 +748,7 @@ function config(): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'enter',
                 'options_html' =>
-                    $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0']) .
+                    $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _LOGINL, 'is_selected' => $conf['users']['enter'] == '0']).
                     $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _LOGINF, 'is_selected' => $conf['users']['enter'] == '1']),
                 'is_config' => true,
             ]),

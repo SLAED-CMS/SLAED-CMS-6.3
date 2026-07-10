@@ -41,7 +41,7 @@ function getStatisticSearch(): string {
             'button_type' => 'submit',
         ]),
     ]);
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 # Render extended statistics for the selected archive or current period

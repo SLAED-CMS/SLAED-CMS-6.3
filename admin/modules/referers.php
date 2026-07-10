@@ -30,8 +30,9 @@ function getRefererSearch(): string {
             'is_selected' => $order == $idx,
         ]);
     }
-    return $tpl->getHtmlPart('searchbox', [
-        'searchbox' => $tpl->getHtmlPart('form', [
+    return $tpl->getHtmlPart('div', [
+        'is_searchbox' => true,
+        'content_html' => $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php',
             'hidden' => [
                 ['nameattr' => 'name', 'valueattr' => 'referers'],

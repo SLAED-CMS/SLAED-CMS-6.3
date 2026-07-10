@@ -158,7 +158,7 @@ function stats(): void {
             'is_selected' => $order == $_ord,
         ]);
     }
-    $subtitle = $id ? $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlPart('form', [
+    $subtitle = $id ? $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=auto_links&op=stats&id='.$id,
         'content_html' =>
             _SORTE.': '.

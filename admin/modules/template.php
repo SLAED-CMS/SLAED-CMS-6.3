@@ -68,7 +68,7 @@ function getTemplateSearch(string $templ): string {
             'button_type' => 'submit',
         ]),
     ]);
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $form]);
+    return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
 function getTemplateEditorBlock(string $templ, string $filelink, string $mode, string $op): string {

@@ -103,7 +103,7 @@ function getAdminPanel(): void {
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) $items[] = getAdminMenu($name, $mod);
             }
-            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODADMINPANEL, 'icon_name' => 'person-gear', 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
+            $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_admin', 'title' => _MODADMINPANEL, 'icon_name' => 'person-gear', 'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $items)])]);
         }
         $items = [];
         foreach ($conf['modules'] as $name => $mod) {
@@ -117,7 +117,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODSITEPANEL, 'icon_name' => 'people', 'content_html' => $tpl->getHtmlPart('menu-grid', ['items_html' => implode('', $items)])]);
+        $content .= $tpl->getHtmlPart('dashboard-panel', ['panel_id' => 'sl_panel_site', 'title' => _MODSITEPANEL, 'icon_name' => 'people', 'content_html' => $tpl->getHtmlPart('div', ['is_menu_grid' => true, 'content_html' => implode('', $items)])]);
     }
     echo $content;
     setFoot();
