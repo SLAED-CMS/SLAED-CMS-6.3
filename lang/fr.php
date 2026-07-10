@@ -482,7 +482,7 @@ define('_UWARNS','Avertissements');
 define('_VCLINFO',"Merci pour la participation au vote! Cette enquête est fermée, les résultats sont disponibles seulement à l'administration du projet.");
 define('_VCLOSE','Piscine sondage');
 define('_VERSION','Version');
-define('_TPLMISS',"Erreur de chargement du modèle ! Le modèle indiqué dans la fonction est absent du répertoire du thème actif : %1\$s. Nom de fichier recommandé : %2\$s.html");
+define('_TPLMISS','Erreur de chargement du modèle ! Le modèle indiqué dans la fonction est absent du répertoire du thème actif : %1$s. Nom de fichier recommandé : %2$s.html');
 define('_VIEW','Qui voit');
 define('_VIEWS','Ol.');
 define('_VOPEN','Piscine sondage');

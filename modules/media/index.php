@@ -65,11 +65,11 @@ function media(): void {
         $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _MEDIA;
     }
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home || ($home && $conf['media']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -99,6 +99,7 @@ function media(): void {
             $del = $afile.'.php?name=media&op=media_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
+                'is_nested'     => false,
                 'width'         => 100,
                 'title_href'    => $thref,
                 'title_attr'    => $mtitle,
@@ -109,7 +110,7 @@ function media(): void {
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_icon'  => $cimg,
                 'category_tone'  => $cordern % 6,
-                'text'          => cutstr($prs->filterContent($description, false, $conf['name']), 800),
+                'text'          => cutstr($prs->filterContent($description, false, $conf['name'], 2), 800),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
                 'post_text'     => $post,
@@ -172,7 +173,7 @@ function liste(): void {
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id)'
         .' '.$order.' '.$cwhere.' ORDER BY m.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
-    setHead(['title' => _LIST]);
+    setHead(['title' => _LIST, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
     $rows = [];
     $ismoder = is_moder($conf['name']);
@@ -262,8 +263,8 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _MEDIA, 'is_heading' => false]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
-        if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
+        $catlist = $conf['media']['viewcat'] ? setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0) : '';
         $cdesc = $cdesc ?: $ctitle;
         $cimg = getCategoryIcon($cimg);
         $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
@@ -331,7 +332,7 @@ function view(): void {
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
             'category_icon'  => $cimg,
             'category_tone'  => $cordern % 6,
-            'text'          => filterTextHighlight($prs->filterContent($description, false, $conf['name']), $word),
+            'text'          => filterTextHighlight($prs->filterContent($description, false, $conf['name'], 1), $word),
             'year'          => $year,
             'director'      => $director,
             'roles'         => $roles,
@@ -351,6 +352,7 @@ function view(): void {
             'back_text'     => _BACK,
             ...($ismoder ? getTplEditMenu($edit, $del, $ptitle) : []),
         ]);
+        $cont .= $catlist;
         if ($conf['media']['link']) {
             $limit = (int)($conf['media']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery(
@@ -543,7 +545,7 @@ function send(): void {
                 'INSERT INTO '.PREFIX_DB.'_media'
                 .' (id, cid, uid, name, title, subtitle, year, director, roles, intro, author,'
                 .' duration, lang, note, format, quality, size, released, links, time, ip, status)'
-                ." VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles,"
+                .' VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles,'
                 ." :intro, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, '0')",
                 ['cid' => $cid, 'postid' => $postid, 'uname' => $uname,
                     'title' => $title, 'subtitle' => $subtitle, 'year' => $year,

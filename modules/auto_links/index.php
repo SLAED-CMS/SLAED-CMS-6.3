@@ -34,7 +34,7 @@ function autolink(): void {
     $onum   = "hits != '0'";
     $sql    = 'SELECT id, title, intro, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE '.$onum.' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum;
     $result = $db->getSqlQuery($sql);
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home) $cont .= getModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
@@ -50,6 +50,7 @@ function autolink(): void {
             $del = $afile.'.php?name=auto_links&op=auto_links_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
+                'is_nested'     => false,
                 'width'         => 100,
                 'title_href'    => $thref,
                 'title_attr'    => $sitename,
@@ -59,7 +60,7 @@ function autolink(): void {
                 'category_attr' => '',
                 'category_text' => '',
                 'category_icon'  => '',
-                'text'          => filterTextHighlight($prs->filterContent($intro, false, $conf['name']), $word),
+                'text'          => filterTextHighlight($prs->filterContent($intro, false, $conf['name'], 2), $word),
                 'read_href'     => $thref,
                 'read_text'     => _DOWNLLINK,
                 'post_text'     => '',

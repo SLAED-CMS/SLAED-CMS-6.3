@@ -1,5 +1,7 @@
 <article id="{{ id }}" class="sl-post sl-card{% if columns %} sl-card-col-{{ columns }}{% endif %}">
-  <h3 class="sl-title">
+  {% if is_detail %}<h1 class="sl-title">
+  {% elseif is_nested %}<h3 class="sl-title">
+  {% else %}<h2 class="sl-title">{% endif %}
     {{{ favorites }}}
     {% if title_html %}
       {{{ title_html }}}
@@ -10,7 +12,7 @@
       <a href="{{ title_href }}" title="{{ title_attr }}">{{{ title_text }}}</a>
       {% if title_new %} {{{ title_new }}}{% endif %}
     {% endif %}
-  </h3>
+  {% if is_detail %}</h1>{% elseif is_nested %}</h3>{% else %}</h2>{% endif %}
   <div class="sl-meta">
     <ul class="sl-pull-right">
       <li>

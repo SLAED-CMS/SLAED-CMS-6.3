@@ -65,11 +65,11 @@ function links(): void {
         $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _LINKS;
     }
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -98,6 +98,7 @@ function links(): void {
             $del = $afile.'.php?name=links&op=links_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
+                'is_nested' => false,
                 'width' => 100,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -108,7 +109,7 @@ function links(): void {
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_icon' => $cimg,
                 'category_tone' => $cordern % 6,
-                'text' => $prs->filterContent($description, false, $conf['name']),
+                'text' => $prs->filterContent($description, false, $conf['name'], 2),
                 'read_href' => $thref,
                 'read_text' => _READMORE,
                 'post_text' => $post,
@@ -171,7 +172,7 @@ function liste(): void {
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
         .' '.$order.' '.$cwhere.' ORDER BY f.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
-    setHead(['title' => _LIST]);
+    setHead(['title' => _LIST, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _LIST, 'htitle' => _LINKS]);
     $rows = [];
     $ismoder = is_moder($conf['name']);
@@ -254,8 +255,8 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _LINKS, 'is_heading' => false]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
-        if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
+        $catlist = $conf['links']['viewcat'] ? setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0) : '';
         $rawtext = $bodytext ? $description.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
         $cimg = getCategoryIcon($cimg);
@@ -269,7 +270,7 @@ function view(): void {
         $edit = $afile.'.php?name=links&op=links_add&id='.$id;
         $del = $afile.'.php?name=links&op=links_delete&id='.$id.'&token='.getSiteToken();
         if (is_user() || $conf['links']['links'] == '1') {
-            $onclick = ' OnClick="javascript:window.open(\''.str_replace(["\\", "'"], ["\\\\", "\\'"], $authorurl).'\')"';
+            $onclick = ' OnClick="javascript:window.open(\''.str_replace(['\\', "'"], ['\\\\', "\\'"], $authorurl).'\')"';
             $download = $tpl->getHtmlPart('form-wrap', [
                 'action' => 'index.php?name='.$conf['name'],
                 'method' => 'post',
@@ -299,7 +300,7 @@ function view(): void {
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
             'category_icon'  => $cimg,
             'category_tone'  => $cordern % 6,
-            'text'          => filterTextHighlight($prs->filterContent($rawtext, false, $conf['name']), $word),
+            'text'          => filterTextHighlight($prs->filterContent($rawtext, false, $conf['name'], 1), $word),
             'size'          => '',
             'version'       => '',
             'email'         => $email,
@@ -312,6 +313,7 @@ function view(): void {
             'is_moder'      => $ismoder,
             ...($ismoder ? getTplEditMenu($edit, $del, $title) : []),
         ]);
+        $cont .= $catlist;
         if ($conf['links']['link']) {
             $limit = (int)($conf['links']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_links WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));

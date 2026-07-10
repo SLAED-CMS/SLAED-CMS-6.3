@@ -35,8 +35,8 @@ function info(): void {
         $numOptions .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$lim, 'label_text' => (string)_RSS_INFO_MENG.' - '.$lim, 'is_selected' => $lim == $rsslim]);
         $lim++;
     }
-    setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _RSS]);
+    setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT, 'kind' => 'utility']);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _RSS, 'is_level_one' => true]);
     $fields = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSS_INFO_TEXT]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _RSS_INFO_TIP,

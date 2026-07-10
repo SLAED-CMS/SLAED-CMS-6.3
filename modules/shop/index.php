@@ -61,12 +61,12 @@ function shop(): void {
 	$url_extra = [];
 	if ($ncat) $url_extra['cat'] = $ncat;
 	if ($op)   $url_extra['op']  = $op;
-	setHead(['title' => $ntitle]);
+	setHead(['title' => $ntitle, 'kind' => 'collection']);
 	$cont = '';
 	if (!$home || ($home && $conf['shop']['homcat'])) {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= getModuleNavi(['title' => $ntitle] + SHOP_NAVI);
-		if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
 	$num    = getVar('get', 'num', 'num', '1');
@@ -97,6 +97,7 @@ function shop(): void {
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&typ=d&id='.$id.'&refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 			$cont .= $tpl->getHtmlFrag('card', [
 				'id'           => $id,
+				'is_nested'    => false,
 				'columns'      => $columns,
 				'favorites'    => '',
 				'title_html'   => $title,
@@ -118,7 +119,7 @@ function shop(): void {
 				'category_href' => $chref,
 				'category_attr' => $cdesc,
 				'category_tone' => $cordern % 6,
-				'text'         => $prs->filterContent($text, false, $conf['name']),
+				'text'         => $prs->filterContent($text, false, $conf['name'], 2),
 				'rating'       => $rating,
 				'footer_items' => [
 					['content_html' => $admin],
@@ -165,7 +166,7 @@ function liste(): void {
 	$num    = getVar('get', 'num', 'num', '1');
 	$offset = (int)(($num - 1) * $listnum);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
-	setHead(['title' => _LIST]);
+	setHead(['title' => _LIST, 'kind' => 'collection']);
 	$cont = getModuleNavi(['title' => _LIST] + SHOP_NAVI);
 	$rows = [];
 	while ([$id, $cid, $time, $title, $price, $ctitle, $cdesc] = $db->getSqlRow($result)) {
@@ -229,6 +230,7 @@ function view(): void {
 		$seoauthor = ($nick ?? '') ?: (($uname ?? '') ?: $conf['sitename']);
 		setHead([
 			'title' => $seotitle,
+			'kind' => 'product',
 			'ctitle' => $seoctitle,
 			'cid' => $cid,
 			'desc' => $seodesc,
@@ -236,10 +238,10 @@ function view(): void {
 			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
-		$cont = getModuleNavi(['title' => _SHOP] + SHOP_NAVI);
+		$cont = getModuleNavi(['title' => _SHOP, 'is_heading' => false] + SHOP_NAVI);
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
-		if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
-		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
+		if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $defis, _SHOP)]);
+		$catlist = $conf['shop']['viewcat'] ? setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0) : '';
 		$cont .= $tpl->getHtmlFrag('block-content', ['id' => 'shop', 'content' => $tpl->getHtmlFrag('block-content', ['id' => 'repkasse', 'content' => getCartSummary()])]);
 		$cdesc = $cdesc ?: $ctitle;
 		$cimg = getCategoryIcon($cimg);
@@ -259,6 +261,7 @@ function view(): void {
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&typ=d&id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
 		$cont .= $tpl->getHtmlFrag('card', [
 			'id'           => $id,
+			'is_detail'    => true,
 			'favorites'    => $favorites,
 			'title_html'   => filterTextHighlight($title, $word),
 			'comm_html'    => '',
@@ -279,14 +282,15 @@ function view(): void {
 			'category_href' => $chref,
 			'category_attr' => $cdesc,
 			'category_tone' => $cordern % 6,
-			'text'         => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
-			'body_text'    => ($bodytext) ? filterTextHighlight($prs->filterContent($bodytext, false, $conf['name']), $word) : '',
+			'text'         => filterTextHighlight($prs->filterContent($text, false, $conf['name'], 1), $word),
+			'body_text'    => ($bodytext) ? filterTextHighlight($prs->filterContent($bodytext, false, $conf['name'], 1), $word) : '',
 			'rating'       => $rating,
 			'footer_items' => [
 				['content_html' => $goback],
 				['content_html' => $admin],
 			],
 		]);
+		$cont .= $catlist;
 		if ($conf['shop']['assoc']) {
 			$limit = (int)$conf['shop']['assocnum'];
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
@@ -377,7 +381,7 @@ function kasse(): void {
 	$cont = getModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
 		$cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repkasse', 'content' => getCartSummary()]);
-		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
+		$cont .= $form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'shop')) $stop[] = _ERROR;
@@ -659,7 +663,7 @@ function partners(): void {
 		} else {
 			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
 			$cont .= $prs->filterContent($conf['shop']['partinfo'], false, $conf['name']);
-			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
+			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD, 'is_level_two' => true]);
 			$fields = [
 				[_C_PIN, 'text', 'paname', '', _C_PINB, true],
 				[_C_PIP, 'text', 'paaddr', '', _C_PIPB, true],

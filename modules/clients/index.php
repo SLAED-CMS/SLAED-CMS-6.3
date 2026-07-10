@@ -13,7 +13,7 @@ function clients(): void {
     global $db, $conf, $afile, $user, $stop, $info, $tpl, $prs;
     getLang('clients');
     setHead(['title' => _PRODUCTSINFO]);
-    $cont = $tpl->getHtmlFrag('title', ['title' => _PRODUCTSINFO]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _PRODUCTSINFO, 'is_level_one' => true]);
     $cont .= getUserNav();
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     if ($info) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);

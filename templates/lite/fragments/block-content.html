@@ -2,7 +2,7 @@
 <hr>
 {{{ content }}}
 {% else %}
-<div
+{% if is_comments_section %}<section{% else %}<div{% endif %}
   {% if id %}id="{{ id }}"{% endif %}
   {% if class or is_catflex_cont or is_catflex_box or is_radio_group or is_form_submit or is_center or is_main_grid or is_section or is_hidden or is_search_line or is_search_meta or is_snippet or is_pull_right or is_post_vote or is_message_box or is_block_flags or is_block_modules or is_block_module_section %}
   class="
@@ -26,6 +26,6 @@
     {% if is_block_module_section %} sl-block-mod-section{% endif %}
   "
   {% endif %}
->{{{ content }}}</div>
+>{{{ content }}}{% if is_comments_section %}</section>{% else %}</div>{% endif %}
 {% if has_hr %}<hr>{% endif %}
 {% endif %}

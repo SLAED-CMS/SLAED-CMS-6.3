@@ -1,9 +1,9 @@
-<ul class="sl-navi-menu">
+<nav aria-label="{{ nav_label }}"><ul class="sl-navi-menu">
   <li>{% include 'fragments/link.html' with home_link %}</li>
   {% if best_link %}<li>{% include 'fragments/link.html' with best_link %}</li>{% endif %}
   {% if pop_link %}<li>{% include 'fragments/link.html' with pop_link %}</li>{% endif %}
   {% if list_link %}<li>{% include 'fragments/link.html' with list_link %}</li>{% endif %}
   {% if add_link %}<li>{% include 'fragments/link.html' with add_link %}</li>{% endif %}
   {% if cat_link %}<li>{% include 'fragments/link.html' with cat_link %}</li>{% endif %}
-</ul>
+</ul></nav>
 {% if is_heading %}<h1 class="sl-title">{{ title }}</h1>{% endif %}

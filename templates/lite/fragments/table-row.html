@@ -72,7 +72,7 @@
       {% else %}
         {% if cell.prefix_html %}{{{ cell.prefix_html }}}{% endif %}
         {% if cell.heading_html %}
-          <h4>{{{ cell.heading_html }}}</h4>
+          <strong>{{{ cell.heading_html }}}</strong>
         {% elseif cell.content_html %}
           {{{ cell.content_html }}}
         {% elseif cell.primary_text or cell.secondary_text %}

@@ -562,6 +562,7 @@ define('_OGRAPH','Open Graph aktivieren?');
 define('_OGRAPHT','Open Graph Vorlage');
 define('_SCHEMA','Schema.org aktivieren?');
 define('_SCHEMAT','Schema.org Vorlage');
+define('_SEO_TPL_INVALID','Ungültige SEO-Vorlage');
 define('_TPLVARS','<b>[site]</b> - Seitenname<br><b>[loc]</b> - Seiten-URL<br><b>[title]</b> - SEO-Titel (Artikel + Kategorie + Modul + Site)<br><b>[desc]</b> - Beschreibung<br><b>[img]</b> - Bild<br><b>[type]</b> - Inhaltstyp<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Startseite<br><b>[logo]</b> - Logo<br><b>[time]</b> - Veröffentlichungsdatum<br><b>[mtime]</b> - Änderungsdatum<br><b>[ctitle]</b> - Kategorie<br><b>[headline]</b> - Artikelüberschrift (nur Text, ohne Zusätze)<br><b>[author]</b> - Autor des Beitrags');
 define('_ADMINPASSKEEP','Leer lassen, um das aktuelle Passwort zu behalten');
 define('_ADMINSELFDEL','Das aktuelle Administratorkonto kann nicht gelöscht werden');

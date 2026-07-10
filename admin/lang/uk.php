@@ -562,6 +562,7 @@ define('_OGRAPH','Активувати Open Graph?');
 define('_OGRAPHT','Шаблон Open Graph');
 define('_SCHEMA','Активувати Schema.org?');
 define('_SCHEMAT','Шаблон Schema.org');
+define('_SEO_TPL_INVALID','Некоректний SEO-шаблон');
 define('_TPLVARS','<b>[site]</b> - Назва сайту<br><b>[loc]</b> - URL сторінки<br><b>[title]</b> - SEO-заголовок (стаття + категорія + модуль + сайт)<br><b>[desc]</b> - Опис<br><b>[img]</b> - Зображення<br><b>[type]</b> - Тип контенту<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Головна<br><b>[logo]</b> - Логотип<br><b>[time]</b> - Дата публікації<br><b>[mtime]</b> - Дата зміни<br><b>[ctitle]</b> - Категорія<br><b>[headline]</b> - Заголовок статті (тільки текст, без суфіксів)<br><b>[author]</b> - Автор матеріалу');
 define('_ADMINPASSKEEP','Залиште порожнім, щоб не змінювати поточний пароль');
 define('_ADMINSELFDEL','Не можна видалити поточний обліковий запис адміністратора');

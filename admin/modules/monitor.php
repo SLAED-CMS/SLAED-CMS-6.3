@@ -884,10 +884,10 @@ function getDbHealth(object $db): array {
         $res = $db->getSqlQuery("SHOW VARIABLES LIKE 'innodb_buffer_pool_size'");
         if ($res && ($row = $db->getSqlRow($res)) && isset($row['Value'])) $data['buffer_pool'] = filterSize((int)$row['Value']);
         $tz = 'N/A';
-        $res = $db->getSqlQuery("SELECT CURRENT_TIME() as db_time");
+        $res = $db->getSqlQuery('SELECT CURRENT_TIME() as db_time');
         if ($res && ($row = $db->getSqlRow($res)) && isset($row['db_time'])) $tz = (string)$row['db_time'];
         $data['timezone'] = $tz;
-        $res = $db->getSqlQuery("SELECT CURRENT_USER() as db_user");
+        $res = $db->getSqlQuery('SELECT CURRENT_USER() as db_user');
         if ($res && ($row = $db->getSqlRow($res)) && isset($row['db_user'])) $data['user'] = (string)$row['db_user'];
     } catch (Throwable $error) {
         if (class_exists('Logger')) Logger::addSql('error', 'Monitor DB health read failed', ['error' => $error->getMessage()]);

@@ -64,11 +64,11 @@ function pages(): void {
         $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _PAGES;
     }
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home || ($home && $conf['pages']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _PAGES]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -102,6 +102,7 @@ function pages(): void {
             $del = $afile.'.php?op=page_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
+                'is_nested'     => false,
                 'title_href'    => $thref,
                 'title_attr'    => $stitle,
                 'title_text'    => $stitle,
@@ -111,7 +112,7 @@ function pages(): void {
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_icon'  => $cimg,
                 'category_tone'  => $cordern % 6,
-                'text'          => $prs->filterContent($hometext, false, $conf['name']),
+                'text'          => $prs->filterContent($hometext, false, $conf['name'], 2),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
                 'post_text'     => $post,
@@ -174,7 +175,7 @@ function liste(): void {
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)'
         .' '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
-    setHead(['title' => _LIST]);
+    setHead(['title' => _LIST, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _LIST, 'htitle' => _PAGES]);
     $rows = [];
     $ismoder = is_moder($conf['name']);
@@ -253,6 +254,7 @@ function view(): void {
         $seoimg = getImgText($hometext, '', false);
         setHead([
             'title'  => $title,
+            'kind'   => 'article',
             'ctitle' => $ctitle,
             'cid' => $cid,
             'desc'   => $seodesc,
@@ -261,8 +263,8 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _PAGES, 'is_heading' => false]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
-        if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
+        $catlist = $conf['pages']['viewcat'] ? setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0) : '';
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
         $conpag = explode('[pagebreak]', $rawtext);
         $pageno = count($conpag);
@@ -288,7 +290,7 @@ function view(): void {
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
             'category_icon'  => $cimg,
             'category_tone'  => $cordern % 6,
-            'text'          => filterTextHighlight($prs->filterContent($conpag[$pagei], false, $conf['name']), $word),
+            'text'          => filterTextHighlight($prs->filterContent($conpag[$pagei], false, $conf['name'], 1), $word),
             'post_text'     => $post,
             'post_label'    => _POSTEDBY,
             'date_text'     => $date,
@@ -304,6 +306,7 @@ function view(): void {
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);
+        $cont .= $catlist;
         $cont .= getPageNumbers($conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['pages']['nump'], (int)$pag, '#'.$id);
         if ($conf['pages']['link']) {
             $limit = (int)($conf['pages']['linknum']);

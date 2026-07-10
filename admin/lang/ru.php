@@ -562,6 +562,7 @@ define('_OGRAPH','Активировать Open Graph?');
 define('_OGRAPHT','Шаблон Open Graph');
 define('_SCHEMA','Активировать Schema.org?');
 define('_SCHEMAT','Шаблон Schema.org');
+define('_SEO_TPL_INVALID','Некорректный SEO-шаблон');
 define('_TPLVARS','<b>[site]</b> - Название сайта<br><b>[loc]</b> - URL страницы<br><b>[title]</b> - SEO-заголовок (статья + категория + модуль + сайт)<br><b>[desc]</b> - Описание<br><b>[img]</b> - Изображение<br><b>[type]</b> - Тип контента<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Главная<br><b>[logo]</b> - Логотип<br><b>[time]</b> - Дата публикации<br><b>[mtime]</b> - Дата изменения<br><b>[ctitle]</b> - Категория<br><b>[headline]</b> - Заголовок статьи (только текст, без суффиксов)<br><b>[author]</b> - Автор материала');
 define('_ADMINPASSKEEP','Оставьте пустым, чтобы не менять пароль');
 define('_ADMINSELFDEL','Нельзя удалить текущую учётную запись администратора');

@@ -42,7 +42,7 @@ function news(): void {
                 ? $ctitle.' '.$conf['defis'].' '._BEST
                 : $ctitle.' '.$conf['defis'].' '._POP)
             : $ctitle;
-        $order = "WHERE (s.cid = :ncat1 OR s.assoc REGEXP :ncat_re OR c.parent = :ncat2)"
+        $order = 'WHERE (s.cid = :ncat1 OR s.assoc REGEXP :ncat_re OR c.parent = :ncat2)'
             ." AND s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
         $cids = [];
@@ -66,11 +66,11 @@ function news(): void {
         $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _NEWS;
     }
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home || ($home && $conf['news']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _NEWS]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -101,6 +101,7 @@ function news(): void {
             $del = $afile.'.php?name=news&op=actions&typ=d&id='.$id.'&refer=2&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
+                'is_nested' => false,
                 'columns' => $columns,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -113,7 +114,7 @@ function news(): void {
                 'category_link' => $ctitle ? ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_card_category' => true] : [],
                 'category_icon' => $cimg,
                 'category_tone' => $cordern % 6,
-                'text' => $prs->filterContent($hometext, false, $conf['name']),
+                'text' => $prs->filterContent($hometext, false, $conf['name'], 2),
                 'read_href' => $thref,
                 'read_text' => _READMORE,
                 'read_link' => ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_card_read' => true],
@@ -180,7 +181,7 @@ function liste(): void {
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)'
         .' '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
-    setHead(['title' => _LIST]);
+    setHead(['title' => _LIST, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _LIST, 'htitle' => _NEWS]);
     $rows = [];
     $ismoder = is_moder($conf['name']);
@@ -263,6 +264,7 @@ function view(): void {
         $seoimg = getImgText($hometext, '', false);
         setHead([
             'title'  => $title,
+            'kind'   => 'news',
             'ctitle' => $ctitle,
             'cid' => $cid,
             'desc'   => $seodesc,
@@ -271,9 +273,8 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _NEWS, 'is_heading' => false]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
-        if ($conf['news']['viewcat'])
-            $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
+        $catlist = $conf['news']['viewcat'] ? setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0) : '';
         $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
         $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
         if ($fields) $rawtext .= $fields;
@@ -303,7 +304,7 @@ function view(): void {
             'category_icon' => $cimg,
             'category_tone' => $cordern % 6,
             'text' => filterTextHighlight(
-                $prs->filterContent($conpag[$pagei], false, $conf['name']),
+                $prs->filterContent($conpag[$pagei], false, $conf['name'], 1),
                 $word
             ),
             'post_text' => $post,
@@ -321,6 +322,7 @@ function view(): void {
             'back_title' => _BACK,
             'back_text' => _BACK,
         ]);
+        $cont .= $catlist;
         $cont .= getPageNumbers(
             $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['news']['nump'], (int)$pag, '#'.$id
         );

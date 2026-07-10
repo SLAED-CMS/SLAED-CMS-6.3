@@ -694,6 +694,30 @@ function save(): void {
         $eduser = getVar('post', 'editor_user', 'var', 'plain');
         $test = getVar('post', 'testip', 'text', '');
         $test = filter_var($test, FILTER_VALIDATE_IP) ? $test : '';
+        $graph = getVar('post', 'graph', 'raw');
+        $schema = getVar('post', 'schema', 'raw');
+        $known = ['[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]', '[headline]', '[author]'];
+        preg_match_all('#\[[a-z]+\]#', $graph.$schema, $found);
+        $unknown = array_values(array_diff(array_unique($found[0]), $known));
+        if ($unknown) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _SEO_TPL_INVALID.': '.implode(', ', $unknown), true);
+        if ($graph !== '') {
+            preg_match_all('#<meta\b[^>]*>#is', $graph, $metas);
+            $rest = trim((string)preg_replace('#<meta\b[^>]*>#is', '', $graph));
+            $valid = $rest === '' && !empty($metas[0]);
+            foreach ($metas[0] ?? [] as $meta) {
+                $hasprop = preg_match('#\bproperty\s*=\s*(["\'])og:[^"\']+\1#i', $meta);
+                $hascont = preg_match('#\bcontent\s*=\s*(["\']).*?\1#is', $meta);
+                if (!$hasprop || !$hascont) $valid = false;
+            }
+            if (!$valid) setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _SEO_TPL_INVALID.': '._OGRAPH, true);
+        }
+        if ($schema !== '') {
+            try {
+                getSeoJsonItems($schema);
+            } catch (Throwable $e) {
+                setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, _SEO_TPL_INVALID.': '.$e->getMessage(), true);
+            }
+        }
 
         $cont = [
             'version' => '6.3.0 Phoenix',
@@ -741,9 +765,9 @@ function save(): void {
             'title' => getVar('post', 'title', 'num'),
             'ctitle' => getVar('post', 'ctitle', 'num'),
             'agraph' => getVar('post', 'agraph', 'num'),
-            'graph' => getVar('post', 'graph', 'raw'),
+            'graph' => $graph,
             'aschema' => getVar('post', 'aschema', 'num'),
-            'schema' => getVar('post', 'schema', 'raw'),
+            'schema' => $schema,
             'language' => getVar('post', 'language', 'var'),
             'multilingual' => getVar('post', 'multilingual', 'num'),
             'flags' => getVar('post', 'flags', 'num'),

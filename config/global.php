@@ -92,42 +92,8 @@ support@slaed.net',
 	"sameAs": [
 		"https://vk.com/slaed_cms",
 		"https://www.facebook.com/SLAED-CMS-577310846059054",
-		"https://twitter.com/slaed_cms",
-		"https://plus.google.com/112343714768886483056"
+		"https://twitter.com/slaed_cms"
 	]
-}
-</script>
-<script type="application/ld+json">
-{
-	"@context": "https://schema.org",
-	"@type": "Article",
-	"name": "[title]",
-	"description": "[desc]",
-	"articleSection": "[ctitle]",
-	"datePublished": "[time]",
-	"dateModified": "[mtime]",
-	"image": "[img]",
-	"url": "[url]",
-	"headline": "[headline]",
-	"author": {
-		"@type": "Person",
-		"name": "[author]"
-	},
-	"publisher": {
-		"@type": "Organization",
-		"name": "[site]",
-		"url": "[homeurl]",
-		"logo": {
-			"@type": "ImageObject",
-			"name": "[site]",
-			"url": "[logo]"
-		}
-	},
-	"mainEntityOfPage": {
-		"@type": "WebPage",
-		"name": "[site]",
-		"url": "[homeurl]"
-	}
 }
 </script>',
     'script_a' => '0',

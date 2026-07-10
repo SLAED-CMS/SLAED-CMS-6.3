@@ -315,8 +315,8 @@ function getSearchLine(array $row, array $state, int $numb): string {
     $aside .= $tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]);
     $snippet = getSearchSnippet($row['content'], $word, $row['mod']);
     $body = $tpl->getHtmlFrag('block-content', ['is_pull_right' => true, 'content' => $aside])
-        .$tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($row['mod'], $row['cid'], $sep, getModuleName($row['mod']))])
-        .$tpl->getHtmlFrag('title', ['title_html' => $link])
+        .$tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($row['mod'], $row['cid'], $sep, getModuleName($row['mod']))])
+        .$tpl->getHtmlFrag('title', ['title_html' => $link, 'is_level_two' => true])
         .($snippet !== '' ? $tpl->getHtmlFrag('block-content', ['is_snippet' => true, 'content' => $snippet]) : '')
         .$tpl->getHtmlFrag('block-content', ['is_search_meta' => true, 'content' => $meta]);
     return $tpl->getHtmlFrag('block-content', ['id' => (string)$numb, 'is_search_line' => true, 'content' => $body]);

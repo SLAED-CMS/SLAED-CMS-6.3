@@ -197,6 +197,40 @@ namespace Tests\Unit {
         }
 
         #[Test]
+        public function mainSliderUsesExplicitThemeAssetPaths(): void
+        {
+            $html = (new \Template('lite'))->getHtmlPart('main-slider', ['is_home' => true, 'theme' => 'lite']);
+
+            $this->assertSame(4, substr_count($html, 'templates/lite/images/slide/'));
+            $this->assertStringNotContainsString('templates//', $html);
+            $this->assertStringContainsString('slaed_1.jpg', $html);
+            $this->assertStringContainsString('slaed_4.jpg', $html);
+        }
+
+        #[Test]
+        public function linkAndListItemCompositionPreservesEscapingAndBlankTarget(): void
+        {
+            $tpl = new \Template('lite');
+            $link = $tpl->getHtmlFrag('link', [
+                'href' => 'index.php?name=news&id=1',
+                'title' => '<Title>',
+                'label' => '<Label>',
+                'is_blank' => true,
+            ]);
+            $html = $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
+
+            $this->assertStringStartsWith('<li>', trim($html));
+            $this->assertStringEndsWith('</li>', trim($html));
+            $this->assertStringContainsString('href="index.php?name=news&amp;id=1"', $html);
+            $this->assertStringContainsString('title="&lt;Title&gt;"', $html);
+            $this->assertStringContainsString('&lt;Label&gt;', $html);
+            $this->assertStringContainsString('target="_blank"', $html);
+            $this->assertStringContainsString('rel="noopener noreferrer"', $html);
+            $this->assertStringNotContainsString('<Title>', $html);
+            $this->assertStringNotContainsString('<Label>', $html);
+        }
+
+        #[Test]
         public function liteThemeRendersModulePage(): void
         {
             $tpl = new \Template('lite');

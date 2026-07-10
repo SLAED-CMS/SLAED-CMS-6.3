@@ -909,8 +909,7 @@ function getModuleNavi(array $p): string {
     $always = $p['always'] ?? false;
     $addquest = $p['addquest'] ?? true;
     $showrate = $always || !empty($mconf['rate']);
-    $canadd = (is_user() && ($mconf['add'] ?? 0) == 1)
-           || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
+    $canadd = (is_user() && ($mconf['add'] ?? 0) == 1) || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
     $home = $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]);
     $best = $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : '');
     $pop = $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : '');
@@ -921,6 +920,7 @@ function getModuleNavi(array $p): string {
     $catshow = $p['catshow'] ?? $cat;
     return $tpl->getHtmlPart('navi', [
         'title' => $title,
+        'nav_label' => $htitle,
         'is_heading' => $p['is_heading'] ?? true,
         'home_link' => ['href' => $home, 'title' => $htitle, 'label' => _HOME, 'is_navi_button' => true],
         'best_link' => $best ? ['href' => $best, 'title' => $btit, 'label' => $btit, 'is_navi_button' => true] : [],

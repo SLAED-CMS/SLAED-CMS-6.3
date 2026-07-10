@@ -451,9 +451,8 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
     $base = rtrim((string)($conf['homeurl'] ?? ''), '/').'/';
-    $meta = $tpl->getHtmlFrag('head-base', ['href' => $base]) . "\n"
-        . $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => (string)($conf['sitename'] ?? '')]) . "\n"
-        . $tpl->getHtmlFrag('head-meta', ['name' => 'generator', 'content' => 'SLAED CMS '.($conf['version'] ?? '')]) . "\n";
+    $meta = $tpl->getHtmlFrag('head-base', ['href' => $base])."\n"
+        .$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, follow'])."\n";
     $license = getLicenseHtml();
     $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
     $adpath = img_find('logos/'.$adlogo);

@@ -59,7 +59,7 @@ function forum(): void {
         $uinfo = getUserInfo();
         $ulast = (is_array($uinfo) && !empty($uinfo['lastvis'])) ? (int)$uinfo['lastvis'] : 0;
         $head = ($id) ? _FORUM.' '.$rows[0][1] : _FORUM;
-        setHead(['title' => $head]);
+        setHead(['title' => $head, 'kind' => 'collection']);
         echo $tpl->getHtmlFrag('title', ['title' => $head, 'is_level_one' => true]);
         $cnt = 0;
         foreach ($rows as $val) {
@@ -276,7 +276,7 @@ function forum(): void {
         ]);
         echo $cont;
     } else {
-        setHead(['title' => _FORUM]);
+        setHead(['title' => _FORUM, 'kind' => 'collection']);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO, 'meta' => $meta]);
     }
@@ -345,6 +345,7 @@ function view(): void {
         }
         setHead([
             'title' => $rows[0][5],
+            'kind' => 'forum',
             'ctitle' => $rows[0][18],
             'cid' => $rows[0][2],
             'desc' => $seodesc,
@@ -444,9 +445,9 @@ function view(): void {
                       ])
                     : '';
                 $edit = ($edit) ? getActionMenu(explode('||', $edit)) : '';
-                $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name']), $word);
+                $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name'], 2), $word);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
-                if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name']), $word);
+                if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name'], 2), $word);
                 $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
@@ -489,7 +490,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
             'form_attr' => 'class="sl-forum-reply-form"',
             'fields' => $rows,
         ]);
-        return $tpl->getHtmlFrag('title', ['title' => _QUICKREPLY, 'is_forum_heading' => true]).$cont;
+        return $tpl->getHtmlFrag('title', ['title' => _QUICKREPLY, 'is_level_two' => true]).$cont;
     }
     return '';
 }
@@ -605,13 +606,13 @@ function add(): void {
 
     }
     if ($form) {
-        setHead(['title' => $head]);
+        setHead(['title' => $head, 'kind' => 'utility', 'robots' => 'noindex, follow']);
         $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]) : '';
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name']]);
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
-        $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_forum_heading' => true]);
+        $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
@@ -638,8 +639,8 @@ function add(): void {
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
         $head = _FORUM.' '.$ctitle.' '.$ctitle;
-        setHead(['title' => $head]);
-        $cont = $tpl->getHtmlFrag('title', ['title' => $ctitle, 'is_forum_heading' => true]);
+        setHead(['title' => $head, 'kind' => 'utility', 'robots' => 'noindex, follow']);
+        $cont = $tpl->getHtmlFrag('title', ['title' => $ctitle, 'is_level_one' => true]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 5]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
     }

@@ -62,11 +62,11 @@ function files(): void {
         $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _FILES;
     }
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home || ($home && $conf['files']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle, 'htitle' => _FILES]);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['files']['defis'], _FILES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['files']['defis'], _FILES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -96,6 +96,7 @@ function files(): void {
             $del = $afile.'.php?name=files&op=files_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
+                'is_nested'     => false,
                 'width'         => 100,
                 'title_href'    => $thref,
                 'title_attr'    => $stitle,
@@ -106,7 +107,7 @@ function files(): void {
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_icon'  => $cimg,
                 'category_tone'  => $cordern % 6,
-                'text'          => $prs->filterContent($description, false, $conf['name']),
+                'text'          => $prs->filterContent($description, false, $conf['name'], 2),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
                 'post_text'     => $post,
@@ -169,7 +170,7 @@ function liste(): void {
         .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id)'
         .' '.$order.' '.$cwhere.' ORDER BY f.time DESC LIMIT '.$offset.', '.$listnum;
     $result = $db->getSqlQuery($sql, $params);
-    setHead(['title' => _LIST]);
+    setHead(['title' => _LIST, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _LIST, 'htitle' => _FILES]);
     $rows = [];
     $ismoder = is_moder($conf['name']);
@@ -258,8 +259,8 @@ function view(): void {
             'author' => $nick ?: ($uname ?: $conf['sitename']),
         ]);
         $cont = getModuleNavi(['title' => _FILES, 'is_heading' => false]);
-        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['files']['defis'], _FILES)]);
-        if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
+        if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['files']['defis'], _FILES)]);
+        $catlist = $conf['files']['viewcat'] ? setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0) : '';
         $rawtext = $bodytext ? $description.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
         $cimg  = getCategoryIcon($cimg);
@@ -293,7 +294,7 @@ function view(): void {
             'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
             'category_icon'  => $cimg,
             'category_tone'  => $cordern % 6,
-            'text'          => filterTextHighlight($prs->filterContent($rawtext, false, $conf['name']), $word),
+            'text'          => filterTextHighlight($prs->filterContent($rawtext, false, $conf['name'], 1), $word),
             'post_text'     => $post,
             'post_label'    => _POSTEDBY,
             'date_text'     => $date,
@@ -314,6 +315,7 @@ function view(): void {
             'back_title'    => _BACK,
             'back_text'     => _BACK,
         ]);
+        $cont .= $catlist;
         if ($conf['files']['link']) {
             $limit = (int)($conf['files']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery(

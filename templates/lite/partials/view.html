@@ -37,8 +37,10 @@
   </div>
   {% endif %}
   {% if note %}<div class="sl-entry-content">{{{ note }}}</div>{% endif %}
-  {% if links_label %}<h3 class="sl-related-title">{{ links_label }}</h3>{% endif %}
+  {% if links_label or mlinks %}<section>
+  {% if links_label %}<h2 class="sl-related-title">{{ links_label }}</h2>{% endif %}
   {% if mlinks %}<div class="sl-section">{{{ mlinks }}}</div>{% endif %}
+  </section>{% endif %}
   <hr>
   <div class="sl-meta-foot">
     <div class="sl-rate-box sl-pull-right">{{{ rating }}}</div>

@@ -131,6 +131,20 @@ namespace Tests\Unit {
         }
 
         #[Test]
+        public function checkHeadingOffsetsPreserveIdsAndCapAtH6(): void
+        {
+            $src = "# Раздел API v2\n\n## Детали\n\n###### Предел";
+            $html = self::$p->filterDoc($src, true, '', 1);
+            $this->assertStringContainsString('<h2 id="раздел-api-v2">Раздел API v2</h2>', $html);
+            $this->assertStringContainsString('<h3 id="детали">Детали</h3>', $html);
+            $this->assertStringContainsString('<h6 id="предел">Предел</h6>', $html);
+
+            $setext = self::$p->filterDoc("Раздел\n=======\n\nПодраздел\n----------", true, '', 2);
+            $this->assertStringContainsString('<h3 id="раздел">Раздел</h3>', $setext);
+            $this->assertStringContainsString('<h4 id="подраздел">Подраздел</h4>', $setext);
+        }
+
+        #[Test]
         public function checkParserImageFallback(): void
         {
             if (!class_exists('Template', false)) {

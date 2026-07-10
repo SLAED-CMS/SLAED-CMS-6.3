@@ -124,9 +124,9 @@ function add(): void {
     $rows[] = ['label_html' => _VIEWPRIV, 'field_html' => $tpl->getHtmlFrag('select', [
         'name_attr' => 'view',
         'options_html' =>
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVALL, 'is_selected' => (string)$view === '1']) .
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVANON, 'is_selected' => (string)$view === '2']) .
-            $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVUSERS, 'is_selected' => (string)$view === '3']) .
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _MVALL, 'is_selected' => (string)$view === '1']).
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _MVANON, 'is_selected' => (string)$view === '2']).
+            $tpl->getHtmlFrag('select-option', ['value_attr' => '3', 'label_text' => _MVUSERS, 'is_selected' => (string)$view === '3']).
             $tpl->getHtmlFrag('select-option', ['value_attr' => '4', 'label_text' => _MVADMIN, 'is_selected' => (string)$view === '4']),
     ])];
     $rows[] = ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup([

@@ -13,11 +13,13 @@ class Parser {
     private int $scnt = 0;
     private bool $safe = true;
     private string $mod = '';
+    private int $hoff = 0;
     private array $hids = [];
 
-    # Parse src through the pipeline (BB blocks → code → blocks → safe → stash restore) into HTML cached per request by src+safe+mod; safe=true escapes user content
-    public function filterDoc(string $src, bool $safe = true, string $mod = ''): string {
-        $key = md5($src.(int)$safe.$mod);
+    # Parse src through the pipeline; heading offset raises Markdown levels inside an already titled container and caps them at H6
+    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0): string {
+        $hoff = max(0, min(5, $hoff));
+        $key = md5($src.(int)$safe.$mod.$hoff);
         if (isset(self::$pcache[$key])) return self::$pcache[$key];
         $this->stash = [];
         $this->hids  = [];
@@ -25,6 +27,7 @@ class Parser {
         $this->scnt  = 0;
         $this->safe  = $safe;
         $this->mod   = $mod;
+        $this->hoff  = $hoff;
         $src = str_replace(["\r\n", "\r"], "\n", $src);
         $src = $this->filterBbBlocks($src);
         $src = $this->filterCode($src);
@@ -36,9 +39,9 @@ class Parser {
     }
 
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
-    public function filterContent(string $src, bool $safe, string $mod): string {
+    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0): string {
         return $this->normalizeHtmlImages(
-            $this->replaceText($this->filterDoc($src, $safe, $mod), $mod)
+            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff), $mod)
         );
     }
 
@@ -544,7 +547,7 @@ class Parser {
             if ($trim === '') { $out .= "\n"; $i++; continue; }
 
             if (preg_match('/^(#{1,6})\s+(.*?)(?:\s+#+)?$/', $trim, $m)) {
-                $lvl  = strlen($m[1]);
+                $lvl  = min(6, strlen($m[1]) + $this->hoff);
                 $id   = $this->getHeadingId($m[2], $lvl);
                 $out .= $this->addStash('<h'.$lvl.' id="'.$id.'">'.$this->filterInline($m[2]).'</h'.$lvl.'>')."\n";
                 $i++; continue;
@@ -584,7 +587,7 @@ class Parser {
                         $inner = $this->filterBlocks(implode("\n", $seg));
                         $html = $this->getQuoteHtml(
                             ['is_plain' => true, 'content_html' => $inner],
-                            "<blockquote>\n".$inner."</blockquote>"
+                            "<blockquote>\n".$inner.'</blockquote>'
                         );
                         $out .= $this->addStash($html)."\n";
                     }
@@ -606,13 +609,15 @@ class Parser {
 
             if (isset($lines[$i + 1]) && $trim !== '') {
                 if (preg_match('/^=+\s*$/', $lines[$i + 1])) {
-                    $id   = $this->getHeadingId($trim, 1);
-                    $out .= $this->addStash('<h1 id="'.$id.'">'.$this->filterInline($trim).'</h1>')."\n";
+                    $lvl  = min(6, 1 + $this->hoff);
+                    $id   = $this->getHeadingId($trim, $lvl);
+                    $out .= $this->addStash('<h'.$lvl.' id="'.$id.'">'.$this->filterInline($trim).'</h'.$lvl.'>')."\n";
                     $i += 2; continue;
                 }
                 if (preg_match('/^-+\s*$/', $lines[$i + 1]) && !preg_match('/^[*+\-]\s/', $trim)) {
-                    $id   = $this->getHeadingId($trim, 2);
-                    $out .= $this->addStash('<h2 id="'.$id.'">'.$this->filterInline($trim).'</h2>')."\n";
+                    $lvl  = min(6, 2 + $this->hoff);
+                    $id   = $this->getHeadingId($trim, $lvl);
+                    $out .= $this->addStash('<h'.$lvl.' id="'.$id.'">'.$this->filterInline($trim).'</h'.$lvl.'>')."\n";
                     $i += 2; continue;
                 }
             }

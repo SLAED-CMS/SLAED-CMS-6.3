@@ -104,7 +104,7 @@ function getCrypt(string $pass): string {
 }
 
 function getSqlStatements(string $content): array {
-    $lines = preg_split("/\\r\\n|\\n|\\r/", $content);
+    $lines = preg_split('/\\r\\n|\\n|\\r/', $content);
     $delim = ';';
     $buffer = '';
     $queries = [];

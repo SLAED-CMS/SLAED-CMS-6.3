@@ -52,7 +52,7 @@ if (empty($go)) {
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
                 http_response_code(403);
                 setHead();
-                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED])
+                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED, 'is_level_one' => true])
                     .$tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
                 setFoot();
                 exit;
@@ -62,7 +62,7 @@ if (empty($go)) {
             } elseif ($view == 2 && !is_moder($name)) {
                 http_response_code(403);
                 setHead();
-                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED])
+                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED, 'is_level_one' => true])
                     .$tpl->getHtmlFrag('alert', ['text' => _MODULESADMINS, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
                 setFoot();
                 exit;
@@ -147,7 +147,7 @@ if (empty($go)) {
                 echo json_encode(['status' => 'denied', 'message' => 'Access denied'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 exit;
             }
-            echo json_encode(addSchedulerRun($name ?: null, $type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); 
+            echo json_encode(addSchedulerRun($name ?: null, $type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }
     } elseif ($go == 4) {

@@ -1,4 +1,7 @@
-<aside class="sl-block">
+{% if is_before_content %}<div class="sl-block">
+  <div class="sl-title">{% if href %}<a href="{{ href }}" title="{{ title }}">{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}{{ title }}</a>{% else %}{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}{{ title }}{% endif %}</div>
+{% else %}<section class="sl-block">
   <h2 class="sl-title">{% if href %}<a href="{{ href }}" title="{{ title }}">{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}{{ title }}</a>{% else %}{% if icon_name %}<i class="bi bi-{{ icon_name }}" aria-hidden="true"></i> {% endif %}{{ title }}{% endif %}</h2>
+{% endif %}
   <div class="sl-block-content">{{{ content }}}</div>
-</aside>
+{% if is_before_content %}</div>{% else %}</section>{% endif %}

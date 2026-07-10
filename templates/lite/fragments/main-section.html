@@ -1,9 +1,9 @@
-<div class="sl-grid sl-main-section">
-  <h3 title="{{ section_title }}" class="sl-font sl-heading-1">{{ section_title }}</h3>
+<section class="sl-grid sl-main-section">
+  <h2 title="{{ section_title }}" class="sl-font sl-heading-1">{{ section_title }}</h2>
   <ul class="sl-main-list">{{{ items_html }}}</ul>
   {% if more_link %}
     {% include 'fragments/link.html' with more_link %}
   {% else %}
     <a href="{{ more_url }}" title="{{ more_title }}" class="sl-but">{{ more_label }}</a>
   {% endif %}
-</div>
+</section>

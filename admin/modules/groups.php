@@ -50,7 +50,7 @@ function groups(): void {
                         'href' => $afile.'.php?name=groups&op=delete&id='.$grid.'&token='.getSiteToken(),
                         'label' => _ONDELETE,
                         'title' => _ONDELETE,
-                        'onclick_attr' => "return DelCheck(this, '"._DELETE." &quot;".addslashes($grname)."&quot;?')",
+                        'onclick_attr' => "return DelCheck(this, '"._DELETE.' &quot;'.addslashes($grname)."&quot;?')",
                     ],
                 ],
             ]);

@@ -69,10 +69,10 @@ function config(): void {
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sortopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '1']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _ASC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '1']).
         $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _DESC, 'is_selected' => ($conf['forum']['sort'] ?? null) == '0']);
     $anonopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _APOSTMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '0']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _APOSTMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '0']).
         $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _APOSTNOMOD, 'is_selected' => ($conf['forum']['anonpost'] ?? null) == '1']);
     $recycleopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _NO, 'is_selected' => !($conf['forum']['recycle'] ?? 0)]);
     $catres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern ASC');

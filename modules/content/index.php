@@ -15,8 +15,8 @@ function content(): void {
     $nump = (int)($conf['content']['nump'] ?? 5);
     if ($limit < 1) $limit = 10;
     if ($nump < 1) $nump = 5;
-    setHead(['title' => _CONTENT]);
-    $cont = '';
+    setHead(['title' => _CONTENT, 'kind' => 'collection']);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _CONTENT, 'is_level_one' => true]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $limit);
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
@@ -83,12 +83,13 @@ function view(): void {
             }
         }
         $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
-        $hometext = $body . $fields;
+        $hometext = $body.$fields;
         $seodesc = cutstr(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         setHead([
             'title' => $title,
+            'kind' => 'article',
             'desc' => $seodesc,
             'img' => $seoimg,
             'time' => $time,
@@ -100,7 +101,7 @@ function view(): void {
         $cont = $tpl->getHtmlPart('view', [
             'is_moder' => $ismoder,
             'title_text' => filterTextHighlight($title, $word),
-            'text' => filterTextHighlight($prs->filterDoc($body, false, $conf['name']), $word),
+            'text' => filterTextHighlight($prs->filterDoc($body, false, $conf['name'], 1), $word),
             'fields' => $fields,
             ...($ismoder ? getTplEditMenu($edit, $del, $title) : []),
             'back_title' => _BACK,

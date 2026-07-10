@@ -556,7 +556,7 @@ function getBlocks(string $side, string $fly = ''): void {
         $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
-            $content = $prs->filterContent($content, false, 'all');
+            $content = $prs->filterContent($content, false, 'all', 2);
             $view = intval($view);
             $where_mas = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas];
@@ -1412,6 +1412,8 @@ function filterCanonicalParams(): array {
     if ($num > 1) $vars['num'] = (string)$num;
     $let = getVar('get', 'let', 'let');
     if ($let !== '') $vars['let'] = $let;
+    $uname = getVar('get', 'uname', 'name');
+    if ($uname !== '') $vars['uname'] = rawurlencode($uname);
     return $vars;
 }
 
@@ -1428,12 +1430,27 @@ function getPublicUrl(array $vars = []): string {
 function getSeoRoute(array $seo = []): array {
     $vars = filterCanonicalParams();
     $name = $vars['name'] ?? '';
+    $op = $vars['op'] ?? '';
+    if (!empty($vars['id']) && !empty($GLOBALS['conf']['rewrite'])) {
+        $vars['title'] = filterSeoText((string)($seo['title'] ?? ''));
+        $vars['ctitle'] = filterSeoText((string)($seo['ctitle'] ?? ''));
+    }
     $robot = trim((string)($seo['robots'] ?? ''));
     $canon = trim((string)($seo['canon'] ?? ''));
-    $iscanon = $name !== 'search';
+    $services = ['contact', 'money', 'order', 'recommend', 'search', 'whois'];
+    $forms = [
+        'add', 'activate', 'broc', 'check', 'client', 'edithome', 'favorites', 'kasse',
+        'network', 'partner', 'passlost', 'preview', 'privat', 'send', 'upload',
+    ];
+    $noindex = in_array($name, $services, true) || in_array($op, $forms, true) || ($name === 'account' && $op !== 'view');
+    if (getVar('get', 'status', 'num')) $noindex = true;
+    $status = http_response_code();
+    if ($status >= 400) $noindex = true;
+    $iscanon = !$noindex;
     if ($robot === '') {
-        $robot = ($name === 'search') ? 'noindex, follow' : 'index, follow';
+        $robot = $noindex ? 'noindex, follow' : 'index, follow';
     }
+    if (stripos($robot, 'noindex') !== false) $iscanon = false;
     if ($canon !== '') {
         if (!preg_match('#^https?://#i', $canon)) {
             $base = rtrim((string)($GLOBALS['conf']['homeurl'] ?? ''), '/');
@@ -1447,7 +1464,161 @@ function getSeoRoute(array $seo = []): array {
         'canon' => $canon,
         'iscanon' => $iscanon && $canon !== '',
         'siteurl' => getPublicUrl($vars),
+        'kind' => $noindex ? 'utility' : (($name === 'account' && $op === 'view') ? 'profile' : ''),
     ];
+}
+
+# Normalize SEO text for title, meta, Open Graph, and structured-data values
+function filterSeoText(string $text): string {
+    $text = preg_replace('#<[^>]+>#u', ' ', $text) ?? $text;
+    $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    return trim(preg_replace('/\s+/u', ' ', $text) ?? $text);
+}
+
+# Join unique non-empty title segments while preserving their first occurrence and display order
+function getSeoTitle(array $parts, string $sep): string {
+    $out = [];
+    $seen = [];
+    foreach ($parts as $part) {
+        $part = filterSeoText((string)$part);
+        if ($part === '') continue;
+        $key = function_exists('mb_strtolower') ? mb_strtolower($part, 'UTF-8') : strtolower($part);
+        if (isset($seen[$key])) continue;
+        $seen[$key] = true;
+        $out[] = $part;
+    }
+    return implode(' '.$sep.' ', $out);
+}
+
+# Encode one structured-data object without unsafe HTML-significant JSON characters
+function getSeoJson(array $data): string {
+    $flags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE;
+    $flags |= JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR;
+    return json_encode($data, $flags);
+}
+
+# Decode every JSON-LD object from one configurable script template for safe re-encoding
+function getSeoJsonItems(string $html): array {
+    $pat = '#<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>#is';
+    $hits = preg_match_all($pat, $html, $rows);
+    if (!$hits) throw new UnexpectedValueException('Schema template does not contain JSON-LD');
+    $rest = preg_replace($pat, '', $html);
+    if (trim((string)$rest) !== '') throw new UnexpectedValueException('Schema template contains markup outside JSON-LD scripts');
+    $items = [];
+    foreach ($rows[1] as $json) {
+        $data = json_decode(trim($json), true, 512, JSON_THROW_ON_ERROR);
+        if (!is_array($data) || array_is_list($data)) throw new UnexpectedValueException('Schema JSON-LD must decode to an object');
+        $items[] = $data;
+    }
+    return $items;
+}
+
+# Replace legacy placeholders only in decoded structured-data string values
+function setSeoJsonVars(array $data, array $vars): array {
+    foreach ($data as $key => $val) {
+        if (is_array($val)) {
+            $data[$key] = setSeoJsonVars($val, $vars);
+        } elseif (is_string($val)) {
+            $data[$key] = str_replace(array_keys($vars), array_values($vars), $val);
+        }
+    }
+    return $data;
+}
+
+# Decode configurable Open Graph meta tags into property values for safe template rendering
+function getSeoGraph(string $html, array $vars): array {
+    preg_match_all('#<meta\b[^>]*>#is', $html, $rows);
+    $data = [];
+    foreach ($rows[0] ?? [] as $tag) {
+        if (!preg_match('#\bproperty\s*=\s*(["\'])(og:[^"\']+)\1#i', $tag, $prop)) continue;
+        if (!preg_match('#\bcontent\s*=\s*(["\'])(.*?)\1#is', $tag, $cont)) continue;
+        $valu = html_entity_decode($cont[2], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $data[$prop[2]] = str_replace(array_keys($vars), array_values($vars), $valu);
+    }
+    return $data;
+}
+
+# Build the route-level structured-data object from explicit page facts
+function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
+    $types = [
+        'website' => $ishome ? 'WebSite' : 'WebPage',
+        'collection' => 'CollectionPage',
+        'article' => 'Article',
+        'news' => 'NewsArticle',
+        'product' => 'WebPage',
+        'forum' => 'WebPage',
+        'profile' => 'WebPage',
+        'utility' => 'WebPage',
+    ];
+    $data = [
+        '@context' => 'https://schema.org',
+        '@type' => $types[$kind] ?? 'WebPage',
+        'name' => $seo['title'],
+        'url' => $seo['url'],
+    ];
+    if ($seo['desc'] !== '') $data['description'] = $seo['desc'];
+    if ($seo['img'] !== '') $data['image'] = $seo['img'];
+    if (in_array($kind, ['article', 'news'], true)) {
+        $data['headline'] = $seo['title'];
+        if ($seo['time'] !== '') $data['datePublished'] = $seo['time'];
+        if ($seo['mtime'] !== '') $data['dateModified'] = $seo['mtime'];
+        if ($seo['author'] !== '') {
+            $isorg = strcasecmp($seo['author'], $seo['site']) === 0;
+            $data['author'] = ['@type' => $isorg ? 'Organization' : 'Person', 'name' => $seo['author']];
+            if ($isorg) $data['author']['url'] = $seo['home'];
+        }
+        $data['publisher'] = [
+            '@type' => 'Organization',
+            'name' => $seo['site'],
+            'url' => $seo['home'],
+            'logo' => ['@type' => 'ImageObject', 'url' => $seo['logo']],
+        ];
+        $data['mainEntityOfPage'] = ['@type' => 'WebPage', '@id' => $seo['url']];
+    }
+    return $data;
+}
+
+# Build a visible module/category/page breadcrumb trail as BreadcrumbList data
+function getSeoBreadcrumbSchema(string $name, int $cid, string $title, string $url): array {
+    global $db;
+    if ($name === '' || $cid < 1) return [];
+    $res = $db->getSqlQuery(
+        'SELECT id, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :modul',
+        ['modul' => $name]
+    );
+    $cats = [];
+    while ([$id, $ctit, $parent] = $db->getSqlRow($res)) {
+        $cats[(int)$id] = ['title' => filterSeoText(getConst($ctit)), 'parent' => (int)$parent];
+    }
+    $chain = [];
+    $cur = $cid;
+    $guard = 0;
+    while ($cur && isset($cats[$cur]) && $guard++ < 50) {
+        $chain[] = $cur;
+        $cur = $cats[$cur]['parent'];
+    }
+    $chain = array_reverse($chain);
+    if (!$chain) return [];
+    $items = [];
+    $pos = 1;
+    $items[] = [
+        '@type' => 'ListItem',
+        'position' => $pos++,
+        'name' => filterSeoText(getModuleName($name)),
+        'item' => getPublicUrl(['name' => $name]),
+    ];
+    foreach ($chain as $id) {
+        $items[] = [
+            '@type' => 'ListItem',
+            'position' => $pos++,
+            'name' => $cats[$id]['title'],
+            'item' => getPublicUrl(['name' => $name, 'cat' => $id]),
+        ];
+    }
+    if ($title !== '' && $title !== $cats[$cid]['title']) {
+        $items[] = ['@type' => 'ListItem', 'position' => $pos, 'name' => $title, 'item' => $url];
+    }
+    return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $items];
 }
 
 # Decide whether the current frontend request may be served from or stored into the page cache
@@ -1526,57 +1697,73 @@ function setHead(array $seo = []): void {
     $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
         $seomap = getSeoRoute($seo);
-        $atime  = date('Y-m-d H:i:s');
-        $time   = $seo['time']   ?? $atime;
-        $mtime  = $time;
-        $title    = $seo['title']  ?? $conf['sitename'];
-        $headline = $title;
-        $desc   = $seo['desc']   ?? $conf['slogan'];
-        $img    = ($seo['img'] ?? '') ?: $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
-        $ctitle = $seo['ctitle'] ?? '';
-        $author = $seo['author'] ?? $conf['sitename'];
-        $purl = $seomap['siteurl'];
-        $type = 'article';
+        $site = filterSeoText((string)($conf['sitename'] ?? ''));
+        $slogan = filterSeoText((string)($conf['slogan'] ?? ''));
+        $headline = filterSeoText((string)($seo['title'] ?? $site));
+        $ctitle = filterSeoText((string)($seo['ctitle'] ?? ''));
+        $desc = array_key_exists('desc', $seo) ? filterSeoText((string)$seo['desc']) : ($home ? $slogan : '');
+        $author = filterSeoText((string)($seo['author'] ?? ''));
+        $time = trim((string)($seo['time'] ?? ''));
+        $mtime = trim((string)($seo['mtime'] ?? ''));
+        $tstamp = $time !== '' ? strtotime($time) : false;
+        $mstamp = $mtime !== '' ? strtotime($mtime) : false;
+        $tiso = $tstamp !== false ? date('c', $tstamp) : '';
+        $miso = $mstamp !== false ? date('c', $mstamp) : '';
+        $logo = rtrim((string)$conf['homeurl'], '/').'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
+        $simg = trim((string)($seo['img'] ?? ''));
+        $img = $simg !== '' ? $simg : $logo;
+        $kind = $home ? 'website' : trim((string)($seo['kind'] ?? ($seomap['kind'] ?: 'website')));
+        $ogmap = ['article' => 'article', 'news' => 'article', 'forum' => 'article', 'product' => 'product', 'profile' => 'profile'];
+        $type = $ogmap[$kind] ?? 'website';
+        $purl = $seomap['iscanon'] ? $seomap['canon'] : $seomap['siteurl'];
+        $title = $headline;
         if ($home) {
-            $title = $conf['sitename'].' '.$sep.' '.$conf['slogan'];
+            $title = getSeoTitle(mb_strlen($slogan, 'UTF-8') <= 60 ? [$site, $slogan] : [$site], $sep);
         } else {
             if ($conf['ltitle']) {
                 $mod = getModuleName($conf['name']);
-                $title = ($title == $conf['sitename']) ? [] : [$title];
-                $title = empty($ctitle) ? $title : array_merge($title, [$ctitle]);
+                $parts = $headline !== $site ? [$headline, $ctitle] : [$ctitle];
                 $word = getVar('get', 'word', 'word');
-                $title = empty($word) ? $title : array_merge($title, [$word]);
+                if ($word !== '') $parts[] = $word;
                 $let = getVar('get', 'let', 'let');
-                $title = empty($let) ? $title : array_merge($title, [$let]);
+                if ($let !== '') $parts[] = $let;
                 $num = getVar('get', 'num', 'num');
-                $title = empty($num) ? $title : array_merge($title, [_PAGE.' '.$num]);
+                if ($num) $parts[] = _PAGE.' '.$num;
                 $com = getVar('get', 'com', 'num');
-                $title = empty($com) ? $title : array_merge($title, [_COMMENTS.' '.$com]);
+                if ($com) $parts[] = _COMMENTS.' '.$com;
                 if ($op == 'best') {
-                    $title = array_merge($title, [_BEST]);
+                    $parts[] = _BEST;
                 } elseif ($op == 'pop') {
-                    $title = array_merge($title, [_POP]);
+                    $parts[] = _POP;
                 } elseif ($op == 'liste') {
-                    $title = array_merge($title, [_LIST]);
+                    $parts[] = _LIST;
                 } elseif ($op == 'add') {
-                    $title = array_merge($title, [_ADD]);
+                    $parts[] = _ADD;
                 }
-                $title = array_merge($title, [$mod]);
-                $title = array_merge($title, [$conf['sitename']]);
-                $title = implode(' '.$sep.' ', array_map('trim', $title));
+                $parts[] = $mod;
+                $parts[] = $site;
+                $title = getSeoTitle($parts, $sep);
             }
         }
-        $strmeta .= '<title>'.$title.'</title>'."\n"
-        .'<meta name="author" content="'.$conf['sitename'].'">'."\n"
-        .'<meta name="description" content="'.$desc.'">'."\n"
-        .'<meta name="robots" content="'.$seomap['robot'].'">'."\n"
-        .'<meta name="revisit-after" content="1 days">'."\n"
-        .'<meta name="rating" content="general">'."\n"
-        .'<meta name="generator" content="SLAED CMS">'."\n";
+        $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $title])."\n";
+        if ($author !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'author', 'content' => $author])."\n";
+        if ($desc !== '') $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'description', 'content' => $desc])."\n";
+        $strmeta .= $tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => $seomap['robot']])."\n";
         $from = ['[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]', '[headline]', '[author]'];
-        $into = [$conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, date('c', strtotime($time)), date('c', strtotime($mtime)), $title, $desc, $img, $ctitle, $type, $purl, $headline, $author];
-        if (!empty($conf['agraph']) && !empty($conf['graph'])) {
-            $strmeta .= str_replace($from, $into, $conf['graph']);
+        $raw = [$conf['homeurl'], $site, $logo, _LOCALE, $tiso, $miso, $title, $desc, $img, $ctitle, $type, $purl, $headline, $author];
+        $gvars = array_combine($from, array_map('strval', $raw)) ?: [];
+        $jvars = $gvars;
+        if (!empty($conf['agraph'])) {
+            $graph = ['og:site_name' => $site, 'og:locale' => _LOCALE, 'og:title' => $title, 'og:image' => $img, 'og:type' => $type, 'og:url' => $purl];
+            if ($desc !== '') $graph['og:description'] = $desc;
+            if (!empty($conf['graph'])) $graph = array_replace($graph, getSeoGraph((string)$conf['graph'], $gvars));
+            foreach ($graph as $prop => $value) {
+                $strmeta .= $tpl->getHtmlFrag('head-meta', [
+                    'is_property' => true,
+                    'property' => $prop,
+                    'content' => $value,
+                ])."\n";
+            }
         }
         if ($seomap['iscanon']) $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'canonical', 'href' => $seomap['canon'], 'type' => '', 'title' => ''])."\n";
         if ($conf['rss']['act']) {
@@ -1589,17 +1776,47 @@ function setHead(array $seo = []): void {
             }
         }
         $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'search', 'href' => $conf['homeurl'].'/index.php?go=search', 'type' => 'application/opensearchdescription+xml', 'title' => $conf['sitename'].' - '._SEARCH])."\n";
+        if (!empty($conf['aschema'])) {
+            $sdata = [
+                'title' => $home ? $site : $headline, 'desc' => $desc, 'url' => $purl, 'img' => $simg, 'author' => $author,
+                'time' => $tiso, 'mtime' => $miso, 'site' => $site, 'home' => rtrim((string)$conf['homeurl'], '/'), 'logo' => $logo,
+            ];
+            $items = [getSeoSchema($kind, $sdata, (bool)$home)];
+            if ($home) $items[] = getSeoSchema('website', $sdata);
+            $bcid = (int)($seo['cid'] ?? getVar('get', 'cat', 'num'));
+            $bread = getSeoBreadcrumbSchema($name, $bcid, $headline, $purl);
+            if ($bread) $items[] = $bread;
+            if (!empty($conf['schema'])) {
+                try {
+                    $custom = getSeoJsonItems((string)$conf['schema']);
+                    foreach ($custom as $item) $items[] = setSeoJsonVars($item, $jvars);
+                } catch (Throwable $e) {
+                    static $bad = [];
+                    $hash = sha1((string)$conf['schema']);
+                    if (!isset($bad[$hash]) && class_exists('Logger')) Logger::addSite('error', 'Invalid Schema.org template', ['error' => $e->getMessage()]);
+                    $bad[$hash] = true;
+                }
+            }
+            $extra = $seo['jsonld'] ?? [];
+            if (is_array($extra) && isset($extra['@type'])) $extra = [$extra];
+            if (is_array($extra)) {
+                foreach ($extra as $item) if (is_array($item)) $items[] = $item;
+            }
+            foreach ($items as $item) {
+                $stscript .= $tpl->getHtmlFrag('head-script-inline', [
+                    'is_jsonld' => true,
+                    'json_html' => getSeoJson($item),
+                ])."\n";
+            }
+        }
     } else {
-        $strmeta .= '<title>'.$conf['sitename'].' '.$sep.' '._ADMIN.'</title>'."\n";
+        $strmeta .= $tpl->getHtmlFrag('head-title', ['title' => $conf['sitename'].' '.$sep.' '._ADMIN])."\n";
     }
     $favicon = 'templates/'.(defined('ADMIN_FILE') ? 'admin' : $theme).'/images/favicon.svg';
     if (is_file(BASE_DIR.'/'.$favicon)) {
         $strlink .= $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => ''])."\n";
     }
     $strlink .= doCss();
-    if (!defined('ADMIN_FILE') && !empty($conf['aschema']) && !empty($conf['schema'])) {
-        $stscript = str_replace($from, $into, $conf['schema']);
-    }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     if (defined('ADMIN_FILE')) {
         $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
@@ -2850,7 +3067,11 @@ function getOutputHtml(string $html, bool $full = false): string {
 function getVotingView(int $id = 0, string $votid = '', bool $force = false): string {
     global $db, $afile, $user, $locale, $conf, $tpl;
     if (!$id) $id = getVar('get', 'id', 'num', 0);
+    if (!$votid) $votid = filterVar(getVar('get', 'votid', 'text'));
     if (!$votid) $votid = filterVar(getVar('post', 'votid', 'text', 'voting')) ?: 'voting';
+    $ispage = !$force && $votid === 'voting';
+    $iswidget = !$force && $votid === 'blockvoting';
+    $issection = !$ispage && !$iswidget;
 
     if ($force) {
         $qwhere = '1 = 1';
@@ -2925,6 +3146,9 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     return $tpl->getHtmlPart('voting-widget', [
         'has_form'   => !$rate,
         'is_view'    => $votid === 'voting',
+        'is_page'    => $ispage,
+        'is_section' => $issection,
+        'is_widget'  => $iswidget,
         'form_id'    => 'form'.$votid,
         'poll_id'    => $id,
         'token'      => getSiteToken(),
@@ -3893,7 +4117,7 @@ function getEditorFileJson(): void {
     $row = [];
     foreach (scandir($dir) ?: [] as $file) {
         if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
-        $own = preg_match("#^[a-zA-Z0-9_]+-[a-zA-Z0-9]+-([0-9]+)\\.[a-zA-Z0-9]+$#", $file, $mat) && (int)$mat[1] === $uid;
+        $own = preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]+-([0-9]+)\\.[a-zA-Z0-9]+$#', $file, $mat) && (int)$mat[1] === $uid;
         if (!$all && !$own) continue;
         $row[] = getEditorFileData($dir, $file);
     }
@@ -4790,7 +5014,13 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             return $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
             break;
             default:
-            echo $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content, 'icon_name' => $bicon, 'href' => $bhref]);
+            echo $tpl->getHtmlFrag('block-all', [
+                'title' => $blocktitle,
+                'content' => $content,
+                'icon_name' => $bicon,
+                'href' => $bhref,
+                'is_before_content' => $side === 'c',
+            ]);
             break;
         }
     } else {
@@ -5170,11 +5400,17 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 if (defined('ADMIN_FILE')) {
                     $acttyp = $com_status ? '0' : '1';
                     $acttxt = $com_status ? _DEACTIVATE : _ACTIVATE;
+                    $ctext = cutstr(filterText($prs->filterContent($com_text, false, $com_modul, 2)), 10);
                     $items = [
                         ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$com_cid.'#'.$com_id, 'title' => _MVIEW, 'label' => _MVIEW],
                         ['href' => $afile.'.php?name=comments&op=edit&id='.$com_id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
                         ['href' => $afile.'.php?name=comments&op=approve&id='.$com_id.'&typ='.$acttyp.'&refer=1&token='.getSiteToken(), 'title' => $acttxt, 'label' => $acttxt],
-                        ['href' => $afile.'.php?name=comments&op=delete&id='.$com_id.'&refer=1&token='.getSiteToken(), 'title' => _ONDELETE, 'label' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.cutstr(filterText($prs->filterContent($com_text, false, $com_modul)), 10).'&quot;?\');"'],
+                        [
+                            'href' => $afile.'.php?name=comments&op=delete&id='.$com_id.'&refer=1&token='.getSiteToken(),
+                            'title' => _ONDELETE,
+                            'label' => _ONDELETE,
+                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ctext.'&quot;?\');"',
+                        ],
                     ];
                     $edit = getActionMenu(array_map(fn($item) => $tpl->getHtmlFrag('link', $item), $items));
                 } else {
@@ -5196,7 +5432,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $edit = '';
                 }
             }
-            $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul)]);
+            $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$com_id, 'content' => $prs->filterContent($com_text, false, $com_modul, 2)]);
             if (defined('ADMIN_FILE')) {
                 $markAll = $tpl->getHtmlFrag('checkbox', [
                     'name_attr' => 'markcheck',
@@ -5227,7 +5463,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
             $cont .= getPageNumbers($mod, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
-            $out = $tpl->getHtmlFrag('title', ['title' => _COMMENTS]).$cont;
+            $out = $cont;
         }
     } else {
         $winfo = (defined('ADMIN_FILE')) ? _NO_INFO : _NOCOMMENTS;
@@ -5247,7 +5483,12 @@ function updateComment(): string {
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
-            $content = ($typ) ? getTplAjaxTextarea(['obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id, 'cid' => '0', 'typ' => '0', 'mod' => $mod, 'text' => $comment, 'rows' => 10]) : $prs->filterContent($comment, false, $mod);
+            $content = $typ
+                ? getTplAjaxTextarea([
+                    'obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id,
+                    'cid' => '0', 'typ' => '0', 'mod' => $mod, 'text' => $comment, 'rows' => 10,
+                ])
+                : $prs->filterContent($comment, false, $mod, 2);
             echo $content;
         } elseif ($id && $mod && $text) {
             $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
@@ -5261,7 +5502,7 @@ function updateComment(): string {
             if (!$stop) {
                 $comm = filterHtml($text, $urlclick);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $comm, 'id' => $id]);
-                echo $prs->filterContent($comm, false, $mod);
+                echo $prs->filterContent($comm, false, $mod, 2);
             } else {
                 return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
             }
@@ -5386,7 +5627,8 @@ function updateVotingResult(): void {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET answer = :answer WHERE id = :id', ['answer' => $answ, 'id' => $id]);
                     updatePoints(42);
                 }
-                $cont = getVotingView($id);
+                $votid = filterVar(getVar('get', 'votid', 'text', 'voting')) ?: 'voting';
+                $cont = getVotingView($id, $votid);
             }
         }
     } else {

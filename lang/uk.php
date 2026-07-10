@@ -240,7 +240,7 @@ define('_LAST_VISIT','Останній візит');
 define('_LINKEXIST','Сайт з даними адресою вже існує в нашому каталозі!');
 define('_LINKS','Каталог сайтів');
 define('_LIST','Список');
-define('_LOCALE','uk_UK');
+define('_LOCALE','uk_UA');
 define('_LOCALITYLANG','Місце проживання');
 define('_LOGIN','Увійти');
 define('_LOGININCOR','Неправильний логін! Спробуйте ще...');

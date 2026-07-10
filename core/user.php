@@ -9,10 +9,8 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $cid = 0): string {
     global $conf, $user, $tpl;
-    $cont = $tpl->getHtmlFrag('block-content', [
-        'id' => 'comm',
-        'content' => $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]),
-    ]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
@@ -49,7 +47,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
             'submit' => $submit,
         ]);
     }
-    return $cont;
+    return $tpl->getHtmlFrag('block-content', ['id' => 'comm', 'is_comments_section' => true, 'content' => $cont]);
 }
 
 # Render the active site message box for the current language and user role
@@ -70,14 +68,14 @@ function setMessageShow(): string {
         }
         $messageBox = static fn(string $title, string $body): string => $tpl->getHtmlFrag('block-content', [
             'is_message_box' => true,
-            'content' => $tpl->getHtmlFrag('title', ['title' => $title, 'is_plain' => true]).$body,
+            'content' => $tpl->getHtmlFrag('title', ['title' => $title, 'is_level_two' => true]).$body,
         ]);
         $result = $db->getSqlQuery('SELECT id, title, body, expire, view FROM '.PREFIX_DB.'_message WHERE status = 1 '.$querylang, $params);
         if ($db->getSqlRowCount($result) > 0) {
             while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
                 if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = 0 WHERE id = :mid', ['mid' => $mid]);
-                $body = $prs->filterContent($body, false, 'all');
+                $body = $prs->filterContent($body, false, 'all', 2);
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 if ($view == 4 && is_moder()) {
@@ -201,7 +199,7 @@ function getUserBlock(): string {
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
-        $userblock = $prs->filterContent($userblock, false, 'account');
+        $userblock = $prs->filterContent($userblock, false, 'account', 2);
         return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock]);
     }
     return '';
@@ -280,7 +278,12 @@ function updatePost() {
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
-                $content = ($typ) ? getTplAjaxTextarea(['obj' => 'for'.$id, 'go' => '1', 'op' => 'updatePost', 'id' => $id, 'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'text' => $hometext, 'rows' => 15]) : $prs->filterContent($hometext, false, $mod);
+                $content = $typ
+                    ? getTplAjaxTextarea([
+                        'obj' => 'for'.$id, 'go' => '1', 'op' => 'updatePost', 'id' => $id,
+                        'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'text' => $hometext, 'rows' => 15,
+                    ])
+                    : $prs->filterContent($hometext, false, $mod, 2);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : 0;
@@ -297,7 +300,7 @@ function updatePost() {
                         'UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id',
                         ['body' => $htext, 'euid' => $postid, 'eip' => $ip, 'id' => $id]
                     );
-                    echo $prs->filterContent($htext, false, $mod);
+                    echo $prs->filterContent($htext, false, $mod, 2);
                 } else {
                     return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
                 }
@@ -480,7 +483,27 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $usermenu = getActionMenu($uitems, true);
                 $edit =(($uidin == $uid) || ($uidout == $uid && !$status)) ? getActionMenu([$tpl->getHtmlFrag('comment-action-ajax', ['query' => 'go=1&op=deletePrivateMessage&id='.$idp.'&typ='.$mod, 'target' => $prmid, 'title' => _ONDELETE, 'label' => _ONDELETE])]) : '';
                 $rankHtml = ($rank) ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $rank]) : '';
-                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => 'pm'.$idp, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'ip' => $ip, 'meta_title' => cutstr($title, 35), 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank_html' => $rankHtml, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $prs->filterContent($body, false, $conf['name']), 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_edit' => $edit, 'is_private_message' => true]);
+                $cont .= $tpl->getHtmlFrag('forum-post', [
+                    'id' => 'pm'.$idp,
+                    'username' => $avname,
+                    'username_html' => $uname_html,
+                    'report' => $utip,
+                    'date' => $date,
+                    'ip' => $ip,
+                    'meta_title' => cutstr($title, 35),
+                    'avatar' => $avatar,
+                    'avatar_html' => $tpl->getHtmlFrag('image', [
+                        'src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true,
+                    ]),
+                    'rank_html' => $rankHtml,
+                    'rank_link' => $rlink,
+                    'user_rate' => $rate,
+                    'text' => $prs->filterContent($body, false, $conf['name'], 2),
+                    'sig' => $prs->filterContent($sig, false, $conf['name'], 2),
+                    'btn_user' => $usermenu,
+                    'btn_edit' => $edit,
+                    'is_private_message' => true,
+                ]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {

@@ -323,14 +323,13 @@ function view(): void {
             $seoctitle = _PERSONALINFO;
             $seodesc   = cutstr(trim(strip_tags($prs->filterContent($sig ?? '', false, $conf['name']))), 160);
             $seoimg    = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['homeurl'].'/'.$conf['users']['adirectory'].'/'.$avatar : '';
-            $seotime   = $last;
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
             setHead([
                 'title' => $seotitle,
+                'kind' => 'profile',
                 'ctitle' => $seoctitle,
                 'desc' => $seodesc,
                 'img' => $seoimg,
-                'time' => $seotime,
                 'author' => $seoauthor,
             ]);
             if (isAdmin()) {

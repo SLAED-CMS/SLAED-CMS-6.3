@@ -66,11 +66,11 @@ function jokes(): void {
         $onum = "time <= NOW() AND status != '0'";
         $ntitle = _JOKES;
     }
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home || ($home && $conf['jokes']['homcat'])) {
         $cont .= getModuleNavi(['title' => $ntitle] + JOKES_NAVI);
-        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -97,6 +97,7 @@ function jokes(): void {
             $del = $afile.'.php?name=jokes&op=jokes_delete&id='.$id.'&refer=1&token='.$token;
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
+                'is_nested'     => false,
                 'width'         => 100,
                 'title_href'    => '#'.$id,
                 'title_attr'    => $jtitle,
@@ -107,7 +108,7 @@ function jokes(): void {
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_icon'  => $cimg,
                 'category_tone'  => $cordern % 6,
-                'text'          => filterTextHighlight($prs->filterContent($joke, false, $conf['name']), $word),
+                'text'          => filterTextHighlight($prs->filterContent($joke, false, $conf['name'], 2), $word),
                 'read_href'     => '',
                 'read_text'     => '',
                 'post_text'     => $post,

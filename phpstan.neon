@@ -2,12 +2,13 @@ parameters:
     level: 0
     bootstrapFiles:
         - phpstan-bootstrap.php
+    scanFiles:
+        - admin/index.php
     paths:
         - core
         - modules
     excludePaths:
         - modules/*/admin/info/*
-        - modules/clients/pclzip.lib.php (?)
         - plugins/*
         - vendor/*
     ignoreErrors:

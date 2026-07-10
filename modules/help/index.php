@@ -70,11 +70,11 @@ function help(): void {
     $url_extra = [];
     if ($ncat) $url_extra['cat'] = $ncat;
     if ($op)   $url_extra['op']  = $op;
-    setHead(['title' => $ntitle]);
+    setHead(['title' => $ntitle, 'kind' => 'collection']);
     $cont = '';
     if (!$home) {
         $cont .= getModuleNavi(['title' => $ntitle] + HELP_NAVI);
-        if ($ncat)      $cont .= $tpl->getHtmlFrag('category-nav', ['crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
+        if ($ncat)      $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['help']['subcat'], $conf['help']['catdesc'], $ncat);
     }
     $num    = getVar('get', 'num', 'num', '1');
@@ -90,6 +90,7 @@ function help(): void {
             $date  = ($conf['help']['date']) ? format_time($time) : '';
             $cont .= $tpl->getHtmlFrag('card', [
                 'id'            => $id,
+                'is_nested'     => false,
                 'width'         => 100,
                 'title_href'    => $thref,
                 'title_attr'    => $stitle,
@@ -100,7 +101,7 @@ function help(): void {
                 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                 'category_icon'  => $cimg,
                 'category_tone'  => $cordern % 6,
-                'text'          => $prs->filterContent($hometext, false, $conf['name']),
+                'text'          => $prs->filterContent($hometext, false, $conf['name'], 2),
                 'read_href'     => $thref,
                 'read_text'     => _READMORE,
                 'post_text'     => '',
@@ -159,7 +160,7 @@ function liste(): void {
     $num    = getVar('get', 'num', 'num', '1');
     $offset = (int)(($num - 1) * $listnum);
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.status, c.title, c.intro FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum, $params);
-    setHead(['title' => _LIST]);
+    setHead(['title' => _LIST, 'kind' => 'collection']);
     $cont = getModuleNavi(['title' => _LIST] + HELP_NAVI);
     $rows = [];
     while ([$id, $cid, $title, $time, $status, $ctitle, $cdesc] = $db->getSqlRow($result)) {
@@ -232,7 +233,7 @@ function view(): void {
             'time'   => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = getModuleNavi(['title' => _HELPINFO] + HELP_NAVI);
+        $cont = getModuleNavi(['title' => _HELPINFO, 'is_heading' => false] + HELP_NAVI);
         $a = 0;
         while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $chref  = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
@@ -267,7 +268,7 @@ function view(): void {
                     'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
                     'category_icon'  => $cimg,
                     'category_tone'  => $cordern % 6,
-                    'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
+                    'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name'], 1), $word),
                     'fields'        => $fields,
                     'voting'        => '',
                     'rating'        => $rating,
@@ -287,7 +288,7 @@ function view(): void {
                     'category_attr' => '',
                     'category_text' => '',
                     'category_icon'  => '',
-                    'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name']), $word),
+                    'text'          => filterTextHighlight($prs->filterContent($text, false, $conf['name'], 1), $word),
                     'read_href'     => '',
                     'read_text'     => '',
                     'post_text'     => $post,

@@ -1,6 +1,5 @@
-{% if is_forum_heading %}
-<h1 class="sl-heading">{{ title }}</h1>
-{% elseif content or subtitle %}
+{% if is_level_one %}
+{% if content or subtitle %}
 <div class="sl-basecont">
   <div class="sl-bpad">
     <div class="sl-headmodule">
@@ -11,12 +10,15 @@
     {{{ content }}}
   </div>
 </div>
-{% elseif is_level_one %}
+{% else %}
 <h1 class="sl-title">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h1>
+{% endif %}
 {% elseif is_level_two %}
 <h2>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h2>
+{% elseif is_level_three %}
+<h3 class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h3>
 {% elseif is_level_four %}
 <h4>{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h4>
 {% else %}
-<h3 class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</h3>
+<div class="{% if title_class %}{{ title_class }}{% else %}sl-title{% endif %}">{% if title_html %}{{{ title_html }}}{% else %}{{ title }}{% endif %}</div>
 {% endif %}

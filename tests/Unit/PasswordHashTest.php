@@ -58,7 +58,7 @@ final class PasswordHashTest extends TestCase
     #[Test]
     public function legacyMd5HashIsDetectedByFormat(): void
     {
-        $legacyHash = md5(md5('test_salt') . md5('password'));
+        $legacyHash = md5(md5('test_salt').md5('password'));
 
         $this->assertSame(32, strlen($legacyHash));
         $this->assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $legacyHash);

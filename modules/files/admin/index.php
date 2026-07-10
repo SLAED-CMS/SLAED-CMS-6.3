@@ -307,8 +307,8 @@ function config(): void {
     $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $streamopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']) .
-        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _STREAM_1, 'is_selected' => ($conf['files']['stream'] ?? null) == '1']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _STREAM_NO, 'is_selected' => ($conf['files']['stream'] ?? null) == '0']).
+        $tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _STREAM_1, 'is_selected' => ($conf['files']['stream'] ?? null) == '1']).
         $tpl->getHtmlFrag('select-option', ['value_attr' => '2', 'label_text' => _STREAM_2, 'is_selected' => ($conf['files']['stream'] ?? null) == '2']);
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [

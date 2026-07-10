@@ -104,7 +104,7 @@ function config(): void {
     ]);
     $source = chlogSource((string) ($conf['changelog']['source'] ?? 'local'));
     $sourceopts =
-        $tpl->getHtmlFrag('select-option', ['value_attr' => 'local', 'label_text' => 'Local', 'is_selected' => $source === 'local']) .
+        $tpl->getHtmlFrag('select-option', ['value_attr' => 'local', 'label_text' => 'Local', 'is_selected' => $source === 'local']).
         $tpl->getHtmlFrag('select-option', ['value_attr' => 'github', 'label_text' => 'GitHub', 'is_selected' => $source === 'github']);
     $yesno = [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]];
     $rows = [

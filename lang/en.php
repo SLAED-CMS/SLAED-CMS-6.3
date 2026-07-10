@@ -240,7 +240,7 @@ define('_LAST_VISIT','Last visit');
 define('_LINKEXIST','The site with the given address already exists in our catalogue!');
 define('_LINKS','Catalogue of sites');
 define('_LIST','List');
-define('_LOCALE','en_EN');
+define('_LOCALE','en_GB');
 define('_LOCALITYLANG','Locality');
 define('_LOGIN','Login');
 define('_LOGININCOR','Login Incorrect! Please Try Again...');
