@@ -61,7 +61,8 @@
   --sl-hover-border-soft: #8fc5d9;
   --sl-hover-border-primary: #207fb6;
   --sl-hover-shadow-card: 0 2px 6px rgba(35, 52, 70, 0.12);
-  --sl-hover-shadow-input: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(11, 135, 201, 0.08);
+  --sl-hover-shadow-input:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 0 0 2px rgba(11, 135, 201, 0.08);
   --sl-hover-preview-size: 48px;
   --sl-hover-preview-radius: 30px;
   --sl-radius-control: 4px;
@@ -74,20 +75,25 @@
   --sl-space-lg: 12px;
   --sl-shadow-soft: rgba(32, 75, 102, 0.18);
   --sl-shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --sl-shadow-control: 0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.42), inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --sl-shadow-control:
+    0 2px 4px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
   --sl-shadow-control-active: inset 0 1px 4px 0 rgba(0, 0, 0, 0.2);
   --sl-shadow-hover-soft: 0 0 0 2px rgba(32, 127, 182, 0.08);
   --sl-text-shadow-light: 0 1px 0 var(--sl-color-bg);
   --sl-text-shadow-dark: 0 1px 0 rgba(0, 0, 0, 0.1);
   --sl-focus-primary: rgba(32, 127, 182, 0.38);
-  --sl-shadow-input: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
-  --sl-shadow-input-active: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
+  --sl-shadow-input:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 1px rgba(43, 87, 112, 0.08);
+  --sl-shadow-input-active:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
   --sl-focus-primary-ring: 0 0 0 2px rgba(11, 135, 201, 0.22);
-  --sl-focus-success-ring: inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
+  --sl-focus-success-ring:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
   --sl-focus-danger: rgba(226, 76, 76, 0.3);
   --sl-focus-success: rgba(52, 185, 75, 0.3);
-  --sl-line-gradient:
-    linear-gradient(90deg,
+  --sl-line-gradient: linear-gradient(
+    90deg,
     rgba(208, 240, 254, 0) 0%,
     rgba(208, 240, 254, 0.35) 10%,
     rgba(138, 183, 216, 0.68) 28%,
@@ -97,15 +103,27 @@
     rgba(79, 122, 166, 0.9) 56%,
     rgba(138, 183, 216, 0.68) 72%,
     rgba(208, 240, 254, 0.35) 90%,
-    rgba(208, 240, 254, 0) 100%);
+    rgba(208, 240, 254, 0) 100%
+  );
   --sl-shadow-card: 0 1px 1px rgba(35, 52, 70, 0.08);
   --sl-shadow-xs: 0 1px 2px rgba(32, 75, 102, 0.08);
   --sl-bg-footer-stripe:
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0, rgba(255, 255, 255, 0.08) 2px, transparent 2px, transparent 7px),
-    linear-gradient(to bottom, var(--sl-color-primary-hover) 0%, var(--sl-color-primary) 100%);
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.08) 0,
+      rgba(255, 255, 255, 0.08) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--sl-color-primary-hover) 0%,
+      var(--sl-color-primary) 100%
+    );
   --sl-shadow-float: 0 6px 18px rgba(0, 90, 130, 0.18);
   --sl-shadow-sidebar: 0 2px 6px rgba(41, 86, 109, 0.28);
-  --sl-shadow-bar: 0 1px 3px rgba(43, 87, 112, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --sl-shadow-bar:
+    0 1px 3px rgba(43, 87, 112, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.85);
   --sl-progress-track-border: #e8ebee;
   --sl-progress-track-bg: #f4f6f8;
   --sl-progress-track-radius: 3px;
@@ -126,6 +144,11 @@
   --sl-progress-fill-5-base: #9b36b9;
   --sl-progress-fill-5-start: #bf5fdd;
   --sl-progress-fill-5-end: #8c2ca9;
+}
+
+/* Navigation: smooth in-page anchor scrolling */
+html {
+  scroll-behavior: smooth;
 }
 
 /* Reset: base element styles and box defaults */
@@ -156,7 +179,12 @@ input {
 html {
   min-height: 100%;
   background: var(--sl-color-primary-tint);
-  background: linear-gradient(180deg, var(--sl-color-primary-soft) 0%, var(--sl-color-primary-tint) 52%, var(--sl-color-bg-soft) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--sl-color-primary-soft) 0%,
+    var(--sl-color-primary-tint) 52%,
+    var(--sl-color-bg-soft) 100%
+  );
 }
 
 body {
@@ -169,7 +197,12 @@ select,
 input,
 textarea,
 button {
-  font: 14px/16px Tahoma, Arial, Verdana, sans-serif, system-ui;
+  font:
+    14px/16px Tahoma,
+    Arial,
+    Verdana,
+    sans-serif,
+    system-ui;
   color: var(--sl-color-text);
   outline: none;
 }
@@ -268,10 +301,19 @@ select {
   color: var(--sl-color-muted);
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-control);
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-input:where(:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(:disabled)):hover,
+input:where(
+    :not([type="button"]):not([type="submit"]):not([type="reset"]):not(
+        [type="radio"]
+      ):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not(
+        :disabled
+      )
+  ):hover,
 textarea:where(:not(:disabled)):hover,
 select:where(:not(:disabled)):hover {
   background-color: var(--sl-color-bg);
