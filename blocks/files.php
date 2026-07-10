@@ -14,10 +14,10 @@ $content = '';
 $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_files WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while (list($id, $title) = $db->getSqlRow($result)) {
     $title = getDecodedText($title);
-    $content .= $tpl->getHtmlFrag('block-list-item', [
-        'url' => getSeoUrl(['name' => 'files', 'op' => 'view', 'id' => $id]),
+    $link = $tpl->getHtmlFrag('link', [
+        'href' => getSeoUrl(['name' => 'files', 'op' => 'view', 'id' => $id]),
         'title' => $title,
         'label' => $title,
-        'target_attr' => '',
     ]);
+    $content .= $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
 }

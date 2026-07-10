@@ -15,12 +15,13 @@ $result = $db->getSqlQuery('SELECT id, title, intro FROM '.PREFIX_DB."_auto_link
 while (list($a_id, $a_site, $a_description) = $db->getSqlRow($result)) {
     $a_site = cutstr(getDecodedText($a_site), $conf['auto_links']['strip']);
     $title = filterText(cutstr($prs->filterContent($a_description, false, ''), 250), 1);
-    $content .= $tpl->getHtmlFrag('block-list-item', [
-        'url' => getSeoUrl(['name' => 'auto_links', 'op' => 'view', 'id' => $a_id]),
+    $link = $tpl->getHtmlFrag('link', [
+        'href' => getSeoUrl(['name' => 'auto_links', 'op' => 'view', 'id' => $a_id]),
         'title' => $title,
         'label' => $a_site,
-        'target_attr' => ' target="_blank"',
+        'is_blank' => true,
     ]);
+    $content .= $tpl->getHtmlFrag('list-item', ['content_html' => $link]);
 }
 $content .= $tpl->getHtmlFrag('block-center-link', [
     'url' => getSeoUrl(['name' => 'auto_links', 'op' => 'add']),
