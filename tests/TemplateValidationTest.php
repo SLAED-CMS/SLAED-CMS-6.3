@@ -21,6 +21,38 @@ class TemplateValidationTest extends TestCase
         self::scanTemplates();
     }
 
+    # Returns a normalized repository-relative path and rejects paths outside the repository
+    private static function getRelativePath(string $path): string
+    {
+        $base = rtrim(str_replace('\\', '/', self::$basePath), '/');
+        $norm = str_replace('\\', '/', $path);
+        if (!str_starts_with($norm, $base.'/')) {
+            throw new RuntimeException('Path is outside the repository: '.$norm);
+        }
+        return substr($norm, strlen($base) + 1);
+    }
+
+    # Discovers installed frontend themes without assuming names or shared implementations
+    private static function getFrontendThemes(): array
+    {
+        $themes = [];
+        foreach (scandir(self::$templatesPath) ?: [] as $theme) {
+            if ($theme === '.' || $theme === '..' || $theme === 'admin') continue;
+            if (is_dir(self::$templatesPath.'/'.$theme)) $themes[] = $theme;
+        }
+        sort($themes);
+        return $themes;
+    }
+
+    # Maps a PHP or theme-hook emitter to the theme contracts it can use
+    private static function getThemesForPath(string $path, array $front): array
+    {
+        if (str_starts_with($path, 'admin/') || preg_match('#^modules/[^/]+/admin/#', $path)) return ['admin'];
+        if (str_starts_with($path, 'blocks/') || preg_match('#^modules/[^/]+/index\.php$#', $path)) return $front;
+        if (preg_match('#^templates/([^/]+)/#', $path, $match)) return [$match[1]];
+        return [];
+    }
+
     /**
      * Загружает известные плейсхолдеры из template.php
      */
@@ -212,87 +244,43 @@ class TemplateValidationTest extends TestCase
         );
     }
 
-    public function testSharedFrontendFragmentsStayInSyncAcrossThemes(): void
+    public function testThemeRuntimeContractsAreIndependent(): void
     {
-        $allowed = [];
         $errors = [];
-        $maps = [];
-
-        // Discover frontend themes dynamically: any template theme with a fragments dir, except admin
-        foreach (scandir(self::$templatesPath) ?: [] as $theme) {
-            if ($theme === '.' || $theme === '..' || $theme === 'admin') {
-                continue;
-            }
-            $path = self::$templatesPath.'/'.$theme.'/fragments';
-            if (!is_dir($path)) {
-                continue;
-            }
-            $maps[$theme] = [];
-            foreach (scandir($path) ?: [] as $file) {
-                if ($file === '.' || $file === '..') {
-                    continue;
-                }
-                if (!is_file($path.'/'.$file)) {
-                    continue;
-                }
-                $maps[$theme]['fragments/'.$file] = hash_file('sha256', $path.'/'.$file) ?: '';
+        $themes = array_merge(['admin'], self::getFrontendThemes());
+        $this->assertGreaterThan(1, count($themes), 'Admin and at least one frontend theme must be installed');
+        foreach ($themes as $theme) {
+            foreach (['layouts', 'pages', 'partials', 'fragments', 'assets/css/base.css', 'assets/css/theme.css'] as $item) {
+                $path = self::$templatesPath.'/'.$theme.'/'.$item;
+                if (!file_exists($path)) $errors[] = 'templates/'.$theme.'/'.$item.' - отсутствует';
             }
         }
+        $this->assertEmpty($errors, "Нарушен самостоятельный runtime-контракт темы:\n".implode("\n", $errors));
+    }
 
-        if (count($maps) < 2) {
-            $this->markTestSkipped('Only one frontend theme present — cross-theme fragment sync is not applicable');
-        }
-
-        $common = array_values(array_intersect(...array_map('array_keys', $maps)));
-        sort($common);
-
-        $different = [];
-        foreach ($common as $file) {
-            $hashes = [];
-            foreach ($maps as $theme => $map) {
-                $hashes[$theme] = $map[$file];
-            }
-            if (count(array_unique($hashes)) > 1) {
-                $different[] = $file;
-                if (!in_array($file, $allowed, true)) {
-                    $parts = [];
-                    foreach ($hashes as $theme => $hash) {
-                        $parts[] = $theme.':'.$hash;
-                    }
-                    $errors[] = $file.' - неразрешённое расхождение между темами: '.implode(', ', $parts);
-                }
-            }
-        }
-
-        sort($different);
-        $expected = $allowed;
-        sort($expected);
-
-        $this->assertSame(
-            $expected,
-            $different,
-            "Набор разрешённых theme-specific fragments изменился"
-        );
-
-        $this->assertGreaterThan(
-            60,
-            count($common),
-            'Слишком мало общих frontend fragments для cross-theme проверки'
-        );
-
-        $this->assertEmpty(
-            $errors,
-            "Shared frontend fragments рассинхронизированы:\n".implode("\n", $errors)
-        );
+    public function testRelativePathNormalizationAndEmitterClassification(): void
+    {
+        $base = str_replace('/', '\\', self::$basePath);
+        $front = self::getFrontendThemes();
+        $this->assertSame('modules/news/index.php', self::getRelativePath($base.'\\modules\\news\\index.php'));
+        $this->assertSame('templates/lite/partials/main-slider.html', self::getRelativePath($base.'\\templates/lite\\partials\\main-slider.html'));
+        $this->assertSame('modules/news/index.php', self::getRelativePath(str_replace('\\', '/', self::$basePath).'/modules/news/index.php'));
+        $this->assertSame($front, self::getThemesForPath('modules/news/index.php', $front));
+        $this->assertSame(['admin'], self::getThemesForPath('admin/modules/news.php', $front));
+        $this->assertSame(['admin'], self::getThemesForPath('modules/news/admin/index.php', $front));
     }
 
     public function testConcreteTemplateReferencesExist(): void
     {
         $errors = [];
-        $frontendThemes = ['default', 'simple', 'lite'];
-        $scanRoots = ['admin', 'modules', 'templates/default', 'templates/simple', 'templates/lite'];
+        $front = self::getFrontendThemes();
+        $roots = ['admin', 'blocks', 'modules', 'templates/admin'];
+        $found = 0;
+        $known = 0;
+        $inner = 0;
+        foreach ($front as $theme) $roots[] = 'templates/'.$theme;
 
-        foreach ($scanRoots as $root) {
+        foreach ($roots as $root) {
             $path = self::$basePath.'/'.$root;
             if (!is_dir($path)) {
                 continue;
@@ -304,24 +292,17 @@ class TemplateValidationTest extends TestCase
                 if (!in_array($file->getExtension(), ['php', 'html'], true)) {
                     continue;
                 }
-                $relativePath = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file->getPathname()));
+                $relativePath = self::getRelativePath($file->getPathname());
                 $content = file_get_contents($file->getPathname());
                 if (!preg_match_all("/getHtml(Frag|Part)\(\s*'([^']+)'/", $content, $matches, PREG_SET_ORDER)) {
                     continue;
                 }
                 foreach ($matches as $match) {
+                    $found++;
                     $type = $match[1] === 'Frag' ? 'fragments' : 'partials';
                     $name = $match[2];
-                    $themes = [];
-                    if (str_starts_with($relativePath, 'admin/') || preg_match('#^modules/[^/]+/admin/#', $relativePath)) {
-                        $themes = ['admin'];
-                    } elseif ($relativePath === 'templates/lite/index.php') {
-                        $themes = ['lite'];
-                    } elseif (preg_match('#^modules/[^/]+/index\.php$#', $relativePath)) {
-                        $themes = $frontendThemes;
-                    } elseif (preg_match('#^templates/(default|simple|lite)/#', $relativePath, $themeMatch)) {
-                        $themes = [$themeMatch[1]];
-                    }
+                    $themes = self::getThemesForPath($relativePath, $front);
+                    if ($themes !== []) $known++;
                     foreach ($themes as $theme) {
                         $target = self::$templatesPath.'/'.$theme.'/'.$type.'/'.$name.'.html';
                         if (!is_file($target)) {
@@ -336,14 +317,19 @@ class TemplateValidationTest extends TestCase
             if (pathinfo($file, PATHINFO_EXTENSION) !== 'html') {
                 continue;
             }
-            $relativePath = str_replace('\\', '/', str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file));
+            $relativePath = self::getRelativePath($file);
             if (!preg_match('#^templates/([^/]+)/#', $relativePath, $themeMatch)) {
                 continue;
             }
             $theme = $themeMatch[1];
             $content = file_get_contents($file);
-            if (preg_match_all("/\{%\s*(?:include|extends)\s+'([^']+)'/", $content, $matches)) {
+            if (preg_match_all("/\{%\s*(?:include|extends|component)\s+'([^']+)'/", $content, $matches)) {
                 foreach ($matches[1] as $target) {
+                    $inner++;
+                    if (str_starts_with($target, 'templates/') || str_contains('/'.$target.'/', '/../')) {
+                        $errors[] = $relativePath.' -> forbidden cross-theme template path '.$target;
+                        continue;
+                    }
                     if (!is_file(self::$templatesPath.'/'.$theme.'/'.$target)) {
                         $errors[] = $relativePath.' -> templates/'.$theme.'/'.$target;
                     }
@@ -354,10 +340,48 @@ class TemplateValidationTest extends TestCase
         $errors = array_values(array_unique($errors));
         sort($errors);
 
+        $this->assertGreaterThan(0, $found, 'Не найдено ни одной PHP template reference');
+        $this->assertGreaterThan(0, $known, 'Ни одна PHP template reference не классифицирована по теме');
+        $this->assertGreaterThan(0, $inner, 'Не найдено ни одной include/extends/component template reference');
         $this->assertEmpty(
             $errors,
             "Отсутствуют используемые template references:\n".implode("\n", $errors)
         );
+    }
+
+    public function testThemesDoNotReferenceOtherThemeAssets(): void
+    {
+        $errors = [];
+        $themes = array_merge(['admin'], self::getFrontendThemes());
+        foreach ($themes as $theme) {
+            $root = self::$templatesPath.'/'.$theme;
+            $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS));
+            foreach ($iter as $file) {
+                if (!in_array($file->getExtension(), ['html', 'css', 'js', 'php'], true)) continue;
+                $text = file_get_contents($file->getPathname());
+                foreach ($themes as $other) {
+                    if ($other === $theme) continue;
+                    if (preg_match('#(?:@import\s+[^;]*|(?:src|href)\s*=\s*["\'][^"\']*)templates/'.$other.'/#i', $text)) {
+                        $errors[] = self::getRelativePath($file->getPathname()).' -> templates/'.$other.'/';
+                    }
+                }
+                if (is_link($file->getPathname())) $errors[] = self::getRelativePath($file->getPathname()).' -> symbolic link';
+            }
+        }
+        $this->assertEmpty($errors, "Обнаружена межтемовая зависимость:\n".implode("\n", $errors));
+    }
+
+    public function testRuntimeHtmlDoesNotHardcodeItsThemeDirectory(): void
+    {
+        $errors = [];
+        foreach (self::$templates as $file) {
+            if (pathinfo($file, PATHINFO_EXTENSION) !== 'html') continue;
+            $relative = self::getRelativePath($file);
+            if (!preg_match('#^templates/([^/]+)/(?:layouts|pages|partials|fragments)/#', $relative, $match)) continue;
+            $content = file_get_contents($file);
+            if (str_contains($content, 'templates/'.$match[1].'/')) $errors[] = $relative;
+        }
+        $this->assertEmpty($errors, "Runtime HTML содержит hardcoded theme directory:\n".implode("\n", $errors));
     }
 
     public function testHtmlTemplatesDoNotContainInlineStyles(): void
