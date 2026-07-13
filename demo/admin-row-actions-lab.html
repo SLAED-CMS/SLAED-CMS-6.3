@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED · Действия строки: лаборатория</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+/*
+  Лаборатория: замена hover-попапа в колонке «Функции» админ-таблиц.
+  Проблема текущего: панель открывается наведением, позиционируется ПОД
+  триггером и перекрывает 2-3 соседние строки; закрытие с задержкой 300ms —
+  при движении мыши по колонке панели цепляются одна за другую.
+  Стили таблиц, кнопок и sl-dial — реальные из админ-темы.
+*/
+
+/* ---- кандидаты для theme.css ---- */
+
+/* V2/V3: постоянные инлайн-иконки действий */
+.sl-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sl-space-xs);
+}
+
+.sl-row-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--sl-color-muted);
+  font-size: var(--sl-size-icon-xs);
+  text-decoration: none;
+  transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.sl-row-actions a:hover {
+  color: var(--sl-color-primary-hover);
+  background: var(--sl-hover-bg-soft);
+  transform: scale(1.15);
+}
+
+.sl-row-actions a.sl-act-danger:hover {
+  color: var(--sl-color-danger);
+}
+
+/* V3: иконки проявляются при ховере строки; фокус и тач всегда видимы */
+tr .sl-row-reveal a {
+  opacity: 0.15;
+  transition: opacity 0.18s ease, color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+tr:hover .sl-row-reveal a,
+tr:focus-within .sl-row-reveal a {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  tr .sl-row-reveal a { opacity: 1; }
+}
+
+/* V1: sl-dial как overlay — absolute поверх ячеек своей строки, колонка остаётся узкой.
+   td:last-child в теме уже position:relative + overflow:visible, tr:hover поднимает z-index */
+.sl-table-list-sort td.sl-col-actions .sl-dial {
+  z-index: 30;
+}
+
+/* V4: клик-попап — hover не раскрывает панель */
+.sl-float-click:hover:not(.sl-is-open) > .sl-float-panel {
+  display: none;
+  opacity: 0;
+}
+
+/* V6: строка-экспандер с действиями */
+tr.sl-actions-row > td {
+  padding: 0;
+  border-top: 0;
+  background: var(--sl-color-bg-soft);
+}
+
+tr.sl-actions-row .sl-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sl-space-md);
+  padding: 4px 10px;
+}
+
+tr.sl-actions-row .sl-actions-bar a {
+  color: var(--sl-color-primary-hover);
+  font-size: 0.92em;
+  text-decoration: none;
+}
+
+tr.sl-actions-row .sl-actions-bar a:hover {
+  text-decoration: underline;
+}
+
+tr.sl-actions-row .sl-actions-bar a.sl-act-danger {
+  color: var(--sl-color-danger);
+}
+
+/* ---- только оформление лаборатории ---- */
+.lab-wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 80px; }
+.lab-wrap > h1 { color: var(--sl-color-primary-center); margin-bottom: 4px; }
+.lab-sub { color: var(--sl-color-muted); margin-bottom: 28px; line-height: 1.5; }
+.lab-variant { margin-bottom: 44px; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-panel, 8px); padding: 16px 18px; box-shadow: 0 2px 8px rgba(23, 67, 114, 0.08); }
+.lab-variant > h2 { margin: 0 0 6px; font-size: 1.25em; }
+.lab-note { color: var(--sl-color-muted); margin: 0 0 14px; line-height: 1.5; }
+.lab-note code { color: var(--sl-color-primary-hover); background: var(--sl-color-bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+.lab-hint { margin-top: 10px; font-size: 0.9em; color: var(--sl-color-muted); }
+.lab-hint .bi { margin-right: 4px; color: var(--sl-color-primary-hover); }
+</style>
+</head>
+<body>
+<div class="lab-wrap">
+  <h1>Действия строки · без перекрытия соседей</h1>
+  <p class="lab-sub">Проблема текущего меню «Функции»: hover-панель открывается вниз и накрывает 2-3 соседние строки,
+    а закрывается с задержкой — при движении мыши вдоль колонки панели мешают навести на нужную. Ниже шесть живых вариантов —
+    у всех действия: <i class="bi bi-power"></i> вкл/выкл, <i class="bi bi-pencil"></i> редактировать, <i class="bi bi-trash"></i> удалить.</p>
+
+  <section class="lab-variant" data-lab="dial">
+    <h2>Вариант 1 — веер sl-dial (клик или ховер, overlay)</h2>
+    <p class="lab-note">Готовый механизм темы <code>sl-dial</code>: кнопка «⋯» раскрывает иконки <b>горизонтально, влево</b>.
+      Веер — <b>отдельный слой поверх ячеек своей строки</b> (absolute + фон/рамка/тень из темы): колонка «Функции» остаётся узкой,
+      таблица не растягивается, соседние строки не перекрываются. Открытие: клик (фиксация) или наведение; наружный клик закрывает.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: ноль вертикального перекрытия, узкая колонка, механизм и стили уже в теме. Минус: иконки без подписей (title-подсказки); раскрытый веер накрывает «Статус» своей строки.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="inline">
+    <h2>Вариант 2 — постоянные инлайн-иконки</h2>
+    <p class="lab-note">Классика enterprise-таблиц: до трёх действий — просто иконки в ячейке, без меню вообще.
+      Один клик вместо «наведи → дождись → выбери». Ничего не открывается и не перекрывается.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: самый быстрый доступ, максимум предсказуемости, тач/клавиатура ок. Минус: постоянный «шум» иконок в каждой строке.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="reveal">
+    <h2>Вариант 3 — иконки, проявляющиеся на строке</h2>
+    <p class="lab-note">Те же инлайн-иконки, но приглушены до призраков и проявляются при наведении на <b>строку</b> (не на ячейку).
+      Ничего не выпадает. На тач-устройствах и при фокусе с клавиатуры — видимы всегда (<code>@media (hover: none)</code>, <code>:focus-within</code>).</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: чистый вид + скорость инлайна. Минус: действия не видны, пока не наведёшь (частично решено призраками 15%).</p>
+  </section>
+
+  <section class="lab-variant" data-lab="click">
+    <h2>Вариант 4 — текущий попап, но по клику</h2>
+    <p class="lab-note">Минимальная правка: та же панель <code>sl-float-panel</code>, но раскрывается только <b>кликом</b> по шестерёнке
+      (механизм <code>data-sl-float-event="click"</code> уже есть в slaed.js). Случайное наведение больше ничего не открывает;
+      закрытие — клик мимо или повторный клик.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: минимальный диф, привычный вид меню с подписями. Минус: панель по-прежнему накрывает соседей, пока открыта (но только осознанно).</p>
+  </section>
+
+  <section class="lab-variant" data-lab="intent">
+    <h2>Вариант 5 — hover-intent (консервативный)</h2>
+    <p class="lab-note">Панель остаётся на наведении, но: открытие с задержкой 350мс (случайный проезд мыши не открывает),
+      закрытие мгновенное при уходе со строки. «Ждать, когда уплывёт» больше не нужно.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: ничего не меняется визуально. Минус: перекрытие при открытой панели остаётся, целиться в панель через зазор всё ещё надо.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="expander">
+    <h2>Вариант 6 — строка-экспандер (фантазийный)</h2>
+    <p class="lab-note">Клик по шестерёнке раздвигает таблицу и вставляет под строкой тонкую панель действий с подписями.
+      Ничего не перекрывается вообще — соседние строки просто сдвигаются. Повторный клик или клик по другой строке закрывает.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: ноль перекрытий, подписи, много места под будущие действия. Минус: таблица «дышит» по высоте, непривычный паттерн.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var ROWS = [
+        { id: 3, title: 'Выбор языка', type: 'Файл', view: 'Все посетители', on: true },
+        { id: 1, title: 'Навигация', type: 'Файл', view: 'Все посетители', on: true },
+        { id: 2, title: 'Администрация', type: 'HTML', view: 'Только администраторы', on: true },
+        { id: 4, title: 'Блок пользователя', type: 'Системный', view: 'Только пользователи', on: true },
+        { id: 6, title: 'Счетчик посещений', type: 'Файл', view: 'Все посетители', on: false }
+    ];
+    var ICONS = [
+        { icon: 'power', title: 'Активировать / Деактивировать' },
+        { icon: 'pencil', title: 'Полное редактирование' },
+        { icon: 'trash', title: 'Удаление объекта', danger: true }
+    ];
+
+    function iconLinks(cls) {
+        var h = '<span class="sl-row-actions' + (cls ? ' ' + cls : '') + '">';
+        ICONS.forEach(function (a) {
+            h += '<a href="#" onclick="return false" title="' + a.title + '"' + (a.danger ? ' class="sl-act-danger"' : '') + '><i class="bi bi-' + a.icon + '"></i></a>';
+        });
+        return h + '</span>';
+    }
+
+    function actionsCell(mode, rid) {
+        if (mode === 'dial') {
+            var d = '<span class="sl-dial"><button class="sl-dial-toggle sl-but-mini" type="button" title="Функции"><i class="bi bi-three-dots"></i></button>';
+            ICONS.forEach(function (a) {
+                d += '<a class="sl-dial-item sl-but-mini" href="#" onclick="return false" title="' + a.title + '"><i class="bi bi-' + a.icon + '"></i></a>';
+            });
+            return d + '</span>';
+        }
+        if (mode === 'inline') return iconLinks('');
+        if (mode === 'reveal') return iconLinks('sl-row-reveal');
+        if (mode === 'click' || mode === 'intent') {
+            var cls = (mode === 'click') ? ' sl-float-click' : ' sl-float-intent';
+            var p = '<nav class="sl-menu"><ul><li class="sl-float' + cls + '" data-sl-lab-float>'
+                + '<span class="sl-but-mini" title="Редактор" role="button" tabindex="0"><i class="bi bi-gear-fill"></i></span>'
+                + '<ul class="sl-float-panel">';
+            ICONS.forEach(function (a) {
+                p += '<li><a href="#" onclick="return false">' + a.title + '</a></li>';
+            });
+            return p + '</ul></li></ul></nav>';
+        }
+        if (mode === 'expander') {
+            return '<span class="sl-but-mini" data-sl-expander="' + rid + '" role="button" tabindex="0" title="Функции"><i class="bi bi-gear-fill"></i></span>';
+        }
+        return '';
+    }
+
+    function buildTable(mode) {
+        var h = '<div class="sl-box sl-table-shell"><table class="sl-table-list-sort"><thead><tr>'
+            + '<th>ID</th><th>Название</th><th>Тип</th><th>Кто видит</th><th class="sl-col-status">Статус</th><th class="sl-col-actions">Функции</th>'
+            + '</tr></thead><tbody>';
+        ROWS.forEach(function (r) {
+            h += '<tr data-rid="' + r.id + '">'
+                + '<td class="sl-col-id">' + r.id + '</td>'
+                + '<td>' + r.title + '</td>'
+                + '<td>' + r.type + '</td>'
+                + '<td>' + r.view + '</td>'
+                + '<td class="sl-col-status"><span class="' + (r.on ? 'sl-status-active' : 'sl-status-inactive') + '"></span></td>'
+                + '<td class="sl-col-actions">' + actionsCell(mode, r.id) + '</td>'
+                + '</tr>';
+        });
+        return h + '</tbody></table></div>';
+    }
+
+    document.querySelectorAll('[data-lab]').forEach(function (section) {
+        section.querySelector('.lab-table').innerHTML = buildTable(section.getAttribute('data-lab'));
+    });
+
+    /* V1: dial toggle по клику (как в admin-ui.js) + наружное закрытие */
+    document.addEventListener('click', function (e) {
+        var toggle = e.target.closest ? e.target.closest('.sl-dial-toggle') : null;
+        document.querySelectorAll('.sl-dial.sl-open').forEach(function (d) {
+            if (!toggle || d !== toggle.parentNode) d.classList.remove('sl-open');
+        });
+        if (toggle) toggle.parentNode.classList.toggle('sl-open');
+    });
+
+    /* V4: клик-попап */
+    document.querySelectorAll('[data-lab="click"] [data-sl-lab-float]').forEach(function (f) {
+        f.querySelector('.sl-but-mini').addEventListener('click', function () {
+            var open = f.classList.contains('sl-is-open');
+            document.querySelectorAll('[data-lab="click"] .sl-is-open').forEach(function (x) { x.classList.remove('sl-is-open'); });
+            if (!open) f.classList.add('sl-is-open');
+        });
+    });
+    document.addEventListener('pointerdown', function (e) {
+        if (!e.target.closest('[data-lab="click"] [data-sl-lab-float]')) {
+            document.querySelectorAll('[data-lab="click"] .sl-is-open').forEach(function (x) { x.classList.remove('sl-is-open'); });
+        }
+    });
+
+    /* V5: hover-intent — открытие 350мс, закрытие мгновенно */
+    document.querySelectorAll('[data-lab="intent"] [data-sl-lab-float]').forEach(function (f) {
+        var timer = null;
+        f.addEventListener('mouseenter', function () {
+            timer = setTimeout(function () { f.classList.add('sl-is-open'); }, 350);
+        });
+        f.addEventListener('mouseleave', function () {
+            if (timer) clearTimeout(timer);
+            f.classList.remove('sl-is-open');
+        });
+    });
+
+    /* V6: строка-экспандер */
+    document.querySelectorAll('[data-lab="expander"] [data-sl-expander]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var tr = btn.closest('tr');
+            var tbody = tr.parentNode;
+            var open = tr.nextElementSibling && tr.nextElementSibling.classList.contains('sl-actions-row');
+            tbody.querySelectorAll('tr.sl-actions-row').forEach(function (x) { x.remove(); });
+            if (open) return;
+            var row = document.createElement('tr');
+            row.className = 'sl-actions-row';
+            var bar = '';
+            ICONS.forEach(function (a) {
+                bar += '<a href="#" onclick="return false"' + (a.danger ? ' class="sl-act-danger"' : '') + '><i class="bi bi-' + a.icon + '"></i> ' + a.title + '</a>';
+            });
+            row.innerHTML = '<td colspan="6"><div class="sl-actions-bar">' + bar + '</div></td>';
+            tr.parentNode.insertBefore(row, tr.nextSibling);
+        });
+    });
+})();
+</script>
+</body>
+</html>

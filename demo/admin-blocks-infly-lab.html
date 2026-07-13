@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED · Блоки: маркировка свободных (infly)</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+/*
+  Лаборатория к пункту 8: свободные («плавающие») блоки — infly/flyfix в поле
+  `which` — сейчас неотличимы в списке admin.php?name=blocks, т.к. запрос не
+  читает `which`. Варианты маркировки. Таблица и бейджи — реальные классы
+  админ-темы; ниже — КАНДИДАТЫ новых классов для theme.css.
+  Терминология из admin/lang/ru.php: _INFLY = «Свободный блок»,
+  _FLY_FIX = «Свободный фиксированный блок».
+*/
+
+/* ---- кандидаты для templates/admin/assets/css/theme.css ---- */
+.sl-chip-accent {
+  --sl-chip-tone: var(--sl-color-accent);
+}
+
+.sl-infly-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+  margin-left: var(--sl-space-sm);
+  color: var(--sl-color-accent);
+  font-size: var(--sl-size-icon-sm);
+  vertical-align: middle;
+  cursor: help;
+}
+
+tr.sl-row-infly > td:first-child {
+  box-shadow: inset 3px 0 0 var(--sl-color-accent);
+}
+
+tr.sl-row-infly-tint > td {
+  background-color: color-mix(in srgb, var(--sl-color-accent) 6%, transparent);
+}
+
+.sl-table-list-sort tr.sl-group-row > th {
+  text-align: left;
+  padding-left: var(--sl-space-md);
+  background: var(--sl-color-bg-soft);
+  color: var(--sl-color-primary-hover);
+}
+
+.sl-filter-chips {
+  display: flex;
+  gap: var(--sl-space-sm);
+  margin: 0 0 var(--sl-space-md);
+}
+
+.sl-filter-chips .sl-chip {
+  cursor: pointer;
+  height: 24px;
+  padding: 0 var(--sl-space-md);
+  border-color: color-mix(in srgb, var(--sl-chip-tone, var(--sl-color-muted)) 35%, transparent);
+  transition: background 0.18s ease;
+}
+
+.sl-filter-chips .sl-chip.sl-is-active {
+  background: var(--sl-chip-tone, var(--sl-color-muted));
+  color: var(--sl-color-bg);
+}
+
+.sl-legend {
+  margin-top: var(--sl-space-sm);
+  color: var(--sl-color-muted);
+  font-size: 0.9em;
+}
+
+.sl-legend .bi,
+.sl-legend .sl-chip {
+  margin-right: var(--sl-space-sm);
+}
+
+/* ---- только оформление лаборатории (в тему не идёт) ---- */
+.lab-wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 80px; }
+.lab-wrap > h1 { color: var(--sl-color-primary-center); margin-bottom: 4px; }
+.lab-sub { color: var(--sl-color-muted); margin-bottom: 28px; }
+.lab-variant { margin-bottom: 44px; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-panel, 8px); padding: 16px 18px; box-shadow: 0 2px 8px rgba(23, 67, 114, 0.08); }
+.lab-variant > h2 { margin: 0 0 6px; font-size: 1.25em; }
+.lab-note { color: var(--sl-color-muted); margin: 0 0 14px; line-height: 1.5; }
+.lab-note code { color: var(--sl-color-primary-hover); background: var(--sl-color-bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+.lab-hint { margin-top: 10px; font-size: 0.9em; color: var(--sl-color-muted); }
+.lab-hint .bi { margin-right: 4px; color: var(--sl-color-primary-hover); }
+</style>
+</head>
+<body>
+<div class="lab-wrap">
+  <h1>Блоки · маркировка свободных (infly)</h1>
+  <p class="lab-sub">Пункт 8 пожеланий: в списке блоков не видно, какие блоки свободные (исключены из вывода позиций, выводятся только явным вызовом из PHP-кода по id/файлу,
+    метка <code>infly</code> в поле <code>which</code>). В примерах: «Форум внизу» — свободный,
+    «Реклама в статье» — свободный фиксированный (<code>infly,flyfix</code>). Все варианты требуют одной и той же
+    правки PHP: добавить <code>a.which</code> в SELECT списка — отличается только вывод.</p>
+
+  <section class="lab-variant" data-lab="chip">
+    <h2>Вариант 1 — чип рядом с позицией</h2>
+    <p class="lab-note">Существующий <code>sl-chip</code> с новым акцентным тоном <code>sl-chip-accent</code> в колонке «Позиция».
+      Для <code>flyfix</code> — чип с замком. Позиция остаётся видимой (для свободных она справочная).</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: словарь чипов уже общий для тем, ноль нового CSS кроме тона. Минус: колонка «Позиция» становится шире.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="icon">
+    <h2>Вариант 2 — только иконка</h2>
+    <p class="lab-note">Компактный маркер <code>sl-infly-icon</code> (<code>bi-wind</code>) после бейджа позиции,
+      расшифровка — в <code>title</code> (как у бейджей позиций). <code>flyfix</code> — <code>bi-pin-angle-fill</code>.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: самый компактный, таблица не растёт. Минус: смысл виден только по наведению.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="column">
+    <h2>Вариант 3 — отдельная колонка «Размещение»</h2>
+    <p class="lab-note">Колонка «Позиция» переименовывается в «Размещение»: для обычных блоков — бейдж позиции,
+      для свободных — акцентный чип вместо позиции (она для них всё равно не действует: реальную позицию задаёт вызов в шаблоне).</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: честная модель — не показываем неработающую позицию. Минус: теряется сортировка по фактической колонке bpos.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="stripe">
+    <h2>Вариант 4 — акцентная полоса строки</h2>
+    <p class="lab-note">Строка свободного блока получает полосу слева (<code>sl-row-infly</code>) и лёгкую акцентную заливку
+      (<code>sl-row-infly-tint</code>) + легенда под таблицей. Маркер виден периферийным зрением на длинном списке.</p>
+    <div class="lab-table"></div>
+    <div class="sl-legend"><span class="sl-chip sl-chip-accent">&nbsp;</span>Свободные блоки — выводятся явным вызовом из кода, позиция и порядок на них не действуют.</div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: заметно сразу. Минус: конкурирует с ховером строк и статусными цветами.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="group">
+    <h2>Вариант 5 — отдельная группа внизу списка</h2>
+    <p class="lab-note">«Отдельная группа» из пожелания буквально: свободные блоки выносятся из позиций в собственную
+      секцию <code>sl-group-row</code> в конце списка. Внутри секции колонки «Позиция» и «Положение» пустые — для честности.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: полное разделение, ничего не смешивается. Минус: ломает сквозную сортировку списка, самая большая правка.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="filter">
+    <h2>Вариант 6 — фильтр-чипы над таблицей</h2>
+    <p class="lab-note">Маркировка как в варианте 1 + переключатель <code>sl-filter-chips</code>: Все / Позиционные / Свободные.
+      Живой — пощёлкай. Фильтр решает и задачу «увидеть только свободные» на больших списках.</p>
+    <div class="sl-filter-chips">
+      <span class="sl-chip sl-is-active" data-filter="all">Все</span>
+      <span class="sl-chip sl-chip-success" data-filter="pos">Позиционные</span>
+      <span class="sl-chip sl-chip-accent" data-filter="fly">Свободные</span>
+    </div>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: и маркер, и инструмент. Минус: JS + новый UI-элемент над таблицей.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="combo">
+    <h2>Комбинация — вариант 3 + вариант 5</h2>
+    <p class="lab-note">Свободные блоки вынесены в собственную секцию <code>sl-group-row</code> внизу списка, а колонка
+      называется «Размещение»: у позиционных — бейдж позиции, у свободных — акцентный чип. «Положение» у свободных
+      пустое — порядок на них не действует, реальную точку задаёт вызов в шаблоне.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Итог: разделение + честная колонка — не показываем неработающие позицию и порядок.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* Данные: дефолтные блоки + два свободных примера (fly: '' | 'infly' | 'flyfix') */
+  var BLOCKS = [
+    { id: 3, title: 'Выбор языка',             type: 'Файл',      view: 'Все посетители',        pos: 'r', w: 1, on: true,  fly: '' },
+    { id: 1, title: 'Навигация',               type: 'Файл',      view: 'Все посетители',        pos: 'r', w: 2, on: true,  fly: '' },
+    { id: 2, title: 'Администрация',           type: 'HTML',      view: 'Только администраторы', pos: 'r', w: 3, on: true,  fly: '' },
+    { id: 4, title: 'Блок пользователя',       type: 'Системный', view: 'Только пользователи',   pos: 'r', w: 4, on: true,  fly: '' },
+    { id: 6, title: 'Счетчик посещений',       type: 'Файл',      view: 'Все посетители',        pos: 'r', w: 5, on: false, fly: '' },
+    { id: 7, title: 'Реклама',                 type: 'Файл',      view: 'Все посетители',        pos: 'd', w: 1, on: true,  fly: '' },
+    { id: 8, title: 'Форум внизу',             type: 'Файл',      view: 'Все посетители',        pos: 'r', w: 7, on: true,  fly: 'infly' },
+    { id: 9, title: 'Реклама в статье',        type: 'HTML',      view: 'Все посетители',        pos: 'c', w: 1, on: true,  fly: 'flyfix' }
+  ];
+  /* Канонические названия позиций из admin/lang/ru.php */
+  var POS = { r: ['Справа', 'Правый блок'], d: ['По центру внизу', 'Центральный блок'], c: ['По центру вверху', 'Центральный блок'] };
+  var FLY = { infly: 'Свободный блок', flyfix: 'Свободный фиксированный блок' };
+
+  function badge(pos) {
+    return '<span class="sl-note" title="' + POS[pos][1] + '">' + POS[pos][0] + '</span>';
+  }
+  function status(on) {
+    return '<span class="' + (on ? 'sl-status-active' : 'sl-status-inactive') + '"></span>';
+  }
+  function flyChip(fly) {
+    if (!fly) return '';
+    var lock = fly === 'flyfix' ? '<i class="bi bi-pin-angle-fill" style="margin-right:3px"></i>' : '';
+    return ' <span class="sl-chip sl-chip-accent" title="' + FLY[fly] + '">' + lock + 'Свободный</span>';
+  }
+  function flyIcon(fly) {
+    if (!fly) return '';
+    var icon = fly === 'flyfix' ? 'bi-pin-angle-fill' : 'bi-wind';
+    return '<span class="sl-infly-icon" title="' + FLY[fly] + '"><i class="bi ' + icon + '"></i></span>';
+  }
+
+  function placementCell(mode, b) {
+    if (mode === 'chip')   return badge(b.pos) + flyChip(b.fly);
+    if (mode === 'icon')   return badge(b.pos) + flyIcon(b.fly);
+    if (mode === 'column' || mode === 'combo') return b.fly ? flyChip(b.fly).trim() : badge(b.pos);
+    if (mode === 'group')  return b.fly ? '&mdash;' : badge(b.pos);
+    return badge(b.pos) + (mode === 'filter' ? flyChip(b.fly) : '');
+  }
+
+  function row(mode, b) {
+    var cls = [];
+    if (mode === 'stripe' && b.fly) cls.push('sl-row-infly', 'sl-row-infly-tint');
+    var noWeight = (mode === 'group' || mode === 'combo') && b.fly;
+    var h = '<tr data-fly="' + (b.fly ? 1 : 0) + '"' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>';
+    h += '<td class="sl-col-id">' + b.id + '</td>';
+    h += '<td>' + b.title + '</td>';
+    h += '<td>' + b.type + '</td>';
+    h += '<td>' + b.view + '</td>';
+    h += '<td style="text-align:center">' + placementCell(mode, b) + '</td>';
+    h += '<td style="text-align:center">' + (noWeight ? '&mdash;' : b.w) + '</td>';
+    h += '<td class="sl-col-status">' + status(b.on) + '</td>';
+    h += '<td class="sl-col-actions"><a href="#" onclick="return false">Редактор</a></td>';
+    return h + '</tr>';
+  }
+
+  function buildTable(mode) {
+    var placementHead = (mode === 'column' || mode === 'combo') ? 'Размещение' : 'Позиция';
+    var h = '<div class="sl-box sl-table-shell"><table class="sl-table-list-sort"><thead><tr>'
+      + '<th>ID</th><th>Название</th><th>Тип</th><th>Кто видит</th><th>' + placementHead + '</th>'
+      + '<th>Положение</th><th class="sl-col-status">Статус</th><th class="sl-col-actions">Функции</th>'
+      + '</tr></thead><tbody>';
+    if (mode === 'group' || mode === 'combo') {
+      var fixed = BLOCKS.filter(function (b) { return !b.fly; });
+      var fly = BLOCKS.filter(function (b) { return b.fly; });
+      h += '<tr class="sl-group-row"><th colspan="8">Позиционные блоки</th></tr>';
+      fixed.forEach(function (b) { h += row(mode, b); });
+      h += '<tr class="sl-group-row"><th colspan="8">Свободные блоки — выводятся явным вызовом из кода</th></tr>';
+      fly.forEach(function (b) { h += row(mode, b); });
+    } else {
+      BLOCKS.forEach(function (b) { h += row(mode, b); });
+    }
+    return h + '</tbody></table></div>';
+  }
+
+  document.querySelectorAll('[data-lab]').forEach(function (section) {
+    var mode = section.getAttribute('data-lab');
+    section.querySelector('.lab-table').innerHTML = buildTable(mode);
+  });
+
+  /* Вариант 6: живой фильтр */
+  var filterBox = document.querySelector('[data-lab="filter"]');
+  if (filterBox) {
+    filterBox.querySelector('.sl-filter-chips').addEventListener('click', function (e) {
+      var chip = e.target.closest('[data-filter]');
+      if (!chip) return;
+      this.querySelectorAll('.sl-chip').forEach(function (c) { c.classList.remove('sl-is-active'); });
+      chip.classList.add('sl-is-active');
+      var mode = chip.getAttribute('data-filter');
+      filterBox.querySelectorAll('tbody tr').forEach(function (tr) {
+        var isFly = tr.getAttribute('data-fly') === '1';
+        tr.hidden = (mode === 'pos' && isFly) || (mode === 'fly' && !isFly);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

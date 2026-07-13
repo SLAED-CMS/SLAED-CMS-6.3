@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED · Категории: Drag-and-Drop лаборатория</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+/*
+  Лаборатория: перетаскивание категорий (admin.php?name=categories) как в блоках.
+  Особенность категорий: порядок ordern сквозной внутри МОДУЛЯ, иерархия
+  родитель/потомок отображается склейкой названия («Родитель / Дочка»).
+  Классы sl-drag-handle / sl-group-row / drop-маркеры — уже в теме (блоки).
+*/
+
+/* ---- кандидаты для theme.css ---- */
+.sl-tree-pad {
+  display: inline-block;
+}
+
+.sl-tree-pad::before {
+  content: "";
+  display: inline-block;
+}
+
+.sl-tree-node {
+  color: var(--sl-color-muted);
+  margin-right: var(--sl-space-sm);
+}
+
+tr.sl-drop-into > td {
+  box-shadow: inset 0 0 0 2px var(--sl-color-accent);
+}
+
+tr.sl-cat-collapsed {
+  display: none;
+}
+
+.sl-group-row .sl-group-toggle {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sl-group-row .sl-group-toggle::before {
+  content: "\f282";
+  display: inline-block;
+  font-family: bootstrap-icons;
+  margin-right: var(--sl-space-sm);
+  font-size: 0.85em;
+  transition: transform 0.18s ease;
+}
+
+.sl-group-row.sl-is-closed .sl-group-toggle::before {
+  transform: rotate(-90deg);
+}
+
+/* ---- только оформление лаборатории ---- */
+.lab-wrap { max-width: 1080px; margin: 0 auto; padding: 24px 16px 80px; }
+.lab-wrap > h1 { color: var(--sl-color-primary-center); margin-bottom: 4px; }
+.lab-sub { color: var(--sl-color-muted); margin-bottom: 28px; line-height: 1.5; }
+.lab-variant { margin-bottom: 44px; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-panel, 8px); padding: 16px 18px; box-shadow: 0 2px 8px rgba(23, 67, 114, 0.08); }
+.lab-variant > h2 { margin: 0 0 6px; font-size: 1.25em; }
+.lab-note { color: var(--sl-color-muted); margin: 0 0 14px; line-height: 1.5; }
+.lab-note code { color: var(--sl-color-primary-hover); background: var(--sl-color-bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+.lab-hint { margin-top: 10px; font-size: 0.9em; color: var(--sl-color-muted); }
+.lab-hint .bi { margin-right: 4px; color: var(--sl-color-primary-hover); }
+</style>
+</head>
+<body>
+<div class="lab-wrap">
+  <h1>Категории · Drag-and-Drop вместо стрелок</h1>
+  <p class="lab-sub">Тот же принцип, что в блоках: стрелки убраны, перетаскивание за ручку, сохранение без перезагрузки
+    (зелёная вспышка = имитация ответа). Группы — по модулям. Все варианты живые — таскай.</p>
+
+  <section class="lab-variant" data-lab="flat">
+    <h2>Вариант 1 — как в блоках: группы по модулям, плоский список</h2>
+    <p class="lab-note">Точная копия утверждённого вида блоков: группы-заголовки «Статьи», «Новости», «Форум»;
+      иерархия показана как сейчас — полным путём «Родитель / Дочка»; перетаскивание только внутри своего модуля,
+      чужой модуль краснеет. Минимальная правка кода — переиспользуются все классы и JS блоков.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: единый UX с блоками, минимум нового кода. Минус: подкатегории вперемешку с родителями (как и сейчас со стрелками).</p>
+  </section>
+
+  <section class="lab-variant" data-lab="tree">
+    <h2>Вариант 2 — дерево с отступами, перенос внутри родителя</h2>
+    <p class="lab-note">Иерархия видна структурой: подкатегории с отступом и веткой <code>└</code> вместо склейки названий.
+      Перетаскивать можно только среди соседей по родителю (siblings) — дочки переезжают вместе с родителем автоматически.
+      Попытка бросить в чужой уровень — красная подсветка.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: структура читается сразу, порядок «семьями». Минус: правка построения списка глубже (сортировка деревом, перенос поддерева).</p>
+  </section>
+
+  <section class="lab-variant" data-lab="nest">
+    <h2>Вариант 3 — дерево + смена родителя (фантазийный)</h2>
+    <p class="lab-note">Как вариант 2, плюс два типа drop-зон: <b>между строк</b> = изменить порядок,
+      <b>прямо на строку</b> (фиолетовая рамка) = сделать подкатегорией этой категории. Перенос в корень — бросить на заголовок модуля.
+      Так мышкой решается и порядок, и вложенность — без формы редактирования.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: полное управление структурой одним жестом. Минус: самый сложный вариант (изменение parent + пересчёт порядков + права/циклы), легко бросить не туда.</p>
+  </section>
+
+  <section class="lab-variant" data-lab="collapse">
+    <h2>Вариант 4 — вариант 1 + сворачиваемые группы модулей</h2>
+    <p class="lab-note">Дополнение для длинных списков: клик по заголовку модуля сворачивает/разворачивает его группу.
+      Работает с любым из вариантов выше.</p>
+    <div class="lab-table"></div>
+    <p class="lab-hint"><i class="bi bi-info-circle"></i>Плюс: длинный список категорий 5+ модулей становится обозримым. Минус: ещё один клик до содержимого.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* Данные: модуль, id, название, родитель (0 = корень), публикаций, статус */
+    var CATS = [
+        { mod: 'pages', id: 31, title: 'Устройство', parent: 0, num: 13, on: true },
+        { mod: 'pages', id: 32, title: 'Темы', parent: 0, num: 14, on: true },
+        { mod: 'pages', id: 62, title: 'Оформление', parent: 32, num: 5, on: true },
+        { mod: 'pages', id: 63, title: 'Компоненты', parent: 32, num: 9, on: true },
+        { mod: 'pages', id: 33, title: 'Модули', parent: 0, num: 2, on: true },
+        { mod: 'pages', id: 34, title: 'Документация', parent: 0, num: 19, on: true },
+        { mod: 'news', id: 11, title: 'Новости проекта', parent: 0, num: 46, on: true },
+        { mod: 'news', id: 12, title: 'Релизы', parent: 0, num: 18, on: true },
+        { mod: 'news', id: 13, title: 'Статьи и обзоры', parent: 0, num: 7, on: false },
+        { mod: 'forum', id: 21, title: 'Поддержка', parent: 0, num: 231, on: true },
+        { mod: 'forum', id: 22, title: 'Разработка', parent: 0, num: 88, on: true }
+    ];
+    var MODS = { pages: 'Статьи', news: 'Новости', forum: 'Форум' };
+
+    function pathTitle(cat) {
+        var t = cat.title;
+        var p = cat.parent;
+        while (p) {
+            var par = CATS.find(function (x) { return x.id === p; });
+            if (!par) break;
+            t = par.title + ' / ' + t;
+            p = par.parent;
+        }
+        return t;
+    }
+
+    function grip() {
+        return '<span class="sl-drag-handle"></span>';
+    }
+    function status(on) {
+        return '<span class="' + (on ? 'sl-status-active' : 'sl-status-inactive') + '"></span>';
+    }
+
+    function row(mode, cat, ordern) {
+        var tree = (mode === 'tree' || mode === 'nest');
+        var name = tree
+            ? (cat.parent ? '<span class="sl-tree-pad" style="width:22px"></span><span class="sl-tree-node">&#9492;</span>' + cat.title : cat.title)
+            : pathTitle(cat);
+        return '<tr data-cid="' + cat.id + '" data-mod="' + cat.mod + '" data-parent="' + cat.parent + '">'
+            + '<td class="sl-col-id">' + cat.id + '</td>'
+            + '<td>' + name + '</td>'
+            + '<td style="text-align:center">' + cat.num + '</td>'
+            + '<td style="text-align:center">' + grip() + ' <span data-w>' + ordern + '</span></td>'
+            + '<td class="sl-col-status">' + status(cat.on) + '</td>'
+            + '<td class="sl-col-actions"><a href="#" onclick="return false">Редактор</a></td>'
+            + '</tr>';
+    }
+
+    function sortTree(list) {
+        var out = [];
+        function walk(parent) {
+            list.filter(function (c) { return c.parent === parent; }).forEach(function (c) {
+                out.push(c);
+                walk(c.id);
+            });
+        }
+        walk(0);
+        return out;
+    }
+
+    function buildTable(mode) {
+        var h = '<div class="sl-box sl-table-shell"><table class="sl-table-list-sort"><thead><tr>'
+            + '<th>ID</th><th>Название</th><th>Публикаций</th><th>Позиция</th><th class="sl-col-status">Статус</th><th class="sl-col-actions">Функции</th>'
+            + '</tr></thead><tbody>';
+        Object.keys(MODS).forEach(function (mod) {
+            var toggle = (mode === 'collapse') ? ' class="sl-group-toggle"' : '';
+            h += '<tr class="sl-group-row" data-group="' + mod + '"><th colspan="6"><span' + toggle + '>' + MODS[mod] + ' — категории модуля</span></th></tr>';
+            var list = CATS.filter(function (c) { return c.mod === mod; });
+            if (mode === 'tree' || mode === 'nest') list = sortTree(list);
+            var n = 0;
+            list.forEach(function (c) {
+                n++;
+                h += row(mode, c, n);
+            });
+        });
+        return h + '</tbody></table></div>';
+    }
+
+    function renumber(tbody) {
+        var count = {};
+        tbody.querySelectorAll('tr[data-cid]').forEach(function (tr) {
+            var mod = tr.getAttribute('data-mod');
+            count[mod] = (count[mod] || 0) + 1;
+            tr.querySelector('[data-w]').textContent = count[mod];
+        });
+    }
+
+    function clearMarks(tbody) {
+        tbody.querySelectorAll('.sl-drop-above, .sl-drop-below, .sl-drop-deny, .sl-drop-into').forEach(function (tr) {
+            tr.classList.remove('sl-drop-above', 'sl-drop-below', 'sl-drop-deny', 'sl-drop-into');
+        });
+    }
+
+    function flash(tr) {
+        tr.classList.add('sl-row-saved');
+        setTimeout(function () { tr.classList.remove('sl-row-saved'); }, 900);
+    }
+
+    /* Забрать строку вместе с её поддеревом (для tree/nest) */
+    function subtree(tr) {
+        var rows = [tr];
+        var cid = tr.getAttribute('data-cid');
+        var next = tr.nextElementSibling;
+        var ids = [cid];
+        while (next && next.hasAttribute('data-cid')) {
+            if (ids.indexOf(next.getAttribute('data-parent')) !== -1) {
+                rows.push(next);
+                ids.push(next.getAttribute('data-cid'));
+                next = next.nextElementSibling;
+            } else break;
+        }
+        return rows;
+    }
+
+    document.querySelectorAll('[data-lab]').forEach(function (section) {
+        var mode = section.getAttribute('data-lab');
+        section.querySelector('.lab-table').innerHTML = buildTable(mode);
+        var tbody = section.querySelector('tbody');
+        var drag = null;
+
+        tbody.addEventListener('mousedown', function (e) {
+            var handle = e.target.closest('.sl-drag-handle');
+            var tr = e.target.closest('tr[data-cid]');
+            if (handle && tr) tr.draggable = true;
+        });
+        tbody.addEventListener('dragstart', function (e) {
+            drag = e.target.closest('tr[data-cid]');
+            if (!drag) return;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', drag.getAttribute('data-cid'));
+            setTimeout(function () { drag.classList.add('sl-dragging'); });
+        });
+        tbody.addEventListener('dragover', function (e) {
+            if (!drag) return;
+            var tr = e.target.closest('tr[data-cid], tr.sl-group-row');
+            if (!tr || tr === drag) return;
+            clearMarks(tbody);
+            var isgroup = tr.classList.contains('sl-group-row');
+            if (isgroup) {
+                if (mode === 'nest' && tr.getAttribute('data-group') === drag.getAttribute('data-mod')) {
+                    e.preventDefault();
+                    tr.classList.add('sl-drop-into');
+                }
+                return;
+            }
+            if (tr.getAttribute('data-mod') !== drag.getAttribute('data-mod')) {
+                e.dataTransfer.dropEffect = 'none';
+                tr.classList.add('sl-drop-deny');
+                return;
+            }
+            var sameparent = tr.getAttribute('data-parent') === drag.getAttribute('data-parent');
+            var rect = tr.getBoundingClientRect();
+            var ratio = (e.clientY - rect.top) / rect.height;
+            if (mode === 'nest' && ratio > 0.3 && ratio < 0.7) {
+                e.preventDefault();
+                tr.classList.add('sl-drop-into');
+                return;
+            }
+            if ((mode === 'tree' || mode === 'nest') && !sameparent && mode !== 'nest') {
+                e.dataTransfer.dropEffect = 'none';
+                tr.classList.add('sl-drop-deny');
+                return;
+            }
+            if (mode === 'tree' && !sameparent) {
+                e.dataTransfer.dropEffect = 'none';
+                tr.classList.add('sl-drop-deny');
+                return;
+            }
+            e.preventDefault();
+            tr.classList.add(ratio < 0.5 ? 'sl-drop-above' : 'sl-drop-below');
+        });
+        tbody.addEventListener('drop', function (e) {
+            if (!drag) return;
+            e.preventDefault();
+            var tr = e.target.closest('tr[data-cid], tr.sl-group-row');
+            if (!tr || tr === drag) return;
+            var moving = (mode === 'tree' || mode === 'nest') ? subtree(drag) : [drag];
+            var isgroup = tr.classList.contains('sl-group-row');
+            if (isgroup && mode === 'nest' && tr.getAttribute('data-group') === drag.getAttribute('data-mod')) {
+                drag.setAttribute('data-parent', '0');
+                drag.querySelector('td:nth-child(2)').innerHTML = drag.querySelector('td:nth-child(2)').textContent.trim();
+                moving.forEach(function (r) { tbody.insertBefore(r, tr.nextSibling); });
+                renumber(tbody);
+                flash(drag);
+                return;
+            }
+            if (isgroup || tr.getAttribute('data-mod') !== drag.getAttribute('data-mod')) return;
+            var rect = tr.getBoundingClientRect();
+            var ratio = (e.clientY - rect.top) / rect.height;
+            if (mode === 'nest' && ratio > 0.3 && ratio < 0.7) {
+                drag.setAttribute('data-parent', tr.getAttribute('data-cid'));
+                var cell = drag.querySelector('td:nth-child(2)');
+                cell.innerHTML = '<span class="sl-tree-pad" style="width:22px"></span><span class="sl-tree-node">&#9492;</span>' + cell.textContent.trim();
+                var anchor = subtree(tr);
+                var last = anchor[anchor.length - 1];
+                moving.forEach(function (r) { tbody.insertBefore(r, last.nextSibling); last = r; });
+                renumber(tbody);
+                flash(drag);
+                return;
+            }
+            if (mode === 'tree' && tr.getAttribute('data-parent') !== drag.getAttribute('data-parent')) return;
+            var target = (ratio < 0.5) ? tr : ((mode === 'tree' || mode === 'nest') ? subtree(tr)[subtree(tr).length - 1] : tr);
+            var before = ratio < 0.5;
+            var anchor2 = before ? target : target.nextSibling;
+            moving.forEach(function (r) { tbody.insertBefore(r, anchor2); });
+            renumber(tbody);
+            flash(drag);
+        });
+        tbody.addEventListener('dragend', function () {
+            if (drag) {
+                drag.classList.remove('sl-dragging');
+                drag.draggable = false;
+            }
+            drag = null;
+            clearMarks(tbody);
+        });
+
+        if (mode === 'collapse') {
+            tbody.addEventListener('click', function (e) {
+                var toggle = e.target.closest('.sl-group-toggle');
+                if (!toggle) return;
+                var head = toggle.closest('tr.sl-group-row');
+                var closed = head.classList.toggle('sl-is-closed');
+                var next = head.nextElementSibling;
+                while (next && !next.classList.contains('sl-group-row')) {
+                    next.classList.toggle('sl-cat-collapsed', closed);
+                    next = next.nextElementSibling;
+                }
+            });
+        }
+    });
+})();
+</script>
+</body>
+</html>
