@@ -316,7 +316,7 @@ function search(): void {
                         'href' => $afile.'.php?op=drop&id='.$id.'&sort='.$sort.'&order='.$order.'&num='.$num.($find !== '' ? '&find='.urlencode($find) : '').($fmod !== '' ? '&fmod='.urlencode($fmod) : '').'&token='.getSiteToken('search'),
                         'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
+                        'confirm_text' => _DELETE.' "'.(string)$word.'"?',
                     ],
                 ]])],
             ]])]);
@@ -379,7 +379,7 @@ function toplist(): void {
                         'href' => $afile.'.php?op=drop&id='.$id.'&sort='.$sort.'&order='.$order.'&num='.$num.($find !== '' ? '&find='.urlencode($find) : '').($fmod !== '' ? '&fmod='.urlencode($fmod) : '').'&token='.getSiteToken('search'),
                         'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
+                        'confirm_text' => _DELETE.' "'.(string)$word.'"?',
                     ],
                 ]])],
             ]])]);

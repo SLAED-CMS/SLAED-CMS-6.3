@@ -88,7 +88,7 @@ class Editor {
     }
 
     # Return parsed manifest for one editor; null if missing or invalid
-    private static function getManifest(string $id): ?array {
+    public static function getManifest(string $id): ?array {
         if (isset(self::$mdata[$id])) return self::$mdata[$id];
         $path = BASE_DIR.'/plugins/editors/'.$id.'/manifest.json';
         if (!is_file($path)) return null;
@@ -99,6 +99,14 @@ class Editor {
         }
         self::$mdata[$id] = $data;
         return $data;
+    }
+
+    # Return the primary storage format declared by an editor manifest
+    public static function getFormat(string $id): string {
+        $man = self::getManifest($id);
+        $fmts = (array)($man['formats'] ?? []);
+        $mode = (string)($fmts[0] ?? 'plain');
+        return in_array($mode, ['plain', 'markdown', 'html'], true) ? $mode : 'plain';
     }
 
     # Validate that manifest qualifies as an enabled content editor for the given role

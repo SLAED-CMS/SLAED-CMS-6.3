@@ -156,7 +156,6 @@ h1.sl-title {
 .sl-meta ul,
 .sl-main-list,
 .sl-main-list ul,
-.sl-menu ul,
 .sl-related-list,
 .sl-block-menu ul,
 .sl-bx-wrapper ul,
@@ -235,7 +234,6 @@ h1.sl-title {
   display: inline-block;
   margin: 0 0 0 10px;
   padding: 2px 10px;
-  height: 20px;
   line-height: 20px;
   border: 1px solid var(--sl-color-border-stronger);
   border-radius: 13px;
@@ -1241,73 +1239,11 @@ select.sl-field {
   margin-right: 20px;
 }
 
-.sl-menu ul li {
-  position: relative;
-}
-
-.sl-menu > ul > li > a {
-  display: block;
-  margin: 0 0 0 var(--sl-space-xs);
-  padding: 5px 15px;
-  border-radius: 15px;
-  background-color: var(--sl-color-bg);
-  border: 1px solid var(--sl-color-border-subtle);
-  text-decoration: none;
-}
-
-.sl-menu > ul > li > a:hover,
-.sl-menu > ul > li:hover > a {
-  background-color: var(--sl-color-surface-alt);
-}
-
-.sl-menu .sl-float-panel {
-  --sl-float-arrow-color: var(--sl-color-surface-dark);
-  position: absolute;
-  top: 10px;
-  margin-top: 30px;
-  padding: 13px 0;
-  border-radius: 13px;
-  min-width: 150px;
-  background-color: var(--sl-color-surface-dark);
-  color: var(--sl-color-on-dark);
-  text-align: left;
-  z-index: 2001;
-  box-shadow: var(--sl-shadow-medium);
-  /* Closed panels must leave layout via display, not visibility: hidden ones still add phantom scrollbar width; the second transition keeps the fade where display animates */
-  display: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  transition:
-    opacity 0.3s ease,
-    display 0.3s allow-discrete;
-}
-
-.sl-menu .sl-float-panel a {
-  white-space: nowrap;
-  display: block;
-  color: var(--sl-color-on-dark);
-  padding: 3px 15px;
-  text-decoration: none;
-}
-
-.sl-menu .sl-float-panel a:hover {
-  background-color: var(--sl-color-brand-link);
-}
-
 /* Floating panels: shared hover, focus and JS-open model */
 .sl-float:hover > .sl-float-panel,
 .sl-float:focus-within > .sl-float-panel {
   display: block;
   opacity: 1;
-}
-
-/* Editor/admin action menu: gear-icon trigger (system-wide) */
-.sl-editor-menu,
-.sl-editor-menu > ul,
-.sl-editor-menu > ul > li {
-  float: none;
-  display: inline-block;
-  position: relative;
 }
 
 /* Mini chip button: holds a single icon or a number, 26px round, grows to a pill for multi-digit numbers */
@@ -1351,8 +1287,7 @@ select.sl-field {
 a.sl-but-mini:hover,
 button.sl-but-mini:hover,
 .sl-but-mini:focus-visible,
-.sl-but-mini.sl-is-active,
-.sl-editor-menu:hover .sl-but-mini {
+.sl-but-mini.sl-is-active {
   background-color: var(--sl-color-brand-link);
   color: var(--sl-color-on-dark);
 }
@@ -1365,6 +1300,153 @@ button.sl-but-mini:hover,
 
 .sl-but-mini.sl-is-soft {
   background-color: var(--sl-color-border-muted);
+}
+
+/* Speed dial: inline moderator toggle chip; items are absolute so the fan opens left over sibling cells without shifting layout */
+.sl-dial {
+  --sl-dial-count: 2;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.sl-dial:has(.sl-dial-item:nth-child(2):last-child) {
+  --sl-dial-count: 1;
+}
+
+.sl-dial:has(.sl-dial-item:nth-child(4):last-child) {
+  --sl-dial-count: 3;
+}
+
+.sl-dial:has(.sl-dial-item:nth-child(5):last-child) {
+  --sl-dial-count: 4;
+}
+
+.sl-dial:has(.sl-dial-item:nth-child(6):last-child) {
+  --sl-dial-count: 5;
+}
+
+.sl-dial:has(.sl-dial-item:nth-child(7):last-child) {
+  --sl-dial-count: 6;
+}
+
+.sl-dial.sl-open,
+.sl-dial:hover {
+  z-index: 30;
+}
+
+/* Backdrop pill behind the open fan (admin-style); width follows the item count via --sl-dial-count */
+.sl-dial::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -3px;
+  width: calc((var(--sl-dial-count) + 1) * var(--sl-size-chip) + var(--sl-dial-count) * var(--sl-space-xs) + 6px);
+  height: calc(var(--sl-size-chip) + 6px);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  transform: translateY(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.sl-dial.sl-open::before,
+.sl-dial:hover::before {
+  opacity: 1;
+  border-color: var(--sl-color-border-strong);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-soft);
+  /* The pill must be hit-testable while the fan is open: it bridges the gaps between the absolute chips, otherwise :hover drops and the fan collapses mid-move */
+  pointer-events: auto;
+}
+
+.sl-dial-toggle,
+.sl-dial-item {
+  border: 0;
+  cursor: pointer;
+}
+
+/* The toggle must join the positioned paint layer so the backdrop pill stays under it */
+.sl-dial-toggle {
+  position: relative;
+}
+
+.sl-dial.sl-open .sl-dial-toggle,
+.sl-dial:hover .sl-dial-toggle {
+  background-color: var(--sl-color-brand-link);
+  color: var(--sl-color-on-dark);
+}
+
+.sl-dial .sl-dial-item {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + var(--sl-space-xs));
+  opacity: 0;
+  transform: translateY(-50%) translateX(8px) scale(0.6);
+  pointer-events: none;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.sl-dial .sl-dial-item:nth-child(3) {
+  right: calc(100% + var(--sl-size-chip) + 2 * var(--sl-space-xs));
+}
+
+.sl-dial .sl-dial-item:nth-child(4) {
+  right: calc(100% + 2 * var(--sl-size-chip) + 3 * var(--sl-space-xs));
+}
+
+.sl-dial .sl-dial-item:nth-child(5) {
+  right: calc(100% + 3 * var(--sl-size-chip) + 4 * var(--sl-space-xs));
+}
+
+.sl-dial .sl-dial-item:nth-child(6) {
+  right: calc(100% + 4 * var(--sl-size-chip) + 5 * var(--sl-space-xs));
+}
+
+.sl-dial .sl-dial-item:nth-child(7) {
+  right: calc(100% + 5 * var(--sl-size-chip) + 6 * var(--sl-space-xs));
+}
+
+.sl-dial.sl-open .sl-dial-item,
+.sl-dial:hover .sl-dial-item {
+  opacity: 1;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.sl-dial.sl-open .sl-dial-item:nth-child(3),
+.sl-dial:hover .sl-dial-item:nth-child(3) {
+  transition-delay: 0.04s;
+}
+
+.sl-dial.sl-open .sl-dial-item:nth-child(4),
+.sl-dial:hover .sl-dial-item:nth-child(4) {
+  transition-delay: 0.09s;
+}
+
+.sl-dial.sl-open .sl-dial-item:nth-child(5),
+.sl-dial:hover .sl-dial-item:nth-child(5) {
+  transition-delay: 0.14s;
+}
+
+.sl-dial.sl-open .sl-dial-item:nth-child(6),
+.sl-dial:hover .sl-dial-item:nth-child(6) {
+  transition-delay: 0.19s;
+}
+
+.sl-dial.sl-open .sl-dial-item:nth-child(7),
+.sl-dial:hover .sl-dial-item:nth-child(7) {
+  transition-delay: 0.24s;
 }
 
 .sl-forum-last:hover {
@@ -2322,12 +2404,6 @@ ol.sl-sublist-two li:hover:before {
   top: 12px;
   right: 15px;
   min-height: 26px;
-}
-
-.sl-vote-tools .sl-editor-menu ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 /* Voting status glyph: success play while active, warning stop when ended; bare inline glyph shares .sl-tip-icon typography so it pixel-snaps like the info tip */

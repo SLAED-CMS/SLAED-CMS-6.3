@@ -41,7 +41,7 @@ class EditorToastUi implements ContentDriver {
         global $tpl;
         $jid = json_encode($id);
         $jval = json_encode($value);
-        $mode = ($profile === 'full') ? '"wysiwyg"' : '"markdown"';
+        $mode = '"markdown"';
         $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
         $high = (int)($data['height'] ?? 0);
         if ($high <= 0) {

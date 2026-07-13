@@ -74,7 +74,7 @@ function money(): void {
                     'href' => $afile.'.php?name=money&op=delete&id='.$id.'&token='.getSiteToken(),
                     'icon_name' => 'trash',
                     'title' => _ONDELETE,
-                    'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\')"',
+                    'confirm_text' => _DELETE.' "'._ID.': '.$id.'"?',
                 ],
             ];
             $rows .= $tpl->getHtmlFrag('table-row', [

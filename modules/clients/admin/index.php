@@ -54,7 +54,7 @@ function clients(): void {
                                     'href' => $afile.'.php?name=clients&op=delete&id='.$id.'&token='.getSiteToken(),
                                     'icon_name' => 'trash',
                                     'title' => _DELETE,
-                                    'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+                                    'confirm_text' => _DELETE.' "'.$title.'"?',
                                 ],
                             ],
                         ])],

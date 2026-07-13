@@ -40,7 +40,7 @@ function newsletter(): void {
                             'href' => $afile.'.php?name=newsletter&op=delete&id='.$id.'&token='.getSiteToken(),
                             'icon_name' => 'trash',
                             'title' => _ONDELETE,
-                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                            'confirm_text' => _DELETE.' "'.$title.'"?',
                         ]],
                     ])],
                 ],

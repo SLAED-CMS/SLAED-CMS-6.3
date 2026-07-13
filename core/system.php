@@ -3130,14 +3130,18 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
     [$vnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$qwhere, $qpars));
     $admin = '';
     if (!$force && is_moder('voting')) {
-        $links = [
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-            $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1', 'confirm_text' => _DELETE.' "'.$title.'"?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
-        ];
-        $admin = getActionMenu($links);
+        $admin = $tpl->getHtmlFrag('dial', getTplEditMenu($afile.'.php?name=voting&op=add&id='.$id, $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), $title));
     }
 
-    $post = (!$force && !$rate) ? $tpl->getHtmlFrag('comment-action-ajax', ['target' => $votid, 'query' => 'go=1&op=updateVotingResult&votid='.$votid, 'title' => _VOTE, 'label' => _VOTE, 'is_button_blue' => true, 'is_post' => true, 'hx_include' => '#form'.$votid]) : '';
+    $post = (!$force && !$rate) ? $tpl->getHtmlFrag('link', [
+        'href' => 'index.php?go=1&op=updateVotingResult&votid='.$votid,
+        'is_post' => true,
+        'hx_target' => '#rep'.$votid,
+        'hx_include' => '#form'.$votid,
+        'title' => _VOTE,
+        'label' => _VOTE,
+        'is_button_blue' => true,
+    ]) : '';
     $polls = (!$force && $vnum > 1) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name=voting', 'title' => _POLLS, 'label' => _POLLS, 'icon_name' => 'card-checklist', 'chip_tone' => 'accent']) : '';
     $votes = $force ? '' : $tpl->getHtmlFrag('span', ['is_votes' => true, 'text' => _VOTES.': '.$vote]);
     if (!$force && !$modul && $votid != 'voting') {
@@ -3628,25 +3632,19 @@ function getEditorKey(): string {
 
 # Check whether the active content editor stores trusted HTML
 function checkHtmlEditor(?string $key = null): bool {
-    $key ??= getEditorKey();
-    return in_array($key, ['ckeditor', 'tinymce'], true);
+    return getEditorMode($key) === 'html';
 }
 
 # Resolve content storage format for the selected editor
 function getEditorMode(?string $key = null): string {
     $key ??= getEditorKey();
-    return match ($key) {
-        'ckeditor', 'tinymce' => 'html',
-        'toastui' => 'markdown',
-        default => 'plain',
-    };
+    return Editor::getFormat($key);
 }
 
 # Replace break
 function replace_break(string $text): string {
- global $conf;
     if ($text) {
-        $out = !checkHtmlEditor() ? preg_replace('#<br.*>#i', '', $text) : $text;
+        $out = !checkHtmlEditor() ? preg_replace('#<br\s*/?>#i', '', $text) : $text;
         return $out;
     }
     return '';
@@ -3900,8 +3898,14 @@ function getCartSummary(string $info = ''): string {
             $price = $price * $i;
             $ptotal += $price;
             $titlink = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=shop&op=view&id='.$id, 'title' => $title, 'label' => $title]);
-            $actions = $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=addCartItem&id='.$id.'&token='.getSiteToken(), 'title' => _PPLUS, 'label' => '', 'is_cart_plus' => true])
-                .$tpl->getHtmlFrag('comment-action-ajax', ['target' => 'kasse', 'query' => 'go=2&op=deleteCartItem&id='.$id.'&token='.getSiteToken(), 'title' => ($i > 1) ? _PMINUS : _DELETE, 'label' => '', 'is_cart_minus' => true]);
+            $actions = $tpl->getHtmlFrag('link', [
+                'href' => 'index.php?go=2&op=addCartItem&id='.$id.'&token='.getSiteToken(),
+                'is_htmx' => true, 'hx_target' => '#repkasse', 'title' => _PPLUS, 'is_cart_plus' => true,
+            ])
+                .$tpl->getHtmlFrag('link', [
+                    'href' => 'index.php?go=2&op=deleteCartItem&id='.$id.'&token='.getSiteToken(),
+                    'is_htmx' => true, 'hx_target' => '#repkasse', 'title' => ($i > 1) ? _PMINUS : _DELETE, 'is_cart_minus' => true,
+                ]);
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'id' => 'kasse-'.$id,
                 'is_cart_row' => true,
@@ -4213,14 +4217,12 @@ function letter(string $mod): string {
     return $items;
 }
 
-# Build a popover action menu from prepared HTML item rows; editor gear by default, user menu when $user is true
+# Build a speed-dial action menu from structured dial items; editor gear by default, user menu with three dots when $user is true
 function getActionMenu(array $items, bool $user = false): string {
     global $tpl;
-    $html = implode('', array_map(static fn($item) => $item !== '' ? $tpl->getHtmlFrag('list-item', ['content_html' => $item]) : '', $items));
-    if ($html === '') return '';
-    $opts = $user ? ['is_user_menu' => true, 'trigger_label' => (string)_USER] : ['editor_label' => (string)_EDITOR];
-    $opts['items_html'] = $html;
-    return $tpl->getHtmlFrag('popover', $opts);
+    $items = array_values(array_filter($items));
+    if (!$items) return '';
+    return $tpl->getHtmlFrag('dial', ['is_user_menu' => $user, 'dial_title' => $user ? (string)_USER : (string)_EDITOR, 'dial' => $items]);
 }
 
 # Admin status
@@ -5383,16 +5385,16 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $sig = (!empty($user_sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $user_sig]) : '';
             $uitems = [];
             if (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) {
-                $uitems[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)]);
+                $uitems[] = ['href' => '#', 'title' => _PERSONAL, 'icon_name' => 'reply', 'link_attr' => getTplEditorInsertAttr('name', $avname)];
             }
             if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) {
-                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=privat&uname='.urlencode($user_name), 'title' => _SENDMES, 'label' => _MESSAGE]);
+                $uitems[] = ['href' => 'index.php?name=account&op=privat&uname='.urlencode($user_name), 'title' => _SENDMES, 'icon_name' => 'envelope'];
             }
             if ($conf['comments']['profil'] && !empty($user_name)) {
-                $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=view&uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+                $uitems[] = ['href' => 'index.php?name=account&op=view&uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'icon_name' => 'person'];
             }
             if ($conf['comments']['web'] && !empty($user_website)) {
-                $uitems[] = $tpl->getHtmlFrag('link', ['href' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
+                $uitems[] = ['href' => $user_website, 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
             }
             $usermenu = getActionMenu($uitems, true);
             $warn = '';
@@ -5404,22 +5406,31 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $acttxt = $com_status ? _DEACTIVATE : _ACTIVATE;
                     $ctext = cutstr(filterText($prs->filterContent($com_text, false, $com_modul, 2)), 10);
                     $items = [
-                        ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$com_cid.'#'.$com_id, 'title' => _MVIEW, 'label' => _MVIEW],
-                        ['href' => $afile.'.php?name=comments&op=edit&id='.$com_id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
-                        ['href' => $afile.'.php?name=comments&op=approve&id='.$com_id.'&typ='.$acttyp.'&refer=1&token='.getSiteToken(), 'title' => $acttxt, 'label' => $acttxt],
+                        ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$com_cid.'#'.$com_id, 'title' => _MVIEW, 'icon_name' => 'eye'],
+                        ['href' => $afile.'.php?name=comments&op=edit&id='.$com_id, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
+                        ['href' => $afile.'.php?name=comments&op=approve&id='.$com_id.'&typ='.$acttyp.'&refer=1&token='.getSiteToken(), 'title' => $acttxt, 'icon_name' => 'power'],
                         [
                             'href' => $afile.'.php?name=comments&op=delete&id='.$com_id.'&refer=1&token='.getSiteToken(),
                             'title' => _ONDELETE,
-                            'label' => _ONDELETE,
-                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ctext.'&quot;?\');"',
+                            'icon_name' => 'trash',
+                            'confirm_text' => _DELETE.' "'.$ctext.'"?',
                         ],
                     ];
-                    $edit = getActionMenu(array_map(fn($item) => $tpl->getHtmlFrag('link', $item), $items));
+                    $edit = getActionMenu($items);
                 } else {
                     $items = [
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateComment&id='.$com_id.'&typ=1&mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateCommentStatus&id='.$com_id.'&typ=0&mod='.$com_modul, 'title' => _FMODC, 'label' => _FMODC]),
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateCommentStatus&id='.$com_id.'&typ=1&mod='.$com_modul, 'title' => _ACTIVATE, 'label' => _ACTIVATE]),
+                        [
+                            'href' => 'index.php?go=1&op=updateComment&id='.$com_id.'&typ=1&mod='.$com_modul.'&token='.getSiteToken(),
+                            'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$com_id,
+                        ],
+                        [
+                            'href' => 'index.php?go=1&op=updateCommentStatus&id='.$com_id.'&typ=0&mod='.$com_modul.'&token='.getSiteToken(),
+                            'title' => _FMODC, 'icon_name' => 'eye-slash', 'is_htmx' => true, 'hx_target' => '#repcom'.$com_id,
+                        ],
+                        [
+                            'href' => 'index.php?go=1&op=updateCommentStatus&id='.$com_id.'&typ=1&mod='.$com_modul.'&token='.getSiteToken(),
+                            'title' => _ACTIVATE, 'icon_name' => 'eye', 'is_htmx' => true, 'hx_target' => '#repcom'.$com_id,
+                        ],
                     ];
                     $edit = getActionMenu($items);
                 }
@@ -5427,7 +5438,10 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
                 if (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) {
                     $items = [
-                        $tpl->getHtmlFrag('comment-action-ajax', ['target' => 'com'.$com_id, 'query' => 'go=1&op=updateComment&id='.$com_id.'&typ=1&mod='.$com_modul, 'title' => _ONEDIT, 'label' => _ONEDIT]),
+                        [
+                            'href' => 'index.php?go=1&op=updateComment&id='.$com_id.'&typ=1&mod='.$com_modul.'&token='.getSiteToken(),
+                            'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$com_id,
+                        ],
                     ];
                     $edit = getActionMenu($items);
                 } else {

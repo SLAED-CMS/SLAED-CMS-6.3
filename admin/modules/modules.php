@@ -168,7 +168,7 @@ function modules(): void {
                 'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id='.($install ? '1' : '2').'&type='.$mtype.'&token='.getSiteToken(),
                 'icon_name' => $install ? 'database-dash' : 'database-add',
                 'title' => $install ? _DB_DELETE : _DB_INSTALL,
-                'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(($install ? _DB_DELETE : _DB_INSTALL).' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
+                'confirm_text' => ($install ? _DB_DELETE : _DB_INSTALL).' "'.$title.'"?',
             ];
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
@@ -176,7 +176,7 @@ function modules(): void {
                 'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id=3&type='.$mtype.'&token='.getSiteToken(),
                 'icon_name' => 'database-up',
                 'title' => _DB_UPDATE,
-                'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(_DB_UPDATE.' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
+                'confirm_text' => _DB_UPDATE.' "'.$title.'"?',
             ];
         }
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [

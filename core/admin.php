@@ -415,7 +415,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                     'href' => $afile.'.php?name=categories&op=delete&id='.$cid.$modlink.'&token='.getSiteToken(),
                     'icon_name' => 'trash',
                     'title' => _ONDELETE,
-                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($cat['title'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                    'confirm_text' => _DELETE.' "'.$cat['title'].'"?',
                 ];
             }
             $rows[] = $tpl->getHtmlFrag('table-row', ['attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'" data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -616,7 +616,7 @@ function getAdminBlockList(): string {
                         'href' => $afile.'.php?name=blocks&op=delete&id='.$bid.'&token='.getSiteToken(),
                         'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                        'confirm_text' => _DELETE.' "'.$title.'"?',
                     ]],
                 ]), 'is_col_actions' => true],
             ],
@@ -763,7 +763,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                                 'icon_name' => 'trash',
                                 'title' => _ONDELETE,
                                 'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminFavoriteList" hx-swap="innerHTML" hx-push-url="false"',
-                                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                                'confirm_text' => _DELETE.' "'.$title.'"?',
                             ]],
                         ]), 'is_col_actions' => true],
                     ],
@@ -822,7 +822,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
-                    ['content_html' => $tpl->getHtmlFrag('popover', ['content' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
+                    ['content_html' => $tpl->getHtmlFrag('popover', ['content_html' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                     ['content_html' => $unse],
                     ['content_html' => $unre],
                     ['content_html' => $date],
@@ -834,7 +834,7 @@ function getAdminPrivateList(int $obj = 0): string {
                             'icon_name' => 'trash',
                             'title' => _ONDELETE,
                             'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminPrivateList" hx-swap="innerHTML" hx-push-url="false"',
-                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                            'confirm_text' => _DELETE.' "'.$title.'"?',
                         ]],
                     ]), 'is_col_actions' => true],
                 ],

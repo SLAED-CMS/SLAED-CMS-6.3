@@ -1,41 +1,5 @@
-{% if items_html or trigger_label or editor_label or editor or view_link or edit_link or edit_href or delete_link or delete_href %}
-<nav class="sl-menu">
-  <ul>
-    <li class="sl-float">
-      <span
-        class="sl-but-mini"
-        title="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}"
-        aria-label="{% if trigger_label %}{{ trigger_label }}{% elseif editor_label %}{{ editor_label }}{% else %}{{ editor }}{% endif %}"
-        role="button"
-        tabindex="0"
-      ><i class="bi {% if is_user_menu %}bi-three-dots{% else %}bi-gear-fill{% endif %}" aria-hidden="true"></i></span>
-      <ul class="sl-float-panel">
-        {% if items_html %}
-          {{{ items_html }}}
-        {% else %}
-          {% for item in items %}<li>{% include 'fragments/link.html' with item %}</li>{% endfor %}
-          {% if view_link %}<li>{% include 'fragments/link.html' with view_link %}</li>{% endif %}
-          {% if edit_link %}
-            <li>{% include 'fragments/link.html' with edit_link %}</li>
-          {% elseif edit_href %}
-            <li><a href="{{ edit_href }}" title="{{ edit_text }}">{{ edit_text }}</a></li>
-          {% endif %}
-          {% if delete_link %}
-            <li>{% include 'fragments/link.html' with delete_link %}</li>
-          {% elseif delete_href %}
-            <li><a href="{{ delete_href }}" OnClick="return DelCheck(this, '{{{ delete_ask }}}');" title="{{ delete_text }}">{{ delete_text }}</a></li>
-          {% endif %}
-        {% endif %}
-      </ul>
-    </li>
-  </ul>
-</nav>
-{% else %}
 {% if content_html %}
 <nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">{{{ content_html }}}</div></nav>
-{% endif %}
-{% if content %}
-<nav class="sl-float sl-tip" tabindex="0"><i class="bi bi-info-circle-fill"></i><div class="sl-float-panel">{{{ content }}}</div></nav>
 {% endif %}
 {% if items %}
 <nav class="sl-float sl-tip" tabindex="0">
@@ -51,4 +15,3 @@
 </nav>
 {% endif %}
 {% if label_text %}<span class="sl-note">{{ label_text }}</span>{% endif %}
-{% endif %}

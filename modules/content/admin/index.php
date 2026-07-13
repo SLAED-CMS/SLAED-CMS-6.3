@@ -28,7 +28,7 @@ function content(): void {
                 'href' => $afile.'.php?name=content&op=delete&id='.$id.'&token='.getSiteToken(),
                 'icon_name' => 'trash',
                 'title' => _ONDELETE,
-                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                'confirm_text' => _DELETE.' "'.$title.'"?',
             ];
             $acts = $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $items]);
             $tip = $tpl->getHtmlFrag('popover', [

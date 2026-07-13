@@ -56,7 +56,7 @@ function voting(): void {
             ];
             if ($ismoder) {
                 $edit = $afile.'.php?name=voting&op=add&id='.$id;
-                $del = $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1';
+                $del = $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken();
                 $row += getTplEditMenu($edit, $del, $stitle);
             }
             $rows .= $tpl->getHtmlPart('voting-home', $row);

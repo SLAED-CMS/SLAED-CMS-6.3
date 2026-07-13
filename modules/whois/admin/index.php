@@ -54,7 +54,7 @@ function whois(): void {
                 ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=2&refer=1&token='.getSiteToken(), 'icon_name' => 'hdd-network', 'title' => _HOST],
                 ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=3&refer=1&token='.getSiteToken(), 'icon_name' => 'building', 'title' => _DC],
                 ['href' => $afile.'.php?name=whois&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=whois&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=whois&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$domain.'"?'],
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$id],

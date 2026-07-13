@@ -44,7 +44,7 @@ function auto_links(): void {
                 'href' => $afile.'.php?name=auto_links&op=delete&id='.$id.'&token='.getSiteToken(),
                 'icon_name' => 'trash',
                 'title' => _DELETE,
-                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($name).'&quot;?\')"',
+                'confirm_text' => _DELETE.' "'.$name.'"?',
             ];
             $rows .= $tpl->getHtmlFrag('table-row', [
                 'cells_html' => $tpl->getHtmlFrag('table-cells', [

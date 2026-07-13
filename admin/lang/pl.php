@@ -101,7 +101,7 @@ define('_CACHETIME','Czas zachowania danych statystycznych bufora (w sekundach)'
 define('_CACHE_1','Wszystkich działów strony');
 define('_CACHE_2','Tylko strony głównej');
 define('_CAN','Mogą');
-define('_CATDRAGSORT','Kolejność kategorii zmienia się przeciągając uchwyt — tylko wśród sąsiadów tego samego rodzica w obrębie modułu. Podkategorie przenoszą się razem z rodzicem. Kliknięcie nagłówka modułu zwija grupę.');
+define('_CATDRAGSORT','Przeciągnij ikonę „Pozycja”, aby sortować kategorie wspólnego rodzica w module. Podkategorie są przenoszone z rodzicem. Kliknięcie nagłówka zwija grupę.');
 define('_CDEFIS','Symbol rozdzielający kategorii');
 define('_CEDITT','Okres jej edycji przez użytkownika, w minutach');
 define('_CENSOR','Zakazane słowa');
@@ -172,7 +172,7 @@ define('_DEFIS','Symbol rozdzielający титлы i nagłówki');
 define('_DELSETUP','W celu zwiększenia bezpieczeństwa należy usunąć lub zmienić nazwę pliku instalacyjnego systemu setup.php w głównym katalogu strony!');
 define('_DENYING','Zdradzony wybranych modułów');
 define('_DESC','W porządku malejącym');
-define('_DRAGSORT','Kolejność bloków zmienia się przeciągając uchwyt w kolumnie "Pozycja" — tylko w obrębie swojej grupy. Wolne bloki są zebrane w osobnej grupie i wyświetlane tagiem [block=id]; pozycja i kolejność ich nie dotyczą.');
+define('_DRAGSORT','Przeciągnij ikonę w kolumnie „Pozycja” w obrębie grupy. Wolne bloki tworzą osobną grupę i używają [block=id]; pozycja ani kolejność ich nie dotyczą.');
 define('_DGEN','Główny katalog');
 define('_DIR','Katalog');
 define('_DIRDEF','Katalog domyślny');

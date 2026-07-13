@@ -1,0 +1,6 @@
+{% if dial %}
+<span class="sl-dial">
+  <button class="sl-dial-toggle sl-but-mini" type="button" title="{{ dial_title }}"><i class="bi {% if is_user_menu %}bi-three-dots{% else %}bi-gear-fill{% endif %}"></i></button>
+  {% for item in dial %}<a class="sl-dial-item sl-but-mini" {% if item.href %}href="{{ item.href }}"{% endif %} title="{{ item.title }}" {% if item.confirm_text %}data-sl-confirm="{{ item.confirm_text }}"{% endif %} {% if item.is_htmx %}{% if item.is_post %}hx-post="{{ item.href }}"{% else %}hx-get="{{ item.href }}"{% endif %} hx-target="{{ item.hx_target }}" hx-swap="{% if item.hx_swap %}{{ item.hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% endif %} {% if item.is_blank %}target="_blank" rel="noopener noreferrer"{% endif %} {% if item.link_attr %}{{{ item.link_attr }}}{% endif %} {% if item.onclick_attr %}{{{ item.onclick_attr }}}{% endif %}><i class="bi bi-{{ item.icon_name }}"></i></a>{% endfor %}
+</span>
+{% endif %}

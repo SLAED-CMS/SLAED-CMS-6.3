@@ -1,80 +1,63 @@
-# Аудит и план: веер sl-dial для модераторских меню фронтенда
+# Speed dial (sl-dial) — референс механизма
 
-Статус: аудит завершён, план утверждается. Дата: 2026-07-13.
+Единое меню действий для фронтенда (тема lite) и админки: тогл-чип, веер иконок-чипов,
+подтверждение удаления. Темы независимы — у каждой свои копии `fragments/dial.html`,
+`fragments/link.html` и CSS; контракт ключей общий, потому что PHP один.
 
-## Проблема
+## Контракт данных
 
-На фронтенде (тема lite) модераторское меню «Редактор» (шестерёнка) в списках
-`index.php?name=*&op=liste`, карточках и на страницах материалов открывается
-наведением вниз тёмной панелью `sl-float-panel` и накрывает 1-2 соседние строки
-(замер на `news&op=liste`: панель 189×77px поверх 2 строк). Колонка «№» узкая —
-те же перехлёсты, что были в админке до перехода на веер `sl-dial`.
+Фрагмент `dial.html` принимает:
 
-## Аудит: где живёт меню
-
-Данные меню строит один хелпер — `getTplEditMenu()` (`core/helpers.php`):
-ключи `is_moder`, `editor_label`, `edit_href`, `delete_href`, `delete_ask`.
-Рендерит их lite-фрагмент `popover.html` (фрагмент `edit-actions.html` — его алиас).
-
-**Шаблоны lite, выводящие меню (4):**
-
-| Шаблон | Где виден |
+| Ключ | Значение |
 |---|---|
-| `fragments/table-row.html:105` | табличные списки `op=liste` (news, pages, files, links, media) |
-| `fragments/card.html:37` | карточки списков/категорий (news, pages, faq, files, links, media, jokes, auto_links, content) |
-| `partials/view.html:8` | страница материала (`op=view`) |
-| `partials/voting-home.html:5` | таблица опросов |
+| `dial` | массив элементов веера (без него фрагмент не рендерится) |
+| `dial_title` | title тогла (`_EDITOR`, `_FUNCTIONS`, `_USER`) |
+| `is_user_menu` | lite: тогл three-dots вместо шестерёнки (admin-тема всегда three-dots) |
 
-**PHP-вызовы (22 места, меню как данные):** `$row += getTplEditMenu(...)` /
-`...getTplEditMenu(...)` в modules: auto_links, content (2), faq (2), files (3),
-links (3), media (3), news (3), pages (3), jokes, voting.
+Элемент `dial[]`:
 
-**PHP-вызовы мимо хелпер-ключей (3):** `modules/shop/index.php:97,261` —
-`getHtmlFrag('edit-actions', ...)` с `edit_link`/`delete_link`;
-`modules/content/index.php:38` — `getHtmlFrag('popover', getTplEditMenu(...))`.
+| Ключ | Значение |
+|---|---|
+| `href` | URL действия |
+| `icon_name` | bootstrap-иконка без префикса `bi-` (pencil, trash, eye, power, ...) |
+| `title` | подпись (tooltip) |
+| `confirm_text` | текст confirm ЧИСТЫМ текстом с обычными кавычками: `_DELETE.' "'.$title.'"?'` |
+| `is_htmx`, `is_post`, `hx_target`, `hx_swap` | htmx-действие (lite): hx-get/hx-post на `href` |
+| `is_blank` | target="_blank" + rel |
+| `link_attr`, `onclick_attr` | сырые атрибуты для остального (data-sl-toggle, history.go и т.п.) |
 
-**Чего нет в lite:** стилей `sl-dial` (есть только в admin theme.css),
-фрагмента `dial.html`, клик-механики веера (живёт в `admin-ui.js`, который
-на фронт не грузится; общий `slaed.js` грузится и там и там).
+## Продюсеры
 
-## План
+- `getTplEditMenu($edit, $del, $title)` (`core/helpers.php`) — стандартная пара
+  pencil+trash(confirm) с ключами `is_moder`/`dial_title`/`dial`; модули добавляют её
+  в данные строки (`$row += ...`) или рендерят напрямую `getHtmlFrag('dial', ...)`.
+- `getActionMenu(array $items, bool $user = false)` (`core/system.php`) — произвольный
+  набор структурированных элементов; `$user = true` даёт user-menu (три точки).
+- Никогда не собирать в PHP HTML/OnClick-строки для меню: экранирование делает шаблон.
 
-1. **PHP — один источник данных.** Переписать `getTplEditMenu()`: возвращать
-   dial-ключи `['is_moder' => true, 'dial_title' => _EDITOR, 'dial' => [pencil-edit, trash-delete(confirm)]]`.
-   Все 22 `$row += ...`-вызова получают новые данные без правок.
-2. **Шаблоны lite.** Скопировать `fragments/dial.html` из admin-темы (темы
-   независимые — копия, не share). В 4 шаблонах заменить
-   `{% include 'fragments/popover.html' %}` (модераторская ветка) на
-   `{% include 'fragments/dial.html' %}`.
-3. **Спец-вызовы.** shop (2): собрать dial-массив на месте (power нет — только
-   edit/delete как сейчас); content:38: `popover` → `dial`. Фрагмент
-   `edit-actions.html` удалить, ключи `edit_link/delete_link/edit_href/...`
-   вычистить из lite `popover.html` (останется только инфо-«i» и user-menu).
-4. **CSS lite.** Перенести блок «Speed dial» из admin theme.css в lite
-   theme.css на токенах lite (~60 строк: `.sl-dial`, `.sl-dial-toggle`,
-   `.sl-dial-item`, каскадные задержки). Якорь в таблицах:
-   `td:last-child`/ячейка меню — `position: relative` (проверить перехлёст
-   вправо у колонки «№»: веер раскрывается влево — совместимо).
-5. **JS.** Перенести клик-toggle веера из `admin-ui.js` в общий
-   `plugins/system/slaed.js` (делегированный обработчик, ~10 строк) — один код
-   для фронта и админки; из admin-ui.js удалить.
-6. **Не трогаем:** инфо-«i» (`sl-tip`), меню пользователя (`is_user_menu`),
-   навигацию шапки.
+## Подтверждение удаления (data-sl-confirm)
 
-## Верификация
+PHP передаёт `confirm_text` без сущностей и без addslashes/htmlspecialchars.
+Шаблон рендерит `data-sl-confirm="{{ confirm_text }}"` (экранирование однократное).
+Делегированный обработчик в `plugins/system/slaed.js` (`setDialToggle`) вызывает
+`confirm()` и гасит переход при отказе. Для htmx-элементов этот механизм не подходит
+(их обработчики срабатывают раньше документного) — при необходимости использовать `hx-confirm`.
 
-- `php -l`, `phpstan`, `phpunit`.
-- Playwright под админом: свип `op=liste` всех модулей (news, pages, files,
-  links, media, faq, jokes, auto_links, content) + `op=view` + опросы + shop:
-  веера присутствуют, gear-попапов в модераторских местах 0, JS-ошибок нет.
-- Проверить гостем: модераторские веера отсутствуют, вёрстка списков не
-  изменилась.
-- Клик по «удалить» — confirm срабатывает; редактирование ведёт в админку.
+## CSS (lite)
 
-## Риски
+- `.sl-dial` — инлайновый чип в потоке; элементы веера абсолютные, раскрываются влево
+  оффсетами `right: calc(...)` по nth-child (до 6 элементов).
+- Пилюля-подложка `.sl-dial::before` — ширина от `--sl-dial-count`, который выставляют
+  чистые CSS-правила `:has(.sl-dial-item:nth-child(N):last-child)`.
+- В открытом состоянии пилюля получает `pointer-events: auto` — она мостит зазоры между
+  чипами, иначе `:hover` слетает и веер схлопывается до клика.
+- `.sl-dial-toggle` — `position: relative`, иначе пилюля рисуется поверх тогла.
+- В admin-теме своя схема: абсолютный контейнер в выделенной ячейке `td.sl-col-actions`.
 
-- Веер в колонке «№» раскрывается влево поверх ячеек своей строки — на узких
-  экранах может выйти за левый край таблицы: проверить на 360px, при
-  необходимости добавить сжатие ячеек-иконок в мобильном брейкпоинте.
-- Страница `op=view`: веер в мета-строке (не таблица) — якорь `li.sl-meta-actions`,
-  проверить наложение на заголовок.
+## JS
+
+- Клик-фиксация веера (`.sl-open`) и confirm — `plugins/system/slaed.js`, грузится и на
+  фронте и в админке (`script_f`); в `admin-ui.js` dial-кода нет.
+- Ajax-гейт `go=N` (`index.php`) требует `token` в URL или заголовок `X-CSRF-TOKEN` —
+  все htmx-элементы веера и inline-формы (`getTplAjaxTextarea`) обязаны передавать
+  `&token='.getSiteToken()`.

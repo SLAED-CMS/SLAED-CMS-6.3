@@ -961,13 +961,15 @@ function filterClickable(string $text): string {
     return $ret;
 }
 
-# Convert raw user text to HTML-safe output; applies nl2br, escaping and URL linking; skips URL auto-linking when $id === 1
+# Normalize submitted content for the active editor format; plain text keeps HTML breaks, Markdown keeps line endings and trusted HTML stays intact
 function filterHtml(string $text, mixed $id = ''): string {
     global $conf;
     if ($text) {
-        if (!checkHtmlEditor()) {
+        $mode = getEditorMode();
+        if ($mode !== 'html') {
             $text = ($conf['clickable'] && $id != 1) ? filterClickable($text) : $text;
-            $out = nl2br(str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(filterText($text, 2))), false);
+            $out = str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(filterText($text, 2)));
+            if ($mode === 'plain') $out = nl2br($out, false);
         } else {
             $out = str_replace(['"', '$', '\'', '\\'], ['&#034;', '&#036;', '&#039;', '&#092;'], stripslashes($text));
         }

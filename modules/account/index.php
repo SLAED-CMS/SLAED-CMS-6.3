@@ -423,11 +423,20 @@ function view(): void {
                 $text[] = last($uid, 'pages');
             }
             $tabs = getNaviTabs(0, 'tab', $title, $text);
-            $acts = isAdmin() ? $tpl->getHtmlFrag('popover', [
-                'editor_label' => _EDITOR,
-                'items_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_add&id='.$uid, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
-                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=security_block&new_ip='.$userIpRaw, 'confirm_text' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?', 'title' => _BANIPSENDER, 'label' => _BANIPSENDER, 'is_delete' => true])
-                    .$tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=users_del&id='.$uid, 'confirm_text' => _DELETE.' &quot;'.$nick.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]),
+            $acts = isAdmin() ? getActionMenu([
+                ['href' => $afile.'.php?op=users_add&id='.$uid, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
+                [
+                    'href' => $afile.'.php?op=security_block&new_ip='.$userIpRaw,
+                    'title' => _BANIPSENDER,
+                    'icon_name' => 'shield-x',
+                    'confirm_text' => _BANIPSENDER.' "'.$userIpRaw.'"?',
+                ],
+                [
+                    'href' => $afile.'.php?op=users_del&id='.$uid,
+                    'title' => _ONDELETE,
+                    'icon_name' => 'trash',
+                    'confirm_text' => _DELETE.' "'.$nick.'"?',
+                ],
             ]) : '';
             $report = getTplTitleTip([
                 ['label' => $id[0], 'value' => htmlspecialchars((string)$id[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
@@ -435,12 +444,12 @@ function view(): void {
             ]);
             $uacts = [];
             if (($conf['privat']['act'] ?? 0) && !empty($nick)) {
-                $uacts[] = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]), 'title' => _SENDMES, 'label' => _MESSAGE]);
+                $uacts[] = ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]), 'title' => _SENDMES, 'icon_name' => 'envelope'];
             }
             if (is_user() && $uname == $nick) {
-                $uacts[] = $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _ACCOUNT, 'label' => _ACCOUNT]);
+                $uacts[] = ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _ACCOUNT, 'icon_name' => 'person'];
             }
-            $uacts[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _BACK, 'label' => _BACK, 'onclick_attr' => 'onclick="window.history.go(-1);return false;"']);
+            $uacts[] = ['href' => '#', 'title' => _BACK, 'icon_name' => 'arrow-left', 'onclick_attr' => 'onclick="window.history.go(-1);return false;"'];
             echo $tpl->getHtmlPart('account-profile', [
                 'has_sign' => !empty($sign),
                 'has_field' => !empty($field),
@@ -667,9 +676,9 @@ function privat(): void {
             'title' => _PRIVAT,
         ]);
         $title = [
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmessin', 'request' => 'go=1&op=getPrivateMessageView&typ=1', 'text' => _PRIN, 'is_htmx' => true]),
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmessou', 'request' => 'go=1&op=getPrivateMessageView&typ=2', 'text' => _PROUT, 'is_htmx' => true]),
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmesssa', 'request' => 'go=1&op=getPrivateMessageView&typ=3', 'text' => _PRSAVE, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmessin', 'request' => 'go=1&op=getPrivateMessageView&typ=1&token='.getSiteToken(), 'text' => _PRIN, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmessou', 'request' => 'go=1&op=getPrivateMessageView&typ=2&token='.getSiteToken(), 'text' => _PROUT, 'is_htmx' => true]),
+            $tpl->getHtmlFrag('span', ['target_id' => 'prmesssa', 'request' => 'go=1&op=getPrivateMessageView&typ=3&token='.getSiteToken(), 'text' => _PRSAVE, 'is_htmx' => true]),
             _SEND
         ];
         $text = [

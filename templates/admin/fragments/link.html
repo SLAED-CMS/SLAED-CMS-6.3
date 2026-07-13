@@ -35,14 +35,15 @@
   {% if link_attr %}{{{ link_attr }}}{% endif %}
   {% if toggle_onclick %}OnClick="{{ toggle_onclick }}"{% endif %}
   {% if is_upper %}OnClick="Upper('html, body', 600); return false;"{% endif %}
-  {% if is_delete %}OnClick="return DelCheck(this, '{{ confirm_text }}');"{% endif %}
+  {% if confirm_text %}data-sl-confirm="{{ confirm_text }}"{% endif %}
   {% if onclick_attr %}{{{ onclick_attr }}}{% endif %}
 
-  {% if is_htmx %}
-    hx-get="{{ href }}"
+  {% if is_htmx or is_post %}
+    {% if is_post %}hx-post="{{ href }}"{% else %}hx-get="{{ href }}"{% endif %}
     hx-target="{{ hx_target }}"
     hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}"
     hx-push-url="false"
+    {% if hx_include %}hx-include="{{ hx_include }}"{% endif %}
   {% endif %}
 
   {% if target_attr %}

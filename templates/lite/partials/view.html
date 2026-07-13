@@ -5,7 +5,7 @@
       <li>{{{ hits }}}</li>
       <li>{% if reads_text %}<span title="{{ reads_label }}" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> {{ reads_text }}</span>{% endif %}</li>
       <li>{% if post_text %}<span title="{{ post_label }}" class="sl-chip sl-chip-info sl-post-icon">{{{ post_text }}}</span>{% endif %}</li>
-      {% if id or is_moder %}<li class="sl-meta-actions">{% if is_moder %}{% include 'fragments/popover.html' %}{% endif %}{% if id %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>{% endif %}</li>{% endif %}
+      {% if id or is_moder %}<li class="sl-meta-actions">{% if is_moder %}{% include 'fragments/dial.html' %}{% endif %}{% if id %}<a href="#{{ id }}" title="{{ id }}" class="sl-but-mini">{{ id }}</a>{% endif %}</li>{% endif %}
     </ul>
     <ul>
       {% if date_text %}<li><time datetime="{{ date_iso }}" title="{{ date_label }}" class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ date_text }}</time></li>{% endif %}

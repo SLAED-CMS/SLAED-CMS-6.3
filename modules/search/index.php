@@ -303,13 +303,9 @@ function getSearchLine(array $row, array $state, int $numb): string {
     }
     $aside = '';
     if ($row['edithref'] !== '' && is_moder($row['mod'])) {
-        $items = [
-            $tpl->getHtmlFrag('link', ['href' => $row['edithref'], 'title' => _FULLEDIT, 'label' => _FULLEDIT]),
-            $tpl->getHtmlFrag('link', ['href' => $row['url'], 'title' => _WINDOWNEW, 'label' => _WINDOWNEW, 'is_blank' => true]),
-        ];
-        $aside = $tpl->getHtmlFrag('popover', [
-            'editor_label' => _EDITOR,
-            'items_html' => implode('', array_map(static fn($item) => $tpl->getHtmlFrag('list-item', ['content_html' => $item]), $items)),
+        $aside = getActionMenu([
+            ['href' => $row['edithref'], 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
+            ['href' => $row['url'], 'title' => _WINDOWNEW, 'icon_name' => 'box-arrow-up-right', 'is_blank' => true],
         ]);
     }
     $aside .= $tpl->getHtmlFrag('link', ['href' => '#'.$numb, 'title' => (string)$numb, 'label' => (string)$numb, 'is_num_anchor' => true]);

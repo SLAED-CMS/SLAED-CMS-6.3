@@ -94,7 +94,7 @@ function shop(): void {
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 			$comm = ($acomm) ? $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=view&id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom, 'is_comment' => true]) : '';
 			$read = $tpl->getHtmlFrag('link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE, 'is_read' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&typ=d&id='.$id.'&refer=1', 'confirm_text' => _DELETE.' &quot;'.$stitle.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('dial', getTplEditMenu($afile.'.php?op=shop_products_add&id='.$id, $afile.'.php?op=shop_products_admin&typ=d&id='.$id.'&refer=1', $stitle)) : '';
 			$cont .= $tpl->getHtmlFrag('card', [
 				'id'           => $id,
 				'is_nested'    => false,
@@ -258,7 +258,7 @@ function view(): void {
 		$kasse = $tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=kasse', 'title' => _SCACH, 'label' => _SCACH, 'is_shop_checkout' => true]);
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('link', ['href' => $chref, 'title' => $cdesc, 'label' => cutstr($ctitle, 15), 'is_category' => true]) : '';
 		$goback = $tpl->getHtmlFrag('span', ['title' => _BACK, 'text' => _BACK, 'is_back' => true]);
-			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('edit-actions', ['editor_label' => _EDITOR, 'edit_link' => ['href' => $afile.'.php?op=shop_products_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT], 'delete_link' => ['href' => $afile.'.php?op=shop_products_admin&typ=d&id='.$id, 'confirm_text' => _DELETE.' &quot;'.$title.'&quot;?', 'title' => _ONDELETE, 'label' => _ONDELETE, 'is_delete' => true]]) : '';
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('dial', getTplEditMenu($afile.'.php?op=shop_products_add&id='.$id, $afile.'.php?op=shop_products_admin&typ=d&id='.$id, $title)) : '';
 		$cont .= $tpl->getHtmlFrag('card', [
 			'id'           => $id,
 			'is_detail'    => true,

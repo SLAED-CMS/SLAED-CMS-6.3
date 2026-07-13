@@ -85,7 +85,7 @@ function admins(): void {
                     'href' => $afile.'.php?name=admins&op=delete&aid='.$aid.'&token='.getSiteToken(),
                     'icon_name' => 'trash',
                     'title' => _ONDELETE,
-                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                    'confirm_text' => _DELETE.' "'.(string)$name.'"?',
                 ],
             ],
         ]);

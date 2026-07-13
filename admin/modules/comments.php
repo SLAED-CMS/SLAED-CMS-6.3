@@ -151,7 +151,7 @@ function comments(): void {
                 'href' => $afile.'.php?'.$curq.'&op=delete&id='.$id.'&token='.getSiteToken(),
                 'icon_name' => 'trash',
                 'title' => _ONDELETE,
-                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($comment).'&quot;?\')"',
+                'confirm_text' => _DELETE.' "'.$comment.'"?',
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [

@@ -47,7 +47,7 @@ function faq(): void {
                 'href' => $afile.'.php?name=faq&op=delete&id='.$id.($refer ? '&refer=1' : '').'&token='.getSiteToken(),
                 'icon_name' => 'trash',
                 'title' => _ONDELETE,
-                'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
+                'confirm_text' => _DELETE.' "'.$title.'"?',
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [

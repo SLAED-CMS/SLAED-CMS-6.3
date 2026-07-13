@@ -48,7 +48,7 @@ function order(): void {
                             'href' => $afile.'.php?name=order&op=delete&id='.$id.'&token='.getSiteToken(),
                             'icon_name' => 'trash',
                             'title' => _ONDELETE,
-                            'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\')"',
+                            'confirm_text' => _DELETE.' "'._ID.': '.$id.'"?',
                         ],
                     ]])],
                 ],

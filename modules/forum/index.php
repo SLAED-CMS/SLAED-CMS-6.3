@@ -410,41 +410,44 @@ function view(): void {
                 $sig = (!empty($sig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $sig]) : '';
                 $uitems = [];
                 if (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply'])) {
-                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => '#', 'title' => _PERSONAL, 'label' => _PERS, 'link_attr' => getTplEditorInsertAttr('name', $avname)]);
+                    $uitems[] = ['href' => '#', 'title' => _PERSONAL, 'icon_name' => 'reply', 'link_attr' => getTplEditorInsertAttr('name', $avname)];
                 }
                 if ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick)) {
-                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=privat&uname='.urlencode($nick), 'title' => _SENDMES, 'label' => _MESSAGE]);
+                    $uitems[] = ['href' => 'index.php?name=account&op=privat&uname='.urlencode($nick), 'title' => _SENDMES, 'icon_name' => 'envelope'];
                 }
                 if ($conf['forum']['profil'] && !empty($nick)) {
-                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account&op=view&uname='.urlencode($nick), 'title' => _PERSONALINFO, 'label' => _ACCOUNT]);
+                    $uitems[] = ['href' => 'index.php?name=account&op=view&uname='.urlencode($nick), 'title' => _PERSONALINFO, 'icon_name' => 'person'];
                 }
                 if ($conf['forum']['web'] && !empty($site)) {
-                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => $site, 'title' => _DOWNLLINK, 'label' => _SITE, 'is_blank' => true]);
+                    $uitems[] = ['href' => $site, 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
                 }
                 if (is_moder($conf['name']) || ($isreply && $tstatus)) {
                     $qhref = 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&pid='.$topic.'&qid='.$fid;
-                    $uitems[] = $tpl->getHtmlFrag('link', ['href' => $qhref, 'title' => _QREPLY, 'label' => _REPLY]);
+                    $uitems[] = ['href' => $qhref, 'title' => _QREPLY, 'icon_name' => 'chat-quote'];
                 }
                 $usermenu = getActionMenu($uitems, true);
                 $warn = '';
                 $thank = '';
-                $edit_href = 'index.php?go=1&op=updatePost&id='.$fid.'&cid='.$fcat.'&typ=1&mod='.$conf['name'];
-                $edit = ($ismod || ($isedit && $val[3] == (int)$user[0] && $tstatus))
-                    ? $tpl->getHtmlFrag('link', ['href' => $edit_href, 'hx_target' => '#repfor'.$fid, 'title' => _ONEDIT, 'label' => _ONEDIT, 'is_htmx' => true])
-                      .'||'
-                      .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&id='.$fid.'&pid='.$topic, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
-                      .'||'
-                    : '';
-                $edit .= ($ismod || ($isdelete && $val[3] == (int)$user[0]))
-                    ? $tpl->getHtmlFrag('link', [
-                        'href'         => 'index.php?name='.$conf['name'].'&op=delete&cat='.$fcat.'&id='.$fid,
-                        'confirm_text' => _DELETE.' &quot;'.$val[5].'&quot;?',
-                        'title'        => _ONDELETE,
-                        'label'        => _ONDELETE,
-                        'is_delete'    => true,
-                      ])
-                    : '';
-                $edit = ($edit) ? getActionMenu(explode('||', $edit)) : '';
+                $eitems = [];
+                if ($ismod || ($isedit && $val[3] == (int)$user[0] && $tstatus)) {
+                    $eitems[] = [
+                        'href' => 'index.php?go=1&op=updatePost&id='.$fid.'&cid='.$fcat.'&typ=1&mod='.$conf['name'].'&token='.getSiteToken(),
+                        'title' => _ONEDIT,
+                        'icon_name' => 'pencil-square',
+                        'is_htmx' => true,
+                        'hx_target' => '#repfor'.$fid,
+                    ];
+                    $eitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&id='.$fid.'&pid='.$topic, 'title' => _FULLEDIT, 'icon_name' => 'pencil'];
+                }
+                if ($ismod || ($isdelete && $val[3] == (int)$user[0])) {
+                    $eitems[] = [
+                        'href' => 'index.php?name='.$conf['name'].'&op=delete&cat='.$fcat.'&id='.$fid,
+                        'title' => _ONDELETE,
+                        'icon_name' => 'trash',
+                        'confirm_text' => _DELETE.' "'.$val[5].'"?',
+                    ];
+                }
+                $edit = getActionMenu($eitems);
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name'], 2), $word);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
                 if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name'], 2), $word);
@@ -611,7 +614,7 @@ function add(): void {
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= getTplPreviewContent(['title' => $psubject, 'texta' => $hometext, 'textb' => '', 'mod' => $conf['name']]);
         $userinfo = getUserInfo();
-        if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
+        if (($userinfo['access'] ?? false) || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
@@ -690,7 +693,6 @@ function send(): void {
         $checks = str_replace(["\n", "\r", "\t"], ' ', $hometext);
         $words = explode(' ', $checks);
         for ($ix = 0; $ix < count($words); $ix++) $size = strlen($words[$ix]);
-        $hometext = filterHtml($hometext);
         $status = getVar('post', 'status', 'num', 0);
 
         $field = getVar('post', 'field', 'field');
@@ -725,7 +727,7 @@ function send(): void {
             } else {
                 if ($ismod) {
                     $userinfo = getUserInfo();
-                    $postname = ($userinfo['name']) ? $userinfo['name'] : $postname;
+                    $postname = $userinfo['name'] ?? $postname;
                     $status = ($status) ? $status : (($pid) ? 1 : 3);
                 } elseif (is_user()) {
                     $userinfo = getUserInfo();

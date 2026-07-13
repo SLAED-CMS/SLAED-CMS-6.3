@@ -35,7 +35,7 @@ function content(): void {
             if ($ismoder) {
                 $edit = $afile.'.php?name=content&op=add&id='.$id;
                 $del = $afile.'.php?name=content&op=delete&id='.$id.'&refer=1&token='.$token;
-                $menu = $tpl->getHtmlFrag('popover', getTplEditMenu($edit, $del, $title));
+                $menu = $tpl->getHtmlFrag('dial', getTplEditMenu($edit, $del, $title));
             }
             $rows[] = [
                 'id' => (string)$id,

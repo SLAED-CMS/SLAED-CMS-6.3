@@ -52,11 +52,6 @@
     document.addEventListener('click', function (event) {
         var node = event.target;
         if (!node || !node.closest) return;
-        var toggle = node.closest('.sl-dial-toggle');
-        document.querySelectorAll('.sl-dial.sl-open').forEach(function (dial) {
-            if (!toggle || dial !== toggle.parentNode) dial.classList.remove('sl-open');
-        });
-        if (toggle) toggle.parentNode.classList.toggle('sl-open');
         var opener = node.closest('[data-sl-icon-open]');
         if (opener) {
             var modal = document.getElementById('sl_icon_modal');

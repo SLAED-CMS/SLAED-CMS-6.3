@@ -101,7 +101,7 @@ define('_CACHETIME','Le temps de rétention des statistiques de cache en seconde
 define('_CACHE_1','Tous les divisions du site');
 define('_CACHE_2','Seulement la page principale');
 define('_CAN','Peut');
-define('_CATDRAGSORT','L\'ordre des catégories se modifie en faisant glisser la poignée — uniquement entre voisins du même parent au sein du module. Les sous-catégories se déplacent avec leur parent. Un clic sur l\'en-tête du module replie le groupe.');
+define('_CATDRAGSORT','Glissez l\'icône « Position » entre catégories de même parent par module. Les sous-catégories suivent le parent. Cliquer sur l\'en-tête replie le groupe.');
 define('_CDEFIS','Le symbole, qui sépare les catégories');
 define('_CEDITT',"La période de l'édition de messages de l'utilisateur, en quelques minutes");
 define('_CENSOR','Mots interdits');
@@ -172,7 +172,7 @@ define('_DEFIS','Symbole séparant Titley et les titres');
 define('_DELSETUP',"Afin d'améliorer la sécurité, vous devez supprimer ou renommer le fichier d'installation du système setup.php dans le répertoire principal site!");
 define('_DENYING','La négation de la étiqueté modules');
 define('_DESC',"Dans l'ordre décroissant");
-define('_DRAGSORT','L\'ordre des blocs se modifie en faisant glisser la poignée dans la colonne «Position» — uniquement au sein de son groupe. Les blocs libres sont regroupés séparément et affichés avec la balise [block=id]; la position et l\'ordre ne s\'y appliquent pas.');
+define('_DRAGSORT','Glissez l\'icône « Position » dans un groupe. Les blocs libres forment un groupe séparé et utilisent [block=id] ; position et ordre ne s\'appliquent pas.');
 define('_DGEN','Basedir');
 define('_DIR','Annuaire');
 define('_DIRDEF','Le répertoire par défaut');

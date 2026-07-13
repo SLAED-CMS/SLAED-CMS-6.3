@@ -52,7 +52,7 @@ function messages(): void {
                             'href' => $afile.'.php?name=messages&op=delete&id='.$mid.'&token='.getSiteToken(),
                             'icon_name' => 'trash',
                             'title' => _ONDELETE,
-                            'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                            'confirm_text' => _DELETE.' "'.$title.'"?',
                         ]],
                     ])],
                 ],

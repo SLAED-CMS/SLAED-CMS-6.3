@@ -299,12 +299,12 @@ function database(): void {
                     'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=1&token='.getSiteToken(),
                     'icon_name' => 'eraser',
                     'title' => _CLEAN,
-                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                    'confirm_text' => _CLEAN.' "'.$name.'"?',
                 ], [
                     'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=2&token='.getSiteToken(),
                     'icon_name' => 'trash',
                     'title' => _ONDELETE,
-                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                    'confirm_text' => _DELETE.' "'.$name.'"?',
                 ]],
             ]);
         }

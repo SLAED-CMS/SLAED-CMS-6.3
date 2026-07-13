@@ -57,7 +57,7 @@ function security(): void {
                         'href' => $afile.'.php?name=security&op=delete&file='.urlencode($name).'&token='.getSiteToken(),
                         'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                        'confirm_text' => _DELETE.' "'.$title.'"?',
                     ],
                 ],
             ]);
@@ -150,7 +150,7 @@ function banlist(): void {
                         'href' => $afile.'.php?name=security&op=bansave&cidr='.urlencode($tcidr).'&hash='.urlencode($binfo[1]).'&time='.(int)$binfo[2].'&id=1&token='.getSiteToken(),
                         'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($tcidr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                        'confirm_text' => _DELETE.' "'.$tcidr.'"?',
                     ]],
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -231,7 +231,7 @@ function banlist(): void {
                         'href' => $afile.'.php?name=security&op=bansave&name='.urlencode((string)$binfo[0]).'&time='.(int)($binfo[1] ?? 0).'&id=3&token='.getSiteToken(),
                         'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$binfo[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                        'confirm_text' => _DELETE.' "'.(string)$binfo[0].'"?',
                     ]],
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [

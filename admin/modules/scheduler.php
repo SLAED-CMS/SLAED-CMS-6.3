@@ -86,7 +86,7 @@ function scheduler(): void {
                 'href' => $afile.'.php?name=scheduler&op=delete&job='.$name.'&token='.getSiteToken(),
                 'icon_name' => 'trash',
                 'title' => _DELETE,
-                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                'confirm_text' => _DELETE.' "'.(string)$title.'"?',
             ];
         }
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [

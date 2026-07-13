@@ -473,6 +473,25 @@
         });
     }
 
+    // Speed dial: click on the toggle pins the fan open, any other click closes every open dial;
+    // links carrying data-sl-confirm (plain text, escaped by the template) must pass a confirm dialog first
+    function setDialToggle() {
+        document.addEventListener('click', function (event) {
+            var node = event.target;
+            if (!node || !node.closest) return;
+            var ask = node.closest('[data-sl-confirm]');
+            if (ask && !window.confirm(ask.getAttribute('data-sl-confirm'))) {
+                event.preventDefault();
+                return;
+            }
+            var toggle = node.closest('.sl-dial-toggle');
+            document.querySelectorAll('.sl-dial.sl-open').forEach(function (dial) {
+                if (!toggle || dial !== toggle.parentNode) dial.classList.remove('sl-open');
+            });
+            if (toggle) toggle.parentNode.classList.toggle('sl-open');
+        });
+    }
+
     window.Upper = function (obj, dur) {
         var duration = dur || 200;
         var target = document.scrollingElement || document.documentElement;
@@ -913,6 +932,7 @@
         setFloating(document);
         setFloatOutsideClose();
         setEditorInsertHandler();
+        setDialToggle();
         setTabs(document);
         setAlerts(document);
         setVoteBlocks(document);

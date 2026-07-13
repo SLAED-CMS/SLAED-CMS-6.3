@@ -964,10 +964,6 @@ tr.sl-row-collapsed {
   margin-bottom: var(--sl-space-md);
 }
 
-.sl-menu .sl-float.sl-float-up > .sl-float-panel {
-  margin-bottom: 30px;
-}
-
 .sl-float.sl-is-open > .sl-float-panel {
   position: fixed;
   top: var(--sl-float-top);
@@ -3108,17 +3104,6 @@ tr.sl-row-collapsed {
   }
 }
 
-/* Row actions: contextual menu */
-.sl-menu ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.sl-menu ul li {
-  position: relative;
-}
-
 /* Mini chip button: 26px round trigger holding a single icon, shared visual language with the lite theme */
 .sl-but-mini {
   display: inline-flex;
@@ -3155,8 +3140,7 @@ tr.sl-row-collapsed {
 }
 
 .sl-but-mini:hover,
-.sl-but-mini:focus-visible,
-.sl-menu > ul > li:hover > .sl-but-mini {
+.sl-but-mini:focus-visible {
   background-color: var(--sl-hover-bg-primary);
   color: var(--sl-color-on-dark);
 }
@@ -3164,24 +3148,6 @@ tr.sl-row-collapsed {
 .sl-but-mini:focus-visible {
   outline: none;
   box-shadow: var(--sl-focus-primary-ring);
-}
-
-.sl-menu .sl-float-panel {
-  padding: var(--sl-space-md) 0;
-  text-align: left;
-}
-
-.sl-menu .sl-float-panel a {
-  white-space: normal;
-  display: block;
-  color: var(--sl-color-primary);
-  padding: 5px 10px;
-  overflow-wrap: anywhere;
-}
-
-.sl-menu .sl-float-panel a:hover {
-  color: var(--sl-color-on-dark);
-  background-color: var(--sl-hover-bg-primary);
 }
 
 /* Tables: list view */

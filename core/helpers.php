@@ -543,10 +543,11 @@ function getTplTextarea(array $data = []): string {
     $phld = (string)($data['placeholder'] ?? '');
     $required = in_array($data['required'] ?? '', [true, 1, '1', 'required'], true);
     $stloc = substr(_LOCALE, 0, 2);
-    $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
-    $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
     $key = getEditorKey();
     $fmt = getEditorMode($key);
+    $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
+    if ($fmt !== 'html') $desc = getDecodedText(replace_break($desc));
+    $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
     return Editor::getContent([
         'editor' => $key,
         'format' => $fmt,
@@ -581,11 +582,11 @@ function getTplAjaxTextarea(array $data = []): string {
     $mod  = (string)($data['mod']  ?? '');
     $text = (string)($data['text'] ?? '');
     $rows = (int)   ($data['rows'] ?? 5);
-    $desc    = !checkHtmlEditor() ? replace_break($text) : $text;
+    $desc    = !checkHtmlEditor() ? getDecodedText(replace_break($text)) : $text;
     $formId  = 'form'.$obj;
     $fieldId = $formId.'_text';
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod);
+    $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod).'&token='.getSiteToken();
     $cerror  = addslashes((string)_CERROR1);
     $content = $tpl->getHtmlFrag('textarea', [
             'name_attr'   => 'text',
@@ -618,17 +619,15 @@ function getTplNewGraphic(string $time): string {
     return '';
 }
 
-# Build the standard admin edit/delete menu keys for any front-end content row or card; callers pass the exact admin hrefs
+# Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs
 function getTplEditMenu(string $edithref, string $delhref, string $title): array {
-    $ask = str_replace(['\\', "'"], ['\\\\', "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
     return [
-        'is_moder'     => true,
-        'editor_label' => _EDITOR,
-        'edit_href'    => $edithref,
-        'edit_text'    => _FULLEDIT,
-        'delete_href'  => $delhref,
-        'delete_text'  => _ONDELETE,
-        'delete_ask'   => $ask,
+        'is_moder' => true,
+        'dial_title' => _EDITOR,
+        'dial' => [
+            ['href' => $edithref, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+            ['href' => $delhref, 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?'],
+        ],
     ];
 }
 

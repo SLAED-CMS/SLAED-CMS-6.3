@@ -1,17 +1,4 @@
-/* Clear form */
-function ClearForm(id) {
-	window.setTimeout(function() {
-		id.elements.text.value = '';
-	}, 100);
-}
-
-/* Delete check info */
-function DelCheck(form, text) {
-	check = confirm(text);
-	if (check == false) return false;
-}
-
-/* Open window */
+/* Open window: still referenced by stored block content (javascript:OpenWindow links), do not remove */
 function OpenWindow(url, title, x, y) {
 	window.open(url, title, "toolbar=0, location=0, directories=0, status=0, scrollbars=0, resizable=1, copyhistory=0, width="+x+", height="+y+"");
 }

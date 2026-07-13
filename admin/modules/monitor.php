@@ -1363,8 +1363,8 @@ function getMonitorServerStats(): array {
     }
     
     $exton = implode(', ', $loaded);
-    $extlist_on = $tpl->getHtmlFrag('popover', ['content' => $exton, 'label_text' => $exton]);
-    if (!empty($off)) { $extoff = implode(', ', $off); $extlist_off = $tpl->getHtmlFrag('popover', ['content' => $extoff, 'label_text' => $extoff]); } else { $extlist_off = 'None / N/A'; }
+    $extlist_on = $tpl->getHtmlFrag('popover', ['content_html' => $exton, 'label_text' => $exton]);
+    if (!empty($off)) { $extoff = implode(', ', $off); $extlist_off = $tpl->getHtmlFrag('popover', ['content_html' => $extoff, 'label_text' => $extoff]); } else { $extlist_off = 'None / N/A'; }
 
     return [
         'servsw' => $servsw,
@@ -1521,7 +1521,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'servprot' => (string)$ctx['srvprot'],
             'servname' => (string)$ctx['srvname'],
             'servport' => (string)$ctx['srvport'],
-            'servroot' => $tpl->getHtmlFrag('popover', ['content' => $ctx['srvroot'], 'label_text' => $ctx['srvroot']]),
+            'servroot' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['srvroot'], 'label_text' => $ctx['srvroot']]),
             'servhttps' => $ctx['srvhttps'],
             'phpsapi' => php_sapi_name(),
             'zend_eng' => (string)(function_exists('zend_version') ? zend_version() : 'N/A'),
@@ -1552,7 +1552,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'dbconn' => (string)$dbhealth['connections'],
             'dbslow' => (string)$dbhealth['slow'],
             'dbchar' => (string)$dbhealth['charset'],
-            'dbsqlmode' => $tpl->getHtmlFrag('popover', ['content' => $dbhealth['sql_mode'], 'label_text' => $dbhealth['sql_mode']]),
+            'dbsqlmode' => $tpl->getHtmlFrag('popover', ['content_html' => $dbhealth['sql_mode'], 'label_text' => $dbhealth['sql_mode']]),
             'dbmaxpack' => (string)$dbhealth['max_packet'],
             'dbbuffpool' => (string)$dbhealth['buffer_pool'],
             'dbtz' => (string)$dbhealth['timezone'],
@@ -1565,12 +1565,12 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'disktot' => filterSize((float)$ctx['disktotal']),
             'diskused' => filterSize((float)$ctx['diskused']),
             'reqmeth' => (string)$ctx['reqmethod'],
-            'reqcookie' => $tpl->getHtmlFrag('popover', ['content' => $ctx['reqcookie'], 'label_text' => $ctx['reqcookie']]),
-            'requri' => $tpl->getHtmlFrag('popover', ['content' => $ctx['requri'], 'label_text' => $ctx['requri']]),
-            'reqquery' => $tpl->getHtmlFrag('popover', ['content' => $ctx['reqquery'], 'label_text' => $ctx['reqquery']]),
+            'reqcookie' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['reqcookie'], 'label_text' => $ctx['reqcookie']]),
+            'requri' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['requri'], 'label_text' => $ctx['requri']]),
+            'reqquery' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['reqquery'], 'label_text' => $ctx['reqquery']]),
             'reqip' => (string)$ctx['reqip'],
-            'requa' => $tpl->getHtmlFrag('popover', ['content' => $ctx['requa'], 'label_text' => $ctx['requa']]),
-            'reqlang' => $tpl->getHtmlFrag('popover', ['content' => $ctx['reqlang'], 'label_text' => $ctx['reqlang']]),
+            'requa' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['requa'], 'label_text' => $ctx['requa']]),
+            'reqlang' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['reqlang'], 'label_text' => $ctx['reqlang']]),
             'dskread' => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
             'dskwrite' => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
             'backupdirsz' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
@@ -1580,8 +1580,8 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             'errorlog24h' => (string)$ctx['error24'],
             'uploadssz' => (string)$ctx['uploadsz'],
             'failedlogins24h' => (string)$ctx['failed24'],
-            'lastsecurityevent24h' => $tpl->getHtmlFrag('popover', ['content' => $ctx['seclast24'], 'label_text' => $ctx['seclast24']]),
-            'dbissueevent24h' => $tpl->getHtmlFrag('popover', ['content' => $ctx['dblast24'], 'label_text' => $ctx['dblast24']]),
+            'lastsecurityevent24h' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['seclast24'], 'label_text' => $ctx['seclast24']]),
+            'dbissueevent24h' => $tpl->getHtmlFrag('popover', ['content_html' => $ctx['dblast24'], 'label_text' => $ctx['dblast24']]),
             'show_layout' => true,
             'show_status' => ($snapshot !== null),
             'show_traffic' => ($snapshot !== null),

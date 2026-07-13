@@ -32,13 +32,17 @@ function clients(): void {
             elseif (file_exists($tpath.'.bz2')) $tpath .= '.bz2';
             else $tpath = '';
             $dtitle = $tpath ? _CDOWN : _GZIPGEN;
-            $moder = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('link', ['href' => $afile.'.php?op=clients_add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]).'||' : '';
-            $acont = getActionMenu(explode('||',
-                $moder
-                .$tpl->getHtmlFrag('link', ['href' => '#', 'title' => _CINFO, 'label' => _CINFO, 'onclick_attr' => 'data-sl-toggle-control="cl'.$i.'" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"']).'||'
-                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=download&id='.$id.'&pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
-                .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'].'&op=generator&id='.$id.'&pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
-            ));
+            $aitems = [];
+            if (is_moder($conf['name'])) $aitems[] = ['href' => $afile.'.php?op=clients_add&id='.$id, 'title' => _FULLEDIT, 'icon_name' => 'pencil'];
+            $aitems[] = [
+                'href' => '#',
+                'title' => _CINFO,
+                'icon_name' => 'info-circle',
+                'link_attr' => 'data-sl-toggle-control="cl'.$i.'" data-sl-toggle-effect="slide" data-sl-toggle-duration="500"',
+            ];
+            $aitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=download&id='.$id.'&pid='.$prod, 'title' => $dtitle, 'icon_name' => 'download'];
+            $aitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=generator&id='.$id.'&pid='.$prod, 'title' => _CLIZENS, 'icon_name' => 'key'];
+            $acont = getActionMenu($aitems);
             $time = (file_exists(UPLOADS_DIR.'/clients/'.$url)) ? date(_TIMESTRING, filemtime(UPLOADS_DIR.'/clients/'.$url)) : _NO_INFO;
             $rows[] = [
                 'id' => (string)$a,
