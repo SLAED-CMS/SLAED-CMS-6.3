@@ -31,18 +31,18 @@ function auto_links(): void {
             if ((int)$hits > 0) {
                 $items[] = [
                     'href' => $afile.'.php?name=auto_links&op=stats&id='.$id,
-                    'label' => _MVIEW,
+                    'icon_name' => 'eye',
                     'title' => _MVIEW,
                 ];
             }
             $items[] = [
                 'href' => $afile.'.php?name=auto_links&op=add&id='.$id,
-                'label' => _FULLEDIT,
+                'icon_name' => 'pencil',
                 'title' => _FULLEDIT,
             ];
             $items[] = [
                 'href' => $afile.'.php?name=auto_links&op=delete&id='.$id.'&token='.getSiteToken(),
-                'label' => _DELETE,
+                'icon_name' => 'trash',
                 'title' => _DELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($name).'&quot;?\')"',
             ];
@@ -60,9 +60,9 @@ function auto_links(): void {
                         ['is_truncate' => true, 'title_text' => domain($url), 'content_html' => domain($url)],
                         ['is_col_count' => true, 'content_html' => (string)$hits],
                         ['is_col_count' => true, 'content_html' => (string)$outs],
-                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
-                            'trigger_label' => _FUNCTIONS,
-                            'items' => $items,
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
+                            'dial_title' => _FUNCTIONS,
+                            'dial' => $items,
                         ])],
                     ],
                 ]),

@@ -342,148 +342,130 @@ function getDbVersion() {
     return $dbv;
 }
 
-# Render the admin category list as an HTML table with reorder controls, flags and action links
+# Render the admin category list grouped by module as an indented tree with drag ordering, collapsible groups and dial actions
 function getAdminCategoryList(string $modul = '', int $obj = 0): string {
     global $db, $afile, $tpl;
     $modul = filterVar($modul);
-    $where = ($modul) ? 'WHERE a.modul = :modul' : '';
+    $where = ($modul) ? 'WHERE modul = :modul' : '';
     $params = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? '&modul='.$modul : '';
-    $result = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.intro, a.img, a.lang, a.parent, a.ordern, a.status, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
-    if ($db->getSqlRowCount($result) > 0) {
-        while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $prev, , , $next) = $db->getSqlRow($result)) {
-            $massiv[$id] = [$id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $prev, $next];
-            unset($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $prev, $next);
+    $tabs = ['faq' => '_faq', 'files' => '_files', 'forum' => '_forum', 'help' => '_help', 'jokes' => '_jokes', 'links' => '_links', 'media' => '_media', 'news' => '_news', 'pages' => '_pages', 'shop' => '_products'];
+    $cats = [];
+    $result = $db->getSqlQuery('SELECT id, modul, title, intro, img, lang, parent, ordern, status FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY modul, ordern', $params);
+    while ([$cid, $cmod, $title, $intro, $img, $lang, $parent, , $status] = $db->getSqlRow($result)) {
+        $cats[$cmod][] = ['id' => (int)$cid, 'title' => $title, 'intro' => $intro, 'img' => $img, 'lang' => $lang, 'parent' => (int)$parent, 'status' => (int)$status];
+    }
+    if (!$cats) {
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+        if ($obj) return $cont;
+        echo $cont;
+        return '';
+    }
+    $rows = [];
+    foreach ($cats as $cmod => $list) {
+        $rows[] = getAdminGroupRow(getModuleName($cmod), 'categories-'.$cmod, 7);
+        $kids = [];
+        foreach ($list as $cat) $kids[$cat['parent']] = ($kids[$cat['parent']] ?? 0) + 1;
+        $nums = [];
+        if (isset($tabs[$cmod])) {
+            $count = $db->getSqlQuery('SELECT cid, COUNT(id) FROM '.PREFIX_DB.$tabs[$cmod].' GROUP BY cid');
+            while ([$ncid, $cnt] = $db->getSqlRow($count)) $nums[(int)$ncid] = (int)$cnt;
         }
-        $rows = [];
-        foreach ($massiv as $key => $val) {
-            $id = $val[0];
-            $modul = $val[1];
-            $title = $val[2];
-            $description = $val[3];
-            $imgcat = $val[4];
-            $language = $val[5];
-            $parentid = $val[6];
-            $ordern = $val[7];
-            $cstatus = $val[8];
-            $prev = $val[9];
-            $next = $val[10];
-            if ($modul == 'faq') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_faq WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'files') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_files WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'forum') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'help') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_help WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'jokes') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_jokes WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'links') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_links WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'media') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'news') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_news WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'pages') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_pages WHERE cid = :id', ['id' => $id]));
-            } elseif ($modul == 'shop') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid = :id', ['id' => $id]));
+        $tree = [];
+        $seen = [];
+        $walk = function(int $parent, int $level) use (&$walk, &$tree, &$seen, $list): void {
+            foreach ($list as $cat) {
+                if ($cat['parent'] === $parent && !isset($seen[$cat['id']])) {
+                    $seen[$cat['id']] = true;
+                    $tree[] = [$cat, $level];
+                    $walk($cat['id'], $level + 1);
+                }
             }
-            list($ispid) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]));
-            $ordernm = $ordern - 1;
-            $ordernp = $ordern + 1;
-            $active = $tpl->getHtmlFrag('inline-badge', [
-                'is_success' => (bool)$parentid,
-                'is_danger' => !$parentid,
-                'label' => $parentid ? _YES : _NO,
-            ]);
-            $img = $imgcat ? getCategoryIcon($imgcat) : $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _NO]);
-            $flag = $parentid;
-            while ($flag != '0') {
-                $title = $massiv[$flag][2].' / '.$title;
-                $flag = $massiv[$flag][6];
-            }
-            $descript = ($description) ? $description : _NO;
-            $subcat = ($ispid) ? $ispid : _NO;
-            $tipItems = [
-                ['label' => _DESCRIPTION, 'value' => (string)$descript, 'is_last' => false],
-                ['label' => _CATEGORIES, 'value' => (string)$subcat, 'is_last' => $language === ''],
+        };
+        $walk(0, 0);
+        foreach ($list as $cat) if (!isset($seen[$cat['id']])) $tree[] = [$cat, 0];
+        $num = 0;
+        foreach ($tree as [$cat, $level]) {
+            $num++;
+            $cid = $cat['id'];
+            $pnum = $nums[$cid] ?? 0;
+            $subs = $kids[$cid] ?? 0;
+            $img = $cat['img'] ? getCategoryIcon($cat['img']) : $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => _NO]);
+            $tips = [
+                ['label' => _DESCRIPTION, 'value' => (string)($cat['intro'] ?: _NO), 'is_last' => false],
+                ['label' => _CATEGORIES, 'value' => (string)($subs ?: _NO), 'is_last' => $cat['lang'] === ''],
             ];
-            if ($language !== '') {
-                $tipItems[] = ['label' => _LANGUAGE, 'value' => getLangName($language), 'is_last' => true];
-            }
-            $mup = ($prev) ? 'go=5&op=updateAdminCategoryOrder&id='.$id.'&cid='.$prev.'&typ='.$ordernm.'&mod='.$modul.'&ordern='.$ordern : '';
-            $mdn = ($next) ? 'go=5&op=updateAdminCategoryOrder&id='.$id.'&cid='.$next.'&typ='.$ordernp.'&mod='.$modul.'&ordern='.$ordern : '';
-            $items = [[
-                'href' => $afile.'.php?name=categories&op=edit&cid='.$id.$modlink,
-                'label' => _FULLEDIT,
+            if ($cat['lang'] !== '') $tips[] = ['label' => _LANGUAGE, 'value' => getLangName($cat['lang']), 'is_last' => true];
+            $name = $tpl->getHtmlFrag('tree-node', ['pads' => array_fill(0, max(0, $level - 1), []), 'is_child' => $level > 0]).$tpl->getHtmlFrag('popover', [
+                'items' => $tips,
+                'label_text' => $cat['title'],
+                'title_text' => $cat['title'],
+            ]);
+            $dial = [[
+                'href' => $afile.'.php?name=categories&op=change&id='.$cid.'&act='.$cat['status'].$modlink.'&token='.getSiteToken(),
+                'icon_name' => 'power',
+                'title' => $cat['status'] ? _DEACTIVATE : _ACTIVATE,
+            ], [
+                'href' => $afile.'.php?name=categories&op=edit&cid='.$cid.$modlink,
+                'icon_name' => 'pencil',
                 'title' => _FULLEDIT,
             ]];
-            if (!$pnum && !$ispid) {
-                $items[] = [
-                    'href' => $afile.'.php?name=categories&op=delete&id='.$id.$modlink.'&token='.getSiteToken(),
-                    'label' => _ONDELETE,
+            if (!$pnum && !$subs) {
+                $dial[] = [
+                    'href' => $afile.'.php?name=categories&op=delete&id='.$cid.$modlink.'&token='.getSiteToken(),
+                    'icon_name' => 'trash',
                     'title' => _ONDELETE,
-                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($cat['title'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ];
             }
-            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+            $rows[] = $tpl->getHtmlFrag('table-row', ['attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'" data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string)$id],
-                    ['content_html' => $tpl->getHtmlFrag('popover', [
-                        'items' => $tipItems,
-                        'label_text' => $title,
-                        'title_text' => $title,
-                    ])],
+                    ['content_html' => (string)$cid],
+                    ['content_html' => $name],
                     ['content_html' => (string)$pnum],
-                    ['content_html' => $active],
                     ['content_html' => $img],
-                    ['content_html' => (string)$ordern],
-                    ['content_html' => getTplMoveControls(['target' => 'ajax_cat', 'up' => $mup, 'down' => $mdn])],
-                    ['content_html' => ad_status('', $cstatus), 'is_col_status' => true, 'attr' => 'data-sort-column-key="category-status" data-sort="'.((int)$cstatus === 1 ? '1' : '0').'"'],
-                    ['content_html' => $tpl->getHtmlFrag('popover', [
-                        'trigger_label' => _EDITOR,
-                        'items' => $items,
-                    ]), 'is_col_actions' => true],
+                    ['content_html' => $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$num],
+                    ['content_html' => ad_status('', $cat['status']), 'is_col_status' => true],
+                    ['content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $dial]), 'is_col_actions' => true],
                 ],
             ])]);
         }
-        $cont = $tpl->getHtmlFrag('table', [
-            'attr' => 'data-sl-admin-table="categories"',
-            'head' => [
+    }
+    $cont = $tpl->getHtmlFrag('table', [
+        'attr' => 'data-sl-admin-table="categories" data-sl-drag-url="index.php?go=5&op=updateAdminCategoryOrder&mod='.$modul.'&token='.getSiteToken().'" data-sl-drag-target="repajax_cat"',
+        'disable_sort' => true,
+        'head' => [
             ['content' => _ID],
             ['content' => _CATEGORY],
             ['content' => cutstr(_CONTENT, 3, 1)],
-            ['content' => cutstr(_SUBCATEGORY, 3, 1), 'nosort' => true],
-            ['content' => cutstr(_ICON, 2, 1), 'nosort' => true],
-            ['content' => _WEIGHT, 'colspan' => 2],
-            ['content' => _STATUS, 'attr' => 'data-sort-column-key="category-status" data-sort-reverse'],
+            ['content' => cutstr(_ICON, 2, 1)],
+            ['content' => _POSITION],
+            ['content' => _STATUS],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-            ],
-            'rows_html' => implode('', $rows),
-            'is_wrapless' => true,
-        ]);
-    } else {
-        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
-    }
-    if ($obj) { return $cont; }
+        ],
+        'rows_html' => implode('', $rows),
+        'is_wrapless' => true,
+    ]);
+    if ($obj) return $cont;
     echo $cont;
     return '';
 }
 
-# Swap the ordern values of two adjacent categories and return the refreshed list fragment
+# Persist a full drag-and-drop tree order for one category module after a token check and echo the refreshed list fragment
 function updateAdminCategoryOrder(): void {
     global $db;
-    $modul = filterVar(getVar('get', 'mod', 'text', ''));
-    if ($modul) {
-        $typ = getVar('get', 'typ', 'num', 0);
-        $ordern = getVar('get', 'ordern', 'num', 0);
-        $id = getVar('get', 'id', 'num', 0);
-        $cid = getVar('get', 'cid', 'num', 0);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :typ WHERE id = :id', ['typ' => $typ, 'id' => $id]);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
+    if (checkSiteToken()) {
+        $ids = array_values(array_filter(array_map('intval', explode('-', getVar('post', 'ids', 'var')))));
+        if ($ids) {
+            [$cmod] = $db->getSqlRow($db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $ids[0]]));
+            $ordern = 0;
+            foreach ($ids as $cid) {
+                $ordern++;
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid AND modul = :cmod', ['ordern' => $ordern, 'cid' => $cid, 'cmod' => $cmod]);
+            }
+        }
     }
-    getAdminCategoryList($modul, 0);
+    getAdminCategoryList(filterVar(getVar('get', 'mod', 'var', '')), 0);
 }
 
 function catacess(string $name, string $class, string $selected, int $limit): string {
@@ -557,12 +539,22 @@ function scatacess($auth) {
     return $acess.'|'.implode(',', $select);
 }
 
-# Render the admin block list as an HTML table with reorder controls, expiry state and action links
-function getAdminBlockList(string $token = ''): string {
+# Render the admin block list grouped by position with drag ordering, a trailing free (infly) section, expiry state and action links
+function getAdminBlockList(): string {
     global $db, $afile, $tpl;
+    $posmap = [
+        'l' => [_LEFT, _LEFTBLOCK],
+        'r' => [_RIGHT, _RIGHTBLOCK],
+        'c' => [_CENTERUP, _CENTERBLOCK],
+        'd' => [_CENTERDOWN, _CENTERBLOCK],
+        'b' => [_BANNERUP, _BANNER],
+        'f' => [_BANNERDOWN, _BANNER],
+    ];
     $rows = [];
-    $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.lang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
-    while (list($bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $prev, , , $next) = $db->getSqlRow($result)) {
+    $free = [];
+    $group = '';
+    $result = $db->getSqlQuery('SELECT id, bkey, title, url, bpos, weight, status, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks ORDER BY bpos, weight');
+    while ([$bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($result)) {
         if (($expire && $expire < time()) || (!$active && $expire)) {
             if ($action == 'd') {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = 0, expire = 0 WHERE id = :bid', ['bid' => $bid]);
@@ -570,91 +562,90 @@ function getAdminBlockList(string $token = ''): string {
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]);
             }
         }
-        $wminus = $weight - 1;
-        $wplus = $weight + 1;
+        $marks = explode(',', (string)$which);
+        $isfly = in_array('infly', $marks, true);
+        $isfix = $isfly && in_array('flyfix', $marks, true);
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-        $tipItems = [
-            ['label' => _NAME, 'value' => $title, 'is_last' => false],
-        ];
-        if ($lang !== '') {
-            $tipItems[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];
-        }
-        $tipItems[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
-        if ($bpos == 'l') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _LEFT, 'title_text' => _LEFTBLOCK]);
-        } elseif ($bpos == 'r') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _RIGHT, 'title_text' => _RIGHTBLOCK]);
-        } elseif ($bpos == 'c') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _CENTERUP, 'title_text' => _CENTERBLOCK]);
-        } elseif ($bpos == 'd') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _CENTERDOWN, 'title_text' => _CENTERBLOCK]);
-        } elseif ($bpos == 'b') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _BANNERUP, 'title_text' => _BANNER]);
-        } elseif ($bpos == 'f') {
-            $bpos = $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => _BANNERDOWN, 'title_text' => _BANNER]);
-        }
+        $tips = [['label' => _NAME, 'value' => $title, 'is_last' => false]];
+        if ($lang !== '') $tips[] = ['label' => _LANGUAGE, 'value' => getLangName($lang), 'is_last' => false];
+        $tips[] = ['label' => _PURCHASED, 'value' => $exp, 'is_last' => true];
         if ($bkey == '') {
             $type = ($url) ? 'RSS/RDF' : 'HTML';
             if ($bfile != '') $type = _BLOCKFILE2;
-        } elseif ($bkey != '') {
+        } else {
             $type = _BLOCKSYSTEM;
         }
         if ($view == 0) {
-            $who_view = _MVALL;
+            $who = _MVALL;
         } elseif ($view == 1) {
-            $who_view = _MVUSERS;
+            $who = _MVUSERS;
         } elseif ($view == 2) {
-            $who_view = _MVADMIN;
-        } elseif ($view == 3) {
-            $who_view = _MVANON;
+            $who = _MVADMIN;
+        } else {
+            $who = _MVANON;
         }
-        $mup = ($prev) ? 'go=5&op=updateAdminBlockOrder&id='.$bid.'&cid='.$prev.'&typ='.$wminus.'&ordern='.$weight : '';
-        $mdn = ($next) ? 'go=5&op=updateAdminBlockOrder&id='.$bid.'&cid='.$next.'&typ='.$wplus.'&ordern='.$weight : '';
-        $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+        if ($isfly) {
+            $order = $tpl->getHtmlFrag('inline-badge', ['chip_tone' => 'accent', 'is_infly' => !$isfix, 'is_flyfix' => $isfix, 'label' => _INFLY, 'title_text' => $isfix ? _FLY_FIX : _INFLY]);
+        } else {
+            $order = $tpl->getHtmlFrag('span', ['is_drag_handle' => true]).' '.$weight;
+        }
+        $row = $tpl->getHtmlFrag('table-row', ['attr' => $isfly ? '' : 'data-sl-drag-id="'.$bid.'" data-sl-drag-group="'.$bpos.'" data-sl-drag-scope="'.$bpos.'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['content_html' => (string) $bid],
                 ['content_html' => $tpl->getHtmlFrag('popover', [
-                    'items' => $tipItems,
+                    'items' => $tips,
                     'label_text' => getConst($title),
                     'title_text' => $title,
                 ])],
                 ['content_html' => $type],
-                ['content_html' => $who_view],
-                ['content_html' => $bpos],
-                ['content_html' => (string) $weight],
-                ['content_html' => getTplMoveControls(['target' => 'ajax_block', 'up' => $mup, 'down' => $mdn])],
-                ['content_html' => ad_status('', $active), 'is_col_status' => true, 'attr' => 'data-sort-column-key="block-status" data-sort="'.((int)$active === 1 ? '1' : '0').'"'],
-                ['content_html' => $tpl->getHtmlFrag('popover', [
-                    'trigger_label' => _EDITOR,
-                    'items' => [[
+                ['content_html' => $who],
+                ['content_html' => $order],
+                ['content_html' => ad_status('', $active), 'is_col_status' => true],
+                ['content_html' => $tpl->getHtmlFrag('dial', [
+                    'dial_title' => _EDITOR,
+                    'dial' => [[
                         'href' => $afile.'.php?name=blocks&op=change&id='.$bid.'&act='.$active.'&token='.getSiteToken(),
-                        'label' => $active ? _DEACTIVATE : _ACTIVATE,
+                        'icon_name' => 'power',
                         'title' => $active ? _DEACTIVATE : _ACTIVATE,
                     ], [
                         'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
-                        'label' => _FULLEDIT,
+                        'icon_name' => 'pencil',
                         'title' => _FULLEDIT,
                     ], [
                         'href' => $afile.'.php?name=blocks&op=delete&id='.$bid.'&token='.getSiteToken(),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                     ]],
                 ]), 'is_col_actions' => true],
             ],
         ])]);
+        if ($isfly) {
+            $free[] = $row;
+        } elseif ($bpos !== $group) {
+            $group = $bpos;
+            $label = isset($posmap[$bpos]) ? $posmap[$bpos][0].' — '.mb_strtolower($posmap[$bpos][1], 'UTF-8') : $bpos;
+            $rows[] = getAdminGroupRow($label, 'blocks-'.$bpos, 7);
+            $rows[] = $row;
+        } else {
+            $rows[] = $row;
+        }
+    }
+    if ($free) {
+        $rows[] = getAdminGroupRow(_INFLYINFO, 'blocks-fly', 7);
+        $rows = array_merge($rows, $free);
     }
     return $tpl->getHtmlFrag('table', [
-        'attr' => 'data-sl-admin-table="blocks"',
+        'attr' => 'data-sl-admin-table="blocks" data-sl-drag-url="index.php?go=5&op=updateAdminBlockOrder&token='.getSiteToken().'" data-sl-drag-target="repajax_block"',
+        'disable_sort' => true,
         'head' => [
             ['content' => _ID],
             ['content' => _TITLE],
             ['content' => _TYPE],
             ['content' => _VIEW],
             ['content' => _POSITION],
-            ['content' => _WEIGHT, 'colspan' => 2],
-            ['content' => _STATUS, 'attr' => 'data-sort-column-key="block-status" data-sort-reverse'],
+            ['content' => _STATUS],
             ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
         ],
         'rows_html' => implode('', $rows),
@@ -662,15 +653,29 @@ function getAdminBlockList(string $token = ''): string {
     ]);
 }
 
-# Swap the weight values of two adjacent blocks and echo the refreshed list fragment
+# Build one collapsible group header row spanning the given number of admin list table columns
+function getAdminGroupRow(string $label, string $key, int $span): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('table-row', ['is_group' => true, 'attr' => 'data-sl-group="'.$key.'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
+        'is_summary' => true,
+        'cells' => [['content_html' => $tpl->getHtmlFrag('group-toggle', ['label' => $label]), 'attr' => 'colspan="'.$span.'"']],
+    ])]);
+}
+
+# Persist a full drag-and-drop order for one block position group after a token check and echo the refreshed list fragment
 function updateAdminBlockOrder(): void {
     global $db;
-    $typ = getVar('get', 'typ', 'num', 0);
-    $ordern = getVar('get', 'ordern', 'num', 0);
-    $id = getVar('get', 'id', 'num', 0);
-    $cid = getVar('get', 'cid', 'num', 0);
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :typ WHERE id = :id', ['typ' => $typ, 'id' => $id]);
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
+    if (checkSiteToken()) {
+        $ids = array_values(array_filter(array_map('intval', explode('-', getVar('post', 'ids', 'var')))));
+        if ($ids) {
+            [$bpos] = $db->getSqlRow($db->getSqlQuery('SELECT bpos FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $ids[0]]));
+            $weight = 0;
+            foreach ($ids as $bid) {
+                $weight++;
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid AND bpos = :bpos', ['weight' => $weight, 'bid' => $bid, 'bpos' => $bpos]);
+            }
+        }
+    }
     echo getAdminBlockList();
 }
 
@@ -747,20 +752,20 @@ function getAdminFavoriteList(int $obj = 0): string {
                         ['content_html' => $tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
                         ['content_html' => getModuleName($modul)],
                         ['content_html' => $uname],
-                        ['content_html' => $tpl->getHtmlFrag('popover', [
-                            'trigger_label' => _FUNCTIONS,
-                            'items' => [[
+                        ['content_html' => $tpl->getHtmlFrag('dial', [
+                            'dial_title' => _FUNCTIONS,
+                            'dial' => [[
                                 'href' => 'index.php?name='.$modul.'&op=view&id='.$fid.'#'.$fid,
-                                'label' => _MVIEW,
+                                'icon_name' => 'eye',
                                 'title' => _MVIEW,
                             ], [
                                 'href' => $delhref,
-                                'label' => _ONDELETE,
+                                'icon_name' => 'trash',
                                 'title' => _ONDELETE,
                                 'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminFavoriteList" hx-swap="innerHTML" hx-push-url="false"',
                                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                             ]],
-                        ])],
+                        ]), 'is_col_actions' => true],
                     ],
                 ])]);
             }
@@ -822,16 +827,16 @@ function getAdminPrivateList(int $obj = 0): string {
                     ['content_html' => $unre],
                     ['content_html' => $date],
                     ['content_html' => ad_status('', $status, 1), 'is_col_status' => true],
-                    ['content_html' => $tpl->getHtmlFrag('popover', [
-                        'trigger_label' => _FUNCTIONS,
-                        'items' => [[
+                    ['content_html' => $tpl->getHtmlFrag('dial', [
+                        'dial_title' => _FUNCTIONS,
+                        'dial' => [[
                             'href' => $delhref,
-                            'label' => _ONDELETE,
+                            'icon_name' => 'trash',
                             'title' => _ONDELETE,
                             'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminPrivateList" hx-swap="innerHTML" hx-push-url="false"',
                             'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                         ]],
-                    ])],
+                    ]), 'is_col_actions' => true],
                 ],
             ])]);
         }
@@ -936,20 +941,20 @@ function getAdminUploadFiles(): void {
                 }
                 $show = [];
                 if (in_array(true, checkCompress(), true)) {
+                    $zhref = 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=1&file='.$entry[1];
                     $show[] = [
-                        'href' => 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=1&file='.$entry[1],
-                        'label' => _ZIP,
+                        'href' => $zhref,
+                        'icon_name' => 'file-zip',
                         'title' => _ZIP,
-                        'is_htmx' => true,
-                        'hx_target' => '#repf'.$id,
+                        'link_attr' => 'hx-get="'.$zhref.'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
                     ];
                 }
+                $dhref = 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=0&file='.$entry[1];
                 $show[] = [
-                    'href' => 'index.php?go=5&op=getAdminUploadFiles&id='.$id.'&dir='.$dir.'&cid=0&file='.$entry[1],
-                    'label' => _ONDELETE,
+                    'href' => $dhref,
+                    'icon_name' => 'trash',
                     'title' => _ONDELETE,
-                    'is_htmx' => true,
-                    'hx_target' => '#repf'.$id,
+                    'link_attr' => 'hx-get="'.$dhref.'" hx-target="#repf'.$id.'" hx-swap="innerHTML" hx-push-url="false"',
                 ];
                 $contents[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
@@ -958,10 +963,10 @@ function getAdminUploadFiles(): void {
                         ['content_html' => date(_TIMESTRING, $entry[0])],
                         ['content_html' => filterSize($filesize)],
                         ['content_html' => $isize],
-                        ['content_html' => $tpl->getHtmlFrag('popover', [
-                            'trigger_label' => _EDITOR,
-                            'items' => $show,
-                        ])],
+                        ['content_html' => $tpl->getHtmlFrag('dial', [
+                            'dial_title' => _EDITOR,
+                            'dial' => $show,
+                        ]), 'is_col_actions' => true],
                     ],
                 ])]);
                 $a++;

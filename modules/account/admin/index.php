@@ -115,23 +115,23 @@ function account(): void {
                     ['class_name' => 'sl-col-ip', 'content_html' => filterTextHighlight(Geoip::getIpHtml($ip), $chng)],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => filterTextHighlight($mail, $chng)],
                     ['is_col_date' => true, 'content_html' => format_time($reg, _TIMESTRING)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
-                        'trigger_label' => _FUNCTIONS,
-                        'items' => [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
+                        'dial_title' => _FUNCTIONS,
+                        'dial' => [
                             [
                                 'href' => $afile.'.php?name=account&op=add&id='.$uid,
-                                'label' => _FULLEDIT,
+                                'icon_name' => 'pencil',
                                 'title' => _FULLEDIT,
                             ],
                             [
                                 'href' => $afile.'.php?name=security&op=banlist&new_ip='.$ip,
-                                'label' => _BANIPSENDER,
+                                'icon_name' => 'ban',
                                 'title' => _BANIPSENDER,
                                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.htmlspecialchars($ip, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                             ],
                             [
                                 'href' => $delhref,
-                                'label' => _ONDELETE,
+                                'icon_name' => 'trash',
                                 'title' => _ONDELETE,
                                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                             ],
@@ -556,17 +556,17 @@ function newuser(): void {
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => $mail],
                     ['content_html' => $pass],
                     ['is_col_date' => true, 'content_html' => $reg],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
-                        'trigger_label' => _FUNCTIONS,
-                        'items' => [
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
+                        'dial_title' => _FUNCTIONS,
+                        'dial' => [
                             [
                                 'href' => $conf['homeurl'].'/index.php?name=account&op=activate&user='.urlencode($name).'&num='.$check,
-                                'label' => _ACTIVATE,
+                                'icon_name' => 'power',
                                 'title' => _ACTIVATE,
                             ],
                             [
                                 'href' => $delhref,
-                                'label' => _ONDELETE,
+                                'icon_name' => 'trash',
                                 'title' => _ONDELETE,
                                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                             ],

@@ -33,24 +33,24 @@ function groups(): void {
                 [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE points >= :points', ['points' => $points]));
                 $userlink = $afile.'.php?op=users_show&search=7&chng_user='.$points;
             }
-            $acts = $tpl->getHtmlFrag('popover', [
-                'trigger_label' => _FUNCTIONS,
-                'items' => [
+            $acts = $tpl->getHtmlFrag('dial', [
+                'dial_title' => _FUNCTIONS,
+                'dial' => [
                     [
                         'href' => $userlink,
-                        'label' => _MVIEW,
+                        'icon_name' => 'eye',
                         'title' => _MVIEW,
                     ],
                     [
                         'href' => $afile.'.php?name=groups&op=add&id='.$grid,
-                        'label' => _FULLEDIT,
+                        'icon_name' => 'pencil',
                         'title' => _FULLEDIT,
                     ],
                     [
                         'href' => $afile.'.php?name=groups&op=delete&id='.$grid.'&token='.getSiteToken(),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
-                        'onclick_attr' => "return DelCheck(this, '"._DELETE.' &quot;'.addslashes($grname)."&quot;?')",
+                        'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($grname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                     ],
                 ],
             ]);

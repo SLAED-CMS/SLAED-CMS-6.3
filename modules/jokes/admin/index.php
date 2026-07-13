@@ -31,15 +31,15 @@ function jokes(): void {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $items = [];
             if ($status && time() >= strtotime($date)) {
-                $items[] = ['href' => 'index.php?name=jokes&cat='.$cat.'#'.$jokeid, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=jokes&cat='.$cat.'#'.$jokeid, 'icon_name' => 'eye', 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
-            $items[] = ['href' => $afile.'.php?name=jokes&op=add&id='.$jokeid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=jokes&op=add&id='.$jokeid, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
             $items[] = [
                 'href' => $afile.'.php?name=jokes&op=delete&id='.$jokeid.$refer.'&token='.getSiteToken(),
-                'label' => _ONDELETE,
+                'icon_name' => 'trash',
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ];
@@ -57,7 +57,7 @@ function jokes(): void {
                     ])],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
         }

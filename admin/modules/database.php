@@ -293,16 +293,16 @@ function database(): void {
 
         } else {
             // Default view with actions
-            $stattag = $tpl->getHtmlFrag('popover', [
-                'trigger_label' => _EDITOR,
-                'items' => [[
+            $stattag = $tpl->getHtmlFrag('dial', [
+                'dial_title' => _EDITOR,
+                'dial' => [[
                     'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=1&token='.getSiteToken(),
-                    'label' => _CLEAN,
+                    'icon_name' => 'eraser',
                     'title' => _CLEAN,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ], [
                     'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=2&token='.getSiteToken(),
-                    'label' => _ONDELETE,
+                    'icon_name' => 'trash',
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ]],

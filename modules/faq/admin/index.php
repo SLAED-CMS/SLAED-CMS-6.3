@@ -40,12 +40,12 @@ function faq(): void {
             }
             $items = [];
             if ($view) {
-                $items[] = ['href' => $view, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => $view, 'icon_name' => 'eye', 'title' => _MVIEW];
             }
-            $items[] = ['href' => $afile.'.php?name=faq&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=faq&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
             $items[] = [
                 'href' => $afile.'.php?name=faq&op=delete&id='.$id.($refer ? '&refer=1' : '').'&token='.getSiteToken(),
-                'label' => _ONDELETE,
+                'icon_name' => 'trash',
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ];
@@ -63,7 +63,7 @@ function faq(): void {
                     ])],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
         }

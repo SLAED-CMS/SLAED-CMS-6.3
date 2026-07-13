@@ -99,7 +99,7 @@ function voting(): void {
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $view = (!$modul) ? [['href' => 'index.php?name=voting&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW]] : [];
+                $view = (!$modul) ? [['href' => 'index.php?name=voting&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW]] : [];
                 $active = '1';
             } else {
                 $view = [];
@@ -107,8 +107,8 @@ function voting(): void {
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
             $items = array_merge($view, [
-                ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ]);
             $cells = [
                 ['is_col_id' => true, 'content_html' => (string)$id],
@@ -123,7 +123,7 @@ function voting(): void {
             }
             $cells[] = ['class_name' => 'sl-col-module', 'content_html' => $modul ? getModuleName($modul) : _NONE];
             $cells[] = ['is_col_status' => true, 'content_html' => ad_status('', $active)];
-            $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])];
+            $cells[] = ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => $cells])]);
         }
         $head[1]['is_truncate'] = true;

@@ -138,18 +138,18 @@ function comments(): void {
             $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
             $act = ((int)$com_status) ? 0 : 1;
             $items = [
-                ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$cid.'#'.$id, 'label' => _MVIEW, 'title' => _MVIEW],
-                ['href' => $afile.'.php?'.$curq.'&op=edit&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$cid.'#'.$id, 'icon_name' => 'eye', 'title' => _MVIEW],
+                ['href' => $afile.'.php?'.$curq.'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
             ];
             $acttxt = ((int)$com_status) ? _DEACTIVATE : _ACTIVATE;
             $items[] = [
                 'href' => $afile.'.php?'.$curq.'&op=approve&id='.$id.'&typ='.$act.'&token='.getSiteToken(),
-                'label' => $acttxt,
+                'icon_name' => 'power',
                 'title' => $acttxt,
             ];
             $items[] = [
                 'href' => $afile.'.php?'.$curq.'&op=delete&id='.$id.'&token='.getSiteToken(),
-                'label' => _ONDELETE,
+                'icon_name' => 'trash',
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($comment).'&quot;?\')"',
             ];
@@ -169,7 +169,7 @@ function comments(): void {
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $com_status)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
                 ],
             ])]);

@@ -40,11 +40,11 @@ function lang(): void {
             ['content_html' => _ALL],
             ['content_html' => _MVALL],
             ['is_col_status' => true, 'content_html' => ad_status('', 1)],
-            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
-                'trigger_label' => _FUNCTIONS,
-                'items' => [
-                    ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT],
-                    ['href' => $afile.'.php?name=lang&op=fileedit', 'label' => _MODUL, 'title' => _FULLEDIT],
+            ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
+                'dial_title' => _FUNCTIONS,
+                'dial' => [
+                    ['href' => $afile.'.php?name=lang&op=fileedit&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN],
+                    ['href' => $afile.'.php?name=lang&op=fileedit', 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL],
                 ],
             ])],
         ],
@@ -62,8 +62,8 @@ function lang(): void {
         $view = $who_view[$mod[$i]] ?? _MVALL;
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $items = [];
-        if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i].'&typ=admin', 'label' => _ADMIN, 'title' => _FULLEDIT];
-        if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i], 'label' => _MODUL, 'title' => _FULLEDIT];
+        if (is_dir($mod_path.'/admin/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i].'&typ=admin', 'icon_name' => 'person-gear', 'title' => _FULLEDIT.': '._ADMIN];
+        if (is_dir($mod_path.'/lang')) $items[] = ['href' => $afile.'.php?name=lang&op=fileedit&mod='.$mod[$i], 'icon_name' => 'puzzle', 'title' => _FULLEDIT.': '._MODUL];
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$a],
@@ -71,7 +71,7 @@ function lang(): void {
                 ['is_truncate' => true, 'title_text' => $mod[$i], 'content_html' => $mod[$i]],
                 ['content_html' => $view],
                 ['is_col_status' => true, 'content_html' => ad_status('', $act)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
             ],
         ])]);
     }

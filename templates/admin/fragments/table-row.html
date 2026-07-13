@@ -1,10 +1,12 @@
 <tr
-  {% if row_class or is_lang_edit or is_ratings_inner %}
+  {% if row_class or is_lang_edit or is_ratings_inner or is_group %}
   class="
     {% if row_class %}{{ row_class }}{% endif %}
     {% if is_lang_edit %} sl-lang-edit-row{% endif %}
     {% if is_ratings_inner %} sl-ratings-inner-row{% endif %}
+    {% if is_group %} sl-group-row{% endif %}
   "
   {% endif %}
   {% if is_no_sort %}data-sort-method="none"{% endif %}
+  {% if attr %}{{{ attr }}}{% endif %}
 >{{{ cells_html }}}</tr>

@@ -21,9 +21,10 @@ function blocks(): void {
     global $tpl;
     setHead();
     $cont = getTplAdminTabs(['ops' => getBlockTabsOps(), 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _DOCS]]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => _DRAGSORT]);
     echo $cont.$tpl->getHtmlPart('box', [
         'box_id' => 'repajax_block',
-        'content_html' => getAdminBlockList(getSiteToken()),
+        'content_html' => getAdminBlockList(),
     ]);
     setFoot();
 }
@@ -58,7 +59,7 @@ function add(): void {
             'field_html' => $tpl->getHtmlFrag('select', [
                 'name_attr' => 'headline',
                 'options_html' => $tpl->getHtmlFrag('select-option', [
-                    'value_attr' => '0',
+                    'value_attr' => '',
                     'label_text' => _CUSTOM,
                     'is_selected' => true,
                 ]).rss_select(),

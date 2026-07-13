@@ -7,6 +7,7 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class Parser {
+    public static bool $freeoff = false;
     private static array $pcache = [];
     private array $stash = [];
     private string $salt = '';
@@ -31,11 +32,26 @@ class Parser {
         $src = str_replace(["\r\n", "\r"], "\n", $src);
         $src = $this->filterBbBlocks($src);
         $src = $this->filterCode($src);
+        $src = $this->filterFreeBlocks($src);
         $out = $this->filterBlocks($src);
         $out = $this->filterSafe($out);
         $out = $this->filterStash($out);
         $out = trim($out);
         return self::$pcache[$key] = $out;
+    }
+
+    # Replace trusted [block=id] tags with rendered free (infly) block output; frontend only, skipped for unsafe content, block-content filtering, nested rendering and standalone test runs
+    private function filterFreeBlocks(string $src): string {
+        static $depth = 0;
+        if ($this->safe || self::$freeoff || $depth > 0 || defined('ADMIN_FILE') || !str_contains($src, '[block=') || !function_exists('getBlocks')) return $src;
+        return preg_replace_callback('#\[block=(\d{1,10})\]#', function (array $m) use (&$depth): string {
+            $depth++;
+            ob_start();
+            getBlocks('d', $m[1]);
+            $out = ob_get_clean();
+            $depth--;
+            return $out;
+        }, $src) ?? $src;
     }
 
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)

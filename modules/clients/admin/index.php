@@ -37,22 +37,22 @@ function clients(): void {
                             'label' => $status ? _YES : _NO,
                             'title' => _STATUS,
                         ])],
-                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
-                            'trigger_label' => _FUNCTIONS,
-                            'items' => [
+                        ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
+                            'dial_title' => _FUNCTIONS,
+                            'dial' => [
                                 [
                                     'href' => $afile.'.php?name=clients&op=status&id='.$id.'&act='.$act.'&token='.getSiteToken(),
-                                    'label' => $status ? _DEACTIVATE : _ACTIVATE,
+                                    'icon_name' => 'power',
                                     'title' => $status ? _DEACTIVATE : _ACTIVATE,
                                 ],
                                 [
                                     'href' => $afile.'.php?name=clients&op=add&id='.$id,
-                                    'label' => _FULLEDIT,
+                                    'icon_name' => 'pencil',
                                     'title' => _FULLEDIT,
                                 ],
                                 [
                                     'href' => $afile.'.php?name=clients&op=delete&id='.$id.'&token='.getSiteToken(),
-                                    'label' => _DELETE,
+                                    'icon_name' => 'trash',
                                     'title' => _DELETE,
                                     'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
                                 ],

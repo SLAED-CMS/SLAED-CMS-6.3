@@ -40,22 +40,22 @@ function security(): void {
             $title = $labels[$name] ?? $name;
             $path = LOGS_DIR.'/'.$file;
             $filesize = filesize($path);
-            $acts = $tpl->getHtmlFrag('popover', [
-                'trigger_label' => _EDITOR,
-                'items' => [
+            $acts = $tpl->getHtmlFrag('dial', [
+                'dial_title' => _EDITOR,
+                'dial' => [
                     [
                         'href' => $afile.'.php?name=security&op=logview&file='.urlencode($name),
-                        'label' => _DOCS,
+                        'icon_name' => 'file-text',
                         'title' => _DOCS,
                     ],
                     [
                         'href' => $afile.'.php?name=security&op=download&file='.urlencode($name),
-                        'label' => _DOWN,
+                        'icon_name' => 'download',
                         'title' => _DOWN,
                     ],
                     [
                         'href' => $afile.'.php?name=security&op=delete&file='.urlencode($name).'&token='.getSiteToken(),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                     ],
@@ -144,11 +144,11 @@ function banlist(): void {
                         ['label' => _BANN_REAS, 'has_value_text' => true, 'value_text' => (string)$binfo[3], 'is_last' => true],
                     ],
                 ]).Geoip::getIpHtml($tip);
-                $acts = $tpl->getHtmlFrag('popover', [
-                    'trigger_label' => _EDITOR,
-                    'items' => [[
+                $acts = $tpl->getHtmlFrag('dial', [
+                    'dial_title' => _EDITOR,
+                    'dial' => [[
                         'href' => $afile.'.php?name=security&op=bansave&cidr='.urlencode($tcidr).'&hash='.urlencode($binfo[1]).'&time='.(int)$binfo[2].'&id=1&token='.getSiteToken(),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($tcidr, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                     ]],
@@ -225,11 +225,11 @@ function banlist(): void {
         foreach ($busers as $val) {
             if ($val != '') {
                 $binfo = explode('|', $val);
-                $acts = $tpl->getHtmlFrag('popover', [
-                    'trigger_label' => _EDITOR,
-                    'items' => [[
+                $acts = $tpl->getHtmlFrag('dial', [
+                    'dial_title' => _EDITOR,
+                    'dial' => [[
                         'href' => $afile.'.php?name=security&op=bansave&name='.urlencode((string)$binfo[0]).'&time='.(int)($binfo[1] ?? 0).'&id=3&token='.getSiteToken(),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
                         'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$binfo[0], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                     ]],

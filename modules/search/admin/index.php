@@ -310,11 +310,11 @@ function search(): void {
                 ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
                 ['is_col_count' => true, 'content_html' => (string)intval($hits)],
                 ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-                    ['href' => $afile.'.php?'.$link.'&op=edit&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                    ['href' => $afile.'.php?'.$link.'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&id='.$id.'&sort='.$sort.'&order='.$order.'&num='.$num.($find !== '' ? '&find='.urlencode($find) : '').($fmod !== '' ? '&fmod='.urlencode($fmod) : '').'&token='.getSiteToken('search'),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
                         'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
                     ],
@@ -373,11 +373,11 @@ function toplist(): void {
                 ['is_truncate' => true, 'title_text' => $mlab, 'content_html' => $hmod],
                 ['is_col_count' => true, 'content_html' => (string)intval($hits)],
                 ['is_col_date' => true, 'content_html' => format_time((string)$time, _TIMESTRING)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-                    ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&op=edit&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                    ['href' => $afile.'.php?'.getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist').'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
                     [
                         'href' => $afile.'.php?op=drop&id='.$id.'&sort='.$sort.'&order='.$order.'&num='.$num.($find !== '' ? '&find='.urlencode($find) : '').($fmod !== '' ? '&fmod='.urlencode($fmod) : '').'&token='.getSiteToken('search'),
-                        'label' => _ONDELETE,
+                        'icon_name' => 'trash',
                         'title' => _ONDELETE,
                         'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes((string)$word).'&quot;?\')"',
                     ],

@@ -156,17 +156,17 @@ function clients(): void {
             $items = [
                 [
                     'href' => $afile.'.php?name=shop&op=clientset&id='.$cid.$refer.'&token='.getSiteToken(),
-                    'label' => $cactive ? _DEACTIVATE : _ACTIVATE,
+                    'icon_name' => 'power',
                     'title' => $cactive ? _DEACTIVATE : _ACTIVATE,
                 ],
                 [
                     'href' => $afile.'.php?name=shop&op=clientadd&cid='.$cid,
-                    'label' => _FULLEDIT,
+                    'icon_name' => 'pencil',
                     'title' => _FULLEDIT,
                 ],
                 [
                     'href' => $afile.'.php?name=shop&op=clientdel&id='.$cid.$refer.'&token='.getSiteToken(),
-                    'label' => _ONDELETE,
+                    'icon_name' => 'trash',
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ],
@@ -179,7 +179,7 @@ function clients(): void {
                     ['is_truncate' => true, 'title_text' => domain($cwebsite), 'content_html' => filterTextHighlight(domain($cwebsite), $csearch)],
                     ['is_col_date' => true, 'content_html' => $cenddate],
                     ['is_col_status' => true, 'content_html' => ad_status('', $cactive)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
             $a++;
@@ -461,14 +461,14 @@ function products(): void {
             $typ = ($pactive) ? '0' : '1';
             $items = [];
             if ($pactive && time() >= strtotime($ptime)) {
-                $items[] = ['href' => 'index.php?name=shop&op=view&id='.$pid, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=shop&op=view&id='.$pid, 'icon_name' => 'eye', 'title' => _MVIEW];
             }
             if ($pvote) {
-                $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$pvote, 'label' => _EDITVOTE, 'title' => _EDITVOTE];
+                $items[] = ['href' => $afile.'.php?name=voting&op=add&id='.$pvote, 'icon_name' => 'bar-chart', 'title' => _EDITVOTE];
             }
-            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=a'.$typ.'&id='.$pid.$refer.'&token='.getSiteToken(), 'label' => $pactive ? _DEACTIVATE : _ACTIVATE, 'title' => $pactive ? _DEACTIVATE : _ACTIVATE];
-            $items[] = ['href' => $afile.'.php?name=shop&op=productadd&id='.$pid, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
-            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=d&id='.$pid.$refer.'&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=a'.$typ.'&id='.$pid.$refer.'&token='.getSiteToken(), 'icon_name' => 'power', 'title' => $pactive ? _DEACTIVATE : _ACTIVATE];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productadd&id='.$pid, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=shop&op=productops&typ=d&id='.$pid.$refer.'&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($ptitle, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'];
             $prows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$pid])],
@@ -479,7 +479,7 @@ function products(): void {
                     ]]), 'has_content_text' => true, 'content_text' => (string)$ptitle],
                     ['is_col_count' => true, 'content_html' => $pprice.' '.$conf['shop']['valute']],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
         }
@@ -781,10 +781,10 @@ function partners(): void {
                 $nick = _ANONYM;
             }
             $items = [
-                ['href' => $afile.'.php?name=shop&op=partnerset&id='.$paid.$refer.'&token='.getSiteToken(), 'label' => $paactive ? _DEACTIVATE : _ACTIVATE, 'title' => $paactive ? _DEACTIVATE : _ACTIVATE],
-                ['href' => $afile.'.php?name=shop&op=partnerinfo&paid='.$paid, 'label' => _MVIEW, 'title' => _MVIEW],
-                ['href' => $afile.'.php?name=shop&op=partneradd&paid='.$paid, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=shop&op=partnerdel&id='.$paid.$refer.'&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=shop&op=partnerset&id='.$paid.$refer.'&token='.getSiteToken(), 'icon_name' => 'power', 'title' => $paactive ? _DEACTIVATE : _ACTIVATE],
+                ['href' => $afile.'.php?name=shop&op=partnerinfo&paid='.$paid, 'icon_name' => 'eye', 'title' => _MVIEW],
+                ['href' => $afile.'.php?name=shop&op=partneradd&paid='.$paid, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=shop&op=partnerdel&id='.$paid.$refer.'&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ];
             $parows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -799,7 +799,7 @@ function partners(): void {
                     ['is_col_date' => true, 'content_html' => date(_TIMESTRING, $paregdate)],
                     ['is_col_count' => true, 'content_html' => $parest.' '.$conf['shop']['valute']],
                     ['is_col_count' => true, 'content_html' => $pabek.' '.$conf['shop']['valute']],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
         }

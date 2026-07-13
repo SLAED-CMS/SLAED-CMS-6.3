@@ -30,15 +30,15 @@ function newsletter(): void {
                     ])],
                     ['class_name' => 'sl-col-sent', 'is_col_count' => true, 'content_html' => $sended.' '._NLUSER],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', [
-                        'trigger_label' => _FUNCTIONS,
-                        'items' => [[
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
+                        'dial_title' => _FUNCTIONS,
+                        'dial' => [[
                             'href' => $afile.'.php?name=newsletter&op=add&id='.$id,
-                            'label' => _FULLEDIT,
+                            'icon_name' => 'pencil',
                             'title' => _FULLEDIT,
                         ], [
                             'href' => $afile.'.php?name=newsletter&op=delete&id='.$id.'&token='.getSiteToken(),
-                            'label' => _ONDELETE,
+                            'icon_name' => 'trash',
                             'title' => _ONDELETE,
                             'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                         ]],

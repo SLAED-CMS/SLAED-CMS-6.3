@@ -38,18 +38,18 @@ function media(): void {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $items = [];
             if ($status && time() >= strtotime($date)) {
-                $items[] = ['href' => 'index.php?name=media&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=media&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
             if ($status == '2') {
-                $items[] = ['href' => $afile.'.php?name=media&op=approve&id='.$id.'&token='.getSiteToken(), 'label' => _IGNORE, 'title' => _IGNORE];
+                $items[] = ['href' => $afile.'.php?name=media&op=approve&id='.$id.'&token='.getSiteToken(), 'icon_name' => 'check2', 'title' => _IGNORE];
             }
-            $items[] = ['href' => $afile.'.php?name=media&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=media&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
             $items[] = [
                 'href' => $afile.'.php?name=media&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
-                'label' => _ONDELETE,
+                'icon_name' => 'trash',
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($label).'&quot;?\')"',
             ];
@@ -67,7 +67,7 @@ function media(): void {
                     ])],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
         }

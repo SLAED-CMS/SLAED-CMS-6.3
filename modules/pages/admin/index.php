@@ -94,15 +94,15 @@ function pages(): void {
             $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
             $items = [];
             if ($status && time() >= strtotime($time)) {
-                $items[] = ['href' => 'index.php?name=pages&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW];
+                $items[] = ['href' => 'index.php?name=pages&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW];
                 $active = '1';
             } else {
                 $active = '0';
             }
-            $items[] = ['href' => $afile.'.php?name=pages&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT];
+            $items[] = ['href' => $afile.'.php?name=pages&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
             $items[] = [
                 'href' => $afile.'.php?name=pages&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
-                'label' => _ONDELETE,
+                'icon_name' => 'trash',
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ];
@@ -119,7 +119,7 @@ function pages(): void {
                     ]).filterTextHighlight($title, $chng)],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
                 ],
             ])]);
@@ -379,6 +379,7 @@ function config(): void {
         ['label_html' => _C_40, 'field_html' => getTplRadioGroup(['name' => 'addquest', 'value' => (string)($conf['pages']['addquest'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_37, 'field_html' => getTplRadioGroup(['name' => 'autor', 'value' => (string)($conf['pages']['autor'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_17, 'field_html' => getTplRadioGroup(['name' => 'date', 'value' => (string)($conf['pages']['date'] ?? 0), 'options' => $yesno])],
+        ['label_html' => _C_INTRO, 'field_html' => getTplRadioGroup(['name' => 'intro', 'value' => (string)($conf['pages']['intro'] ?? 1), 'options' => $yesno])],
         ['label_html' => _C_18, 'field_html' => getTplRadioGroup(['name' => 'read', 'value' => (string)($conf['pages']['read'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_19, 'field_html' => getTplRadioGroup(['name' => 'rate', 'value' => (string)($conf['pages']['rate'] ?? 0), 'options' => $yesno])],
         ['label_html' => _C_20, 'field_html' => getTplRadioGroup(['name' => 'letter', 'value' => (string)($conf['pages']['letter'] ?? 0), 'options' => $yesno])],
@@ -415,6 +416,7 @@ function configsave(): void {
             'addquest' => getVar('post', 'addquest', 'num', 0),
             'autor' => getVar('post', 'autor', 'num', 0),
             'date' => getVar('post', 'date', 'num', 0),
+            'intro' => getVar('post', 'intro', 'num', 0),
             'read' => getVar('post', 'read', 'num', 0),
             'rate' => getVar('post', 'rate', 'num', 0),
             'letter' => getVar('post', 'letter', 'num', 0),

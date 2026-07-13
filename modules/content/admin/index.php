@@ -21,18 +21,16 @@ function content(): void {
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             $view = (time() >= strtotime($time)) ? 'index.php?name=content&op=view&id='.$id : '';
             $active = $view ? '1' : '0';
-            $acts = $tpl->getHtmlFrag('edit-actions', [
-                'editor_label' => _EDITOR,
-                'view_link' => $view ? ['href' => $view, 'title' => _MVIEW, 'label' => _MVIEW] : [],
-                'edit_link' => ['href' => $afile.'.php?name=content&op=add&id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT],
-                'delete_link' => [
-                    'href' => $afile.'.php?name=content&op=delete&id='.$id.'&token='.getSiteToken(),
-                    'confirm_text' => _DELETE.' "'.$title.'"?',
-                    'title' => _ONDELETE,
-                    'label' => _ONDELETE,
-                    'is_delete' => true,
-                ],
-            ]);
+            $items = [];
+            if ($view) $items[] = ['href' => $view, 'icon_name' => 'eye', 'title' => _MVIEW];
+            $items[] = ['href' => $afile.'.php?name=content&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
+            $items[] = [
+                'href' => $afile.'.php?name=content&op=delete&id='.$id.'&token='.getSiteToken(),
+                'icon_name' => 'trash',
+                'title' => _ONDELETE,
+                'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+            ];
+            $acts = $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $items]);
             $tip = $tpl->getHtmlFrag('popover', [
                 'items' => [
                     ['label' => _URL, 'value' => $conf['homeurl'].'/index.php?name=content&op=view&id='.$id, 'is_last' => false],

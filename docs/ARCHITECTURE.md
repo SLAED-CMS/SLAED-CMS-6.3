@@ -245,6 +245,14 @@ Block definitions and placement are database-driven. `setFoot()` asks
 `getBlocks()` for footer, left, right, center, and down zones; file-backed blocks
 are included from `blocks/<file>`.
 
+Free blocks (the `infly` mark in the `which` column) are excluded from zone
+rendering and are output in two ways: trusted content places a `[block=id]`
+tag (resolved by the parser for admin-authored content with `$safe === false`,
+left as literal text in user-submitted content), and theme templates place a
+`{% freeblock id %}` tag (compiled by the template engine). Both entry points
+call the same `getBlocks()` engine, apply the same visibility rules, and do
+not expand nested tags inside block output.
+
 Block rendering is part of the frontend page assembly path. Treat it as a shared
 runtime boundary, not as module-local output.
 

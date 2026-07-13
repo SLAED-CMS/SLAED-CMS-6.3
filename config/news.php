@@ -19,6 +19,7 @@ return [
         'date' => '1',
         'defis' => '%C2%BB',
         'homcat' => '0',
+        'intro' => '1',
         'letter' => '1',
         'listnum' => '25',
         'num' => '10',

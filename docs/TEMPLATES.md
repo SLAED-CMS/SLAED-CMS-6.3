@@ -280,6 +280,12 @@ The current `Template` runtime supports:
 - components:
   - `{% component 'modal' %}` (auto-resolves to `partials/modal.html`)
   - `{% slot header %}`
+- free site blocks:
+  - `{% freeblock 15 %}` renders the site block with the given numeric id through `getBlocks()`
+  - intended for free (infly) blocks placed in the layout outside the standard positions
+  - block status, expiry, language binding, view rights and flyfix module rules all apply; unavailable blocks render as empty output
+  - frontend only (skipped in the admin runtime), no nesting inside block output
+  - not related to `{% block name %}` layout inheritance blocks
 
 Additional confirmed runtime behavior:
 

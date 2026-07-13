@@ -66,25 +66,25 @@ function scheduler(): void {
         $title = $job['title'];
         $acts = [[
             'href' => $afile.'.php?name=scheduler&op=add&job='.$name,
-            'label' => _EDIT,
+            'icon_name' => 'pencil',
             'title' => _EDIT,
         ]];
         if ((int)($job['manual'] ?? 0) === 1) {
             $acts[] = [
                 'href' => $afile.'.php?name=scheduler&op=run&job='.$name.'&token='.getSiteToken(),
-                'label' => _SCHEDULER_RUN,
+                'icon_name' => 'play-fill',
                 'title' => _SCHEDULER_RUN,
             ];
         }
         $acts[] = [
             'href' => $afile.'.php?name=scheduler&op=unlock&job='.$name.'&token='.getSiteToken(),
-            'label' => _SCHEDULER_UNLOCK,
+            'icon_name' => 'unlock',
             'title' => _SCHEDULER_UNLOCK,
         ];
         if (($job['type'] ?? '') === 'custom') {
             $acts[] = [
                 'href' => $afile.'.php?name=scheduler&op=delete&job='.$name.'&token='.getSiteToken(),
-                'label' => _DELETE,
+                'icon_name' => 'trash',
                 'title' => _DELETE,
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
             ];
@@ -96,7 +96,7 @@ function scheduler(): void {
                 ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
                 ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
                 ['is_col_status' => true, 'content_html' => ((int)$isactive === 1) ? _YES : _NO],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _EDITOR, 'items' => $acts])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _EDITOR, 'dial' => $acts])],
             ],
         ])]);
     }

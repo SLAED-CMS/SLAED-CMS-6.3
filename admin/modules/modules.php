@@ -146,11 +146,11 @@ function modules(): void {
         }
         $items = [[
             'href' => $afile.'.php?name=modules&op=status&mod='.$title.'&act='.($active ? '0' : '1').'&type='.$mtype.'&token='.getSiteToken(),
-            'label' => $active ? _DEACTIVATE : _ACTIVATE,
+            'icon_name' => 'power',
             'title' => $active ? _DEACTIVATE : _ACTIVATE,
         ], [
             'href' => $afile.'.php?name=modules&op=edit&mod='.$title.'&type='.$mtype,
-            'label' => _FULLEDIT,
+            'icon_name' => 'pencil',
             'title' => _FULLEDIT,
         ]];
         if (file_exists('modules/'.$title.'/sql/table.sql')) {
@@ -166,7 +166,7 @@ function modules(): void {
             }
             $items[] = [
                 'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id='.($install ? '1' : '2').'&type='.$mtype.'&token='.getSiteToken(),
-                'label' => $install ? _DB_DELETE : _DB_INSTALL,
+                'icon_name' => $install ? 'database-dash' : 'database-add',
                 'title' => $install ? _DB_DELETE : _DB_INSTALL,
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(($install ? _DB_DELETE : _DB_INSTALL).' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
             ];
@@ -174,7 +174,7 @@ function modules(): void {
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
             $items[] = [
                 'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id=3&type='.$mtype.'&token='.getSiteToken(),
-                'label' => _DB_UPDATE,
+                'icon_name' => 'database-up',
                 'title' => _DB_UPDATE,
                 'onclick_attr' => 'OnClick="return DelCheck(this, \''.htmlspecialchars(_DB_UPDATE.' &quot;'.$title.'&quot;?', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'\');"',
             ];
@@ -187,7 +187,7 @@ function modules(): void {
                 ['content_html' => $who_view],
                 ['content_html' => $group_name],
                 ['is_col_status' => true, 'content_html' => ad_status('', $active)],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
             ],
         ])]);
         $a++;

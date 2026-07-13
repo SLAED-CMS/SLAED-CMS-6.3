@@ -469,6 +469,9 @@ input.sl-but-blue[value="ОК"] {
 .sl-status-inactive::before,
 .sl-bl-up::before,
 .sl-bl-down::before,
+.sl-drag-handle::before,
+.sl-infly::before,
+.sl-flyfix::before,
 .sl-plus::before,
 .sl-post-icon::before,
 .sl-date::before,
@@ -602,6 +605,131 @@ input.sl-but-blue[value="ОК"] {
 
 .sl-bl-down:hover {
   color: var(--sl-color-primary);
+}
+
+/* Drag ordering: grip handle, drag states and drop markers for grouped admin lists */
+.sl-drag-handle {
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+  color: var(--sl-color-muted);
+  font-size: var(--sl-size-icon-sm);
+  vertical-align: middle;
+  transition: color 0.18s ease;
+}
+
+/* Scale only the glyph on hover: a transform on the handle itself would turn it into the containing block for the fixed-positioned hint panel */
+.sl-drag-handle::before {
+  content: "\f3fe";
+  transition: transform 0.18s ease;
+}
+
+.sl-drag-handle:hover::before {
+  transform: scale(var(--sl-hover-scale-up));
+}
+
+.sl-drag-handle:hover {
+  color: var(--sl-color-primary-hover);
+}
+
+tr.sl-dragging {
+  opacity: 0.45;
+}
+
+tr.sl-dragging .sl-drag-handle {
+  cursor: grabbing;
+}
+
+tr.sl-drop-above > td {
+  box-shadow: inset 0 2px 0 var(--sl-color-primary-hover);
+}
+
+tr.sl-drop-below > td {
+  box-shadow: inset 0 -2px 0 var(--sl-color-primary-hover);
+}
+
+tr.sl-drop-deny > td {
+  box-shadow: inset 0 0 0 1px var(--sl-color-danger);
+}
+
+tr.sl-row-saved > td {
+  animation: sl-row-saved-flash 0.9s ease;
+}
+
+@keyframes sl-row-saved-flash {
+  0% {
+    background-color: color-mix(in srgb, var(--sl-color-success) 25%, transparent);
+  }
+
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Group rows: collapsible section headers inside grouped admin list tables */
+.sl-table-list-sort tr.sl-group-row > th {
+  text-align: left;
+  padding-left: var(--sl-space-md);
+  background: var(--sl-color-bg-soft);
+  color: var(--sl-color-primary-hover);
+}
+
+.sl-group-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+tr.sl-row-collapsed {
+  display: none;
+}
+
+/* Tree nodes: indent pads and branch glyph for hierarchical admin lists */
+.sl-tree-pad {
+  display: inline-block;
+  width: 22px;
+}
+
+.sl-tree-node {
+  color: var(--sl-color-muted);
+  margin: 0 var(--sl-space-sm) 0 22px;
+}
+
+/* Dial in list tables: the fan overlays sibling cells of its own row; the actions cell anchors the absolute dial even when it is not the last column */
+.sl-table-list-sort td.sl-col-actions {
+  position: relative;
+  overflow: visible;
+}
+
+.sl-table-list-sort tr:hover td.sl-col-actions {
+  z-index: 20;
+}
+
+.sl-table-list-sort td.sl-col-actions .sl-dial {
+  z-index: 30;
+}
+
+/* Free block chips: accent tone with wind/pin glyphs for infly and flyfix markers */
+.sl-chip-accent {
+  --sl-chip-tone: var(--sl-color-accent);
+}
+
+.sl-infly::before,
+.sl-flyfix::before {
+  margin-right: 3px;
+  font-size: 0.9em;
+}
+
+.sl-infly::before {
+  content: "\f61d";
+}
+
+.sl-flyfix::before {
+  content: "\f4ea";
 }
 
 /* Basic controls: select and save actions */

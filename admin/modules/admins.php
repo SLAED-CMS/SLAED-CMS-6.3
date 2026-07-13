@@ -73,17 +73,17 @@ function admins(): void {
                 ['label' => _LAST_VISIT, 'value' => format_time((string)$vdate, _TIMESTRING), 'is_last' => true],
             ],
         ]);
-        $acts = $tpl->getHtmlFrag('popover', [
-            'trigger_label' => _EDITOR,
-            'items' => [
+        $acts = $tpl->getHtmlFrag('dial', [
+            'dial_title' => _EDITOR,
+            'dial' => [
                 [
                     'href' => $afile.'.php?name=admins&op=add&id='.$aid,
-                    'label' => _FULLEDIT,
+                    'icon_name' => 'pencil',
                     'title' => _FULLEDIT,
                 ],
                 [
                     'href' => $afile.'.php?name=admins&op=delete&aid='.$aid.'&token='.getSiteToken(),
-                    'label' => _ONDELETE,
+                    'icon_name' => 'trash',
                     'title' => _ONDELETE,
                     'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars((string)$name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
                 ],

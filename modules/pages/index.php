@@ -265,7 +265,7 @@ function view(): void {
         $cont = getModuleNavi(['title' => _PAGES, 'is_heading' => false]);
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
         $catlist = $conf['pages']['viewcat'] ? setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0) : '';
-        $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
+        $rawtext = $bodytext ? (empty($conf['pages']['intro']) ? $bodytext : $hometext.$bodytext) : $hometext;
         $conpag = explode('[pagebreak]', $rawtext);
         $pageno = count($conpag);
         if ($pag > $pageno) $pag = $pageno;

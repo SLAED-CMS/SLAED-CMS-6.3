@@ -30,10 +30,10 @@ function help(): void {
         while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : _ANONYM;
             $items = [
-                ['href' => $afile.'.php?name=help&op=view&id='.$id, 'label' => _MVIEW, 'title' => _MVIEW],
+                ['href' => $afile.'.php?name=help&op=view&id='.$id, 'icon_name' => 'eye', 'title' => _MVIEW],
                 [
                     'href' => $afile.'.php?name=help&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
-                    'label' => _ONDELETE,
+                    'icon_name' => 'trash',
                     'title' => _ONDELETE,
                     'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
                 ],
@@ -53,7 +53,7 @@ function help(): void {
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_count' => true, 'content_html' => (string)$comments],
                     ['is_col_status' => true, 'content_html' => ad_status('', $stat ? 0 : 1)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                 ],
             ])]);
         }
@@ -101,11 +101,11 @@ function view(): void {
         if ($a) {
             $meta[] = $tpl->getHtmlFrag('link', ['href' => '#'.$id, 'is_num_anchor' => true, 'title' => _MESSAGE.': '.$a, 'label' => (string)$a]);
         }
-        $actions = $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-            ['href' => $afile.'.php?name=help&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+        $actions = $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+            ['href' => $afile.'.php?name=help&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
             [
                 'href' => $afile.'.php?name=help&op=delete&id='.$id.'&token='.getSiteToken(),
-                'label' => _ONDELETE,
+                'icon_name' => 'trash',
                 'title' => _ONDELETE,
                 'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'.addslashes($title).'&quot;?\')"',
             ],

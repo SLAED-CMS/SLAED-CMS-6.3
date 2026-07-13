@@ -276,7 +276,7 @@ function view(): void {
         if ($cid) $cont .= $tpl->getHtmlFrag('category-nav', ['label' => _CATEGORIES, 'crumbs' => getTplCategoryTrail($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
         $catlist = $conf['news']['viewcat'] ? setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0) : '';
         $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);
-        $rawtext = $bodytext ? $hometext.$bodytext : $hometext;
+        $rawtext = $bodytext ? (empty($conf['news']['intro']) ? $bodytext : $hometext.$bodytext) : $hometext;
         if ($fields) $rawtext .= $fields;
         $conpag = explode('[pagebreak]', $rawtext);
         $pageno = count($conpag);

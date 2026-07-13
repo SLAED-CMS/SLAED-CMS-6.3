@@ -41,12 +41,12 @@ function order(): void {
                     ['content_html' => Geoip::getIpHtml($ip)],
                     ['is_col_date' => true, 'content_html' => format_time($date, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $status)],
-                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => [
-                        ['href' => $afile.'.php?name=order&op=activate&id='.$id.'&act='.$act.'&token='.getSiteToken(), 'label' => $status ? _DEACTIVATE : _ACTIVATE, 'title' => $status ? _DEACTIVATE : _ACTIVATE],
-                        ['href' => $afile.'.php?name=order&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => [
+                        ['href' => $afile.'.php?name=order&op=activate&id='.$id.'&act='.$act.'&token='.getSiteToken(), 'icon_name' => 'power', 'title' => $status ? _DEACTIVATE : _ACTIVATE],
+                        ['href' => $afile.'.php?name=order&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
                         [
                             'href' => $afile.'.php?name=order&op=delete&id='.$id.'&token='.getSiteToken(),
-                            'label' => _ONDELETE,
+                            'icon_name' => 'trash',
                             'title' => _ONDELETE,
                             'onclick_attr' => ' OnClick="return confirm(\''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\')"',
                         ],

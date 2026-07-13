@@ -50,11 +50,11 @@ function whois(): void {
             $dc = $dc ? domain($dc) : _NO_INFO;
             $domain = domain($domain);
             $items = [
-                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=1&refer=1&token='.getSiteToken(), 'label' => _SITE, 'title' => _SITE],
-                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=2&refer=1&token='.getSiteToken(), 'label' => _HOST, 'title' => _HOST],
-                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=3&refer=1&token='.getSiteToken(), 'label' => _DC, 'title' => _DC],
-                ['href' => $afile.'.php?name=whois&op=add&id='.$id, 'label' => _FULLEDIT, 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=whois&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'label' => _ONDELETE, 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
+                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=1&refer=1&token='.getSiteToken(), 'icon_name' => 'globe', 'title' => _SITE],
+                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=2&refer=1&token='.getSiteToken(), 'icon_name' => 'hdd-network', 'title' => _HOST],
+                ['href' => $afile.'.php?name=whois&op=toggle&id='.$id.'&fid=3&refer=1&token='.getSiteToken(), 'icon_name' => 'building', 'title' => _DC],
+                ['href' => $afile.'.php?name=whois&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
+                ['href' => $afile.'.php?name=whois&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($domain, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"'],
             ];
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', ['cells' => [
                 ['is_col_id' => true, 'content_html' => (string)$id],
@@ -66,7 +66,7 @@ function whois(): void {
                     ['label' => _IP, 'value' => $ipSender, 'is_last' => false],
                     ['label' => _COMMENT, 'has_value_text' => true, 'value_text' => (string)$hometext, 'is_last' => true],
                 ]]).$post],
-                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('popover', ['trigger_label' => _FUNCTIONS, 'items' => $items])],
+                ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
             ]])]);
         }
         $body = $tpl->getHtmlFrag('table', ['is_wrapless' => true, 'is_fixed' => true, 'head' => $head, 'rows_html' => $rows]);

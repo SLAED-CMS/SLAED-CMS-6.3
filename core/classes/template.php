@@ -330,6 +330,7 @@ class Template {
         $code = $this->filterEcho($code);
         $code = $this->filterIf($code);
         $code = $this->filterFor($code);
+        $code = $this->filterFree($code);
         $code = $this->filterComp($code);
         $code = $this->filterSlot($code);
         return $this->filterUse($code);
@@ -463,6 +464,30 @@ class Template {
             },
             $code
         );
+    }
+
+    # Compile free block tags with a numeric id into runtime render calls
+    protected function filterFree(string $code): string {
+        if ($code === '' || !str_contains($code, '{%')) return $code;
+        return (string)preg_replace_callback(
+            '/\{%\s*freeblock\s+([0-9]{1,10})\s*%\}/',
+            static function(array $data): string {
+                return '<?= $this->getFree('.$data[1].'); ?>';
+            },
+            $code
+        );
+    }
+
+    # Render one free block by id through the global block engine; frontend only, output captured, no nesting
+    protected function getFree(int $bid): string {
+        static $depth = 0;
+        if ($bid < 1 || $depth > 0 || defined('ADMIN_FILE') || !function_exists('getBlocks')) return '';
+        $depth++;
+        ob_start();
+        getBlocks('d', (string)$bid);
+        $out = (string)ob_get_clean();
+        $depth--;
+        return $out;
     }
 
     # Compile component tags with optional isolated props and slot payloads

@@ -2,11 +2,12 @@
   {% if title %}title="{{ title }}"{% elseif back_title %}title="{{ back_title }}"{% endif %}
   {% if is_back or back_text or has_back_button %}onclick="javascript:window.history.go(-1);"{% endif %}
 
-  {% if class or back_text or has_back_button or is_back or is_highlight or is_geo_flag or is_alpha_letter or is_success or is_hidden or is_bold or is_danger %}
+  {% if class or back_text or has_back_button or is_back or is_highlight or is_geo_flag or is_alpha_letter or is_success or is_hidden or is_bold or is_danger or is_drag_handle %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if back_text or has_back_button %} sl-but-back{% endif %}
     {% if is_back %} sl-back-button{% endif %}
+    {% if is_drag_handle %} sl-drag-handle{% endif %}
     {% if is_highlight %} sl-highlight{% endif %}
     {% if is_geo_flag %} sl-geo-flag{% endif %}
     {% if is_alpha_letter %} sl-letter{% endif %}

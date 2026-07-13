@@ -553,6 +553,7 @@ function getBlocks(string $side, string $fly = ''): void {
     $side = $pos;
     if (!isset($barr)) {
         $barr = [];
+        Parser::$freeoff = true;
         $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
@@ -561,6 +562,7 @@ function getBlocks(string $side, string $fly = ''): void {
             $where_mas = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas];
         }
+        Parser::$freeoff = false;
     }
     if ($fly != '') {
         $b_id = 0;
@@ -1442,7 +1444,7 @@ function getSeoRoute(array $seo = []): array {
         'add', 'activate', 'broc', 'check', 'client', 'edithome', 'favorites', 'kasse',
         'network', 'partner', 'passlost', 'preview', 'privat', 'send', 'upload',
     ];
-    $noindex = in_array($name, $services, true) || in_array($op, $forms, true) || ($name === 'account' && $op !== 'view');
+    $noindex = in_array($name, $services, true) || in_array($op, $forms, true) || $op === 'liste' || ($name === 'account' && $op !== 'view');
     if (getVar('get', 'status', 'num')) $noindex = true;
     $status = http_response_code();
     if ($status >= 400) $noindex = true;

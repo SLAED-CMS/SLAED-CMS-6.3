@@ -8,15 +8,15 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function categories(): void {
     global $afile, $tpl;
-    $modul = getVar('req', 'modul', 'var', 'forum');
-    $modlink = '&modul='.$modul;
+    $modul = getVar('req', 'modul', 'var', '');
+    $modlink = $modul ? '&modul='.$modul : '';
     $ops = ['name=categories'.$modlink, 'name=categories&op=add'.$modlink, 'name=categories&op=subadd'.$modlink, 'name=categories&op=addedit'.$modlink, 'name=categories&op=fix&token='.getSiteToken().$modlink, 'name=categories&op=info'.$modlink];
     $subtitle = $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'categories'],
         ],
-        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true),
+        'content_html' => _MODUL.': '.getTplCategoryModule('modul', '', $modul, true, true),
     ])]);
     setHead();
     $cont = getTplAdminTabs([
@@ -25,6 +25,7 @@ function categories(): void {
         'subtitle_html' => $subtitle,
     ]);
     echo $cont
+        .$tpl->getHtmlFrag('alert', ['text' => _CATDRAGSORT])
         .$tpl->getHtmlFrag('alert', ['text' => _INFOCATDEL])
         .$tpl->getHtmlPart('box', [
             'box_id' => 'repajax_cat',
@@ -437,6 +438,18 @@ function save(): void {
     setRedirect($afile.'.php?name=categories&modul='.$modul, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
 
+function change(): void {
+    global $db, $afile;
+    $id = getVar('get', 'id', 'num');
+    $act = getVar('get', 'act', 'num', 0);
+    $modul = getVar('req', 'modul', 'var', '');
+    $warn = !checkSiteToken();
+    if (!$warn && $id) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET status = :status WHERE id = :id', ['status' => $act ? 0 : 1, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=categories'.($modul ? '&modul='.$modul : ''), false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
+}
+
 function delete(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
@@ -467,6 +480,7 @@ switch ($op) {
     case 'addsave': addsave(); break;
     case 'edit': edit(); break;
     case 'save': save(); break;
+    case 'change': change(); break;
     case 'delete': delete(); break;
     case 'info': info(); break;
 }

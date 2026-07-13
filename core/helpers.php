@@ -478,23 +478,6 @@ function getTplUserSearchInput(array $data = []): string {
 }
 
 
-# Render one shared admin move-controls block with HTMX transport
-function getTplMoveControls(array $data = []): string {
-    global $tpl;
-    $target = (string)($data['target'] ?? '');
-    $up = (string)($data['up'] ?? '');
-    $down = (string)($data['down'] ?? '');
-    $up = ($up && !str_contains($up, 'token=')) ? $up.'&token='.getSiteToken() : $up;
-    $down = ($down && !str_contains($down, 'token=')) ? $down.'&token='.getSiteToken() : $down;
-    return $tpl->getHtmlFrag('move-controls', [
-        'down_query' => $down,
-        'down_title' => _BLOCKDOWN,
-        'target' => $target,
-        'up_query' => $up,
-        'up_title' => _BLOCKUP,
-    ]);
-}
-
 # Render extra field rows for new/ form layout (getTplFieldsIn() replacement for new/form-add)
 function getTplFieldsIn(array $data = []): string {
     global $conf, $tpl;
@@ -869,10 +852,10 @@ function getCategoryModules(): array {
 }
 
 # Render a select with category-enabled modules
-function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false): string {
+function getTplCategoryModule(string $name, string $clas = '', string $sel = '', bool $auto = false, bool $all = false): string {
     global $tpl;
     $attr = $auto ? 'OnChange="submit()"' : '';
-    $cont = '';
+    $cont = $all ? $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _ALLMODULES, 'is_selected' => $sel === '']) : '';
     $mods = getCategoryModules();
     foreach ($mods as $mod) {
         $cont .= $tpl->getHtmlFrag('select-option', [
