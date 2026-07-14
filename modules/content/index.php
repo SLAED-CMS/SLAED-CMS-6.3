@@ -100,7 +100,10 @@ function view(): void {
         $del = $afile.'.php?name=content&op=delete&id='.$id.'&token='.getSiteToken();
         $cont = $tpl->getHtmlPart('view', [
             'is_moder' => $ismoder,
+            'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]),
+            'share_title' => $title,
             'title_text' => filterTextHighlight($title, $word),
+            'title_new' => getTplNewGraphic($time),
             'text' => filterTextHighlight($prs->filterDoc($body, false, $conf['name'], 1), $word),
             'fields' => $fields,
             ...($ismoder ? getTplEditMenu($edit, $del, $title) : []),

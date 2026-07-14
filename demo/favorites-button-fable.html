@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — «В избранное» (Fable): круглая звезда у заголовка</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%); border-bottom: 1px solid var(--sl-color-border); }
+.demo-head h1 { margin: 0 0 6px; font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.demo-head p { margin: 0; max-width: 960px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1400px; margin: 0 auto; }
+.demo-sec { margin: 42px 0 0; }
+.demo-sec > h2 { margin: 0 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--sl-color-border); font: bold 20px/1.2 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.demo-sec > .demo-note { margin: 0 0 18px; color: var(--sl-color-text-muted); font-size: 13px; }
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 22px; align-items: start; }
+.demo-cell { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 18px; }
+.demo-cell .demo-label { display: block; margin: 0 0 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sl-color-text-muted); }
+.demo-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.demo-badge-reco { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-success) 15%, transparent); color: var(--sl-color-success); font-size: 11px; font-weight: bold; text-transform: none; letter-spacing: 0; }
+.demo-article { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 24px 28px; }
+.demo-muted { color: var(--sl-color-text-muted); font-size: 13px; }
+.demo-hint { font-size: 13px; color: var(--sl-color-text-muted); margin-top: 10px; }
+.demo-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sl-color-text-muted); cursor: pointer; }
+code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+
+/* ==== ПРЕДЛОЖЕНИЕ ДЛЯ theme.css: избранное как круглая звезда .sl-fav ==== */
+/* Host: standard tip/float mechanics give the hover and focus tooltip; the button itself is the stock .sl-but-mini */
+.sl-fav {
+  margin-right: 0;
+  cursor: default;
+}
+
+.sl-fav .sl-but-mini { position: relative; }
+
+/* Already in favorites: brand-blue like a browser bookmark star; not clickable */
+.sl-fav-on {
+  background-color: var(--sl-color-brand-link);
+  cursor: default;
+}
+
+/* Limit reached: same filled look but gray, function disabled */
+.sl-fav-limit {
+  background-color: var(--sl-color-text-muted);
+  cursor: not-allowed;
+}
+
+.sl-fav-limit:hover,
+.sl-fav-on:hover { background-color: var(--sl-color-text-muted); }
+.sl-fav-on:hover { background-color: var(--sl-color-brand-link); }
+
+/* Click burst: star pop */
+.sl-fav .sl-is-burst > .bi { animation: sl-fav-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Click burst: expanding ring */
+.sl-fav-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.sl-is-burst > .sl-fav-ring { animation: sl-fav-ring 0.55s ease-out forwards; }
+
+/* Click burst: eight spark rays around the circle */
+.sl-fav-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--sl-color-warning-soft);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sl-is-burst > .sl-fav-spark { animation: sl-fav-spark 0.6s ease-out forwards; }
+.sl-is-burst > .sl-fav-spark:nth-child(odd) { background: var(--sl-color-brand-link); }
+
+@keyframes sl-fav-pop {
+  0% { transform: scale(0.4) rotate(-30deg); }
+  60% { transform: scale(1.45) rotate(8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes sl-fav-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-brand-link) 60%, transparent); }
+  100% { box-shadow: 0 0 0 14px transparent; }
+}
+
+@keyframes sl-fav-spark {
+  0% { opacity: 1; transform: rotate(var(--sl-spark-angle, 0deg)) translateX(4px) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--sl-spark-angle, 0deg)) translateX(22px) scale(0.4); }
+}
+
+/* Toast: shared confirmation bubble (also used by the share dial) */
+.sl-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--sl-color-surface-dark);
+  color: var(--sl-color-on-dark);
+  font-size: 14px;
+  box-shadow: var(--sl-shadow-strong);
+  opacity: 0;
+  transform: translate(-50%, 16px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.sl-toast.sl-is-show { opacity: 1; transform: translate(-50%, 0); }
+.sl-toast > .bi { color: var(--sl-color-success-soft); font-size: var(--sl-size-icon-sm); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-fav .sl-is-burst > .bi,
+  .sl-is-burst > .sl-fav-ring,
+  .sl-is-burst > .sl-fav-spark { animation: none; }
+  .sl-toast { transition: opacity 0.25s ease; transform: translate(-50%, 0); }
+}
+
+/* ---- lab-only variant tweaks ---- */
+.demo-v-fill .sl-is-burst > .bi { animation-name: sl-fav-pop-fill; }
+@keyframes sl-fav-pop-fill {
+  0% { transform: scale(1); clip-path: inset(100% 0 0 0); }
+  50% { transform: scale(1.35); clip-path: inset(0 0 0 0); }
+  100% { transform: scale(1); clip-path: inset(0 0 0 0); }
+}
+.demo-v-spin .sl-is-burst > .bi { animation-name: sl-fav-pop-spin; animation-duration: 0.6s; }
+@keyframes sl-fav-pop-spin {
+  0% { transform: scale(0.3) rotate(-180deg); }
+  70% { transform: scale(1.4) rotate(20deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+</style>
+</head>
+<body>
+
+<div class="demo-head">
+  <h1>«В избранное» — круглая звезда перед заголовком</h1>
+  <p>Замена чипа-сердца на круглую кнопку в визуале <code>sl-but-mini</code>/<code>sl-dial</code>: тёмная звезда <code>bi-star</code>, на hover — <code>brand-link</code>. Три состояния с подсказкой <code>sl-tip.sl-float</code>. HTMX-контракт <code>getFavoriteButton()</code> (id=<code>rep&lt;id&gt;&lt;mod&gt;</code>, <code>hx-swap="outerHTML"</code>, href с токеном) не меняется — меняется только разметка фрагмента.</p>
+</div>
+
+<div class="demo-wrap">
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>1. Три состояния <span class="demo-badge-reco">финал</span></h2>
+  <p class="demo-note">Наведи или сфокусируй Tab-ом каждую кнопку — у всех есть подсказка. Серая звезда лимита не реагирует на клик (<code>aria-disabled</code>).</p>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">Можно добавить</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav" id="rep642news">
+          <a href="#addFavorite" class="sl-but-mini" title="" aria-label="Добавить в избранное" data-fav="add"><i class="bi bi-star" aria-hidden="true"></i></a>
+          <div class="sl-float-panel">Добавить в избранное</div>
+        </span>
+        <span class="demo-muted">тёмная, звезда-контур</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Уже в избранном</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav">
+          <span class="sl-but-mini sl-fav-on" aria-label="Материал в избранном"><i class="bi bi-star-fill" aria-hidden="true"></i></span>
+          <div class="sl-float-panel">Материал уже в вашем избранном</div>
+        </span>
+        <span class="demo-muted">синяя, как закладка в браузере</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Лимит достигнут</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav">
+          <span class="sl-but-mini sl-fav-limit" aria-disabled="true" aria-label="Лимит избранного исчерпан"><i class="bi bi-star-fill" aria-hidden="true"></i></span>
+          <div class="sl-float-panel">Лимит избранного исчерпан (50 из 50).<br>Удалите что-нибудь из списка, чтобы добавить новое.</div>
+        </span>
+        <span class="demo-muted">серая, без функции</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>2. Эффект добавления — варианты «взрыва»</h2>
+  <p class="demo-note">Кликни по любой звезде. Все варианты: pop звезды + свой характер разлёта. После взрыва кнопка переходит в состояние «в избранном» и показывает тост (сброс через 2,5 с для повторного теста).</p>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">A. Pop + разлёт искр <span class="demo-badge-reco">финал</span></span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav">
+          <button type="button" class="sl-but-mini" data-burst="sparks" aria-label="Добавить в избранное"><i class="bi bi-star" aria-hidden="true"></i></button>
+          <div class="sl-float-panel">Добавить в избранное</div>
+        </span>
+        <span class="demo-muted">8 искр + кольцо + pop</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">B. Только кольцо-волна</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav">
+          <button type="button" class="sl-but-mini" data-burst="ring" aria-label="Добавить в избранное"><i class="bi bi-star" aria-hidden="true"></i></button>
+          <div class="sl-float-panel">Добавить в избранное</div>
+        </span>
+        <span class="demo-muted">тихая волна без частиц</span>
+      </div>
+    </div>
+    <div class="demo-cell demo-v-fill">
+      <span class="demo-label">C. Заливка снизу вверх</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav">
+          <button type="button" class="sl-but-mini" data-burst="ring" aria-label="Добавить в избранное"><i class="bi bi-star" aria-hidden="true"></i></button>
+          <div class="sl-float-panel">Добавить в избранное</div>
+        </span>
+        <span class="demo-muted">звезда «наполняется»</span>
+      </div>
+    </div>
+    <div class="demo-cell demo-v-spin">
+      <span class="demo-label">D. Оборот с вылетом</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fav">
+          <button type="button" class="sl-but-mini" data-burst="sparks" aria-label="Добавить в избранное"><i class="bi bi-star" aria-hidden="true"></i></button>
+          <div class="sl-float-panel">Добавить в избранное</div>
+        </span>
+        <span class="demo-muted">звезда влетает с вращением</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>3. Живой контекст: шапка статьи</h2>
+  <p class="demo-note">Реальная разметка <code>partials/view.html</code>: звезда стоит на месте <code>{{{ favorites }}}</code> перед заголовком. Переключатель имитирует ответ сервера с лимитом.</p>
+  <div class="demo-article">
+    <article class="sl-post sl-fullview">
+      <h1 class="sl-title" style="margin-top:0;"><span id="favlive"></span> Обновление SLAED CMS: единая система живых блоков</h1>
+      <div class="sl-meta">
+        <ul class="sl-pull-right">
+          <li><span title="Прочитано" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> 1 482</span></li>
+          <li><a href="#642" title="642" class="sl-but-mini">642</a></li>
+        </ul>
+        <ul>
+          <li><time datetime="2026-07-14" title="Дата публикации" class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> 14.07.2026</time></li>
+          <li><a href="#" title="Категория: Новости" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> Новости</a></li>
+        </ul>
+      </div>
+      <div class="sl-entry-content"><p>Кликни звезду перед заголовком: pop + искры + тост, состояние меняется как при реальном <code>hx-swap="outerHTML"</code>. Повторный клик (для теста) возвращает исходное состояние.</p></div>
+    </article>
+    <label class="demo-switch"><input type="checkbox" id="limitsw"> имитировать «лимит достигнут»</label>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>4. Контракт для переноса</h2>
+  <div class="demo-cell" style="max-width:960px;">
+    <span class="demo-label">Что меняется, что нет</span>
+    <p class="demo-note" style="margin-bottom:8px;">PHP (<code>getFavoriteButton()</code>) продолжает отдавать флаги <code>is_favorite / is_favorite_on / is_favorite_off</code>, href с токеном и HTMX-атрибуты. Меняются только фрагменты <code>span.html</code>/<code>link.html</code>: вместо <code>sl-chip sl-chip-danger sl-favor*</code> — круглая кнопка:</p>
+    <pre class="demo-muted" style="overflow:auto;background:var(--sl-color-surface-alt);padding:12px;border-radius:6px;margin:0;">&lt;span id="rep642news" class="sl-tip sl-float sl-fav"&gt;
+  &lt;a href="index.php?go=1&amp;op=addFavorite&amp;id=642&amp;mod=news&amp;token=…"
+     class="sl-but-mini" hx-get="…" hx-target="#rep642news" hx-swap="outerHTML" hx-push-url="false"
+     aria-label="Добавить в избранное"&gt;&lt;i class="bi bi-star"&gt;&lt;/i&gt;&lt;/a&gt;
+  &lt;div class="sl-float-panel"&gt;Добавить в избранное&lt;/div&gt;
+&lt;/span&gt;</pre>
+  </div>
+</section>
+
+</div>
+
+<div class="sl-toast" id="toast" role="status" aria-live="polite"><i class="bi bi-star-fill" aria-hidden="true"></i> <span id="toasttext">Добавлено в избранное</span></div>
+
+<script>
+// Favorites lab: burst effect, state swap and toast confirmation
+(function () {
+  var toast = document.getElementById('toast');
+  var toasttimer = null;
+  function showToast(text) {
+    document.getElementById('toasttext').textContent = text;
+    toast.classList.add('sl-is-show');
+    clearTimeout(toasttimer);
+    toasttimer = setTimeout(function () { toast.classList.remove('sl-is-show'); }, 2600);
+  }
+  // Attach spark elements and run the burst animation on a mini button
+  function burst(btn, kind) {
+    btn.querySelectorAll('.sl-fav-ring, .sl-fav-spark').forEach(function (n) { n.remove(); });
+    var ring = document.createElement('span');
+    ring.className = 'sl-fav-ring';
+    btn.appendChild(ring);
+    if (kind === 'sparks') {
+      for (var i = 0; i < 8; i++) {
+        var s = document.createElement('span');
+        s.className = 'sl-fav-spark';
+        s.style.setProperty('--sl-spark-angle', (i * 45) + 'deg');
+        btn.appendChild(s);
+      }
+    }
+    btn.classList.remove('sl-is-burst');
+    void btn.offsetWidth;
+    btn.classList.add('sl-is-burst');
+    setTimeout(function () {
+      btn.classList.remove('sl-is-burst');
+      btn.querySelectorAll('.sl-fav-ring, .sl-fav-spark').forEach(function (n) { n.remove(); });
+    }, 700);
+  }
+  // Section 2 playground buttons: burst, flip to "on", flip back after a pause
+  document.querySelectorAll('[data-burst]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var icon = btn.querySelector('.bi');
+      icon.className = 'bi bi-star-fill';
+      btn.classList.add('sl-fav-on');
+      burst(btn, btn.getAttribute('data-burst'));
+      showToast('Добавлено в избранное');
+      setTimeout(function () { icon.className = 'bi bi-star'; btn.classList.remove('sl-fav-on'); }, 2500);
+    });
+  });
+  // Section 3 live header: simulate the outerHTML swap of getFavoriteButton()
+  var favhost = document.getElementById('favlive');
+  var limitsw = document.getElementById('limitsw');
+  var infav = false;
+  function renderFav() {
+    if (limitsw.checked && !infav) {
+      favhost.innerHTML = '<span class="sl-tip sl-float sl-fav">'
+        + '<span class="sl-but-mini sl-fav-limit" aria-disabled="true" aria-label="Лимит избранного исчерпан"><i class="bi bi-star-fill" aria-hidden="true"></i></span>'
+        + '<div class="sl-float-panel">Лимит избранного исчерпан (50 из 50).<br>Удалите что-нибудь из списка, чтобы добавить новое.</div></span>';
+      return;
+    }
+    if (infav) {
+      favhost.innerHTML = '<span class="sl-tip sl-float sl-fav">'
+        + '<button type="button" class="sl-but-mini sl-fav-on" aria-label="Материал в избранном"><i class="bi bi-star-fill" aria-hidden="true"></i></button>'
+        + '<div class="sl-float-panel">Материал уже в вашем избранном<br><span class="demo-muted">(клик в демо возвращает назад)</span></div></span>';
+      favhost.querySelector('button').addEventListener('click', function () { infav = false; renderFav(); });
+      return;
+    }
+    favhost.innerHTML = '<span class="sl-tip sl-float sl-fav">'
+      + '<button type="button" class="sl-but-mini" aria-label="Добавить в избранное"><i class="bi bi-star" aria-hidden="true"></i></button>'
+      + '<div class="sl-float-panel">Добавить в избранное</div></span>';
+    favhost.querySelector('button').addEventListener('click', function () {
+      var btn = favhost.querySelector('button');
+      btn.querySelector('.bi').className = 'bi bi-star-fill';
+      btn.classList.add('sl-fav-on');
+      burst(btn, 'sparks');
+      showToast('Добавлено в избранное');
+      setTimeout(function () { infav = true; renderFav(); }, 700);
+    });
+  }
+  limitsw.addEventListener('change', renderFav);
+  renderFav();
+})();
+</script>
+</body>
+</html>

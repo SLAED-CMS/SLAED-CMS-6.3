@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Единая модалка (Fable): варианты оформления</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%); border-bottom: 1px solid var(--sl-color-border); }
+.demo-head h1 { margin: 0 0 6px; font: normal clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.demo-head p { margin: 0; max-width: 1000px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1400px; margin: 0 auto; }
+.demo-sec { margin: 42px 0 0; }
+.demo-sec > h2 { margin: 0 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--sl-color-border); font: normal 20px/1.2 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.demo-sec > .demo-note { margin: 0 0 18px; color: var(--sl-color-text-muted); font-size: 13px; }
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; align-items: start; }
+.demo-cell { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 18px; }
+.demo-cell .demo-label { display: block; margin: 0 0 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sl-color-text-muted); }
+.demo-cell .demo-desc { margin: 0 0 12px; font-size: 13px; color: var(--sl-color-text-muted); }
+.demo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.demo-badge-reco { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-success) 15%, transparent); color: var(--sl-color-success); font-size: 11px; font-weight: bold; text-transform: none; letter-spacing: 0; }
+.demo-open { display: inline-flex; align-items: center; gap: 8px; padding: 7px 16px; border: 1px solid var(--sl-color-border-strong); border-radius: 999px; background: var(--sl-color-bg); font: inherit; font-size: 13px; color: var(--sl-color-text-heading); cursor: pointer; transition: border-color 0.15s ease, background-color 0.15s ease; }
+.demo-open:hover { border-color: var(--sl-color-brand-link); background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent); }
+.demo-open .bi { color: var(--sl-color-brand-link); }
+
+/* ==== БАЗА (как сейчас в системе: dialog.sl-modal) ==== */
+dialog.sl-modal { width: min(94vw, 520px); padding: 0; border: 1px solid var(--sl-color-border-muted); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); color: var(--sl-color-text); box-shadow: var(--sl-shadow-strong); }
+dialog.sl-modal::backdrop { background: color-mix(in srgb, #223345 58%, transparent); }
+.sl-modal-body { position: relative; padding: 22px 24px 24px; }
+.sl-modal-title { display: flex; align-items: center; gap: 10px; margin: 0 36px 12px 0; color: var(--sl-color-text-heading); font: normal 18px/1.2 "Magistral", Arial, sans-serif; }
+.sl-modal-title > .bi { color: var(--sl-color-brand-link); }
+.sl-modal-close { position: absolute; top: 12px; right: 12px; }
+.sl-modal-note { margin: 0 0 12px; color: var(--sl-color-text-muted); font-size: 13px; text-align: center; overflow-wrap: anywhere; }
+
+/* ==== ВАРИАНТЫ ОФОРМЛЕНИЯ (кандидаты в theme.css) ==== */
+
+/* A. Карточная (текущая): вход снизу с лёгким scale */
+.sl-modal-va { animation: sl-modal-in-a 0.22s cubic-bezier(0.34, 1.3, 0.64, 1); }
+@keyframes sl-modal-in-a { from { opacity: 0; transform: translateY(14px) scale(0.97); } }
+
+/* B. Полоса-шапка: заголовок в светлой полосе с разделителем, крестик в полосе */
+.sl-modal-vb .sl-modal-body { padding: 0 0 20px; }
+.sl-modal-vb .sl-modal-title { margin: 0 0 16px; padding: 14px 52px 14px 20px; background: var(--sl-color-surface); border-bottom: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0; }
+.sl-modal-vb .sl-modal-content { padding: 0 20px; }
+.sl-modal-vb .sl-modal-close { top: 10px; right: 12px; }
+.sl-modal-vb { animation: sl-modal-in-a 0.22s cubic-bezier(0.34, 1.3, 0.64, 1); }
+
+/* C. Тёмная шапка: полоса surface-dark, белый заголовок и белая иконка */
+.sl-modal-vc .sl-modal-body { padding: 0 0 20px; }
+.sl-modal-vc .sl-modal-title { margin: 0 0 16px; padding: 14px 52px 14px 20px; background: var(--sl-color-surface-dark); color: var(--sl-color-on-dark); border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0; }
+.sl-modal-vc .sl-modal-title > .bi { color: var(--sl-color-brand); }
+.sl-modal-vc .sl-modal-content { padding: 0 20px; }
+.sl-modal-vc .sl-modal-close { top: 10px; right: 12px; background-color: var(--sl-color-surface-divider); }
+.sl-modal-vc { animation: sl-modal-in-a 0.22s cubic-bezier(0.34, 1.3, 0.64, 1); }
+
+/* D. Минимал: без полосы, заголовок по центру, вход простым фейдом */
+.sl-modal-vd .sl-modal-title { justify-content: center; margin: 0 0 14px; text-align: center; }
+.sl-modal-vd { border-color: var(--sl-color-border); box-shadow: var(--sl-shadow-medium); animation: sl-modal-in-d 0.18s ease-out; }
+@keyframes sl-modal-in-d { from { opacity: 0; } }
+
+/* E. Акцентный борт: цветная левая кромка по тону контекста (info/danger/success) */
+.sl-modal-ve { border-left: 4px solid var(--sl-modal-tone, var(--sl-color-brand-link)); animation: sl-modal-in-a 0.22s cubic-bezier(0.34, 1.3, 0.64, 1); }
+.sl-modal-ve .sl-modal-title > .bi { color: var(--sl-modal-tone, var(--sl-color-brand-link)); }
+.sl-modal-ve.sl-is-danger { --sl-modal-tone: var(--sl-color-danger); }
+
+/* F. Футер действий: нижняя панель с кнопками (для confirm и форм), общая для любых вариантов */
+.sl-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-modal-vb .sl-modal-foot, .sl-modal-vc .sl-modal-foot { margin: 18px 20px 0; }
+
+/* Подложки для сравнения */
+dialog.demo-bd-blur::backdrop { background: color-mix(in srgb, #223345 45%, transparent); backdrop-filter: blur(3px); }
+dialog.demo-bd-soft::backdrop { background: rgba(0, 0, 0, 0.25); }
+dialog.demo-bd-brand::backdrop { background: color-mix(in srgb, var(--sl-color-brand-strong) 40%, transparent); backdrop-filter: blur(2px); }
+
+/* Демо-наполнение кейсов */
+.demo-confirm-text { margin: 0; font-size: 14px; line-height: 1.55; }
+.demo-confirm-text b { color: var(--sl-color-text-heading); }
+.demo-form-row { margin: 0 0 12px; }
+.demo-form-row label { display: block; margin-bottom: 4px; font-size: 13px; color: var(--sl-color-text-muted); }
+.demo-img { width: 100%; border-radius: var(--sl-radius-control); display: block; background: linear-gradient(135deg, var(--sl-color-brand) 0%, var(--sl-color-accent) 100%); aspect-ratio: 16/9; }
+.sl-icon-demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 6px; max-height: 260px; overflow: auto; }
+.sl-icon-demo-grid button { display: grid; place-items: center; height: 44px; border: 1px solid transparent; border-radius: var(--sl-radius-control); background: var(--sl-color-surface); font-size: var(--sl-size-icon-sm); color: var(--sl-color-text-heading); cursor: pointer; }
+.sl-icon-demo-grid button:hover { border-color: var(--sl-color-brand-link); background: color-mix(in srgb, var(--sl-color-brand-link) 10%, transparent); }
+.demo-search { width: 100%; height: 30px; margin: 0 0 12px; padding: 0 12px; border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-control); font: inherit; font-size: 13px; }
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.sl-modal { animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="demo-head">
+  <h1>Единая модалка — варианты оформления</h1>
+  <p>Один механизм для всего проекта: нативный <code>&lt;dialog class="sl-modal"&gt;</code> (top-layer, ESC, фокус — бесплатно) + <code>sl-modal-body / sl-modal-title / sl-modal-close / sl-modal-note / sl-modal-foot</code>. Заменяет собой: диалоги «Поделиться»/QR, админский icon-picker (<code>sl-icon-modal</code>), лайтбокс изображений и <code>window.confirm</code> у удалений. Ниже — варианты рамки/шапки (A–E), подложки и структура с футером действий. Каждый вариант показан на реальных кейсах.</p>
+</div>
+
+<div class="demo-wrap">
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>1. Варианты рамки и шапки</h2>
+  <p class="demo-note">Один и тот же кейс — лист «Поделиться» — в пяти оформлениях. Открой каждый и сравни.</p>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">A. Карточная <span class="demo-badge-reco">текущая</span></span>
+      <p class="demo-desc">Белая карточка, заголовок с иконкой слева, крестик в углу контента. Вход: подъём + лёгкий scale.</p>
+      <button type="button" class="demo-open" data-open="m-a"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">B. Полоса-шапка</span>
+      <p class="demo-desc">Заголовок в светло-серой полосе с разделителем — модалка читается «окном» с титлбаром.</p>
+      <button type="button" class="demo-open" data-open="m-b"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">C. Тёмная шапка</span>
+      <p class="demo-desc">Титлбар на <code>surface-dark</code> — перекликается с шапкой сайта и админкой.</p>
+      <button type="button" class="demo-open" data-open="m-c"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">D. Минимал</span>
+      <p class="demo-desc">Без полосы, заголовок по центру, мягкая тень, вход фейдом. Самый тихий вариант.</p>
+      <button type="button" class="demo-open" data-open="m-d"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">E. Акцентный борт</span>
+      <p class="demo-desc">Цветная левая кромка по тону контекста: info — обычные окна, danger — подтверждения удаления.</p>
+      <button type="button" class="demo-open" data-open="m-e"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>2. Подложка (backdrop)</h2>
+  <p class="demo-note">Вариант A с разными подложками.</p>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">Затемнение 58% <span class="demo-badge-reco">текущая</span></span>
+      <button type="button" class="demo-open" data-open="m-a"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Затемнение 45% + blur 3px</span>
+      <button type="button" class="demo-open" data-open="m-bd-blur"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Лёгкая, 25%</span>
+      <button type="button" class="demo-open" data-open="m-bd-soft"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Брендовая + blur</span>
+      <button type="button" class="demo-open" data-open="m-bd-brand"><i class="bi bi-box-arrow-up-right"></i> Открыть</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>3. Кейсы одного механизма</h2>
+  <p class="demo-note">Все окна проекта на одной системе (показаны в варианте A; после выбора рамки — все кейсы её наследуют).</p>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">QR-код</span>
+      <p class="demo-desc">Уже в системе: белый бокс кода + ссылка + «Копировать».</p>
+      <button type="button" class="demo-open" data-open="m-qr"><i class="bi bi-qr-code"></i> Открыть</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Подтверждение удаления</span>
+      <p class="demo-desc">Замена <code>window.confirm</code> у <code>data-sl-confirm</code>: тон danger + футер действий.</p>
+      <button type="button" class="demo-open" data-open="m-confirm"><i class="bi bi-trash"></i> Удалить материал</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Icon-picker (админка)</span>
+      <p class="demo-desc">Замена <code>sl-icon-modal</code>: поиск в шапке + грид иконок.</p>
+      <button type="button" class="demo-open" data-open="m-icons"><i class="bi bi-grid-3x3-gap"></i> Выбрать иконку</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Изображение (лайтбокс)</span>
+      <p class="demo-desc">Просмотр картинок: широкая модалка, подпись — в ноте.</p>
+      <button type="button" class="demo-open" data-open="m-img"><i class="bi bi-image"></i> Открыть скриншот</button>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Форма</span>
+      <p class="demo-desc">Любая быстрая форма: поля + футер с «Отправить».</p>
+      <button type="button" class="demo-open" data-open="m-form"><i class="bi bi-envelope"></i> Написать автору</button>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- ============================================================ Диалоги ============================================================ -->
+
+<!-- A: share sheet -->
+<dialog class="sl-modal sl-modal-va" id="m-a">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-share-fill" aria-hidden="true"></i> Поделиться материалом</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-share-grid">
+      <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram"></i></span>Telegram</button>
+      <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp"></i></span>WhatsApp</button>
+      <button type="button" class="sl-share-net" data-sl-net="vk"><span class="sl-share-net-ico"><i class="bi bi-chat-fill"></i></span>VK</button>
+      <button type="button" class="sl-share-net" data-sl-net="facebook"><span class="sl-share-net-ico"><i class="bi bi-facebook"></i></span>Facebook</button>
+      <button type="button" class="sl-share-net" data-sl-net="x"><span class="sl-share-net-ico"><i class="bi bi-twitter-x"></i></span>X</button>
+      <button type="button" class="sl-share-net" data-sl-net="reddit"><span class="sl-share-net-ico"><i class="bi bi-reddit"></i></span>Reddit</button>
+      <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin"></i></span>LinkedIn</button>
+      <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at"></i></span>E-Mail</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- B -->
+<dialog class="sl-modal sl-modal-vb" id="m-b">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-share-fill" aria-hidden="true"></i> Поделиться материалом</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-modal-content">
+      <div class="sl-share-grid">
+        <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram"></i></span>Telegram</button>
+        <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp"></i></span>WhatsApp</button>
+        <button type="button" class="sl-share-net" data-sl-net="vk"><span class="sl-share-net-ico"><i class="bi bi-chat-fill"></i></span>VK</button>
+        <button type="button" class="sl-share-net" data-sl-net="facebook"><span class="sl-share-net-ico"><i class="bi bi-facebook"></i></span>Facebook</button>
+        <button type="button" class="sl-share-net" data-sl-net="x"><span class="sl-share-net-ico"><i class="bi bi-twitter-x"></i></span>X</button>
+        <button type="button" class="sl-share-net" data-sl-net="reddit"><span class="sl-share-net-ico"><i class="bi bi-reddit"></i></span>Reddit</button>
+        <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin"></i></span>LinkedIn</button>
+        <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at"></i></span>E-Mail</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- C -->
+<dialog class="sl-modal sl-modal-vc" id="m-c">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-share-fill" aria-hidden="true"></i> Поделиться материалом</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-modal-content">
+      <div class="sl-share-grid">
+        <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram"></i></span>Telegram</button>
+        <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp"></i></span>WhatsApp</button>
+        <button type="button" class="sl-share-net" data-sl-net="vk"><span class="sl-share-net-ico"><i class="bi bi-chat-fill"></i></span>VK</button>
+        <button type="button" class="sl-share-net" data-sl-net="facebook"><span class="sl-share-net-ico"><i class="bi bi-facebook"></i></span>Facebook</button>
+        <button type="button" class="sl-share-net" data-sl-net="x"><span class="sl-share-net-ico"><i class="bi bi-twitter-x"></i></span>X</button>
+        <button type="button" class="sl-share-net" data-sl-net="reddit"><span class="sl-share-net-ico"><i class="bi bi-reddit"></i></span>Reddit</button>
+        <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin"></i></span>LinkedIn</button>
+        <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at"></i></span>E-Mail</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- D -->
+<dialog class="sl-modal sl-modal-vd" id="m-d">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-share-fill" aria-hidden="true"></i> Поделиться материалом</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-share-grid">
+      <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram"></i></span>Telegram</button>
+      <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp"></i></span>WhatsApp</button>
+      <button type="button" class="sl-share-net" data-sl-net="vk"><span class="sl-share-net-ico"><i class="bi bi-chat-fill"></i></span>VK</button>
+      <button type="button" class="sl-share-net" data-sl-net="facebook"><span class="sl-share-net-ico"><i class="bi bi-facebook"></i></span>Facebook</button>
+      <button type="button" class="sl-share-net" data-sl-net="x"><span class="sl-share-net-ico"><i class="bi bi-twitter-x"></i></span>X</button>
+      <button type="button" class="sl-share-net" data-sl-net="reddit"><span class="sl-share-net-ico"><i class="bi bi-reddit"></i></span>Reddit</button>
+      <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin"></i></span>LinkedIn</button>
+      <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at"></i></span>E-Mail</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- E -->
+<dialog class="sl-modal sl-modal-va sl-modal-ve" id="m-e">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-share-fill" aria-hidden="true"></i> Поделиться материалом</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-share-grid">
+      <button type="button" class="sl-share-net" data-sl-net="telegram"><span class="sl-share-net-ico"><i class="bi bi-telegram"></i></span>Telegram</button>
+      <button type="button" class="sl-share-net" data-sl-net="whatsapp"><span class="sl-share-net-ico"><i class="bi bi-whatsapp"></i></span>WhatsApp</button>
+      <button type="button" class="sl-share-net" data-sl-net="vk"><span class="sl-share-net-ico"><i class="bi bi-chat-fill"></i></span>VK</button>
+      <button type="button" class="sl-share-net" data-sl-net="facebook"><span class="sl-share-net-ico"><i class="bi bi-facebook"></i></span>Facebook</button>
+      <button type="button" class="sl-share-net" data-sl-net="x"><span class="sl-share-net-ico"><i class="bi bi-twitter-x"></i></span>X</button>
+      <button type="button" class="sl-share-net" data-sl-net="reddit"><span class="sl-share-net-ico"><i class="bi bi-reddit"></i></span>Reddit</button>
+      <button type="button" class="sl-share-net" data-sl-net="linkedin"><span class="sl-share-net-ico"><i class="bi bi-linkedin"></i></span>LinkedIn</button>
+      <button type="button" class="sl-share-net" data-sl-net="mail"><span class="sl-share-net-ico"><i class="bi bi-envelope-at"></i></span>E-Mail</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- backdrop variants (копии A с другим ::backdrop) -->
+<dialog class="sl-modal sl-modal-va demo-bd-blur" id="m-bd-blur">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-droplet-half" aria-hidden="true"></i> Подложка: blur</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <p class="demo-confirm-text">Затемнение 45% + размытие 3px. Контент за окном «уходит в глубину».</p>
+  </div>
+</dialog>
+<dialog class="sl-modal sl-modal-va demo-bd-soft" id="m-bd-soft">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-brightness-high" aria-hidden="true"></i> Подложка: лёгкая</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <p class="demo-confirm-text">Слабое затемнение 25% — страница остаётся читаемой.</p>
+  </div>
+</dialog>
+<dialog class="sl-modal sl-modal-va demo-bd-brand" id="m-bd-brand">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-palette" aria-hidden="true"></i> Подложка: брендовая</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <p class="demo-confirm-text">Тонировка фирменным синим + blur.</p>
+  </div>
+</dialog>
+
+<!-- QR case -->
+<dialog class="sl-modal sl-modal-va" id="m-qr">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-qr-code" aria-hidden="true"></i> Ссылка QR-кодом</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-qr-code" id="qrslot"></div>
+    <p class="sl-modal-note">https://slaed.net/news/642</p>
+    <div class="sl-share-action"><button type="button" class="sl-chip sl-chip-info sl-live-act"><i class="bi bi-link-45deg" aria-hidden="true"></i> Копировать ссылку</button></div>
+  </div>
+</dialog>
+
+<!-- confirm case -->
+<dialog class="sl-modal sl-modal-va sl-modal-ve sl-is-danger" id="m-confirm">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Удалить материал?</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <p class="demo-confirm-text">Материал <b>«Производительность относительно новых версий PHP»</b> будет удалён без возможности восстановления.</p>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-close>Отмена</button>
+      <button type="button" class="sl-chip sl-chip-danger sl-live-act" data-close><i class="bi bi-trash" aria-hidden="true"></i> Удалить</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- icon picker case -->
+<dialog class="sl-modal sl-modal-va" id="m-icons" style="width: min(94vw, 640px);">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> Выбор иконки</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <input type="search" class="demo-search" placeholder="Поиск по названию…">
+    <div class="sl-icon-demo-grid" id="icongrid"></div>
+  </div>
+</dialog>
+
+<!-- image case -->
+<dialog class="sl-modal sl-modal-va" id="m-img" style="width: min(94vw, 760px);">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> Скриншот</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="demo-img" role="img" aria-label="Скриншот-заглушка"></div>
+    <p class="sl-modal-note" style="margin-top:12px;">admin-blocks-final.png — редизайн списка блоков</p>
+  </div>
+</dialog>
+
+<!-- form case -->
+<dialog class="sl-modal sl-modal-va" id="m-form">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-envelope" aria-hidden="true"></i> Написать автору</div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-close title="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="demo-form-row"><label>Тема</label><input type="text" class="demo-search" style="margin:0;" value="Вопрос по статье"></div>
+    <div class="demo-form-row"><label>Сообщение</label><textarea class="demo-search" style="margin:0;height:90px;padding-top:8px;" placeholder="Текст сообщения…"></textarea></div>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-close>Отмена</button>
+      <button type="button" class="sl-chip sl-chip-info sl-live-act" data-close><i class="bi bi-send" aria-hidden="true"></i> Отправить</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+// Modal lab: open buttons, close buttons, backdrop click; icon grid demo fill
+(function () {
+  document.addEventListener('click', function (event) {
+    var open = event.target.closest('[data-open]');
+    if (open) {
+      var dlg = document.getElementById(open.getAttribute('data-open'));
+      if (dlg) dlg.showModal();
+      return;
+    }
+    var close = event.target.closest('[data-close]');
+    if (close) {
+      var host = close.closest('dialog');
+      if (host) host.close();
+      return;
+    }
+    if (event.target.tagName === 'DIALOG') event.target.close();
+  });
+  var icons = ['house','gear','star','heart','bell','bookmark','camera','chat','cloud','cpu','display','envelope','flag','folder','globe','key','lock','map','music-note','palette','pencil','person','phone','pin','printer','search','shield','tag','trash','trophy','truck','wallet','wifi','wrench','x-circle','youtube','alarm','archive','award','bag','bank','basket','battery','bicycle','book','box','brush','bug'];
+  var grid = document.getElementById('icongrid');
+  grid.innerHTML = icons.map(function (n) { return '<button type="button" title="bi-' + n + '"><i class="bi bi-' + n + '"></i></button>'; }).join('');
+})();
+</script>
+</body>
+</html>

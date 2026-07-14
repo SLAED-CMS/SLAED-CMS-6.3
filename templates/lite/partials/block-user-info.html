@@ -1,5 +1,5 @@
 <div class="sl-block-user-ava">
-  {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
+  {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
   <p>{{ greeting_label }}<br>{% if is_user %}<a href="index.php?name=account">{{ greeting_name }}</a>{% else %}{{ greeting_name }}{% endif %}</p>
   {% if has_meta %}<p class="sl-block-user-meta">{% if group_name %}{{ group_name }}{% endif %}{% if group_name and points_label %} &middot; {% endif %}{% if points_label %}{{ points_label }}: <b>{{ points_count }}</b>{% endif %}</p>{% endif %}
 </div>
@@ -30,4 +30,4 @@
     <p><button type="submit" class="sl-but">{{ login_label }}</button></p>
   </form>
 {% endif %}
-{% if session_html %}<div class="sl-block-session" id="repsinfo">{{{ session_html }}}</div>{% endif %}
+{% if session_html %}<div class="sl-block-session" id="repsinfo" data-sl-live-box>{{{ session_html }}}</div>{% endif %}

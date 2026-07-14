@@ -2098,8 +2098,9 @@ ol.sl-sublist-two li:hover:before {
   text-align: left;
   white-space: normal;
   overflow-wrap: anywhere;
-  font-size: 14px;
-  line-height: 16px;
+  /* One tooltip typography for the whole project: poll-panel size, bold everywhere */
+  font-size: 13px;
+  line-height: 1.5;
   background-color: var(--sl-color-bg);
   border: 1px solid var(--sl-color-border-muted);
   border-radius: 6px;
@@ -2114,25 +2115,28 @@ ol.sl-sublist-two li:hover:before {
     display 0.5s allow-discrete;
 }
 
-.sl-tip dl {
+/* Float panel definition rows: the one global label/value mechanism - muted label with colon left, heading value flushed right */
+.sl-float-panel dl {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  gap: var(--sl-space-xs) var(--sl-space-md);
+  gap: var(--sl-space-xs) var(--sl-space-lg);
   margin: 0;
 }
 
-.sl-tip dt {
+.sl-float-panel dt {
   margin: 0;
-  color: var(--sl-color-text-heading);
+  color: var(--sl-color-text-muted);
 }
 
-.sl-tip dt::after {
+.sl-float-panel dt::after {
   content: ":";
 }
 
-.sl-tip dd {
+.sl-float-panel dd {
   margin: 0;
   min-width: 0;
+  color: var(--sl-color-text-heading);
+  text-align: right;
 }
 
 /* Popover arrow: shared geometry, flips with .sl-float-up; colour set per context */
@@ -5401,10 +5405,7 @@ a.sl-chip-neutral {
   );
 }
 
-/* Favourite toggles and chips wrapping a link are clickable too: same hover deepening */
-.sl-favor:hover,
-.sl-favor-on:hover,
-.sl-favor-off:hover,
+/* Chips wrapping a link are clickable too: same hover deepening */
 .sl-chip:has(> a):hover {
   background: var(--sl-chip-hover-bg);
 }
@@ -6331,6 +6332,578 @@ a.sl-chip-neutral {
   font-size: 12px;
   color: var(--sl-color-text-muted);
   max-width: 440px;
+}
+
+/* 2026 compact article controls: favourite, share, live status and freshness indicators */
+/* Favourites star: round mini toggle in the title; on = browser-bookmark blue, limit = muted and inert */
+.sl-fav {
+  margin-right: 0;
+}
+
+.sl-fav .sl-but-mini {
+  position: relative;
+  overflow: visible;
+}
+
+.sl-fav-on,
+.sl-fav-on:hover {
+  background-color: var(--sl-color-brand-link);
+  color: var(--sl-color-on-dark);
+  cursor: default;
+}
+
+.sl-fav-limit,
+.sl-fav-limit:hover {
+  background-color: var(--sl-color-text-muted);
+  color: var(--sl-color-on-dark);
+  cursor: not-allowed;
+}
+
+/* Add burst: star pop plus ring wave on the button and six sparks via pseudo elements */
+.sl-fav .sl-is-burst {
+  animation: sl-fav-ring 0.55s ease-out;
+}
+
+.sl-fav .sl-is-burst > .bi {
+  animation: sl-fav-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sl-fav .sl-is-burst::before,
+.sl-fav .sl-is-burst::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--sl-space-xs);
+  height: var(--sl-space-xs);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sl-fav-spark 0.6s ease-out forwards;
+}
+
+.sl-fav .sl-is-burst::before {
+  box-shadow:
+    13px -13px var(--sl-color-warning-soft),
+    -13px -13px var(--sl-color-brand-link),
+    15px 7px var(--sl-color-warning-soft);
+}
+
+.sl-fav .sl-is-burst::after {
+  box-shadow:
+    -15px 7px var(--sl-color-brand-link),
+    10px 14px var(--sl-color-warning-soft),
+    -10px 14px var(--sl-color-brand-link);
+}
+
+@keyframes sl-fav-pop {
+  0% {
+    transform: scale(0.4) rotate(-30deg);
+  }
+
+  60% {
+    transform: scale(1.45) rotate(8deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes sl-fav-ring {
+  0% {
+    box-shadow: 0 0 0 0
+      color-mix(in srgb, var(--sl-color-brand-link) 60%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@keyframes sl-fav-spark {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.7);
+  }
+}
+
+/* Share: inline SVG brand glyphs (VK, OK, Viber have no bootstrap icon) share the .bi sizing */
+.sl-svg-ico {
+  display: block;
+  width: var(--sl-size-icon-xs);
+  height: var(--sl-size-icon-xs);
+}
+
+/* Share sheet: network tiles keep official brand colours via --sl-net-brand; actions stay theme-toned */
+.sl-share-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: var(--sl-space-md);
+}
+
+.sl-share-net {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  padding: var(--sl-space-md) var(--sl-space-xs);
+  border: 0;
+  border-radius: var(--sl-radius-control);
+  background: transparent;
+  color: var(--sl-color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.sl-share-net:hover,
+.sl-share-net:focus-visible {
+  background: var(--sl-color-surface-alt);
+  color: var(--sl-color-text-heading);
+}
+
+.sl-share-net-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-control);
+  height: var(--sl-size-control);
+  border-radius: 50%;
+  background: var(--sl-net-brand, var(--sl-color-border-strong));
+  color: var(--sl-color-on-dark);
+  font-size: var(--sl-size-icon-sm);
+  transition:
+    filter 0.15s ease,
+    transform 0.15s ease;
+}
+
+.sl-share-net:hover .sl-share-net-ico {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+.sl-share-net-ico .sl-svg-ico {
+  width: var(--sl-size-icon-sm);
+  height: var(--sl-size-icon-sm);
+}
+
+/* Official network brand colours, keyed by the share target id */
+[data-sl-net="telegram"] {
+  --sl-net-brand: #2aabee;
+}
+
+[data-sl-net="whatsapp"] {
+  --sl-net-brand: #25d366;
+}
+
+[data-sl-net="viber"] {
+  --sl-net-brand: #7360f2;
+}
+
+[data-sl-net="vk"] {
+  --sl-net-brand: #0077ff;
+}
+
+[data-sl-net="ok"] {
+  --sl-net-brand: #ee8208;
+}
+
+[data-sl-net="facebook"] {
+  --sl-net-brand: #0866ff;
+}
+
+[data-sl-net="x"] {
+  --sl-net-brand: #111111;
+}
+
+[data-sl-net="pinterest"] {
+  --sl-net-brand: #e60023;
+}
+
+[data-sl-net="reddit"] {
+  --sl-net-brand: #ff4500;
+}
+
+[data-sl-net="linkedin"] {
+  --sl-net-brand: #0a66c2;
+}
+
+[data-sl-net="mail"] {
+  --sl-net-brand: #6e7c8b;
+}
+
+/* Brand tone on the dial fan network chips */
+.sl-but-mini.sl-net-brand {
+  background-color: var(--sl-net-brand, var(--sl-color-border-strong));
+}
+
+a.sl-but-mini.sl-net-brand:hover,
+button.sl-but-mini.sl-net-brand:hover,
+.sl-but-mini.sl-net-brand:focus-visible {
+  background-color: var(--sl-net-brand, var(--sl-color-brand-link));
+  filter: brightness(1.15);
+}
+
+/* Copy feedback: the pressed control flashes green with a check icon */
+.sl-is-copied,
+.sl-chip.sl-is-copied,
+a.sl-but-mini.sl-is-copied:hover,
+button.sl-but-mini.sl-is-copied:hover {
+  background-color: var(--sl-color-success);
+  color: var(--sl-color-on-dark);
+}
+
+/* Centered action row under the QR code */
+.sl-share-action {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--sl-space-lg);
+}
+
+/* Modal: the one project-wide dialog frame - native dialog with a title bar strip (share, QR, confirm, icon picker, lightbox) */
+dialog.sl-modal {
+  width: min(94vw, 520px);
+  padding: 0;
+  border: 1px solid var(--sl-color-border-muted);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  box-shadow: var(--sl-shadow-strong);
+  animation: sl-modal-in 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+dialog.sl-modal::backdrop {
+  background: color-mix(in srgb, var(--sl-color-text-heading) 58%, transparent);
+}
+
+/* Wide contents: image previews and icon grids */
+dialog.sl-modal.sl-modal-wide {
+  width: auto;
+  max-width: min(94vw, 1280px);
+}
+
+.sl-modal-body {
+  position: relative;
+  padding: 0 20px 20px;
+}
+
+/* Title bar strip: bleeds to the dialog edges via negative margins so dialog markup stays flat */
+.sl-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 -20px 16px;
+  padding: 14px 52px 14px 20px;
+  background: var(--sl-color-surface);
+  border-bottom: 1px solid var(--sl-color-border);
+  border-radius: calc(var(--sl-radius-card) - 1px) calc(var(--sl-radius-card) - 1px) 0 0;
+  color: var(--sl-color-text-heading);
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.sl-modal-title > .bi {
+  color: var(--sl-color-brand-link);
+}
+
+.sl-modal-note {
+  margin: 0 0 var(--sl-space-lg);
+  color: var(--sl-color-text-muted);
+  font-size: 13px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.sl-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
+/* Footer action row: confirmations and modal forms */
+.sl-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sl-space-md);
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sl-color-border-subtle);
+}
+
+/* Lightbox image inside the shared modal */
+.sl-modal-image {
+  display: block;
+  max-width: 100%;
+  max-height: calc(90vh - 120px);
+  margin: 0 auto;
+  border-radius: var(--sl-radius-control);
+}
+
+@keyframes sl-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+.sl-qr-code {
+  width: min(64vw, 256px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: var(--sl-space-md);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-on-dark);
+  box-shadow: var(--sl-shadow-soft);
+}
+
+.sl-qr-code > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sl-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--sl-space-xl) + var(--sl-space-md));
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--sl-color-text-heading);
+  color: var(--sl-color-on-dark);
+  box-shadow: var(--sl-shadow-strong);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 20px);
+  transition:
+    opacity 0.24s ease,
+    transform 0.24s ease;
+}
+
+.sl-toast.sl-is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.sl-toast > .bi {
+  color: var(--sl-color-success-soft);
+  font-size: var(--sl-size-icon-sm);
+}
+
+.sl-live-tools {
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  z-index: 5;
+}
+
+.sl-live-chip {
+  margin-right: 0;
+}
+
+.sl-live-icon {
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  animation: sl-live-pulse 2s ease-out infinite;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-icon,
+.sl-live-chip.sl-is-closed .sl-live-icon {
+  background: color-mix(in srgb, var(--sl-color-warning) 16%, transparent);
+  color: var(--sl-color-warning);
+  animation: none;
+}
+
+.sl-live-panel {
+  min-width: 220px;
+}
+
+.sl-live-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sl-space-lg);
+  padding-top: var(--sl-space-md);
+  border-top: 1px solid var(--sl-color-border-subtle);
+}
+
+/* Live chip paired state labels and icons: the paused variant shows only while paused */
+.sl-live-chip .sl-live-s-paused {
+  display: none;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-s-on {
+  display: none;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-s-paused {
+  display: inline;
+}
+
+.sl-live-act {
+  border: 0;
+  cursor: pointer;
+}
+
+.sl-live-chip.sl-is-paused .sl-live-act {
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+}
+
+.sl-live-avatar {
+  position: relative;
+  display: inline-block;
+}
+
+.sl-live-avatar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--sl-color-bg);
+  border-radius: 50%;
+  background: var(--sl-color-success);
+  animation: sl-live-pulse 2s ease-out infinite;
+}
+
+.sl-fresh {
+  display: inline-grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: 50%;
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.sl-fresh-now {
+  background: color-mix(in srgb, var(--sl-color-danger) 18%, transparent);
+  color: var(--sl-color-danger);
+  animation: sl-fresh-glow 1.5s ease-out infinite;
+}
+
+.sl-fresh-now > .bi {
+  transform-origin: 50% 78%;
+  animation: sl-fresh-fire 0.8s ease-in-out infinite;
+}
+
+.sl-fresh-day {
+  background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
+  color: var(--sl-color-danger);
+}
+
+.sl-fresh-day > .bi {
+  animation: sl-fresh-beat 1.5s ease-in-out infinite;
+}
+
+.sl-fresh-days {
+  background: color-mix(in srgb, var(--sl-color-warning) 16%, transparent);
+  color: var(--sl-color-warning);
+}
+
+.sl-fresh-days > .bi {
+  animation: sl-fresh-sway 1.9s ease-in-out infinite;
+}
+
+.sl-fresh-week {
+  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+  color: var(--sl-color-brand-strong);
+}
+
+.sl-fresh-week > .bi {
+  animation: sl-fresh-turn 4s linear infinite;
+}
+
+.sl-fresh-month {
+  background: var(--sl-color-surface-alt);
+  color: var(--sl-color-text-muted);
+}
+
+.sl-fresh-month > .bi {
+  animation: sl-fresh-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes sl-fresh-fire {
+  20% {
+    transform: rotate(7deg) scale(1.16);
+  }
+
+  70% {
+    transform: rotate(-8deg) scale(1.18);
+  }
+}
+
+@keyframes sl-fresh-glow {
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-danger) 55%, transparent);
+  }
+}
+
+@keyframes sl-fresh-beat {
+  16% {
+    transform: scale(1.26);
+  }
+}
+
+@keyframes sl-fresh-sway {
+  50% {
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes sl-fresh-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sl-fresh-breathe {
+  50% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-fav .sl-is-burst,
+  .sl-fav .sl-is-burst::before,
+  .sl-fav .sl-is-burst::after,
+  .sl-fav .sl-is-burst > .bi,
+  dialog.sl-modal,
+  .sl-share-net-ico,
+  .sl-toast,
+  .sl-live-icon,
+  .sl-live-avatar::after,
+  .sl-fresh,
+  .sl-fresh > .bi {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Responsive overlay gutters: reserve space for fixed idea and feedback tabs */

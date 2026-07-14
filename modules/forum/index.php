@@ -343,6 +343,11 @@ function view(): void {
             if (!$isread) setError(403);
             elseif ($tstatus <= 1) setError(404);
         }
+        $svars = ['name' => $conf['name'], 'op' => 'view', 'id' => $topic];
+        if ($num > 1) $svars['num'] = $num;
+        $svars['title'] = $rows[0][5];
+        $svars['ctitle'] = $rows[0][18];
+        $share = getPublicUrl($svars);
         setHead([
             'title' => $rows[0][5],
             'kind' => 'forum',
@@ -352,6 +357,7 @@ function view(): void {
             'img' => $seoimg,
             'time' => $rows[0][6],
             'author' => $rows[0][4] ?: $conf['sitename'],
+            'canon' => $share,
         ]);
         if ($ismod || ($isread && $tstatus > 1)) {
             $atopic = (is_moder($conf['name']) || $istopic)
@@ -362,7 +368,15 @@ function view(): void {
                 : $tpl->getHtmlFrag('inline-badge', ['title_text' => sprintf(_ACINFOP, _NOTCAN), 'is_account_button' => true, 'is_hidden' => true, 'label' => _REPLY]);
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $favor = getFavoriteButton($topic, $conf['name']);
-            $cont = $tpl->getHtmlFrag('forum-topic-view', ['open' => true, 'atopic' => $atopic, 'areply' => $areply, 'title' => filterTextHighlight($rows[0][5], $word), 'favor' => $favor]);
+            $cont = $tpl->getHtmlFrag('forum-topic-view', [
+                'open' => true,
+                'atopic' => $atopic,
+                'areply' => $areply,
+                'title' => filterTextHighlight($rows[0][5], $word),
+                'favor' => $favor,
+                'share_url' => $share,
+                'share_title' => $rows[0][5],
+            ]);
             foreach ($rows as $val) {
                 $fid = $val[0];
                 $fcat = $val[2];
@@ -451,7 +465,29 @@ function view(): void {
                 $body_html = filterTextHighlight($prs->filterContent($val[7], false, $conf['name'], 2), $word);
                 $text = $tpl->getHtmlFrag('block-content', ['id' => 'repfor'.$fid, 'content' => $body_html]);
                 if ($fields) $text .= filterTextHighlight($prs->filterContent("\n\n".$fields, false, $conf['name'], 2), $word);
-                $cont .= $tpl->getHtmlFrag('forum-post', ['id' => $fid, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $text, 'sig' => $prs->filterContent($sig, false, $conf['name']), 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !$val[17], 'closed_title' => _PCLOSED]);
+                $cont .= $tpl->getHtmlFrag('forum-post', [
+                    'id' => $fid,
+                    'username' => $avname,
+                    'username_html' => $uname_html,
+                    'report' => $utip,
+                    'date' => $date,
+                    'rating' => $rating,
+                    'ip' => $ip,
+                    'post_count' => $amess,
+                    'avatar' => $avatar,
+                    'rank' => $rank,
+                    'rank_link' => $rlink,
+                    'user_rate' => $rate,
+                    'text' => $text,
+                    'sig' => $prs->filterContent($sig, false, $conf['name']),
+                    'btn_user' => $usermenu,
+                    'btn_warn' => $warn,
+                    'btn_thank' => $thank,
+                    'btn_edit' => $edit,
+                    'is_closed' => !$val[17],
+                    'closed_title' => _PCLOSED,
+                    'share_url' => $share.'#'.$fid,
+                ]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = getPageNumbers($conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);

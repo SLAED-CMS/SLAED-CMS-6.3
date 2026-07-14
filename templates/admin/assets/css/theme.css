@@ -2218,39 +2218,106 @@ tr.sl-row-collapsed {
   cursor: pointer;
 }
 
-.sl-icon-modal {
-  width: min(760px, calc(100vw - 40px));
-  height: min(560px, calc(100vh - 80px));
+/* Modal: the one project-wide dialog frame - native dialog with a title bar strip (icon picker, confirmations) */
+dialog.sl-modal {
+  width: min(94vw, 520px);
   padding: 0;
-  overflow: hidden;
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-card);
   background: var(--sl-color-bg);
   color: var(--sl-color-text);
   box-shadow: var(--sl-shadow-float);
+  animation: sl-modal-in 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
 }
 
-.sl-icon-modal[open] {
-  display: flex;
-  flex-direction: column;
-}
-
-.sl-icon-modal::backdrop {
+dialog.sl-modal::backdrop {
   background: color-mix(in srgb, var(--sl-color-text) 40%, transparent);
 }
 
-.sl-icon-modal-head {
-  flex: 0 0 auto;
+.sl-modal-body {
+  position: relative;
+  padding: 0 20px 20px;
+}
+
+/* Title bar strip: bleeds to the dialog edges via negative margins so dialog markup stays flat */
+.sl-modal-title {
   display: flex;
   align-items: center;
   gap: var(--sl-space-md);
-  padding: var(--sl-space-md) var(--sl-space-lg);
+  margin: 0 -20px 16px;
+  padding: 12px 56px 12px 20px;
+  background: var(--sl-color-bg-muted);
   border-bottom: 1px solid var(--sl-color-border);
-  background: linear-gradient(
-    to bottom,
-    var(--sl-color-bg) 0%,
-    var(--sl-color-bg-muted) 100%
-  );
+  border-radius: calc(var(--sl-radius-card) - 1px) calc(var(--sl-radius-card) - 1px) 0 0;
+  color: var(--sl-color-text);
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.sl-modal-title > .bi {
+  color: var(--sl-color-primary);
+}
+
+.sl-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
+/* Footer action row: confirmations and modal forms */
+.sl-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sl-space-md);
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sl-color-border);
+}
+
+/* Chip tones and chip buttons used inside modal footers; class names match the lite theme */
+.sl-live-act {
+  border: 0;
+  cursor: pointer;
+}
+
+.sl-chip-neutral {
+  background: var(--sl-color-bg-muted);
+  color: var(--sl-color-text);
+}
+
+.sl-chip-danger {
+  background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent);
+  color: var(--sl-color-danger);
+}
+
+@keyframes sl-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+/* Icon picker on the shared modal frame: fixed height with a scrolling grid */
+.sl-icon-modal {
+  width: min(760px, calc(100vw - 40px));
+}
+
+.sl-icon-modal .sl-modal-body {
+  display: flex;
+  flex-direction: column;
+  height: min(560px, calc(100vh - 80px));
+  padding: 0;
+}
+
+.sl-icon-modal .sl-modal-title {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.sl-icon-modal .sl-modal-title [data-sl-icon-search] {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: normal;
 }
 
 .sl-icon-modal-tabs {
@@ -2277,32 +2344,6 @@ tr.sl-row-collapsed {
   border-color: var(--sl-color-primary);
   background: var(--sl-color-primary);
   color: var(--sl-color-on-dark);
-}
-
-.sl-icon-modal-head [data-sl-icon-search] {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.sl-icon-modal-close {
-  display: grid;
-  place-items: center;
-  width: var(--sl-size-control);
-  height: var(--sl-size-control);
-  padding: 0;
-  border: 1px solid var(--sl-color-border-strong);
-  border-radius: 9999px;
-  background: var(--sl-color-bg);
-  color: var(--sl-color-muted);
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    color 0.18s ease;
-}
-
-.sl-icon-modal-close:hover {
-  border-color: var(--sl-color-danger);
-  color: var(--sl-color-danger);
 }
 
 .sl-icon-modal-grid {

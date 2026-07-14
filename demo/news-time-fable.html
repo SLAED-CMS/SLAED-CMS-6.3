@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Свежесть материала (Fable): чип-индикатор у заголовка</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---- demo chrome (не часть системы) ---- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%); border-bottom: 1px solid var(--sl-color-border); }
+.demo-head h1 { margin: 0 0 6px; font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.demo-head p { margin: 0; max-width: 960px; color: var(--sl-color-text-muted); }
+.demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1400px; margin: 0 auto; }
+.demo-sec { margin: 42px 0 0; }
+.demo-sec > h2 { margin: 0 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--sl-color-border); font: bold 20px/1.2 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.demo-sec > .demo-note { margin: 0 0 18px; color: var(--sl-color-text-muted); font-size: 13px; }
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 22px; align-items: start; }
+.demo-cell { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 18px; }
+.demo-cell .demo-label { display: block; margin: 0 0 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sl-color-text-muted); }
+.demo-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.demo-badge-reco { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-success) 15%, transparent); color: var(--sl-color-success); font-size: 11px; font-weight: bold; text-transform: none; letter-spacing: 0; }
+.demo-article { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 24px 28px; }
+.demo-muted { color: var(--sl-color-text-muted); font-size: 13px; }
+.demo-slider { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
+.demo-slider input[type="range"] { flex: 1; accent-color: var(--sl-color-brand-link); }
+.demo-slider output { min-width: 130px; font-weight: bold; color: var(--sl-color-text-heading); }
+
+/* ==== ПРЕДЛОЖЕНИЕ ДЛЯ theme.css: чип свежести .sl-fresh ==== */
+/* Host: круглый информ-чип на штатной механике sl-tip.sl-float; НЕ кнопка — cursor:help от .sl-tip */
+.sl-fresh {
+  --sl-fresh-tone: var(--sl-color-text-muted);
+  margin-right: 0;
+  vertical-align: middle;
+}
+
+.sl-fresh-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sl-fresh-tone) 12%, transparent);
+  color: var(--sl-fresh-tone);
+}
+
+.sl-fresh-ico > .bi {
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+}
+
+/* Tier tones: heat palette, cooling with age */
+.sl-fresh-now { --sl-fresh-tone: var(--sl-color-danger); }
+.sl-fresh-day { --sl-fresh-tone: var(--sl-color-danger-soft); }
+.sl-fresh-days { --sl-fresh-tone: var(--sl-color-warning); }
+.sl-fresh-week { --sl-fresh-tone: var(--sl-color-brand-link); }
+.sl-fresh-month { --sl-fresh-tone: var(--sl-color-text-muted); }
+
+/* Ambient tier effects: always-on, the fresher the livelier; no hover effect by design */
+.sl-fresh-now .sl-fresh-ico { animation: sl-fresh-halo 1.6s ease-out infinite; }
+.sl-fresh-now .sl-fresh-ico > .bi { animation: sl-fresh-flicker 0.9s ease-in-out infinite; transform-origin: 50% 85%; }
+.sl-fresh-day .sl-fresh-ico > .bi { animation: sl-fresh-beat 1.8s ease-in-out infinite; transform-origin: 50% 60%; }
+.sl-fresh-days .sl-fresh-ico > .bi { animation: sl-fresh-sway 2.6s ease-in-out infinite; transform-origin: 50% 80%; }
+.sl-fresh-week .sl-fresh-ico > .bi { animation: sl-fresh-spin 14s linear infinite; }
+.sl-fresh-month .sl-fresh-ico { animation: sl-fresh-breathe 4s ease-in-out infinite; }
+
+/* Tooltip content grid inside the standard float panel */
+.sl-fresh-tip-title { font-weight: bold; color: var(--sl-color-text-heading); }
+.sl-fresh-tip-date { display: block; margin-top: 2px; color: var(--sl-color-text-muted); font-size: 13px; }
+
+@keyframes sl-fresh-halo {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-fresh-tone) 45%, transparent); }
+  70% { box-shadow: 0 0 0 9px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+@keyframes sl-fresh-flicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.12, 0.94) rotate(-3deg); }
+  50% { transform: scale(0.95, 1.1) rotate(2deg); }
+  75% { transform: scale(1.08, 0.97) rotate(-2deg); }
+}
+
+@keyframes sl-fresh-beat {
+  0%, 55%, 100% { transform: scale(1); }
+  15% { transform: scale(1.22); }
+  30% { transform: scale(0.96); }
+  42% { transform: scale(1.12); }
+}
+
+@keyframes sl-fresh-sway {
+  0%, 100% { transform: rotate(-9deg); }
+  50% { transform: rotate(9deg); }
+}
+
+@keyframes sl-fresh-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sl-fresh-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-fresh .sl-fresh-ico,
+  .sl-fresh .sl-fresh-ico > .bi { animation: none; }
+}
+
+/* Variant helpers for this lab only */
+.demo-fresh-soft .sl-fresh-now .sl-fresh-ico { animation-duration: 2.6s; }
+.demo-fresh-soft .sl-fresh-now .sl-fresh-ico > .bi { animation-duration: 1.6s; }
+.demo-fresh-soft .sl-fresh-day .sl-fresh-ico > .bi { animation-duration: 3s; }
+.demo-fresh-soft .sl-fresh-days .sl-fresh-ico > .bi { animation-duration: 4s; }
+.demo-fresh-hot .sl-fresh-now .sl-fresh-ico { animation-duration: 1.1s; }
+.demo-fresh-hot .sl-fresh-now .sl-fresh-ico > .bi { animation-duration: 0.55s; }
+.demo-fresh-hot .sl-fresh-day .sl-fresh-ico > .bi { animation-duration: 1.2s; }
+.demo-fresh-hot .sl-fresh-days .sl-fresh-ico > .bi { animation-duration: 1.6s; }
+.demo-fresh-bare .sl-fresh-ico { background: transparent; }
+.demo-fresh-ring .sl-fresh-ico { background: transparent; border: 1px solid color-mix(in srgb, var(--sl-fresh-tone) 45%, transparent); }
+</style>
+</head>
+<body>
+
+<div class="demo-head">
+  <h1>Свежесть материала — круглый чип у заголовка</h1>
+  <p>Замена текстовых чипов <code>getTplNewGraphic()</code> на круглый индикатор «жара»: только иконка, текст и точная дата — в штатной подсказке <code>sl-tip.sl-float</code> (hover и Tab-фокус). Шкала 5 ступеней, каждая со своим постоянным ambient-эффектом; на hover иконка не реагирует — это индикатор, не кнопка. Все анимации отключаются при <code>prefers-reduced-motion</code>.</p>
+</div>
+
+<div class="demo-wrap">
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>1. Рекомендуемая шкала <span class="demo-badge-reco">финал</span></h2>
+  <p class="demo-note">Палитра «остывания»: danger → danger-soft → warning → brand-link → muted. Иконки — шкала времени: огонь → секундомер (счёт на часы) → календарь с датой (счёт на дни) → часы-история → песочные часы. Старше 30 дней чип не выводится.</p>
+  <div class="demo-grid" id="scaleA">
+    <div class="demo-cell">
+      <span class="demo-label">&lt; 1 часа — «только что»</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0">
+          <span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span>
+          <div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что опубликовано</span><span class="sl-fresh-tip-date">14.07.2026, 10:31</span></div>
+        </span>
+        <span class="demo-muted">огонь бьётся + пульс-ореол</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">&lt; 24 часов — «сегодня»</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0">
+          <span class="sl-fresh-ico"><i class="bi bi-stopwatch" aria-hidden="true"></i></span>
+          <div class="sl-float-panel"><span class="sl-fresh-tip-title">Опубликовано сегодня</span><span class="sl-fresh-tip-date">14.07.2026, 02:14</span></div>
+        </span>
+        <span class="demo-muted">пульс-удар (scale)</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">&le; 3 дней</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0">
+          <span class="sl-fresh-ico"><i class="bi bi-calendar-event" aria-hidden="true"></i></span>
+          <div class="sl-float-panel"><span class="sl-fresh-tip-title">За последние 3 дня</span><span class="sl-fresh-tip-date">12.07.2026, 18:40</span></div>
+        </span>
+        <span class="demo-muted">покачивание</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">&le; 7 дней — «неделя»</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-week" tabindex="0">
+          <span class="sl-fresh-ico"><i class="bi bi-clock-history" aria-hidden="true"></i></span>
+          <div class="sl-float-panel"><span class="sl-fresh-tip-title">На этой неделе</span><span class="sl-fresh-tip-date">09.07.2026, 09:05</span></div>
+        </span>
+        <span class="demo-muted">медленный оборот</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">&le; 30 дней — «месяц»</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-month" tabindex="0">
+          <span class="sl-fresh-ico"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span>
+          <div class="sl-float-panel"><span class="sl-fresh-tip-title">В этом месяце</span><span class="sl-fresh-tip-date">21.06.2026, 13:22</span></div>
+        </span>
+        <span class="demo-muted">«дыхание»</span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">&gt; 30 дней</span>
+      <div class="demo-row">
+        <span class="demo-muted">чип не показывается — материал «остыл»</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>2. Альтернативные наборы иконок</h2>
+  <p class="demo-note">Тот же CSS, другие глифы — иконка задаётся шаблоном по флагу тира. Первые два блока — кандидаты для спорных тиров (первым стоит рекомендуемый, последним — отклонённый старый).</p>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">Кандидаты «сегодня» (&lt; 24 ч)</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-stopwatch" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Секундомер — счёт ещё на часы</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-clock" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Часы — просто «сегодня»</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-alarm" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Будильник — «сегодняшнее»</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-stopwatch-fill" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Секундомер (залитый)</span></div></span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Кандидаты «3 дня»</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar-event" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Календарь с отмеченной датой</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar-date" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Календарь с числом</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar2-day" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Календарь-день (вариант 2)</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar3-event" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Календарь с точкой (вариант 3)</span></div></span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">C: время (часы и календарь)</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-stopwatch" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Сегодня</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-clock" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">3 дня</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-week" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar-week" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Неделя</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-month" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-hourglass-bottom" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Месяц</span></div></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>3. Интенсивность ambient-эффектов</h2>
+  <p class="demo-note">Одни и те же keyframes, разная длительность. «Стандарт» = раздел 1.</p>
+  <div class="demo-grid">
+    <div class="demo-cell demo-fresh-soft">
+      <span class="demo-label">Тихая</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-stopwatch" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Сегодня</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar-event" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">3 дня</span></div></span>
+      </div>
+    </div>
+    <div class="demo-cell">
+      <span class="demo-label">Стандарт <span class="demo-badge-reco">финал</span></span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-stopwatch" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Сегодня</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar-event" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">3 дня</span></div></span>
+      </div>
+    </div>
+    <div class="demo-cell demo-fresh-hot">
+      <span class="demo-label">Максимум</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-day" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-stopwatch" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Сегодня</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-days" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-calendar-event" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">3 дня</span></div></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>4. Форма чипа</h2>
+  <div class="demo-grid">
+    <div class="demo-cell">
+      <span class="demo-label">Тонированный круг <span class="demo-badge-reco">финал</span></span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-week" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-clock-history" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Неделя</span></div></span>
+      </div>
+    </div>
+    <div class="demo-cell demo-fresh-bare">
+      <span class="demo-label">Голая иконка</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-week" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-clock-history" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Неделя</span></div></span>
+      </div>
+    </div>
+    <div class="demo-cell demo-fresh-ring">
+      <span class="demo-label">Кольцо-контур</span>
+      <div class="demo-row">
+        <span class="sl-tip sl-float sl-fresh sl-fresh-now" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-fire" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Только что</span></div></span>
+        <span class="sl-tip sl-float sl-fresh sl-fresh-week" tabindex="0"><span class="sl-fresh-ico"><i class="bi bi-clock-history" aria-hidden="true"></i></span><div class="sl-float-panel"><span class="sl-fresh-tip-title">Неделя</span></div></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section class="demo-sec">
+  <h2>5. Живой контекст: заголовок статьи + машина времени</h2>
+  <p class="demo-note">Двигай ползунок «возраста» — чип пересчитывает тир по реальным порогам <code>getTplNewGraphic()</code> (1ч / 24ч / 3д / 7д / 30д). Tab-фокус тоже открывает подсказку.</p>
+  <div class="demo-article">
+    <article class="sl-post sl-fullview">
+      <h1 class="sl-title" style="margin-top:0;">Обновление SLAED CMS: единая система живых блоков <span id="timechip"></span></h1>
+      <div class="sl-meta">
+        <ul class="sl-pull-right">
+          <li><span title="Прочитано" class="sl-chip sl-views"><i class="bi bi-eye" aria-hidden="true"></i> 1 482</span></li>
+          <li><a href="#642" title="642" class="sl-but-mini">642</a></li>
+        </ul>
+        <ul>
+          <li><time datetime="2026-07-14" title="Дата публикации" class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3" aria-hidden="true"></i> <span id="timedate">14.07.2026, 10:31</span></time></li>
+          <li><a href="#" title="Категория: Новости" class="sl-chip sl-cat"><i class="bi bi-folder" aria-hidden="true"></i> Новости</a></li>
+        </ul>
+      </div>
+    </article>
+    <div class="demo-slider">
+      <i class="bi bi-fire" style="color:var(--sl-color-danger);"></i>
+      <input type="range" id="agerange" min="0" max="100" value="0" step="1" aria-label="Возраст материала">
+      <i class="bi bi-snow2" style="color:var(--sl-color-text-subtle);"></i>
+      <output id="ageout" for="agerange">10 минут назад</output>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// Time machine: maps slider 0..100 to material age and rebuilds the freshness chip like the template would
+(function () {
+  var host = document.getElementById('timechip');
+  var range = document.getElementById('agerange');
+  var out = document.getElementById('ageout');
+  var datebox = document.getElementById('timedate');
+  var tiers = [
+    { max: 3600, cls: 'sl-fresh-now', icon: 'bi-fire', label: 'Только что опубликовано' },
+    { max: 86400, cls: 'sl-fresh-day', icon: 'bi-stopwatch', label: 'Опубликовано сегодня' },
+    { max: 259200, cls: 'sl-fresh-days', icon: 'bi-calendar-event', label: 'За последние 3 дня' },
+    { max: 604800, cls: 'sl-fresh-week', icon: 'bi-clock-history', label: 'На этой неделе' },
+    { max: 2592000, cls: 'sl-fresh-month', icon: 'bi-hourglass-split', label: 'В этом месяце' }
+  ];
+  function fmtAge(sec) {
+    if (sec < 3600) return Math.max(1, Math.round(sec / 60)) + ' мин. назад';
+    if (sec < 86400) return Math.round(sec / 3600) + ' ч. назад';
+    return Math.round(sec / 86400) + ' дн. назад';
+  }
+  function fmtDate(ts) {
+    var d = new Date(ts);
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + ', ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function render() {
+    // Exponential mapping keeps the interesting fresh zone wide on the slider
+    var sec = Math.round(600 * Math.pow(3456000 / 600, range.value / 100));
+    var tier = null;
+    for (var i = 0; i < tiers.length; i++) { if (sec < tiers[i].max) { tier = tiers[i]; break; } }
+    out.textContent = fmtAge(sec);
+    datebox.textContent = fmtDate(Date.now() - sec * 1000);
+    if (!tier) { host.innerHTML = '<span class="demo-muted" style="font-size:14px;vertical-align:middle;">(чип скрыт — старше месяца)</span>'; return; }
+    host.innerHTML = '<span class="sl-tip sl-float ' + 'sl-fresh ' + tier.cls + '" tabindex="0">'
+      + '<span class="sl-fresh-ico"><i class="bi ' + tier.icon + '" aria-hidden="true"></i></span>'
+      + '<div class="sl-float-panel"><span class="sl-fresh-tip-title">' + tier.label + '</span>'
+      + '<span class="sl-fresh-tip-date">' + fmtDate(Date.now() - sec * 1000) + '</span></div></span>';
+  }
+  range.addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>

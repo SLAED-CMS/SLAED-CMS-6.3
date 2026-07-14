@@ -3167,7 +3167,6 @@ function getVotingView(int $id = 0, string $votid = '', bool $force = false): st
         'comm_html'  => $com,
         'live_every' => (!$force && $rate && strtotime($end) > time()) ? intval($conf['live_u'] ?? 0) : 0,
         'live_query' => 'go=1&op=getVotingView&id='.$id.'&votid='.$votid.'&token='.getSiteToken(),
-        'live_label' => _VOTING_LIVE,
         'is_closed' => (!$force && $rate && strtotime($end) <= time()),
         'end_label' => _VOTING_END,
     ]);
@@ -3676,7 +3675,7 @@ function getUserSessionInfo(string $id = ''): string {
             'has_rows' => ($mem > 0 || $bot > 0),
             'rows_query' => 'go=1&op=getUserSessionRows&token='.getSiteToken(),
             'toggle_id' => 'u-block',
-            'update_every' => intval($conf['live_u'] ?? 0),
+            'live_every' => intval($conf['live_u'] ?? 0),
             'update_target' => 'sinfo',
             'update_query' => 'go=1&op=getUserSessionInfo&token='.getSiteToken(),
         ]);
@@ -5470,7 +5469,36 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ['label' => _IP, 'value' => $ip, 'is_last' => true],
                 ],
             ]) : '';
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'username_html' => $uname_html, 'report' => $utip, 'date' => $date, 'ip' => $ip, 'meta_tip' => $metatip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $avname, 'title' => $avname, 'is_avatar' => true]), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'text' => $text, 'sig' => $sig, 'btn_user' => $usermenu, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'is_closed' => !defined('ADMIN_FILE') && !$com_status, 'closed_title' => _PCLOSED, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', [
+                'id' => $com_id,
+                'username' => $avname,
+                'username_html' => $uname_html,
+                'report' => $utip,
+                'date' => $date,
+                'ip' => $ip,
+                'meta_tip' => $metatip,
+                'post_count' => $amess,
+                'avatar' => $avatar,
+                'avatar_html' => $tpl->getHtmlFrag('image', [
+                    'src' => $avatar,
+                    'alt' => $avname,
+                    'title' => $avname,
+                    'is_avatar' => true,
+                ]),
+                'rank' => $rank,
+                'rank_link' => $rlink,
+                'user_rate' => $rate,
+                'text' => $text,
+                'sig' => $sig,
+                'btn_user' => $usermenu,
+                'btn_warn' => $warn,
+                'btn_thank' => $thank,
+                'btn_edit' => $edit,
+                'is_closed' => !defined('ADMIN_FILE') && !$com_status,
+                'closed_title' => _PCLOSED,
+                'checkb' => $checkb,
+                'share_url' => defined('ADMIN_FILE') ? '' : '#'.$com_id,
+            ]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {

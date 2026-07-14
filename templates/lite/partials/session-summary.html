@@ -1,3 +1,4 @@
+{% if live_every %}<div class="sl-live-tools">{% include 'fragments/live-chip.html' %}</div>{% endif %}
 <div class="sl-session-line">
   <div>{{ members_label }}:</div>
   <div class="sl-session-right">{{ members_count }}</div>
@@ -29,7 +30,7 @@
     hx-target="#rep{{ update_target }}"
     hx-swap="innerHTML"
     hx-push-url="false"
-    {% if update_every %}hx-trigger="click, every {{ update_every }}s"{% endif %}
+    {% if live_every %}hx-trigger="click, every {{ live_every }}s"{% endif %}
 
     title="{{ update_title }}"
     class="sl-session-button"

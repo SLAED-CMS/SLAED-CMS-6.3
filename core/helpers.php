@@ -612,11 +612,15 @@ function getTplAjaxTextarea(array $data = []): string {
 # Render the shared "new" badge for fresh content
 function getTplNewGraphic(string $time): string {
     global $tpl;
-    $data = time() - strtotime($time);
-    if ($data < 86400) return $tpl->getHtmlFrag('span', ['is_new_today' => true, 'title' => (string)_NEWTODAY]);
-    if ($data < 259200) return $tpl->getHtmlFrag('span', ['is_new_days' => true, 'title' => (string)_NEWLAST3DAYS]);
-    if ($data < 604800) return $tpl->getHtmlFrag('span', ['is_new_week' => true, 'title' => (string)_NEWTHISWEEK]);
-    return '';
+    $mark = strtotime($time);
+    $age = time() - $mark;
+    if ($age >= 2592000) return '';
+    if ($age < 3600) [$tier, $label] = ['now', _NEWNOW];
+    elseif ($age < 86400) [$tier, $label] = ['day', _NEWTODAY];
+    elseif ($age < 259200) [$tier, $label] = ['days', _NEWLAST3DAYS];
+    elseif ($age < 604800) [$tier, $label] = ['week', _NEWTHISWEEK];
+    else [$tier, $label] = ['month', _NEWMONTH];
+    return $tpl->getHtmlFrag('fresh', ['tier' => $tier, 'is_'.$tier => true, 'title' => (string)$label, 'date_text' => format_time($time), 'date_iso' => date('c', $mark)]);
 }
 
 # Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs

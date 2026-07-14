@@ -1,78 +1,24 @@
 (function () {
+    // Lightbox: image links open in the shared project modal frame; the dialog is created once on first use
     function setLightbox() {
-        if (!document.getElementById('sl-lightbox-styles')) {
-            var style = document.createElement('style');
-            style.id = 'sl-lightbox-styles';
-            style.textContent = [
-                '.sl-lightbox{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(17,24,39,.72);opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s ease;}',
-                '.sl-lightbox.is-open{opacity:1;visibility:visible;}',
-                '.sl-lightbox__dialog{position:relative;max-width:min(92vw,1280px);max-height:92vh;display:flex;align-items:center;justify-content:center;}',
-                '.sl-lightbox__surface{background:#fff;border-radius:8px;box-shadow:0 18px 50px rgba(0,0,0,.32);overflow:hidden;}',
-                '.sl-lightbox__image{display:block;max-width:min(92vw,1280px);max-height:calc(92vh - 48px);width:auto;height:auto;background:#fff;}',
-                '.sl-lightbox__caption{padding:10px 14px;font:14px/1.4 Arial,sans-serif;color:#44515f;background:#f7f9fb;border-top:1px solid #dbe3eb;}',
-                '.sl-lightbox__close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border:0;border-radius:18px;background:#1f2937;color:#fff;font:700 22px/36px Arial,sans-serif;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28);}',
-                '.sl-lightbox__close:hover{background:#111827;}'
-            ].join('');
-            document.head.appendChild(style);
-        }
-
         var root = null;
         var image = null;
-        var caption = null;
-        var closeButton = null;
-        var previousOverflow = '';
+        var label = null;
 
         function getLightbox() {
             if (root) return;
-            root = document.createElement('div');
-            root.className = 'sl-lightbox';
-            root.setAttribute('hidden', 'hidden');
-            root.innerHTML = '<div class="sl-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Image preview"><div class="sl-lightbox__surface"><img class="sl-lightbox__image" alt=""><div class="sl-lightbox__caption" hidden></div></div><button type="button" class="sl-lightbox__close" aria-label="Close">×</button></div>';
+            root = document.createElement('dialog');
+            root.className = 'sl-modal sl-modal-wide';
+            root.innerHTML = '<div class="sl-modal-body">'
+                + '<div class="sl-font sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> <span></span></div>'
+                + '<button type="button" class="sl-but-mini sl-modal-close" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i></button>'
+                + '<img class="sl-modal-image" alt=""></div>';
             document.body.appendChild(root);
-            image = root.querySelector('.sl-lightbox__image');
-            caption = root.querySelector('.sl-lightbox__caption');
-            closeButton = root.querySelector('.sl-lightbox__close');
-
-            closeButton.addEventListener('click', setLightboxClose);
-            root.addEventListener('click', function (event) {
-                if (event.target === root) setLightboxClose();
+            image = root.querySelector('.sl-modal-image');
+            label = root.querySelector('.sl-modal-title > span');
+            root.addEventListener('close', function () {
+                image.removeAttribute('src');
             });
-        }
-
-        function setLightboxClose() {
-            if (!root || root.hidden) return;
-            root.classList.remove('is-open');
-            window.setTimeout(function () {
-                if (!root.classList.contains('is-open')) {
-                    root.hidden = true;
-                    image.removeAttribute('src');
-                    image.removeAttribute('width');
-                    image.removeAttribute('height');
-                    caption.textContent = '';
-                    caption.hidden = true;
-                    document.documentElement.style.overflow = previousOverflow;
-                }
-            }, 180);
-        }
-
-        function setLightboxOpen(src, title) {
-            getLightbox();
-            previousOverflow = document.documentElement.style.overflow;
-            image.src = src;
-            image.alt = title || '';
-            if (title) {
-                caption.textContent = title;
-                caption.hidden = false;
-            } else {
-                caption.textContent = '';
-                caption.hidden = true;
-            }
-            root.hidden = false;
-            document.documentElement.style.overflow = 'hidden';
-            window.requestAnimationFrame(function () {
-                root.classList.add('is-open');
-            });
-            closeButton.focus();
         }
 
         document.addEventListener('click', function (event) {
@@ -81,11 +27,11 @@
             var href = trigger.getAttribute('href') || '';
             if (!/\.(?:bmp|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
             event.preventDefault();
-            setLightboxOpen(href, trigger.getAttribute('title') || '');
-        });
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') setLightboxClose();
+            getLightbox();
+            image.src = href;
+            image.alt = trigger.getAttribute('title') || '';
+            label.textContent = trigger.getAttribute('title') || href.split('/').pop();
+            root.showModal();
         });
     }
 
@@ -480,9 +426,19 @@
             var node = event.target;
             if (!node || !node.closest) return;
             var ask = node.closest('[data-sl-confirm]');
-            if (ask && !window.confirm(ask.getAttribute('data-sl-confirm'))) {
-                event.preventDefault();
-                return;
+            if (ask) {
+                var dlg = document.getElementById('sl-confirm');
+                if (dlg) {
+                    event.preventDefault();
+                    dlg.querySelector('[data-sl-confirm-text]').textContent = ask.getAttribute('data-sl-confirm');
+                    dlg.slask = ask;
+                    dlg.showModal();
+                    return;
+                }
+                if (!window.confirm(ask.getAttribute('data-sl-confirm'))) {
+                    event.preventDefault();
+                    return;
+                }
             }
             var toggle = node.closest('.sl-dial-toggle');
             document.querySelectorAll('.sl-dial.sl-open').forEach(function (dial) {
@@ -877,8 +833,10 @@
         var url = vote.getAttribute('data-sl-vote-url') || '';
         if (wait < 1 || url === '' || vote.getAttribute('data-sl-vote-ready') === '1') return;
         vote.setAttribute('data-sl-vote-ready', '1');
+        if (!vote.hasAttribute('data-sl-live-stamp')) vote.setAttribute('data-sl-live-stamp', Date.now());
         var timer = window.setInterval(function () {
             if (!document.body.contains(vote)) { window.clearInterval(timer); return; }
+            if (vote.hasAttribute('data-sl-live-paused')) return;
             window.fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(function (response) {
                 if (!response.ok) throw new Error('Request failed');
                 return response.text();
@@ -901,6 +859,7 @@
                     rows[i].classList.toggle('sl-lead', frows[i].classList.contains('sl-lead'));
                 }
                 setVoteValues(vote, false);
+                vote.setAttribute('data-sl-live-stamp', Date.now());
                 var votes = vote.querySelector('.sl-votes');
                 var fvotes = fresh.querySelector('.sl-votes');
                 if (votes && fvotes) votes.innerHTML = fvotes.innerHTML;
@@ -923,6 +882,367 @@
         }
     }
 
+    // QR generator: byte mode, ECC level L, penalty-based mask choice - compact port of Nayuki's qrcodegen (public domain)
+    function getQrSvg(text) {
+        var ECC = [-1, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18, 20, 24, 26, 30, 22, 24, 28, 30, 28, 28, 28, 28, 30, 30, 26, 28, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30];
+        var BLK = [-1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4, 4, 4, 4, 4, 6, 6, 6, 6, 7, 8, 8, 9, 9, 10, 12, 12, 12, 13, 14, 15, 16, 17, 18, 19, 19, 20, 21, 22, 24, 25];
+        function raw(v) { var r = (16 * v + 128) * v + 64; if (v >= 2) { var a = Math.floor(v / 7) + 2; r -= (25 * a - 10) * a - 55; if (v >= 7) r -= 36; } return r; }
+        function cap(v) { return Math.floor(raw(v) / 8) - ECC[v] * BLK[v]; }
+        function gmul(x, y) { var z = 0; for (var i = 7; i >= 0; i--) { z = (z << 1) ^ ((z >>> 7) * 0x11D); z ^= ((y >>> i) & 1) * x; } return z & 255; }
+        var bytes = Array.prototype.slice.call(new TextEncoder().encode(text));
+        var ver;
+        for (ver = 1; ver <= 40; ver++) if (4 + (ver < 10 ? 8 : 16) + bytes.length * 8 <= cap(ver) * 8) break;
+        if (ver > 40) return '';
+        var bits = [];
+        function put(val, n) { for (var i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1); }
+        put(4, 4);
+        put(bytes.length, ver < 10 ? 8 : 16);
+        bytes.forEach(function (b) { put(b, 8); });
+        var capbits = cap(ver) * 8;
+        put(0, Math.min(4, capbits - bits.length));
+        put(0, (8 - bits.length % 8) % 8);
+        for (var pad = 0xEC; bits.length < capbits; pad ^= 0xEC ^ 0x11) put(pad, 8);
+        var data = [];
+        for (var i = 0; i < bits.length; i += 8) { var b = 0; for (var j = 0; j < 8; j++) b = (b << 1) | bits[i + j]; data.push(b); }
+        var nb = BLK[ver], ecl = ECC[ver], rawcw = Math.floor(raw(ver) / 8);
+        var nshort = nb - rawcw % nb, blocklen = Math.floor(rawcw / nb);
+        var div = [];
+        for (i = 0; i < ecl - 1; i++) div.push(0);
+        div.push(1);
+        var root = 1;
+        for (i = 0; i < ecl; i++) {
+            for (j = 0; j < div.length; j++) {
+                div[j] = gmul(div[j], root);
+                if (j + 1 < div.length) div[j] ^= div[j + 1];
+            }
+            root = gmul(root, 2);
+        }
+        var blocks = [], k = 0;
+        for (i = 0; i < nb; i++) {
+            var dat = data.slice(k, k + blocklen - ecl + (i < nshort ? 0 : 1));
+            k += dat.length;
+            var rem = div.map(function () { return 0; });
+            dat.forEach(function (bb) {
+                var factor = bb ^ rem.shift();
+                rem.push(0);
+                div.forEach(function (c, ci) { rem[ci] ^= gmul(c, factor); });
+            });
+            if (i < nshort) dat.push(0);
+            blocks.push(dat.concat(rem));
+        }
+        var cw = [];
+        for (i = 0; i < blocks[0].length; i++) for (j = 0; j < blocks.length; j++) if (i != blocklen - ecl || j >= nshort) cw.push(blocks[j][i]);
+        var size = ver * 4 + 17, mods = [], fun = [];
+        for (i = 0; i < size; i++) { mods.push(new Array(size).fill(false)); fun.push(new Array(size).fill(false)); }
+        function setf(x, y, d) { mods[y][x] = d; fun[y][x] = true; }
+        function bit(x, i) { return ((x >>> i) & 1) != 0; }
+        for (i = 0; i < size; i++) { setf(6, i, i % 2 == 0); setf(i, 6, i % 2 == 0); }
+        function finder(cx, cy) {
+            for (var dy = -4; dy <= 4; dy++) for (var dx = -4; dx <= 4; dx++) {
+                var xx = cx + dx, yy = cy + dy, dd = Math.max(Math.abs(dx), Math.abs(dy));
+                if (xx >= 0 && xx < size && yy >= 0 && yy < size) setf(xx, yy, dd != 2 && dd != 4);
+            }
+        }
+        finder(3, 3); finder(size - 4, 3); finder(3, size - 4);
+        var ap = [];
+        if (ver > 1) {
+            var na = Math.floor(ver / 7) + 2;
+            var step = (ver == 32) ? 26 : Math.ceil((ver * 4 + 4) / (na * 2 - 2)) * 2;
+            ap = [6];
+            for (var pos = size - 7; ap.length < na; pos -= step) ap.splice(1, 0, pos);
+        }
+        for (i = 0; i < ap.length; i++) for (j = 0; j < ap.length; j++) {
+            if ((i == 0 && j == 0) || (i == 0 && j == ap.length - 1) || (i == ap.length - 1 && j == 0)) continue;
+            for (var dy = -2; dy <= 2; dy++) for (var dx = -2; dx <= 2; dx++) setf(ap[i] + dx, ap[j] + dy, Math.max(Math.abs(dx), Math.abs(dy)) != 1);
+        }
+        function fmt(mask) {
+            var d = (1 << 3) | mask, r = d;
+            for (var i = 0; i < 10; i++) r = (r << 1) ^ ((r >>> 9) * 0x537);
+            var f = ((d << 10) | r) ^ 0x5412;
+            for (i = 0; i <= 5; i++) setf(8, i, bit(f, i));
+            setf(8, 7, bit(f, 6)); setf(8, 8, bit(f, 7)); setf(7, 8, bit(f, 8));
+            for (i = 9; i < 15; i++) setf(14 - i, 8, bit(f, i));
+            for (i = 0; i < 8; i++) setf(size - 1 - i, 8, bit(f, i));
+            for (i = 8; i < 15; i++) setf(8, size - 15 + i, bit(f, i));
+            setf(8, size - 8, true);
+        }
+        fmt(0);
+        if (ver >= 7) {
+            var vr = ver;
+            for (i = 0; i < 12; i++) vr = (vr << 1) ^ ((vr >>> 11) * 0x1F25);
+            var vb = (ver << 12) | vr;
+            for (i = 0; i < 18; i++) {
+                var c = bit(vb, i), a = size - 11 + i % 3, d2 = Math.floor(i / 3);
+                setf(a, d2, c); setf(d2, a, c);
+            }
+        }
+        var idx = 0;
+        for (var right = size - 1; right >= 1; right -= 2) {
+            if (right == 6) right = 5;
+            for (var vert = 0; vert < size; vert++) {
+                for (j = 0; j < 2; j++) {
+                    var x = right - j, up = ((right + 1) & 2) == 0;
+                    var y = up ? size - 1 - vert : vert;
+                    if (!fun[y][x] && idx < cw.length * 8) {
+                        mods[y][x] = ((cw[idx >>> 3] >>> (7 - (idx & 7))) & 1) != 0;
+                        idx++;
+                    }
+                }
+            }
+        }
+        function maskbit(m, x, y) {
+            switch (m) {
+                case 0: return (x + y) % 2 == 0;
+                case 1: return y % 2 == 0;
+                case 2: return x % 3 == 0;
+                case 3: return (x + y) % 3 == 0;
+                case 4: return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 == 0;
+                case 5: return x * y % 2 + x * y % 3 == 0;
+                case 6: return (x * y % 2 + x * y % 3) % 2 == 0;
+                default: return ((x + y) % 2 + x * y % 3) % 2 == 0;
+            }
+        }
+        function applymask(m) {
+            for (var y = 0; y < size; y++) for (var x = 0; x < size; x++)
+                if (!fun[y][x] && maskbit(m, x, y)) mods[y][x] = !mods[y][x];
+        }
+        function penalty() {
+            var res = 0, x, y, dark = 0;
+            function line(get) {
+                var s = 0, run = 1, i, j, p;
+                for (i = 1; i <= size; i++) {
+                    if (i < size && get(i) == get(i - 1)) run++;
+                    else { if (run >= 5) s += 3 + run - 5; run = 1; }
+                }
+                for (i = 0; i + 11 <= size; i++) {
+                    p = 0;
+                    for (j = 0; j < 11; j++) p = (p << 1) | (get(i + j) ? 1 : 0);
+                    if (p == 0x5D0 || p == 0x05D) s += 40;
+                }
+                return s;
+            }
+            for (y = 0; y < size; y++) (function (yy) { res += line(function (i) { return mods[yy][i]; }); })(y);
+            for (x = 0; x < size; x++) (function (xx) { res += line(function (i) { return mods[i][xx]; }); })(x);
+            for (y = 0; y < size - 1; y++) for (x = 0; x < size - 1; x++)
+                if (mods[y][x] == mods[y][x + 1] && mods[y][x] == mods[y + 1][x] && mods[y][x] == mods[y + 1][x + 1]) res += 3;
+            for (y = 0; y < size; y++) for (x = 0; x < size; x++) if (mods[y][x]) dark++;
+            res += (Math.ceil(Math.abs(dark * 20 - size * size * 10) / (size * size)) - 1) * 10;
+            return res;
+        }
+        var best = 0, bestscore = Infinity;
+        for (var m = 0; m < 8; m++) {
+            applymask(m); fmt(m);
+            var s = penalty();
+            if (s < bestscore) { bestscore = s; best = m; }
+            applymask(m);
+        }
+        applymask(best); fmt(best);
+        var dim = size + 6, path = '';
+        for (var yy = 0; yy < size; yy++) for (var xx = 0; xx < size; xx++)
+            if (mods[yy][xx]) path += 'M' + (xx + 3) + ' ' + (yy + 3) + 'h1v1h-1z';
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + ' ' + dim + '" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="100%" height="100%" fill="#ffffff"/><path d="' + path + '" fill="#111827"/></svg>';
+    }
+
+    // Toast: singleton confirmation pill, created on first use and reused
+    function setToast(text) {
+        if (!text) return;
+        var toast = document.querySelector('.sl-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'sl-toast';
+            toast.setAttribute('role', 'status');
+            toast.innerHTML = '<i class="bi bi-check-lg" aria-hidden="true"></i> <span></span>';
+            document.body.appendChild(toast);
+        }
+        toast.querySelector('span').textContent = text;
+        toast.classList.add('sl-is-visible');
+        window.clearTimeout(toast.sltimer);
+        toast.sltimer = window.setTimeout(function () { toast.classList.remove('sl-is-visible'); }, 2600);
+    }
+
+    // Share endpoints: {u} = encoded canonical url, {t} = encoded title
+    var sharenets = {
+        telegram: 'https://t.me/share/url?url={u}&text={t}',
+        whatsapp: 'https://wa.me/?text={t}%20{u}',
+        viber: 'viber://forward?text={t}%20{u}',
+        vk: 'https://vk.com/share.php?url={u}&title={t}',
+        ok: 'https://connect.ok.ru/offer?url={u}&title={t}',
+        facebook: 'https://www.facebook.com/sharer/sharer.php?u={u}',
+        x: 'https://x.com/intent/post?url={u}&text={t}',
+        pinterest: 'https://pinterest.com/pin/create/button/?url={u}&description={t}',
+        reddit: 'https://www.reddit.com/submit?url={u}&title={t}',
+        linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url={u}',
+        mail: 'mailto:?subject={t}&body={u}'
+    };
+
+    // Share helpers: canonical url and title come from the closest annotated host (dial or dialog)
+    function getShareData(node) {
+        var host = node.closest('[data-sl-share-url]');
+        if (!host) return null;
+        var canon = document.querySelector('link[rel="canonical"]');
+        var base = canon ? canon.href : window.location.href.split('#')[0];
+        var url = null;
+        try {
+            url = new URL(host.getAttribute('data-sl-share-url') || base, base);
+        } catch (error) {
+            return null;
+        }
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+        return { url: url.href, title: host.getAttribute('data-sl-share-title') || document.title };
+    }
+
+    // Copy the canonical url with a clipboard fallback, flash a check icon and confirm with a toast
+    function setShareCopy(node, url) {
+        var done = function () {
+            setToast(node.getAttribute('data-sl-done') || '');
+            var icon = node.querySelector('.bi');
+            if (!icon) return;
+            var was = icon.className;
+            icon.className = 'bi bi-check-lg';
+            node.classList.add('sl-is-copied');
+            window.setTimeout(function () { icon.className = was; node.classList.remove('sl-is-copied'); }, 1400);
+        };
+        if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(url).then(done, done); return; }
+        var area = document.createElement('textarea');
+        area.value = url;
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        area.remove();
+        done();
+    }
+
+    // Favorites: remember the clicked star so the freshly swapped on-state can burst and toast
+    var favpending = null;
+
+    function setFavoriteBurst() {
+        if (!favpending) return;
+        var host = document.getElementById(favpending.id);
+        var done = favpending.done;
+        favpending = null;
+        if (!host) return;
+        var star = host.querySelector('.sl-fav-on');
+        if (!star) return;
+        star.classList.add('sl-is-burst');
+        window.setTimeout(function () { star.classList.remove('sl-is-burst'); }, 700);
+        setToast(done);
+    }
+
+    // Live boxes: containers that own auto-refresh state (voting widget root or a marked htmx container)
+    function getLiveBox(node) {
+        return node.closest('[data-sl-vote-live], [data-sl-live-box]');
+    }
+
+    function setLiveState(box) {
+        var chip = box.querySelector('.sl-live-chip');
+        if (chip) chip.classList.toggle('sl-is-paused', box.hasAttribute('data-sl-live-paused'));
+    }
+
+    // Live chips: init refresh stamps and sync chip visuals after load and htmx swaps
+    function setLiveChips(root) {
+        var scope = root || document;
+        var boxes = Array.prototype.slice.call(scope.querySelectorAll('[data-sl-vote-live], [data-sl-live-box]'));
+        if (scope !== document && scope.matches && scope.matches('[data-sl-vote-live], [data-sl-live-box]')) boxes.push(scope);
+        for (var i = 0; i < boxes.length; i++) {
+            if (!boxes[i].hasAttribute('data-sl-live-stamp')) boxes[i].setAttribute('data-sl-live-stamp', Date.now());
+            setLiveState(boxes[i]);
+        }
+    }
+
+    // Live chips: tick the "updated N sec ago" counters once per second
+    function setLiveTick() {
+        var boxes = document.querySelectorAll('[data-sl-live-stamp]');
+        for (var i = 0; i < boxes.length; i++) {
+            if (boxes[i].hasAttribute('data-sl-live-paused')) continue;
+            var ago = boxes[i].querySelector('[data-sl-live-ago]');
+            if (!ago) continue;
+            var sec = Math.max(0, Math.round((Date.now() - parseInt(boxes[i].getAttribute('data-sl-live-stamp'), 10)) / 1000));
+            ago.textContent = sec + ' ' + (ago.getAttribute('data-sl-live-unit') || 's');
+        }
+    }
+
+    // Delegated UI actions: share networks and dialogs, copy, favorite star capture, live pause toggle
+    function setUiActions() {
+        document.addEventListener('click', function (event) {
+            var node = event.target;
+            if (!node || !node.closest) return;
+            var fav = node.closest('[data-sl-fav]');
+            if (fav) favpending = { id: fav.getAttribute('data-sl-fav'), done: fav.getAttribute('data-sl-done') || '' };
+            var close = node.closest('[data-sl-close]');
+            if (close) {
+                var dlg = close.closest('dialog');
+                if (dlg) dlg.close();
+                return;
+            }
+            if (node.tagName === 'DIALOG' && node.classList.contains('sl-modal')) { node.close(); return; }
+            var okay = node.closest('[data-sl-confirm-ok]');
+            if (okay) {
+                var box = okay.closest('dialog');
+                var ask = box ? box.slask : null;
+                if (box) box.close();
+                if (ask && ask.href) window.location.href = ask.href;
+                return;
+            }
+            var toggle = node.closest('[data-sl-live-toggle]');
+            if (toggle) {
+                var live = getLiveBox(toggle);
+                if (!live) return;
+                if (live.hasAttribute('data-sl-live-paused')) live.removeAttribute('data-sl-live-paused');
+                else live.setAttribute('data-sl-live-paused', '1');
+                setLiveState(live);
+                return;
+            }
+            var net = node.closest('[data-sl-net]');
+            if (net) {
+                var data = getShareData(net);
+                var key = net.getAttribute('data-sl-net');
+                var mask = sharenets[key] || '';
+                if (!data || !mask) return;
+                var target = mask.replace('{u}', encodeURIComponent(data.url)).replace('{t}', encodeURIComponent(data.title));
+                var sheet = net.closest('dialog');
+                if (sheet) sheet.close();
+                if (key === 'mail' || key === 'viber') { window.location.href = target; return; }
+                window.open(target, 'slshare', 'width=640,height=520,noopener');
+                return;
+            }
+            var act = node.closest('[data-sl-share-act]');
+            if (!act) return;
+            var kind = act.getAttribute('data-sl-share-act');
+            var share = getShareData(act);
+            if (kind === 'copy' && share) setShareCopy(act, share.url);
+            if (kind === 'qr' && share) {
+                var qr = document.getElementById('sl-share-qr');
+                if (!qr) return;
+                qr.setAttribute('data-sl-share-url', share.url);
+                var note = qr.querySelector('.sl-modal-note');
+                if (note) note.textContent = share.url;
+                var slot = qr.querySelector('[data-sl-qr]');
+                if (slot && slot.getAttribute('data-sl-qr') !== share.url) {
+                    slot.innerHTML = getQrSvg(share.url);
+                    slot.setAttribute('data-sl-qr', share.url);
+                }
+                qr.showModal();
+            }
+            if (kind === 'more' && share) {
+                var more = document.getElementById('sl-share-sheet');
+                if (!more) return;
+                more.setAttribute('data-sl-share-url', share.url);
+                more.setAttribute('data-sl-share-title', share.title);
+                more.showModal();
+            }
+        });
+        // Paused live boxes swallow their htmx polls; direct clicks keep working
+        document.addEventListener('htmx:beforeRequest', function (event) {
+            var trig = event.detail && event.detail.requestConfig ? event.detail.requestConfig.triggeringEvent : null;
+            if (trig && trig.type === 'click') return;
+            var elt = event.detail ? event.detail.elt : null;
+            if (elt && elt.closest && elt.closest('[data-sl-live-paused]')) event.preventDefault();
+        });
+        window.setInterval(setLiveTick, 1000);
+    }
+
     function setSlaedUi() {
         setTableSort(document);
         setLightbox();
@@ -936,6 +1256,8 @@
         setTabs(document);
         setAlerts(document);
         setVoteBlocks(document);
+        setUiActions();
+        setLiveChips(document);
     }
 
     document.addEventListener('htmx:afterSwap', function (event) {
@@ -945,6 +1267,10 @@
         setTabs(event.target);
         setAlerts(event.target);
         setVoteBlocks(event.target);
+        var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;
+        if (live) live.setAttribute('data-sl-live-stamp', Date.now());
+        setLiveChips(event.target);
+        setFavoriteBurst();
     });
 
     window.addEventListener('resize', refitFloating);

@@ -3,7 +3,7 @@
   {% if title %}title="{{ title }}"{% elseif back_title %}title="{{ back_title }}"{% endif %}
   {% if is_back or back_text or has_back_button %}onclick="javascript:window.history.go(-1);"{% endif %}
 
-  {% if class or back_text or has_back_button or is_shop_price or is_card_reads or is_card_post or is_back or is_highlight or is_geo_flag or is_geo_ip or is_alpha_letter or is_success or is_message_in or is_message_out or is_message_save or is_favorite or is_votes or is_cart_total or is_hidden or is_bold or is_danger or is_form_value or is_views or is_line_stack_item or is_cat_image or is_cat_name or is_new_today or is_new_days or is_new_week %}
+  {% if class or back_text or has_back_button or is_shop_price or is_card_reads or is_card_post or is_back or is_highlight or is_geo_flag or is_geo_ip or is_alpha_letter or is_success or is_message_in or is_message_out or is_message_save or is_votes or is_cart_total or is_hidden or is_bold or is_danger or is_form_value or is_views or is_line_stack_item or is_cat_image or is_cat_name %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if back_text or has_back_button %} sl-but{% endif %}
@@ -19,9 +19,6 @@
     {% if is_message_in %} sl-chip sl-message-in{% endif %}
     {% if is_message_out %} sl-chip sl-message-out{% endif %}
     {% if is_message_save %} sl-chip sl-message-save{% endif %}
-    {% if is_favorite %} sl-chip sl-chip-danger sl-favor{% endif %}
-    {% if is_favorite_on %} sl-chip sl-chip-danger sl-favor-on{% endif %}
-    {% if is_favorite_off %} sl-chip sl-chip-danger sl-favor-off{% endif %}
     {% if is_votes %} sl-chip sl-chip-success sl-votes{% endif %}
     {% if is_cart_total %} sl-chip sl-cart-total{% endif %}
     {% if is_hidden %} sl-hidden{% endif %}
@@ -32,9 +29,6 @@
     {% if is_line_stack_item %} sl-line-stack-item{% endif %}
     {% if is_cat_image %} sl-catimg{% endif %}
     {% if is_cat_name %} sl-catname{% endif %}
-    {% if is_new_today %} sl-chip sl-chip-warn sl-n-day{% endif %}
-    {% if is_new_days %} sl-chip sl-chip-warn sl-n-days{% endif %}
-    {% if is_new_week %} sl-chip sl-chip-warn sl-n-week{% endif %}
   "
   {% endif %}
 
@@ -52,8 +46,6 @@
   {% if is_message_in %}<i class="bi bi-envelope" aria-hidden="true"></i> {% endif %}
   {% if is_message_out %}<i class="bi bi-send" aria-hidden="true"></i> {% endif %}
   {% if is_message_save %}<i class="bi bi-bookmark" aria-hidden="true"></i> {% endif %}
-  {% if is_favorite_on %}<i class="bi bi-heart-fill" aria-hidden="true"></i> {% elseif is_favorite or is_favorite_off %}<i class="bi bi-heart" aria-hidden="true"></i> {% endif %}
-  {% if is_new_today or is_new_days or is_new_week %}<i class="bi bi-clock" aria-hidden="true"></i> {% endif %}
   {% if label %}{{ label }}: {% endif %}
   {% if img_src %}<img src="{{ img_src }}" alt="{{ img_alt }}" title="{{ img_alt }}">{% endif %}
   {% if content_html %}{{{ content_html }}}{% elseif back_text %}{{ back_text }}{% elseif back_label %}{{ back_label }}{% else %}{{ text }}{% endif %}

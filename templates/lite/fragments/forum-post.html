@@ -3,11 +3,12 @@
     <div class="sl-forum-post-in">
       <div class="sl-fp-right">
         <div class="sl-fp-meta">
-          {% if rating or post_count or btn_edit or btn_user %}
-          <div class="sl-pull-right">
+          {% if rating or post_count or btn_edit or btn_user or share_url %}
+          <div class="sl-pull-right sl-meta-actions">
             <div class="sl-min-rate">
               <div class="sl-rate-like-box">{{{ rating }}}</div>
             </div>
+            {% if share_url %}{% include 'fragments/share.html' %}{% endif %}
             {{{ btn_user }}}
             {{{ btn_edit }}}
             {{{ post_count }}}

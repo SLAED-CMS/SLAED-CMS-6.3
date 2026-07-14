@@ -2,10 +2,7 @@
 {% if live_every or is_closed %}
 <div class="sl-vote-tools" data-sl-float-align="end">
   {% if admin_html %}{{{ admin_html }}}{% endif %}
-  <div class="sl-tip sl-float sl-vote-live{% if is_closed %} sl-vote-end{% endif %}" tabindex="0">
-    <span class="sl-vote-live-ico"><i class="bi {% if is_closed %}bi-stop-circle-fill{% else %}bi-play-circle-fill{% endif %}" aria-hidden="true"></i></span>
-    <div class="sl-float-panel">{% if is_closed %}{{ end_label }}{% else %}{{ live_label }}{% endif %}</div>
-  </div>
+  {% include 'fragments/live-chip.html' %}
 </div>
 {% endif %}
 {% if has_form %}<form name="voting" id="{{ form_id }}" method="post"><input type="hidden" name="id" value="{{ poll_id }}"><input type="hidden" name="token" value="{{ token }}">{% endif %}

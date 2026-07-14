@@ -667,31 +667,26 @@ function deletePrivateMessage() {
     return getPrivateMessageView(0, '', '', $typ);
 }
 
-# Render the favorites toggle button for an item (on/off/limit-reached state)
+# Render the favorites star button for an item as a round mini toggle (add/on/limit-reached state) with a tooltip panel
+# The whole favorites set of the user is loaded once per request into a static cache, so list pages render many stars without per-item SQL
 function getFavoriteButton(?int $fid, string $mod): string {
     global $db, $conf, $user, $tpl;
+    static $cache = null;
     $fid = (int)$fid;
     $uid = (is_user()) ? intval($user[0]) : 0;
-    if ($conf['favorites']['favact'] && $uid && $fid > 0) {
-        [$fav] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
-        if ($fav) {
-            $content = $tpl->getHtmlFrag('span', ['title' => _FAVOR, 'is_favorite' => true, 'is_favorite_on' => true, 'text' => '']);
-        } else {
-            [$fav_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
-            if ($fav_num >= $conf['favorites']['favorites']) {
-                $content = $tpl->getHtmlFrag('span', ['title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']), 'is_favorite' => true, 'is_favorite_off' => true, 'text' => '']);
-            } else {
-                $rep_id = 'rep'.$fid.$mod;
-                $url = 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod.'&token='.getSiteToken();
-                $content = $tpl->getHtmlFrag('span', [
-                    'id' => $rep_id,
-                    'content_html' => $tpl->getHtmlFrag('link', ['href' => $url, 'is_htmx' => true, 'hx_target' => '#'.$rep_id, 'hx_swap' => 'outerHTML', 'title' => _FAVOR_ADD, 'is_favorite' => true]),
-                ]);
-            }
+    if (!$conf['favorites']['favact'] || !$uid || $fid < 1) return '';
+    if ($cache === null || $cache['uid'] !== $uid) {
+        $cache = ['uid' => $uid, 'num' => 0, 'items' => []];
+        $result = $db->getSqlQuery('SELECT fid, modul FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]);
+        while ([$itemid, $itemmod] = $db->getSqlRow($result)) {
+            $cache['items'][$itemmod.'-'.$itemid] = true;
+            $cache['num']++;
         }
     }
-    if (!isset($content)) $content = '';
-    return $content;
+    $repid = 'rep'.$fid.$mod;
+    if (!empty($cache['items'][$mod.'-'.$fid])) return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'is_on' => true]);
+    if ($cache['num'] >= $conf['favorites']['favorites']) return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'is_limit' => true, 'title' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites'])]);
+    return $tpl->getHtmlFrag('favorite', ['rep_id' => $repid, 'href' => 'index.php?go=1&op=addFavorite&id='.$fid.'&mod='.$mod.'&token='.getSiteToken()]);
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button

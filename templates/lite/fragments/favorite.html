@@ -1,0 +1,7 @@
+<span id="{{ rep_id }}" class="sl-tip sl-float sl-fav">
+  {% if is_on %}<span class="sl-but-mini sl-fav-on" aria-label="{{ _FAVOR }}"><i class="bi bi-star-fill" aria-hidden="true"></i></span>
+  {% elseif is_limit %}<span class="sl-but-mini sl-fav-limit" aria-disabled="true" aria-label="{{ title }}"><i class="bi bi-star-fill" aria-hidden="true"></i></span>
+  {% else %}<a href="{{ href }}" class="sl-but-mini" aria-label="{{ _FAVOR_ADD }}" data-sl-fav="{{ rep_id }}" data-sl-done="{{ _FAVOR_DONE }}" hx-get="{{ href }}" hx-target="#{{ rep_id }}" hx-swap="outerHTML" hx-push-url="false"><i class="bi bi-star" aria-hidden="true"></i></a>
+  {% endif %}
+  <div class="sl-float-panel">{% if is_on %}{{ _FAVOR }}{% elseif is_limit %}{{ title }}{% else %}{{ _FAVOR_ADD }}{% endif %}</div>
+</span>
