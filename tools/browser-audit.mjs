@@ -258,7 +258,7 @@ async function resolvePage(context, options, targetUrl) {
   return contains?.page || context.newPage();
 }
 
-async function wirePage(page, options, addFinding, consoleMessages) {
+async function wirePage(context, page, options, addFinding, consoleMessages) {
   page.on('console', (message) => {
     const type = message.type();
     if (type !== 'error' && type !== 'warning') return;
@@ -363,7 +363,7 @@ async function main() {
     const page = await resolvePage(context, options, targetUrl);
     console.log(`[browser-audit] page=${page.url() || '(new page)'}`);
 
-    await wirePage(page, options, addFinding, consoleMessages);
+    await wirePage(context, page, options, addFinding, consoleMessages);
 
     if (!(options.attach && options.current && !options.url)) {
       await page.goto(targetUrl, {

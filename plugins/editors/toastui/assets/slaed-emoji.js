@@ -372,11 +372,13 @@
         if (panel.classList.contains('sl-none')) return;
         render(id);
         place(id);
+        if (api.syncWindow) api.syncWindow(id, 'emoji');
         panel.querySelector('.slaed-emoji-search').focus();
     }
 
     function hide() {
         if (panel) panel.classList.add('sl-none');
+        if (active && api.syncWindow) api.syncWindow(active, 'emoji');
     }
 
     doc.addEventListener('input', function(ev) {
@@ -386,7 +388,9 @@
 
     doc.addEventListener('click', function(ev) {
         var el = ev.target;
+        var head;
         if (!panel || panel.classList.contains('sl-none')) return;
+        head = el.closest ? el.closest('[data-window-head="emoji"]') : null;
         if (el.classList && el.classList.contains('slaed-emoji-tab')) {
             cat = el.getAttribute('data-cat') || 'smileys';
             panel.querySelector('.slaed-emoji-search').value = '';
@@ -399,7 +403,7 @@
             render(active);
             return;
         }
-        if (!panel.contains(el) && !el.classList.contains('slaed-bi-emoji')) hide();
+        if (!panel.contains(el) && !head && !el.classList.contains('slaed-bi-emoji')) hide();
     });
 
     doc.addEventListener('keydown', function(ev) {

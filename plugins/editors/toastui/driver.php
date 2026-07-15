@@ -1,8 +1,40 @@
 <?php
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
+class EditorToastTemplate extends Template {
+    # Set isolated source and cache paths for the Toast UI plugin templates
+    public function __construct() {
+        $root = defined('BASE_DIR') ? BASE_DIR : dirname(__DIR__, 3);
+        $root = str_replace('\\', '/', rtrim($root, '\\/'));
+        $this->theme = 'toastui-editor';
+        $this->base = $root.'/plugins/editors/toastui/templates';
+        $this->cache = $root.'/storage/cache/templates/toastui-editor';
+        $base = realpath($this->base);
+        $this->real = ($base !== false) ? rtrim(str_replace('\\', '/', $base), '/') : '';
+    }
+
+    # Resolve a validated partial name directly inside the plugin template directory
+    protected function getFile(string $type, string $name): string {
+        if ($type !== 'partials' || !$this->checkName($name)) return '';
+        return $this->base.'/'.$name.'.html';
+    }
+}
+
 class EditorToastUi implements ContentDriver {
     private static bool $done = false;
+    private static ?EditorToastTemplate $edit = null;
+
+    private function getLocale(): array {
+        $map = [
+            'de' => ['de-DE', 'de-de.js'],
+            'en' => ['en-US', 'en-us.js'],
+            'fr' => ['fr-FR', 'fr-fr.js'],
+            'pl' => ['pl-PL', 'pl-pl.js'],
+            'ru' => ['ru-RU', 'ru-ru.js'],
+            'uk' => ['uk-UA', 'uk-ua.js'],
+        ];
+        return $map[substr(_LOCALE, 0, 2)] ?? $map['en'];
+    }
 
     private function getEmojiLabels(): array {
         $map = [
@@ -28,10 +60,12 @@ class EditorToastUi implements ContentDriver {
         global $tpl;
         if (self::$done) return '';
         self::$done = true;
-        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/toastui/assets/toastui-editor.min.css', 'type' => '', 'title' => ''])
+        $locale = $this->getLocale();
+        $assets = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/toastui/assets/toastui-editor.min.css', 'type' => '', 'title' => ''])
             .$tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => 'plugins/editors/toastui/assets/slaed-icons.css', 'type' => '', 'title' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/toastui-editor.all.min.js', 'attr' => ''])
-            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/i18n/ru-ru.js', 'attr' => ''])
+            .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/toastui-editor.all.min.js', 'attr' => '']);
+        if ($locale[1] !== '') $assets .= $tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/i18n/'.$locale[1], 'attr' => '']);
+        return $assets
             .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/slaed-tags.js', 'attr' => ''])
             .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/slaed-emoji.js', 'attr' => ''])
             .$tpl->getHtmlFrag('head-script-src', ['src' => 'plugins/editors/toastui/assets/slaed-upload.js', 'attr' => '']);
@@ -39,8 +73,10 @@ class EditorToastUi implements ContentDriver {
 
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
         global $tpl;
+        $edit = self::$edit ??= new EditorToastTemplate();
         $jid = json_encode($id);
         $jval = json_encode($value);
+        $jph = json_encode((string)($data['placeholder'] ?? ''));
         $mode = '"markdown"';
         $rows = (int)($data['rows'] ?? (($profile === 'full') ? 20 : 10));
         $high = (int)($data['height'] ?? 0);
@@ -50,8 +86,12 @@ class EditorToastUi implements ContentDriver {
         $height = max(250, $high);
         $h = '"'.$height.'px"';
         $focus = !empty($data['autofocus']) ? 'true' : 'false';
-        $lang = (substr(_LOCALE, 0, 2) === 'ru') ? '"ru-RU"' : '"en-US"';
+        $locale = $this->getLocale();
+        $lang = json_encode($locale[0]);
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
+        $ihid = $id.'_toast_image_head';
+        $lhid = $id.'_toast_link_head';
+        $ehid = $id.'_toast_emoji_head';
         $ta = $tpl->getHtmlFrag('textarea', [
             'name_attr' => $name,
             'rows_num' => $rows,
@@ -71,16 +111,21 @@ class EditorToastUi implements ContentDriver {
                 'quote' => _EQUOTE,
                 'hide' => _HIDE,
                 'tabs' => 'Tabs',
-                'emoji' => 'Emoji',
+                'emoji' => _EEMOJI,
                 'html' => _EUSEHTML,
                 'php' => _EUSEPHP,
                 'files' => _FILES,
+                'fullscreen' => _EFULLSCREEN,
+                'exitfull' => _EEXITFULL,
                 'image' => _IMG,
-                'attach' => _INSERT,
+                'attach' => _EATTACH,
                 'nofiles' => _NO.' '._FILES,
                 'upload' => _ERROR_UP,
                 'load' => _ERROR,
                 'uploaded' => _FILE_RENAMED,
+                'fileup' => _FILEUP,
+                'nofile' => _ENOFILE,
+                'dropfiles' => _EDROPFILES,
                 'emoji_recent' => $emoji['recent'],
                 'emoji_smileys' => $emoji['smileys'],
                 'emoji_reactions' => $emoji['reactions'],
@@ -88,7 +133,23 @@ class EditorToastUi implements ContentDriver {
                 'emoji_symbols' => $emoji['symbols'],
                 'emoji_empty' => $emoji['empty'],
             ],
+            'imagehead' => $ihid,
+            'linkhead' => $lhid,
+            'emojihead' => $ehid,
         ];
+        $wins = $edit->getHtmlPart('dialog-headers', [
+            'editor_id' => $eid,
+            'image_head_id' => htmlspecialchars($ihid, ENT_QUOTES, 'UTF-8'),
+            'link_head_id' => htmlspecialchars($lhid, ENT_QUOTES, 'UTF-8'),
+            'emoji_head_id' => htmlspecialchars($ehid, ENT_QUOTES, 'UTF-8'),
+            'image_label' => _INSERTIMG,
+            'link_label' => _EINSLINK,
+            'emoji_label' => _EEMOJI,
+            'close_label' => _CLOSE,
+            'move_label' => _EMOVEWIN,
+            'expand_label' => _EEXPAND,
+            'restore_label' => _ERESTORE,
+        ]);
         if ($upl) {
             $tok = getSiteToken('upload');
             $atk = getSiteToken();
@@ -96,20 +157,48 @@ class EditorToastUi implements ContentDriver {
             $mid = $id.'_toast_msg';
             $lid = $id.'_toast_files';
             $fid = $id.'_toast_file';
+            $tid = $id.'_toast_title';
+            $oid = $id.'_toast_object';
             $opt += [
                 'token' => $tok,
                 'panel' => $pid,
                 'msg' => $mid,
                 'list' => $lid,
+                'object' => $oid,
+                'maxfiles' => (int)($con[5] ?? 0),
                 'upload' => 'index.php?go=4&op=editorUpload&mod='.rawurlencode($mod),
                 'files' => 'index.php?go=4&op=editorFiles&mod='.rawurlencode($mod).'&token='.rawurlencode($atk),
             ];
-            $panel = $tpl->getHtmlPart('toastui-upload-panel', [
+            $panel = $edit->getHtmlPart('file-manager', [
                 'panel_id' => htmlspecialchars($pid, ENT_QUOTES, 'UTF-8'),
+                'title_id' => htmlspecialchars($tid, ENT_QUOTES, 'UTF-8'),
                 'msg_id' => htmlspecialchars($mid, ENT_QUOTES, 'UTF-8'),
                 'list_id' => htmlspecialchars($lid, ENT_QUOTES, 'UTF-8'),
                 'file_id' => htmlspecialchars($fid, ENT_QUOTES, 'UTF-8'),
+                'object_id' => htmlspecialchars($oid, ENT_QUOTES, 'UTF-8'),
                 'editor_id' => $eid,
+                'title_label' => _EUPLOAD,
+                'close_label' => _CLOSE,
+                'move_label' => _EMOVEWIN,
+                'expand_label' => _EEXPAND,
+                'restore_label' => _ERESTORE,
+                'object_label' => _EINSOBJ,
+                'object_info' => _EINSOBJINFO,
+                'select_label' => _ESELFILE,
+                'nofile_label' => _ENOFILE,
+                'drop_label' => _EDROPFILES,
+                'type_label' => _FTYPE,
+                'types_text' => str_replace(',', ', ', (string)($con[0] ?? '')),
+                'allsize_label' => _FSIZEALL,
+                'allsize_text' => filterSize((int)($con[1] ?? 0)),
+                'filesize_label' => _FSIZE,
+                'filesize_text' => filterSize((int)($con[2] ?? 0)),
+                'width_label' => _AWIDTH,
+                'width_text' => (int)($con[3] ?? 0).' px',
+                'height_label' => _AHEIGHT,
+                'height_text' => (int)($con[4] ?? 0).' px',
+                'count_label' => _FILEUP,
+                'count_text' => (int)($con[5] ?? 0),
                 'refresh_label' => _UPDATE,
             ]);
         }
@@ -117,11 +206,14 @@ class EditorToastUi implements ContentDriver {
         $js = '(function(){var ta=document.getElementById('.$jid.');var root=window.toastui&&window.toastui.Editor;';
         $js .= 'if(!ta||!root){return;}';
         $js .= 'var ed=new root({el:document.getElementById('.$jid.'+"_toast"),';
-        $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',height:'.$h.',language:'.$lang.',autofocus:'.$focus.',usageStatistics:false});';
+        $js .= 'initialEditType:'.$mode.',initialValue:'.$jval.',placeholder:'.$jph.',height:'.$h.',language:'.$lang.',autofocus:'.$focus.',usageStatistics:false});';
         $js .= 'if(window.SlaedToastUi){window.SlaedToastUi.register('.$jid.',ed,'.$jopt.');}';
-        $js .= 'if('.$focus.'){setTimeout(function(){var box=document.getElementById('.$jid.'+"_toast");var foc=box&&box.querySelector(".toastui-editor-contents[contenteditable=true],.ProseMirror.toastui-editor-contents,.toastui-editor textarea:not(.toastui-editor-pseudo-clipboard)");if(foc){foc.focus();}else{try{ed.focus();}catch(e){}}},300);}';
+        $js .= 'if('.$focus.'){setTimeout(function(){var box=document.getElementById('.$jid.'+"_toast");';
+        $js .= 'var foc=box&&box.querySelector(".toastui-editor-contents[contenteditable=true],.ProseMirror.toastui-editor-contents,"+';
+        $js .= '".toastui-editor textarea:not(.toastui-editor-pseudo-clipboard)");';
+        $js .= 'if(foc){foc.focus();}else{try{ed.focus();}catch(e){}}},300);}';
         $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=ed.getMarkdown();},true);';
         $js .= '})();';
-        return $ta.$panel.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
+        return $ta.$panel.$wins.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
 }

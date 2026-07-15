@@ -27,18 +27,22 @@ function recommend(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
     $fields = $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOURNAME,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => $unkey, 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOUREMAIL,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _FFRIENDNAME,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fname', 'value_attr' => $fname, 'placeholder_text' => _FFRIENDNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _FFRIENDEMAIL,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'femail', 'value_attr' => $femail, 'placeholder_text' => _FFRIENDEMAIL, 'is_required' => true]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [

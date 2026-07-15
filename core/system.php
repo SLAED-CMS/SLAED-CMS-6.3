@@ -2616,6 +2616,7 @@ function doCss(): string {
     global $theme, $conf, $tpl;
     $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
     $array = array_merge(
+        ['plugins/bootstrap-icons/bootstrap-icons.min.css'],
         getAssetFiles(is_array($entries) ? $entries : [], 'css'),
         getThemeAssets($theme, 'css')
     );
@@ -4077,9 +4078,22 @@ function addEditorUpload(): void {
     $siz = is_array($upl['size']) ? $upl['size'] : [$upl['size']];
     $err = is_array($upl['error']) ? $upl['error'] : [$upl['error']];
     $typ = (string)($con[0] ?? '');
+    $all = (int)($con[1] ?? 0);
     $max = (int)($con[2] ?? 0);
     $wid = (int)($con[3] ?? 0);
     $hei = (int)($con[4] ?? 0);
+    $num = (int)($con[5] ?? 0);
+    if ($num > 0 && count($nam) > $num) {
+        $msg = _FILEUP.': '.$num;
+        getEditorJson(['ok' => false, 'files' => [], 'errors' => [$msg], 'error' => $msg]);
+    }
+    $used = 0;
+    if ($all > 0) {
+        foreach (scandir($dir) ?: [] as $file) {
+            if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
+            $used += max(0, (int)filesize($dir.'/'.$file));
+        }
+    }
     $uid = is_user() ? (int)($user[0] ?? 0) : (int)getVar('get', 'userid', 'num', 0);
     $out = [];
     $bad = [];
@@ -4103,6 +4117,10 @@ function addEditorUpload(): void {
             $bad[] = (string)$img['error'];
             continue;
         }
+        if ($all > 0 && $used + (int)($siz[$key] ?? 0) > $all) {
+            $bad[] = _FSIZEALL.': '.filterSize($all);
+            continue;
+        }
         $new = $mod.'-'.getRandomString(10).'-'.$uid.'.'.$ext;
         while (is_file($dir.'/'.$new)) $new = $mod.'-'.getRandomString(10).'-'.$uid.'.'.$ext;
         if (!move_uploaded_file((string)$tmp[$key], $dir.'/'.$new)) {
@@ -4110,6 +4128,7 @@ function addEditorUpload(): void {
             continue;
         }
         $out[] = getEditorFileData($dir, $new);
+        $used += (int)($siz[$key] ?? 0);
     }
     getEditorJson(['ok' => $out !== [], 'files' => $out, 'errors' => $bad, 'error' => $out ? '' : ($bad[0] ?? _ERROR_DOWN)]);
 }

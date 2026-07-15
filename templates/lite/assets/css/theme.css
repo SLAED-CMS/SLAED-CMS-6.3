@@ -1464,14 +1464,16 @@ button.sl-but-mini:hover,
 
 .sl-form-row {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
   margin-bottom: 10px;
+  width: 100%;
 }
 
 .sl-form-label {
-  width: 160px;
-  flex-shrink: 0;
-  padding-top: var(--sl-space-sm);
+  margin-bottom: var(--sl-space-sm);
+  padding-top: 0;
+  width: auto;
 }
 
 .sl-form-label::after,
@@ -1486,6 +1488,14 @@ button.sl-but-mini:hover,
 
 .sl-form-row .sl-field--auto {
   margin-right: 0;
+}
+
+.sl-form-field {
+  width: 100%;
+}
+
+.sl-form-field > .sl-field:not(.sl-field--auto) {
+  width: 100%;
 }
 
 .sl-form-value {

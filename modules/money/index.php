@@ -56,7 +56,7 @@ function money(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $rows = '';
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_7, 'field_html' => $tpl->getHtmlFrag('input', [
+        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_7, 'hide_label' => true, 'field_html' => $tpl->getHtmlFrag('input', [
             'itype' => 'number',
             'name_attr' => 'sum',
             'value_attr' => (string)$sum,
@@ -64,6 +64,7 @@ function money(): void {
         ])]);
         $rows .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _MO_8,
+            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._MO_8.'" required', 'name_attr' => 'email', 'value_attr' => $email]),
         ]);
         $form = explode(',', $conf['money']['form']);
@@ -72,12 +73,24 @@ function money(): void {
             if ($val != '') {
                 $rows .= $tpl->getHtmlFrag('form-field-row', [
                     'label' => $val,
+                    'hide_label' => true,
                     'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="255" placeholder="'.$val.'" required', 'itype' => 'text', 'name_attr' => 'intro[]', 'value_attr' => filterHtml($intro[$i] ?? '', 1)]),
                 ]);
                 $i++;
             }
         }
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _MO_9, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => 5, 'placeholder' => _MO_9])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MO_9,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '1',
+                'name' => 'note',
+                'value' => $note,
+                'mod' => $conf['name'],
+                'rows' => 5,
+                'placeholder' => _MO_9,
+            ]),
+        ]);
         $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _MO_6]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'captcha' => getCaptcha('comment'),

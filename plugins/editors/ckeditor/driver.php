@@ -20,6 +20,7 @@ class EditorCkeditor implements ContentDriver {
         global $tpl;
         $jid = json_encode($id);
         $jval = json_encode($value);
+        $jph = json_encode((string)($data['placeholder'] ?? ''));
         $lang = substr(_LOCALE, 0, 2);
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
@@ -31,7 +32,8 @@ class EditorCkeditor implements ContentDriver {
             'input_attr' => 'id="'.$eid.'"',
         ]);
         $js = '(function(){CK5.ClassicEditor.create(document.getElementById('.$jid.'+"_ck"),{';
-        $js .= 'plugins:'.$pl.',toolbar:'.$tb.',language:"'.$lang.'",licenseKey:"GPL",table:{contentToolbar:["tableColumn","tableRow","mergeTableCells"]}}).then(function(ed){';
+        $js .= 'plugins:'.$pl.',toolbar:'.$tb.',placeholder:'.$jph.',language:"'.$lang.'",licenseKey:"GPL",';
+        $js .= 'table:{contentToolbar:["tableColumn","tableRow","mergeTableCells"]}}).then(function(ed){';
         $js .= 'ed.setData('.$jval.');';
         $js .= 'var inp=document.getElementById('.$jid.');';
         $js .= 'inp.form&&inp.form.addEventListener("submit",function(){inp.value=ed.getData();},true);';

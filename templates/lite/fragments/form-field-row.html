@@ -2,6 +2,12 @@
   {% if row_id %}id="{{ row_id }}"{% endif %}
   class="sl-form-row{% if is_hidden %} sl-none{% endif %}"
 >
+  {% if not hide_label %}
+  {% if label or label_html %}
   {% include 'fragments/label.html' %}
+  {% endif %}
+  {% endif %}
+  <div class="sl-form-field">
   {{{ field_html }}}
+  </div>
 </div>

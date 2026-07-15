@@ -83,6 +83,7 @@ function info(): void {
             'no_enctype' => true,
             'fields' => $tpl->getHtmlFrag('form-field-row', [
                 'label' => _ORTYPEURL,
+                'hide_label' => true,
                 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
             ]),
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),

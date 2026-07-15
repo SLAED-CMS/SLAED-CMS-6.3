@@ -398,20 +398,103 @@ function add(): void {
         if ($conf['files']['upload'] == 1) {
             $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _FILE_USER, 'field_html' => $tpl->getHtmlFrag('file-input', ['name_attr' => 'userfile'])]);
         }
-        $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _URL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'url', 'value_attr' => $url, 'maxlength_num' => '100', 'placeholder_text' => _URL])]);
-        $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _VERSION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fversion', 'value_attr' => $fversion, 'maxlength_num' => '10', 'placeholder_text' => _VERSION])]);
-        $extra .= $tpl->getHtmlFrag('form-field-row', ['label' => _SIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'fsize', 'value_attr' => $fsize, 'maxlength_num' => '10', 'placeholder_text' => _SIZE])]);
+        $extra .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _URL,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'name_attr' => 'url',
+                'value_attr' => $url,
+                'maxlength_num' => '100',
+                'placeholder_text' => _URL,
+            ]),
+        ]);
+        $extra .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _VERSION,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'fversion',
+                'value_attr' => $fversion,
+                'maxlength_num' => '10',
+                'placeholder_text' => _VERSION,
+            ]),
+        ]);
+        $extra .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _SIZE,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'fsize',
+                'value_attr' => $fsize,
+                'maxlength_num' => '10',
+                'placeholder_text' => _SIZE,
+            ]),
+        ]);
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('files')]);
         $nameField = is_user()
             ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _AUEMAIL, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'value_attr' => $mail, 'maxlength_num' => 100, 'placeholder_text' => _AUEMAIL, 'is_required' => true])]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _NAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _NAME, 'is_required' => true])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'hide_label' => !is_user(), 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _AUEMAIL,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'name_attr' => 'mail',
+                'value_attr' => $mail,
+                'maxlength_num' => 100,
+                'placeholder_text' => _AUEMAIL,
+                'is_required' => true,
+            ]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _NAME,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'title',
+                'value_attr' => $title,
+                'maxlength_num' => 100,
+                'placeholder_text' => _NAME,
+                'is_required' => true,
+            ]),
+        ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1'])]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0'])]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'home', 'value_attr' => $home, 'maxlength_num' => 100, 'placeholder_text' => _SITE])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _TEXT,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '1',
+                'name' => 'description',
+                'value' => $description,
+                'mod' => $conf['name'],
+                'rows' => '5',
+                'placeholder' => _TEXT,
+                'required' => '1',
+            ]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _ENDTEXT,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '2',
+                'name' => 'bodytext',
+                'value' => $bodytext,
+                'mod' => $conf['name'],
+                'rows' => '15',
+                'placeholder' => _ENDTEXT,
+                'required' => '0',
+            ]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _SITE,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'name_attr' => 'home',
+                'value_attr' => $home,
+                'maxlength_num' => 100,
+                'placeholder_text' => _SITE,
+            ]),
+        ]);
         $fields .= $extra;
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'        => $conf['name'],

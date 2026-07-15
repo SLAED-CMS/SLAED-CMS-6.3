@@ -19,6 +19,7 @@ class EditorTinymce implements ContentDriver {
     public function getWidget(string $id, string $name, string $value, string $profile, array $data = []): string {
         global $tpl;
         $jid = json_encode($id);
+        $jph = json_encode((string)($data['placeholder'] ?? ''));
         $pl = ($profile === 'full') ? self::PL_FULL : self::PL_SIMPLE;
         $tb = ($profile === 'full') ? self::TB_FULL : self::TB_SIMPLE;
         $eid = htmlspecialchars($id, ENT_QUOTES, 'UTF-8');
@@ -32,7 +33,9 @@ class EditorTinymce implements ContentDriver {
         ]);
         $js = '(function(){var el=document.getElementById('.$jid.');';
         $js .= 'if(!el||typeof tinymce==="undefined"){return;}';
-        $js .= 'tinymce.init({target:el,license_key:"gpl",base_url:"'.self::BASE_URL.'",suffix:".min",icons:"default",plugins:"'.$pl.'",toolbar:"'.$tb.'",skin:"oxide",promotion:false,branding:false,menubar:false,statusbar:true});';
+        $js .= 'tinymce.init({target:el,placeholder:'.$jph.',license_key:"gpl",base_url:"'.self::BASE_URL.'",';
+        $js .= 'suffix:".min",icons:"default",plugins:"'.$pl.'",toolbar:"'.$tb.'",skin:"oxide",';
+        $js .= 'promotion:false,branding:false,menubar:false,statusbar:true});';
         $js .= '})();';
         return $ta.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }

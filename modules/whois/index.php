@@ -172,16 +172,56 @@ function add(): void {
 		$host = getVar('post', 'host', 'url', 'http://');
 		$dc = getVar('post', 'dc', 'url', 'http://');
 
-		$fields = $tpl->getHtmlFrag('form-field-row', ['label' => _SITE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'domain', 'value_attr' => $domain, 'maxlength_num' => '255', 'placeholder_text' => _SITE, 'is_required' => true])]);
-		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _HOST, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'host', 'value_attr' => $host, 'maxlength_num' => '255', 'placeholder_text' => _HOST])]);
-		$fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _DC, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'url', 'name_attr' => 'dc', 'value_attr' => $dc, 'maxlength_num' => '255', 'placeholder_text' => _DC])]);
+		$fields = $tpl->getHtmlFrag('form-field-row', [
+			'label' => _SITE,
+			'hide_label' => true,
+			'field_html' => $tpl->getHtmlFrag('input', [
+				'itype' => 'url',
+				'name_attr' => 'domain',
+				'value_attr' => $domain,
+				'maxlength_num' => '255',
+				'placeholder_text' => _SITE,
+				'is_required' => true,
+			]),
+		]);
+		$fields .= $tpl->getHtmlFrag('form-field-row', [
+			'label' => _HOST,
+			'hide_label' => true,
+			'field_html' => $tpl->getHtmlFrag('input', [
+				'itype' => 'url',
+				'name_attr' => 'host',
+				'value_attr' => $host,
+				'maxlength_num' => '255',
+				'placeholder_text' => _HOST,
+			]),
+		]);
+		$fields .= $tpl->getHtmlFrag('form-field-row', [
+			'label' => _DC,
+			'hide_label' => true,
+			'field_html' => $tpl->getHtmlFrag('input', [
+				'itype' => 'url',
+				'name_attr' => 'dc',
+				'value_attr' => $dc,
+				'maxlength_num' => '255',
+				'placeholder_text' => _DC,
+			]),
+		]);
 		$nameField = is_user()
 			? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => $userNameValue])
 			: $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $userNameValue, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
 		$fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('whois')])
-			.$tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField])
+			.$tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'hide_label' => !is_user(), 'field_html' => $nameField])
 			.$fields
-			.$tpl->getHtmlFrag('form-field-row', ['label' => _COMMENT, 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'hometext', 'rows_num' => 5, 'value_text' => $hometext, 'placeholder_text' => _COMMENT])]);
+			.$tpl->getHtmlFrag('form-field-row', [
+				'label' => _COMMENT,
+				'hide_label' => true,
+				'field_html' => $tpl->getHtmlFrag('textarea', [
+					'name_attr' => 'hometext',
+					'rows_num' => 5,
+					'value_text' => $hometext,
+					'placeholder_text' => _COMMENT,
+				]),
+			]);
 		$cont .= $tpl->getHtmlPart('form-add', [
 			'name'               => $conf['name'],
 			'fields'             => $fields,

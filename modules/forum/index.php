@@ -513,9 +513,22 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
+            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
         ]) : '';
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1'])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _TEXT,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '1',
+                'name' => 'hometext',
+                'value' => '',
+                'mod' => $conf['name'],
+                'rows' => '10',
+                'placeholder' => _TEXT,
+                'required' => '1',
+            ]),
+        ]);
         $rows .= getTplFieldsIn(['mod' => $conf['name']]);
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
@@ -654,13 +667,27 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('title', ['title' => $info, 'is_level_one' => true]);
         $rows = (!is_user()) ? $tpl->getHtmlFrag('form-field-row', [
             'label' => _YOURNAME,
+            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'placeholder="'._YOURNAME.'" required', 'itype' => 'text', 'name_attr' => 'postname', 'value_attr' => _ANONYM]),
         ]) : '';
         $rows .= ($subh) ? $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => '']) : $tpl->getHtmlFrag('form-field-row', [
             'label' => _TITLE,
+            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', ['input_attr' => 'maxlength="100" placeholder="'._TITLE.'" required', 'itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject]),
         ]);
-        $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => $conf['name'], 'rows' => '15', 'placeholder' => _TEXT, 'required' => '1'])]);
+        $rows .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _TEXT,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '1',
+                'name' => 'hometext',
+                'value' => $hometext,
+                'mod' => $conf['name'],
+                'rows' => '15',
+                'placeholder' => _TEXT,
+                'required' => '1',
+            ]),
+        ]);
         $rows .= getTplFieldsIn(['field' => $field, 'mod' => $conf['name']]);
         $rows .= ($ismod) ? $tpl->getHtmlFrag('form-field-row', ['label' => _OPMOD, 'field_html' => pmoder($status, $subh)]).$tpl->getHtmlFrag('form-field-row', ['label' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])]) : '';
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])

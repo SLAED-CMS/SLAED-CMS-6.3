@@ -476,28 +476,133 @@ function add(): void {
             ]);
             $i++;
         }
-        $fieldsBeforeText = $tpl->getHtmlFrag('form-field-row', ['label' => _MSUBTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subtitle', 'value_attr' => $subtitle, 'maxlength_num' => '100', 'placeholder_text' => _MSUBTITLE])]);
+        $fieldsBeforeText = $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MSUBTITLE,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'subtitle',
+                'value_attr' => $subtitle,
+                'maxlength_num' => '100',
+                'placeholder_text' => _MSUBTITLE,
+            ]),
+        ]);
         $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MYEAR, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearOptions])]);
-        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MDIRECTOR, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director, 'maxlength_num' => '100', 'placeholder_text' => _MDIRECTOR])]);
-        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MROLES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles, 'maxlength_num' => '255', 'placeholder_text' => _MROLES])]);
-        $fieldsAfterText = $tpl->getHtmlFrag('form-field-row', ['label' => _MCREATEDBY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby, 'maxlength_num' => '100', 'placeholder_text' => _MCREATEDBY])]);
-        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MDURATION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration, 'maxlength_num' => '100', 'placeholder_text' => _MDURATION])]);
+        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MDIRECTOR,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'director',
+                'value_attr' => $director,
+                'maxlength_num' => '100',
+                'placeholder_text' => _MDIRECTOR,
+            ]),
+        ]);
+        $fieldsBeforeText .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MROLES,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'roles',
+                'value_attr' => $roles,
+                'maxlength_num' => '255',
+                'placeholder_text' => _MROLES,
+            ]),
+        ]);
+        $fieldsAfterText = $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MCREATEDBY,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'createdby',
+                'value_attr' => $createdby,
+                'maxlength_num' => '100',
+                'placeholder_text' => _MCREATEDBY,
+            ]),
+        ]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MDURATION,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'duration',
+                'value_attr' => $duration,
+                'maxlength_num' => '100',
+                'placeholder_text' => _MDURATION,
+            ]),
+        ]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langOptions])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MFORMAT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => false]).$formatOptions])]);
         $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MQUALITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _NO_INFO, 'is_selected' => false]).$qualityOptions])]);
-        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MSIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size, 'maxlength_num' => '100', 'placeholder_text' => _MSIZE])]);
-        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', ['label' => _MRELEASED, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'released', 'value_attr' => $released, 'maxlength_num' => '100', 'placeholder_text' => _MRELEASED])]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MSIZE,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'size',
+                'value_attr' => $size,
+                'maxlength_num' => '100',
+                'placeholder_text' => _MSIZE,
+            ]),
+        ]);
+        $fieldsAfterText .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MRELEASED,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'released',
+                'value_attr' => $released,
+                'maxlength_num' => '100',
+                'placeholder_text' => _MRELEASED,
+            ]),
+        ]);
         $fieldsAfterText .= $linksRows;
         $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('media')]);
         $nameField = is_user()
             ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _MTITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _MTITLE, 'is_required' => true])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'hide_label' => !is_user(), 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _MTITLE,
+            'hide_label' => true,
+            'field_html' => $tpl->getHtmlFrag('input', [
+                'itype' => 'text',
+                'name_attr' => 'title',
+                'value_attr' => $title,
+                'maxlength_num' => 100,
+                'placeholder_text' => _MTITLE,
+                'is_required' => true,
+            ]),
+        ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _CATEGORY, 'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false]))]);
         $fields .= $fieldsBeforeText;
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _DESCRIPTION, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1'])]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _NOTE, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _NOTE, 'required' => '0'])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _DESCRIPTION,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '1',
+                'name' => 'description',
+                'value' => $description,
+                'mod' => $conf['name'],
+                'rows' => '10',
+                'placeholder' => _DESCRIPTION,
+                'required' => '1',
+            ]),
+        ]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _NOTE,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '2',
+                'name' => 'note',
+                'value' => $note,
+                'mod' => $conf['name'],
+                'rows' => '5',
+                'placeholder' => _NOTE,
+                'required' => '0',
+            ]),
+        ]);
         $fields .= $fieldsAfterText;
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'           => $conf['name'],

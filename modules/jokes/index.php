@@ -168,16 +168,29 @@ function add(): void {
         $nameField = is_user()
             ? $tpl->getHtmlFrag('span', ['is_form_value' => true, 'text' => filterText(substr($user[1], 0, 25))])
             : $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'postname', 'value_attr' => $postname, 'placeholder_text' => _YOURNAME, 'is_required' => true]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'field_html' => $nameField]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _YOURNAME, 'hide_label' => !is_user(), 'field_html' => $nameField]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _JTITLE,
+            'hide_label' => true,
             'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 100, 'placeholder_text' => _JTITLE, 'is_required' => true]),
         ]);
         $fields .= $tpl->getHtmlFrag('form-field-row', [
             'label' => _CATEGORY,
             'field_html' => getTplCategorySelect($conf['name'], $cid, 'cid', '', $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => false])),
         ]);
-        $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _JOKE, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'joke', 'value' => $joke, 'mod' => $conf['name'], 'rows' => '10', 'placeholder' => _JOKE, 'required' => '1'])]);
+        $fields .= $tpl->getHtmlFrag('form-field-row', [
+            'label' => _JOKE,
+            'hide_label' => true,
+            'field_html' => getTplTextarea([
+                'id' => '1',
+                'name' => 'joke',
+                'value' => $joke,
+                'mod' => $conf['name'],
+                'rows' => '10',
+                'placeholder' => _JOKE,
+                'required' => '1',
+            ]),
+        ]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'name'      => $conf['name'],
             'fields'    => $fields,

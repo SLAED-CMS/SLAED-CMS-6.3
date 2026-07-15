@@ -52,14 +52,17 @@ function contact(): void {
     ]) : '';
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOURNAME,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'sname', 'value_attr' => $sname, 'placeholder_text' => _YOURNAME, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _YOUREMAIL,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'semail', 'value_attr' => $semail, 'placeholder_text' => _YOUREMAIL, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _MESSAGE,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'message', 'rows_num' => 10, 'value_text' => $message, 'placeholder_text' => _MESSAGE, 'is_required' => true]),
     ]);
     $form = ($info ? $tpl->getHtmlFrag('block-content', ['is_section' => true, 'content' => $info, 'has_hr' => true]) : '').$tpl->getHtmlPart('form-add', [

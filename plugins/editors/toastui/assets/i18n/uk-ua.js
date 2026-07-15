@@ -29,7 +29,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__213__;
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -43,14 +43,14 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__213__;
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
 /******/ 	!function() {
@@ -63,7 +63,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__213__;
 /******/ 			return getter;
 /******/ 		};
 /******/ 	}();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
@@ -75,12 +75,12 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__213__;
 /******/ 			}
 /******/ 		};
 /******/ 	}();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	!function() {
 /******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
 /******/ 	}();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	!function() {
 /******/ 		// define __esModule on exports
@@ -91,7 +91,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE__213__;
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
 /******/ 	}();
-/******/ 	
+/******/
 /************************************************************************/
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
@@ -100,60 +100,59 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _editorCore__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(213);
 /* harmony import */ var _editorCore__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_editorCore__WEBPACK_IMPORTED_MODULE_0__);
 /**
- * @fileoverview I18N for Russian
- * @author Stepan Samko <stpnsamko@gmail.com>
- * @author Veaceslav Grimalschi <grimalschi@yandex.ru>
+ * @fileoverview I18N for Ukrainian
+ * @author Nikolya <k_m_i@i.ua>
  */
 
-_editorCore__WEBPACK_IMPORTED_MODULE_0___default().setLanguage(['ru', 'ru-RU'], {
+_editorCore__WEBPACK_IMPORTED_MODULE_0___default().setLanguage(['uk', 'uk-UA'], {
     Markdown: 'Markdown',
-    WYSIWYG: 'Визуальный',
-    Write: 'Редактор',
-    Preview: 'Просмотр',
+    WYSIWYG: 'Візуальний',
+    Write: 'Написати',
+    Preview: 'Попередній перегляд',
     Headings: 'Заголовки',
     Paragraph: 'Абзац',
-    Bold: 'Жирный',
+    Bold: 'Жирний',
     Italic: 'Курсив',
-    Strike: 'Зачеркнутый',
-    Code: 'Код',
-    Line: 'Линия',
-    Blockquote: 'Цитата',
-    'Unordered list': 'Неупорядоченный список',
-    'Ordered list': 'Упорядоченный список',
-    Task: 'Галочка',
-    Indent: 'Увеличить отступ',
-    Outdent: 'Уменьшить отступ',
-    'Insert link': 'Вставить ссылку',
-    'Insert CodeBlock': 'Вставить блок кода',
-    'Insert table': 'Вставить таблицу',
-    'Insert image': 'Вставить изображение',
+    Strike: 'Закреслений',
+    Code: 'Вбудований код',
+    Line: 'Лінія',
+    Blockquote: 'Блок цитування',
+    'Unordered list': 'Невпорядкований список',
+    'Ordered list': 'Упорядкований список',
+    Task: 'Завдання',
+    Indent: 'відступ',
+    Outdent: 'застарілий',
+    'Insert link': 'Вставити посилання',
+    'Insert CodeBlock': 'Вставити код',
+    'Insert table': 'Вставити таблицю',
+    'Insert image': 'Вставити зображення',
     Heading: 'Заголовок',
-    'Image URL': 'Ссылка на изображение',
-    'Select image file': 'Выбрать файл',
-    'Choose a file': 'Выбрать',
-    'No file': 'Нет файла',
-    Description: 'Описание',
+    'Image URL': 'Посилання на зображення',
+    'Select image file': 'Вибрати файл',
+    'Choose a file': 'Вибрати',
+    'No file': 'Немає файлу',
+    Description: 'Опис',
     OK: 'Готово',
-    More: 'Еще',
-    Cancel: 'Отмена',
+    More: 'ще',
+    Cancel: 'Скасувати',
     File: 'Файл',
-    URL: 'Ссылка',
-    'Link text': 'Текст ссылки',
-    'Add row to up': 'Добавить строку вверх',
-    'Add row to down': 'Добавить строку вниз',
-    'Add column to left': 'Добавить столбец слева',
-    'Add column to right': 'Добавить столбец справа',
-    'Remove row': 'Удалить ряд',
-    'Remove column': 'Удалить столбец',
-    'Align column to left': 'Выровнять по левому краю',
-    'Align column to center': 'Выровнять по центру',
-    'Align column to right': 'Выровнять по правому краю',
-    'Remove table': 'Удалить таблицу',
-    'Would you like to paste as table?': 'Вы хотите вставить в виде таблицы?',
-    'Text color': 'Цвет текста',
-    'Auto scroll enabled': 'Автопрокрутка включена',
-    'Auto scroll disabled': 'Автопрокрутка отключена',
-    'Choose language': 'Выбрать язык',
+    URL: 'Посилання',
+    'Link text': 'Текст посилання',
+    'Add row to up': 'Додати рядок вгору',
+    'Add row to down': 'Додати рядок вниз',
+    'Add column to left': 'Додайте стовпець зліва',
+    'Add column to right': 'Додайте стовпець праворуч',
+    'Remove row': 'Видалити ряд',
+    'Remove column': 'Видалити стовпчик',
+    'Align column to left': 'Вирівняти по лівому краю',
+    'Align column to center': 'Вирівняти по центру',
+    'Align column to right': 'Вирівняти по правому краю',
+    'Remove table': 'Видалити таблицю',
+    'Would you like to paste as table?': 'Ви хочете вставити у вигляді таблиці?',
+    'Text color': 'Колір тексту',
+    'Auto scroll enabled': 'Автоматична прокрутка включена',
+    'Auto scroll disabled': 'Автоматична прокрутка відключена',
+    'Choose language': 'Вибрати мову',
 });
 
 }();

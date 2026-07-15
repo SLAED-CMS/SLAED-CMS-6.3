@@ -136,15 +136,30 @@ function add(): void {
     $fields = $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('auto_links')]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _A_LINKS_E,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'mail', 'value_attr' => $email, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_E, 'is_required' => true]),
     ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _SITENAME,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'name', 'value_attr' => $name, 'maxlength_num' => 100, 'placeholder_text' => _SITENAME, 'is_required' => true]),
     ]);
-    $fields .= $tpl->getHtmlFrag('form-field-row', ['label' => _A_LINKS_TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'desc', 'value' => $desc, 'mod' => $conf['name'], 'rows' => '5', 'placeholder' => _A_LINKS_TEXT, 'required' => '1'])]);
+    $fields .= $tpl->getHtmlFrag('form-field-row', [
+        'label' => _A_LINKS_TEXT,
+        'hide_label' => true,
+        'field_html' => getTplTextarea([
+            'id' => '1',
+            'name' => 'desc',
+            'value' => $desc,
+            'mod' => $conf['name'],
+            'rows' => '5',
+            'placeholder' => _A_LINKS_TEXT,
+            'required' => '1',
+        ]),
+    ]);
     $fields .= $tpl->getHtmlFrag('form-field-row', [
         'label' => _A_LINKS_L,
+        'hide_label' => true,
         'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'site', 'value_attr' => $site, 'maxlength_num' => 100, 'placeholder_text' => _A_LINKS_L]),
     ]);
     $cont .= $tpl->getHtmlPart('form-add', [

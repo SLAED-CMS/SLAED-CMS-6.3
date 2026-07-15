@@ -465,7 +465,7 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
     foreach (getThemeCssFiles($theme) as $asset) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
     }
-    $iconcss = 'templates/'.$theme.'/assets/vendor/bootstrap/css/bootstrap-icons.min.css';
+    $iconcss = 'plugins/bootstrap-icons/bootstrap-icons.min.css';
     if (is_file(BASE_DIR.'/'.$iconcss)) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $iconcss, 'type' => '', 'title' => '']);
     }

@@ -35,8 +35,8 @@
         });
     }
 
-    function addItem(ed, idx, name, icon, tip) {
-        ed.insertToolbarItem({ groupIndex: 6, itemIndex: idx }, {
+    function addItem(ed, idx, name, icon, tip, group) {
+        ed.insertToolbarItem({ groupIndex: typeof group === 'number' ? group : 6, itemIndex: idx }, {
             name: name,
             text: '',
             className: 'toastui-editor-toolbar-icons ' + icon,
@@ -45,10 +45,38 @@
         });
     }
 
+    function setFullscreen(id, open) {
+        var box = doc.getElementById(String(id) + '_toast');
+        var opt = api.options && api.options[String(id)] ? api.options[String(id)] : {};
+        var txt = opt.labels || {};
+        var button = box ? box.querySelector('.slaed-bi-fullscreen') : null;
+        var tooltip = button ? button.querySelector('.toastui-editor-tooltip') : null;
+        var active;
+        var label;
+        if (!box) return;
+        active = typeof open === 'boolean' ? open : !box.classList.contains('sl-toastui-editor-fullscreen');
+        box.classList.toggle('sl-toastui-editor-fullscreen', active);
+        label = active ? (txt.exitfull || 'Exit full screen') : (txt.fullscreen || 'Full screen');
+        if (button) {
+            button.classList.toggle('sl-toastui-fullscreen-active', active);
+            button.setAttribute('aria-label', label);
+            button.setAttribute('data-tooltip', label);
+            button.title = label;
+        }
+        if (tooltip) tooltip.textContent = label;
+        doc.documentElement.classList.toggle('sl-toastui-page-locked', !!doc.querySelector('.sl-toastui-editor-fullscreen'));
+        if (doc.body) doc.body.classList.toggle('sl-toastui-page-locked', !!doc.querySelector('.sl-toastui-editor-fullscreen'));
+        setTimeout(function() { setWidth(id); }, 0);
+    }
+
     function addTags(id, ed, opt) {
         var admin = !!(opt && opt.admin);
         var txt = opt && opt.labels ? opt.labels : {};
         if (!ed || typeof ed.addCommand !== 'function' || typeof ed.insertToolbarItem !== 'function') return;
+        addCmd(ed, 'slaedFullscreen', function() {
+            setFullscreen(id);
+        });
+        addItem(ed, 0, 'slaedFullscreen', 'slaed-bi slaed-bi-fullscreen', txt.fullscreen || 'Full screen', 0);
         addCmd(ed, 'slaedQuote', function() {
             addWrap(ed, '[quote]', '[/quote]', 'Quote');
         });
@@ -81,37 +109,43 @@
     api.insertWrap = function(id, open, close, text) {
         addWrap(getEditor(id), open, close, text);
     };
-    function refit(id) {
+    function setTabs(id) {
+        var box = doc.getElementById(String(id) + '_toast');
+        var tabs = box && box.querySelector('.toastui-editor-md-tab-container');
+        var mode = box && box.querySelector('.toastui-editor-mode-switch');
+        if (!tabs || !mode || tabs.parentElement === mode) return;
+        mode.insertBefore(tabs, mode.firstChild);
+    }
+    function setWidth(id) {
         var box = doc.getElementById(String(id) + '_toast');
         var bar = box && box.querySelector('.toastui-editor-defaultUI-toolbar');
         if (!bar || !bar.parentElement) return;
-        // Toast UI folds surplus toolbar icons into its "..." dropdown only
-        // when the toolbar has a determinate width: at width:auto it shares
-        // the row with the md tab switcher and classifies the icons against
-        // a bogus width, so they spill past the editor. Pin the toolbar to
-        // the real remaining row width; its ResizeObserver then reclassifies
-        // correctly on every change.
-        var tabs = box.querySelector('.toastui-editor-md-tab-container');
         var cs = win.getComputedStyle(bar);
         var pad = (cs.boxSizing === 'border-box') ? 0 : parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
-        // -1: the pinned width must differ from the auto width, or the box
-        // does not resize and the observer never re-runs the stale classifier
-        var w = bar.parentElement.clientWidth - (tabs ? tabs.offsetWidth : 0) - pad - 1;
-        if (w > 0) bar.style.width = w + 'px';
+        var width = bar.parentElement.clientWidth - pad - 1;
+        if (width > 0) bar.style.width = width + 'px';
     }
-    function refitAll() {
-        map.forEach(function(ed, id) { refit(id); });
+    function setWidths() {
+        map.forEach(function(ed, id) { setWidth(id); });
     }
-    win.addEventListener('load', refitAll);
-    win.addEventListener('resize', refitAll);
+    win.addEventListener('load', setWidths);
+    win.addEventListener('resize', setWidths);
+    doc.addEventListener('keydown', function(event) {
+        if (event.key !== 'Escape') return;
+        map.forEach(function(ed, id) {
+            var box = doc.getElementById(String(id) + '_toast');
+            if (box && box.classList.contains('sl-toastui-editor-fullscreen')) setFullscreen(id, false);
+        });
+    });
     api.register = function(id, ed, opt) {
         map.set(String(id), ed);
         api.options[String(id)] = opt || {};
         addTags(id, ed, opt || {});
         if (api.addEmoji) api.addEmoji(id, ed, opt || {});
         if (api.addUpload) api.addUpload(id, ed, opt || {});
-        if (typeof ed.on === 'function') ed.on('changeMode', function() { refit(id); });
-        if (doc.readyState === 'complete') refit(id);
+        setTabs(id);
+        if (typeof ed.on === 'function') ed.on('changeMode', function() { setWidth(id); });
+        if (doc.readyState === 'complete') setWidth(id);
     };
     win.SlaedToastUi = api;
 })(window, document);
