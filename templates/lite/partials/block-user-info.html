@@ -2,9 +2,13 @@
   <div class="sl-block-user-ava">
     {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
     <p>
-      {% if is_user %}<a href="index.php?name=account">{{ greeting_name }}</a>{% else %}<b>{{ greeting_name }}</b>{% endif %}
+      {% if is_user %}
+      <a href="index.php?name=account">{{ greeting_name }}</a>
       {% if rank_url %}<img src="{{ rank_url }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}
-      <small{% if group_name %} title="{{ group_name }}"{% endif %}>{% if is_user and has_meta %}{% if group_name %}{{ group_name }}{% endif %}{% if group_name and ngroup_pct %} &middot; {% endif %}{% if ngroup_pct %}{{ ngroup_pct }}%{% endif %}{% else %}{{ greeting_label }}{% endif %}</small>
+      <small{% if group_name %} title="{{ group_name }}"{% endif %}>{% if has_meta %}{% if group_name %}{{ group_name }}{% endif %}{% if group_name and ngroup_pct %} &middot; {% endif %}{% if ngroup_pct %}{{ ngroup_pct }}%{% endif %}{% else %}{{ greeting_label }}{% endif %}</small>
+      {% else %}
+      <small>{{ greeting_label }}</small><b>{{ greeting_name }}</b>
+      {% endif %}
     </p>
     {% if is_user and points_label %}<span class="sl-user-points"><b>{{ points_count }}</b><small>{{ points_label }}</small></span>{% endif %}
   </div>

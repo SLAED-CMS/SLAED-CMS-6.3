@@ -301,6 +301,7 @@ define('_NOTE','Note');
 define('_NO_INFO','No info');
 define('_OCCUPATION','Occupation');
 define('_OK','OK');
+define('_ONLINE','online');
 define('_ONLINE_NOW','Online now');
 define('_ONDELETE','Deleting an object');
 define('_ONEDIT','Quick editing');

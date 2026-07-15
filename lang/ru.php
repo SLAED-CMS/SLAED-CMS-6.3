@@ -301,6 +301,7 @@ define('_NOTE','Примечание');
 define('_NO_INFO','Нет информации');
 define('_OCCUPATION','Род занятий');
 define('_OK','OK');
+define('_ONLINE','онлайн');
 define('_ONLINE_NOW','Сейчас на сайте');
 define('_ONDELETE','Удаление объекта');
 define('_ONEDIT','Быстрое редактирование');

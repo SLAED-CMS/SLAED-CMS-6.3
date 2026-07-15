@@ -3023,7 +3023,6 @@ ol.sl-sublist-two li:hover:before {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: 458px;
 }
 
 .sl-user-card .sl-live-tools { top: -38px; right: 0; }
@@ -3130,6 +3129,7 @@ ol.sl-sublist-two li:hover:before {
   border-bottom: 1px solid var(--sl-color-border-subtle);
   color: var(--sl-color-text-muted);
   font-size: 13px;
+  transition: padding-left 0.22s ease, color 0.22s ease;
 }
 
 .sl-block-pm a:hover {
@@ -3219,7 +3219,19 @@ ol.sl-sublist-two li:hover:before {
 .sl-user-captcha > * { max-width: 100%; }
 .sl-net-login { margin: 0; }
 
-.sl-block-session { margin-top: auto; }
+.sl-block-session { margin-top: var(--sl-space-lg); }
+
+[data-sl-session-online] {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  z-index: 2;
+  gap: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-block-pm a { transition: none; }
+}
 
 .sl-session-summary {
   display: grid;

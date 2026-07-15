@@ -3674,16 +3674,18 @@ function getUserSessionInfo(string $id = ''): string {
             'visitors_pct' => $gper,
             'overall_label' => _OVERALL,
             'overall_count' => $all,
+            'online_label' => _ONLINE,
+            'show_online_chip' => !is_user(),
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'toggle_title' => _READMORE,
             'toggle_label' => _READMORE,
             'has_rows' => ($mem > 0 || $bot > 0),
-            'rows_query' => 'go=1&op=getUserSessionRows&token='.getSiteToken(),
+            'rows_query' => 'go=1&op=getUserSessionRows',
             'toggle_id' => 'u-block',
             'live_every' => intval($conf['live_u'] ?? 0),
             'update_target' => 'sinfo',
-            'update_query' => 'go=1&op=getUserSessionInfo&token='.getSiteToken(),
+            'update_query' => 'go=1&op=getUserSessionInfo',
         ]);
         if ($id) { return $content; } else { echo $content; }
     }

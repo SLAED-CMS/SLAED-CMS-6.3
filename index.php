@@ -98,7 +98,8 @@ if (empty($go)) {
         }
     }
 } elseif (is_numeric($go)) {
-    if ($go != 3) {
+    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows'], true));
+    if ($go != 3 && !$public) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);
         $tok = getVar('req', 'token', 'raw', '')
             ?: ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
