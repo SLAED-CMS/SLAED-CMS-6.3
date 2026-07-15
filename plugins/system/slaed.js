@@ -196,6 +196,10 @@
         var nextOpen = typeof isOpen === 'boolean' ? isOpen : isHidden;
         setToggleBlockState(element, id, nextOpen, effect, duration);
         setToggleState(id, scoped, nextOpen ? '1' : '0');
+        if (nextOpen) {
+            var items = getToggleControls(id);
+            for (var num = 0; num < items.length; num++) items[num].dispatchEvent(new Event('sl-toggle-open'));
+        }
     }
 
     function setToggleControl(control) {
@@ -1240,6 +1244,26 @@
             var elt = event.detail ? event.detail.elt : null;
             if (elt && elt.closest && elt.closest('[data-sl-live-paused]')) event.preventDefault();
         });
+        window.setInterval(function () {
+            if (document.hidden || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+            var lists = document.querySelectorAll('[data-sl-live-scroll].sl-is-open');
+            for (var i = 0; i < lists.length; i++) {
+                var list = lists[i];
+                if (list.closest('[data-sl-live-paused]') || list.matches(':hover') || list.contains(document.activeElement)) continue;
+                var limit = list.scrollHeight - list.clientHeight;
+                if (limit <= 1) continue;
+                var wait = parseInt(list.getAttribute('data-sl-scroll-wait') || '0', 10);
+                if (list.scrollTop >= limit - 1) {
+                    if (!wait) list.setAttribute('data-sl-scroll-wait', Date.now() + 1000);
+                    else if (Date.now() >= wait) {
+                        list.scrollTop = 0;
+                        list.removeAttribute('data-sl-scroll-wait');
+                    }
+                    continue;
+                }
+                list.scrollTop += 1;
+            }
+        }, 50);
         window.setInterval(setLiveTick, 1000);
     }
 
@@ -1270,6 +1294,12 @@
         var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;
         if (live) live.setAttribute('data-sl-live-stamp', Date.now());
         setLiveChips(event.target);
+        if (live === event.target && window.htmx) {
+            var detail = live.querySelector('[data-sl-toggle-control][aria-expanded="true"]');
+            var rows = live.querySelector('.sl-session-list [id$="-rows"]');
+            var query = detail ? detail.getAttribute('hx-get') : '';
+            if (detail && rows && query) window.htmx.ajax('GET', query, { source: detail, target: rows, swap: 'innerHTML' });
+        }
         setFavoriteBurst();
     });
 

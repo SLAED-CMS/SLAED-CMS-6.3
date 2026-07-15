@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — 18 разных Live-концепций блока «Пользователи»</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 80px;
+  background: var(--sl-color-surface);
+  color: var(--sl-color-text);
+  font: 14px/1.45 Arial, system-ui, sans-serif;
+}
+
+.sl-demo-head {
+  padding: 28px clamp(16px, 4vw, 52px);
+  border-bottom: 1px solid var(--sl-color-border);
+  background:
+    radial-gradient(circle at 88% 14%, color-mix(in srgb, var(--sl-color-brand) 20%, transparent), transparent 25%),
+    linear-gradient(180deg, var(--sl-color-bg), var(--sl-color-surface));
+}
+
+.sl-demo-head h1 {
+  max-width: 1050px;
+  margin: 0 0 var(--sl-space-md);
+  color: var(--sl-color-text-heading);
+  font: bold clamp(23px, 3vw, 34px)/1.12 "Magistral", Arial, sans-serif;
+}
+
+.sl-demo-head p { max-width: 980px; margin: 0; color: var(--sl-color-text-muted); }
+
+.sl-demo-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-sm);
+  margin-top: var(--sl-space-lg);
+}
+
+.sl-demo-nav a { font-size: 12px; }
+
+.sl-demo-wrap { width: min(1540px, calc(100% - 32px)); margin: 0 auto; }
+.sl-demo-section { margin-top: 38px; }
+
+.sl-demo-section > h2 {
+  margin: 0 0 var(--sl-space-sm);
+  padding-bottom: var(--sl-space-md);
+  border-bottom: 2px solid var(--sl-color-border);
+  color: var(--sl-color-text-heading);
+  font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+}
+
+.sl-demo-note { max-width: 980px; margin: 0 0 22px; color: var(--sl-color-text-muted); font-size: 13px; }
+
+.sl-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, var(--sl-sidebar)));
+  justify-content: center;
+  gap: 28px 24px;
+  align-items: start;
+}
+
+.sl-demo-item { width: min(100%, var(--sl-sidebar)); min-width: 0; }
+
+.sl-demo-label {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sl-space-md);
+  min-height: 34px;
+  margin-bottom: var(--sl-space-md);
+}
+
+.sl-demo-label > span:nth-child(2) { min-width: 0; }
+
+.sl-demo-number {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: var(--sl-color-text-heading);
+  color: var(--sl-color-on-dark);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.sl-demo-label b,
+.sl-demo-label small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-demo-label b { color: var(--sl-color-text-heading); font-size: 13px; }
+.sl-demo-label small { color: var(--sl-color-text-muted); font-size: 11px; }
+
+.sl-demo-pick {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sl-color-success) 14%, transparent);
+  color: var(--sl-color-success);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.sl-demo-block {
+  position: relative;
+  width: 100%;
+  min-height: 330px;
+  margin: 0;
+  overflow: visible;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-soft);
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.sl-demo-item:hover .sl-demo-block {
+  border-color: color-mix(in srgb, var(--sl-color-brand-link) 26%, var(--sl-color-border));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--sl-color-surface-dark) 12%, transparent);
+  transform: translateY(-3px);
+}
+
+.sl-demo-block .sl-title {
+  margin: 0;
+  color: var(--sl-color-text-heading);
+  font: bold 17px/1.25 "Magistral", Arial, sans-serif;
+}
+
+.sl-demo-live {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 30;
+  margin: 0;
+}
+
+.sl-demo-live-trigger {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 12%, var(--sl-color-bg));
+  color: var(--sl-color-success);
+  font-size: var(--sl-size-icon-xs);
+  line-height: 1;
+  cursor: pointer;
+  animation: sl-live-pulse 2s ease-out infinite;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.sl-demo-live:hover .sl-demo-live-trigger,
+.sl-demo-live:focus-within .sl-demo-live-trigger {
+  box-shadow: 0 6px 16px color-mix(in srgb, currentColor 22%, transparent);
+  transform: translateY(-2px) scale(1.06);
+}
+
+.sl-demo-live:focus-visible { outline: 0; }
+
+.sl-demo-live:focus-visible .sl-demo-live-trigger {
+  outline: 2px solid color-mix(in srgb, var(--sl-color-brand-link) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.sl-demo-live > .sl-demo-live-panel {
+  --sl-float-arrow: calc(100% - 15px);
+  right: 0;
+  left: auto;
+  width: 244px;
+  min-width: 244px;
+}
+
+.sl-demo-live-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-space-md);
+  margin-bottom: var(--sl-space-lg);
+  color: var(--sl-color-text-heading);
+  font-weight: bold;
+}
+
+.sl-demo-live-head > i { color: var(--sl-color-success); }
+.sl-demo-live-panel dd { font-variant-numeric: tabular-nums; }
+
+.sl-demo-live-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--sl-space-lg);
+  padding-top: var(--sl-space-md);
+  border-top: 1px solid var(--sl-color-border-subtle);
+}
+
+.sl-demo-live-button { border: 0; cursor: pointer; }
+.sl-demo-live-resume { display: none; }
+.sl-demo-live-paused { display: none; }
+
+.sl-demo-live.sl-is-paused .sl-demo-live-trigger {
+  color: var(--sl-color-warning);
+  animation: none;
+}
+
+.sl-demo-live.sl-is-paused .sl-demo-live-head > i { color: var(--sl-color-warning); }
+.sl-demo-live.sl-is-paused .sl-demo-live-on { display: none; }
+.sl-demo-live.sl-is-paused .sl-demo-live-paused { display: inline; }
+.sl-demo-live.sl-is-paused .sl-demo-live-pause { display: none; }
+.sl-demo-live.sl-is-paused .sl-demo-live-resume { display: inline-flex; }
+
+.sl-demo-live[data-sl-tone="info"] .sl-demo-live-trigger { color: var(--sl-color-tone-info); }
+.sl-demo-live[data-sl-tone="brand"] .sl-demo-live-trigger { color: var(--sl-color-brand-strong); }
+.sl-demo-live[data-sl-tone="accent"] .sl-demo-live-trigger { color: var(--sl-color-accent); }
+.sl-demo-live[data-sl-tone="dark"] .sl-demo-live-trigger {
+  border-color: var(--sl-color-surface-divider);
+  background: var(--sl-color-surface-dark);
+  color: var(--sl-color-success-soft);
+}
+
+.sl-demo-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  border: 3px solid var(--sl-color-surface-alt);
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--sl-color-brand), var(--sl-color-brand-strong));
+  color: var(--sl-color-on-dark);
+  font: bold 18px/1 "Magistral", Arial, sans-serif;
+  box-shadow: var(--sl-shadow-soft);
+}
+
+.sl-demo-avatar-sm { width: 36px; height: 36px; border-width: 2px; font-size: 11px; }
+.sl-demo-avatar-lg { width: 78px; height: 78px; font-size: 23px; }
+.sl-demo-muted { color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-demo-name { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-demo-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-success); }
+
+.sl-demo-kpi {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 9px 7px;
+  border-radius: var(--sl-radius-control);
+  background: var(--sl-color-surface-alt);
+  text-align: center;
+}
+
+.sl-demo-kpi b { color: var(--sl-color-text-heading); font-size: 16px; font-variant-numeric: tabular-nums; }
+.sl-demo-kpi small { color: var(--sl-color-text-muted); font-size: 10px; }
+
+.sl-user-hero { padding: 18px; text-align: center; }
+.sl-user-hero .sl-title { text-align: left; }
+.sl-user-hero .sl-demo-avatar { margin: 22px auto 8px; }
+.sl-user-hero h4 { margin: 0; color: var(--sl-color-text-heading); font-size: 17px; }
+.sl-user-hero p { margin: 3px 0 14px; }
+.sl-user-hero-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sl-space-sm); }
+.sl-user-hero-foot { display: flex; justify-content: center; gap: 16px; margin-top: 18px; color: var(--sl-color-text-muted); font-size: 11px; }
+
+.sl-user-split { display: grid; grid-template-columns: 46% 54%; }
+.sl-user-split-main { padding: 18px; border-right: 1px solid var(--sl-color-border-subtle); }
+.sl-user-split-main .sl-title { margin-bottom: 35px; }
+.sl-user-split-main .sl-demo-avatar { margin-bottom: 10px; }
+.sl-user-split-main p { margin: 0; }
+.sl-user-split-side { display: grid; grid-template-rows: repeat(3, 1fr); padding: 48px 16px 16px; gap: var(--sl-space-md); }
+.sl-user-split-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: var(--sl-radius-control); background: var(--sl-color-surface-alt); }
+.sl-user-split-row b { color: var(--sl-color-text-heading); font-size: 18px; }
+.sl-user-split-actions { display: grid; gap: var(--sl-space-sm); margin-top: 18px; }
+
+.sl-user-bento { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: auto repeat(2, 1fr); gap: var(--sl-space-md); padding: 18px; }
+.sl-user-bento .sl-title { grid-column: 1 / -1; margin-bottom: 8px; }
+.sl-user-bento-cell { min-height: 92px; padding: 12px; border-radius: var(--sl-radius-card); background: var(--sl-color-surface-alt); }
+.sl-user-bento-profile { display: flex; align-items: center; gap: 10px; background: linear-gradient(145deg, color-mix(in srgb, var(--sl-color-brand) 15%, var(--sl-color-bg)), var(--sl-color-bg)); }
+.sl-user-bento-profile p { margin: 0; }
+.sl-user-bento-number { display: flex; flex-direction: column; justify-content: space-between; }
+.sl-user-bento-number b { color: var(--sl-color-text-heading); font-size: 28px; }
+.sl-user-bento-mail { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; min-height: 58px; }
+
+.sl-user-console {
+  padding: 18px;
+  border-color: var(--sl-color-surface-divider);
+  background: var(--sl-color-surface-darker);
+  color: var(--sl-color-on-dark);
+}
+
+.sl-user-console::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(180deg, transparent 0 5px, color-mix(in srgb, var(--sl-color-success) 4%, transparent) 6px);
+}
+
+.sl-user-console .sl-title { color: var(--sl-color-on-dark); }
+.sl-user-console-head { display: flex; align-items: center; gap: 10px; margin: 34px 0 20px; }
+.sl-user-console-head p { margin: 0; }
+.sl-user-console-head .sl-demo-name { color: var(--sl-color-success-soft); }
+.sl-user-console-screen { display: grid; gap: 8px; padding: 13px; border: 1px solid var(--sl-color-surface-divider); border-radius: var(--sl-radius-control); background: color-mix(in srgb, var(--sl-color-surface-dark) 82%, transparent); font: 12px/1.45 Consolas, monospace; }
+.sl-user-console-line { display: flex; justify-content: space-between; color: var(--sl-color-text-subtle); }
+.sl-user-console-line b { color: var(--sl-color-success-soft); }
+.sl-user-console-foot { display: flex; gap: 8px; margin-top: 14px; }
+
+.sl-user-inbox { padding: 18px; }
+.sl-user-inbox .sl-title { margin-bottom: 30px; }
+.sl-user-inbox-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.sl-user-inbox-profile { display: flex; align-items: center; gap: 9px; }
+.sl-user-inbox-profile p { margin: 0; }
+.sl-user-inbox-list { display: grid; gap: 7px; }
+.sl-user-message { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 8px; border-radius: var(--sl-radius-control); background: var(--sl-color-surface-alt); }
+.sl-user-message p { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-user-message time { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-user-inbox-actions { display: flex; justify-content: space-between; margin-top: 13px; }
+
+.sl-user-orbit { display: grid; place-items: center; padding: 18px; }
+.sl-user-orbit .sl-title { position: absolute; top: 18px; left: 18px; }
+.sl-user-orbit-stage { position: relative; width: 240px; height: 235px; margin-top: 42px; }
+.sl-user-orbit-ring { position: absolute; inset: 18px; border: 1px dashed color-mix(in srgb, var(--sl-color-brand-link) 35%, transparent); border-radius: 50%; animation: sl-demo-spin 18s linear infinite; }
+.sl-user-orbit-core { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; text-align: center; transform: translate(-50%, -50%); }
+.sl-user-orbit-core .sl-demo-avatar { margin-bottom: 5px; }
+.sl-user-orbit-node { position: absolute; display: grid; place-items: center; width: 64px; height: 64px; border: 1px solid var(--sl-color-border); border-radius: 50%; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); text-align: center; }
+.sl-user-orbit-node b { display: block; color: var(--sl-color-text-heading); }
+.sl-user-orbit-node small { font-size: 9px; color: var(--sl-color-text-muted); }
+.sl-user-orbit-node-a { top: 0; left: 88px; }
+.sl-user-orbit-node-b { right: 0; bottom: 25px; }
+.sl-user-orbit-node-c { bottom: 25px; left: 0; }
+
+.sl-user-presence { padding: 18px; }
+.sl-user-presence .sl-title { margin-bottom: 38px; }
+.sl-user-presence-total { display: flex; align-items: baseline; gap: 8px; }
+.sl-user-presence-total b { color: var(--sl-color-text-heading); font-size: 42px; line-height: 1; }
+.sl-user-presence-stack { display: flex; margin: 16px 0; }
+.sl-user-presence-stack .sl-demo-avatar { margin-left: -9px; border-color: var(--sl-color-bg); }
+.sl-user-presence-stack .sl-demo-avatar:first-child { margin-left: 0; }
+.sl-user-presence-list { display: grid; gap: 7px; }
+.sl-user-presence-row { display: flex; align-items: center; justify-content: space-between; padding-top: 7px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-user-presence-row span:first-child { display: flex; align-items: center; gap: 7px; }
+
+.sl-user-rank { padding: 18px; }
+.sl-user-rank .sl-title { margin-bottom: 32px; }
+.sl-user-rank-profile { display: flex; align-items: center; gap: 12px; }
+.sl-user-rank-profile p { margin: 0; }
+.sl-user-rank-card { margin-top: 18px; padding: 14px; border-radius: var(--sl-radius-card); background: linear-gradient(145deg, color-mix(in srgb, var(--sl-color-warning) 10%, var(--sl-color-bg)), var(--sl-color-surface-alt)); }
+.sl-user-rank-line { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.sl-user-rank-progress { height: 9px; overflow: hidden; border-radius: 999px; background: var(--sl-color-border-muted); }
+.sl-user-rank-progress i { display: block; width: 72%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sl-color-brand), var(--sl-color-brand-strong)); animation: sl-demo-grow 1.1s ease-out both; }
+.sl-user-rank-next { display: flex; justify-content: space-between; margin-top: 8px; color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-user-rank-actions { display: flex; gap: 6px; margin-top: 15px; }
+
+.sl-user-timeline { padding: 18px; }
+.sl-user-timeline .sl-title { margin-bottom: 33px; }
+.sl-user-timeline-head { display: flex; align-items: center; gap: 10px; margin-bottom: 13px; }
+.sl-user-timeline-head p { margin: 0; }
+.sl-user-timeline-list { position: relative; display: grid; gap: 11px; padding-left: 20px; }
+.sl-user-timeline-list::before { content: ""; position: absolute; top: 6px; bottom: 6px; left: 5px; width: 1px; background: var(--sl-color-border-strong); }
+.sl-user-timeline-event { position: relative; display: flex; justify-content: space-between; gap: 8px; }
+.sl-user-timeline-event::before { content: ""; position: absolute; top: 5px; left: -19px; width: 9px; height: 9px; border: 2px solid var(--sl-color-bg); border-radius: 50%; background: var(--sl-color-brand-link); box-shadow: 0 0 0 1px var(--sl-color-brand-link); }
+.sl-user-timeline-event time { flex: 0 0 auto; color: var(--sl-color-text-muted); font-size: 10px; }
+
+.sl-user-geo { padding: 18px; }
+.sl-user-geo .sl-title { margin-bottom: 34px; }
+.sl-user-geo-hero { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 16px; }
+.sl-user-geo-globe { position: relative; display: grid; place-items: center; width: 120px; height: 120px; border: 1px solid color-mix(in srgb, var(--sl-color-brand-link) 28%, transparent); border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--sl-color-brand) 25%, transparent), var(--sl-color-surface-alt)); color: var(--sl-color-brand-strong); font-size: 56px; }
+.sl-user-geo-globe::after { content: ""; position: absolute; inset: 11px; border: 1px dashed currentColor; border-radius: 50%; animation: sl-demo-spin 14s linear infinite; }
+.sl-user-geo-total b { display: block; color: var(--sl-color-text-heading); font-size: 34px; line-height: 1; }
+.sl-user-geo-list { display: grid; gap: 7px; margin-top: 16px; }
+.sl-user-geo-row { display: grid; grid-template-columns: 32px 1fr auto; align-items: center; gap: 8px; }
+.sl-user-geo-bar { height: 6px; overflow: hidden; border-radius: 999px; background: var(--sl-color-surface-alt); }
+.sl-user-geo-bar i { display: block; height: 100%; border-radius: inherit; background: var(--sl-color-brand); }
+
+.sl-user-minimal { padding: 18px; }
+.sl-user-minimal .sl-title { color: var(--sl-color-text-muted); font-size: 12px; font-weight: normal; letter-spacing: 0.12em; text-transform: uppercase; }
+.sl-user-minimal-main { margin-top: 60px; }
+.sl-user-minimal-main h4 { margin: 0; color: var(--sl-color-text-heading); font: bold 28px/1.1 "Magistral", Arial, sans-serif; }
+.sl-user-minimal-main p { margin: 7px 0 30px; color: var(--sl-color-text-muted); }
+.sl-user-minimal-numbers { display: flex; gap: 22px; }
+.sl-user-minimal-numbers b { display: block; color: var(--sl-color-text-heading); font-size: 26px; }
+.sl-user-minimal-numbers small { color: var(--sl-color-text-muted); }
+.sl-user-minimal-foot { display: flex; gap: 15px; margin-top: 34px; padding-top: 13px; border-top: 1px solid var(--sl-color-border-subtle); }
+
+.sl-user-rail { display: grid; grid-template-columns: 62px 1fr; }
+.sl-user-rail-nav { display: grid; align-content: center; gap: 8px; padding: 12px; background: var(--sl-color-surface-dark); }
+.sl-user-rail-nav a { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; color: var(--sl-color-text-subtle); font-size: 18px; }
+.sl-user-rail-nav a:hover { background: var(--sl-color-surface-divider); color: var(--sl-color-on-dark); }
+.sl-user-rail-main { padding: 18px; }
+.sl-user-rail-main .sl-title { margin-bottom: 38px; }
+.sl-user-rail-profile { display: flex; align-items: center; gap: 11px; }
+.sl-user-rail-profile p { margin: 0; }
+.sl-user-rail-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 22px; }
+.sl-user-rail-metrics .sl-demo-kpi:last-child { grid-column: 1 / -1; }
+
+.sl-user-glass {
+  padding: 18px;
+  border: 0;
+  background:
+    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--sl-color-on-dark) 32%, transparent), transparent 28%),
+    linear-gradient(145deg, var(--sl-color-brand), var(--sl-color-accent));
+  color: var(--sl-color-on-dark);
+}
+
+.sl-user-glass::before { content: ""; position: absolute; right: 8px; bottom: -70px; width: 210px; height: 210px; border: 36px solid color-mix(in srgb, var(--sl-color-on-dark) 10%, transparent); border-radius: 50%; }
+.sl-user-glass .sl-title { color: var(--sl-color-on-dark); }
+.sl-user-glass-card { margin-top: 40px; padding: 16px; border: 1px solid color-mix(in srgb, var(--sl-color-on-dark) 26%, transparent); border-radius: var(--sl-radius-card); background: color-mix(in srgb, var(--sl-color-bg) 19%, transparent); box-shadow: var(--sl-shadow-medium); backdrop-filter: blur(12px); }
+.sl-user-glass-head { display: flex; align-items: center; gap: 11px; }
+.sl-user-glass-head p { margin: 0; }
+.sl-user-glass-head .sl-demo-name { color: var(--sl-color-on-dark); }
+.sl-user-glass-head .sl-demo-muted { color: color-mix(in srgb, var(--sl-color-on-dark) 74%, transparent); }
+.sl-user-glass-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 16px; }
+.sl-user-glass-stats span { padding: 8px 4px; border-radius: var(--sl-radius-control); background: color-mix(in srgb, var(--sl-color-bg) 14%, transparent); text-align: center; }
+.sl-user-glass-stats b { display: block; font-size: 18px; }
+.sl-user-glass-stats small { color: color-mix(in srgb, var(--sl-color-on-dark) 74%, transparent); font-size: 9px; }
+
+.sl-user-heat { padding: 18px; }
+.sl-user-heat .sl-title { margin-bottom: 34px; }
+.sl-user-heat-head { display: flex; align-items: flex-end; justify-content: space-between; }
+.sl-user-heat-head b { color: var(--sl-color-text-heading); font-size: 32px; line-height: 1; }
+.sl-user-heat-map { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin: 20px 0; }
+.sl-user-heat-map i { aspect-ratio: 1; border-radius: 3px; background: color-mix(in srgb, var(--sl-color-success) 12%, var(--sl-color-surface-alt)); }
+.sl-user-heat-map i:nth-child(3n) { background: color-mix(in srgb, var(--sl-color-success) 32%, var(--sl-color-surface-alt)); }
+.sl-user-heat-map i:nth-child(5n) { background: color-mix(in srgb, var(--sl-color-success) 62%, var(--sl-color-surface-alt)); }
+.sl-user-heat-map i:nth-child(11n) { background: var(--sl-color-success); animation: sl-demo-heat 1.8s ease-in-out infinite alternate; }
+.sl-user-heat-legend { display: flex; justify-content: space-between; color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-user-heat-foot { display: flex; gap: 7px; margin-top: 18px; }
+
+.sl-user-ticker { padding: 18px; }
+.sl-user-ticker .sl-title { margin-bottom: 34px; }
+.sl-user-ticker-summary { display: flex; align-items: baseline; gap: 8px; margin-bottom: 13px; }
+.sl-user-ticker-summary b { color: var(--sl-color-text-heading); font-size: 36px; line-height: 1; }
+.sl-user-feed { display: grid; gap: 7px; }
+.sl-user-feed-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 9px; border-radius: var(--sl-radius-control); background: var(--sl-color-surface-alt); animation: sl-demo-feed 4s ease-in-out infinite; }
+.sl-user-feed-row:nth-child(2) { animation-delay: -1.3s; }
+.sl-user-feed-row:nth-child(3) { animation-delay: -2.6s; }
+.sl-user-feed-row time { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-user-ticker-foot { display: flex; justify-content: space-between; margin-top: 14px; }
+
+.sl-user-dial { display: grid; grid-template-columns: 46% 54%; }
+.sl-user-dial-main { display: grid; place-items: center; padding: 56px 10px 18px; background: var(--sl-color-surface-alt); }
+.sl-user-dial-ring { display: grid; place-items: center; width: 126px; height: 126px; border-radius: 50%; background: conic-gradient(var(--sl-color-brand-strong) 0 77%, var(--sl-color-border-muted) 77%); animation: sl-demo-turn 1.2s ease-out both; }
+.sl-user-dial-ring::before { content: ""; position: absolute; width: 94px; height: 94px; border-radius: 50%; background: var(--sl-color-bg); }
+.sl-user-dial-ring span { position: relative; z-index: 1; text-align: center; }
+.sl-user-dial-ring b { display: block; color: var(--sl-color-text-heading); font-size: 28px; }
+.sl-user-dial-ring small { color: var(--sl-color-text-muted); font-size: 9px; }
+.sl-user-dial-side { padding: 18px 15px; }
+.sl-user-dial-side .sl-title { margin-bottom: 38px; }
+.sl-user-dial-profile { display: flex; align-items: center; gap: 9px; }
+.sl-user-dial-profile p { margin: 0; }
+.sl-user-dial-list { display: grid; gap: 8px; margin-top: 18px; }
+.sl-user-dial-row { display: flex; justify-content: space-between; padding-bottom: 7px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+
+.sl-user-table { padding: 18px; }
+.sl-user-table .sl-title { margin-bottom: 34px; }
+.sl-user-table-profile { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-bottom: 13px; }
+.sl-user-table-profile p { margin: 0; }
+.sl-user-table-grid { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
+.sl-user-table-grid td { padding: 7px 8px; background: var(--sl-color-surface-alt); font-size: 11px; }
+.sl-user-table-grid td:first-child { border-radius: var(--sl-radius-control) 0 0 var(--sl-radius-control); }
+.sl-user-table-grid td:last-child { border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; color: var(--sl-color-text-heading); text-align: right; }
+.sl-user-table-grid i { margin-right: 6px; color: var(--sl-color-brand-strong); }
+.sl-user-table-foot { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
+
+.sl-user-hub { display: grid; place-items: center; padding: 18px; }
+.sl-user-hub .sl-title { position: absolute; top: 18px; left: 18px; }
+.sl-user-hub-stage { position: relative; width: 270px; height: 250px; margin-top: 45px; }
+.sl-user-hub-core { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; text-align: center; transform: translate(-50%, -50%); }
+.sl-user-hub-core .sl-demo-avatar { margin-bottom: 5px; }
+.sl-user-hub-action { position: absolute; display: grid; place-items: center; width: 82px; min-height: 65px; padding: 8px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); color: var(--sl-color-text-heading); box-shadow: var(--sl-shadow-soft); text-align: center; }
+.sl-user-hub-action i { color: var(--sl-color-brand-strong); font-size: 19px; }
+.sl-user-hub-action small { font-size: 9px; }
+.sl-user-hub-action-a { top: 0; left: 0; }
+.sl-user-hub-action-b { top: 0; right: 0; }
+.sl-user-hub-action-c { bottom: 0; left: 0; }
+.sl-user-hub-action-d { right: 0; bottom: 0; }
+
+.sl-demo-contract { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--sl-space-lg); }
+.sl-demo-contract > div { padding: 16px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+.sl-demo-contract b { display: block; margin-bottom: var(--sl-space-sm); color: var(--sl-color-text-heading); }
+.sl-demo-contract p { margin: 0; color: var(--sl-color-text-muted); font-size: 12px; }
+
+@keyframes sl-demo-spin { to { transform: rotate(360deg); } }
+@keyframes sl-demo-grow { from { width: 0; } }
+@keyframes sl-demo-heat { to { filter: brightness(1.28); transform: scale(1.12); } }
+@keyframes sl-demo-turn { from { transform: rotate(-70deg); opacity: 0; } }
+@keyframes sl-demo-feed { 0%, 85%, 100% { transform: translateX(0); } 90% { transform: translateX(4px); } }
+
+@media (max-width: 520px) {
+  .sl-demo-wrap { width: min(100% - 20px, 1540px); }
+  .sl-demo-grid { grid-template-columns: minmax(0, var(--sl-sidebar)); }
+  .sl-demo-live > .sl-demo-live-panel { width: min(244px, calc(100vw - 34px)); min-width: 0; }
+  .sl-user-split { grid-template-columns: 45% 55%; }
+  .sl-user-dial { grid-template-columns: 44% 56%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-demo-block,
+  .sl-demo-live-trigger,
+  .sl-user-orbit-ring,
+  .sl-user-geo-globe::after,
+  .sl-user-rank-progress i,
+  .sl-user-heat-map i,
+  .sl-user-feed-row,
+  .sl-user-dial-ring { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="sl-demo-head">
+  <h1>Блок «Пользователи» — 18 действительно разных Live-концепций</h1>
+  <p>Здесь меняется весь блок шириной 400 px: композиция, приоритет данных, навигация, плотность, метрики и характер движения. Круглый Live-чип остаётся общей системной механикой в правом верхнем углу и открывает меню при hover или focus.</p>
+  <nav class="sl-demo-nav" aria-label="Другие демо пользовательского блока">
+    <a class="sl-chip sl-chip-success" href="user-block-states-live-2026.html">Гость + пользователь + Live</a>
+    <a class="sl-chip sl-chip-info" href="user-block-2026.html">Тренды 2026</a>
+    <a class="sl-chip sl-chip-info" href="user-block-variants.html">Основные варианты</a>
+    <a class="sl-chip sl-chip-info" href="user-block-max-effects.html">Максимум эффектов</a>
+    <a class="sl-chip sl-chip-info" href="user-block-live.html">Live и «Подробнее»</a>
+    <a class="sl-chip sl-chip-info" href="user-block-guest.html">Гость</a>
+  </nav>
+</header>
+
+<main class="sl-demo-wrap">
+  <section class="sl-demo-section">
+    <h2>18 композиций одного набора реальных данных</h2>
+    <p class="sl-demo-note">Все варианты используют актуальную ширину sidebar из темы: <b>--sl-sidebar: 400px</b>. Отличается не размер и не иконка, а способ организации информации.</p>
+    <div class="sl-demo-grid">
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">01</span><span><b>Profile hero</b><small>личность в центре, функции вторичны</small></span><span class="sl-demo-pick">финалист</span></div>
+        <aside class="sl-block sl-demo-block sl-user-hero">
+          <h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-activity" data-sl-label="Профиль и сессии"></span>
+          <span class="sl-demo-avatar sl-demo-avatar-lg">EL</span><h4>SLAED CMS</h4><p class="sl-demo-muted">Клиент · 50 206 очков</p>
+          <div class="sl-user-hero-nav"><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-envelope"></i> Входящие 0</a><a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-star"></i> Фавориты</a><a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-sliders"></i> Настройки</a></div>
+          <div class="sl-user-hero-foot"><span><b>1</b> пользователь</span><span><b>5</b> исходящих</span><span><b>77</b> сессий</span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">02</span><span><b>Split dashboard</b><small>профиль слева, оперативные данные справа</small></span><span class="sl-demo-pick">финалист</span></div>
+        <aside class="sl-block sl-demo-block sl-user-split">
+          <span data-sl-live-slot data-sl-icon="bi-broadcast" data-sl-tone="info" data-sl-label="Dashboard online"></span>
+          <div class="sl-user-split-main"><h3 class="sl-title">Пользователи</h3><span class="sl-demo-avatar">EL</span><p><span class="sl-demo-name">SLAED CMS</span><br><span class="sl-demo-muted">Администратор<br>50 206 очков</span></p><div class="sl-user-split-actions"><a class="sl-chip sl-chip-info" href="#">Профиль</a><a class="sl-chip sl-chip-neutral" href="#">Выйти</a></div></div>
+          <div class="sl-user-split-side"><span class="sl-user-split-row"><small>Входящие</small><b>0</b></span><span class="sl-user-split-row"><small>Исходящие</small><b>5</b></span><span class="sl-user-split-row"><small>Online</small><b data-sl-live-number>77</b></span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">03</span><span><b>Bento users</b><small>модульная сетка с разными приоритетами</small></span><span class="sl-demo-pick">финалист</span></div>
+        <aside class="sl-block sl-demo-block sl-user-bento">
+          <h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-grid-fill" data-sl-tone="brand" data-sl-label="Bento обновляется"></span>
+          <div class="sl-user-bento-cell sl-user-bento-profile"><span class="sl-demo-avatar sl-demo-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-demo-muted">Клиент</small></p></div>
+          <div class="sl-user-bento-cell sl-user-bento-number"><small class="sl-demo-muted">Очки</small><b>50K</b><span class="sl-chip sl-chip-success">+240</span></div>
+          <div class="sl-user-bento-cell sl-user-bento-number"><small class="sl-demo-muted">Пользователи</small><b>1</b><small class="sl-demo-muted">сейчас</small></div>
+          <div class="sl-user-bento-cell sl-user-bento-number"><small class="sl-demo-muted">Гости</small><b data-sl-live-number>70</b><small class="sl-demo-muted">в сети</small></div>
+          <div class="sl-user-bento-cell sl-user-bento-mail"><span><i class="bi bi-envelope"></i> Личные сообщения</span><a class="sl-chip sl-chip-info" href="#">0 новых</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">04</span><span><b>Command center</b><small>тёмная телеметрия для технического режима</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-console">
+          <h3 class="sl-title">USER_MONITOR</h3><span data-sl-live-slot data-sl-icon="bi-terminal-fill" data-sl-tone="dark" data-sl-label="Telemetry stream"></span>
+          <div class="sl-user-console-head"><span class="sl-demo-avatar sl-demo-avatar-sm">EL</span><p><span class="sl-demo-name">SLAED_CMS</span><br><span class="sl-demo-muted">AUTHENTICATED / CLIENT</span></p></div>
+          <div class="sl-user-console-screen"><span class="sl-user-console-line">sessions.total <b data-sl-live-number>77</b></span><span class="sl-user-console-line">sessions.users <b>01</b></span><span class="sl-user-console-line">messages.in <b>00</b></span><span class="sl-user-console-line">messages.out <b>05</b></span><span class="sl-user-console-line">refresh.rate <b>04s</b></span></div>
+          <div class="sl-user-console-foot"><a class="sl-chip sl-chip-success" href="#">PROFILE</a><a class="sl-chip sl-chip-neutral" href="#">LOGOUT</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">05</span><span><b>Inbox first</b><small>блок как центр личных сообщений</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-inbox">
+          <h3 class="sl-title">Сообщения</h3><span data-sl-live-slot data-sl-icon="bi-envelope-pulse" data-sl-tone="info" data-sl-label="Почта проверяется"></span>
+          <div class="sl-user-inbox-head"><div class="sl-user-inbox-profile"><span class="sl-demo-avatar sl-demo-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-demo-muted">0 непрочитанных</small></p></div><span class="sl-chip sl-chip-success">online</span></div>
+          <div class="sl-user-inbox-list"><a class="sl-user-message" href="#"><span class="sl-demo-avatar sl-demo-avatar-sm">AN</span><p><b>Anton</b><br><small class="sl-demo-muted">Посмотри новый дизайн…</small></p><time>10:42</time></a><a class="sl-user-message" href="#"><span class="sl-demo-avatar sl-demo-avatar-sm">MK</span><p><b>Maria</b><br><small class="sl-demo-muted">Спасибо за обновление</small></p><time>вчера</time></a><a class="sl-user-message" href="#"><span class="sl-demo-avatar sl-demo-avatar-sm">SY</span><p><b>System</b><br><small class="sl-demo-muted">Сессия подтверждена</small></p><time>12 июл</time></a></div>
+          <div class="sl-user-inbox-actions"><a href="#">Все сообщения</a><a href="#"><i class="bi bi-pencil-square"></i> Написать</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">06</span><span><b>Orbital presence</b><small>аватар как ядро, показатели на орбите</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-orbit">
+          <h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-bullseye" data-sl-tone="brand" data-sl-label="Орбита сессий"></span>
+          <div class="sl-user-orbit-stage"><i class="sl-user-orbit-ring"></i><div class="sl-user-orbit-core"><span class="sl-demo-avatar">EL</span><b>SLAED CMS</b><small class="sl-demo-muted">Клиент</small></div><span class="sl-user-orbit-node sl-user-orbit-node-a"><b>1</b><small>пользователь</small></span><span class="sl-user-orbit-node sl-user-orbit-node-b"><b data-sl-live-number>70</b><small>гостей</small></span><span class="sl-user-orbit-node sl-user-orbit-node-c"><b>5</b><small>исходящих</small></span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">07</span><span><b>Presence stack</b><small>кто сейчас рядом, а не сухая статистика</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-presence">
+          <h3 class="sl-title">Сейчас на сайте</h3><span data-sl-live-slot data-sl-icon="bi-people-fill" data-sl-label="Состав аудитории"></span>
+          <div class="sl-user-presence-total"><b data-sl-live-number>77</b><span class="sl-demo-muted">активных сессий</span></div>
+          <div class="sl-user-presence-stack"><span class="sl-demo-avatar">EL</span><span class="sl-demo-avatar">AN</span><span class="sl-demo-avatar">MK</span><span class="sl-demo-avatar">+4</span></div>
+          <div class="sl-user-presence-list"><span class="sl-user-presence-row"><span><i class="sl-demo-dot"></i> SLAED CMS</span><small class="sl-demo-muted">Главная</small></span><span class="sl-user-presence-row"><span><i class="sl-demo-dot"></i> Anton</span><small class="sl-demo-muted">Форум</small></span><span class="sl-user-presence-row"><span><i class="sl-demo-dot"></i> Maria</span><small class="sl-demo-muted">Новости</small></span><span class="sl-user-presence-row"><span>Поисковые роботы</span><b>6</b></span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">08</span><span><b>Rank journey</b><small>очки и путь до следующей группы</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-rank">
+          <h3 class="sl-title">Мой прогресс</h3><span data-sl-live-slot data-sl-icon="bi-graph-up-arrow" data-sl-tone="accent" data-sl-label="Прогресс синхронизирован"></span>
+          <div class="sl-user-rank-profile"><span class="sl-demo-avatar">EL</span><p><b>SLAED CMS</b><br><span class="sl-chip sl-chip-info">Клиент</span></p></div>
+          <div class="sl-user-rank-card"><div class="sl-user-rank-line"><span>50 206 очков</span><b>72%</b></div><div class="sl-user-rank-progress"><i></i></div><div class="sl-user-rank-next"><span>Клиент</span><span>до «Партнёр»: 19 794</span></div></div>
+          <div class="sl-user-rank-actions"><a class="sl-chip sl-chip-info" href="#">Профиль</a><a class="sl-chip sl-chip-neutral" href="#">Фавориты</a><a class="sl-chip sl-chip-neutral" href="#">Настройки</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">09</span><span><b>Activity timeline</b><small>последние события пользователя</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-timeline">
+          <h3 class="sl-title">Моя активность</h3><span data-sl-live-slot data-sl-icon="bi-clock-history" data-sl-tone="brand" data-sl-label="Лента активности"></span>
+          <div class="sl-user-timeline-head"><span class="sl-demo-avatar sl-demo-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-demo-muted">сегодня в системе</small></p></div>
+          <div class="sl-user-timeline-list"><span class="sl-user-timeline-event"><span>Вход в аккаунт</span><time>10:31</time></span><span class="sl-user-timeline-event"><span>Открыта главная</span><time>10:32</time></span><span class="sl-user-timeline-event"><span>Просмотрены сообщения</span><time>10:36</time></span><span class="sl-user-timeline-event"><span>Добавлено в фавориты</span><time>10:41</time></span><span class="sl-user-timeline-event"><span>Сессия обновлена</span><time>сейчас</time></span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">10</span><span><b>Geo pulse</b><small>география живой аудитории</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-geo">
+          <h3 class="sl-title">География online</h3><span data-sl-live-slot data-sl-icon="bi-globe2" data-sl-tone="info" data-sl-label="География обновляется"></span>
+          <div class="sl-user-geo-hero"><span class="sl-user-geo-globe"><i class="bi bi-globe-europe-africa"></i></span><span class="sl-user-geo-total"><b data-sl-live-number>77</b><small class="sl-demo-muted">сессий<br>из 12 стран</small></span></div>
+          <div class="sl-user-geo-list"><span class="sl-user-geo-row"><b>DE</b><i class="sl-user-geo-bar"><i style="width:78%"></i></i><small>32</small></span><span class="sl-user-geo-row"><b>RU</b><i class="sl-user-geo-bar"><i style="width:54%"></i></i><small>21</small></span><span class="sl-user-geo-row"><b>US</b><i class="sl-user-geo-bar"><i style="width:31%"></i></i><small>12</small></span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">11</span><span><b>Ultra minimal</b><small>максимум воздуха, только главное</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-minimal">
+          <h3 class="sl-title">Account / live</h3><span data-sl-live-slot data-sl-icon="bi-wifi" data-sl-label="Минимальный статус"></span>
+          <div class="sl-user-minimal-main"><h4>SLAED CMS</h4><p>Клиент · 50 206 очков</p><div class="sl-user-minimal-numbers"><span><b>0</b><small>входящих</small></span><span><b>5</b><small>исходящих</small></span><span><b data-sl-live-number>77</b><small>online</small></span></div></div>
+          <div class="sl-user-minimal-foot"><a href="#">Профиль</a><a href="#">Настройки</a><a href="#">Выйти</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">12</span><span><b>Action rail</b><small>инструменты вынесены в отдельную вертикаль</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-rail">
+          <nav class="sl-user-rail-nav" aria-label="Действия пользователя"><a href="#" title="Сообщения"><i class="bi bi-envelope"></i></a><a href="#" title="Фавориты"><i class="bi bi-star"></i></a><a href="#" title="Настройки"><i class="bi bi-sliders"></i></a><a href="#" title="Выход"><i class="bi bi-box-arrow-right"></i></a></nav>
+          <div class="sl-user-rail-main"><h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-broadcast-pin" data-sl-tone="dark" data-sl-label="Action rail live"></span><div class="sl-user-rail-profile"><span class="sl-demo-avatar">EL</span><p><b>SLAED CMS</b><br><small class="sl-demo-muted">Клиент · 50 206</small></p></div><div class="sl-user-rail-metrics"><span class="sl-demo-kpi"><b>0</b><small>входящих</small></span><span class="sl-demo-kpi"><b>5</b><small>исходящих</small></span><span class="sl-demo-kpi"><b data-sl-live-number>77</b><small>сессий сейчас</small></span></div></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">13</span><span><b>Glass spotlight</b><small>эмоциональный брендовый центр внимания</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-glass">
+          <h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-stars" data-sl-tone="dark" data-sl-label="Glass live stream"></span>
+          <div class="sl-user-glass-card"><div class="sl-user-glass-head"><span class="sl-demo-avatar">EL</span><p><span class="sl-demo-name">SLAED CMS</span><br><span class="sl-demo-muted">Клиент · 50 206 очков</span></p></div><div class="sl-user-glass-stats"><span><b>0</b><small>входящих</small></span><span><b>5</b><small>исходящих</small></span><span><b data-sl-live-number>77</b><small>online</small></span></div></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">14</span><span><b>Session heatmap</b><small>ритм активности вместо списка</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-heat">
+          <h3 class="sl-title">Активность сессий</h3><span data-sl-live-slot data-sl-icon="bi-grid-3x3-gap-fill" data-sl-label="Heatmap обновляется"></span>
+          <div class="sl-user-heat-head"><span><b data-sl-live-number>77</b><small class="sl-demo-muted"> активных</small></span><small class="sl-demo-muted">последние 60 минут</small></div>
+          <div class="sl-user-heat-map" aria-label="Карта активности"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <div class="sl-user-heat-legend"><span>60 мин назад</span><span>сейчас</span></div><div class="sl-user-heat-foot"><span class="sl-chip sl-chip-success">1 пользователь</span><span class="sl-chip sl-chip-info">6 ботов</span><span class="sl-chip sl-chip-neutral">70 гостей</span></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">15</span><span><b>Live ticker</b><small>поток событий и перемещений</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-ticker">
+          <h3 class="sl-title">Live feed</h3><span data-sl-live-slot data-sl-icon="bi-soundwave" data-sl-tone="accent" data-sl-label="События поступают"></span>
+          <div class="sl-user-ticker-summary"><b data-sl-live-number>77</b><span class="sl-demo-muted">на сайте прямо сейчас</span></div>
+          <div class="sl-user-feed"><span class="sl-user-feed-row"><i class="sl-demo-dot"></i><span><b>SLAED CMS</b> открыл главную</span><time>сейчас</time></span><span class="sl-user-feed-row"><i class="sl-demo-dot"></i><span><b>Googlebot</b> индексирует новости</span><time>3 с</time></span><span class="sl-user-feed-row"><i class="sl-demo-dot"></i><span><b>Гость DE</b> читает форум</span><time>8 с</time></span></div>
+          <div class="sl-user-ticker-foot"><a href="#">Подробнее</a><a href="#">Обновить</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">16</span><span><b>Session dial</b><small>круговая доля гостей и компактный профиль</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-dial">
+          <div class="sl-user-dial-main"><div class="sl-user-dial-ring"><span><b>91%</b><small>гости</small></span></div></div>
+          <div class="sl-user-dial-side"><h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-pie-chart-fill" data-sl-tone="brand" data-sl-label="Dial обновляется"></span><div class="sl-user-dial-profile"><span class="sl-demo-avatar sl-demo-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-demo-muted">Клиент</small></p></div><div class="sl-user-dial-list"><span class="sl-user-dial-row"><small>Пользователи</small><b>1</b></span><span class="sl-user-dial-row"><small>Боты</small><b>6</b></span><span class="sl-user-dial-row"><small>Гости</small><b data-sl-live-number>70</b></span><span class="sl-user-dial-row"><small>Всего</small><b>77</b></span></div></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">17</span><span><b>Dense data table</b><small>максимум информации в минимальной высоте</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-table">
+          <h3 class="sl-title">Пользователи</h3><span data-sl-live-slot data-sl-icon="bi-table" data-sl-tone="info" data-sl-label="Таблица обновляется"></span>
+          <div class="sl-user-table-profile"><span class="sl-demo-avatar sl-demo-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-demo-muted">Клиент · 50 206</small></p><span class="sl-chip sl-chip-success">online</span></div>
+          <table class="sl-user-table-grid"><tbody><tr><td><i class="bi bi-envelope"></i>Новые входящие</td><td>0</td></tr><tr><td><i class="bi bi-send"></i>Новые исходящие</td><td>5</td></tr><tr><td><i class="bi bi-person"></i>Пользователи</td><td>1</td></tr><tr><td><i class="bi bi-robot"></i>Поисковые боты</td><td>6</td></tr><tr><td><i class="bi bi-people"></i>Гости</td><td data-sl-live-number>70</td></tr><tr><td><i class="bi bi-activity"></i>Всего</td><td>77</td></tr></tbody></table>
+          <div class="sl-user-table-foot"><a class="sl-chip sl-chip-neutral" href="#">Настройки</a><a class="sl-chip sl-chip-info" href="#">Подробнее</a></div>
+        </aside>
+      </article>
+
+      <article class="sl-demo-item">
+        <div class="sl-demo-label"><span class="sl-demo-number">18</span><span><b>Action hub</b><small>профиль как центр четырёх основных задач</small></span></div>
+        <aside class="sl-block sl-demo-block sl-user-hub">
+          <h3 class="sl-title">Мой аккаунт</h3><span data-sl-live-slot data-sl-icon="bi-router-fill" data-sl-tone="brand" data-sl-label="Action hub live"></span>
+          <div class="sl-user-hub-stage"><div class="sl-user-hub-core"><span class="sl-demo-avatar">EL</span><b>SLAED CMS</b><small class="sl-demo-muted">50 206</small></div><a class="sl-user-hub-action sl-user-hub-action-a" href="#"><i class="bi bi-envelope"></i><small>Сообщения<br><b>0 новых</b></small></a><a class="sl-user-hub-action sl-user-hub-action-b" href="#"><i class="bi bi-star"></i><small>Фавориты<br><b>12</b></small></a><a class="sl-user-hub-action sl-user-hub-action-c" href="#"><i class="bi bi-people"></i><small>Online<br><b data-sl-live-number>77</b></small></a><a class="sl-user-hub-action sl-user-hub-action-d" href="#"><i class="bi bi-sliders"></i><small>Настройки<br><b>профиля</b></small></a></div>
+        </aside>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sl-demo-section">
+    <h2>Условие показа Live</h2>
+    <p class="sl-demo-note">Чип не заменяется старым Play и не резервирует пустое место.</p>
+    <div class="sl-demo-contract"><div><b><span class="sl-chip sl-chip-success">Live on</span> + автообновление on</b><p>Показывается круглый чип с hover/focus-меню, интервалом, временем ответа и паузой.</p></div><div><b><span class="sl-chip sl-chip-warn">Live on</span> + автообновление off</b><p>Ничего в правом верхнем углу. Ручное обновление остаётся внутри блока.</p></div><div><b><span class="sl-chip sl-chip-neutral">Live off</span></b><p>Ничего не выводится, свободное место не резервируется.</p></div></div>
+  </section>
+</main>
+
+<template data-sl-live-template>
+  <div class="sl-tip sl-float sl-demo-live" tabindex="0" aria-label="Live включён">
+    <span class="sl-demo-live-trigger"><i class="bi bi-activity" aria-hidden="true"></i></span>
+    <div class="sl-float-panel sl-demo-live-panel">
+      <div class="sl-demo-live-head"><i class="bi bi-activity" aria-hidden="true"></i><span class="sl-demo-live-on">Данные в эфире</span><span class="sl-demo-live-paused">Поток на паузе</span></div>
+      <dl><dt>Источник</dt><dd data-sl-live-label>Сессии</dd><dt>Интервал</dt><dd>4 сек</dd><dt>Обновлено</dt><dd><span data-sl-live-ago>0</span> сек назад</dd></dl>
+      <div class="sl-demo-live-actions"><button type="button" class="sl-chip sl-chip-warn sl-demo-live-button sl-demo-live-pause" data-sl-live-toggle><i class="bi bi-pause-fill"></i> Пауза</button><button type="button" class="sl-chip sl-chip-success sl-demo-live-button sl-demo-live-resume" data-sl-live-toggle><i class="bi bi-play-fill"></i> Продолжить</button></div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function () {
+  var sample = document.querySelector('[data-sl-live-template]');
+  document.querySelectorAll('[data-sl-live-slot]').forEach(function (slot) {
+    var live = sample.content.firstElementChild.cloneNode(true);
+    var icon = slot.getAttribute('data-sl-icon') || 'bi-activity';
+    var tone = slot.getAttribute('data-sl-tone') || '';
+    var label = slot.getAttribute('data-sl-label') || 'Сессии';
+    live.querySelector('.sl-demo-live-trigger > i').className = 'bi ' + icon;
+    live.querySelector('[data-sl-live-label]').textContent = label;
+    if (tone) live.setAttribute('data-sl-tone', tone);
+    slot.replaceWith(live);
+  });
+
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-sl-live-toggle]');
+    if (!button) return;
+    var live = button.closest('.sl-demo-live');
+    live.classList.toggle('sl-is-paused');
+    live.setAttribute('aria-label', live.classList.contains('sl-is-paused') ? 'Live на паузе' : 'Live включён');
+  });
+
+  window.setInterval(function () {
+    document.querySelectorAll('.sl-demo-live').forEach(function (live) {
+      if (live.classList.contains('sl-is-paused')) return;
+      var ago = live.querySelector('[data-sl-live-ago]');
+      var value = Number(ago.textContent) + 1;
+      if (value >= 4) {
+        value = 0;
+        var number = live.closest('.sl-demo-block').querySelector('[data-sl-live-number]');
+        if (number) number.textContent = Math.max(1, Number(number.textContent) + (Math.random() > 0.5 ? 1 : -1));
+      }
+      ago.textContent = value;
+    });
+  }, 1000);
+})();
+</script>
+</body>
+</html>

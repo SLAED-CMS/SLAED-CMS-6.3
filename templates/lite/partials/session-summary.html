@@ -1,38 +1,17 @@
 {% if live_every %}<div class="sl-live-tools">{% include 'fragments/live-chip.html' %}</div>{% endif %}
-<div class="sl-session-line">
-  <div>{{ members_label }}:</div>
-  <div class="sl-session-right">{{ members_count }}</div>
+<div class="sl-session-summary">
+  <div class="sl-session-donut" style="--sl-members: {{ members_pct }}%; --sl-bots: {{ bots_end_pct }}%;">
+    <span><b>{{ visitors_pct }}%</b><small>{{ visitors_label }}</small></span>
+  </div>
+  <div>
+    <div class="sl-session-line" data-sl-audience="users"><i class="bi bi-person-fill" aria-hidden="true"></i><span>{{ members_label }}</span><b>{{ members_count }}</b></div>
+    {% if show_bots %}<div class="sl-session-line" data-sl-audience="bots"><i class="bi bi-robot" aria-hidden="true"></i><span>{{ bots_label }}</span><b>{{ bots_count }}</b></div>{% endif %}
+    <div class="sl-session-line" data-sl-audience="guests"><i class="bi bi-people-fill" aria-hidden="true"></i><span>{{ visitors_label }}</span><b>{{ visitors_count }}</b></div>
+    <div class="sl-session-line sl-session-total"><span>{{ overall_label }}</span><b>{{ overall_count }}</b></div>
+  </div>
 </div>
-{% if show_bots %}
-<div class="sl-session-line">
-  <div>{{ bots_label }}:</div>
-  <div class="sl-session-right">{{ bots_count }}</div>
-</div>
-{% endif %}
-<div class="sl-session-line">
-  <div>{{ visitors_label }}:</div>
-  <div class="sl-session-right">{{ visitors_count }}</div>
-</div>
-<div class="sl-session-line">
-  <div>{{ overall_label }}:</div>
-  <div class="sl-session-right">{{ overall_count }}</div>
-</div>
-{% if has_rows %}
-<div class="sl-session-action"><a data-sl-toggle-control="{{ toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="500" title="{{ toggle_title }}" class="sl-session-toggle"{% if rows_query %} hx-get="index.php?{{ rows_query }}" hx-target="#{{ toggle_id }}" hx-swap="innerHTML" hx-trigger="click once" hx-push-url="false"{% endif %}>{{ toggle_label }}</a></div>
-<div id="{{ toggle_id }}" class="sl-session-list sl-session-hidden">{% if rows_html %}{{{ rows_html }}}{% endif %}</div>
-{% endif %}
-<hr>
 <div class="sl-session-action">
-  <a
-    href="index.php?{{ update_query }}"
-
-    hx-get="index.php?{{ update_query }}"
-    hx-target="#rep{{ update_target }}"
-    hx-swap="innerHTML"
-    hx-push-url="false"
-    {% if live_every %}hx-trigger="click, every {{ live_every }}s"{% endif %}
-
-    title="{{ update_title }}"
-    class="sl-session-button"
-  >{{ update_label }}</a>
+  {% if has_rows %}<a id="{{ toggle_id }}-toggle" hx-preserve aria-expanded="false" data-sl-toggle-control="{{ toggle_id }}" data-sl-toggle-effect="slide" data-sl-toggle-duration="300" title="{{ toggle_title }}" class="sl-chip sl-chip-accent sl-session-toggle"{% if rows_query %} hx-get="index.php?{{ rows_query }}" hx-target="#{{ toggle_id }}-rows" hx-swap="innerHTML" hx-trigger="sl-toggle-open" hx-push-url="false"{% endif %}><i class="bi bi-eye sl-session-open" aria-hidden="true"></i><i class="bi bi-eye-slash sl-session-close" aria-hidden="true"></i><span class="sl-session-open">{{ toggle_label }}</span><span class="sl-session-close">{{ _CLOSE }}</span></a>{% endif %}
+  <a href="index.php?{{ update_query }}" hx-get="index.php?{{ update_query }}" hx-target="#rep{{ update_target }}" hx-swap="innerHTML" hx-push-url="false"{% if live_every %} hx-trigger="click, every {{ live_every }}s"{% endif %} title="{{ update_title }}" class="sl-chip sl-chip-info sl-session-button"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> {{ update_label }}</a>
 </div>
+{% if has_rows %}<div id="{{ toggle_id }}" class="sl-session-list sl-session-hidden" role="region" aria-labelledby="{{ toggle_id }}-title"{% if live_every %} data-sl-live-scroll{% endif %} hx-preserve><header><b id="{{ toggle_id }}-title">{{ _ONLINE_NOW }}</b></header><div id="{{ toggle_id }}-rows">{% if rows_html %}{{{ rows_html }}}{% endif %}</div></div>{% endif %}

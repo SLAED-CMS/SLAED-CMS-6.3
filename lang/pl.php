@@ -301,6 +301,7 @@ define('_NOTE','Uwaga');
 define('_NO_INFO','Brak informacji');
 define('_OCCUPATION','Zawód');
 define('_OK','OK');
+define('_ONLINE_NOW','Teraz online');
 define('_ONDELETE','Usuwanie obiektu');
 define('_ONEDIT','Szybka edycja');
 define('_OPMOD','Działania moderatora');

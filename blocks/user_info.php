@@ -28,20 +28,30 @@ if (is_user()) {
     }
     $gname = '';
     $rank = '';
+    $grank = '';
+    $gcolor = '';
     $ngname = '';
     $ngpts = 0;
     $points = intval($userinfo['points'] ?? 0);
     $grp = intval($userinfo['grp'] ?? 0);
     if ($conf['users']['point'] || $grp) {
-        $result = $db->getSqlQuery('SELECT id, name, points, extra FROM '.PREFIX_DB.'_groups ORDER BY points ASC');
-        while ([$gid, $name, $gpts, $extra] = $db->getSqlRow($result)) {
+        $result = $db->getSqlQuery('SELECT id, name, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points ASC');
+        while ([$gid, $name, $gpts, $extra, $grimg, $color] = $db->getSqlRow($result)) {
             if ($extra == 1) {
-                if ($grp && $gid == $grp) $gname = $name;
+                if ($grp && $gid == $grp) {
+                    $gname = $name;
+                    $grank = $grimg;
+                    $gcolor = $color;
+                }
                 continue;
             }
             if (!$conf['users']['point']) continue;
             if ($gpts <= $points) {
                 $rank = $name;
+                if ($gname === '') {
+                    $grank = $grimg;
+                    $gcolor = $color;
+                }
             } elseif ($ngname === '') {
                 $ngname = $name;
                 $ngpts = intval($gpts);
@@ -49,6 +59,9 @@ if (is_user()) {
         }
         if ($gname === '' && $points) $gname = $rank;
     }
+    $gcolor = ($gcolor && preg_match('/^#[0-9a-f]{6}$/i', $gcolor)) ? $gcolor : '';
+    $rankurl = ($grank && file_exists(img_find('ranks/'.$grank))) ? img_find('ranks/'.$grank) : '';
+    $level = ($conf['users']['point'] && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
     $data = [
         'is_user' => true,
         'avatar_url' => getUserAvatarUrl($userinfo),
@@ -56,11 +69,12 @@ if (is_user()) {
         'greeting_name' => $userinfo['name'],
         'has_meta' => ($gname !== '' || ($conf['users']['point'] && $points)),
         'group_name' => $gname,
+        'group_color' => $gcolor,
+        'rank_url' => $rankurl,
+        'rank_alt' => ($gname !== '') ? _GROUP.': '.$gname : _RANK,
         'points_label' => ($conf['users']['point'] && $points) ? _POINTS : '',
-        'points_count' => $points,
-        'ngroup_name' => $ngname,
-        'ngroup_points' => $ngpts,
-        'ngroup_pct' => ($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 0,
+        'points_count' => number_format($points, 0, '', ' '),
+        'ngroup_pct' => $level,
         'has_privat' => $conf['privat']['act'],
         'privat_label' => _PRIVAT,
         'inbox_label' => _PRINNO,
@@ -70,6 +84,7 @@ if (is_user()) {
         'outbox_count' => $prout,
         'has_fav' => $conf['favorites']['favact'],
         'favorites_label' => _FAVORITES,
+        'profile_label' => _PERSONALINFO,
         'change_label' => _CHANGE,
         'logout_label' => _LOGOUT,
     ];

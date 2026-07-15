@@ -301,6 +301,7 @@ define('_NOTE','Anmerkung');
 define('_NO_INFO','Keine Information');
 define('_OCCUPATION','Tätigkeit');
 define('_OK','OK');
+define('_ONLINE_NOW','Jetzt online');
 define('_ONDELETE','Objekt lцschen');
 define('_ONEDIT','Schnelle Bearbeitung');
 define('_OPMOD','Action abwarten');

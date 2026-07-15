@@ -301,6 +301,7 @@ define('_NOTE','Remarque');
 define('_NO_INFO','Aucune information');
 define('_OCCUPATION','Profession');
 define('_OK','OK');
+define('_ONLINE_NOW','En ligne maintenant');
 define('_ONDELETE',"Suppression d'un objet");
 define('_ONEDIT','Montage rapide');
 define('_OPMOD','Action modérateur');

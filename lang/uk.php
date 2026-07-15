@@ -301,6 +301,7 @@ define('_NOTE','Примітка');
 define('_NO_INFO','Немає інформації');
 define('_OCCUPATION','Рід занять');
 define('_OK','OK');
+define('_ONLINE_NOW','Зараз на сайті');
 define('_ONDELETE',"Видалення об'єкта");
 define('_ONEDIT','Швидке редагування');
 define('_OPMOD','Дії модератора');

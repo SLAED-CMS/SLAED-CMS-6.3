@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Пользователь и гость: 12 парных концепций + Live-статистика</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 80px;
+  background: var(--sl-color-surface);
+  color: var(--sl-color-text);
+  font: 14px/1.45 Arial, system-ui, sans-serif;
+}
+
+.sl-demo-head {
+  padding: 28px clamp(16px, 4vw, 52px);
+  border-bottom: 1px solid var(--sl-color-border);
+  background:
+    radial-gradient(circle at 85% 18%, color-mix(in srgb, var(--sl-color-brand) 20%, transparent), transparent 25%),
+    linear-gradient(180deg, var(--sl-color-bg), var(--sl-color-surface));
+}
+
+.sl-demo-head h1 {
+  max-width: 1120px;
+  margin: 0 0 var(--sl-space-md);
+  color: var(--sl-color-text-heading);
+  font: bold clamp(23px, 3vw, 34px)/1.12 "Magistral", Arial, sans-serif;
+}
+
+.sl-demo-head p { max-width: 1000px; margin: 0; color: var(--sl-color-text-muted); }
+.sl-demo-nav { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: var(--sl-space-lg); }
+.sl-demo-nav a { font-size: 12px; }
+.sl-demo-wrap { width: min(1540px, calc(100% - 32px)); margin: 0 auto; }
+.sl-demo-section { margin-top: 40px; }
+
+.sl-demo-section > h2 {
+  margin: 0 0 var(--sl-space-sm);
+  padding-bottom: var(--sl-space-md);
+  border-bottom: 2px solid var(--sl-color-border);
+  color: var(--sl-color-text-heading);
+  font: bold 20px/1.2 "Magistral", Arial, sans-serif;
+}
+
+.sl-demo-note { max-width: 1020px; margin: 0 0 22px; color: var(--sl-color-text-muted); font-size: 13px; }
+.sl-demo-sync { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.sl-demo-sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-warning); }
+.sl-demo-sync.sl-is-live i { background: var(--sl-color-success); animation: sl-live-pulse 2s ease-out infinite; }
+
+.sl-concept { margin-top: 34px; }
+
+.sl-concept-head {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sl-space-md);
+  margin-bottom: var(--sl-space-md);
+}
+
+.sl-concept-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--sl-color-text-heading); color: var(--sl-color-on-dark); font-size: 11px; font-weight: bold; }
+.sl-concept-head b { display: block; color: var(--sl-color-text-heading); }
+.sl-concept-head small { display: block; color: var(--sl-color-text-muted); }
+.sl-concept-pick { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-success) 14%, transparent); color: var(--sl-color-success); font-size: 10px; font-weight: bold; text-transform: uppercase; }
+
+.sl-state-pair { display: grid; grid-template-columns: repeat(2, var(--sl-sidebar)); justify-content: center; gap: 18px; }
+
+.sl-state-block {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  margin: 0;
+  overflow: visible;
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-soft);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.sl-state-block:hover { box-shadow: 0 10px 28px color-mix(in srgb, var(--sl-color-surface-dark) 12%, transparent); transform: translateY(-2px); }
+.sl-state-title { margin: 0; color: var(--sl-color-text-heading); font: bold 17px/1.25 "Magistral", Arial, sans-serif; }
+.sl-state-type { position: absolute; top: 15px; left: 18px; z-index: 3; color: var(--sl-color-text-muted); font-size: 10px; font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; }
+.sl-state-block > .sl-state-title { padding: 42px 18px 0; }
+
+.sl-live-slot {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 30;
+  margin: 0;
+}
+
+.sl-live-trigger {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, currentColor 12%, var(--sl-color-bg));
+  color: var(--sl-color-success);
+  font-size: var(--sl-size-icon-xs);
+  animation: sl-live-pulse 2s ease-out infinite;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.sl-live-slot:hover .sl-live-trigger,
+.sl-live-slot:focus-within .sl-live-trigger { box-shadow: 0 6px 16px color-mix(in srgb, currentColor 22%, transparent); transform: translateY(-2px) scale(1.06); }
+.sl-live-slot:focus-visible { outline: 0; }
+.sl-live-slot:focus-visible .sl-live-trigger { outline: 2px solid color-mix(in srgb, var(--sl-color-brand-link) 55%, transparent); outline-offset: 3px; }
+
+.sl-live-slot > .sl-live-menu {
+  --sl-float-arrow: calc(100% - 15px);
+  right: 0;
+  left: auto;
+  width: 248px;
+  min-width: 248px;
+}
+
+.sl-live-menu-head { display: flex; align-items: center; gap: 8px; margin-bottom: 11px; color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-live-menu-head i { color: var(--sl-color-success); }
+.sl-live-menu dd { font-variant-numeric: tabular-nums; }
+.sl-live-action { display: flex; justify-content: flex-end; margin-top: 12px; padding-top: 9px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-live-action button { border: 0; cursor: pointer; }
+.sl-live-resume,
+.sl-live-paused { display: none; }
+.sl-live-slot.sl-is-paused .sl-live-trigger { color: var(--sl-color-warning); animation: none; }
+.sl-live-slot.sl-is-paused .sl-live-menu-head i { color: var(--sl-color-warning); }
+.sl-live-slot.sl-is-paused .sl-live-on,
+.sl-live-slot.sl-is-paused .sl-live-pause { display: none; }
+.sl-live-slot.sl-is-paused .sl-live-paused { display: inline; }
+.sl-live-slot.sl-is-paused .sl-live-resume { display: inline-flex; }
+
+.sl-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 58px; height: 58px; border: 3px solid var(--sl-color-surface-alt); border-radius: 50%; background: linear-gradient(145deg, var(--sl-color-brand), var(--sl-color-brand-strong)); color: var(--sl-color-on-dark); font: bold 18px/1 "Magistral", Arial, sans-serif; box-shadow: var(--sl-shadow-soft); }
+.sl-avatar-sm { width: 38px; height: 38px; border-width: 2px; font-size: 11px; }
+.sl-avatar-lg { width: 82px; height: 82px; font-size: 24px; }
+.sl-muted { color: var(--sl-color-text-muted); font-size: 12px; }
+.sl-name { color: var(--sl-color-text-heading); font-weight: bold; }
+.sl-online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--sl-color-success); }
+.sl-login-fields { display: grid; gap: 8px; }
+.sl-login-fields .sl-field { width: 100%; }
+.sl-login-links { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+.sl-login-submit { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+.sl-stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.sl-stat-box { min-width: 0; padding: 8px 4px; border-radius: var(--sl-radius-control); background: var(--sl-color-surface-alt); text-align: center; }
+.sl-stat-box b { display: block; color: var(--sl-color-text-heading); font-size: 16px; font-variant-numeric: tabular-nums; }
+.sl-stat-box small { display: block; overflow: hidden; color: var(--sl-color-text-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+
+.sl-state-hero { padding: 0 18px 18px; text-align: center; }
+.sl-state-hero .sl-avatar { margin: 18px auto 8px; }
+.sl-state-hero h4 { margin: 0; color: var(--sl-color-text-heading); font-size: 18px; }
+.sl-state-hero p { margin: 3px 0 13px; }
+.sl-state-hero .sl-login-fields { max-width: 310px; margin: 18px auto 10px; text-align: left; }
+.sl-state-hero .sl-login-submit { max-width: 310px; margin: 0 auto 13px; }
+.sl-state-hero .sl-stat-strip { margin-top: 20px; }
+
+.sl-state-split { display: grid; grid-template-columns: 42% 58%; }
+.sl-state-split-a { padding: 48px 16px 16px; border-right: 1px solid var(--sl-color-border-subtle); }
+.sl-state-split-a .sl-state-title { margin-bottom: 28px; }
+.sl-state-split-a .sl-avatar { margin-bottom: 9px; }
+.sl-state-split-a p { margin: 0; }
+.sl-state-split-b { display: grid; align-content: center; gap: 10px; padding: 54px 16px 16px; }
+.sl-state-split-b .sl-stat-strip { grid-template-columns: repeat(2, 1fr); }
+.sl-state-split-b .sl-stat-box:last-child { grid-column: 1 / -1; }
+.sl-state-split-b .sl-login-links { justify-content: space-between; }
+
+.sl-state-bento { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: auto repeat(2, 1fr); gap: 8px; padding: 48px 16px 16px; }
+.sl-state-bento > .sl-state-title { grid-column: 1 / -1; padding: 0; margin-bottom: 4px; }
+.sl-bento-cell { min-height: 92px; padding: 12px; border-radius: var(--sl-radius-card); background: var(--sl-color-surface-alt); }
+.sl-bento-profile { display: flex; align-items: center; gap: 9px; }
+.sl-bento-profile p { margin: 0; }
+.sl-bento-main { background: linear-gradient(145deg, color-mix(in srgb, var(--sl-color-brand) 14%, var(--sl-color-bg)), var(--sl-color-bg)); }
+.sl-bento-number { display: flex; flex-direction: column; justify-content: space-between; }
+.sl-bento-number b { color: var(--sl-color-text-heading); font-size: 26px; }
+.sl-bento-wide { grid-column: 1 / -1; min-height: 62px; }
+.sl-bento-wide .sl-login-fields { grid-template-columns: repeat(2, 1fr); }
+
+.sl-state-minimal { padding: 48px 18px 18px; }
+.sl-state-minimal .sl-state-title { padding: 0; color: var(--sl-color-text-muted); font-size: 11px; font-weight: normal; letter-spacing: 0.12em; text-transform: uppercase; }
+.sl-minimal-main { margin-top: 54px; }
+.sl-minimal-main h4 { margin: 0; color: var(--sl-color-text-heading); font: bold 28px/1.1 "Magistral", Arial, sans-serif; }
+.sl-minimal-main p { margin: 7px 0 27px; color: var(--sl-color-text-muted); }
+.sl-minimal-numbers { display: flex; gap: 24px; }
+.sl-minimal-numbers b { display: block; color: var(--sl-color-text-heading); font-size: 25px; }
+.sl-minimal-numbers small { color: var(--sl-color-text-muted); }
+.sl-state-minimal .sl-login-fields { max-width: 330px; margin: 52px 0 12px; }
+.sl-minimal-foot { display: flex; gap: 15px; margin-top: 29px; padding-top: 12px; border-top: 1px solid var(--sl-color-border-subtle); }
+
+.sl-state-console { padding: 48px 18px 18px; border-color: var(--sl-color-surface-divider); background: var(--sl-color-surface-darker); color: var(--sl-color-on-dark); }
+.sl-state-console .sl-state-title { padding: 0; color: var(--sl-color-on-dark); }
+.sl-console-head { display: flex; align-items: center; gap: 9px; margin: 30px 0 15px; }
+.sl-console-head p { margin: 0; }
+.sl-console-head .sl-name { color: var(--sl-color-success-soft); }
+.sl-console-screen { display: grid; gap: 7px; padding: 13px; border: 1px solid var(--sl-color-surface-divider); border-radius: var(--sl-radius-control); background: var(--sl-color-surface-dark); font: 12px/1.45 Consolas, monospace; }
+.sl-console-line { display: flex; justify-content: space-between; color: var(--sl-color-text-subtle); }
+.sl-console-line b { color: var(--sl-color-success-soft); }
+.sl-state-console .sl-field { border-color: var(--sl-color-surface-divider); background: var(--sl-color-surface-dark); color: var(--sl-color-on-dark); }
+.sl-state-console .sl-login-links { margin-top: 12px; }
+
+.sl-state-glass { padding: 48px 18px 18px; border: 0; background: linear-gradient(145deg, var(--sl-color-brand), var(--sl-color-accent)); color: var(--sl-color-on-dark); }
+.sl-state-glass .sl-state-title { padding: 0; color: var(--sl-color-on-dark); }
+.sl-glass-card { margin-top: 34px; padding: 16px; border: 1px solid color-mix(in srgb, var(--sl-color-on-dark) 26%, transparent); border-radius: var(--sl-radius-card); background: color-mix(in srgb, var(--sl-color-bg) 19%, transparent); box-shadow: var(--sl-shadow-medium); backdrop-filter: blur(12px); }
+.sl-glass-profile { display: flex; align-items: center; gap: 10px; }
+.sl-glass-profile p { margin: 0; }
+.sl-glass-profile .sl-name { color: var(--sl-color-on-dark); }
+.sl-state-glass .sl-stat-strip { margin-top: 16px; }
+.sl-state-glass .sl-stat-box { background: color-mix(in srgb, var(--sl-color-bg) 16%, transparent); }
+.sl-state-glass .sl-stat-box b { color: var(--sl-color-on-dark); }
+.sl-state-glass .sl-stat-box small { color: color-mix(in srgb, var(--sl-color-on-dark) 76%, transparent); }
+.sl-state-glass .sl-field { border-color: color-mix(in srgb, var(--sl-color-on-dark) 35%, transparent); background: color-mix(in srgb, var(--sl-color-bg) 86%, transparent); }
+.sl-state-glass .sl-login-links a { color: var(--sl-color-on-dark); }
+
+.sl-state-inbox { padding: 48px 18px 18px; }
+.sl-state-inbox > .sl-state-title { padding: 0; margin-bottom: 24px; }
+.sl-inbox-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
+.sl-inbox-profile { display: flex; align-items: center; gap: 9px; }
+.sl-inbox-profile p { margin: 0; }
+.sl-inbox-list { display: grid; gap: 7px; }
+.sl-inbox-row { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 8px; border-radius: var(--sl-radius-control); background: var(--sl-color-surface-alt); }
+.sl-inbox-row p { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-inbox-row time { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-community-call { padding: 14px; border-radius: var(--sl-radius-card); background: linear-gradient(145deg, color-mix(in srgb, var(--sl-color-brand) 14%, var(--sl-color-bg)), var(--sl-color-surface-alt)); }
+.sl-community-call h4 { margin: 0 0 5px; color: var(--sl-color-text-heading); }
+.sl-community-call p { margin: 0 0 12px; }
+.sl-state-inbox .sl-stat-strip { margin-top: 13px; }
+
+.sl-state-presence { padding: 48px 18px 18px; }
+.sl-state-presence > .sl-state-title { padding: 0; margin-bottom: 26px; }
+.sl-presence-total { display: flex; align-items: baseline; gap: 8px; }
+.sl-presence-total b { color: var(--sl-color-text-heading); font-size: 42px; line-height: 1; }
+.sl-presence-stack { display: flex; margin: 16px 0; }
+.sl-presence-stack .sl-avatar { margin-left: -8px; border-color: var(--sl-color-bg); }
+.sl-presence-stack .sl-avatar:first-child { margin-left: 0; }
+.sl-presence-list { display: grid; gap: 7px; }
+.sl-presence-row { display: flex; justify-content: space-between; padding-top: 7px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-state-presence .sl-login-fields { margin: 18px 0 11px; }
+
+.sl-state-rail { display: grid; grid-template-columns: 64px 1fr; }
+.sl-rail-nav { display: grid; align-content: center; gap: 8px; padding: 12px; border-radius: var(--sl-radius-card) 0 0 var(--sl-radius-card); background: var(--sl-color-surface-dark); }
+.sl-rail-nav a { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--sl-color-text-subtle); font-size: 18px; }
+.sl-rail-nav a:hover { background: var(--sl-color-surface-divider); color: var(--sl-color-on-dark); }
+.sl-rail-main { padding: 48px 16px 16px; }
+.sl-rail-main .sl-state-title { padding: 0; margin-bottom: 30px; }
+.sl-rail-profile { display: flex; align-items: center; gap: 10px; }
+.sl-rail-profile p { margin: 0; }
+.sl-state-rail .sl-stat-strip { grid-template-columns: repeat(2, 1fr); margin-top: 20px; }
+.sl-state-rail .sl-stat-box:last-child { grid-column: 1 / -1; }
+.sl-state-rail .sl-login-fields { margin: 20px 0 11px; }
+
+.sl-state-dial { display: grid; grid-template-columns: 43% 57%; }
+.sl-dial-panel { display: grid; place-items: center; padding: 52px 12px 18px; border-radius: var(--sl-radius-card) 0 0 var(--sl-radius-card); background: var(--sl-color-surface-alt); }
+.sl-dial-ring { position: relative; display: grid; place-items: center; width: 130px; height: 130px; border-radius: 50%; background: conic-gradient(var(--sl-color-brand-strong) 0 var(--sl-guest-share, 0%), var(--sl-color-border-muted) var(--sl-guest-share, 0%)); }
+.sl-dial-ring::before { content: ""; position: absolute; width: 96px; height: 96px; border-radius: 50%; background: var(--sl-color-bg); }
+.sl-dial-ring span { position: relative; z-index: 1; text-align: center; }
+.sl-dial-ring b { display: block; color: var(--sl-color-text-heading); font-size: 28px; }
+.sl-dial-ring small { color: var(--sl-color-text-muted); font-size: 9px; }
+.sl-dial-main { padding: 48px 15px 16px; }
+.sl-dial-main .sl-state-title { padding: 0; margin-bottom: 27px; }
+.sl-dial-profile { display: flex; align-items: center; gap: 9px; }
+.sl-dial-profile p { margin: 0; }
+.sl-dial-rows { display: grid; gap: 7px; margin-top: 15px; }
+.sl-dial-row { display: flex; justify-content: space-between; padding-bottom: 6px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-state-dial .sl-login-fields { margin-top: 14px; }
+
+.sl-state-dense { padding: 48px 18px 18px; }
+.sl-state-dense > .sl-state-title { padding: 0; margin-bottom: 23px; }
+.sl-dense-profile { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 9px; margin-bottom: 12px; }
+.sl-dense-profile p { margin: 0; }
+.sl-dense-table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
+.sl-dense-table td { padding: 7px 8px; background: var(--sl-color-surface-alt); font-size: 11px; }
+.sl-dense-table td:first-child { border-radius: var(--sl-radius-control) 0 0 var(--sl-radius-control); }
+.sl-dense-table td:last-child { border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; text-align: right; }
+.sl-dense-table i { margin-right: 6px; color: var(--sl-color-brand-strong); }
+.sl-state-dense .sl-login-fields { margin: 20px 0 12px; }
+
+.sl-state-hub { display: grid; place-items: center; padding: 48px 18px 18px; }
+.sl-state-hub > .sl-state-title { position: absolute; top: 48px; left: 18px; padding: 0; }
+.sl-hub-stage { position: relative; width: 290px; height: 250px; margin-top: 35px; }
+.sl-hub-core { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; text-align: center; transform: translate(-50%, -50%); }
+.sl-hub-core .sl-avatar { margin-bottom: 5px; }
+.sl-hub-action { position: absolute; display: grid; place-items: center; width: 88px; min-height: 66px; padding: 8px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); color: var(--sl-color-text-heading); box-shadow: var(--sl-shadow-soft); text-align: center; }
+.sl-hub-action i { color: var(--sl-color-brand-strong); font-size: 19px; }
+.sl-hub-action small { font-size: 9px; }
+.sl-hub-a { top: 0; left: 0; }
+.sl-hub-b { top: 0; right: 0; }
+.sl-hub-c { bottom: 0; left: 0; }
+.sl-hub-d { right: 0; bottom: 0; }
+
+.sl-stat-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+.sl-stat-card { min-height: 245px; padding: 17px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); }
+.sl-stat-card h3 { margin: 0 0 20px; color: var(--sl-color-text-heading); font: bold 16px/1.2 "Magistral", Arial, sans-serif; }
+.sl-stat-big { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.sl-stat-big span { text-align: center; }
+.sl-stat-big b { display: block; color: var(--sl-color-text-heading); font-size: 30px; }
+.sl-stat-big small { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-stat-bar { display: flex; height: 18px; overflow: hidden; border-radius: 999px; background: var(--sl-color-surface-alt); }
+.sl-stat-bar i:nth-child(1) { width: var(--sl-members-share, 0%); background: var(--sl-color-success); }
+.sl-stat-bar i:nth-child(2) { width: var(--sl-bots-share, 0%); background: var(--sl-color-brand); }
+.sl-stat-bar i:nth-child(3) { width: var(--sl-guests-share, 0%); background: var(--sl-color-text-subtle); }
+.sl-stat-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.sl-stat-radar { display: grid; grid-template-columns: 135px 1fr; align-items: center; gap: 18px; }
+.sl-stat-radar .sl-dial-ring { width: 135px; height: 135px; }
+.sl-stat-radar-list { display: grid; gap: 9px; }
+.sl-stat-radar-row { display: flex; justify-content: space-between; padding-bottom: 7px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-stat-live-list { display: grid; gap: 8px; }
+.sl-stat-live-row { display: grid; grid-template-columns: 8px 1fr auto; align-items: center; gap: 9px; padding: 9px; border-radius: var(--sl-radius-control); background: var(--sl-color-surface-alt); }
+.sl-stat-live-row b { font-variant-numeric: tabular-nums; }
+.sl-stat-pills { display: flex; flex-wrap: wrap; align-content: center; gap: 10px; min-height: 140px; }
+.sl-stat-pills .sl-chip { font-size: 13px; }
+.sl-stat-pills .sl-chip b { font-size: 19px; }
+.sl-stat-stream { position: relative; display: grid; gap: 8px; padding-left: 20px; }
+.sl-stat-stream::before { content: ""; position: absolute; top: 5px; bottom: 5px; left: 5px; width: 1px; background: var(--sl-color-border-strong); }
+.sl-stat-stream-row { position: relative; display: flex; justify-content: space-between; }
+.sl-stat-stream-row::before { content: ""; position: absolute; top: 4px; left: -19px; width: 9px; height: 9px; border: 2px solid var(--sl-color-bg); border-radius: 50%; background: var(--sl-color-success); box-shadow: 0 0 0 1px var(--sl-color-success); }
+.sl-stat-stream time { color: var(--sl-color-text-muted); font-size: 10px; }
+
+@media (max-width: 860px) {
+  .sl-state-pair { grid-template-columns: minmax(0, var(--sl-sidebar)); }
+}
+
+@media (max-width: 520px) {
+  .sl-demo-wrap { width: min(100% - 20px, 1540px); }
+  .sl-live-slot > .sl-live-menu { width: min(248px, calc(100vw - 34px)); min-width: 0; }
+  .sl-state-split { grid-template-columns: 42% 58%; }
+  .sl-state-dial { grid-template-columns: 42% 58%; }
+  .sl-stat-gallery { grid-template-columns: minmax(0, 1fr); }
+  .sl-stat-big { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-state-block,
+  .sl-live-trigger,
+  .sl-demo-sync i { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="sl-demo-head">
+  <h1>Блок «Пользователи»: гость + пользователь + актуальная посещаемость</h1>
+  <p>12 парных концепций шириной 400 px показывают оба состояния одной визуальной системы. Числа посещаемости считываются с работающего <code>#repsinfo</code> и обновляются через штатный endpoint каждые 4 секунды.</p>
+  <div class="sl-demo-sync" data-sl-sync><i></i><span data-sl-sync-label>Подключение к реальной статистике…</span><span class="sl-chip sl-chip-neutral">4 сек</span></div>
+  <nav class="sl-demo-nav" aria-label="Другие демо пользовательского блока"><a class="sl-chip sl-chip-info" href="user-live-chip-2026.html">18 пользовательских концепций</a><a class="sl-chip sl-chip-info" href="user-block-2026.html">Тренды 2026</a><a class="sl-chip sl-chip-info" href="user-block-guest.html">Гостевые варианты</a><a class="sl-chip sl-chip-info" href="user-block-max-effects.html">Максимум эффектов</a></nav>
+</header>
+
+<main class="sl-demo-wrap">
+  <section class="sl-demo-section">
+    <h2>12 парных концепций · 24 блока</h2>
+    <p class="sl-demo-note">Слева — авторизованный пользователь, справа — гость. Оба блока используют актуальный <b>--sl-sidebar: 400px</b>; меняется композиция, но не размер.</p>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">01</span><span><b>Identity hero</b><small>персона в центре, статистика внизу</small></span><span class="sl-concept-pick">финалист</span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-hero"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Пользователи</h3><span data-sl-live-slot></span><span class="sl-avatar sl-avatar-lg">EL</span><h4>SLAED CMS</h4><p class="sl-muted">Клиент · 50 206 очков</p><div><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-envelope"></i> Входящие 0</a> <a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-sliders"></i> Настройки</a></div><div class="sl-stat-strip" data-sl-stat-strip></div></aside>
+      <aside class="sl-block sl-state-block sl-state-hero"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Добро пожаловать</h3><span data-sl-live-slot></span><span class="sl-avatar sl-avatar-lg"><i class="bi bi-person"></i></span><h4>Гость</h4><p class="sl-muted">Войдите или создайте аккаунт</p><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"></div><div class="sl-login-submit"><button class="sl-but" type="button">Войти</button><span class="sl-login-links"><a href="#">Регистрация</a><a href="#">Забыли пароль?</a></span></div><div class="sl-stat-strip" data-sl-stat-strip></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">02</span><span><b>Split dashboard</b><small>идентичность слева, данные и форма справа</small></span><span class="sl-concept-pick">финалист</span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-split"><span class="sl-state-type">Пользователь</span><span data-sl-live-slot></span><div class="sl-state-split-a"><h3 class="sl-state-title">Аккаунт</h3><span class="sl-avatar">EL</span><p><b>SLAED CMS</b><br><small class="sl-muted">Клиент · 50 206</small></p><p><a href="#">Профиль</a><br><a href="#">Фавориты</a><br><a href="#">Выйти</a></p></div><div class="sl-state-split-b"><div class="sl-stat-strip" data-sl-stat-strip></div><a class="sl-chip sl-chip-info" href="#">Личные сообщения: 0</a></div></aside>
+      <aside class="sl-block sl-state-block sl-state-split"><span class="sl-state-type">Гость</span><span data-sl-live-slot></span><div class="sl-state-split-a"><h3 class="sl-state-title">SLAED</h3><span class="sl-avatar"><i class="bi bi-person"></i></span><p><b>Вход</b><br><small class="sl-muted">Один аккаунт для всех модулей</small></p></div><div class="sl-state-split-b"><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div><div class="sl-login-links"><a href="#">Регистрация</a><a href="#">Восстановить</a></div><div class="sl-stat-strip" data-sl-stat-strip></div></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">03</span><span><b>Bento states</b><small>модульная сетка для данных и входа</small></span><span class="sl-concept-pick">финалист</span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-bento"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Пользователи</h3><span data-sl-live-slot></span><div class="sl-bento-cell sl-bento-main sl-bento-profile"><span class="sl-avatar sl-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-muted">Клиент</small></p></div><div class="sl-bento-cell sl-bento-number"><small class="sl-muted">Очки</small><b>50K</b><span class="sl-chip sl-chip-success">+206</span></div><div class="sl-bento-cell sl-bento-number"><small class="sl-muted">Сообщения</small><b>0</b><a href="#">Открыть</a></div><div class="sl-bento-cell sl-bento-number"><small class="sl-muted">Всего online</small><b data-sl-stat="total">…</b><a href="#">Подробнее</a></div></aside>
+      <aside class="sl-block sl-state-block sl-state-bento"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Добро пожаловать</h3><span data-sl-live-slot></span><div class="sl-bento-cell sl-bento-main"><b>Уже с нами?</b><p class="sl-muted">Войдите в аккаунт</p><button class="sl-but" type="button">Войти</button></div><div class="sl-bento-cell"><b>Впервые?</b><p class="sl-muted">Регистрация бесплатна</p><a class="sl-chip sl-chip-info" href="#">Создать аккаунт</a></div><div class="sl-bento-cell sl-bento-wide"><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"></div></div><div class="sl-bento-cell sl-bento-wide"><div class="sl-stat-strip" data-sl-stat-strip></div></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">04</span><span><b>Ultra minimal</b><small>типографика, воздух, минимум рамок</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-minimal"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">ACCOUNT / LIVE</h3><span data-sl-live-slot></span><div class="sl-minimal-main"><h4>SLAED CMS</h4><p>Клиент · 50 206 очков</p><div class="sl-minimal-numbers"><span><b>0</b><small>входящих</small></span><span><b>5</b><small>исходящих</small></span><span><b data-sl-stat="total">…</b><small>online</small></span></div></div><div class="sl-minimal-foot"><a href="#">Профиль</a><a href="#">Настройки</a><a href="#">Выйти</a></div></aside>
+      <aside class="sl-block sl-state-block sl-state-minimal"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">WELCOME / LIVE</h3><span data-sl-live-slot></span><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div><div class="sl-minimal-foot"><a href="#">Регистрация</a><a href="#">Восстановить пароль</a><span><b data-sl-stat="total">…</b> online</span></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">05</span><span><b>Command center</b><small>техническая консоль для обеих ролей</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-console"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">USER_MONITOR</h3><span data-sl-live-slot></span><div class="sl-console-head"><span class="sl-avatar sl-avatar-sm">EL</span><p><span class="sl-name">SLAED_CMS</span><br><span class="sl-muted">AUTHENTICATED / CLIENT</span></p></div><div class="sl-console-screen"><span class="sl-console-line">sessions.total <b data-sl-stat="total">…</b></span><span class="sl-console-line">sessions.users <b data-sl-stat="members">…</b></span><span class="sl-console-line">messages.in <b>00</b></span><span class="sl-console-line">messages.out <b>05</b></span><span class="sl-console-line">refresh.rate <b>04s</b></span></div><div class="sl-login-links"><a href="#">PROFILE</a><a href="#">LOGOUT</a></div></aside>
+      <aside class="sl-block sl-state-block sl-state-console"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">ACCESS_GATE</h3><span data-sl-live-slot></span><div class="sl-console-head"><span class="sl-avatar sl-avatar-sm">?</span><p><span class="sl-name">ANONYMOUS</span><br><span class="sl-muted">AUTH_REQUIRED</span></p></div><div class="sl-login-fields"><input class="sl-field" placeholder="nickname"><input class="sl-field" type="password" placeholder="password"><button class="sl-but" type="button">LOGIN</button></div><div class="sl-console-screen"><span class="sl-console-line">visitors.online <b data-sl-stat="guests">…</b></span><span class="sl-console-line">bots.detected <b data-sl-stat="bots">…</b></span></div><div class="sl-login-links"><a href="#">REGISTER</a><a href="#">RECOVER</a></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">06</span><span><b>Glass spotlight</b><small>эмоциональный брендовый сценарий</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-glass"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Пользователи</h3><span data-sl-live-slot></span><div class="sl-glass-card"><div class="sl-glass-profile"><span class="sl-avatar">EL</span><p><span class="sl-name">SLAED CMS</span><br><span class="sl-muted">Клиент · 50 206 очков</span></p></div><div class="sl-stat-strip" data-sl-stat-strip></div><div class="sl-login-links"><a href="#">Сообщения</a><a href="#">Настройки</a><a href="#">Выход</a></div></div></aside>
+      <aside class="sl-block sl-state-block sl-state-glass"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Присоединяйтесь</h3><span data-sl-live-slot></span><div class="sl-glass-card"><div class="sl-glass-profile"><span class="sl-avatar"><i class="bi bi-person"></i></span><p><span class="sl-name">Добро пожаловать</span><br><span class="sl-muted"><b data-sl-stat="total">…</b> посетителей сейчас</span></p></div><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div><div class="sl-login-links"><a href="#">Регистрация</a><a href="#">Забыли пароль?</a></div></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">07</span><span><b>Inbox / community</b><small>сообщения для пользователя, сообщество для гостя</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-inbox"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Сообщения</h3><span data-sl-live-slot></span><div class="sl-inbox-head"><div class="sl-inbox-profile"><span class="sl-avatar sl-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-muted">0 непрочитанных</small></p></div><span class="sl-chip sl-chip-success">online</span></div><div class="sl-inbox-list"><a class="sl-inbox-row" href="#"><span class="sl-avatar sl-avatar-sm">AN</span><p><b>Anton</b><br><small class="sl-muted">Посмотри новый дизайн…</small></p><time>10:42</time></a><a class="sl-inbox-row" href="#"><span class="sl-avatar sl-avatar-sm">MK</span><p><b>Maria</b><br><small class="sl-muted">Спасибо за обновление</small></p><time>вчера</time></a></div><div class="sl-stat-strip" data-sl-stat-strip></div></aside>
+      <aside class="sl-block sl-state-block sl-state-inbox"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Сообщество</h3><span data-sl-live-slot></span><div class="sl-community-call"><h4>Станьте участником</h4><p class="sl-muted">Сообщения, фавориты, профиль и персональные настройки.</p><a class="sl-chip sl-chip-info" href="#">Регистрация</a></div><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div><div class="sl-stat-strip" data-sl-stat-strip></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">08</span><span><b>Presence first</b><small>аудитория и присутствие важнее аккаунта</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-presence"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Сейчас на сайте</h3><span data-sl-live-slot></span><div class="sl-presence-total"><b data-sl-stat="total">…</b><span class="sl-muted">активных сессий</span></div><div class="sl-presence-stack"><span class="sl-avatar">EL</span><span class="sl-avatar">AN</span><span class="sl-avatar">MK</span><span class="sl-avatar">+4</span></div><div class="sl-presence-list"><span class="sl-presence-row"><span><i class="sl-online-dot"></i> SLAED CMS</span><small>Главная</small></span><span class="sl-presence-row"><span>Поисковые боты</span><b data-sl-stat="bots">…</b></span><span class="sl-presence-row"><a href="#">Подробнее</a><a href="#">Профиль</a></span></div></aside>
+      <aside class="sl-block sl-state-block sl-state-presence"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Вы не одни</h3><span data-sl-live-slot></span><div class="sl-presence-total"><b data-sl-stat="total">…</b><span class="sl-muted">посетителей online</span></div><div class="sl-stat-strip" data-sl-stat-strip></div><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"></div><div class="sl-login-submit"><button class="sl-but" type="button">Войти</button><span class="sl-login-links"><a href="#">Регистрация</a><a href="#">Восстановить</a></span></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">09</span><span><b>Action rail</b><small>основные действия в отдельной вертикали</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-rail"><span class="sl-state-type">Пользователь</span><nav class="sl-rail-nav"><a href="#"><i class="bi bi-envelope"></i></a><a href="#"><i class="bi bi-star"></i></a><a href="#"><i class="bi bi-sliders"></i></a><a href="#"><i class="bi bi-box-arrow-right"></i></a></nav><div class="sl-rail-main"><h3 class="sl-state-title">Аккаунт</h3><span data-sl-live-slot></span><div class="sl-rail-profile"><span class="sl-avatar">EL</span><p><b>SLAED CMS</b><br><small class="sl-muted">Клиент · 50 206</small></p></div><div class="sl-stat-strip" data-sl-stat-strip></div></div></aside>
+      <aside class="sl-block sl-state-block sl-state-rail"><span class="sl-state-type">Гость</span><nav class="sl-rail-nav"><a href="#"><i class="bi bi-box-arrow-in-right"></i></a><a href="#"><i class="bi bi-person-plus"></i></a><a href="#"><i class="bi bi-key"></i></a><a href="#"><i class="bi bi-people"></i></a></nav><div class="sl-rail-main"><h3 class="sl-state-title">Вход</h3><span data-sl-live-slot></span><div class="sl-rail-profile"><span class="sl-avatar"><i class="bi bi-person"></i></span><p><b>Гость</b><br><small class="sl-muted"><b data-sl-stat="total">…</b> online</small></p></div><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">10</span><span><b>Audience dial</b><small>структура аудитории и компактный аккаунт</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-dial"><span class="sl-state-type">Пользователь</span><div class="sl-dial-panel"><div class="sl-dial-ring"><span><b data-sl-guest-share>0%</b><small>гости</small></span></div></div><div class="sl-dial-main"><h3 class="sl-state-title">Пользователи</h3><span data-sl-live-slot></span><div class="sl-dial-profile"><span class="sl-avatar sl-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-muted">Клиент</small></p></div><div class="sl-dial-rows"><span class="sl-dial-row"><small>Пользователи</small><b data-sl-stat="members">…</b></span><span class="sl-dial-row"><small>Боты</small><b data-sl-stat="bots">…</b></span><span class="sl-dial-row"><small>Гости</small><b data-sl-stat="guests">…</b></span><span class="sl-dial-row"><small>Всего</small><b data-sl-stat="total">…</b></span></div></div></aside>
+      <aside class="sl-block sl-state-block sl-state-dial"><span class="sl-state-type">Гость</span><div class="sl-dial-panel"><div class="sl-dial-ring"><span><b data-sl-stat="total">…</b><small>online</small></span></div></div><div class="sl-dial-main"><h3 class="sl-state-title">Войти</h3><span data-sl-live-slot></span><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div><div class="sl-login-links"><a href="#">Регистрация</a><a href="#">Пароль</a></div></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">11</span><span><b>Dense information</b><small>максимум данных в минимальной высоте</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-dense"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Пользователи</h3><span data-sl-live-slot></span><div class="sl-dense-profile"><span class="sl-avatar sl-avatar-sm">EL</span><p><b>SLAED CMS</b><br><small class="sl-muted">Клиент · 50 206</small></p><span class="sl-chip sl-chip-success">online</span></div><table class="sl-dense-table"><tbody><tr><td><i class="bi bi-envelope"></i>Новые входящие</td><td>0</td></tr><tr><td><i class="bi bi-send"></i>Новые исходящие</td><td>5</td></tr><tr><td><i class="bi bi-person"></i>Пользователи</td><td data-sl-stat="members">…</td></tr><tr><td><i class="bi bi-robot"></i>Поисковые боты</td><td data-sl-stat="bots">…</td></tr><tr><td><i class="bi bi-people"></i>Гости</td><td data-sl-stat="guests">…</td></tr><tr><td><i class="bi bi-activity"></i>Всего</td><td data-sl-stat="total">…</td></tr></tbody></table></aside>
+      <aside class="sl-block sl-state-block sl-state-dense"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Вход пользователя</h3><span data-sl-live-slot></span><div class="sl-login-fields"><input class="sl-field" placeholder="Никнейм"><input class="sl-field" type="password" placeholder="Пароль"><button class="sl-but" type="button">Войти</button></div><table class="sl-dense-table"><tbody><tr><td><i class="bi bi-person"></i>Пользователи online</td><td data-sl-stat="members">…</td></tr><tr><td><i class="bi bi-robot"></i>Поисковые боты</td><td data-sl-stat="bots">…</td></tr><tr><td><i class="bi bi-people"></i>Гости</td><td data-sl-stat="guests">…</td></tr><tr><td><i class="bi bi-activity"></i>Всего</td><td data-sl-stat="total">…</td></tr></tbody></table><div class="sl-login-links"><a href="#">Регистрация</a><a href="#">Восстановить пароль</a></div></aside>
+    </div></article>
+
+    <article class="sl-concept"><div class="sl-concept-head"><span class="sl-concept-number">12</span><span><b>Action hub</b><small>центральный персонаж и четыре задачи</small></span></div><div class="sl-state-pair">
+      <aside class="sl-block sl-state-block sl-state-hub"><span class="sl-state-type">Пользователь</span><h3 class="sl-state-title">Мой аккаунт</h3><span data-sl-live-slot></span><div class="sl-hub-stage"><div class="sl-hub-core"><span class="sl-avatar">EL</span><b>SLAED CMS</b><small class="sl-muted">50 206</small></div><a class="sl-hub-action sl-hub-a" href="#"><i class="bi bi-envelope"></i><small>Сообщения<br><b>0 новых</b></small></a><a class="sl-hub-action sl-hub-b" href="#"><i class="bi bi-star"></i><small>Фавориты<br><b>12</b></small></a><a class="sl-hub-action sl-hub-c" href="#"><i class="bi bi-people"></i><small>Online<br><b data-sl-stat="total">…</b></small></a><a class="sl-hub-action sl-hub-d" href="#"><i class="bi bi-sliders"></i><small>Настройки</small></a></div></aside>
+      <aside class="sl-block sl-state-block sl-state-hub"><span class="sl-state-type">Гость</span><h3 class="sl-state-title">Добро пожаловать</h3><span data-sl-live-slot></span><div class="sl-hub-stage"><div class="sl-hub-core"><span class="sl-avatar"><i class="bi bi-person"></i></span><b>Гость</b><small class="sl-muted"><b data-sl-stat="total">…</b> online</small></div><a class="sl-hub-action sl-hub-a" href="#"><i class="bi bi-box-arrow-in-right"></i><small>Войти</small></a><a class="sl-hub-action sl-hub-b" href="#"><i class="bi bi-person-plus"></i><small>Регистрация</small></a><a class="sl-hub-action sl-hub-c" href="#"><i class="bi bi-key"></i><small>Восстановить</small></a><a class="sl-hub-action sl-hub-d" href="#"><i class="bi bi-people"></i><small>Посетители<br><b data-sl-stat="total">…</b></small></a></div></aside>
+    </div></article>
+  </section>
+
+  <section class="sl-demo-section">
+    <h2>6 представлений актуальной посещаемости</h2>
+    <p class="sl-demo-note">Эти компоненты используют те же реальные значения, что и блоки выше. «Обновлено» меняется после каждого штатного ответа.</p>
+    <div class="sl-stat-gallery">
+      <article class="sl-stat-card"><h3>01 · Большие показатели</h3><div class="sl-stat-big"><span><b data-sl-stat="members">…</b><small>пользователи</small></span><span><b data-sl-stat="bots">…</b><small>боты</small></span><span><b data-sl-stat="guests">…</b><small>гости</small></span><span><b data-sl-stat="total">…</b><small>всего</small></span></div></article>
+      <article class="sl-stat-card"><h3>02 · Состав аудитории</h3><div class="sl-stat-bar"><i></i><i></i><i></i></div><div class="sl-stat-legend"><span class="sl-chip sl-chip-success">Пользователи <b data-sl-stat="members">…</b></span><span class="sl-chip sl-chip-info">Боты <b data-sl-stat="bots">…</b></span><span class="sl-chip sl-chip-neutral">Гости <b data-sl-stat="guests">…</b></span></div></article>
+      <article class="sl-stat-card"><h3>03 · Круг аудитории</h3><div class="sl-stat-radar"><div class="sl-dial-ring"><span><b data-sl-guest-share>0%</b><small>гости</small></span></div><div class="sl-stat-radar-list"><span class="sl-stat-radar-row"><small>Пользователи</small><b data-sl-stat="members">…</b></span><span class="sl-stat-radar-row"><small>Боты</small><b data-sl-stat="bots">…</b></span><span class="sl-stat-radar-row"><small>Гости</small><b data-sl-stat="guests">…</b></span><span class="sl-stat-radar-row"><small>Всего</small><b data-sl-stat="total">…</b></span></div></div></article>
+      <article class="sl-stat-card"><h3>04 · Live-строки</h3><div class="sl-stat-live-list"><span class="sl-stat-live-row"><i class="sl-online-dot"></i><span>Пользователи</span><b data-sl-stat="members">…</b></span><span class="sl-stat-live-row"><i class="sl-online-dot"></i><span>Поисковые боты</span><b data-sl-stat="bots">…</b></span><span class="sl-stat-live-row"><i class="sl-online-dot"></i><span>Гости</span><b data-sl-stat="guests">…</b></span><span class="sl-stat-live-row"><i class="sl-online-dot"></i><span>Всего</span><b data-sl-stat="total">…</b></span></div></article>
+      <article class="sl-stat-card"><h3>05 · Информационные чипы</h3><div class="sl-stat-pills"><span class="sl-chip sl-chip-success"><i class="bi bi-person"></i> Пользователи <b data-sl-stat="members">…</b></span><span class="sl-chip sl-chip-info"><i class="bi bi-robot"></i> Боты <b data-sl-stat="bots">…</b></span><span class="sl-chip sl-chip-neutral"><i class="bi bi-people"></i> Гости <b data-sl-stat="guests">…</b></span><span class="sl-chip sl-chip-accent"><i class="bi bi-activity"></i> Всего <b data-sl-stat="total">…</b></span></div></article>
+      <article class="sl-stat-card"><h3>06 · Поток обновлений</h3><div class="sl-stat-stream"><span class="sl-stat-stream-row"><span>Статистика подключена</span><time>Live</time></span><span class="sl-stat-stream-row"><span>Текущая аудитория</span><b data-sl-stat="total">…</b></span><span class="sl-stat-stream-row"><span>Последний ответ</span><time data-sl-updated>—</time></span><span class="sl-stat-stream-row"><span>Следующий запрос</span><time>через 4 сек</time></span></div></article>
+    </div>
+  </section>
+</main>
+
+<template data-sl-live-template><div class="sl-tip sl-float sl-live-slot" tabindex="0" aria-label="Live включён"><span class="sl-live-trigger"><i class="bi bi-activity"></i></span><div class="sl-float-panel sl-live-menu"><div class="sl-live-menu-head"><i class="bi bi-activity"></i><span class="sl-live-on">Статистика в эфире</span><span class="sl-live-paused">Обновление на паузе</span></div><dl><dt>Интервал</dt><dd>4 сек</dd><dt>Пользователи</dt><dd data-sl-stat="members">…</dd><dt>Боты</dt><dd data-sl-stat="bots">…</dd><dt>Гости</dt><dd data-sl-stat="guests">…</dd><dt>Всего</dt><dd data-sl-stat="total">…</dd><dt>Обновлено</dt><dd data-sl-updated>—</dd></dl><div class="sl-live-action"><button type="button" class="sl-chip sl-chip-warn sl-live-pause" data-sl-live-toggle><i class="bi bi-pause-fill"></i> Пауза</button><button type="button" class="sl-chip sl-chip-success sl-live-resume" data-sl-live-toggle><i class="bi bi-play-fill"></i> Продолжить</button></div></div></div></template>
+
+<script>
+(function () {
+  var sample = document.querySelector('[data-sl-live-template]');
+  var endpoint = '../';
+  var timer = 0;
+  var stats = { members: 0, bots: 0, guests: 0, total: 0 };
+
+  document.querySelectorAll('[data-sl-live-slot]').forEach(function (slot) {
+    slot.replaceWith(sample.content.firstElementChild.cloneNode(true));
+  });
+
+  document.querySelectorAll('[data-sl-stat-strip]').forEach(function (strip) {
+    strip.innerHTML = '<span class="sl-stat-box"><b data-sl-stat="members">…</b><small>пользователи</small></span><span class="sl-stat-box"><b data-sl-stat="bots">…</b><small>боты</small></span><span class="sl-stat-box"><b data-sl-stat="guests">…</b><small>гости</small></span><span class="sl-stat-box"><b data-sl-stat="total">…</b><small>всего</small></span>';
+  });
+
+  function setStats(data) {
+    stats = data;
+    Object.keys(stats).forEach(function (key) {
+      document.querySelectorAll('[data-sl-stat="' + key + '"]').forEach(function (node) {
+        var block = node.closest('.sl-state-block');
+        if (block && block.querySelector('.sl-live-slot.sl-is-paused')) return;
+        node.textContent = stats[key];
+      });
+    });
+    var total = Math.max(1, stats.total);
+    var guest = Math.round(stats.guests * 100 / total);
+    document.documentElement.style.setProperty('--sl-members-share', (stats.members * 100 / total) + '%');
+    document.documentElement.style.setProperty('--sl-bots-share', (stats.bots * 100 / total) + '%');
+    document.documentElement.style.setProperty('--sl-guests-share', (stats.guests * 100 / total) + '%');
+    document.documentElement.style.setProperty('--sl-guest-share', guest + '%');
+    document.querySelectorAll('[data-sl-guest-share]').forEach(function (node) { node.textContent = guest + '%'; });
+    var now = new Date().toLocaleTimeString('ru-RU');
+    document.querySelectorAll('[data-sl-updated]').forEach(function (node) { node.textContent = now; });
+    document.querySelector('[data-sl-sync]').classList.add('sl-is-live');
+    document.querySelector('[data-sl-sync-label]').textContent = 'Реальные данные сайта · обновлено ' + now;
+  }
+
+  function readStats(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    var root = doc.querySelector('#repsinfo') || doc.body;
+    var data = { members: 0, bots: 0, guests: 0, total: 0 };
+    root.querySelectorAll('.sl-session-line').forEach(function (line) {
+      var label = line.firstElementChild.textContent.trim().toLowerCase();
+      var value = Number(line.querySelector('.sl-session-right').textContent.trim()) || 0;
+      if (label.indexOf('пользовател') === 0) data.members = value;
+      else if (label.indexOf('поисков') === 0) data.bots = value;
+      else if (label.indexOf('гост') === 0) data.guests = value;
+      else if (label.indexOf('всего') === 0) data.total = value;
+    });
+    var link = root.querySelector('.sl-session-button[href]');
+    if (link) endpoint = new URL('../' + link.getAttribute('href'), location.href).href;
+    return data;
+  }
+
+  async function updateStats() {
+    try {
+      var response = await fetch(endpoint, { credentials: 'same-origin', cache: 'no-store' });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      setStats(readStats(await response.text()));
+    } catch (error) {
+      document.querySelector('[data-sl-sync-label]').textContent = 'Статистика временно недоступна';
+    }
+    window.clearTimeout(timer);
+    timer = window.setTimeout(updateStats, 4000);
+  }
+
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-sl-live-toggle]');
+    if (!button) return;
+    var live = button.closest('.sl-live-slot');
+    live.classList.toggle('sl-is-paused');
+    live.setAttribute('aria-label', live.classList.contains('sl-is-paused') ? 'Live на паузе' : 'Live включён');
+  });
+
+  updateStats();
+})();
+</script>
+</body>
+</html>

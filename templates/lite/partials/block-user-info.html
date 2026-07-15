@@ -1,33 +1,41 @@
-<div class="sl-block-user-ava">
-  {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
-  <p>{{ greeting_label }}<br>{% if is_user %}<a href="index.php?name=account">{{ greeting_name }}</a>{% else %}{{ greeting_name }}{% endif %}</p>
-  {% if has_meta %}<p class="sl-block-user-meta">{% if group_name %}{{ group_name }}{% endif %}{% if group_name and points_label %} &middot; {% endif %}{% if points_label %}{{ points_label }}: <b>{{ points_count }}</b>{% endif %}</p>{% endif %}
-</div>
-{% if is_user %}
-  {% if has_privat %}
+<div class="sl-user-card"{% if group_color %} style="--sl-user-color: {{ group_color }}; --sl-user-level: {{ ngroup_pct }}%;"{% endif %}>
+  <div class="sl-block-user-ava">
+    {% if is_user %}<a href="index.php?name=account" title="{{ change_label }}" class="sl-live-avatar"><i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i></a>{% else %}<i class="sl-ava-min" style="background-image: url({{ avatar_url }});"></i>{% endif %}
+    <p>
+      {% if is_user %}<a href="index.php?name=account">{{ greeting_name }}</a>{% else %}<b>{{ greeting_name }}</b>{% endif %}
+      {% if rank_url %}<img src="{{ rank_url }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}
+      <small{% if group_name %} title="{{ group_name }}"{% endif %}>{% if is_user and has_meta %}{% if group_name %}{{ group_name }}{% endif %}{% if group_name and ngroup_pct %} &middot; {% endif %}{% if ngroup_pct %}{{ ngroup_pct }}%{% endif %}{% else %}{{ greeting_label }}{% endif %}</small>
+    </p>
+    {% if is_user and points_label %}<span class="sl-user-points"><b>{{ points_count }}</b><small>{{ points_label }}</small></span>{% endif %}
+  </div>
+  {% if is_user %}
   <ul class="sl-block-pm">
-    <li><b>{{ privat_label }}</b></li>
-    <li><a href="index.php?name=account&amp;op=privat">{{ inbox_label }}: <b{% if has_new_in %} class="sl-pm-new"{% endif %}>{{ inbox_count }}</b></a></li>
-    <li><a href="index.php?name=account&amp;op=privat">{{ outbox_label }}: <b>{{ outbox_count }}</b></a></li>
+    {% if has_privat %}
+    <li><a href="index.php?name=account&amp;op=privat"><i class="bi bi-envelope" aria-hidden="true"></i><span>{{ inbox_label }}</span><b{% if has_new_in %} class="sl-pm-new"{% endif %}>{{ inbox_count }}</b></a></li>
+    <li><a href="index.php?name=account&amp;op=privat"><i class="bi bi-send" aria-hidden="true"></i><span>{{ outbox_label }}</span><b>{{ outbox_count }}</b></a></li>
+    {% endif %}
+    {% if has_fav %}<li><a href="index.php?name=account&amp;op=favorites"><i class="bi bi-star" aria-hidden="true"></i><span>{{ favorites_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>{% endif %}
+    <li><a href="index.php?name=account&amp;op=edithome"><i class="bi bi-sliders" aria-hidden="true"></i><span>{{ change_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
   </ul>
-  {% endif %}
-  <ul class="sl-login-top sl-login-top--block sl-logged">
-    {% if has_fav %}<li><a href="index.php?name=account&amp;op=favorites">{{ favorites_label }}</a></li>{% endif %}
-    <li><a href="index.php?name=account&amp;op=edithome">{{ change_label }}</a></li>
-    <li><a href="index.php?name=account&amp;op=logout&amp;refer=1">{{ logout_label }}</a></li>
-  </ul>
-{% else %}
-  <ul class="sl-login-top sl-login-top--block">
-    <li><a href="index.php?name=account&amp;op=reg">{{ register_label }}</a></li>
-    <li><a href="index.php?name=account&amp;op=passfor">{{ passfor_label }}</a></li>
-  </ul>
+  <nav class="sl-user-nav" aria-label="{{ change_label }}">
+    <a href="index.php?name=account" title="{{ profile_label }}" aria-label="{{ profile_label }}"><i class="bi bi-person" aria-hidden="true"></i></a>
+    {% if has_privat %}<a href="index.php?name=account&amp;op=privat" title="{{ privat_label }}" aria-label="{{ privat_label }}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>{% endif %}
+    <a href="index.php?name=account&amp;op=edithome" title="{{ change_label }}" aria-label="{{ change_label }}"><i class="bi bi-gear" aria-hidden="true"></i></a>
+    <a href="index.php?name=account&amp;op=logout&amp;refer=1" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
+  </nav>
+  {% else %}
   <form action="index.php?name=account" method="post" class="sl-block-login">
-    <p><label>{{ nickname_label }}: {{{ name_input }}}</label></p>
-    <p><label>{{ password_label }}: <input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></label></p>
-    {% if captcha_html %}{{{ captcha_html }}}{% endif %}
+    <label class="sl-user-field"><i class="bi bi-person" aria-hidden="true"></i><span class="sl-visually-hidden">{{ nickname_label }}</span>{{{ name_input }}}</label>
+    <label class="sl-user-field"><i class="bi bi-lock" aria-hidden="true"></i><span class="sl-visually-hidden">{{ password_label }}</span><input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></label>
+    {% if captcha_html %}<div class="sl-user-captcha">{{{ captcha_html }}}</div>{% endif %}
     {{{ hidden_inputs }}}
     {% if has_network %}<p class="sl-net-login">{{ network_label }}: {{{ networks_html }}}</p>{% endif %}
-    <p><button type="submit" class="sl-but">{{ login_label }}</button></p>
+    <button type="submit" class="sl-but"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ login_label }}</button>
   </form>
-{% endif %}
-{% if session_html %}<div class="sl-block-session" id="repsinfo" data-sl-live-box>{{{ session_html }}}</div>{% endif %}
+  <ul class="sl-block-pm">
+    <li><a href="index.php?name=account&amp;op=reg"><i class="bi bi-person-plus" aria-hidden="true"></i><span>{{ register_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+    <li><a href="index.php?name=account&amp;op=passfor"><i class="bi bi-key" aria-hidden="true"></i><span>{{ passfor_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
+  </ul>
+  {% endif %}
+  {% if session_html %}<div class="sl-block-session" id="repsinfo" data-sl-live-box>{{{ session_html }}}</div>{% endif %}
+</div>
