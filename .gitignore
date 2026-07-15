@@ -13,9 +13,6 @@
 !*/index.html
 !*/.htaccess
 
-# Uploads (user content)
-/uploads/*
-!/uploads/index.html
 
 # Database configs (contains passwords)
 /config/db.php
