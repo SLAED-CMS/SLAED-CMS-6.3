@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — профиль пользователя: 16 направлений 2026+</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 80px;
+  background: var(--sl-color-surface);
+  color: var(--sl-color-text);
+  font: 13px/1.45 Arial, system-ui, sans-serif;
+}
+
+a { text-decoration: none; }
+
+.sl-profile-demo-head {
+  padding: 32px max(20px, calc((100vw - 896px) / 2));
+  border-bottom: 1px solid var(--sl-color-border);
+  background:
+    radial-gradient(circle at 82% 0, color-mix(in srgb, var(--sl-color-brand) 20%, transparent), transparent 28%),
+    var(--sl-color-bg);
+}
+
+.sl-profile-demo-head h1 {
+  margin: 0 0 var(--sl-space-md);
+  color: var(--sl-color-text-heading);
+  font: bold clamp(25px, 4vw, 36px)/1.1 "Magistral", Arial, sans-serif;
+}
+
+.sl-profile-demo-head p { max-width: 760px; margin: 0; color: var(--sl-color-text-muted); }
+.sl-profile-demo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: var(--sl-space-lg); }
+.sl-profile-demo-main { width: 896px; max-width: calc(100% - 32px); margin: 34px auto 0; }
+
+.sl-profile-demo-section { margin-top: 46px; }
+.sl-profile-demo-section:first-child { margin-top: 0; }
+.sl-profile-demo-section > h2 { margin: 0 0 5px; color: var(--sl-color-text-heading); font: bold 22px/1.2 "Magistral", Arial, sans-serif; }
+.sl-profile-demo-section > p { margin: 0 0 22px; color: var(--sl-color-text-muted); }
+
+.sl-profile-demo-item { margin-bottom: 34px; }
+.sl-profile-demo-label {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sl-profile-demo-number {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sl-color-text-heading);
+  color: var(--sl-color-on-dark);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.sl-profile-demo-label b,
+.sl-profile-demo-label small { display: block; }
+.sl-profile-demo-label b { color: var(--sl-color-text-heading); font-size: 14px; }
+.sl-profile-demo-label small { color: var(--sl-color-text-muted); font-size: 11px; }
+
+.sl-profile-card {
+  --sl-profile-color: var(--sl-color-brand-link);
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.sl-profile-demo-item:hover .sl-profile-card {
+  border-color: color-mix(in srgb, var(--sl-profile-color) 30%, var(--sl-color-border));
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--sl-color-surface-dark) 10%, transparent);
+  transform: translateY(-2px);
+}
+
+.sl-profile-cover {
+  position: relative;
+  min-height: 84px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 40%, color-mix(in srgb, var(--sl-profile-color) 28%, transparent), transparent 24%),
+    radial-gradient(circle at 88% 20%, color-mix(in srgb, var(--sl-color-success) 16%, transparent), transparent 26%),
+    linear-gradient(120deg, var(--sl-color-surface), var(--sl-color-surface-alt));
+}
+
+.sl-profile-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image: radial-gradient(var(--sl-color-border-strong) 0.7px, transparent 0.7px);
+  background-size: 14px 14px;
+}
+
+.sl-profile-body { padding: 18px 22px 20px; }
+.sl-profile-head { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.sl-profile-head-overlap { margin-top: -58px; position: relative; z-index: 1; align-items: flex-end; }
+
+.sl-profile-avatar {
+  --sl-profile-level: 82%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 112px;
+  width: 112px;
+  height: 112px;
+  padding: 6px;
+  border-radius: 50%;
+  background: conic-gradient(var(--sl-profile-color) 0 var(--sl-profile-level), var(--sl-color-surface-soft) var(--sl-profile-level) 100%);
+  box-shadow: 0 0 0 4px var(--sl-color-bg), var(--sl-shadow-medium);
+}
+
+.sl-profile-avatar img { display: block; width: 100%; height: 100%; border: 4px solid var(--sl-color-bg); border-radius: 50%; object-fit: cover; background: var(--sl-color-bg); }
+.sl-profile-status { position: absolute; right: 5px; bottom: 12px; width: 16px; height: 16px; border: 3px solid var(--sl-color-bg); border-radius: 50%; background: var(--sl-color-success); }
+.sl-profile-identity { min-width: 0; flex: 1 1 auto; }
+.sl-profile-kicker { color: var(--sl-color-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+.sl-profile-name { margin: 2px 0 3px; color: var(--sl-color-text-heading); font: bold 24px/1.1 "Magistral", Arial, sans-serif; }
+.sl-profile-rank { color: var(--sl-profile-color); font-size: 13px; font-weight: bold; }
+.sl-profile-bio { max-width: 560px; margin: 9px 0 0; color: var(--sl-color-text-muted); }
+.sl-profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sl-space-md); }
+.sl-profile-actions .sl-but { margin: 0; }
+.sl-profile-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: 12px; }
+.sl-profile-chips .sl-chip { margin: 0; }
+
+.sl-profile-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.sl-profile-panel { min-width: 0; padding: 14px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-surface); }
+.sl-profile-panel h3 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: 13px; }
+.sl-profile-panel h3 i { margin-right: 5px; color: var(--sl-profile-color); }
+.sl-profile-panel-3 { grid-column: span 3; }
+.sl-profile-panel-4 { grid-column: span 4; }
+.sl-profile-panel-5 { grid-column: span 5; }
+.sl-profile-panel-6 { grid-column: span 6; }
+.sl-profile-panel-7 { grid-column: span 7; }
+.sl-profile-panel-8 { grid-column: span 8; }
+.sl-profile-panel-9 { grid-column: span 9; }
+.sl-profile-panel-12 { grid-column: 1 / -1; }
+
+.sl-profile-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sl-space-md); }
+.sl-profile-stat { min-width: 0; padding: 11px 8px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); text-align: center; }
+.sl-profile-stat i { color: var(--sl-profile-color); font-size: 16px; }
+.sl-profile-stat b { display: block; margin-top: 3px; color: var(--sl-color-text-heading); font-size: 19px; line-height: 1.05; }
+.sl-profile-stat small { color: var(--sl-color-text-muted); font-size: 10px; }
+
+.sl-profile-info { display: grid; gap: 0; }
+.sl-profile-info-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px; min-height: 34px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-info-row:last-child { border-bottom: 0; }
+.sl-profile-info-row i { color: var(--sl-profile-color); text-align: center; }
+.sl-profile-info-row span { color: var(--sl-color-text-muted); }
+.sl-profile-info-row b { color: var(--sl-color-text-heading); font-size: 12px; text-align: right; }
+
+.sl-profile-tabs { display: flex; gap: var(--sl-space-xs); margin-top: 18px; padding: 5px; overflow-x: auto; border-radius: 999px; background: var(--sl-color-surface-alt); }
+.sl-profile-tabs a { flex: 1 0 auto; min-width: 90px; padding: 6px 10px; border-radius: 999px; color: var(--sl-color-text-muted); text-align: center; transition: color 0.2s ease, background 0.2s ease; }
+.sl-profile-tabs a:hover,
+.sl-profile-tabs a.sl-is-active { background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); color: var(--sl-profile-color); }
+
+.sl-profile-feed { display: grid; gap: 0; }
+.sl-profile-feed-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 44px; border-bottom: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text-muted); }
+.sl-profile-feed-row:last-child { border-bottom: 0; }
+.sl-profile-feed-row > i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--sl-color-bg); color: var(--sl-profile-color); }
+.sl-profile-feed-row b { display: block; overflow: hidden; color: var(--sl-color-text-heading); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-profile-feed-row small { display: block; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.sl-profile-feed-row time { color: var(--sl-color-text-subtle); font-size: 10px; white-space: nowrap; }
+
+.sl-profile-meter { margin-top: 10px; }
+.sl-profile-meter-head { display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-profile-meter-head b { color: var(--sl-profile-color); }
+.sl-profile-meter-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--sl-color-surface-soft); }
+.sl-profile-meter-track span { display: block; width: 82%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sl-color-brand), var(--sl-profile-color)); }
+
+.sl-profile-rating { display: flex; align-items: center; gap: 12px; }
+.sl-profile-rating-ring { display: grid; place-items: center; flex: 0 0 72px; width: 72px; height: 72px; border-radius: 50%; background: conic-gradient(var(--sl-color-success) 0 81%, var(--sl-color-surface-soft) 81%); }
+.sl-profile-rating-ring span { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--sl-color-bg); color: var(--sl-color-text-heading); font-size: 18px; font-weight: bold; }
+.sl-profile-rating-copy b { display: block; color: var(--sl-color-text-heading); }
+.sl-profile-rating-copy small { color: var(--sl-color-text-muted); }
+
+.sl-profile-badges { display: flex; flex-wrap: wrap; gap: var(--sl-space-md); }
+.sl-profile-badge { display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid var(--sl-color-border); border-radius: 50%; background: var(--sl-color-bg); color: var(--sl-profile-color); font-size: 21px; box-shadow: var(--sl-shadow-soft); }
+.sl-profile-badge:nth-child(2) { color: var(--sl-color-success); }
+.sl-profile-badge:nth-child(3) { color: var(--sl-color-warning); }
+.sl-profile-badge:nth-child(4) { color: var(--sl-color-accent); }
+.sl-profile-badge:nth-child(5) { color: var(--sl-color-danger); }
+
+.sl-profile-bars { display: flex; align-items: end; gap: 5px; height: 76px; padding-top: 10px; }
+.sl-profile-bars span { flex: 1 1 0; min-width: 7px; height: var(--sl-profile-bar); border-radius: 3px 3px 1px 1px; background: color-mix(in srgb, var(--sl-profile-color) 70%, var(--sl-color-brand)); transition: height 0.25s ease; }
+.sl-profile-bars span:hover { height: calc(var(--sl-profile-bar) + 8px); background: var(--sl-profile-color); }
+.sl-profile-bars-labels { display: flex; justify-content: space-between; margin-top: 4px; color: var(--sl-color-text-subtle); font-size: 9px; }
+
+.sl-profile-tags { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); }
+.sl-profile-tag { padding: 5px 9px; border-radius: 999px; background: var(--sl-color-bg); color: var(--sl-color-text-muted); }
+.sl-profile-tag i { margin-right: 4px; color: var(--sl-profile-color); }
+
+.sl-profile-split { display: grid; grid-template-columns: 238px minmax(0, 1fr); min-height: 440px; }
+.sl-profile-split-rail { padding: 24px 20px; border-right: 1px solid var(--sl-color-border-subtle); background: linear-gradient(180deg, var(--sl-color-surface), var(--sl-color-bg)); text-align: center; }
+.sl-profile-split-rail .sl-profile-avatar { margin: 0 auto; }
+.sl-profile-split-rail .sl-profile-name { margin-top: 14px; font-size: 21px; }
+.sl-profile-split-rail .sl-profile-actions { justify-content: center; margin-top: 14px; }
+.sl-profile-split-main { padding: 22px; }
+
+.sl-profile-split-score { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-user-rating { display: grid; justify-items: center; gap: var(--sl-space-md); }
+.sl-profile-user-rating > b { color: var(--sl-color-text-heading); font-size: 12px; }
+.sl-profile-user-rating .sl-rate-like { justify-content: center; }
+.sl-profile-user-rating .sl-but-mini { border: 0; color: var(--sl-color-text-muted); }
+.sl-profile-user-rating .sl-rate-minus.sl-is-voted { background: var(--sl-color-danger); color: var(--sl-color-on-dark); }
+.sl-profile-user-rating .sl-rate-plus.sl-is-voted { background: var(--sl-color-success); color: var(--sl-color-on-dark); }
+.sl-profile-vote-note { min-height: 15px; color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-profile-vote-note.sl-is-visible { color: var(--sl-color-success); }
+
+.sl-profile-trust-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sl-space-md); margin-top: 16px; }
+.sl-profile-trust-proof { min-width: 0; padding: 11px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-surface); }
+.sl-profile-trust-proof i { color: var(--sl-profile-color); font-size: 16px; }
+.sl-profile-trust-proof:nth-child(2) i { color: var(--sl-color-success); }
+.sl-profile-trust-proof:nth-child(3) i { color: var(--sl-color-accent); }
+.sl-profile-trust-proof b { display: block; margin-top: 7px; color: var(--sl-color-text-heading); font-size: 12px; }
+.sl-profile-trust-proof small { display: block; margin-top: 2px; color: var(--sl-color-text-muted); font-size: 10px; }
+
+.sl-profile-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.sl-profile-facts .sl-profile-panel { padding: 12px; }
+.sl-profile-facts .sl-profile-info-row { min-height: 31px; }
+.sl-profile-facts .sl-profile-info-row b { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-profile-wide-info { margin-top: 12px; }
+.sl-profile-wide-info .sl-profile-tags { margin-top: 10px; }
+
+.sl-profile-module-hub { grid-column: 1 / -1; min-width: 0; padding: 20px 22px 22px; border-top: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg); }
+.sl-profile-module-head { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+.sl-profile-module-head h3 { margin: 0 0 3px; color: var(--sl-color-text-heading); font: bold 18px/1.2 "Magistral", Arial, sans-serif; }
+.sl-profile-module-head p { margin: 0; color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-profile-module-total { display: flex; gap: var(--sl-space-sm); }
+.sl-profile-module-tabs { display: flex; gap: var(--sl-space-xs); margin-top: 14px; padding: 4px; border-radius: 999px; background: var(--sl-color-surface-alt); }
+.sl-profile-module-tabs a { display: flex; align-items: center; justify-content: center; flex: 1 1 0; gap: 6px; min-height: 32px; border-radius: 999px; color: var(--sl-color-text-muted); }
+.sl-profile-module-tabs a.sl-is-active { background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); color: var(--sl-profile-color); }
+.sl-profile-module-table { min-width: 0; margin-top: 12px; overflow: hidden; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); }
+.sl-profile-module-row { display: grid; grid-template-columns: 34px minmax(0, 1.4fr) minmax(90px, 0.55fr) minmax(110px, 0.7fr) minmax(90px, 0.55fr); align-items: center; gap: 10px; min-height: 46px; padding: 0 12px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-module-row:last-child { border-bottom: 0; }
+.sl-profile-module-row:not(.sl-profile-module-row-head):hover { background: var(--sl-color-surface); }
+.sl-profile-module-row > i { color: var(--sl-profile-color); font-size: 16px; text-align: center; }
+.sl-profile-module-row b { color: var(--sl-color-text-heading); }
+.sl-profile-module-row span { color: var(--sl-color-text-muted); font-size: 11px; }
+.sl-profile-module-row span i { margin-right: 4px; color: var(--sl-profile-color); }
+.sl-profile-module-row-head { min-height: 34px; background: var(--sl-color-surface); color: var(--sl-color-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+.sl-profile-module-row-head span:first-of-type { grid-column: 2; }
+
+.sl-profile-module-latest { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 42px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-module-latest:last-child { border-bottom: 0; }
+.sl-profile-module-latest time { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-profile-module-latest a { overflow: hidden; color: var(--sl-color-text-heading); text-overflow: ellipsis; white-space: nowrap; }
+.sl-profile-module-latest a:hover { color: var(--sl-profile-color); }
+
+.sl-profile-content-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.sl-profile-content-head h3 { margin: 0; color: var(--sl-color-text-heading); font-size: 13px; }
+.sl-profile-content-head small { color: var(--sl-color-text-muted); }
+.sl-profile-content-tabs { display: flex; gap: var(--sl-space-xs); margin-top: 10px; overflow-x: auto; padding-bottom: 3px; }
+.sl-profile-content-tabs button { flex: 0 0 auto; border: 0; font: inherit; }
+.sl-profile-content-tabs button.sl-is-active { background: var(--sl-color-brand-link); color: var(--sl-color-on-dark); }
+.sl-profile-content-panel { display: none; margin-top: 8px; }
+.sl-profile-content-panel.sl-is-active { display: block; }
+.sl-profile-scroll-view { --sl-profile-scroll-distance: 0px; --sl-profile-scroll-duration: 18s; position: relative; height: 190px; overflow: hidden; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-surface); }
+.sl-profile-scroll-view::before,
+.sl-profile-scroll-view::after { content: ""; position: absolute; right: 0; left: 0; z-index: 2; height: 18px; pointer-events: none; }
+.sl-profile-scroll-view::before { top: 0; background: linear-gradient(180deg, var(--sl-color-surface), transparent); }
+.sl-profile-scroll-view::after { bottom: 0; background: linear-gradient(0deg, var(--sl-color-surface), transparent); }
+.sl-profile-scroll-feed { padding: 8px 12px; }
+.sl-profile-scroll-view.sl-is-scrolling .sl-profile-scroll-feed { animation: sl-profile-auto-scroll var(--sl-profile-scroll-duration) linear infinite; }
+.sl-profile-scroll-view:hover .sl-profile-scroll-feed { animation-play-state: paused; }
+.sl-profile-module-entry { display: grid; grid-template-columns: 92px 30px minmax(0, 1fr) auto auto; align-items: center; gap: 9px; min-height: 42px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-module-entry time { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-profile-module-entry > i { color: var(--sl-profile-color); text-align: center; }
+.sl-profile-module-entry a { overflow: hidden; color: var(--sl-color-text-heading); text-overflow: ellipsis; white-space: nowrap; }
+.sl-profile-module-entry a:hover { color: var(--sl-profile-color); }
+.sl-profile-module-entry .sl-chip { height: 22px; padding: 0 7px; font-size: 10px; }
+
+@keyframes sl-profile-auto-scroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(calc(-1 * var(--sl-profile-scroll-distance))); }
+}
+
+.sl-profile-bento { display: grid; grid-template-columns: 1.2fr 0.8fr 0.8fr; grid-template-rows: auto auto; gap: 12px; padding: 20px; }
+.sl-profile-bento .sl-profile-panel:first-child { grid-row: span 2; }
+.sl-profile-bento .sl-profile-head { align-items: flex-start; flex-direction: column; }
+
+.sl-profile-orbit { display: grid; grid-template-columns: 330px minmax(0, 1fr); min-height: 430px; }
+.sl-profile-orbit-visual { position: relative; display: grid; place-items: center; overflow: hidden; background: var(--sl-color-surface); }
+.sl-profile-orbit-visual::before,
+.sl-profile-orbit-visual::after { content: ""; position: absolute; border: 1px dashed var(--sl-color-border-strong); border-radius: 50%; }
+.sl-profile-orbit-visual::before { width: 260px; height: 260px; }
+.sl-profile-orbit-visual::after { width: 190px; height: 190px; }
+.sl-profile-orbit-core { position: relative; z-index: 2; text-align: center; }
+.sl-profile-orbit-core .sl-profile-avatar { margin: 0 auto; }
+.sl-profile-orbit-node { position: absolute; z-index: 3; display: grid; place-items: center; width: 62px; height: 62px; border: 1px solid var(--sl-color-border); border-radius: 50%; background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); color: var(--sl-color-text-muted); font-size: 9px; text-align: center; }
+.sl-profile-orbit-node b { display: block; color: var(--sl-color-text-heading); font-size: 15px; }
+.sl-profile-orbit-node-a { top: 48px; left: 30px; }
+.sl-profile-orbit-node-b { top: 48px; right: 30px; }
+.sl-profile-orbit-node-c { bottom: 38px; left: 48px; }
+.sl-profile-orbit-node-d { right: 48px; bottom: 38px; }
+.sl-profile-orbit-main { padding: 22px; }
+
+.sl-profile-activity { display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+.sl-profile-activity-identity { padding: 22px; border-right: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-activity-stream { padding: 22px; background: var(--sl-color-surface); }
+.sl-profile-activity-stream h3 { margin: 0 0 7px; color: var(--sl-color-text-heading); }
+
+.sl-profile-ledger { padding: 20px; background: linear-gradient(90deg, var(--sl-color-bg) 0 65%, var(--sl-color-surface) 65%); }
+.sl-profile-ledger-head { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 20px; align-items: center; }
+.sl-profile-ledger-lines { margin-top: 18px; border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-ledger-line { display: grid; grid-template-columns: 40px minmax(0, 1fr) 140px 80px; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-ledger-line > i { color: var(--sl-profile-color); font-size: 17px; text-align: center; }
+.sl-profile-ledger-line b { color: var(--sl-color-text-heading); }
+.sl-profile-ledger-line span,
+.sl-profile-ledger-line time { color: var(--sl-color-text-muted); font-size: 11px; }
+
+.sl-profile-id { display: grid; grid-template-columns: 310px minmax(0, 1fr); min-height: 420px; }
+.sl-profile-id-card { position: relative; padding: 26px; overflow: hidden; background: var(--sl-color-surface-dark); color: var(--sl-color-on-dark); }
+.sl-profile-id-card::after { content: "SLAED"; position: absolute; right: -20px; bottom: 5px; color: var(--sl-color-on-dark); font: bold 54px/1 "Magistral", Arial, sans-serif; opacity: 0.05; }
+.sl-profile-id-card .sl-profile-avatar { box-shadow: 0 0 0 4px var(--sl-color-surface-dark), var(--sl-shadow-medium); }
+.sl-profile-id-card .sl-profile-name { color: var(--sl-color-on-dark); }
+.sl-profile-id-card .sl-profile-kicker,
+.sl-profile-id-card .sl-profile-bio { color: var(--sl-color-text-subtle); }
+.sl-profile-id-code { margin-top: 30px; color: var(--sl-color-text-subtle); font: 11px/1.5 Consolas, monospace; letter-spacing: 0.12em; }
+.sl-profile-id-main { padding: 22px; }
+
+.sl-profile-timeline { padding: 22px; }
+.sl-profile-timeline-head { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 20px; align-items: center; }
+.sl-profile-timeline-list { position: relative; display: grid; gap: 0; margin-top: 18px; padding-left: 18px; }
+.sl-profile-timeline-list::before { content: ""; position: absolute; top: 8px; bottom: 8px; left: 5px; width: 2px; background: var(--sl-color-border-strong); }
+.sl-profile-timeline-row { position: relative; display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 10px; min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-timeline-row::before { content: ""; position: absolute; top: 18px; left: -17px; width: 10px; height: 10px; border: 2px solid var(--sl-color-bg); border-radius: 50%; background: var(--sl-profile-color); box-shadow: 0 0 0 1px var(--sl-profile-color); }
+.sl-profile-timeline-row time { color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-profile-timeline-row b { color: var(--sl-color-text-heading); }
+
+.sl-profile-console { display: grid; grid-template-columns: minmax(0, 1fr) 240px; min-height: 420px; background: var(--sl-color-surface-dark); color: var(--sl-color-on-dark); }
+.sl-profile-console-main { padding: 24px; }
+.sl-profile-console .sl-profile-name { color: var(--sl-color-on-dark); }
+.sl-profile-console .sl-profile-kicker,
+.sl-profile-console .sl-profile-bio { color: var(--sl-color-text-subtle); }
+.sl-profile-console-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 20px; }
+.sl-profile-console-cell { padding: 12px; border: 1px solid var(--sl-color-surface-divider); border-radius: var(--sl-radius-card); background: var(--sl-color-surface-darker); }
+.sl-profile-console-cell i { color: var(--sl-color-brand); }
+.sl-profile-console-cell b { display: block; margin-top: 10px; color: var(--sl-color-on-dark); font-size: 20px; }
+.sl-profile-console-cell small { color: var(--sl-color-text-subtle); }
+.sl-profile-console-side { padding: 24px 18px; border-left: 1px solid var(--sl-color-surface-divider); background: var(--sl-color-surface-darker); }
+.sl-profile-console-side h3 { margin: 0 0 12px; color: var(--sl-color-on-dark); font-size: 13px; }
+.sl-profile-console-side .sl-profile-info-row { border-color: var(--sl-color-surface-divider); }
+.sl-profile-console-side .sl-profile-info-row b { color: var(--sl-color-on-dark); }
+
+.sl-profile-minimal { padding: 28px; }
+.sl-profile-minimal::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 5px; background: var(--sl-profile-color); }
+.sl-profile-minimal-layout { display: grid; grid-template-columns: 112px minmax(0, 1fr) 220px; gap: 22px; align-items: center; }
+.sl-profile-minimal .sl-profile-chips { margin-top: 14px; }
+
+.sl-profile-editorial { padding: 0 28px 24px; }
+.sl-profile-editorial-mark { color: var(--sl-profile-color); font: bold 72px/0.8 Georgia, serif; opacity: 0.18; }
+.sl-profile-editorial-copy { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr); gap: 24px; margin-top: 20px; }
+.sl-profile-editorial-quote { margin: 0; color: var(--sl-color-text-heading); font: italic 19px/1.5 Georgia, serif; }
+.sl-profile-editorial-meta { display: grid; gap: 7px; align-content: start; }
+.sl-profile-editorial-meta span { padding-bottom: 7px; border-bottom: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text-muted); }
+.sl-profile-editorial-meta b { float: right; color: var(--sl-color-text-heading); }
+
+.sl-profile-compass { padding: 22px; }
+.sl-profile-compass-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 22px; margin-top: 18px; }
+.sl-profile-compass-wheel { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--sl-space-md); }
+.sl-profile-compass-link { display: flex; flex-direction: column; justify-content: space-between; min-height: 90px; padding: 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-surface); color: var(--sl-color-text-muted); transition: border-color 0.2s ease, transform 0.2s ease; }
+.sl-profile-compass-link:hover { border-color: var(--sl-profile-color); transform: translateY(-2px); }
+.sl-profile-compass-link i { color: var(--sl-profile-color); font-size: 20px; }
+.sl-profile-compass-link b { color: var(--sl-color-text-heading); font-size: 16px; }
+
+.sl-profile-trust { padding: 22px; }
+.sl-profile-trust-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; margin-top: 18px; }
+.sl-profile-trust-matrix { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sl-space-md); }
+.sl-profile-trust-cell { min-height: 94px; padding: 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-surface); }
+.sl-profile-trust-cell i { color: var(--sl-profile-color); font-size: 18px; }
+.sl-profile-trust-cell b { display: block; margin-top: 9px; color: var(--sl-color-text-heading); }
+.sl-profile-trust-cell small { color: var(--sl-color-text-muted); }
+
+.sl-profile-signature { padding: 22px; background: linear-gradient(135deg, var(--sl-color-bg) 0 72%, var(--sl-color-surface) 72%); }
+.sl-profile-signature-layout { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: start; }
+.sl-profile-signature-main { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 18px; align-items: center; }
+.sl-profile-signature-seal { display: grid; place-items: center; width: 126px; height: 126px; border: 1px dashed var(--sl-profile-color); border-radius: 50%; color: var(--sl-profile-color); text-align: center; transform: rotate(-6deg); }
+.sl-profile-signature-seal i { display: block; font-size: 26px; }
+.sl-profile-signature-seal b { font: bold 13px/1.2 "Magistral", Arial, sans-serif; }
+.sl-profile-signature-note { margin: 20px 0 0 130px; padding: 12px 14px; border-left: 3px solid var(--sl-profile-color); background: var(--sl-color-surface); color: var(--sl-color-text-muted); font-style: italic; }
+
+.sl-profile-details { border-top: 1px solid var(--sl-color-border-subtle); }
+.sl-profile-details summary { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 12px; color: var(--sl-profile-color); cursor: pointer; list-style: none; }
+.sl-profile-details summary::-webkit-details-marker { display: none; }
+.sl-profile-details summary i { transition: transform 0.25s ease; }
+.sl-profile-details[open] summary i { transform: rotate(180deg); }
+.sl-profile-details-content { padding: 0 22px 20px; }
+
+@media (max-width: 760px) {
+  .sl-profile-demo-main { max-width: calc(100% - 20px); }
+  .sl-profile-demo-label { grid-template-columns: 34px minmax(0, 1fr); }
+  .sl-profile-demo-label > .sl-chip { display: none; }
+  .sl-profile-body { padding: 16px; }
+  .sl-profile-head,
+  .sl-profile-head-overlap { align-items: center; flex-direction: column; margin-top: 0; text-align: center; }
+  .sl-profile-actions { justify-content: center; }
+  .sl-profile-panel-3,
+  .sl-profile-panel-4,
+  .sl-profile-panel-5,
+  .sl-profile-panel-6,
+  .sl-profile-panel-7,
+  .sl-profile-panel-8,
+  .sl-profile-panel-9 { grid-column: 1 / -1; }
+  .sl-profile-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sl-profile-split,
+  .sl-profile-orbit,
+  .sl-profile-activity,
+  .sl-profile-id,
+  .sl-profile-console { grid-template-columns: 1fr; }
+  .sl-profile-split-rail,
+  .sl-profile-activity-identity { border-right: 0; border-bottom: 1px solid var(--sl-color-border-subtle); }
+  .sl-profile-trust-strip,
+  .sl-profile-facts { grid-template-columns: 1fr; }
+  .sl-profile-module-head { align-items: flex-start; flex-direction: column; }
+  .sl-profile-module-tabs { overflow-x: auto; }
+  .sl-profile-module-tabs a { flex: 1 0 96px; }
+  .sl-profile-module-row { grid-template-columns: 30px minmax(0, 1fr) auto; min-height: 56px; padding: 7px 10px; row-gap: 2px; }
+  .sl-profile-module-row > span:nth-of-type(1),
+  .sl-profile-module-row-head { display: none; }
+  .sl-profile-module-row > i { grid-row: 1 / span 2; }
+  .sl-profile-module-row > b { grid-column: 2 / 4; }
+  .sl-profile-module-row > span:nth-of-type(2) { grid-column: 2; }
+  .sl-profile-module-row > span:nth-of-type(3) { grid-column: 3; }
+  .sl-profile-module-latest { grid-template-columns: 82px minmax(0, 1fr); }
+  .sl-profile-module-latest > .sl-chip { display: none; }
+  .sl-profile-facts .sl-profile-info-row { grid-template-columns: 22px minmax(0, 1fr); padding: 5px 0; }
+  .sl-profile-facts .sl-profile-info-row b { grid-column: 2; max-width: none; text-align: left; white-space: normal; }
+  .sl-profile-content-head { align-items: flex-start; flex-direction: column; }
+  .sl-profile-module-entry { grid-template-columns: 68px 22px minmax(0, 1fr) auto; gap: var(--sl-space-sm); }
+  .sl-profile-module-entry > .sl-chip:last-child { display: none; }
+  .sl-profile-module-entry time { font-size: 9px; }
+  .sl-profile-bento { grid-template-columns: 1fr; }
+  .sl-profile-bento .sl-profile-panel:first-child { grid-row: auto; }
+  .sl-profile-ledger-head,
+  .sl-profile-timeline-head,
+  .sl-profile-minimal-layout,
+  .sl-profile-editorial-copy,
+  .sl-profile-compass-layout,
+  .sl-profile-trust-layout,
+  .sl-profile-signature-layout,
+  .sl-profile-signature-main { grid-template-columns: 1fr; }
+  .sl-profile-ledger { background: var(--sl-color-bg); }
+  .sl-profile-ledger-line { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  .sl-profile-ledger-line time { display: none; }
+  .sl-profile-timeline-row { grid-template-columns: 80px minmax(0, 1fr); }
+  .sl-profile-timeline-row > .sl-chip { display: none; }
+  .sl-profile-console-side { border-top: 1px solid var(--sl-color-surface-divider); border-left: 0; }
+  .sl-profile-signature-seal { margin: 0 auto; }
+  .sl-profile-signature-note { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+  .sl-profile-scroll-view.sl-is-scrolling .sl-profile-scroll-feed { animation: none; }
+}
+</style>
+</head>
+<body>
+<header class="sl-profile-demo-head">
+  <h1>Профиль пользователя · 2026+</h1>
+  <p>16 направлений для публичного профиля SLAED CMS. Одна ширина — 896 px, реальные данные системы, системная палитра, кнопки, чипсы, прогресс и Bootstrap Icons.</p>
+  <div class="sl-profile-demo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-layout-text-window-reverse"></i> 16 композиций</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-arrows"></i> 896 px</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-palette"></i> Lite tokens</span>
+    <span class="sl-chip sl-chip-accent"><i class="bi bi-code-slash"></i> системные механики</span>
+  </div>
+</header>
+
+<main class="sl-profile-demo-main">
+  <section class="sl-profile-demo-section">
+    <h2>Identity first</h2>
+    <p>Сильная личность, ранг и статус группы видны раньше служебных полей.</p>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">01</span><span><b>Signal Hero</b><small>публичная идентичность + вклад + быстрые действия</small></span><span class="sl-chip sl-chip-success">универсальный</span></div>
+      <div class="sl-block sl-profile-card">
+        <div class="sl-profile-cover"></div>
+        <div class="sl-profile-body">
+          <div class="sl-profile-head sl-profile-head-overlap">
+            <div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status" title="Сейчас на сайте"></span></div>
+            <div class="sl-profile-identity"><span class="sl-profile-kicker">Автор проекта · на сайте с 2005</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div><p class="sl-profile-bio">Создаю SLAED CMS и инструменты, которые превращают управление сайтом в понятный рабочий процесс.</p></div>
+            <div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a><a class="sl-but" href="#" title="Назад"><i class="bi bi-arrow-left"></i></a></div>
+          </div>
+          <div class="sl-profile-chips"><span class="sl-chip sl-chip-accent"><i class="bi bi-people-fill"></i> Клиент</span><span class="sl-chip sl-chip-info"><i class="bi bi-geo-alt"></i> Germany</span><span class="sl-chip sl-chip-success"><i class="bi bi-patch-check-fill"></i> Проверенный профиль</span></div>
+          <div class="sl-profile-grid">
+            <div class="sl-profile-panel sl-profile-panel-8"><div class="sl-profile-stats"><div class="sl-profile-stat"><i class="bi bi-stars"></i><b>50 231</b><small>пунктов</small></div><div class="sl-profile-stat"><i class="bi bi-chat-text"></i><b>128</b><small>комментариев</small></div><div class="sl-profile-stat"><i class="bi bi-newspaper"></i><b>47</b><small>публикаций</small></div><div class="sl-profile-stat"><i class="bi bi-hand-thumbs-up"></i><b>3.25</b><small>рейтинг</small></div></div></div>
+            <div class="sl-profile-panel sl-profile-panel-4"><h3><i class="bi bi-graph-up-arrow"></i> Уровень</h3><div class="sl-profile-meter"><div class="sl-profile-meter-head"><span>Опытный</span><b>82%</b></div><div class="sl-profile-meter-track"><span></span></div></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-neutral">до следующей группы 769</span></div></div>
+          </div>
+          <nav class="sl-profile-tabs" aria-label="Разделы профиля"><a class="sl-is-active" href="#">Активность</a><a href="#">Комментарии</a><a href="#">Файлы</a><a href="#">Форум</a><a href="#">Новости</a></nav>
+        </div>
+      </div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">02</span><span><b>Dense Split</b><small>максимум данных без перегруза</small></span><span class="sl-chip sl-chip-accent">плотный</span></div>
+      <div class="sl-block sl-profile-card sl-profile-split">
+        <aside class="sl-profile-split-rail">
+          <div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div>
+          <h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div>
+          <div class="sl-profile-chips" style="justify-content:center"><span class="sl-chip sl-chip-accent"><i class="bi bi-people-fill"></i> Клиент</span><span class="sl-chip sl-chip-success"><i class="bi bi-circle-fill"></i> Online</span></div>
+          <div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Сообщение</a></div>
+          <div class="sl-profile-split-score">
+            <div class="sl-profile-user-rating" data-sl-profile-rating>
+              <b>Оценка пользователя</b>
+              <div class="sl-rate-like">
+                <button type="button" title="Понизить рейтинг" class="sl-but-mini sl-rate-minus sl-out" data-sl-profile-vote="-1"><i class="bi bi-hand-thumbs-down" aria-hidden="true"></i></button>
+                <span title="Рейтинг: 3.24" class="sl-rate-num sl-rate-is" data-sl-profile-score>3.24</span>
+                <button type="button" title="Повысить рейтинг" class="sl-but-mini sl-rate-plus sl-out" data-sl-profile-vote="1"><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i></button>
+              </div>
+              <span class="sl-profile-vote-note" data-sl-profile-vote-note>Выберите оценку</span>
+            </div>
+          </div>
+          <div class="sl-profile-meter"><div class="sl-profile-meter-head"><span>Уровень «Опытный»</span><b>79%</b></div><div class="sl-profile-meter-track"><span style="width:79%"></span></div></div>
+          <div class="sl-profile-chips" style="justify-content:center"><span class="sl-chip sl-chip-info"><i class="bi bi-stars"></i> 39 449 пунктов</span></div>
+        </aside>
+        <div class="sl-profile-split-main">
+          <div class="sl-profile-head">
+            <div class="sl-profile-identity"><span class="sl-profile-kicker">Публичный профиль · ID 7885</span><p class="sl-profile-bio">Автор проекта · Webdesign, PHP, MySQL</p></div>
+            <div class="sl-meta-actions" aria-label="Действия профиля">
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Пользователь"><i class="bi bi-three-dots"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Отправить сообщение"><i class="bi bi-envelope"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Перейти в аккаунт"><i class="bi bi-person"></i></a>
+              </span>
+              <span class="sl-dial">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Редактор"><i class="bi bi-gear-fill"></i></button>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Полное редактирование"><i class="bi bi-pencil"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Блокировать пользователя"><i class="bi bi-shield-x"></i></a>
+                <a class="sl-dial-item sl-but-mini" href="#" title="Удалить пользователя"><i class="bi bi-trash"></i></a>
+              </span>
+              <span class="sl-dial" data-sl-share-url="https://slaed.loc/index.php?name=account&amp;op=view&amp;id=7885" data-sl-share-title="SLAED CMS">
+                <button class="sl-dial-toggle sl-but-mini" type="button" title="Поделиться"><i class="bi bi-share-fill"></i></button>
+                <button class="sl-dial-item sl-but-mini sl-net-brand" type="button" title="Telegram"><i class="bi bi-telegram"></i></button>
+                <button class="sl-dial-item sl-but-mini sl-net-brand" type="button" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>
+                <button class="sl-dial-item sl-but-mini sl-net-brand" type="button" title="VK"><svg class="sl-svg-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.785 16.241s.288-.032.436-.194c.136-.148.132-.427.132-.427s-.02-1.304.576-1.496c.588-.19 1.341 1.26 2.14 1.818.605.422 1.064.33 1.064.33l2.137-.03s1.117-.071.587-.964c-.043-.073-.308-.661-1.588-1.87-1.34-1.264-1.16-1.059.454-3.246.983-1.332 1.376-2.145 1.253-2.493-.117-.332-.84-.244-.84-.244l-2.406.015s-.178-.025-.31.056c-.13.079-.212.262-.212.262s-.382 1.03-.89 1.907c-1.07 1.85-1.499 1.948-1.674 1.832-.407-.267-.305-1.075-.305-1.648 0-1.793.267-2.54-.521-2.733-.262-.065-.454-.107-1.123-.114-.858-.009-1.585.003-1.996.208-.274.136-.485.44-.356.457.159.022.519.099.71.363.246.341.237 1.107.237 1.107s.142 2.11-.33 2.371c-.325.18-.77-.187-1.725-1.865-.489-.859-.859-1.81-.859-1.81s-.07-.176-.198-.272c-.154-.115-.37-.151-.37-.151l-2.286.015s-.343.01-.469.161c-.112.135-.009.414-.009.414s1.79 4.258 3.817 6.403c1.858 1.967 3.968 1.838 3.968 1.838z"/></svg></button>
+              </span>
+            </div>
+          </div>
+          <div class="sl-profile-trust-strip">
+            <div class="sl-profile-trust-proof"><i class="bi bi-hourglass-split"></i><b>21 год с проектом</b><small>регистрация в 2005 году</small></div>
+            <div class="sl-profile-trust-proof"><i class="bi bi-shield-check"></i><b>Без предупреждений</b><small>чистая история аккаунта</small></div>
+            <div class="sl-profile-trust-proof"><i class="bi bi-patch-check"></i><b>Профиль подтверждён</b><small>спец. группа «Клиент»</small></div>
+          </div>
+          <div class="sl-profile-facts">
+            <div class="sl-profile-panel"><h3><i class="bi bi-person-vcard"></i> Аккаунт</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-calendar3"></i><span>Регистрация</span><b>30.04.2005</b></div><div class="sl-profile-info-row"><i class="bi bi-clock-history"></i><span>Последний визит</span><b>15.07.2026</b></div><div class="sl-profile-info-row"><i class="bi bi-stars"></i><span>Пункты</span><b>39 449</b></div><div class="sl-profile-info-row"><i class="bi bi-people"></i><span>Спец. группа</span><b>Клиент</b></div></div></div>
+            <div class="sl-profile-panel"><h3><i class="bi bi-person-badge"></i> Личное</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-cake2"></i><span>Дата рождения</span><b>01.01.1976</b></div><div class="sl-profile-info-row"><i class="bi bi-geo-alt"></i><span>Место жительства</span><b>Germany</b></div><div class="sl-profile-info-row"><i class="bi bi-gender-male"></i><span>Пол</span><b>Мужчина</b></div><div class="sl-profile-info-row"><i class="bi bi-translate"></i><span>Язык</span><b>Русский</b></div></div></div>
+            <div class="sl-profile-panel"><h3><i class="bi bi-briefcase"></i> Профессия</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-person-workspace"></i><span>Род занятий</span><b>Автор проекта</b></div><div class="sl-profile-info-row"><i class="bi bi-envelope-lock"></i><span>E-Mail</span><b>Скрытый текст</b></div><div class="sl-profile-info-row"><i class="bi bi-globe"></i><span>Адрес сайта</span><b>Скрытый текст</b></div><div class="sl-profile-info-row"><i class="bi bi-browser-chrome"></i><span>Браузер</span><b>Скрытый текст</b></div></div></div>
+            <div class="sl-profile-panel"><h3><i class="bi bi-pc-display"></i> Система</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-box-seam"></i><span>Версия системы</span><b>SLAED CMS 5.* Pro</b></div><div class="sl-profile-info-row"><i class="bi bi-hand-thumbs-up"></i><span>Рейтинг</span><b data-sl-profile-rating-value>3.24</b></div><div class="sl-profile-info-row"><i class="bi bi-exclamation-triangle"></i><span>Предупреждения</span><b>Нет</b></div><div class="sl-profile-info-row"><i class="bi bi-circle-fill" style="color:var(--sl-color-success)"></i><span>Статус</span><b>Online</b></div></div></div>
+          </div>
+          <div class="sl-profile-panel sl-profile-wide-info"><h3><i class="bi bi-tags"></i> Интересы и группы</h3><div class="sl-profile-tags"><span class="sl-profile-tag"><i class="bi bi-code-slash"></i>Webdesign</span><span class="sl-profile-tag"><i class="bi bi-filetype-php"></i>PHP</span><span class="sl-profile-tag"><i class="bi bi-database"></i>MySQL</span></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-neutral">Новички</span><span class="sl-chip sl-chip-neutral">Посетители</span><span class="sl-chip sl-chip-info">Пользователи</span><span class="sl-chip sl-chip-info">Местные</span><span class="sl-chip sl-chip-success">Активисты</span><span class="sl-chip sl-chip-accent">Опытные</span></div></div>
+        </div>
+        <section class="sl-profile-module-hub">
+          <div class="sl-profile-module-head"><div><h3>Вклад по модулям</h3><p>Материалы, полученные оценки и сохранения пользователя в одном месте</p></div><div class="sl-profile-module-total"><span class="sl-chip sl-chip-info"><i class="bi bi-grid"></i> 151 материал</span><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.82</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 243</span></div></div>
+          <nav class="sl-profile-module-tabs" aria-label="Показатели вклада"><a class="sl-is-active" href="#"><i class="bi bi-collection"></i> Материалы</a><a href="#"><i class="bi bi-star"></i> Рейтинги</a><a href="#"><i class="bi bi-bookmark"></i> Закладки</a></nav>
+          <div class="sl-profile-module-table">
+            <div class="sl-profile-module-row sl-profile-module-row-head"><span>Модуль</span><span>Материалы</span><span>Рейтинг</span><span>Закладки</span></div>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-chat-text"></i><b>Комментарии</b><span>25 последних</span><span><i class="bi bi-star-fill"></i>4.76</span><span><i class="bi bi-bookmark-fill"></i>31</span></a>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-question-circle"></i><b>Вопросы и ответы</b><span>25 материалов</span><span><i class="bi bi-star-fill"></i>4.91</span><span><i class="bi bi-bookmark-fill"></i>28</span></a>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-file-earmark-arrow-down"></i><b>Каталог файлов</b><span>25 материалов</span><span><i class="bi bi-star-fill"></i>4.84</span><span><i class="bi bi-bookmark-fill"></i>54</span></a>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-window-stack"></i><b>Форум</b><span>25 тем</span><span><i class="bi bi-star-fill"></i>4.72</span><span><i class="bi bi-bookmark-fill"></i>39</span></a>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-link-45deg"></i><b>Каталог сайтов</b><span>6 материалов</span><span><i class="bi bi-star-fill"></i>4.68</span><span><i class="bi bi-bookmark-fill"></i>17</span></a>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-newspaper"></i><b>Новости</b><span>25 материалов</span><span><i class="bi bi-star-fill"></i>4.93</span><span><i class="bi bi-bookmark-fill"></i>46</span></a>
+            <a class="sl-profile-module-row" href="#"><i class="bi bi-file-text"></i><b>Статьи</b><span>20 материалов</span><span><i class="bi bi-star-fill"></i>4.88</span><span><i class="bi bi-bookmark-fill"></i>28</span></a>
+          </div>
+          <div class="sl-profile-content-head"><div><h3>Последняя активность</h3><small>Автопрокрутка от 5 записей · пауза при наведении</small></div><span class="sl-chip sl-chip-success"><i class="bi bi-arrow-down-up"></i> Live list</span></div>
+          <div class="sl-profile-content-tabs" data-sl-profile-tabs>
+            <button type="button" class="sl-chip sl-chip-info sl-is-active" data-sl-profile-tab="comments"><i class="bi bi-chat-text"></i> Комментарии</button>
+            <button type="button" class="sl-chip sl-chip-neutral" data-sl-profile-tab="faq"><i class="bi bi-question-circle"></i> FAQ</button>
+            <button type="button" class="sl-chip sl-chip-neutral" data-sl-profile-tab="files"><i class="bi bi-file-earmark-arrow-down"></i> Файлы</button>
+            <button type="button" class="sl-chip sl-chip-neutral" data-sl-profile-tab="forum"><i class="bi bi-window-stack"></i> Форум</button>
+            <button type="button" class="sl-chip sl-chip-neutral" data-sl-profile-tab="links"><i class="bi bi-link-45deg"></i> Сайты</button>
+            <button type="button" class="sl-chip sl-chip-neutral" data-sl-profile-tab="news"><i class="bi bi-newspaper"></i> Новости</button>
+            <button type="button" class="sl-chip sl-chip-neutral" data-sl-profile-tab="pages"><i class="bi bi-file-text"></i> Статьи</button>
+          </div>
+          <div class="sl-profile-content-panel sl-is-active" data-sl-profile-panel="comments">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">22.12.2024</time><i class="bi bi-chat-text"></i><a href="#">rvg, да, это возможно. Обновлять нужно последовательно, с версии до версии…</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 12</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">16.11.2023</time><i class="bi bi-chat-text"></i><a href="#">На данный момент версия CMS для PHP 8.* находится в разработке…</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 8</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">16.11.2023</time><i class="bi bi-chat-text"></i><a href="#">Это очень просто. Добавьте свои языковые файлы в систему…</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 5.0</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 6</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">02.09.2021</time><i class="bi bi-chat-text"></i><a href="#">Всё, что возможно, доступно в стандартной поставке.</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 3</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">26.03.2021</time><i class="bi bi-chat-text"></i><a href="#">Яндекс рекомендует создавать несколько каналов для каждого раздела…</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.6</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 2</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">22.07.2019</time><i class="bi bi-chat-text"></i><a href="#">Пожалуйста, воспользуйтесь службой обратной связи.</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 4</span></div>
+            </div></div>
+          </div>
+          <div class="sl-profile-content-panel" data-sl-profile-panel="faq">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">16.08.2014</time><i class="bi bi-question-circle"></i><a href="#">Как правильно подключить или интегрировать сторонний форум?</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 18</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">06.03.2009</time><i class="bi bi-question-circle"></i><a href="#">Что учитывать при разработке модулей для новых версий?</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 13</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">20.02.2009</time><i class="bi bi-question-circle"></i><a href="#">Как и где установить свою тему оформления?</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 5.0</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 11</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">21.01.2009</time><i class="bi bi-question-circle"></i><a href="#">Какой метод защиты использовать для файла администратора?</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 9</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">01.11.2008</time><i class="bi bi-question-circle"></i><a href="#">Как увеличить размер сохраняемой информации?</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 7</span></div>
+            </div></div>
+          </div>
+          <div class="sl-profile-content-panel" data-sl-profile-panel="files">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">28.04.2017</time><i class="bi bi-file-earmark-arrow-down"></i><a href="#">SLAED CMS 6.2 Pro — система управления содержимым</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 54</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">29.12.2015</time><i class="bi bi-file-earmark-arrow-down"></i><a href="#">Миграция пользователей InstantCMS в SLAED CMS</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 31</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">08.01.2013</time><i class="bi bi-file-earmark-arrow-down"></i><a href="#">Корзина товаров для модуля магазина</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 22</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">25.08.2012</time><i class="bi bi-file-earmark-arrow-down"></i><a href="#">SLAED CMS 5.1 Pro Demo</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 19</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">14.03.2010</time><i class="bi bi-file-earmark-arrow-down"></i><a href="#">Официальное руководство пользователя Open SLAED</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 5.0</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 27</span></div>
+            </div></div>
+          </div>
+          <div class="sl-profile-content-panel" data-sl-profile-panel="forum">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">14.07.2026</time><i class="bi bi-window-stack"></i><a href="#">Пожелания к версии SLAED CMS 6.3</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 39</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">01.02.2026</time><i class="bi bi-window-stack"></i><a href="#">Дата выхода новой версии SLAED CMS 6.3</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 28</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">24.05.2023</time><i class="bi bi-window-stack"></i><a href="#">Тестируем релиз Pre-Alpha версии системы</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 24</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">07.02.2021</time><i class="bi bi-window-stack"></i><a href="#">SLAED CMS 6.3 Pro — вопросы тестирования</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 17</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">28.04.2017</time><i class="bi bi-window-stack"></i><a href="#">SLAED CMS 6.2 Pro — проблемы и решения</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 21</span></div>
+            </div></div>
+          </div>
+          <div class="sl-profile-content-panel" data-sl-profile-panel="links">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">12.09.2018</time><i class="bi bi-link-45deg"></i><a href="#">Каталог полезных ссылок для оптимизатора</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 17</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">07.02.2017</time><i class="bi bi-link-45deg"></i><a href="#">Инструменты веб-мастера SLAED CMS</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 12</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">19.03.2013</time><i class="bi bi-link-45deg"></i><a href="#">Ресурсы для разработки модулей</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.6</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 9</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">27.09.2008</time><i class="bi bi-link-45deg"></i><a href="#">Сервисы и инструменты продвижения</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 8</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">11.09.2008</time><i class="bi bi-link-45deg"></i><a href="#">Полезные решения для безопасности сайта</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.6</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 6</span></div>
+            </div></div>
+          </div>
+          <div class="sl-profile-content-panel" data-sl-profile-panel="news">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">13.10.2021</time><i class="bi bi-newspaper"></i><a href="#">SLAED ищет единомышленников — вместе мы сила!</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 46</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">07.02.2021</time><i class="bi bi-newspaper"></i><a href="#">Тестируем релиз Pre-Alpha SLAED CMS 6.3 Pro</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 5.0</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 41</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">26.02.2018</time><i class="bi bi-newspaper"></i><a href="#">Новая капча: Captcha, ReCaptcha и SlaedCaptcha</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 32</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">01.01.2018</time><i class="bi bi-newspaper"></i><a href="#">Новые функции CMS и производительность PHP</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 29</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">29.12.2017</time><i class="bi bi-newspaper"></i><a href="#">CSS-фреймворки в современных проектах</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 18</span></div>
+            </div></div>
+          </div>
+          <div class="sl-profile-content-panel" data-sl-profile-panel="pages">
+            <div class="sl-profile-scroll-view" data-sl-profile-scroll><div class="sl-profile-scroll-feed" data-sl-profile-feed>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">07.02.2017</time><i class="bi bi-file-text"></i><a href="#">Использование блоков непосредственно в HTML темы</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 28</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">19.03.2013</time><i class="bi bi-file-text"></i><a href="#">Базовые инструменты веб-мастера SLAED CMS</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 21</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">27.09.2008</time><i class="bi bi-file-text"></i><a href="#">Установка кода отображения гипертекстовых ссылок</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 16</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">24.03.2008</time><i class="bi bi-file-text"></i><a href="#">Создание собственного файлового блока</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 14</span></div>
+              <div class="sl-profile-module-entry"><time class="sl-chip sl-chip-neutral">22.03.2008</time><i class="bi bi-file-text"></i><a href="#">Оформление ошибок, предупреждений и информации</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 5.0</span><span class="sl-chip sl-chip-accent"><i class="bi bi-bookmark-fill"></i> 19</span></div>
+            </div></div>
+          </div>
+        </section>
+      </div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">03</span><span><b>Bento Passport</b><small>профиль как набор живых плиток</small></span><span class="sl-chip sl-chip-info">bento</span></div>
+      <div class="sl-block sl-profile-card sl-profile-bento">
+        <div class="sl-profile-panel"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Паспорт участника</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div><p class="sl-profile-bio">Автор проекта · Германия</p></div></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-accent">Клиент</span><span class="sl-chip sl-chip-success">21 год с нами</span></div><div class="sl-profile-actions" style="justify-content:flex-start;margin-top:14px"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a><a class="sl-but" href="#"><i class="bi bi-three-dots"></i></a></div></div>
+        <div class="sl-profile-panel"><h3><i class="bi bi-stars"></i> Пункты</h3><div class="sl-profile-stat"><b>50 231</b><small>уровень 8</small></div><div class="sl-profile-meter"><div class="sl-profile-meter-track"><span></span></div></div></div>
+        <div class="sl-profile-panel"><h3><i class="bi bi-hand-thumbs-up"></i> Рейтинг</h3><div class="sl-profile-stat"><b>3.25</b><small>12 голосов</small></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-success">+81%</span></div></div>
+        <div class="sl-profile-panel"><h3><i class="bi bi-activity"></i> Сегодня</h3><div class="sl-profile-stat"><b>07:52</b><small>последний визит</small></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-info">Online</span></div></div>
+        <div class="sl-profile-panel"><h3><i class="bi bi-boxes"></i> Вклад</h3><div class="sl-profile-stats" style="grid-template-columns:repeat(2,1fr)"><div class="sl-profile-stat"><b>128</b><small>ответов</small></div><div class="sl-profile-stat"><b>47</b><small>файлов</small></div></div></div>
+      </div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">04</span><span><b>Reputation Orbit</b><small>достижения вращаются вокруг личности</small></span><span class="sl-chip sl-chip-warn">выразительный</span></div>
+      <div class="sl-block sl-profile-card sl-profile-orbit">
+        <div class="sl-profile-orbit-visual">
+          <div class="sl-profile-orbit-core"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div></div>
+          <div class="sl-profile-orbit-node sl-profile-orbit-node-a"><span><b>21</b>год</span></div><div class="sl-profile-orbit-node sl-profile-orbit-node-b"><span><b>3.25</b>рейтинг</span></div><div class="sl-profile-orbit-node sl-profile-orbit-node-c"><span><b>47</b>файлов</span></div><div class="sl-profile-orbit-node sl-profile-orbit-node-d"><span><b>128</b>ответов</span></div>
+        </div>
+        <div class="sl-profile-orbit-main"><span class="sl-profile-kicker">Репутация участника</span><h2 class="sl-profile-name">50 231 пункт</h2><p class="sl-profile-bio">Опыт измеряется не заполненностью анкеты, а реальным вкладом в сообщество.</p><div class="sl-profile-meter"><div class="sl-profile-meter-head"><span>Опытный</span><b>82% до группы «Эксперт»</b></div><div class="sl-profile-meter-track"><span></span></div></div><div class="sl-profile-grid"><div class="sl-profile-panel sl-profile-panel-12"><h3><i class="bi bi-award"></i> Значки</h3><div class="sl-profile-badges"><span class="sl-profile-badge" title="Основатель"><i class="bi bi-rocket-takeoff"></i></span><span class="sl-profile-badge" title="20 лет"><i class="bi bi-hourglass-split"></i></span><span class="sl-profile-badge" title="Автор"><i class="bi bi-code-square"></i></span><span class="sl-profile-badge" title="Наставник"><i class="bi bi-mortarboard"></i></span></div></div><div class="sl-profile-panel sl-profile-panel-12"><div class="sl-profile-actions" style="justify-content:flex-start"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a><a class="sl-but" href="#"><i class="bi bi-person-lines-fill"></i> Активность</a></div></div></div></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="sl-profile-demo-section">
+    <h2>Contribution first</h2>
+    <p>Вклад по модулям и свежая активность становятся главным содержанием профиля.</p>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">05</span><span><b>Activity First</b><small>последние действия важнее анкеты</small></span><span class="sl-chip sl-chip-success">community</span></div>
+      <div class="sl-block sl-profile-card sl-profile-activity">
+        <aside class="sl-profile-activity-identity"><div class="sl-profile-head" style="flex-direction:column;align-items:flex-start"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Сейчас на сайте</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор · Клиент</div><p class="sl-profile-bio">Webdesign, PHP, MySQL</p></div></div><div class="sl-profile-actions" style="justify-content:flex-start;margin-top:16px"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-info">50 231 пункт</span><span class="sl-chip sl-chip-success">3.25 рейтинг</span></div></aside>
+        <div class="sl-profile-activity-stream"><h3>Свежая активность</h3><p class="sl-profile-bio">5 событий за последние 30 дней</p><div class="sl-profile-feed"><a class="sl-profile-feed-row" href="#"><i class="bi bi-chat-text"></i><span><b>Как в теме paradise</b><small>Новый ответ на форуме</small></span><time>09.07</time></a><a class="sl-profile-feed-row" href="#"><i class="bi bi-file-earmark-arrow-down"></i><span><b>SLAED CMS 6.2</b><small>Обновлён файл в каталоге</small></span><time>29.05</time></a><a class="sl-profile-feed-row" href="#"><i class="bi bi-newspaper"></i><span><b>Тестируем релиз Pre-Alpha</b><small>Опубликована новость</small></span><time>24.05</time></a><a class="sl-profile-feed-row" href="#"><i class="bi bi-question-circle"></i><span><b>Обновление системы</b><small>Ответ в разделе FAQ</small></span><time>12.05</time></a></div><nav class="sl-profile-tabs"><a class="sl-is-active" href="#">Все</a><a href="#">Форум</a><a href="#">Файлы</a><a href="#">Новости</a></nav></div>
+      </div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">06</span><span><b>Contribution Ledger</b><small>вклад как прозрачный журнал</small></span><span class="sl-chip sl-chip-info">системный</span></div>
+      <div class="sl-block sl-profile-card sl-profile-ledger">
+        <div class="sl-profile-ledger-head"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Журнал участника</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div><div class="sl-profile-chips"><span class="sl-chip sl-chip-accent">Клиент</span><span class="sl-chip sl-chip-neutral">ID 7885</span></div></div></div><div><div class="sl-profile-rating"><div class="sl-profile-rating-ring"><span>3.25</span></div><div class="sl-profile-rating-copy"><b>Рейтинг сообщества</b><small>50 231 пункт опыта</small></div></div></div></div>
+        <div class="sl-profile-ledger-lines"><a class="sl-profile-ledger-line" href="#"><i class="bi bi-chat-text"></i><b>Комментарии</b><span>Полезные ответы и обсуждения</span><span class="sl-chip sl-chip-info">128</span></a><a class="sl-profile-ledger-line" href="#"><i class="bi bi-file-earmark-arrow-down"></i><b>Каталог файлов</b><span>Публикации и обновления</span><span class="sl-chip sl-chip-success">47</span></a><a class="sl-profile-ledger-line" href="#"><i class="bi bi-window-stack"></i><b>Форум</b><span>Темы и техническая поддержка</span><span class="sl-chip sl-chip-accent">32</span></a><a class="sl-profile-ledger-line" href="#"><i class="bi bi-newspaper"></i><b>Новости</b><span>Статьи и анонсы релизов</span><span class="sl-chip sl-chip-warn">18</span></a></div>
+      </div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">07</span><span><b>Achievement Shelf</b><small>награды, стаж и специализация</small></span><span class="sl-chip sl-chip-warn">gamified</span></div>
+      <div class="sl-block sl-profile-card">
+        <div class="sl-profile-body"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Коллекция достижений</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор · уровень 8</div><p class="sl-profile-bio">Каждая награда объясняет, за что сообщество ценит участника.</p></div><div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div></div><div class="sl-profile-grid"><div class="sl-profile-panel sl-profile-panel-8"><h3><i class="bi bi-trophy"></i> Витрина</h3><div class="sl-profile-badges"><span class="sl-profile-badge"><i class="bi bi-rocket-takeoff"></i></span><span class="sl-profile-badge"><i class="bi bi-patch-check"></i></span><span class="sl-profile-badge"><i class="bi bi-code-slash"></i></span><span class="sl-profile-badge"><i class="bi bi-people"></i></span><span class="sl-profile-badge"><i class="bi bi-lightning-charge"></i></span></div><div class="sl-profile-chips"><span class="sl-chip sl-chip-info">Основатель</span><span class="sl-chip sl-chip-success">20+ лет</span><span class="sl-chip sl-chip-warn">Автор 100+</span><span class="sl-chip sl-chip-accent">Наставник</span></div></div><div class="sl-profile-panel sl-profile-panel-4"><h3><i class="bi bi-bar-chart"></i> Прогресс</h3><div class="sl-profile-meter"><div class="sl-profile-meter-head"><span>Следующая награда</span><b>82%</b></div><div class="sl-profile-meter-track"><span></span></div></div><p class="sl-profile-bio">Ещё 769 пунктов до «Эксперт»</p></div></div></div>
+      </div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">08</span><span><b>Community ID</b><small>цифровое удостоверение участника</small></span><span class="sl-chip sl-chip-accent">brand</span></div>
+      <div class="sl-block sl-profile-card sl-profile-id">
+        <aside class="sl-profile-id-card"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><span class="sl-profile-kicker">SLAED community ID</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div><p class="sl-profile-bio">Member since 30.04.2005</p><div class="sl-profile-id-code">SLD · 7885 · DE<br>GROUP · CLIENT<br>STATUS · VERIFIED</div></aside>
+        <div class="sl-profile-id-main"><span class="sl-profile-kicker">Публичная карточка</span><h2 class="sl-profile-name">Автор проекта</h2><p class="sl-profile-bio">Webdesign, PHP, MySQL. Развивает экосистему SLAED и помогает участникам сообщества.</p><div class="sl-profile-grid"><div class="sl-profile-panel sl-profile-panel-6"><h3><i class="bi bi-person-check"></i> Доверие</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-patch-check"></i><span>Профиль</span><b>проверен</b></div><div class="sl-profile-info-row"><i class="bi bi-shield-check"></i><span>Предупреждения</span><b>нет</b></div><div class="sl-profile-info-row"><i class="bi bi-clock-history"></i><span>Стаж</span><b>21 год</b></div></div></div><div class="sl-profile-panel sl-profile-panel-6"><h3><i class="bi bi-stars"></i> Вклад</h3><div class="sl-profile-stats" style="grid-template-columns:repeat(2,1fr)"><div class="sl-profile-stat"><b>50K</b><small>пунктов</small></div><div class="sl-profile-stat"><b>225</b><small>материалов</small></div></div></div></div><div class="sl-profile-actions" style="justify-content:flex-start;margin-top:16px"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a><a class="sl-but" href="#"><i class="bi bi-arrow-left"></i> Назад</a></div></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="sl-profile-demo-section">
+    <h2>Information architecture</h2>
+    <p>Варианты для длинной истории, высокой плотности данных и быстрого сканирования.</p>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">09</span><span><b>Timeline Profile</b><small>профиль как история отношений с проектом</small></span><span class="sl-chip sl-chip-info">narrative</span></div>
+      <div class="sl-block sl-profile-card sl-profile-timeline"><div class="sl-profile-timeline-head"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">История участника</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор · Клиент</div></div></div><div class="sl-profile-stats" style="grid-template-columns:repeat(2,1fr)"><div class="sl-profile-stat"><b>21</b><small>год с проектом</small></div><div class="sl-profile-stat"><b>50K</b><small>пунктов опыта</small></div></div></div><div class="sl-profile-timeline-list"><div class="sl-profile-timeline-row"><time>сегодня</time><span><b>Активен на сайте</b><br><small>Каталог файлов</small></span><span class="sl-chip sl-chip-success">online</span></div><div class="sl-profile-timeline-row"><time>29.05.2026</time><span><b>Обновил SLAED CMS 6.2</b><br><small>Новая версия системы</small></span><span class="sl-chip sl-chip-info">файл</span></div><div class="sl-profile-timeline-row"><time>24.05.2023</time><span><b>Начал тестирование Pre-Alpha</b><br><small>Важная веха проекта</small></span><span class="sl-chip sl-chip-accent">релиз</span></div><div class="sl-profile-timeline-row"><time>30.04.2005</time><span><b>Присоединился к сообществу</b><br><small>Начало истории профиля</small></span><span class="sl-chip sl-chip-neutral">старт</span></div></div></div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">10</span><span><b>Data Console</b><small>тёмная аналитическая панель профиля</small></span><span class="sl-chip sl-chip-neutral">console</span></div>
+      <div class="sl-block sl-profile-card sl-profile-console"><div class="sl-profile-console-main"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Community analytics</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div><p class="sl-profile-bio">Сводка активности и доверия в реальном времени.</p></div></div><div class="sl-profile-console-grid"><div class="sl-profile-console-cell"><i class="bi bi-stars"></i><b>50 231</b><small>пункты</small></div><div class="sl-profile-console-cell"><i class="bi bi-hand-thumbs-up"></i><b>3.25</b><small>рейтинг</small></div><div class="sl-profile-console-cell"><i class="bi bi-grid"></i><b>225</b><small>вклад</small></div></div><div class="sl-profile-panel" style="margin-top:12px;background:var(--sl-color-surface-darker);border-color:var(--sl-color-surface-divider)"><h3 style="color:var(--sl-color-on-dark)"><i class="bi bi-activity"></i> Активность за год</h3><div class="sl-profile-bars"><span style="--sl-profile-bar:28%"></span><span style="--sl-profile-bar:46%"></span><span style="--sl-profile-bar:38%"></span><span style="--sl-profile-bar:62%"></span><span style="--sl-profile-bar:55%"></span><span style="--sl-profile-bar:78%"></span><span style="--sl-profile-bar:68%"></span><span style="--sl-profile-bar:92%"></span><span style="--sl-profile-bar:74%"></span><span style="--sl-profile-bar:84%"></span><span style="--sl-profile-bar:64%"></span><span style="--sl-profile-bar:88%"></span></div></div></div><aside class="sl-profile-console-side"><h3>Состояние профиля</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-circle-fill" style="color:var(--sl-color-success)"></i><span>Статус</span><b>Online</b></div><div class="sl-profile-info-row"><i class="bi bi-people"></i><span>Группа</span><b>Клиент</b></div><div class="sl-profile-info-row"><i class="bi bi-geo-alt"></i><span>Страна</span><b>Germany</b></div><div class="sl-profile-info-row"><i class="bi bi-translate"></i><span>Язык</span><b>Русский</b></div><div class="sl-profile-info-row"><i class="bi bi-shield-check"></i><span>Предупреждения</span><b>0</b></div></div><div class="sl-profile-actions" style="justify-content:flex-start;margin-top:18px"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div></aside></div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">11</span><span><b>Minimal Authority</b><small>минимум декора, максимум статуса</small></span><span class="sl-chip sl-chip-success">clean</span></div>
+      <div class="sl-block sl-profile-card sl-profile-minimal"><div class="sl-profile-minimal-layout"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Администратор</span><h2 class="sl-profile-name">SLAED CMS</h2><p class="sl-profile-bio">Автор проекта · Webdesign, PHP, MySQL</p><div class="sl-profile-chips"><span class="sl-chip sl-chip-accent">Клиент</span><span class="sl-chip sl-chip-info">Germany</span><span class="sl-chip sl-chip-neutral">с 2005</span></div></div><div><div class="sl-profile-rating"><div class="sl-profile-rating-ring"><span>3.25</span></div><div class="sl-profile-rating-copy"><b>50 231 пункт</b><small>репутация</small></div></div><div class="sl-profile-actions" style="margin-top:13px"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div></div></div><nav class="sl-profile-tabs"><a class="sl-is-active" href="#">Комментарии 128</a><a href="#">Файлы 47</a><a href="#">Форум 32</a><a href="#">Новости 18</a></nav></div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">12</span><span><b>Editorial Bio</b><small>профиль автора как журнальная страница</small></span><span class="sl-chip sl-chip-warn">editorial</span></div>
+      <div class="sl-block sl-profile-card sl-profile-editorial"><div class="sl-profile-cover" style="margin:0 -28px 0"></div><div class="sl-profile-head sl-profile-head-overlap"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Основатель · разработчик · автор</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div></div><div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div></div><div class="sl-profile-editorial-copy"><div><div class="sl-profile-editorial-mark">“</div><blockquote class="sl-profile-editorial-quote">Всё великое просто — особенно когда сложная система говорит с человеком на понятном языке.</blockquote><div class="sl-profile-tags" style="margin-top:16px"><span class="sl-profile-tag"><i class="bi bi-code-slash"></i>PHP</span><span class="sl-profile-tag"><i class="bi bi-database"></i>MySQL</span><span class="sl-profile-tag"><i class="bi bi-bezier2"></i>Webdesign</span></div></div><div class="sl-profile-editorial-meta"><span>Группа <b>Клиент</b></span><span>Страна <b>Germany</b></span><span>С проектом <b>21 год</b></span><span>Пункты <b>50 231</b></span><span>Рейтинг <b>3.25</b></span></div></div></div>
+    </article>
+  </section>
+
+  <section class="sl-profile-demo-section">
+    <h2>Navigation and trust</h2>
+    <p>Композиции для быстрого перехода к материалам, оценки доверия и раскрытия полной анкеты.</p>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">13</span><span><b>Module Compass</b><small>вклад по модулям как карта профиля</small></span><span class="sl-chip sl-chip-info">navigation</span></div>
+      <div class="sl-block sl-profile-card sl-profile-compass"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Навигатор участника</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор · Клиент</div><p class="sl-profile-bio">Выберите область вклада, чтобы сразу перейти к материалам.</p></div><div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div></div><div class="sl-profile-compass-layout"><div class="sl-profile-panel"><h3><i class="bi bi-person-lines-fill"></i> О профиле</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-stars"></i><span>Пункты</span><b>50 231</b></div><div class="sl-profile-info-row"><i class="bi bi-hand-thumbs-up"></i><span>Рейтинг</span><b>3.25</b></div><div class="sl-profile-info-row"><i class="bi bi-calendar3"></i><span>С нами</span><b>21 год</b></div><div class="sl-profile-info-row"><i class="bi bi-geo-alt"></i><span>Страна</span><b>Germany</b></div></div></div><div class="sl-profile-compass-wheel"><a class="sl-profile-compass-link" href="#"><i class="bi bi-chat-text"></i><span><b>128</b><br>Комментарии</span></a><a class="sl-profile-compass-link" href="#"><i class="bi bi-window-stack"></i><span><b>32</b><br>Форум</span></a><a class="sl-profile-compass-link" href="#"><i class="bi bi-file-earmark-arrow-down"></i><span><b>47</b><br>Файлы</span></a><a class="sl-profile-compass-link" href="#"><i class="bi bi-newspaper"></i><span><b>18</b><br>Новости</span></a></div></div></div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">14</span><span><b>Trust Matrix</b><small>доверие объяснено фактами</small></span><span class="sl-chip sl-chip-success">trust</span></div>
+      <div class="sl-block sl-profile-card sl-profile-trust"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Публичный профиль</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор</div><div class="sl-profile-chips"><span class="sl-chip sl-chip-success"><i class="bi bi-patch-check-fill"></i> Проверен</span><span class="sl-chip sl-chip-accent">Клиент</span></div></div><div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a></div></div><div class="sl-profile-trust-layout"><div><h3 style="margin:0 0 10px;color:var(--sl-color-text-heading)">Почему профилю доверяют</h3><div class="sl-profile-trust-matrix"><div class="sl-profile-trust-cell"><i class="bi bi-hourglass-split"></i><b>21 год с проектом</b><small>регистрация в 2005 году</small></div><div class="sl-profile-trust-cell"><i class="bi bi-shield-check"></i><b>Без предупреждений</b><small>чистая история аккаунта</small></div><div class="sl-profile-trust-cell"><i class="bi bi-stars"></i><b>50 231 пункт</b><small>устойчивый вклад</small></div><div class="sl-profile-trust-cell"><i class="bi bi-hand-thumbs-up"></i><b>Рейтинг 3.25</b><small>оценка сообщества</small></div></div></div><div class="sl-profile-panel"><h3><i class="bi bi-person-vcard"></i> Открытые данные</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-geo-alt"></i><span>Страна</span><b>Germany</b></div><div class="sl-profile-info-row"><i class="bi bi-translate"></i><span>Язык</span><b>Русский</b></div><div class="sl-profile-info-row"><i class="bi bi-briefcase"></i><span>Занятие</span><b>Автор проекта</b></div><div class="sl-profile-info-row"><i class="bi bi-envelope-lock"></i><span>E-Mail</span><b>скрыт</b></div></div></div></div></div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">15</span><span><b>Signature Card</b><small>личный профиль с авторской печатью</small></span><span class="sl-chip sl-chip-accent">distinctive</span></div>
+      <div class="sl-block sl-profile-card sl-profile-signature"><div class="sl-profile-signature-layout"><div class="sl-profile-signature-main"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Автор проекта</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Администратор · Клиент</div><p class="sl-profile-bio">Webdesign, PHP, MySQL · Germany</p><div class="sl-profile-chips"><span class="sl-chip sl-chip-info">50 231 пункт</span><span class="sl-chip sl-chip-success">3.25 рейтинг</span><span class="sl-chip sl-chip-neutral">с 2005</span></div><div class="sl-profile-actions" style="justify-content:flex-start;margin-top:14px"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a><a class="sl-but" href="#"><i class="bi bi-arrow-left"></i> Назад</a></div></div></div><div class="sl-profile-signature-seal"><span><i class="bi bi-patch-check-fill"></i><b>SLAED<br>VERIFIED</b></span></div></div><p class="sl-profile-signature-note">«Всё великое просто» — профиль показывает человека через его роль, историю и реальные результаты.</p></div>
+    </article>
+
+    <article class="sl-profile-demo-item">
+      <div class="sl-profile-demo-label"><span class="sl-profile-demo-number">16</span><span><b>Progressive Disclosure</b><small>короткая карточка, полная анкета по запросу</small></span><span class="sl-chip sl-chip-warn">adaptive</span></div>
+      <div class="sl-block sl-profile-card"><div class="sl-profile-body"><div class="sl-profile-head"><div class="sl-profile-avatar"><img src="../uploads/avatars/default/01.svg" alt="SLAED CMS"><span class="sl-profile-status"></span></div><div class="sl-profile-identity"><span class="sl-profile-kicker">Администратор</span><h2 class="sl-profile-name">SLAED CMS</h2><div class="sl-profile-rank">Клиент · 50 231 пункт</div><p class="sl-profile-bio">Автор проекта · Webdesign, PHP, MySQL</p><div class="sl-profile-chips"><span class="sl-chip sl-chip-info">Germany</span><span class="sl-chip sl-chip-success">Online</span><span class="sl-chip sl-chip-neutral">21 год с нами</span></div></div><div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-envelope"></i> Написать</a><a class="sl-but" href="#"><i class="bi bi-arrow-left"></i></a></div></div><div class="sl-profile-stats" style="margin-top:18px"><div class="sl-profile-stat"><b>128</b><small>комментариев</small></div><div class="sl-profile-stat"><b>32</b><small>темы форума</small></div><div class="sl-profile-stat"><b>47</b><small>файлов</small></div><div class="sl-profile-stat"><b>18</b><small>новостей</small></div></div></div><details class="sl-profile-details"><summary><i class="bi bi-chevron-down"></i> Показать полную информацию</summary><div class="sl-profile-details-content"><div class="sl-profile-grid"><div class="sl-profile-panel sl-profile-panel-6"><h3><i class="bi bi-person-vcard"></i> Основное</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-calendar3"></i><span>Регистрация</span><b>30.04.2005</b></div><div class="sl-profile-info-row"><i class="bi bi-clock-history"></i><span>Последний визит</span><b>сегодня</b></div><div class="sl-profile-info-row"><i class="bi bi-cake2"></i><span>Дата рождения</span><b>01.01.1976</b></div><div class="sl-profile-info-row"><i class="bi bi-translate"></i><span>Язык</span><b>Русский</b></div></div></div><div class="sl-profile-panel sl-profile-panel-6"><h3><i class="bi bi-shield-check"></i> Доступ и приватность</h3><div class="sl-profile-info"><div class="sl-profile-info-row"><i class="bi bi-envelope-lock"></i><span>E-Mail</span><b>скрыт</b></div><div class="sl-profile-info-row"><i class="bi bi-globe"></i><span>Адрес сайта</span><b>скрыт</b></div><div class="sl-profile-info-row"><i class="bi bi-exclamation-triangle"></i><span>Предупреждения</span><b>нет</b></div><div class="sl-profile-info-row"><i class="bi bi-browser-chrome"></i><span>Браузер</span><b>скрыт</b></div></div></div></div></div></details></div>
+    </article>
+  </section>
+</main>
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function setProfileScroll(panel) {
+    var view = panel && panel.querySelector('[data-sl-profile-scroll]');
+    var feed = view && view.querySelector('[data-sl-profile-feed]');
+    if (!view || !feed || view.dataset.slReady === 'true') return;
+    view.dataset.slReady = 'true';
+    var items = Array.from(feed.children);
+    if (items.length <= 4 || reduced.matches) return;
+    items.forEach(function (item) {
+      var clone = item.cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      feed.appendChild(clone);
+    });
+    window.requestAnimationFrame(function () {
+      view.style.setProperty('--sl-profile-scroll-distance', feed.scrollHeight / 2 + 'px');
+      view.style.setProperty('--sl-profile-scroll-duration', Math.max(15, items.length * 3) + 's');
+      view.classList.add('sl-is-scrolling');
+    });
+  }
+
+  document.querySelectorAll('[data-sl-profile-tabs]').forEach(function (tabs) {
+    var scope = tabs.closest('.sl-profile-module-hub');
+    var active = scope.querySelector('.sl-profile-content-panel.sl-is-active');
+    setProfileScroll(active);
+    tabs.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-sl-profile-tab]');
+      if (!button) return;
+      tabs.querySelectorAll('[data-sl-profile-tab]').forEach(function (item) {
+        var selected = item === button;
+        item.classList.toggle('sl-is-active', selected);
+        item.classList.toggle('sl-chip-info', selected);
+        item.classList.toggle('sl-chip-neutral', !selected);
+      });
+      scope.querySelectorAll('[data-sl-profile-panel]').forEach(function (panel) {
+        panel.classList.toggle('sl-is-active', panel.dataset.slProfilePanel === button.dataset.slProfileTab);
+      });
+      setProfileScroll(scope.querySelector('.sl-profile-content-panel.sl-is-active'));
+    });
+  });
+
+  document.querySelectorAll('[data-sl-profile-rating]').forEach(function (rating) {
+    rating.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-sl-profile-vote]');
+      if (!button) return;
+      var score = rating.querySelector('[data-sl-profile-score]');
+      var note = rating.querySelector('[data-sl-profile-vote-note]');
+      var value = Number(score.textContent) + Number(button.dataset.slProfileVote) * 0.01;
+      score.textContent = value.toFixed(2);
+      score.title = 'Рейтинг: ' + score.textContent;
+      rating.closest('.sl-profile-card').querySelectorAll('[data-sl-profile-rating-value]').forEach(function (item) { item.textContent = score.textContent; });
+      rating.querySelectorAll('[data-sl-profile-vote]').forEach(function (item) {
+        item.classList.toggle('sl-is-voted', item === button);
+        item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+      });
+      note.textContent = button.dataset.slProfileVote === '1' ? 'Положительная оценка учтена' : 'Отрицательная оценка учтена';
+      note.classList.add('sl-is-visible');
+    });
+  });
+
+  document.addEventListener('click', function (event) {
+    var toggle = event.target.closest('.sl-dial-toggle');
+    if (toggle) {
+      var dial = toggle.closest('.sl-dial');
+      document.querySelectorAll('.sl-dial.sl-open').forEach(function (item) {
+        if (item !== dial) item.classList.remove('sl-open');
+      });
+      dial.classList.toggle('sl-open');
+      return;
+    }
+    if (!event.target.closest('.sl-dial')) document.querySelectorAll('.sl-dial.sl-open').forEach(function (dial) { dial.classList.remove('sl-open'); });
+    if (event.target.closest('a[href="#"]')) event.preventDefault();
+  });
+}());
+</script>
+</body>
+</html>
