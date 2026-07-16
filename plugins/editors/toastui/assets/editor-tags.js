@@ -51,11 +51,21 @@
         var txt = opt.labels || {};
         var button = box ? box.querySelector('.sl-editor-icon-fullscreen') : null;
         var tooltip = button ? button.querySelector('.toastui-editor-tooltip') : null;
+        var ed = getEditor(id);
         var active;
         var label;
         if (!box) return;
         active = typeof open === 'boolean' ? open : !box.classList.contains('sl-toastui-editor-fullscreen');
         box.classList.toggle('sl-toastui-editor-fullscreen', active);
+        if (ed && typeof ed.setHeight === 'function') {
+            if (active) {
+                if (!box.getAttribute('data-slaed-height') && typeof ed.getHeight === 'function') box.setAttribute('data-slaed-height', ed.getHeight() || '');
+                ed.setHeight('100%');
+            } else {
+                ed.setHeight(box.getAttribute('data-slaed-height') || '300px');
+                box.removeAttribute('data-slaed-height');
+            }
+        }
         label = active ? (txt.exitfull || 'Exit full screen') : (txt.fullscreen || 'Full screen');
         if (button) {
             button.classList.toggle('sl-toastui-fullscreen-active', active);

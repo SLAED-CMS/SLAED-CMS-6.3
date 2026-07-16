@@ -7,13 +7,17 @@
       <button type="button" class="sl-toastui-window-action js-slaed-window-close" data-editor="{{ editor_id }}" data-window="files" title="{{ close_label }}" aria-label="{{ close_label }}"><span class="sl-toastui-head-icon sl-toastui-head-icon-close" aria-hidden="true"></span></button>
     </div>
   </div>
-  <div class="sl-toastui-upload-info">
-    <div>{{ type_label }}: {{ types_text }}</div>
-    <div>{{ allsize_label }}: {{ allsize_text }}</div>
-    <div>{{ filesize_label }}: {{ filesize_text }}</div>
-    <div>{{ width_label }}: {{ width_text }}</div>
-    <div>{{ height_label }}: {{ height_text }}</div>
-    <div>{{ count_label }}: {{ count_text }}</div>
+  <div class="sl-alert sl-alert-info js-slaed-upload-limits">
+    <div class="sl-alert-body">
+      <ul class="sl-alert-list">
+        <li>{{ type_label }}: {{ types_text }}</li>
+        <li>{{ allsize_label }}: {{ allsize_text }}</li>
+        <li>{{ filesize_label }}: {{ filesize_text }}</li>
+        <li>{{ width_label }}: {{ width_text }}</li>
+        <li>{{ height_label }}: {{ height_text }}</li>
+        <li>{{ count_label }}: {{ count_text }}</li>
+      </ul>
+    </div>
   </div>
   <div class="sl-toastui-upload-picker">
     <label for="{{ file_id }}">{{ select_label }}</label>
@@ -27,9 +31,10 @@
     <input type="button" value="{{ refresh_label }}" class="js-slaed-file-refresh" data-editor="{{ editor_id }}">
   </div>
   <div id="{{ msg_id }}"></div>
-  <label id="{{ object_id }}" class="sl-toastui-image-mode sl-none">
-    <input type="checkbox">
-    <span><strong>{{ object_label }}</strong><small>{{ object_info }}</small></span>
-  </label>
+  <div id="{{ object_id }}" class="sl-toastui-image-mode sl-none">
+    <label><input type="radio" name="{{ object_id }}m" value="upload" checked><span><strong>{{ upload_label }}</strong><small>{{ upload_info }}</small></span></label>
+    <label><input type="radio" name="{{ object_id }}m" value="attach"><span><strong>{{ object_label }}</strong><small>{{ object_info }}</small></span></label>
+    <label><input type="radio" name="{{ object_id }}m" value="embed"><span><strong>{{ embed_label }}</strong><small>{{ embed_info }}</small></span></label>
+  </div>
   <div id="{{ list_id }}" class="sl-editor-upload-files"></div>
 </div>

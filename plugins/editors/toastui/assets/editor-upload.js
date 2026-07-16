@@ -54,12 +54,14 @@
         var opt = getOpt(id);
         var el = getWindow(id, type);
         var head = type === 'files' ? null : getWindowHead(id, type);
+        var extras = type === 'image' ? getExtras(id) : null;
         var mode = type === 'image' && opt.object ? doc.getElementById(opt.object) : null;
         if (!el || el.classList.contains('sl-none') || win.getComputedStyle(el).display === 'none') return;
-        layer += 3;
+        layer += 4;
         el.style.zIndex = String(layer);
         if (head) head.style.zIndex = String(layer + 1);
-        if (mode) mode.style.zIndex = String(layer + 2);
+        if (extras) extras.style.zIndex = String(layer + 2);
+        if (mode) mode.style.zIndex = String(layer + 3);
     }
 
     function setPopupChrome(id, type, show) {
@@ -77,6 +79,14 @@
                 event.stopPropagation();
             });
             head.setAttribute('data-slaed-bound', '1');
+        }
+        if (popup && !popup.hasAttribute('data-slaed-watch')) {
+            popup.setAttribute('data-slaed-watch', '1');
+            new win.MutationObserver(function() {
+                if (win.getComputedStyle(popup).display !== 'none') return;
+                if (type === 'image') setImageChrome(id, false);
+                else setPopupChrome(id, type, false);
+            }).observe(popup, { attributes: true, attributeFilter: ['style'] });
         }
         active = !!show && !!popup && win.getComputedStyle(popup).display !== 'none';
         head.classList.toggle('sl-none', !active);
@@ -106,22 +116,17 @@
         var buttons = popup ? popup.querySelector('.toastui-editor-button-container') : null;
         var file = popup ? popup.querySelector('#toastuiImageFileInput') : null;
         var filebox = file ? file.parentElement : null;
+        var extras;
         var boxrect;
         var poprect;
         var butrect;
         var active;
         var fixed;
         var filemode;
-        if (!box || !mode) return popup;
-        if (mode.parentNode !== box) box.appendChild(mode);
-        mode.setAttribute('data-slaed-editor', String(id));
-        mode.setAttribute('data-slaed-window', 'image');
+        var label;
+        if (!box) return popup;
         active = !!show && !!popup && win.getComputedStyle(popup).display !== 'none';
         filemode = active && !!filebox && win.getComputedStyle(filebox).display !== 'none';
-        mode.classList.toggle('sl-none', !filemode);
-        if (!active) return popup;
-        fixed = win.getComputedStyle(popup).position === 'fixed';
-        mode.classList.toggle('sl-toastui-window-fixed', fixed);
         if (filemode) {
             filebox.classList.add('sl-toastui-file-row');
             filebox.classList.add('js-slaed-image-drop');
@@ -131,14 +136,39 @@
             filebox.setAttribute('tabindex', '0');
             filebox.style.display = 'grid';
             if (file) file.removeAttribute('accept');
+            if (file && !(file.files && file.files.length)) {
+                label = popup.querySelector('.toastui-editor-file-name');
+                label = label ? label.firstChild : null;
+                if (label && label.nodeType === 3) label.nodeValue = getLab(id, 'nofile', 'No file');
+            }
         }
-        boxrect = box.getBoundingClientRect();
-        poprect = popup.getBoundingClientRect();
+        fixed = active && win.getComputedStyle(popup).position === 'fixed';
+        if (active) {
+            boxrect = box.getBoundingClientRect();
+            poprect = popup.getBoundingClientRect();
+        }
+        extras = getExtras(id);
+        if (extras) {
+            extras.classList.toggle('sl-none', !active || !extras.childElementCount);
+            if (active) {
+                extras.classList.toggle('sl-toastui-window-fixed', fixed);
+                extras.style.left = (fixed ? poprect.left : poprect.left - boxrect.left) + 'px';
+                extras.style.top = ((fixed ? poprect.top : poprect.top - boxrect.top) + 36) + 'px';
+                extras.style.width = poprect.width + 'px';
+                popup.style.paddingTop = (36 + (extras.classList.contains('sl-none') ? 0 : extras.offsetHeight)) + 'px';
+            }
+        }
+        if (!mode) return popup;
+        if (mode.parentNode !== box) box.appendChild(mode);
+        mode.classList.toggle('sl-none', !filemode);
+        if (!active) return popup;
+        mode.classList.toggle('sl-toastui-window-fixed', fixed);
         if (filemode && buttons) {
             butrect = buttons.getBoundingClientRect();
             mode.style.left = (fixed ? poprect.left : poprect.left - boxrect.left) + 20 + 'px';
             mode.style.top = (fixed ? butrect.top : butrect.top - boxrect.top) - mode.offsetHeight - 12 + 'px';
             mode.style.width = Math.max(0, poprect.width - 40) + 'px';
+            buttons.style.marginTop = (mode.offsetHeight + 24) + 'px';
         }
         return popup;
     }
@@ -276,35 +306,42 @@
         var popup = box ? box.querySelector('.toastui-editor-popup-add-image') : null;
         var source;
         var rows;
-        var left;
         if (!popup) return null;
-        source = panel ? panel.querySelector('.sl-toastui-upload-info') : null;
+        source = panel ? panel.querySelector('.js-slaed-upload-limits') : null;
         popup.classList.add('sl-toastui-image-popup');
-        if (source) {
-            rows = source.children;
-            popup.setAttribute('data-slaed-info', Array.prototype.map.call(rows, function(row) {
-                return row.textContent.trim();
-            }).join('\n'));
+        rows = getExtras(id);
+        if (source && rows && !rows.querySelector('.js-slaed-image-limits')) {
+            source = source.cloneNode(true);
+            source.classList.remove('js-slaed-upload-limits');
+            source.classList.add('js-slaed-image-limits');
+            rows.appendChild(source);
         }
-        left = Math.max(5, popup.parentElement.clientWidth - popup.offsetWidth - 5) + 'px';
-        if (!popup.hasAttribute('data-slaed-moved') && !popup.classList.contains('sl-toastui-window-expanded') && popup.style.left !== left) popup.style.left = left;
         setImageChrome(id, true);
         return popup;
     }
 
     function setImageMsg(id, text, warn) {
         var popup = setImagePopup(id);
-        var body = popup ? popup.querySelector('.toastui-editor-popup-body') : null;
-        if (!body) return false;
-        body.classList.toggle('sl-toastui-image-warn', warn && !!text);
-        body.setAttribute('data-slaed-error', text || '');
+        var extras = getExtras(id);
+        var node = extras ? extras.querySelector('.js-slaed-image-msg') : null;
+        if (!popup || !extras) return false;
+        if (node) node.remove();
+        if (text) {
+            node = getMsg(id, text, warn);
+            if (node) {
+                node.classList.add('js-slaed-image-msg');
+                extras.appendChild(node);
+            }
+        }
         setImageChrome(id, true);
         return true;
     }
 
     function getMsg(id, text, warn) {
         var el = api.getTpl(id, warn ? 'msg-warn' : 'msg-info');
-        if (el) el.textContent = text;
+        var slot = el ? el.querySelector('[data-sl-text]') : null;
+        if (slot) slot.textContent = text;
+        else if (el) el.textContent = text;
         return el;
     }
 
@@ -332,16 +369,51 @@
         });
     }
 
+    function getExtras(id) {
+        var box = doc.getElementById(String(id) + '_toast');
+        var el = box ? box.querySelector('.sl-toastui-popup-extras') : null;
+        if (!el && box) {
+            el = api.getTpl(id, 'popup-extras');
+            if (el) box.appendChild(el);
+        }
+        return el;
+    }
+
+    function getImageMode(id) {
+        var opt = getOpt(id);
+        var mode = opt.object ? doc.getElementById(opt.object) : null;
+        var sel = mode ? mode.querySelector('input[type="radio"]:checked') : null;
+        return sel ? sel.value : 'upload';
+    }
+
+    function addEmbed(id, file, done) {
+        var max = parseInt(getOpt(id).embedmax || 0, 10);
+        var rd = new FileReader();
+        if (max > 0 && file.size > max) {
+            setMsg(id, getLab(id, 'toobig', 'File is too big'), true, true);
+            return;
+        }
+        rd.onload = function() {
+            if (done) done(String(rd.result), file.name || 'image');
+            setTimeout(function() {
+                setImageChrome(id, false);
+            }, 0);
+        };
+        rd.readAsDataURL(file);
+    }
+
     function addImage(id, file, done, image) {
         var opt = getOpt(id);
         var data = new FormData();
+        if (image && getImageMode(id) === 'embed') {
+            addEmbed(id, file, done);
+            return Promise.resolve();
+        }
         if (!opt.upload) return Promise.resolve();
         data.append('token', opt.token || '');
         data.append('file[]', file);
         return getReq(opt.upload, data).then(function(json) {
             var row = json.files && json.files[0] ? json.files[0] : null;
-            var mode = opt.object ? doc.getElementById(opt.object) : null;
-            var check = mode ? mode.querySelector('input[type="checkbox"]') : null;
             var box = doc.getElementById(String(id) + '_toast');
             var popup = box ? box.querySelector('.toastui-editor-popup-add-image') : null;
             var close = popup ? popup.querySelector('.toastui-editor-close-button') : null;
@@ -349,7 +421,7 @@
                 setMsg(id, json.error || getLab(id, 'upload', 'Upload failed'), true, image);
                 return;
             }
-            if (image && check && check.checked) {
+            if (image && getImageMode(id) === 'attach') {
                 addAttach(id, row.file);
                 if (close) close.click();
                 setImageChrome(id, false);
@@ -505,10 +577,11 @@
                 setWindowFront(id, 'image');
                 body = popup ? popup.querySelector('.toastui-editor-popup-body') : null;
                 if (body && el.classList.contains('image')) {
-                    body.classList.remove('sl-toastui-image-warn');
-                    body.removeAttribute('data-slaed-error');
+                    mode = popup.querySelector('.js-slaed-image-msg');
+                    if (mode) mode.remove();
                     mode = getOpt(id).object ? doc.getElementById(getOpt(id).object) : null;
-                    if (mode) mode.querySelector('input[type="checkbox"]').checked = false;
+                    mode = mode ? mode.querySelector('input[value="upload"]') : null;
+                    if (mode) mode.checked = true;
                 }
             }, 0);
         });
@@ -534,6 +607,17 @@
     doc.addEventListener('change', function(ev) {
         var el = ev.target;
         var id;
+        var box;
+        var popup;
+        var ok;
+        if (el.id === 'toastuiImageFileInput') {
+            box = el.closest ? el.closest('[id$="_toast"]') : null;
+            id = box ? box.id.replace(/_toast$/, '') : '';
+            popup = el.closest('.toastui-editor-popup-add-image');
+            ok = popup ? popup.querySelector('.toastui-editor-ok-button') : null;
+            if (ok && el.files && el.files.length && getOpt(id).upload) ok.click();
+            return;
+        }
         if (!el.classList || !el.classList.contains('js-slaed-upload-file')) return;
         id = el.getAttribute('data-editor');
         addFileList(id, el.files, el);

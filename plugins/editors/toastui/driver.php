@@ -80,7 +80,7 @@ class EditorToastUi implements ContentDriver {
                 'exitfull' => _EEXITFULL,
                 'image' => _IMG,
                 'attach' => _EATTACH,
-                'nofiles' => _NO.' '._FILES,
+                'nofiles' => _NO_INFO,
                 'upload' => _ERROR_UP,
                 'load' => _ERROR,
                 'uploaded' => _FILE_RENAMED,
@@ -119,7 +119,9 @@ class EditorToastUi implements ContentDriver {
             $fid = $id.'_toast_file';
             $tid = $id.'_toast_title';
             $oid = $id.'_toast_object';
+            $opt['labels']['toobig'] = _ERROR_SIZE;
             $opt += [
+                'embedmax' => 32768,
                 'token' => $tok,
                 'panel' => $pid,
                 'msg' => $mid,
@@ -144,6 +146,10 @@ class EditorToastUi implements ContentDriver {
                 'restore_label' => _ERESTORE,
                 'object_label' => _EINSOBJ,
                 'object_info' => _EINSOBJINFO,
+                'upload_label' => _EMODEUPLOAD,
+                'upload_info' => _EMODEUPLOADINFO,
+                'embed_label' => _EMODEEMBED,
+                'embed_info' => _EMODEEMBEDINFO,
                 'select_label' => _ESELFILE,
                 'nofile_label' => _ENOFILE,
                 'drop_label' => _EDROPFILES,

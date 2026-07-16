@@ -7,6 +7,7 @@
   --sl-color-border: #e8ebee;
   --sl-color-border-strong: #cad2da;
   --sl-color-text: #111827;
+  --sl-color-text-heading: var(--sl-color-text);
   --sl-color-text-soft: #374151;
   --sl-color-text-muted: #6b7280;
   --sl-color-primary: #0877b1;
@@ -88,6 +89,12 @@
   --sl-shadow-input-active:
     inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(43, 87, 112, 0.18);
   --sl-focus-primary-ring: 0 0 0 2px rgba(11, 135, 201, 0.22);
+  --sl-field-bg: var(--sl-color-bg);
+  --sl-field-border: var(--sl-color-border-strong);
+  --sl-field-focus: var(--sl-color-primary);
+  --sl-field-focus-ring: rgba(11, 135, 201, 0.22);
+  --sl-field-radius: var(--sl-radius-control);
+  --sl-field-placeholder: var(--sl-color-text-muted);
   --sl-focus-success-ring:
     inset 0 0 0 1px rgba(0, 0, 0, 0.12), 0 0 0 2px rgba(52, 185, 75, 0.22);
   --sl-focus-danger: rgba(226, 76, 76, 0.3);
