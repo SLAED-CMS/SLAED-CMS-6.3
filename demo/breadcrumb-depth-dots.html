@@ -4,13 +4,13 @@
   :root {
     --sl-space-xs: 4px; --sl-space-sm: 6px; --sl-space-md: 8px; --sl-space-lg: 12px;
     --sl-color-bg: #ffffff;
-    --sl-color-surface: #f8f9fb;
-    --sl-color-surface-alt: #f2f4f7;
+    --sl-color-bg-soft: #f8f9fb;
+    --sl-color-bg-soft-alt: #f2f4f7;
     --sl-color-text: #222222;
     --sl-color-text-heading: #223345;
     --sl-color-text-muted: #6e7c8b;
     --sl-color-text-subtle: #a5b2bf;
-    --sl-color-brand-link: #30a2f6;
+    --sl-color-primary: #30a2f6;
     --sl-color-brand-strong: #207fb6;
     --sl-color-border: #e8ebee;
     --sl-color-border-strong: #cad2da;
@@ -42,7 +42,7 @@
 
   .toggle { position: fixed; top: 16px; right: 16px; z-index: 5; display: inline-flex; gap: 2px; padding: 3px; background: var(--pg-panel); border: 1px solid var(--pg-line); border-radius: 999px; }
   .toggle button { border: 0; background: transparent; color: var(--pg-muted); cursor: pointer; font: 600 12px/1 inherit; padding: 6px 12px; border-radius: 999px; }
-  .toggle button[aria-pressed="true"] { background: var(--sl-color-brand-link); color: #fff; }
+  .toggle button[aria-pressed="true"] { background: var(--sl-color-primary); color: #fff; }
 
   .variant { margin-top: 26px; background: var(--pg-panel); border: 1px solid var(--pg-line); border-radius: 14px; overflow: hidden; }
   .variant > .meta { padding: 18px 22px 4px; }

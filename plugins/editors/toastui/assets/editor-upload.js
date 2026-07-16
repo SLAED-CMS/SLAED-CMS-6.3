@@ -38,7 +38,7 @@
         if (type === 'image') return box ? box.querySelector('.toastui-editor-popup-add-image') : null;
         if (type === 'link') return box ? box.querySelector('.toastui-editor-popup-add-link') : null;
         if (type === 'emoji') {
-            emoji = doc.querySelector('.slaed-emoji-panel');
+            emoji = doc.querySelector('.sl-editor-emoji-panel');
             return emoji && emoji.getAttribute('data-editor') === String(id) ? emoji : null;
         }
         return opt.panel ? doc.getElementById(opt.panel) : null;
@@ -312,12 +312,6 @@
         if (warn) setPanel(id, true);
     }
 
-    function getEsc(text) {
-        return String(text || '').replace(/[&<>"']/g, function(chr) {
-            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[chr];
-        });
-    }
-
     function getReq(url, data) {
         return fetch(url, {
             method: 'POST',
@@ -375,19 +369,56 @@
         setPanel(id, false);
     }
 
+    function getWarn(id, text) {
+        var el = api.getTpl(id, 'msg-warn');
+        if (el) el.textContent = text;
+        return el;
+    }
+
     function getRows(id, rows) {
-        if (!rows || !rows.length) return '<div class="sl-toastui-message sl-toastui-message-info">' + getEsc(getLab(id, 'nofiles', 'No files')) + '</div>';
-        return '<table class="sl-toastui-file-table"><tbody>' + rows.map(function(row) {
-            var dat = ' data-editor="' + getEsc(id) + '" data-file="' + getEsc(row.file) + '"';
-            var img = row.image ? '<img src="' + getEsc(row.url) + '" alt="" style="max-width:80px;max-height:50px">' : '';
-            var lab = getEsc(getLab(id, 'image', 'Image'));
-            var ins = row.image
-                ? '<button type="button" class="toastui-editor-close-button js-slaed-file-image"' + dat + ' data-url="' + getEsc(row.url) + '">' + lab + '</button> '
-                : '';
-            var att = '<button type="button" class="toastui-editor-ok-button js-slaed-file-attach"' + dat
-                + '>' + getEsc(getLab(id, 'attach', 'Attachment')) + '</button>';
-            return '<tr><td>' + img + '</td><td>' + getEsc(row.file) + '</td><td>' + getEsc(row.size) + '</td><td>' + ins + att + '</td></tr>';
-        }).join('') + '</tbody></table>';
+        var table;
+        var body;
+        var info;
+        if (!rows || !rows.length) {
+            info = api.getTpl(id, 'msg-info');
+            if (info) info.textContent = getLab(id, 'nofiles', 'No files');
+            return info;
+        }
+        table = api.getTpl(id, 'file-table');
+        body = table ? table.querySelector('tbody') : null;
+        if (!body) return null;
+        rows.forEach(function(row) {
+            var tr = api.getTpl(id, 'file-row');
+            var img = tr ? tr.querySelector('.js-slaed-file-thumb') : null;
+            var name = tr ? tr.querySelector('.js-slaed-file-name') : null;
+            var size = tr ? tr.querySelector('.js-slaed-file-size') : null;
+            var ins = tr ? tr.querySelector('.js-slaed-file-image') : null;
+            var att = tr ? tr.querySelector('.js-slaed-file-attach') : null;
+            if (!tr) return;
+            if (img) {
+                if (row.image) img.src = row.url;
+                else img.remove();
+            }
+            if (name) name.textContent = row.file;
+            if (size) size.textContent = row.size;
+            if (ins) {
+                if (row.image) {
+                    ins.textContent = getLab(id, 'image', 'Image');
+                    ins.setAttribute('data-editor', id);
+                    ins.setAttribute('data-file', row.file);
+                    ins.setAttribute('data-url', row.url);
+                } else {
+                    ins.remove();
+                }
+            }
+            if (att) {
+                att.textContent = getLab(id, 'attach', 'Attachment');
+                att.setAttribute('data-editor', id);
+                att.setAttribute('data-file', row.file);
+            }
+            body.appendChild(tr);
+        });
+        return table;
     }
 
     function getFiles(id) {
@@ -397,12 +428,13 @@
         fetch(opt.files, { credentials: 'same-origin' }).then(function(res) {
             return res.json();
         }).then(function(json) {
-            el.innerHTML = json.ok
-                ? getRows(id, json.files || [])
-                : '<div class="sl-toastui-message sl-toastui-message-warn">'
-                    + getEsc(json.error || getLab(id, 'load', 'Load failed')) + '</div>';
+            var node = json.ok ? getRows(id, json.files || []) : getWarn(id, json.error || getLab(id, 'load', 'Load failed'));
+            el.replaceChildren();
+            if (node) el.appendChild(node);
         }).catch(function() {
-            el.innerHTML = '<div class="sl-toastui-message sl-toastui-message-warn">' + getEsc(getLab(id, 'load', 'Load failed')) + '</div>';
+            var node = getWarn(id, getLab(id, 'load', 'Load failed'));
+            el.replaceChildren();
+            if (node) el.appendChild(node);
         });
     }
 
@@ -494,7 +526,7 @@
         ed.insertToolbarItem({ groupIndex: 6, itemIndex: 4 }, {
             name: 'slaedFiles',
             text: '',
-            className: 'toastui-editor-toolbar-icons slaed-bi slaed-bi-files',
+            className: 'toastui-editor-toolbar-icons sl-editor-icon sl-editor-icon-files',
             tooltip: getLab(id, 'files', 'SLAED files'),
             command: 'slaedFiles'
         });
@@ -609,6 +641,12 @@
     });
 
     api.options = api.options || {};
+    api.getTpl = api.getTpl || function(id, name) {
+        var opt = (api.options || {})[String(id)] || {};
+        var root = doc.querySelector('.' + (opt.tpl || 'js-slaed-editor-tpl'));
+        var tpl = root ? root.querySelector('template[data-tpl="' + name + '"]') : null;
+        return tpl && tpl.content && tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
+    };
     api.syncWindow = function(id, type) {
         var popup = type === 'image' ? setImageChrome(id, true) : setPopupChrome(id, type, true);
         setWindowFront(id, type);

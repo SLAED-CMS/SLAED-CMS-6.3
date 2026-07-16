@@ -60,7 +60,7 @@ if (is_user()) {
         if ($gname === '' && $points) $gname = $rank;
     }
     $gcolor = ($gcolor && preg_match('/^#[0-9a-f]{6}$/i', $gcolor)) ? $gcolor : '';
-    $rankurl = ($grank && file_exists(img_find('ranks/'.$grank))) ? img_find('ranks/'.$grank) : '';
+    $rankurl = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
     $level = ($conf['users']['point'] && $points) ? (($ngpts > 0) ? min(99, intval(floor($points / $ngpts * 100))) : 100) : (($grp) ? 100 : 0);
     $data = [
         'is_user' => true,

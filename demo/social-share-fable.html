@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — «Поделиться» (Fable): веер, лист сетей, QR</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
 /* ---- demo chrome (не часть системы) ---- */
 * { box-sizing: border-box; }
-body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
-.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%); border-bottom: 1px solid var(--sl-color-border); }
+body { margin: 0; padding: 0 0 90px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%); border-bottom: 1px solid var(--sl-color-border); }
 .demo-head h1 { margin: 0 0 6px; font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
 .demo-head p { margin: 0 0 14px; max-width: 960px; color: var(--sl-color-text-muted); }
 .demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1400px; margin: 0 auto; }
@@ -24,11 +24,11 @@ body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color:
 .demo-badge-reco { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-success) 15%, transparent); color: var(--sl-color-success); font-size: 11px; font-weight: bold; text-transform: none; letter-spacing: 0; }
 .demo-article { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 24px 28px; }
 .demo-muted { color: var(--sl-color-text-muted); font-size: 13px; }
-code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+code { background: var(--sl-color-bg-soft-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
 /* URL mode segmented switch (demo control) */
 .demo-urlmode { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--sl-color-border-strong); border-radius: 999px; overflow: hidden; background: var(--sl-color-bg); }
 .demo-urlmode button { border: 0; background: transparent; padding: 6px 16px; font: inherit; font-size: 13px; cursor: pointer; color: var(--sl-color-text-muted); }
-.demo-urlmode button.demo-on { background: var(--sl-color-brand-link); color: var(--sl-color-on-dark); }
+.demo-urlmode button.demo-on { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
 .demo-urlbar { margin-top: 10px; font-size: 13px; color: var(--sl-color-text-muted); }
 .demo-urlbar b { color: var(--sl-color-text-heading); word-break: break-all; }
 
@@ -74,7 +74,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   color: var(--sl-color-text-heading);
 }
 
-.sl-modal-head > .bi { color: var(--sl-color-brand-link); }
+.sl-modal-head > .bi { color: var(--sl-color-primary); }
 .sl-modal-close { position: absolute; top: 14px; right: 14px; }
 
 @keyframes sl-modal-in {
@@ -109,7 +109,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   transition: background-color 0.15s ease;
 }
 
-.sl-share-net:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading); }
+.sl-share-net:hover { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); }
 
 .sl-share-net-ico {
   display: flex;
@@ -124,12 +124,12 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.sl-share-net:hover .sl-share-net-ico { background: var(--sl-color-brand-link); transform: translateY(-2px); }
+.sl-share-net:hover .sl-share-net-ico { background: var(--sl-color-primary); transform: translateY(-2px); }
 .sl-share-net-ico .sl-svg-ico { width: var(--sl-size-icon-sm); height: var(--sl-size-icon-sm); }
 
 /* Brand-coloured variant of the sheet (lab comparison) */
 .demo-brand .sl-share-net-ico { background: var(--sl-net-brand, var(--sl-color-border-strong)); }
-.demo-brand .sl-share-net:hover .sl-share-net-ico { filter: brightness(1.12); background: var(--sl-net-brand, var(--sl-color-brand-link)); }
+.demo-brand .sl-share-net:hover .sl-share-net-ico { filter: brightness(1.12); background: var(--sl-net-brand, var(--sl-color-primary)); }
 
 /* QR modal body */
 .sl-qr-box { display: flex; flex-direction: column; align-items: center; gap: 14px; }
@@ -150,7 +150,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   gap: 10px;
   padding: 10px 18px;
   border-radius: 999px;
-  background: var(--sl-color-surface-dark);
+  background: var(--sl-color-bg-soft-dark);
   color: var(--sl-color-on-dark);
   font-size: 14px;
   box-shadow: var(--sl-shadow-strong);
@@ -286,7 +286,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   <h2>5. Контракт для переноса</h2>
   <div class="demo-cell" style="max-width:960px;">
     <span class="demo-label">PHP → шаблон</span>
-    <pre class="demo-muted" style="overflow:auto;background:var(--sl-color-surface-alt);padding:12px;border-radius:6px;margin:0;">// PHP отдаёт только данные (без HTML/классов):
+    <pre class="demo-muted" style="overflow:auto;background:var(--sl-color-bg-soft-alt);padding:12px;border-radius:6px;margin:0;">// PHP отдаёт только данные (без HTML/классов):
 'share_url' =&gt; getSeoUrl(...абсолютный канонический...),
 'share_title' =&gt; $title,
 'share_label' =&gt; _SHARE, 'copy_label' =&gt; _COPYLINK, 'qr_label' =&gt; _QRCODE, ...

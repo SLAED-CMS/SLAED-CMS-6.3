@@ -78,7 +78,7 @@
 ### 5. Asset / Compress-пайплайн
 
 - `checkCompress()`, `addCompress()`, `getCompressCss()`, `getCompressCode()`,
-  `getOutputHtml()`, `doScript()`, `doCss()`, `getThemeCssFiles()`,
+  `getOutputHtml()`, `doScript()`, `doCss()`,
   `getThemeAssets()`, `getAssetFiles()`
 - Сервис `AssetBundler` (тема + минификация + кэш). Состояние слабее (в основном
   трансформации), поэтому Tier 2.

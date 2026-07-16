@@ -207,7 +207,7 @@ function send(): void {
             ],
         ]];
         if ($conf['auto_links']['img']) {
-            $banner = img_find('banners/'.$conf['auto_links']['img']);
+            $banner = getThemeImagePath('banners/'.$conf['auto_links']['img']);
             if ($banner && file_exists($banner)) {
                 [$imgwidth, $imgheight] = getimagesize($banner);
                 $embedTitle = htmlspecialchars($conf['sitename'].' - '.$conf['slogan'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

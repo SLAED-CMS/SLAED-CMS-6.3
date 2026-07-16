@@ -21,12 +21,12 @@ $content = $tpl->getHtmlFrag('image', [
 $content .= $tpl->getHtmlFrag('link', [
     'href' => 'http://www.slaed.net',
     'title' => $titl,
-    'img_src' => img_find('banners/slaed_3_2.gif'),
+    'img_src' => getThemeImagePath('banners/slaed_3_2.gif'),
     'img_alt' => $titl,
 ]);
 $content .= $tpl->getHtmlFrag('link', [
     'href' => 'index.php?go=rss&num=50',
     'title' => $rss,
-    'img_src' => img_find('banners/rss_2.gif'),
+    'img_src' => getThemeImagePath('banners/rss_2.gif'),
     'img_alt' => $rss,
 ]);

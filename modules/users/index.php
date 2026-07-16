@@ -142,7 +142,7 @@ function stats(): void {
             $trank = ($grname) ? _GROUP.': '.$grname : _RANK;
             $rows[] = [
                 'cells' => [
-                    ['img_src' => img_find('ranks/'.$rank), 'img_alt' => $trank, 'img_title' => $trank],
+                    ['img_src' => getThemeImagePath('ranks/'.$rank), 'img_alt' => $trank, 'img_title' => $trank],
                     ['primary_text' => $grname, 'secondary_text' => $description],
                     ['text' => (string)$points],
                     ['text' => (string)$total],

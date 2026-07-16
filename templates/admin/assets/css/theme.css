@@ -311,7 +311,7 @@ input.sl-but-blue[value="ОК"] {
 }
 
 .sl-preview-meta {
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   background-color: var(--sl-color-bg-soft);
 }
 
@@ -615,7 +615,7 @@ input.sl-but-blue[value="ОК"] {
   justify-content: center;
   width: var(--sl-size-icon-sm);
   height: var(--sl-size-icon-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   font-size: var(--sl-size-icon-sm);
   vertical-align: middle;
   transition: color 0.18s ease;
@@ -695,7 +695,7 @@ tr.sl-row-collapsed {
 }
 
 .sl-tree-node {
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   margin: 0 var(--sl-space-sm) 0 22px;
 }
 
@@ -811,7 +811,7 @@ tr.sl-row-collapsed {
 
 .sl-debug-stats dd {
   margin: 0;
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 .sl-debug-value {
@@ -1568,10 +1568,10 @@ tr.sl-row-collapsed {
   border-radius: 9999px;
   background: color-mix(
     in srgb,
-    var(--sl-chip-tone, var(--sl-color-muted)) 13%,
+    var(--sl-chip-tone, var(--sl-color-text-muted)) 13%,
     transparent
   );
-  color: var(--sl-chip-tone, var(--sl-color-muted));
+  color: var(--sl-chip-tone, var(--sl-color-text-muted));
   font-size: 0.78em;
   font-weight: 700;
   line-height: 1;
@@ -2031,11 +2031,11 @@ tr.sl-row-collapsed {
 .sl-mcard-off .sl-ico {
   border-color: var(--sl-color-border);
   background: var(--sl-color-bg-subtle);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 .sl-mcard-off .sl-mbody strong {
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 .sl-mbody {
@@ -2057,7 +2057,7 @@ tr.sl-row-collapsed {
 .sl-mbody > span {
   display: block;
   overflow: hidden;
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   font-size: 0.86em;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2331,7 +2331,7 @@ dialog.sl-modal::backdrop {
   border: 1px solid var(--sl-color-border-strong);
   border-radius: 9999px;
   background: var(--sl-color-bg);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   font-weight: bold;
   cursor: pointer;
   transition:
@@ -2551,7 +2551,7 @@ dialog.sl-modal::backdrop {
 .sl-radio-group.sl-radio-switch {
   --sl-switch-on: var(--sl-color-success);
   --sl-switch-off: var(--sl-color-border);
-  --sl-switch-text: var(--sl-color-muted);
+  --sl-switch-text: var(--sl-color-text-muted);
   --sl-switch-dark: var(--sl-color-bg);
   position: relative;
   display: inline-grid;
@@ -3097,8 +3097,8 @@ dialog.sl-modal::backdrop {
   left: 50%;
   width: 7px;
   height: 7px;
-  border-top: 2px solid var(--sl-color-muted);
-  border-right: 2px solid var(--sl-color-muted);
+  border-top: 2px solid var(--sl-color-text-muted);
+  border-right: 2px solid var(--sl-color-text-muted);
   content: "";
 }
 
@@ -3455,7 +3455,7 @@ dialog.sl-modal::backdrop {
 
 .sl-vote-result-meta {
   flex: 0 0 auto;
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   white-space: nowrap;
 }
 
@@ -3712,7 +3712,7 @@ dialog.sl-modal::backdrop {
   border-bottom: 0;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   background: linear-gradient(
     to bottom,
     var(--sl-color-bg-soft) 0%,
@@ -3944,12 +3944,12 @@ dialog.sl-modal::backdrop {
 
 .sl-muted,
 .sl-muted a {
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 .sl-generates,
 .sl-license {
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   font-size: 0.9em;
 }
 
@@ -4271,13 +4271,13 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 .sl-monitor-head-left .bi {
   font-size: var(--sl-size-icon-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 .sl-monitor-head-right {
   font-weight: 400;
   font-size: var(--sl-monitor-size-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 /* Admin monitor: top section split */
@@ -4371,7 +4371,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 .sl-system-sub {
   font-size: var(--sl-monitor-size-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 /* Admin monitor: overview strip */
@@ -4401,7 +4401,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 .sl-overview-label {
   font-size: var(--sl-monitor-size-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   margin-bottom: 5px;
 }
 
@@ -4423,7 +4423,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   justify-content: center;
   align-items: center;
   font-size: var(--sl-size-icon-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 /* Admin monitor: bottom grid */
@@ -4477,7 +4477,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 
 .sl-status-compact-left .bi {
   font-size: var(--sl-size-icon-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   width: var(--sl-size-icon-sm);
   text-align: center;
 }
@@ -4487,7 +4487,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
   align-items: center;
   gap: var(--sl-space-md);
   font-size: var(--sl-monitor-size-sm);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 /* Admin monitor: traffic chart */
@@ -4572,7 +4572,7 @@ body:has(.sl-monitor-wrapper) .sl-monitor-wrapper * {
 .sl-t-sub {
   font-size: var(--sl-monitor-size-md);
   font-weight: 400;
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   line-height: 1;
   margin-top: 5px;
 }
@@ -5690,7 +5690,7 @@ body:has(.sl-admin-login-shell):before {
   padding-top: 16px;
   border-top: 1px solid var(--sl-color-border);
   font-size: 12px;
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
 }
 
 /* Accessibility: honor reduced-motion preference */

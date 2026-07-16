@@ -268,7 +268,7 @@ function config(): void {
     $opts = '';
     if (is_array($list)) {
         foreach ($list as $file) {
-            if (!preg_match('/\./', $file) && $file != 'admin') {
+            if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
                 $opts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $file,
@@ -734,7 +734,7 @@ function save(): void {
             'user_c_t' => getVar('post', 'user_c_t', 'num', 30) * 86400,
             'sess_t' => getVar('post', 'sess_t', 'num', 10) * 60,
             'ip_link' => getVar('post', 'ip_link', 'url', 'http://whois.domaintools.com/'),
-            'theme' => getVar('post', 'theme', 'var'),
+            'theme' => ($xtheme = getVar('post', 'theme', 'var')) && checkThemeAssets($xtheme) ? $xtheme : (string)$conf['theme'],
             'module' => $xmodule,
             'amod' => getVar('post', 'amod', 'var'),
             'editor' => [

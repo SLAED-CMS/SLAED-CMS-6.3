@@ -10,7 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
-$path = img_find('banners/random');
+$path = getThemeImagePath('banners/random');
 $dir = opendir($path);
 $ban = [];
 while (false !== ($file = readdir($dir))) {
@@ -22,6 +22,6 @@ $url = preg_split('#-#', $ban[$i]);
 $content = $tpl->getHtmlFrag('link', [
     'href' => 'https://'.str_replace(['_', '+'], ['/', '?'], $url[0]),
     'title' => 'SLAED CMS',
-    'img_src' => img_find('banners/random/'.$ban[$i]),
+    'img_src' => getThemeImagePath('banners/random/'.$ban[$i]),
     'img_alt' => 'SLAED CMS',
 ]);

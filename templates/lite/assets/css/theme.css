@@ -125,7 +125,7 @@ h1.sl-title {
 }
 
 .sl-title a:hover {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
 }
 
 /* Utilities: reusable helpers */
@@ -327,7 +327,7 @@ h1.sl-title {
 
 .sl-table-head th {
   padding: 13px 15px 10px 15px;
-  background-color: var(--sl-color-surface-alt);
+  background-color: var(--sl-color-bg-soft-alt);
   border-bottom: 1px solid var(--sl-color-border-stronger);
   font-size: 12px;
   font-weight: bold;
@@ -353,7 +353,7 @@ h1.sl-title {
 }
 
 .sl-table-row:hover {
-  background-color: var(--sl-color-surface-alt);
+  background-color: var(--sl-color-bg-soft-alt);
 }
 
 .sl-table-col-num {
@@ -643,7 +643,7 @@ a.sl-crumb:hover + .sl-crumb-sep {
 
 .sl-alert-close:hover {
   color: var(--sl-color-text);
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 
 .sl-alert-actions {
@@ -1186,7 +1186,7 @@ select.sl-field {
 }
 
 .sl-main-list > li:hover:before {
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
 }
 
 .sl-main-list > li:first-child {
@@ -1218,7 +1218,7 @@ select.sl-field {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   margin-top: -4px;
 }
 
@@ -1288,7 +1288,7 @@ a.sl-but-mini:hover,
 button.sl-but-mini:hover,
 .sl-but-mini:focus-visible,
 .sl-but-mini.sl-is-active {
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
   color: var(--sl-color-on-dark);
 }
 
@@ -1379,7 +1379,7 @@ button.sl-but-mini:hover,
 
 .sl-dial.sl-open .sl-dial-toggle,
 .sl-dial:hover .sl-dial-toggle {
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
   color: var(--sl-color-on-dark);
 }
 
@@ -1529,7 +1529,7 @@ button.sl-but-mini:hover,
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 50%;
-  background-color: var(--sl-color-surface-alt);
+  background-color: var(--sl-color-bg-soft-alt);
   background-size: cover;
   background-position: center;
   font-size: 0;
@@ -1930,7 +1930,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-code-row-odd {
-  background-color: var(--sl-color-surface);
+  background-color: var(--sl-color-bg-soft);
 }
 
 .sl-code-row-even {
@@ -2007,7 +2007,7 @@ ol.sl-sublist-two li:hover:before {
   list-style: none;
   border: 1px solid var(--sl-color-border-subtle);
   border-radius: var(--sl-radius-control);
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
 }
 
 .sl-gallery-thumb {
@@ -2259,7 +2259,7 @@ ol.sl-sublist-two li:hover:before {
   width: 100%;
   height: 100px;
   padding: 5px;
-  background-color: var(--sl-color-surface);
+  background-color: var(--sl-color-bg-soft);
   border: 1px solid var(--sl-color-border-stronger);
   border-radius: 4px;
   color: var(--sl-color-text-muted);
@@ -2282,7 +2282,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-preview-head {
   padding: var(--sl-space-lg) 15px;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   border-bottom: 1px solid var(--sl-color-border-stronger);
   font-weight: bold;
   color: var(--sl-color-text-heading);
@@ -2309,7 +2309,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-preview-meta {
-  background-color: var(--sl-color-surface);
+  background-color: var(--sl-color-bg-soft);
   color: var(--sl-color-text-muted);
 }
 
@@ -2339,7 +2339,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-vote-list li:hover {
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 
 .sl-vote-list label {
@@ -2368,7 +2368,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-vote-list li:has(input:checked) {
-  background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent);
+  background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
   color: var(--sl-color-text-heading);
   font-weight: bold;
 }
@@ -2599,7 +2599,7 @@ ol.sl-sublist-two li:hover:before {
   gap: var(--sl-space-md);
   margin: 0 0 24px;
   padding: 14px 16px;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   border: 1px solid var(--sl-color-border);
   border-radius: var(--sl-radius-card);
 }
@@ -2756,11 +2756,11 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-changelog-commit:hover {
-  background-color: var(--sl-color-surface) !important;
+  background-color: var(--sl-color-bg-soft) !important;
 }
 
 .sl-changelog-commit-alt {
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
 }
 
 .sl-changelog-commit-header {
@@ -2798,7 +2798,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-changelog-commit-body {
   background: var(--sl-changelog-header);
-  border-left: 4px solid var(--sl-color-brand-link);
+  border-left: 4px solid var(--sl-color-primary);
   padding: var(--sl-space-lg) 16px;
   margin: var(--sl-space-lg) 0;
   border-radius: 4px;
@@ -2922,7 +2922,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-but:hover {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   opacity: 0.8;
 }
 
@@ -2963,7 +2963,7 @@ ol.sl-sublist-two li:hover:before {
 /* Blocks: positioning anchors for corner tool clusters */
 .sl-block {
   position: relative;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   display: flow-root;
   padding: 15px;
   border-radius: 8px;
@@ -3028,7 +3028,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* User block: compact Dense Split account and audience dashboard */
 .sl-user-card {
-  --sl-user-color: var(--sl-color-brand-link);
+  --sl-user-color: var(--sl-color-primary);
   --sl-user-level: 100%;
   position: relative;
   display: flex;
@@ -3062,7 +3062,7 @@ ol.sl-sublist-two li:hover:before {
   display: block;
   width: 56px;
   height: 56px;
-  border: 3px solid var(--sl-color-surface);
+  border: 3px solid var(--sl-color-bg-soft);
   border-radius: 50%;
   background-color: var(--sl-color-bg);
   background-position: center;
@@ -3073,7 +3073,7 @@ ol.sl-sublist-two li:hover:before {
 .sl-block-user-ava > .sl-ava-min {
   width: 64px;
   height: 64px;
-  border: 4px solid var(--sl-color-surface-alt);
+  border: 4px solid var(--sl-color-bg-soft-alt);
 }
 
 .sl-block-user-ava p {
@@ -3091,7 +3091,7 @@ ol.sl-sublist-two li:hover:before {
   font-size: 15px;
 }
 
-.sl-block-user-ava p > a:hover { color: var(--sl-color-brand-link); }
+.sl-block-user-ava p > a:hover { color: var(--sl-color-primary); }
 
 .sl-block-user-ava p img {
   display: block;
@@ -3147,7 +3147,7 @@ ol.sl-sublist-two li:hover:before {
   color: var(--sl-color-brand-strong);
 }
 
-.sl-block-pm a > .bi:first-child { color: var(--sl-color-brand-link); }
+.sl-block-pm a > .bi:first-child { color: var(--sl-color-primary); }
 .sl-block-pm a > .bi:last-child { font-size: 11px; }
 
 .sl-pm-new {
@@ -3172,7 +3172,7 @@ ol.sl-sublist-two li:hover:before {
   margin-top: 10px;
   border: 1px solid var(--sl-color-border);
   border-radius: 999px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 
 .sl-user-nav a {
@@ -3184,7 +3184,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-user-nav a:last-child { border-right: 0; }
-.sl-user-nav a:hover { background: var(--sl-color-bg); color: var(--sl-color-brand-link); }
+.sl-user-nav a:hover { background: var(--sl-color-bg); color: var(--sl-color-primary); }
 
 .sl-block-login {
   display: grid;
@@ -3260,7 +3260,7 @@ ol.sl-sublist-two li:hover:before {
   background: conic-gradient(
     var(--sl-color-success) 0 var(--sl-members),
     var(--sl-color-warning) var(--sl-members) var(--sl-bots),
-    var(--sl-color-brand-link) var(--sl-bots) 100%
+    var(--sl-color-primary) var(--sl-bots) 100%
   );
 }
 
@@ -3270,7 +3270,7 @@ ol.sl-sublist-two li:hover:before {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   line-height: 1;
 }
 
@@ -3286,7 +3286,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-session-line[data-sl-audience="users"] > .bi { color: var(--sl-color-success); }
 .sl-session-line[data-sl-audience="bots"] > .bi { color: var(--sl-color-warning); }
-.sl-session-line[data-sl-audience="guests"] > .bi { color: var(--sl-color-brand-link); }
+.sl-session-line[data-sl-audience="guests"] > .bi { color: var(--sl-color-primary); }
 
 .sl-session-summary .sl-session-total {
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3315,8 +3315,8 @@ ol.sl-sublist-two li:hover:before {
   padding: 12px;
   border: 1px solid var(--sl-color-border);
   border-radius: var(--sl-radius-card);
-  background: var(--sl-color-surface);
-  box-shadow: var(--sl-shadow-medium);
+  background: var(--sl-color-bg-soft);
+  box-shadow: var(--sl-shadow-panel);
 }
 
 .sl-user-card .sl-session-list > header {
@@ -3488,7 +3488,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* Examples: implementation showcase intro */
 #site-carousel {
-  background-color: var(--sl-color-surface-soft);
+  background-color: var(--sl-color-bg-soft-soft);
   box-shadow: inset 0 1px 2px 0 var(--sl-overlay-10);
   padding: 45px 0;
 }
@@ -3550,7 +3550,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-site-link:hover .sl-site-title:hover {
-  color: var(--sl-color-surface-dark);
+  color: var(--sl-color-bg-soft-dark);
 }
 
 .sl-site-img,
@@ -3571,7 +3571,7 @@ ol.sl-sublist-two li:hover:before {
   position: absolute;
   top: 0;
   left: 0;
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
   opacity: 0;
   visibility: hidden;
   transition: all 0.6s ease;
@@ -3667,7 +3667,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-forum-meta-icon,
 .sl-forum-meta-item a .bi {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   font-size: var(--sl-size-icon-xs);
   line-height: 1;
 }
@@ -3695,12 +3695,12 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-partners a {
-  border: 1px solid var(--sl-color-surface-divider);
+  border: 1px solid var(--sl-color-bg-soft-divider);
   margin: 0 7px 7px 0;
 }
 
 .sl-partners a:hover {
-  border-color: var(--sl-color-surface-divider);
+  border-color: var(--sl-color-bg-soft-divider);
 }
 
 /* Contacts: footer address list with icons */
@@ -3716,7 +3716,7 @@ ol.sl-sublist-two li:hover:before {
   flex: 0 0 var(--sl-size-icon-md);
   width: var(--sl-size-icon-md);
   margin: 0;
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   text-align: center;
   font-size: var(--sl-size-icon-md);
   line-height: 1;
@@ -3764,7 +3764,7 @@ ol.sl-sublist-two li:hover:before {
   text-transform: uppercase;
   letter-spacing: 0.4px;
   text-decoration: none;
-  box-shadow: var(--sl-shadow-medium);
+  box-shadow: var(--sl-shadow-panel);
   transition: padding-left 0.18s ease;
 }
 
@@ -3947,7 +3947,7 @@ ol.sl-sublist-two li:hover:before {
   border: 1px solid var(--sl-color-border-strong);
   border-bottom: 0;
   border-radius: 6px 6px 0 0;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   color: var(--sl-color-text-muted);
   font-size: 13px;
   font-weight: bold;
@@ -3974,7 +3974,7 @@ ol.sl-sublist-two li:hover:before {
   background: var(--sl-color-bg);
   border-color: var(--sl-color-border-strong);
   border-bottom: 1px solid var(--sl-color-bg);
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   text-shadow: none;
 }
 
@@ -4085,7 +4085,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* Top bar: service strip above the header */
 #topbar {
-  background-color: var(--sl-color-surface-dark);
+  background-color: var(--sl-color-bg-soft-dark);
   min-height: 50px;
   color: var(--sl-color-on-dark);
   font-size: 14px;
@@ -4449,7 +4449,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-d-num {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   font-weight: normal;
   font-size: 45px;
   line-height: 40px;
@@ -4465,7 +4465,7 @@ ol.sl-sublist-two li:hover:before {
   position: relative;
   background: linear-gradient(
     to top,
-    var(--sl-color-surface) 0%,
+    var(--sl-color-bg-soft) 0%,
     var(--sl-color-bg) 50%
   );
 }
@@ -4492,8 +4492,8 @@ ol.sl-sublist-two li:hover:before {
 
 #topmenu > ul > li > a:hover,
 #topmenu > ul > li:hover > a {
-  color: var(--sl-color-surface-dark);
-  background-color: var(--sl-color-surface-alt);
+  color: var(--sl-color-bg-soft-dark);
+  background-color: var(--sl-color-bg-soft-alt);
   background-image: var(--sl-bg-hover-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -4540,10 +4540,10 @@ ol.sl-sublist-two li:hover:before {
   padding: 13px 0;
   border-radius: 13px;
   min-width: 150px;
-  background-color: var(--sl-color-surface-dark);
+  background-color: var(--sl-color-bg-soft-dark);
   color: var(--sl-color-on-dark);
   z-index: 2001;
-  box-shadow: var(--sl-shadow-medium);
+  box-shadow: var(--sl-shadow-panel);
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -4551,7 +4551,7 @@ ol.sl-sublist-two li:hover:before {
 
 #topmenu ul ul:after {
   content: "";
-  border-bottom: 8px solid var(--sl-color-surface-dark);
+  border-bottom: 8px solid var(--sl-color-bg-soft-dark);
   border-right: 8px solid transparent;
   border-top: 0 dotted;
   border-left: 8px solid transparent;
@@ -4569,7 +4569,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 #topmenu ul ul a:hover {
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
   background-image: var(--sl-bg-hover-gloss);
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -4648,7 +4648,7 @@ ol.sl-sublist-two li:hover:before {
   margin: 0;
   border-radius: calc(var(--sl-size-nav-control) / 2);
   line-height: var(--sl-size-nav-control);
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   box-shadow: inset 0 1px 1px 0 var(--sl-overlay-10);
   border: 0 none;
 }
@@ -4760,7 +4760,7 @@ ol.sl-sublist-two li:hover:before {
 
 /* Footer: four-column info area */
 #footbox {
-  background-color: var(--sl-color-surface-dark);
+  background-color: var(--sl-color-bg-soft-dark);
   box-shadow: inset 0 1px 2px 0 var(--sl-overlay-10);
   padding: 24px 0 0 0;
   color: var(--sl-color-on-dark);
@@ -4869,7 +4869,7 @@ ol.sl-sublist-two li:hover:before {
 #footbox > .sl-wrp:last-child {
   width: 100%;
   margin: 0;
-  background-color: var(--sl-color-surface-darker);
+  background-color: var(--sl-color-bg-soft-darker);
   padding: 0;
 }
 
@@ -4918,7 +4918,7 @@ ol.sl-sublist-two li:hover:before {
   width: 1px;
   height: 16px;
   vertical-align: middle;
-  background-color: var(--sl-color-surface-divider);
+  background-color: var(--sl-color-bg-soft-divider);
   margin: 0 20px;
 }
 
@@ -5048,7 +5048,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-com-cont {
-  background-color: var(--sl-color-surface-alt);
+  background-color: var(--sl-color-bg-soft-alt);
   position: relative;
   display: flow-root;
   padding: 15px 20px;
@@ -5061,7 +5061,7 @@ ol.sl-sublist-two li:hover:before {
   left: -16px;
   top: 0;
   border: solid transparent;
-  border-right-color: var(--sl-color-surface-alt);
+  border-right-color: var(--sl-color-bg-soft-alt);
   border-width: 0 17px 17px 0;
 }
 
@@ -5348,7 +5348,7 @@ td.sl-fl-col-stat {
 }
 
 .sl-fp-meta {
-  background-color: var(--sl-color-surface-alt);
+  background-color: var(--sl-color-bg-soft-alt);
   border-radius: 8px;
   display: flex;
   flex-wrap: wrap;
@@ -5514,7 +5514,7 @@ td.sl-fl-col-stat {
   padding: 0 11px;
   border: 1px solid transparent;
   border-radius: 999px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-heading);
   font:
     13px/1 Arial,
@@ -5564,11 +5564,11 @@ a.sl-chip {
 /* Tone classes come after the link default, so an explicit sl-chip-* tone wins on spans and links alike */
 .sl-chip-info,
 a.sl-chip-info {
-  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+  background: color-mix(in srgb, var(--sl-color-primary) 12%, transparent);
   color: var(--sl-color-brand-strong);
   --sl-chip-hover-bg: color-mix(
     in srgb,
-    var(--sl-color-brand-link) 22%,
+    var(--sl-color-primary) 22%,
     transparent
   );
 }
@@ -5620,12 +5620,12 @@ a.sl-chip-accent {
 
 .sl-chip-neutral,
 a.sl-chip-neutral {
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-heading);
   --sl-chip-hover-bg: color-mix(
     in srgb,
     var(--sl-color-text-heading) 8%,
-    var(--sl-color-surface-alt)
+    var(--sl-color-bg-soft-alt)
   );
 }
 
@@ -5661,7 +5661,7 @@ a.sl-chip-neutral {
 .sl-topic-admin .bi,
 .sl-topic-closed .bi,
 .sl-topic-pending .bi {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   font-size: var(--sl-size-icon-xs);
   line-height: 1;
   vertical-align: middle;
@@ -6467,8 +6467,8 @@ a.sl-chip-neutral {
   box-sizing: border-box;
   background: linear-gradient(
     160deg,
-    var(--sl-color-surface) 0%,
-    var(--sl-color-surface-alt) 100%
+    var(--sl-color-bg-soft) 0%,
+    var(--sl-color-bg-soft-alt) 100%
   );
 }
 
@@ -6480,7 +6480,7 @@ a.sl-chip-neutral {
   background: var(--sl-color-bg);
   border: 1px solid var(--sl-color-border);
   border-radius: 12px;
-  box-shadow: var(--sl-shadow-medium);
+  box-shadow: var(--sl-shadow-panel);
 }
 
 .sl-msg-brand {
@@ -6571,7 +6571,7 @@ a.sl-chip-neutral {
 
 .sl-fav-on,
 .sl-fav-on:hover {
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
   color: var(--sl-color-on-dark);
   cursor: default;
 }
@@ -6608,15 +6608,15 @@ a.sl-chip-neutral {
 .sl-fav .sl-is-burst::before {
   box-shadow:
     13px -13px var(--sl-color-warning-soft),
-    -13px -13px var(--sl-color-brand-link),
+    -13px -13px var(--sl-color-primary),
     15px 7px var(--sl-color-warning-soft);
 }
 
 .sl-fav .sl-is-burst::after {
   box-shadow:
-    -15px 7px var(--sl-color-brand-link),
+    -15px 7px var(--sl-color-primary),
     10px 14px var(--sl-color-warning-soft),
-    -10px 14px var(--sl-color-brand-link);
+    -10px 14px var(--sl-color-primary);
 }
 
 @keyframes sl-fav-pop {
@@ -6636,7 +6636,7 @@ a.sl-chip-neutral {
 @keyframes sl-fav-ring {
   0% {
     box-shadow: 0 0 0 0
-      color-mix(in srgb, var(--sl-color-brand-link) 60%, transparent);
+      color-mix(in srgb, var(--sl-color-primary) 60%, transparent);
   }
 
   100% {
@@ -6691,7 +6691,7 @@ a.sl-chip-neutral {
 
 .sl-share-net:hover,
 .sl-share-net:focus-visible {
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-heading);
 }
 
@@ -6773,7 +6773,7 @@ a.sl-chip-neutral {
 a.sl-but-mini.sl-net-brand:hover,
 button.sl-but-mini.sl-net-brand:hover,
 .sl-but-mini.sl-net-brand:focus-visible {
-  background-color: var(--sl-net-brand, var(--sl-color-brand-link));
+  background-color: var(--sl-net-brand, var(--sl-color-primary));
   filter: brightness(1.15);
 }
 
@@ -6827,7 +6827,7 @@ dialog.sl-modal.sl-modal-wide {
   gap: 10px;
   margin: 0 -20px 16px;
   padding: 14px 52px 14px 20px;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   border-bottom: 1px solid var(--sl-color-border);
   border-radius: calc(var(--sl-radius-card) - 1px) calc(var(--sl-radius-card) - 1px) 0 0;
   color: var(--sl-color-text-heading);
@@ -6836,7 +6836,7 @@ dialog.sl-modal.sl-modal-wide {
 }
 
 .sl-modal-title > .bi {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
 }
 
 .sl-modal-note {
@@ -7051,7 +7051,7 @@ dialog.sl-modal.sl-modal-wide {
 }
 
 .sl-fresh-week {
-  background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+  background: color-mix(in srgb, var(--sl-color-primary) 12%, transparent);
   color: var(--sl-color-brand-strong);
 }
 
@@ -7060,7 +7060,7 @@ dialog.sl-modal.sl-modal-wide {
 }
 
 .sl-fresh-month {
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-muted);
 }
 
@@ -7182,7 +7182,7 @@ dialog.sl-modal.sl-modal-wide {
     var(--sl-cat-tone) 45%,
     var(--sl-color-border)
   );
-  box-shadow: var(--sl-shadow-medium);
+  box-shadow: var(--sl-shadow-panel);
   transform: translateY(-2px);
 }
 
@@ -7236,7 +7236,7 @@ dialog.sl-modal.sl-modal-wide {
 }
 
 .sl-cat-main:hover .sl-cat-name {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
 }
 
 .sl-cat-desc {

@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — «В избранное» (Fable): круглая звезда у заголовка</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
 /* ---- demo chrome (не часть системы) ---- */
 * { box-sizing: border-box; }
-body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
-.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%); border-bottom: 1px solid var(--sl-color-border); }
+body { margin: 0; padding: 0 0 90px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%); border-bottom: 1px solid var(--sl-color-border); }
 .demo-head h1 { margin: 0 0 6px; font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
 .demo-head p { margin: 0; max-width: 960px; color: var(--sl-color-text-muted); }
 .demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1400px; margin: 0 auto; }
@@ -27,7 +27,7 @@ body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color:
 .demo-muted { color: var(--sl-color-text-muted); font-size: 13px; }
 .demo-hint { font-size: 13px; color: var(--sl-color-text-muted); margin-top: 10px; }
 .demo-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sl-color-text-muted); cursor: pointer; }
-code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
+code { background: var(--sl-color-bg-soft-alt); padding: 1px 5px; border-radius: 4px; font-size: 0.92em; }
 
 /* ==== ПРЕДЛОЖЕНИЕ ДЛЯ theme.css: избранное как круглая звезда .sl-fav ==== */
 /* Host: standard tip/float mechanics give the hover and focus tooltip; the button itself is the stock .sl-but-mini */
@@ -40,7 +40,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
 
 /* Already in favorites: brand-blue like a browser bookmark star; not clickable */
 .sl-fav-on {
-  background-color: var(--sl-color-brand-link);
+  background-color: var(--sl-color-primary);
   cursor: default;
 }
 
@@ -52,7 +52,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
 
 .sl-fav-limit:hover,
 .sl-fav-on:hover { background-color: var(--sl-color-text-muted); }
-.sl-fav-on:hover { background-color: var(--sl-color-brand-link); }
+.sl-fav-on:hover { background-color: var(--sl-color-primary); }
 
 /* Click burst: star pop */
 .sl-fav .sl-is-burst > .bi { animation: sl-fav-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -82,7 +82,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
 }
 
 .sl-is-burst > .sl-fav-spark { animation: sl-fav-spark 0.6s ease-out forwards; }
-.sl-is-burst > .sl-fav-spark:nth-child(odd) { background: var(--sl-color-brand-link); }
+.sl-is-burst > .sl-fav-spark:nth-child(odd) { background: var(--sl-color-primary); }
 
 @keyframes sl-fav-pop {
   0% { transform: scale(0.4) rotate(-30deg); }
@@ -91,7 +91,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
 }
 
 @keyframes sl-fav-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-brand-link) 60%, transparent); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--sl-color-primary) 60%, transparent); }
   100% { box-shadow: 0 0 0 14px transparent; }
 }
 
@@ -111,7 +111,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   gap: 10px;
   padding: 10px 18px;
   border-radius: 999px;
-  background: var(--sl-color-surface-dark);
+  background: var(--sl-color-bg-soft-dark);
   color: var(--sl-color-on-dark);
   font-size: 14px;
   box-shadow: var(--sl-shadow-strong);
@@ -270,7 +270,7 @@ code { background: var(--sl-color-surface-alt); padding: 1px 5px; border-radius:
   <div class="demo-cell" style="max-width:960px;">
     <span class="demo-label">Что меняется, что нет</span>
     <p class="demo-note" style="margin-bottom:8px;">PHP (<code>getFavoriteButton()</code>) продолжает отдавать флаги <code>is_favorite / is_favorite_on / is_favorite_off</code>, href с токеном и HTMX-атрибуты. Меняются только фрагменты <code>span.html</code>/<code>link.html</code>: вместо <code>sl-chip sl-chip-danger sl-favor*</code> — круглая кнопка:</p>
-    <pre class="demo-muted" style="overflow:auto;background:var(--sl-color-surface-alt);padding:12px;border-radius:6px;margin:0;">&lt;span id="rep642news" class="sl-tip sl-float sl-fav"&gt;
+    <pre class="demo-muted" style="overflow:auto;background:var(--sl-color-bg-soft-alt);padding:12px;border-radius:6px;margin:0;">&lt;span id="rep642news" class="sl-tip sl-float sl-fav"&gt;
   &lt;a href="index.php?go=1&amp;op=addFavorite&amp;id=642&amp;mod=news&amp;token=…"
      class="sl-but-mini" hx-get="…" hx-target="#rep642news" hx-swap="outerHTML" hx-push-url="false"
      aria-label="Добавить в избранное"&gt;&lt;i class="bi bi-star"&gt;&lt;/i&gt;&lt;/a&gt;

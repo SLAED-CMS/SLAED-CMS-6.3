@@ -8,5 +8,9 @@
     "priority": 50,
     "roles": ["user", "admin"],
     "profiles": ["simple", "full"],
-    "formats": ["markdown"]
+    "formats": ["markdown"],
+    "theme": {
+        "skin": true,
+        "partials": ["editor-toastui-dialogs", "editor-toastui-files", "editor-toastui-templates"]
+    }
 }

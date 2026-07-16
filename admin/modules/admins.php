@@ -103,7 +103,7 @@ function admins(): void {
                 ['is_col_status' => true, 'attr' => 'data-sort="'.$stat.'"', 'content_html' => $tpl->getHtmlFrag('bootstrap-icon', [
                     'icon_name' => 'shield-fill-check',
                     'title_text' => ($stat === 2) ? _SUPERUSER : (($stat === 1) ? _ADMIN : _NO),
-                    'color_attr' => ($stat === 2) ? 'var(--sl-color-danger)' : (($stat === 1) ? 'var(--sl-color-success)' : 'var(--sl-color-muted)'),
+                    'color_attr' => ($stat === 2) ? 'var(--sl-color-danger)' : (($stat === 1) ? 'var(--sl-color-success)' : 'var(--sl-color-text-muted)'),
                 ])],
                 ['is_col_actions' => true, 'content_html' => $acts],
             ],

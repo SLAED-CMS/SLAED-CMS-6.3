@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Блок «Пользователи»: тренды 2026</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -13,7 +13,7 @@
 body {
 	margin: 0;
 	padding: 0 0 70px;
-	background: var(--sl-color-surface);
+	background: var(--sl-color-bg-soft);
 	color: var(--sl-color-text);
 	font: 15px/1.5 Arial, Tahoma, sans-serif;
 }
@@ -21,7 +21,7 @@ a { text-decoration: none; color: inherit; }
 button { font: inherit; }
 .demo-head {
 	padding: 26px clamp(14px, 4vw, 48px);
-	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%);
 	border-bottom: 1px solid var(--sl-color-border);
 }
 .demo-head h1 {
@@ -97,19 +97,19 @@ button { font: inherit; }
 .rb-pm .cnt {
 	margin-left: auto; min-width: 21px; height: 19px; padding: 0 6px;
 	display: inline-grid; place-items: center; border-radius: 999px; font-size: 11.5px; font-weight: bold;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
 	color: var(--sl-color-brand-strong);
 }
-.rb-pm .cnt.zero { background: var(--sl-color-surface-alt); color: var(--sl-color-text-subtle); }
+.rb-pm .cnt.zero { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-subtle); }
 .rb-actions { display: flex; gap: 8px; margin: 0 0 14px; }
 .rb-actions a {
 	flex: 1 1 0;
 	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 	height: 33px; border-radius: 10px; font-size: 12.5px;
-	color: var(--sl-color-text-heading); background: var(--sl-color-surface-alt);
+	color: var(--sl-color-text-heading); background: var(--sl-color-bg-soft-alt);
 	transition: background .18s, color .18s, transform .18s;
 }
-.rb-actions a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent); color: var(--sl-color-brand-strong); transform: translateY(-1px); }
+.rb-actions a:hover { background: color-mix(in srgb, var(--sl-color-primary) 15%, transparent); color: var(--sl-color-brand-strong); transform: translateY(-1px); }
 .rb-actions a.exit:hover { background: color-mix(in srgb, var(--sl-color-danger) 12%, transparent); color: var(--sl-color-danger); }
 .rb-stats { display: grid; gap: 2px; }
 .rb-line { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 13px; }
@@ -135,7 +135,7 @@ button { font: inherit; }
 	padding: 5px 7px; border-radius: 8px; font-size: 12.5px;
 	transition: background .15s;
 }
-.rb-row:hover { background: var(--sl-color-surface-alt); }
+.rb-row:hover { background: var(--sl-color-bg-soft-alt); }
 .rb-row .flg { width: 21px; height: 15px; border-radius: 3px; object-fit: cover; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08); }
 .rb-row .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rb-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
@@ -145,11 +145,11 @@ button { font: inherit; }
 .rb-update a {
 	display: inline-flex; align-items: center; gap: 7px;
 	height: 27px; padding: 0 13px; border-radius: 999px; font-size: 12.5px;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 12%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 12%, transparent);
 	color: var(--sl-color-brand-strong);
 	transition: background .2s;
 }
-.rb-update a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 22%, transparent); }
+.rb-update a:hover { background: color-mix(in srgb, var(--sl-color-primary) 22%, transparent); }
 .rb-hr { border: 0; border-top: 1px solid var(--sl-color-border-subtle); margin: 12px 0; }
 
 /* ==================================================================
@@ -309,17 +309,17 @@ button { font: inherit; }
 .v4-cell:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft); }
 .v4-profile { grid-column: span 2; flex-direction: row; align-items: center; gap: 12px; justify-content: flex-start; }
 .v4-k { font-size: 11px; color: var(--sl-color-text-muted); display: flex; align-items: center; gap: 5px; }
-.v4-k .bi { font-size: 12px; color: var(--t, var(--sl-color-brand-link)); }
+.v4-k .bi { font-size: 12px; color: var(--t, var(--sl-color-primary)); }
 .v4-v { font-size: 20px; font-weight: bold; line-height: 1; color: var(--sl-color-text-heading); }
 .v4-acts { grid-column: span 2; flex-direction: row; gap: 6px; padding: 8px; }
 .v4-acts a {
 	flex: 1 1 0;
 	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 	height: 30px; border-radius: 9px; font-size: 12px;
-	color: var(--sl-color-text-heading); background: var(--sl-color-surface-alt);
+	color: var(--sl-color-text-heading); background: var(--sl-color-bg-soft-alt);
 	transition: background .15s, color .15s;
 }
-.v4-acts a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent); color: var(--sl-color-brand-strong); }
+.v4-acts a:hover { background: color-mix(in srgb, var(--sl-color-primary) 15%, transparent); color: var(--sl-color-brand-strong); }
 .v4-online { border-radius: 13px; border: 1px solid var(--sl-color-border-subtle); background: #fff; padding: 11px 12px; }
 
 /* ==================================================================
@@ -333,12 +333,12 @@ button { font: inherit; }
 	color: var(--sl-color-text-heading); font-size: 13.5px; font-weight: bold;
 	transition: background .15s;
 }
-.v5-btn:hover { background: var(--sl-color-surface-alt); }
+.v5-btn:hover { background: var(--sl-color-bg-soft-alt); }
 .v5-btn > .bi:first-child { color: var(--sl-color-brand-strong); font-size: 14px; }
 .v5-cnt {
 	min-width: 21px; height: 19px; padding: 0 6px; margin-left: auto;
 	display: inline-grid; place-items: center; border-radius: 999px;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
 	color: var(--sl-color-brand-strong); font-size: 11.5px;
 }
 .v5-chev { transition: transform .3s; font-size: 12px; color: var(--sl-color-text-subtle); }
@@ -356,7 +356,7 @@ button { font: inherit; }
    ================================================================== */
 .v6-switch {
 	display: inline-flex; margin: 0 0 10px;
-	background: var(--sl-color-surface-alt); border-radius: 999px; padding: 3px; gap: 2px;
+	background: var(--sl-color-bg-soft-alt); border-radius: 999px; padding: 3px; gap: 2px;
 }
 .v6-switch button {
 	border: 0; background: transparent; cursor: pointer;
@@ -382,7 +382,7 @@ button { font: inherit; }
 .v7-bars { display: flex; align-items: flex-end; gap: 3px; height: 30px; margin-left: auto; }
 .v7-bars i {
 	width: 6px; border-radius: 3px 3px 0 0;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 55%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 55%, transparent);
 	animation: v7bar 1.6s ease-in-out infinite alternate;
 }
 @keyframes v7bar { from { transform: scaleY(0.4); } to { transform: scaleY(1); } }
@@ -406,7 +406,7 @@ button { font: inherit; }
 	color: var(--sl-color-text-subtle); font-size: 13px;
 	padding: 3px; border-radius: 6px;
 }
-.v8-grab:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading); }
+.v8-grab:hover { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); }
 .v8-sec .rb-pm, .v8-sec .rb-actions { margin: 0; }
 .v8-reset { font-size: 11.5px; color: var(--sl-color-text-subtle); text-align: center; padding-top: 4px; }
 .v8-reset a { color: var(--sl-color-brand-strong); cursor: pointer; }
@@ -418,7 +418,7 @@ button { font: inherit; }
 	--p: 0;
 	width: 84px; height: 84px; border-radius: 50%; flex: 0 0 auto;
 	padding: 5px;
-	background: conic-gradient(var(--sl-color-brand-strong) calc(var(--p) * 1%), var(--sl-color-surface-alt) 0);
+	background: conic-gradient(var(--sl-color-brand-strong) calc(var(--p) * 1%), var(--sl-color-bg-soft-alt) 0);
 	display: grid; place-items: center; position: relative;
 }
 .v9-ring .rb-ava { width: 100%; height: 100%; border: 3px solid #fff; }
@@ -433,7 +433,7 @@ button { font: inherit; }
 .v9-next { margin: 12px 0 0; }
 .v9-next .t { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--sl-color-text-muted); margin-bottom: 4px; }
 .v9-next .t b { color: var(--sl-color-text-heading); }
-.v9-bar { height: 7px; border-radius: 999px; background: var(--sl-color-surface-alt); overflow: hidden; }
+.v9-bar { height: 7px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); overflow: hidden; }
 .v9-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--sl-color-brand) 0%, var(--sl-color-brand-strong) 100%); transition: width 1.2s cubic-bezier(.2,.7,.3,1); }
 </style>
 </head>
@@ -466,7 +466,7 @@ button { font: inherit; }
 			<div class="sl-block-content">
 				<div class="v1-card spec">
 					<div class="rb-profile">
-						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+						<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i>
 						<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 					</div>
 					<div class="rb-pm">
@@ -483,7 +483,7 @@ button { font: inherit; }
 					<div class="rb-stats">
 						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
 						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
-						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 					</div>
 					<details class="rb-more">
@@ -507,7 +507,7 @@ button { font: inherit; }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="rb-profile">
-					<span class="v2-ring"><i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i></span>
+					<span class="v2-ring"><i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i></span>
 					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 				</div>
 				<div class="v2-counts">
@@ -524,7 +524,7 @@ button { font: inherit; }
 					<div class="rb-stats">
 						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
 						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
-						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 					</div>
 					<details class="rb-more">
@@ -549,7 +549,7 @@ button { font: inherit; }
 			<div class="sl-block-content">
 				<div class="v3-card">
 					<div class="v3-head">
-						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/guest.svg)"></i><br>
+						<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/system/guest.svg)"></i><br>
 						<span class="rb-hello">Добро пожаловать,</span><br><span class="rb-name">Гость</span>
 					</div>
 					<form class="v3-form" onsubmit="return false">
@@ -566,7 +566,7 @@ button { font: inherit; }
 					<div class="rb-stats">
 						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>0</b></div>
 						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>5</b></div>
-						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>46</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>46</b></div>
 						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>51</b></div>
 					</div>
 					<details class="rb-more">
@@ -600,10 +600,10 @@ button { font: inherit; }
 			<div class="sl-block-content">
 				<div class="v4-grid">
 					<div class="v4-cell v4-profile">
-						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+						<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i>
 						<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 					</div>
-					<a href="#" class="v4-cell" style="--t:var(--sl-color-brand-link)">
+					<a href="#" class="v4-cell" style="--t:var(--sl-color-primary)">
 						<span class="v4-k"><i class="bi bi-envelope"></i> Новые входящие</span>
 						<span class="v4-v">0</span>
 					</a>
@@ -621,7 +621,7 @@ button { font: inherit; }
 					<div class="rb-stats">
 						<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
 						<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
-						<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+						<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 						<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 					</div>
 					<details class="rb-more">
@@ -650,7 +650,7 @@ button { font: inherit; }
 					<button type="button" data-dn="spacious">Просторно</button>
 				</div>
 				<div class="rb-profile">
-					<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+					<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i>
 					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 				</div>
 				<div class="rb-pm">
@@ -666,7 +666,7 @@ button { font: inherit; }
 				<div class="rb-stats">
 					<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
 					<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
-					<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+					<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 					<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 				</div>
 				<details class="rb-more" open>
@@ -693,7 +693,7 @@ button { font: inherit; }
 					<div class="v8-sec" draggable="true" data-key="profile">
 						<span class="v8-grab bi bi-grip-vertical" title="Перетащить"></span>
 						<div class="rb-profile">
-							<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+							<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i>
 							<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 						</div>
 					</div>
@@ -716,7 +716,7 @@ button { font: inherit; }
 						<span class="v8-grab bi bi-grip-vertical" title="Перетащить"></span>
 						<div class="rb-stats">
 							<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
-							<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+							<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 							<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 						</div>
 						<div class="rb-update"><a href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div>
@@ -743,7 +743,7 @@ button { font: inherit; }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="rb-profile">
-					<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+					<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i>
 					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 				</div>
 				<div class="rb-pm">
@@ -784,7 +784,7 @@ button { font: inherit; }
 					<div class="v5-panel" id="v5p1" role="region" aria-labelledby="v5b1"><div>
 						<div class="v5-body">
 							<div class="rb-profile">
-								<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"><i class="rb-dot"></i></i>
+								<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"><i class="rb-dot"></i></i>
 								<span><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Клиент · Пункты: 50 078</span></span>
 							</div>
 						</div>
@@ -826,7 +826,7 @@ button { font: inherit; }
 							<div class="rb-stats">
 								<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
 								<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
-								<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+								<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 								<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 							</div>
 							<div class="rb-rows" style="padding-top:8px">
@@ -849,7 +849,7 @@ button { font: inherit; }
 			<div class="sl-block-content">
 				<div class="rb-profile">
 					<span class="v9-ring" id="v9ring">
-						<i class="rb-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="rb-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 						<span class="v9-badge" id="v9badge">0%</span>
 					</span>
 					<span><span class="rb-hello">Здравствуйте,</span><br><span class="rb-name">SLAED CMS</span><br><span class="rb-meta">Группа: <b>Клиент</b></span></span>
@@ -871,7 +871,7 @@ button { font: inherit; }
 				<div class="rb-stats">
 					<div class="rb-line" style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></div>
 					<div class="rb-line" style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>1</b></div>
-					<div class="rb-line" style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
+					<div class="rb-line" style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>1</b></div>
 					<div class="rb-line total"><span class="d"></span><span class="k">Всего</span><b>3</b></div>
 				</div>
 				<details class="rb-more">

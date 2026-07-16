@@ -57,7 +57,7 @@ function main(): void {
             preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
             $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
         }
-        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
+        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png')) : getThemeImagePath('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'news'))), ENT_QUOTES), 60);
         $href = 'index.php?name=news&op=view&id='.$id;
         $cat = 'index.php?name=news&cat='.$cid;
@@ -88,7 +88,7 @@ function main(): void {
             preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
             $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
         }
-        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
+        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png')) : getThemeImagePath('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'files'))), ENT_QUOTES), 60);
         $href = 'index.php?name=files&op=view&id='.$id;
         $cat = 'index.php?name=files&cat='.$cid;

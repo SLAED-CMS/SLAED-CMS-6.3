@@ -2,6 +2,19 @@
     'use strict';
     var picker = null;
     var names = null;
+    var icontags = null;
+    var iconterms = null;
+    function getIconWords() {
+        if (icontags !== null) return;
+        icontags = {};
+        iconterms = {};
+        var base = 'templates/admin/assets/js/i18n/';
+        fetch(base + 'icon-tags.json').then(function (res) { return res.json(); }).then(function (json) { icontags = json; }).catch(function () {});
+        var lang = (document.documentElement.lang || 'en').slice(0, 2);
+        if (lang !== 'en') {
+            fetch(base + 'icon-terms-' + lang + '.json').then(function (res) { return res.json(); }).then(function (json) { iconterms = json; }).catch(function () {});
+        }
+    }
     function getIconNames() {
         if (names) return names;
         names = [];
@@ -58,6 +71,7 @@
             if (!modal) return;
             picker = opener.closest('.sl-icon-picker');
             setIconGrid(modal);
+            getIconWords();
             var search = modal.querySelector('[data-sl-icon-search]');
             if (search) search.value = '';
             modal.querySelectorAll('.sl-icon-cell').forEach(function (cell) { cell.hidden = false; });
@@ -84,8 +98,18 @@
         if (!node || !node.closest) return;
         if (node.matches('[data-sl-icon-search]')) {
             var term = node.value.trim().toLowerCase();
+            var list = [];
+            if (term !== '') {
+                Object.keys(iconterms || {}).forEach(function (word) {
+                    if (word.indexOf(term) === 0 && word.length - term.length <= 3) list = list.concat(iconterms[word].split(' '));
+                });
+            }
             node.closest('dialog').querySelectorAll('.sl-icon-cell').forEach(function (cell) {
-                cell.hidden = term !== '' && cell.getAttribute('data-sl-icon-name').indexOf(term) === -1;
+                var name = cell.getAttribute('data-sl-icon-name');
+                var words = name + ' ' + ((icontags || {})[name] || '');
+                var flat = ' ' + words.replace(/-/g, ' ') + ' ';
+                var show = words.indexOf(term) !== -1 || list.some(function (w) { return w && flat.indexOf(' ' + w + ' ') !== -1; });
+                cell.hidden = term !== '' && !show;
             });
             return;
         }

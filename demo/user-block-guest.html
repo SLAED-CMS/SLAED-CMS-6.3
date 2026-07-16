@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Блок «Пользователи»: варианты (гость)</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -13,14 +13,14 @@
 body {
 	margin: 0;
 	padding: 0 0 60px;
-	background: var(--sl-color-surface);
+	background: var(--sl-color-bg-soft);
 	color: var(--sl-color-text);
 	font: 15px/1.5 Arial, Tahoma, sans-serif;
 }
 a { text-decoration: none; color: inherit; }
 .demo-head {
 	padding: 26px clamp(14px, 4vw, 48px);
-	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%);
 	border-bottom: 1px solid var(--sl-color-border);
 }
 .demo-head h1 {
@@ -52,7 +52,7 @@ a { text-decoration: none; color: inherit; }
 .g-ava {
 	width: 76px; height: 76px; border-radius: 50%;
 	background-size: cover; background-position: center;
-	background-color: var(--sl-color-surface-alt);
+	background-color: var(--sl-color-bg-soft-alt);
 	display: inline-grid; place-items: center;
 	color: var(--sl-color-text-subtle); font-size: 34px;
 }
@@ -79,11 +79,11 @@ a { text-decoration: none; color: inherit; }
 .g-net a {
 	display: inline-grid; place-items: center;
 	width: 38px; height: 38px; border-radius: 50%;
-	background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading);
+	background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading);
 	font-size: var(--sl-size-icon-sm);
 	transition: background .18s, color .18s, transform .18s;
 }
-.g-net a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 16%, transparent); color: var(--sl-color-brand-strong); transform: translateY(-1px); }
+.g-net a:hover { background: color-mix(in srgb, var(--sl-color-primary) 16%, transparent); color: var(--sl-color-brand-strong); transform: translateY(-1px); }
 
 /* ---------- G1: Классика+ ---------- */
 .g1-head { text-align: center; margin-bottom: 14px; }
@@ -92,7 +92,7 @@ a { text-decoration: none; color: inherit; }
 /* ---------- G2: Табы ---------- */
 .g2-tabs {
 	display: flex; margin-bottom: 14px;
-	background: var(--sl-color-surface-alt); border-radius: 999px; padding: 3px;
+	background: var(--sl-color-bg-soft-alt); border-radius: 999px; padding: 3px;
 }
 .g2-tabs a {
 	flex: 1 1 0; text-align: center; padding: 7px 4px; border-radius: 999px;
@@ -123,7 +123,7 @@ a { text-decoration: none; color: inherit; }
 	background: transparent; padding: 9px 2px; font-size: 14px; outline: 0;
 	transition: border-color .18s;
 }
-.g4 .g-form input.g4-line:focus { border-color: var(--sl-color-brand-link); }
+.g4 .g-form input.g4-line:focus { border-color: var(--sl-color-primary); }
 .g4-links { display: flex; justify-content: space-between; font-size: 12.5px; margin-top: 4px; }
 .g4-links a { color: var(--sl-color-text-muted); }
 .g4-links a:hover { color: var(--sl-color-brand-strong); }
@@ -185,7 +185,7 @@ a { text-decoration: none; color: inherit; }
 	transition: color .15s;
 }
 .f-acc summary::-webkit-details-marker { display: none; }
-.f-acc summary:hover { color: var(--sl-color-brand-link); }
+.f-acc summary:hover { color: var(--sl-color-primary); }
 .f-acc summary .bi { transition: transform .3s; font-size: var(--sl-size-icon-xs); }
 .f-acc[open] summary .bi { transform: rotate(180deg); }
 .f-rows { display: grid; gap: 2px; padding-top: 5px; }
@@ -198,12 +198,12 @@ a { text-decoration: none; color: inherit; }
 	padding: 5px 8px; border-radius: 7px; font-size: 13px;
 	transition: background .15s;
 }
-.f-row:hover { background: var(--sl-color-surface-alt); }
+.f-row:hover { background: var(--sl-color-bg-soft-alt); }
 .f-row .who { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .f-row .who a { color: var(--sl-color-brand-strong); font-weight: bold; }
 .f-row .mod { font-size: 12px; color: var(--sl-color-text-muted); white-space: nowrap; }
 .f-refresh { display: flex; justify-content: center; margin-top: 10px; }
-.f-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; background: var(--sl-color-surface-alt); margin: 2px 0 8px; }
+.f-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; background: var(--sl-color-bg-soft-alt); margin: 2px 0 8px; }
 .f-bar i { display: block; background: var(--t); width: var(--w); animation: fGrow 1s cubic-bezier(.2,.7,.3,1) both; }
 @keyframes fGrow { from { width: 0; } }
 .f-leg { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 12.5px; color: var(--sl-color-text-muted); }
@@ -420,7 +420,7 @@ a { text-decoration: none; color: inherit; }
 				<ul class="f-stats">
 					<li style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>0</b></li>
 					<li style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>5</b></li>
-					<li style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>46</b></li>
+					<li style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>46</b></li>
 					<li class="total" style="--t:var(--sl-color-text-heading)"><span class="d"></span><span class="k">Всего</span><b>51</b></li>
 				</ul>
 				<details class="f-acc">
@@ -474,11 +474,11 @@ a { text-decoration: none; color: inherit; }
 				<div style="margin-top:6px">
 					<div class="f-online"><span class="live-dot"></span> <b>51</b>&nbsp;посетитель онлайн</div>
 					<div class="f-bar">
-						<i style="--t:var(--sl-color-brand-link); --w:90%"></i>
+						<i style="--t:var(--sl-color-primary); --w:90%"></i>
 						<i style="--t:var(--sl-color-warning); --w:10%"></i>
 					</div>
 					<div class="f-leg">
-						<span style="--t:var(--sl-color-brand-link)"><i class="d"></i>Гости <b>46</b></span>
+						<span style="--t:var(--sl-color-primary)"><i class="d"></i>Гости <b>46</b></span>
 						<span style="--t:var(--sl-color-warning)"><i class="d"></i>Боты <b>5</b></span>
 						<span style="--t:var(--sl-color-success)"><i class="d"></i>Юзеры <b>0</b></span>
 					</div>

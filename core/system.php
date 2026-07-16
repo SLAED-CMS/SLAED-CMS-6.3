@@ -1822,8 +1822,8 @@ function setHead(array $seo = []): void {
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     if (defined('ADMIN_FILE')) {
         $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
-        $adpath = img_find('logos/'.$adlogo);
-        if (!is_file($adpath)) $adpath = img_find('logos/slaed_logo_256x73.png');
+        $adpath = getThemeImagePath('logos/'.$adlogo);
+        if (!is_file($adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
         $adminvars = [
             'theme' => getTheme(),
             'lang' => substr(_LOCALE, 0, 2),
@@ -2514,14 +2514,6 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     getConfig();
 }
 
-# Returns ordered list of base stylesheet paths for a theme, alphabetical by filename
-function getThemeCssFiles(string $theme): array {
-    $dir = 'templates/'.$theme.'/assets/css/';
-    $out = glob($dir.'*.css') ?: [];
-    sort($out);
-    return $out;
-}
-
 # Returns list of asset files found in standard theme subdirectories
 function getThemeAssets(string $theme, string $ext): array {
     $base = 'templates/'.$theme.'/';
@@ -2616,7 +2608,6 @@ function doCss(): string {
     global $theme, $conf, $tpl;
     $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
     $array = array_merge(
-        ['plugins/bootstrap-icons/bootstrap-icons.min.css'],
         getAssetFiles(is_array($entries) ? $entries : [], 'css'),
         getThemeAssets($theme, 'css')
     );
@@ -3454,12 +3445,44 @@ function filterSlug(string $text, string $sep = '-'): string {
 function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
- global $user, $conf;
+    global $user, $conf;
     $default = $conf['theme'] ?? 'default';
-    if (!is_user()) return $cached = $default;
-    $utheme = $user[5] ?? '';
-    if ($utheme !== '' && is_dir(BASE_DIR.'/templates/'.$utheme)) return $cached = $utheme;
+    if (is_user()) {
+        $utheme = $user[5] ?? '';
+        if ($utheme !== '' && checkThemeAssets($utheme)) return $cached = $utheme;
+    }
+    if (!checkThemeAssets($default)) Logger::addSite('error', 'Active theme incomplete: '.$default, ['theme' => $default]);
     return $cached = $default;
+}
+
+# Validate that a theme directory contains the canonical structure: base/theme CSS, icon library, system avatars, presets, and theme assets declared by editor manifests
+function checkThemeAssets(string $name): bool {
+    static $cache = [];
+    if (isset($cache[$name])) return $cache[$name];
+    $base = BASE_DIR.'/templates/'.$name.'/';
+    $need = [
+        'assets/css/base.css',
+        'assets/css/theme.css',
+        'assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css',
+        'assets/vendor/bootstrap-icons/css/fonts/bootstrap-icons.woff2',
+        'images/avatars/system/user.svg',
+        'images/avatars/system/guest.svg',
+        'images/avatars/system/deleted.svg',
+    ];
+    foreach ($need as $file) {
+        if (!is_file($base.$file)) return $cache[$name] = false;
+    }
+    if (!is_dir($base.'images/avatars/presets')) return $cache[$name] = false;
+    foreach (glob(BASE_DIR.'/plugins/editors/*/manifest.json') ?: [] as $file) {
+        $man = Editor::getManifest(basename(dirname($file)));
+        $dec = (array)($man['theme'] ?? []);
+        if (!$dec) continue;
+        if (!empty($dec['skin']) && !is_file($base.'assets/editors/'.$man['id'].'/skin.css')) return $cache[$name] = false;
+        foreach ((array)($dec['partials'] ?? []) as $part) {
+            if (!is_file($base.'partials/'.$part.'.html')) return $cache[$name] = false;
+        }
+    }
+    return $cache[$name] = true;
 }
 
 # Format theme file
@@ -3587,7 +3610,7 @@ function getLanguageFlagSrc(string $lang): string {
     $map = ['en' => 'gb', 'uk' => 'ua'];
     $code = $map[$lang] ?? $lang;
     $path = 'flags/'.$code.'.svg';
-    return file_exists(img_find($path)) ? img_find($path) : img_find('flags/unknown.svg');
+    return file_exists(getThemeImagePath($path)) ? getThemeImagePath($path) : getThemeImagePath('flags/unknown.svg');
 }
 
 # Hash a user password with bcrypt
@@ -4270,8 +4293,8 @@ function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''):
         : $tpl->getHtmlFrag('inline-badge', ['title_text' => _DEACT, 'is_status_inactive' => true, 'label' => '']);
 }
 
-# Find img
-function img_find(string $img): string {
+# Returns the path of an image inside the active theme images directory
+function getThemeImagePath(string $img): string {
     static $base;
     if (!$base) $base = 'templates/'.getTheme().'/images/';
     return $base.$img;
@@ -5404,7 +5427,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $avatar = (!empty($user_name)) ? getUserAvatarUrl(['avatar' => $user_avatar]) : getUserAvatarUrl([], (int)$com_uid > 0 && empty($com_name));
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
-            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
+            $rlink = (!empty($user_grank) && file_exists(getThemeImagePath('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
             $rate = (!empty($user_id)) ? getRatingAsync(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
             $utip = getUserTip((string)($user_gname ?? ''), $user_points ?? 0, (string)($user_regdate ?? ''), (int)($user_gender ?? 0), (string)($user_from ?? ''), (string)($user_warnings ?? ''), empty($user_name), (int)$com_uid > 0 && empty($com_name));
             $uname_html = (!empty($user_name)) ? user_info($user_name, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

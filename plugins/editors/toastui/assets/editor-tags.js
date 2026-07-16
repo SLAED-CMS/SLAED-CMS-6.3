@@ -49,7 +49,7 @@
         var box = doc.getElementById(String(id) + '_toast');
         var opt = api.options && api.options[String(id)] ? api.options[String(id)] : {};
         var txt = opt.labels || {};
-        var button = box ? box.querySelector('.slaed-bi-fullscreen') : null;
+        var button = box ? box.querySelector('.sl-editor-icon-fullscreen') : null;
         var tooltip = button ? button.querySelector('.toastui-editor-tooltip') : null;
         var active;
         var label;
@@ -76,7 +76,7 @@
         addCmd(ed, 'slaedFullscreen', function() {
             setFullscreen(id);
         });
-        addItem(ed, 0, 'slaedFullscreen', 'slaed-bi slaed-bi-fullscreen', txt.fullscreen || 'Full screen', 0);
+        addItem(ed, 0, 'slaedFullscreen', 'sl-editor-icon sl-editor-icon-fullscreen', txt.fullscreen || 'Full screen', 0);
         addCmd(ed, 'slaedQuote', function() {
             addWrap(ed, '[quote]', '[/quote]', 'Quote');
         });
@@ -86,9 +86,9 @@
         addCmd(ed, 'slaedTabs', function() {
             addTabs(ed);
         });
-        addItem(ed, 0, 'slaedQuote', 'slaed-bi slaed-bi-quote', txt.quote || 'SLAED quote');
-        addItem(ed, 1, 'slaedHide', 'slaed-bi slaed-bi-hide', txt.hide || 'SLAED hidden block');
-        addItem(ed, 2, 'slaedTabs', 'slaed-bi slaed-bi-tabs', txt.tabs || 'SLAED tabs');
+        addItem(ed, 0, 'slaedQuote', 'sl-editor-icon sl-editor-icon-quote', txt.quote || 'SLAED quote');
+        addItem(ed, 1, 'slaedHide', 'sl-editor-icon sl-editor-icon-hide', txt.hide || 'SLAED hidden block');
+        addItem(ed, 2, 'slaedTabs', 'sl-editor-icon sl-editor-icon-tabs', txt.tabs || 'SLAED tabs');
         if (!admin) return;
         addCmd(ed, 'slaedHtml', function() {
             addWrap(ed, '[usehtml]', '[/usehtml]', '<p>HTML</p>');
@@ -96,8 +96,8 @@
         addCmd(ed, 'slaedPhp', function() {
             addWrap(ed, '[usephp]', '[/usephp]', 'echo "";');
         });
-        addItem(ed, 5, 'slaedHtml', 'slaed-bi slaed-bi-html', txt.html || 'SLAED raw HTML');
-        addItem(ed, 6, 'slaedPhp', 'slaed-bi slaed-bi-php', txt.php || 'SLAED PHP');
+        addItem(ed, 5, 'slaedHtml', 'sl-editor-icon sl-editor-icon-html', txt.html || 'SLAED raw HTML');
+        addItem(ed, 6, 'slaedPhp', 'sl-editor-icon sl-editor-icon-php', txt.php || 'SLAED PHP');
     }
 
     api.editors = map;

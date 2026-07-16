@@ -8,7 +8,7 @@
   --sl-color-border-strong: #cad2da;
   --sl-color-text: #111827;
   --sl-color-text-soft: #374151;
-  --sl-color-muted: #6b7280;
+  --sl-color-text-muted: #6b7280;
   --sl-color-primary: #0877b1;
   --sl-color-primary-hover: #207fb6;
   --sl-color-primary-hover-soft: #58a0c8;
@@ -298,7 +298,7 @@ textarea,
 select {
   min-height: var(--sl-size-control);
   background: var(--sl-color-bg-soft);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   border: 1px solid var(--sl-color-border-strong);
   border-radius: var(--sl-radius-control);
   transition:
@@ -375,7 +375,7 @@ blockquote {
   background: var(--sl-color-bg);
   border-left: 1px solid var(--sl-color-border-strong);
   border-right: 1px solid var(--sl-color-border-strong);
-  color: var(--sl-color-muted);
+  color: var(--sl-color-text-muted);
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
   margin: 4px;

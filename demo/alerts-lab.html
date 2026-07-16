@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED Alerts Lab</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <style>
 /*
@@ -22,7 +22,7 @@
 
 /* Alert: base layout, token-driven accent color via --sl-alert-c */
 .sl-alert {
-  --sl-alert-c: var(--sl-color-brand-link);
+  --sl-alert-c: var(--sl-color-primary);
   --sl-alert-c-grad-start: var(--sl-grad-info-start);
   --sl-alert-c-grad-end: var(--sl-grad-info-end);
   --sl-alert-c-tint: rgba(48, 162, 246, 0.1);
@@ -98,7 +98,7 @@
 }
 .sl-alert-close:hover {
   color: var(--sl-color-text);
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 
 /* Alert timer: depleting progress bar for auto-dismiss toasts */
@@ -127,7 +127,7 @@
   --sl-alert-c-tint: rgba(29, 155, 240, 0.1);
 }
 .sl-alert-primary {
-  --sl-alert-c: var(--sl-color-brand-link);
+  --sl-alert-c: var(--sl-color-primary);
   --sl-alert-c-grad-start: var(--sl-grad-info-start);
   --sl-alert-c-grad-end: var(--sl-grad-info-end);
   --sl-alert-c-tint: rgba(48, 162, 246, 0.1);
@@ -346,7 +346,7 @@
 }
 .sl-toast-host .sl-alert {
   margin: 0;
-  box-shadow: var(--sl-shadow-medium);
+  box-shadow: var(--sl-shadow-panel);
   pointer-events: auto;
 }
 .sl-toast-host.is-tr { top: 18px; right: 18px; }
@@ -369,7 +369,7 @@
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  background: linear-gradient(160deg, var(--sl-color-surface) 0%, var(--sl-color-surface-alt) 100%);
+  background: linear-gradient(160deg, var(--sl-color-bg-soft) 0%, var(--sl-color-bg-soft-alt) 100%);
   color: var(--sl-color-text);
   font: 14px/1.5 Arial, Tahoma, sans-serif;
 }

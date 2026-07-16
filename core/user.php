@@ -145,7 +145,7 @@ function getUserNav(): string {
     foreach ($navs as [$titl, $itit, $link, $icon]) {
         $items .= $tpl->getHtmlFrag('block-content', [
             'is_catflex_box' => true,
-            'content' => $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $itit, 'img_src' => img_find($icon), 'img_alt' => $itit, 'label' => $titl, 'is_line_break' => true]),
+            'content' => $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $itit, 'img_src' => getThemeImagePath($icon), 'img_alt' => $itit, 'label' => $titl, 'is_line_break' => true]),
         ]);
     }
     return $tpl->getHtmlFrag('block-content', ['is_catflex_cont' => true, 'content' => $items]);
@@ -187,14 +187,15 @@ function getUserInfo() {
     }
 }
 
-# Resolve the avatar URL for a user record; falls back to user.svg (no avatar chosen), guest.svg (no record) or deleted.svg (orphaned uid of a removed account)
+# Resolve the avatar URL for a user record; system avatars (user/guest/deleted) and presets come from the active theme, uploaded files from the avatar upload directory
 function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     global $conf;
-    $dir = $conf['users']['adirectory'];
-    if ($deleted) return $dir.'/default/deleted.svg';
-    if (!$userinfo) return $dir.'/default/guest.svg';
+    $base = 'templates/'.getTheme().'/images/avatars/';
+    if ($deleted) return $base.'system/deleted.svg';
+    if (!$userinfo) return $base.'system/guest.svg';
     $ava = $userinfo['avatar'] ?? '';
-    return ($ava && file_exists($dir.'/'.$ava)) ? $dir.'/'.$ava : $dir.'/default/user.svg';
+    if (str_starts_with($ava, 'presets/')) return (preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists($base.$ava)) ? $base.$ava : $base.'system/user.svg';
+    return ($ava && file_exists($conf['users']['adirectory'].'/'.$ava)) ? $conf['users']['adirectory'].'/'.$ava : $base.'system/user.svg';
 }
 
 # Drop the cached sidebar private-message counters so the next page render recounts them after a mailbox mutation
@@ -493,7 +494,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
                 $avatar = ($user_name) ? getUserAvatarUrl(['avatar' => $user_avatar]) : getUserAvatarUrl([], true);
                 $rank = ($user_rank) ? $user_rank : '';
                 $trank = ($user_gname) ? _GROUP.': '.$user_gname : _RANK;
-                $rlink = ($user_grank && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
+                $rlink = ($user_grank && file_exists(getThemeImagePath('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$user_grank), 'alt' => $trank, 'title' => $trank]) : '';
                 $rate = getRatingAsync(0, $user_id, $conf['name'], $user_votes, $user_totalvotes, $com_id, 1);
                 $utip = getUserTip((string)($user_gname ?? ''), $user_points ?? 0, (string)($user_regdate ?? ''), (int)($user_gender ?? 0), (string)($user_from ?? ''), (string)($user_warnings ?? ''), empty($user_name), (int)$uidout > 0);
                 $uname_html = (!empty($user_name)) ? user_info($user_name, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -1001,7 +1002,7 @@ switch(getVar('get', 'stat', 'num', 0)) {
     $slog = COUNTER_DIR.'/statistic.log';
     $sdate = (is_file($slog) && is_readable($slog)) ? file($slog) : [];
     $con = explode('|', trim($sdate[0]));
-    $image = imagecreatefrompng(img_find('banners/stat'.$img.'.png'));
+    $image = imagecreatefrompng(getThemeImagePath('banners/stat'.$img.'.png'));
     $white = imagecolorallocate($image, 255, 255, 255);
     imagestring($image, 1, 22, 4, $con[2].'/'.$con[1], $white);
     header('Content-type: image/png');

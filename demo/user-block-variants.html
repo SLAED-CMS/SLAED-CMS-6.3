@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Блок «Пользователи»: варианты (залогинен)</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -13,14 +13,14 @@
 body {
 	margin: 0;
 	padding: 0 0 60px;
-	background: var(--sl-color-surface);
+	background: var(--sl-color-bg-soft);
 	color: var(--sl-color-text);
 	font: 15px/1.5 Arial, Tahoma, sans-serif;
 }
 a { text-decoration: none; color: inherit; }
 .demo-head {
 	padding: 26px clamp(14px, 4vw, 48px);
-	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%);
 	border-bottom: 1px solid var(--sl-color-border);
 }
 .demo-head h1 {
@@ -77,14 +77,14 @@ a { text-decoration: none; color: inherit; }
 .u-icon-btn {
 	display: inline-grid; place-items: center;
 	width: 38px; height: 38px; border-radius: 12px;
-	background: var(--sl-color-surface-alt);
+	background: var(--sl-color-bg-soft-alt);
 	color: var(--sl-color-text-heading);
 	font-size: var(--sl-size-icon-sm);
 	transition: background .18s, color .18s, transform .18s;
 	position: relative;
 }
 .u-icon-btn:hover {
-	background: color-mix(in srgb, var(--sl-color-brand-link) 16%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 16%, transparent);
 	color: var(--sl-color-brand-strong);
 	transform: translateY(-1px);
 }
@@ -136,12 +136,12 @@ a { text-decoration: none; color: inherit; }
 .u3-tile {
 	display: flex; flex-direction: column; gap: 4px;
 	padding: 10px 12px; border-radius: 10px;
-	background: color-mix(in srgb, var(--t, var(--sl-color-brand-link)) 9%, #fff);
-	border: 1px solid color-mix(in srgb, var(--t, var(--sl-color-brand-link)) 22%, var(--sl-color-border-subtle));
+	background: color-mix(in srgb, var(--t, var(--sl-color-primary)) 9%, #fff);
+	border: 1px solid color-mix(in srgb, var(--t, var(--sl-color-primary)) 22%, var(--sl-color-border-subtle));
 	transition: transform .18s, box-shadow .18s;
 }
 a.u3-tile:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft); }
-.u3-tile .bi { font-size: var(--sl-size-icon-sm); color: var(--t, var(--sl-color-brand-link)); }
+.u3-tile .bi { font-size: var(--sl-size-icon-sm); color: var(--t, var(--sl-color-primary)); }
 .u3-tile b { font-size: 18px; line-height: 1; color: var(--sl-color-text-heading); }
 .u3-tile span { font-size: 11.5px; color: var(--sl-color-text-muted); }
 .u3-foot { display: flex; gap: 8px; margin-top: 12px; }
@@ -156,7 +156,7 @@ a.u3-tile:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft)
 	padding: 9px 10px; border-radius: 8px;
 	color: var(--sl-color-text); transition: background .15s, color .15s;
 }
-.u4-menu a:hover { background: var(--sl-color-surface-alt); color: var(--sl-color-brand-strong); }
+.u4-menu a:hover { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-brand-strong); }
 .u4-menu a.is-danger:hover { background: color-mix(in srgb, var(--sl-color-danger) 10%, transparent); color: var(--sl-color-danger); }
 .u4-menu .bi { width: 20px; text-align: center; font-size: var(--sl-size-icon-xs); color: var(--sl-color-text-muted); }
 .u4-menu a:hover .bi { color: inherit; }
@@ -165,10 +165,10 @@ a.u3-tile:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft)
 	min-width: 22px; height: 20px; padding: 0 7px;
 	display: inline-grid; place-items: center; border-radius: 999px;
 	font-size: 12px; font-weight: bold;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
 	color: var(--sl-color-brand-strong);
 }
-.u4-menu .cnt.is-zero { background: var(--sl-color-surface-alt); color: var(--sl-color-text-subtle); }
+.u4-menu .cnt.is-zero { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-subtle); }
 
 /* ---------- V5: Чипсы-всё ---------- */
 .u5-head { text-align: center; margin-bottom: 12px; }
@@ -207,7 +207,7 @@ a.u3-tile:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft)
 .u7-seg {
 	display: flex; margin-top: 14px;
 	border: 1px solid var(--sl-color-border); border-radius: 999px;
-	overflow: hidden; background: var(--sl-color-surface-alt);
+	overflow: hidden; background: var(--sl-color-bg-soft-alt);
 }
 .u7-seg a {
 	flex: 1 1 0; text-align: center; padding: 8px 4px;
@@ -228,19 +228,19 @@ a.u3-tile:hover { transform: translateY(-2px); box-shadow: var(--sl-shadow-soft)
 	display: flex; flex-direction: column; align-items: center; gap: 2px;
 	padding: 12px 6px; background: #fff; transition: background .15s;
 }
-.u8-split a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 8%, #fff); }
+.u8-split a:hover { background: color-mix(in srgb, var(--sl-color-primary) 8%, #fff); }
 .u8-split > *:nth-child(2) { border-left: 1px solid var(--sl-color-border-subtle); }
 .u8-split b { font-size: 20px; line-height: 1.1; color: var(--sl-color-brand-strong); }
 .u8-split small { font-size: 11.5px; color: var(--sl-color-text-muted); }
 .u8-links { display: flex; justify-content: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 
 /* ---------- V9: Тёмная карточка ---------- */
-.u9.sl-block { background: linear-gradient(160deg, var(--sl-color-surface-dark) 0%, var(--sl-color-surface-darker) 100%); border-color: var(--sl-color-surface-divider); }
+.u9.sl-block { background: linear-gradient(160deg, var(--sl-color-bg-soft-dark) 0%, var(--sl-color-bg-soft-darker) 100%); border-color: var(--sl-color-bg-soft-divider); }
 .u9 .sl-title { color: #fff; }
 .u9-head { display: flex; align-items: center; gap: 12px; }
 .u9-ava-wrap { position: relative; }
-.u9-head .u-ava { width: 54px; height: 54px; border: 2px solid var(--sl-color-surface-divider); }
-.u9-head .u-presence { border-color: var(--sl-color-surface-darker); }
+.u9-head .u-ava { width: 54px; height: 54px; border: 2px solid var(--sl-color-bg-soft-divider); }
+.u9-head .u-presence { border-color: var(--sl-color-bg-soft-darker); }
 .u9 .u-name { color: #fff; }
 .u9 .u-hello { color: var(--sl-color-text-subtle); }
 .u9-stats { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
@@ -293,9 +293,9 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 	background-image: var(--cov); background-size: cover; background-position: center;
 	filter: blur(14px) saturate(1.3); opacity: .45; transform: scale(1.3);
 }
-.u11-fade { position: absolute; inset: 0 0 auto; height: 130px; background: linear-gradient(180deg, transparent 30%, var(--sl-color-surface) 100%); }
+.u11-fade { position: absolute; inset: 0 0 auto; height: 130px; background: linear-gradient(180deg, transparent 30%, var(--sl-color-bg-soft) 100%); }
 .u11-in { position: relative; text-align: center; }
-.u11-in .u-ava { width: 88px; height: 88px; border: 4px solid #fff; box-shadow: var(--sl-shadow-medium); }
+.u11-in .u-ava { width: 88px; height: 88px; border: 4px solid #fff; box-shadow: var(--sl-shadow-panel); }
 .u11-meta { display: flex; justify-content: center; gap: 18px; margin: 12px 0; padding: 10px 0; border-block: 1px solid var(--sl-color-border-subtle); }
 .u11-meta a, .u11-meta span { display: flex; flex-direction: column; gap: 1px; font-size: 11.5px; color: var(--sl-color-text-muted); }
 .u11-meta b { font-size: 16px; color: var(--sl-color-text-heading); }
@@ -314,9 +314,9 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 	position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
 	width: 16px; height: 16px; border-radius: 50%;
 	display: grid; place-items: center;
-	background: #fff; border: 2px solid var(--t, var(--sl-color-brand-link));
+	background: #fff; border: 2px solid var(--t, var(--sl-color-primary));
 }
-.u12-list .dot::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--t, var(--sl-color-brand-link)); }
+.u12-list .dot::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--t, var(--sl-color-primary)); }
 .u12-list a { color: var(--sl-color-text); }
 .u12-list a:hover { color: var(--sl-color-brand-strong); }
 .u12-list b { color: var(--sl-color-text-heading); }
@@ -333,7 +333,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 .s1 li.total { border-top: 1px solid var(--sl-color-border-subtle); margin-top: 4px; padding-top: 8px; }
 
 /* ---------- S3: Стек-бар ---------- */
-.s3-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--sl-color-surface-alt); margin-bottom: 10px; }
+.s3-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--sl-color-bg-soft-alt); margin-bottom: 10px; }
 .s3-bar i { display: block; background: var(--t); }
 .s3-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--sl-color-text-muted); }
 .s3-leg span { display: inline-flex; align-items: center; gap: 6px; }
@@ -346,12 +346,12 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 .s4-stack .a {
 	width: 30px; height: 30px; border-radius: 50%;
 	border: 2px solid #fff; background-size: cover; background-position: center;
-	background-color: var(--sl-color-surface-soft);
+	background-color: var(--sl-color-bg-soft-soft);
 	display: grid; place-items: center;
 	font-size: 12px; color: var(--sl-color-text-muted);
 }
 .s4-stack .a + .a { margin-left: -9px; }
-.s4-stack .more { background: var(--sl-color-surface-alt); font-size: 11px; font-weight: bold; color: var(--sl-color-text-heading); }
+.s4-stack .more { background: var(--sl-color-bg-soft-alt); font-size: 11px; font-weight: bold; color: var(--sl-color-text-heading); }
 .s4-lbl { flex: 1 1 auto; font-size: 13px; color: var(--sl-color-text-muted); }
 .s4-lbl b { color: var(--sl-color-text-heading); }
 .s4-refresh { width: 30px; height: 30px; border-radius: 50%; font-size: var(--sl-size-icon-xs); }
@@ -381,7 +381,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="sl-block-content">
 				<div class="u1-banner"></div>
 				<div class="u1-ava-wrap">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<i class="u-presence"></i>
 				</div>
 				<div class="u1-center">
@@ -409,7 +409,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="sl-block-content">
 				<div class="u2-head">
 					<span class="u2-ava-wrap">
-						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 						<i class="u-presence"></i>
 					</span>
 					<span class="u2-id">
@@ -437,11 +437,11 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="u3-head">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
 				</div>
 				<div class="u3-grid">
-					<a href="#" class="u3-tile" style="--t:var(--sl-color-brand-link)"><i class="bi bi-envelope"></i><b>0</b><span>Новые входящие</span></a>
+					<a href="#" class="u3-tile" style="--t:var(--sl-color-primary)"><i class="bi bi-envelope"></i><b>0</b><span>Новые входящие</span></a>
 					<span class="u3-tile" style="--t:var(--sl-color-accent)"><i class="bi bi-send"></i><b>5</b><span>Новые исходящие</span></span>
 					<a href="#" class="u3-tile" style="--t:var(--sl-color-warning)"><i class="bi bi-star"></i><b>12</b><span>Фавориты</span></a>
 					<span class="u3-tile" style="--t:var(--sl-color-success)"><i class="bi bi-people"></i><b>1</b><span>Сейчас на сайте</span></span>
@@ -461,7 +461,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="u4-head">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
 				</div>
 				<ul class="u4-menu">
@@ -483,7 +483,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="sl-block-content">
 				<div class="u5-head">
 					<span class="u5-ava-wrap">
-						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 						<i class="u-presence"></i>
 					</span>
 					<span class="u-hello">Здравствуйте,</span><br>
@@ -507,7 +507,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="u6-head">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<span><span class="u-name">SLAED CMS</span><br><span class="u-hello">добро пожаловать</span></span>
 				</div>
 				<ul class="u6-rows">
@@ -531,7 +531,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="u7-head">
-					<span class="u7-ring"><i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i></span>
+					<span class="u7-ring"><i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i></span>
 					<span class="u7-id">
 						<span class="u-hello">Здравствуйте,</span><br>
 						<span class="u-name">SLAED CMS</span>
@@ -557,7 +557,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="u8-top">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<span><span class="u-name">SLAED CMS</span><br><span class="u-hello">Личные сообщения</span></span>
 					<a href="#" class="u-icon-btn is-danger" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
 				</div>
@@ -581,7 +581,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="sl-block-content">
 				<div class="u9-head">
 					<span class="u9-ava-wrap">
-						<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 						<i class="u-presence"></i>
 					</span>
 					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
@@ -607,7 +607,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="u10-hero">
 				<h2 class="sl-title">Пользователи</h2>
 				<div class="u10-ava-wrap">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<i class="u-presence"></i>
 				</div>
 				<span class="u-hello">Здравствуйте,</span><br>
@@ -632,10 +632,10 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 	<div class="demo-cell">
 		<p class="demo-label"><span class="n">11</span><b>Обложка из аватара</b><span>blur-фон, метрики в ряд</span></p>
 		<aside class="sl-block u11">
-			<div class="u11-cover" style="--cov:url(../uploads/avatars/default/51.png)"></div>
+			<div class="u11-cover" style="--cov:url(../templates/lite/images/avatars/presets/51.svg)"></div>
 			<div class="u11-fade"></div>
 			<div class="sl-block-content u11-in">
-				<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+				<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 				<div style="margin-top:8px">
 					<span class="u-hello">Здравствуйте,</span><br>
 					<span class="u-name" style="font-size:16px">SLAED CMS</span>
@@ -660,11 +660,11 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<h2 class="sl-title">Пользователи</h2>
 			<div class="sl-block-content">
 				<div class="u12-head">
-					<i class="u-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+					<i class="u-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 					<span><span class="u-hello">Здравствуйте,</span><br><span class="u-name">SLAED CMS</span></span>
 				</div>
 				<ul class="u12-list">
-					<li style="--t:var(--sl-color-brand-link)"><span class="dot"></span><a href="#">Новые входящие: <b>0</b></a></li>
+					<li style="--t:var(--sl-color-primary)"><span class="dot"></span><a href="#">Новые входящие: <b>0</b></a></li>
 					<li style="--t:var(--sl-color-accent)"><span class="dot"></span>Новые исходящие: <b>5</b></li>
 					<li style="--t:var(--sl-color-warning)"><span class="dot"></span><a href="#">Фавориты</a></li>
 					<li style="--t:var(--sl-color-success)"><span class="dot"></span><a href="#">Настройки</a></li>
@@ -690,7 +690,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 				<ul class="s1">
 					<li style="--t:var(--sl-color-success)"><span class="d"></span><span class="k">Пользователей</span><b>1</b></li>
 					<li style="--t:var(--sl-color-warning)"><span class="d"></span><span class="k">Поисковых ботов</span><b>0</b></li>
-					<li style="--t:var(--sl-color-brand-link)"><span class="d"></span><span class="k">Гостей</span><b>0</b></li>
+					<li style="--t:var(--sl-color-primary)"><span class="d"></span><span class="k">Гостей</span><b>0</b></li>
 					<li class="total" style="--t:var(--sl-color-text-heading)"><span class="d"></span><span class="k">Всего</span><b>1</b></li>
 				</ul>
 			</div>
@@ -721,12 +721,12 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="sl-block-content">
 				<div class="s3-bar">
 					<i style="--t:var(--sl-color-success); width:55%"></i>
-					<i style="--t:var(--sl-color-brand-link); width:30%"></i>
+					<i style="--t:var(--sl-color-primary); width:30%"></i>
 					<i style="--t:var(--sl-color-warning); width:15%"></i>
 				</div>
 				<div class="s3-leg">
 					<span style="--t:var(--sl-color-success)"><i class="d"></i>Пользователи <b>11</b></span>
-					<span style="--t:var(--sl-color-brand-link)"><i class="d"></i>Гости <b>6</b></span>
+					<span style="--t:var(--sl-color-primary)"><i class="d"></i>Гости <b>6</b></span>
 					<span style="--t:var(--sl-color-warning)"><i class="d"></i>Боты <b>3</b></span>
 				</div>
 			</div>
@@ -741,7 +741,7 @@ a.u9-chip:hover { background: rgb(255 255 255 / 0.16); }
 			<div class="sl-block-content">
 				<div class="s4-row">
 					<span class="s4-stack">
-						<i class="a" style="background-image:url(../uploads/avatars/default/51.png)"></i>
+						<i class="a" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i>
 						<i class="a"><span class="bi bi-person"></span></i>
 						<i class="a"><span class="bi bi-person"></span></i>
 						<i class="a more">+4</i>

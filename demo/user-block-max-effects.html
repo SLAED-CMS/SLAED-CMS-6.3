@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED - Блок «Пользователи»: max effects lab</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -12,14 +12,14 @@
 body {
   margin: 0;
   padding: 0 0 64px;
-  background: var(--sl-color-surface);
+  background: var(--sl-color-bg-soft);
   color: var(--sl-color-text);
   font: 15px/1.5 Arial, Tahoma, sans-serif;
 }
 a { color: inherit; text-decoration: none; }
 .demo-head {
   padding: 26px clamp(14px, 4vw, 48px);
-  background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+  background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%);
   border-bottom: 1px solid var(--sl-color-border);
 }
 .demo-head h1 {
@@ -105,13 +105,13 @@ a { color: inherit; text-decoration: none; }
   height: 36px;
   border: 0;
   border-radius: 12px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-heading);
   transition: transform .18s, background .18s, color .18s, box-shadow .18s;
 }
 .ux-icon:hover {
   transform: translateY(-2px);
-  background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent);
+  background: color-mix(in srgb, var(--sl-color-primary) 15%, transparent);
   color: var(--sl-color-brand-strong);
   box-shadow: var(--sl-shadow-soft);
 }
@@ -146,7 +146,7 @@ a { color: inherit; text-decoration: none; }
   transition: background .16s, transform .16s;
 }
 .ux-row:hover {
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   transform: translateX(3px);
 }
 .ux-row .who {
@@ -215,7 +215,7 @@ a { color: inherit; text-decoration: none; }
   transition: transform .22s, box-shadow .22s;
 }
 .fx3-grid a:hover,
-.fx3-grid span:hover { transform: rotateX(7deg) rotateY(-5deg) translateY(-2px); box-shadow: var(--sl-shadow-medium); }
+.fx3-grid span:hover { transform: rotateX(7deg) rotateY(-5deg) translateY(-2px); box-shadow: var(--sl-shadow-panel); }
 .fx3-grid .bi { color: var(--t); }
 .fx3-grid b { color: var(--sl-color-text-heading); font-size: 19px; line-height: 1; }
 .fx3-grid small { color: var(--sl-color-text-muted); font-size: 11.5px; }
@@ -223,7 +223,7 @@ a { color: inherit; text-decoration: none; }
   background:
     radial-gradient(120px 90px at 20% 0%, color-mix(in srgb, var(--sl-color-brand) 25%, transparent), transparent),
     radial-gradient(140px 120px at 100% 100%, color-mix(in srgb, var(--sl-color-accent) 20%, transparent), transparent),
-    var(--sl-color-surface);
+    var(--sl-color-bg-soft);
 }
 .fx5-card {
   transform-style: preserve-3d;
@@ -332,7 +332,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   padding: 3px;
   border-radius: 999px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 .fx11-tabs button {
   flex: 1 1 0;
@@ -354,7 +354,7 @@ a { color: inherit; text-decoration: none; }
 .fx12-heat i {
   height: 22px;
   border-radius: 5px;
-  background: color-mix(in srgb, var(--sl-color-success) calc(var(--v) * 1%), var(--sl-color-surface-alt));
+  background: color-mix(in srgb, var(--sl-color-success) calc(var(--v) * 1%), var(--sl-color-bg-soft-alt));
 }
 .fx13-command {
   display: grid;
@@ -400,8 +400,8 @@ a { color: inherit; text-decoration: none; }
 }
 @keyframes fxOrbit { to { rotate: 360deg; } }
 .fx15-neo.sl-block {
-  border-color: var(--sl-color-surface-divider);
-  background: linear-gradient(160deg, var(--sl-color-surface-dark), var(--sl-color-surface-darker));
+  border-color: var(--sl-color-bg-soft-divider);
+  background: linear-gradient(160deg, var(--sl-color-bg-soft-dark), var(--sl-color-bg-soft-darker));
   color: #dfe6ee;
 }
 .fx15-neo .sl-title,
@@ -432,7 +432,7 @@ a { color: inherit; text-decoration: none; }
   height: 34px;
   border: 2px solid #fff;
   border-radius: 50%;
-  background: var(--sl-color-surface-soft) center/cover;
+  background: var(--sl-color-bg-soft-soft) center/cover;
   color: var(--sl-color-text-muted);
   font-size: 12px;
 }
@@ -442,7 +442,7 @@ a { color: inherit; text-decoration: none; }
   height: 34px;
   margin-bottom: 7px;
   border-radius: 9px;
-  background: linear-gradient(90deg, var(--sl-color-surface-alt) 20%, #fff 42%, var(--sl-color-surface-alt) 64%);
+  background: linear-gradient(90deg, var(--sl-color-bg-soft-alt) 20%, #fff 42%, var(--sl-color-bg-soft-alt) 64%);
   background-size: 300% 100%;
   animation: fxShimmer 1.2s linear infinite;
 }
@@ -457,7 +457,7 @@ a { color: inherit; text-decoration: none; }
   place-items: center;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: conic-gradient(var(--t) var(--p), var(--sl-color-surface-alt) 0);
+  background: conic-gradient(var(--t) var(--p), var(--sl-color-bg-soft-alt) 0);
 }
 .fx19-rings b {
   display: grid;
@@ -500,7 +500,7 @@ a { color: inherit; text-decoration: none; }
   padding: 9px 4px;
   border-radius: 9px;
   text-align: center;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 .fx22-glance b { display: block; color: var(--sl-color-text-heading); font-size: 18px; }
 .fx22-glance small { color: var(--sl-color-text-muted); font-size: 11px; }
@@ -529,7 +529,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--sl-color-border-subtle);
   transition: transform .18s, background .18s;
 }
-.fx24-actions a:hover { transform: translateY(-2px); background: var(--sl-color-surface-alt); }
+.fx24-actions a:hover { transform: translateY(-2px); background: var(--sl-color-bg-soft-alt); }
 .fx25-search {
   display: flex;
   gap: 6px;
@@ -540,7 +540,7 @@ a { color: inherit; text-decoration: none; }
   display: none;
   padding: 10px;
   border-radius: 9px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-muted);
   text-align: center;
   font-size: 12.5px;
@@ -560,7 +560,7 @@ a { color: inherit; text-decoration: none; }
   gap: 4px;
   padding: 3px;
   border-radius: 999px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
 }
 .fx27-controls button {
   height: 26px;
@@ -631,11 +631,11 @@ a { color: inherit; text-decoration: none; }
   padding: 8px;
   border-radius: 8px;
 }
-.fx31-palette a:hover { background: var(--sl-color-surface-alt); }
+.fx31-palette a:hover { background: var(--sl-color-bg-soft-alt); }
 .fx32-copy button {
   border: 0;
   border-radius: 999px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-brand-strong);
   padding: 4px 9px;
   cursor: pointer;
@@ -656,7 +656,7 @@ a { color: inherit; text-decoration: none; }
 }
 .fx34-clay.sl-block {
   border: 0;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   box-shadow: 8px 8px 18px rgb(42 48 60 / .14), -8px -8px 18px #fff;
 }
 .fx35-paper.sl-block {
@@ -667,12 +667,12 @@ a { color: inherit; text-decoration: none; }
   background-size: 18px 18px;
 }
 .fx36-cyber.sl-block {
-  border-color: var(--sl-color-surface-divider);
+  border-color: var(--sl-color-bg-soft-divider);
   color: #dfe6ee;
   background:
     linear-gradient(90deg, rgb(100 177 225 / .09) 1px, transparent 1px),
     linear-gradient(rgb(100 177 225 / .09) 1px, transparent 1px),
-    var(--sl-color-surface-darker);
+    var(--sl-color-bg-soft-darker);
   background-size: 22px 22px;
 }
 .fx36-cyber .sl-title,
@@ -724,7 +724,7 @@ a { color: inherit; text-decoration: none; }
   place-items: center;
   min-height: 160px;
   border-radius: 12px;
-  background: conic-gradient(var(--sl-color-brand-link) 0 55%, var(--sl-color-warning) 55% 72%, var(--sl-color-success) 72% 100%);
+  background: conic-gradient(var(--sl-color-primary) 0 55%, var(--sl-color-warning) 55% 72%, var(--sl-color-success) 72% 100%);
 }
 .fx39-sun b {
   display: grid;
@@ -746,11 +746,11 @@ a { color: inherit; text-decoration: none; }
   place-items: center;
   height: 36px;
   border-radius: 8px;
-  background: var(--sl-color-surface-alt);
+  background: var(--sl-color-bg-soft-alt);
   color: var(--sl-color-text-muted);
   font-size: 12px;
 }
-.fx40-calendar .hot { background: color-mix(in srgb, var(--sl-color-brand-link) 18%, #fff); color: var(--sl-color-brand-strong); font-weight: bold; }
+.fx40-calendar .hot { background: color-mix(in srgb, var(--sl-color-primary) 18%, #fff); color: var(--sl-color-brand-strong); font-weight: bold; }
 .fx41-full {
   display: grid;
   gap: 10px;
@@ -851,35 +851,35 @@ a { color: inherit; text-decoration: none; }
 <div class="demo-grid">
   <div class="demo-cell">
     <p class="demo-label"><span class="n">1</span><b>Conic signal</b><span>живой контур вокруг карточки</span></p>
-    <aside class="sl-block fx1"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i><span class="ux-body"><span class="ux-muted">Здравствуйте,</span><br><span class="ux-name">SLAED CMS</span><br><span class="sl-chip sl-chip-success"><i class="bi bi-circle-fill"></i> online</span></span></div><div class="ux-tools"><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-envelope"></i> 0</a><span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> 5</span><a class="sl-chip sl-chip-danger" href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside>
+    <aside class="sl-block fx1"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span class="ux-body"><span class="ux-muted">Здравствуйте,</span><br><span class="ux-name">SLAED CMS</span><br><span class="sl-chip sl-chip-success"><i class="bi bi-circle-fill"></i> online</span></span></div><div class="ux-tools"><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-envelope"></i> 0</a><span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> 5</span><a class="sl-chip sl-chip-danger" href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">2</span><b>Magnetic avatar</b><span>аватар и колокольчик реагируют на hover</span></p>
-    <aside class="sl-block fx2"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i><span class="ux-body"><span class="ux-muted">в сети</span><br><span class="ux-name">SLAED CMS</span></span><a class="ux-icon" href="#" title="Личные сообщения"><i class="bi bi-bell"></i><span class="ux-badge">5</span></a></div><div class="ux-tools"><a class="sl-chip sl-chip-warn" href="#"><i class="bi bi-star"></i> Фавориты</a><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-gear"></i> Настройки</a></div></div></aside>
+    <aside class="sl-block fx2"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span class="ux-body"><span class="ux-muted">в сети</span><br><span class="ux-name">SLAED CMS</span></span><a class="ux-icon" href="#" title="Личные сообщения"><i class="bi bi-bell"></i><span class="ux-badge">5</span></a></div><div class="ux-tools"><a class="sl-chip sl-chip-warn" href="#"><i class="bi bi-star"></i> Фавориты</a><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-gear"></i> Настройки</a></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">3</span><b>3D metric tiles</b><span>наклоняемые плитки на токенах темы</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line" style="margin-bottom:12px"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">центр управления</span></span></div><div class="fx3-grid"><a style="--t:var(--sl-color-brand-link)" href="#"><i class="bi bi-envelope"></i><b>0</b><small>Входящие</small></a><span style="--t:var(--sl-color-accent)"><i class="bi bi-send"></i><b>5</b><small>Исходящие</small></span><a style="--t:var(--sl-color-warning)" href="#"><i class="bi bi-star"></i><b>12</b><small>Фавориты</small></a><span style="--t:var(--sl-color-success)"><i class="bi bi-people"></i><b>77</b><small>Онлайн</small></span></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line" style="margin-bottom:12px"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">центр управления</span></span></div><div class="fx3-grid"><a style="--t:var(--sl-color-primary)" href="#"><i class="bi bi-envelope"></i><b>0</b><small>Входящие</small></a><span style="--t:var(--sl-color-accent)"><i class="bi bi-send"></i><b>5</b><small>Исходящие</small></span><a style="--t:var(--sl-color-warning)" href="#"><i class="bi bi-star"></i><b>12</b><small>Фавориты</small></a><span style="--t:var(--sl-color-success)"><i class="bi bi-people"></i><b>77</b><small>Онлайн</small></span></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">4</span><b>Aurora compact</b><span>мягкая заливка без новых цветов</span></p>
-    <aside class="sl-block fx4"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content" style="text-align:center"><i class="ux-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i><div><span class="ux-muted">Здравствуйте,</span><br><span class="ux-name">SLAED CMS</span></div><div class="ux-tools" style="justify-content:center"><a href="#" class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> Входящие</a><a href="#" class="sl-chip sl-chip-success"><i class="bi bi-gear"></i> Профиль</a><a href="#" class="sl-chip sl-chip-danger"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside>
+    <aside class="sl-block fx4"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content" style="text-align:center"><i class="ux-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><div><span class="ux-muted">Здравствуйте,</span><br><span class="ux-name">SLAED CMS</span></div><div class="ux-tools" style="justify-content:center"><a href="#" class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> Входящие</a><a href="#" class="sl-chip sl-chip-success"><i class="bi bi-gear"></i> Профиль</a><a href="#" class="sl-chip sl-chip-danger"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">5</span><b>Flip card</b><span>hover открывает вторую сторону</span></p>
-    <aside class="sl-block fx5"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content fx5-card"><div class="fx5-front"><div class="ux-line"><i class="ux-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-muted">наведите курсор</span><br><span class="ux-name">SLAED CMS</span></span></div></div><div class="fx5-back"><div class="fx13-command"><a href="#"><i class="bi bi-envelope"></i> ЛС</a><a href="#"><i class="bi bi-star"></i> Избранное</a><a href="#"><i class="bi bi-person"></i> Профиль</a><a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></div></aside>
+    <aside class="sl-block fx5"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content fx5-card"><div class="fx5-front"><div class="ux-line"><i class="ux-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-muted">наведите курсор</span><br><span class="ux-name">SLAED CMS</span></span></div></div><div class="fx5-back"><div class="fx13-command"><a href="#"><i class="bi bi-envelope"></i> ЛС</a><a href="#"><i class="bi bi-star"></i> Избранное</a><a href="#"><i class="bi bi-person"></i> Профиль</a><a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">6</span><b>Activity meters</b><span>мини-графики внутри блока</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Активность</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">последние 24 часа</span></span></div><div class="fx6-meter"><span>ЛС<i style="--w:18%"></i><b>0</b></span><span>Форум<i style="--w:72%"></i><b>18</b></span><span>Файлы<i style="--w:44%"></i><b>9</b></span></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Активность</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">последние 24 часа</span></span></div><div class="fx6-meter"><span>ЛС<i style="--w:18%"></i><b>0</b></span><span>Форум<i style="--w:72%"></i><b>18</b></span><span>Файлы<i style="--w:44%"></i><b>9</b></span></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">7</span><b>Orbit profile</b><span>точки-сервисы вокруг аватара</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content" style="text-align:center"><span class="fx14-orbit"><i style="--t:var(--sl-color-brand); --a:0deg"></i><i style="--t:var(--sl-color-warning); --a:115deg"></i><i style="--t:var(--sl-color-success); --a:245deg"></i><i class="ux-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i></span><span class="ux-name">SLAED CMS</span><div class="ux-tools" style="justify-content:center"><a class="sl-chip sl-chip-info" href="#">Входящие 0</a><span class="sl-chip sl-chip-neutral">Исходящие 5</span></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content" style="text-align:center"><span class="fx14-orbit"><i style="--t:var(--sl-color-brand); --a:0deg"></i><i style="--t:var(--sl-color-warning); --a:115deg"></i><i style="--t:var(--sl-color-success); --a:245deg"></i><i class="ux-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i></span><span class="ux-name">SLAED CMS</span><div class="ux-tools" style="justify-content:center"><a class="sl-chip sl-chip-info" href="#">Входящие 0</a><span class="sl-chip sl-chip-neutral">Исходящие 5</span></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">8</span><b>Neo dark</b><span>контрастная ночная версия</span></p>
-    <aside class="sl-block fx15-neo"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span class="ux-body"><span class="ux-name">SLAED CMS</span><br><span class="ux-muted"><span class="ux-dot"></span> online</span></span><a class="ux-icon" href="#"><i class="bi bi-box-arrow-right"></i></a></div><div class="ux-tools"><span class="sl-chip sl-chip-info">0 входящих</span><span class="sl-chip sl-chip-warn">5 исходящих</span></div></div></aside>
+    <aside class="sl-block fx15-neo"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span class="ux-body"><span class="ux-name">SLAED CMS</span><br><span class="ux-muted"><span class="ux-dot"></span> online</span></span><a class="ux-icon" href="#"><i class="bi bi-box-arrow-right"></i></a></div><div class="ux-tools"><span class="sl-chip sl-chip-info">0 входящих</span><span class="sl-chip sl-chip-warn">5 исходящих</span></div></div></aside>
   </div>
 </div>
 </section>
@@ -917,7 +917,7 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">16</span><b>Avatar stack</b><span>быстрый намёк на живую аудиторию</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Сейчас на сайте</h2><div class="sl-block-content"><div class="ux-line"><span class="fx17-stack"><i class="a" style="background-image:url(../uploads/avatars/default/51.png)"></i><i class="a"><i class="bi bi-person"></i></i><i class="a"><i class="bi bi-robot"></i></i><i class="a">+74</i></span><span><span class="ux-name">77 онлайн</span><br><span class="ux-muted">1 пользователь, 4 бота, 72 гостя</span></span></div><div class="ux-tools"><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-chevron-down"></i> Подробнее</a><a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Сейчас на сайте</h2><div class="sl-block-content"><div class="ux-line"><span class="fx17-stack"><i class="a" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><i class="a"><i class="bi bi-person"></i></i><i class="a"><i class="bi bi-robot"></i></i><i class="a">+74</i></span><span><span class="ux-name">77 онлайн</span><br><span class="ux-muted">1 пользователь, 4 бота, 72 гостя</span></span></div><div class="ux-tools"><a class="sl-chip sl-chip-info" href="#"><i class="bi bi-chevron-down"></i> Подробнее</a><a class="sl-chip sl-chip-neutral" href="#"><i class="bi bi-arrow-repeat"></i> Обновить</a></div></div></aside>
   </div>
 </div>
 </section>
@@ -935,7 +935,7 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">19</span><b>Ring counters</b><span>радиальные доли аудитории</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Аудитория</h2><div class="sl-block-content"><div class="fx19-rings"><span style="--t:var(--sl-color-brand-link);--p:90%"><b>72</b></span><span style="--t:var(--sl-color-warning);--p:5%"><b>4</b></span><span style="--t:var(--sl-color-success);--p:2%"><b>1</b></span></div><div class="ux-tools"><span class="sl-chip sl-chip-info">Гости</span><span class="sl-chip sl-chip-warn">Боты</span><span class="sl-chip sl-chip-success">Юзеры</span></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Аудитория</h2><div class="sl-block-content"><div class="fx19-rings"><span style="--t:var(--sl-color-primary);--p:90%"><b>72</b></span><span style="--t:var(--sl-color-warning);--p:5%"><b>4</b></span><span style="--t:var(--sl-color-success);--p:2%"><b>1</b></span></div><div class="ux-tools"><span class="sl-chip sl-chip-info">Гости</span><span class="sl-chip sl-chip-warn">Боты</span><span class="sl-chip sl-chip-success">Юзеры</span></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">20</span><b>Security hint</b><span>аккуратное предупреждение в форме</span></p>
@@ -989,7 +989,7 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">31</span><b>Command palette</b><span>мини-палитра действий</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Команды</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">быстрые действия</span></span></div><div class="ux-tools"><button class="sl-but fx31-open" type="button"><i class="bi bi-command"></i> Открыть команды</button></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Команды</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">быстрые действия</span></span></div><div class="ux-tools"><button class="sl-but fx31-open" type="button"><i class="bi bi-command"></i> Открыть команды</button></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">32</span><b>Copy IP</b><span>копирование адреса из строки</span></p>
@@ -1003,11 +1003,11 @@ a { color: inherit; text-decoration: none; }
 <div class="demo-grid">
   <div class="demo-cell">
     <p class="demo-label"><span class="n">33</span><b>Liquid glass</b><span>мягкое стекло с blur</span></p>
-    <aside class="sl-block fx33-liquid"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">glass profile</span></span></div><div class="ux-tools"><span class="sl-chip sl-chip-info">0 входящих</span><span class="sl-chip sl-chip-warn">5 исходящих</span></div></div></aside>
+    <aside class="sl-block fx33-liquid"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">glass profile</span></span></div><div class="ux-tools"><span class="sl-chip sl-chip-info">0 входящих</span><span class="sl-chip sl-chip-warn">5 исходящих</span></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">34</span><b>Soft clay</b><span>neumorphic без потери читаемости</span></p>
-    <aside class="sl-block fx34-clay"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content" style="text-align:center"><i class="ux-ava" style="background-image:url(../uploads/avatars/default/51.png)"></i><div><span class="ux-muted">Здравствуйте,</span><br><span class="ux-name">SLAED CMS</span></div><div class="ux-tools" style="justify-content:center"><a class="sl-chip sl-chip-success" href="#">Настройки</a><a class="sl-chip sl-chip-danger" href="#">Выход</a></div></div></aside>
+    <aside class="sl-block fx34-clay"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content" style="text-align:center"><i class="ux-ava" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><div><span class="ux-muted">Здравствуйте,</span><br><span class="ux-name">SLAED CMS</span></div><div class="ux-tools" style="justify-content:center"><a class="sl-chip sl-chip-success" href="#">Настройки</a><a class="sl-chip sl-chip-danger" href="#">Выход</a></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">35</span><b>Blueprint paper</b><span>легкая сетка для статистики</span></p>
@@ -1023,7 +1023,7 @@ a { color: inherit; text-decoration: none; }
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">38</span><b>Status timeline</b><span>мини-история активности</span></p>
-    <aside class="sl-block"><h2 class="sl-title">События</h2><div class="sl-block-content"><div class="fx38-timeline"><span style="--t:var(--sl-color-success)">SLAED CMS вошёл в профиль</span><span style="--t:var(--sl-color-warning)">Google Bot перешёл на форум</span><span style="--t:var(--sl-color-brand-link)">Гость открыл новости</span><span style="--t:var(--sl-color-accent)">Baidu Spider сканирует каталог</span></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">События</h2><div class="sl-block-content"><div class="fx38-timeline"><span style="--t:var(--sl-color-success)">SLAED CMS вошёл в профиль</span><span style="--t:var(--sl-color-warning)">Google Bot перешёл на форум</span><span style="--t:var(--sl-color-primary)">Гость открыл новости</span><span style="--t:var(--sl-color-accent)">Baidu Spider сканирует каталог</span></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">39</span><b>Sunburst split</b><span>одна диаграмма состава</span></p>
@@ -1041,11 +1041,11 @@ a { color: inherit; text-decoration: none; }
 <div class="demo-grid">
   <div class="demo-cell">
     <p class="demo-label"><span class="n">41</span><b>Command center</b><span>профиль + онлайн + действия</span></p>
-    <aside class="sl-block"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content fx41-full"><div class="fx41-full-head"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">online · профиль</span></span><a class="ux-icon" href="#"><i class="bi bi-bell"></i><span class="ux-badge">5</span></a></div><div class="fx22-glance"><span><b>0</b><small>вход</small></span><span><b>5</b><small>исход</small></span><span><b>77</b><small>online</small></span></div><div class="fx13-command"><a href="#"><i class="bi bi-star"></i> Фавориты</a><a href="#"><i class="bi bi-gear"></i> Настройки</a><a href="#"><i class="bi bi-people"></i> Подробнее</a><a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside>
+    <aside class="sl-block"><h2 class="sl-title">Пользователи</h2><div class="sl-block-content fx41-full"><div class="fx41-full-head"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">online · профиль</span></span><a class="ux-icon" href="#"><i class="bi bi-bell"></i><span class="ux-badge">5</span></a></div><div class="fx22-glance"><span><b>0</b><small>вход</small></span><span><b>5</b><small>исход</small></span><span><b>77</b><small>online</small></span></div><div class="fx13-command"><a href="#"><i class="bi bi-star"></i> Фавориты</a><a href="#"><i class="bi bi-gear"></i> Настройки</a><a href="#"><i class="bi bi-people"></i> Подробнее</a><a href="#"><i class="bi bi-box-arrow-right"></i> Выход</a></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">42</span><b>Mobile sheet</b><span>нижняя панель для телефона</span></p>
-    <aside class="sl-block fx42-mobile"><div class="fx42-grip"></div><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../uploads/avatars/default/51.png)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">готово для mobile sidebar</span></span></div><div class="fx24-actions" style="margin-top:12px"><a href="#"><i class="bi bi-envelope"></i></a><a href="#"><i class="bi bi-star"></i></a><a href="#"><i class="bi bi-gear"></i></a><a href="#"><i class="bi bi-box-arrow-right"></i></a></div></div></aside>
+    <aside class="sl-block fx42-mobile"><div class="fx42-grip"></div><h2 class="sl-title">Пользователи</h2><div class="sl-block-content"><div class="ux-line"><i class="ux-ava ux-ava-sm" style="background-image:url(../templates/lite/images/avatars/presets/51.svg)"></i><span><span class="ux-name">SLAED CMS</span><br><span class="ux-muted">готово для mobile sidebar</span></span></div><div class="fx24-actions" style="margin-top:12px"><a href="#"><i class="bi bi-envelope"></i></a><a href="#"><i class="bi bi-star"></i></a><a href="#"><i class="bi bi-gear"></i></a><a href="#"><i class="bi bi-box-arrow-right"></i></a></div></div></aside>
   </div>
   <div class="demo-cell">
     <p class="demo-label"><span class="n">43</span><b>Trust login</b><span>гостевой блок с доверием</span></p>

@@ -36,13 +36,19 @@ class Editor {
         if ($fmt && $driver instanceof ContentDriver) {
             $man = self::getManifest($key);
             $fmts = (array)($man['formats'] ?? []);
-            if ($fmts && !in_array($fmt, $fmts, true)) $driver = self::getDriver(self::getEditorKey($role));
+            if ($fmts && !in_array($fmt, $fmts, true)) {
+                $key = self::getEditorKey($role);
+                $driver = self::getDriver($key);
+            }
         }
-        if (!$driver instanceof ContentDriver) $driver = self::getDriver('plain');
+        if (!$driver instanceof ContentDriver) {
+            $key = 'plain';
+            $driver = self::getDriver($key);
+        }
         $id = (string)($data['id'] ?? 'editor');
         $name = (string)($data['name'] ?? 'text');
         $value = (string)($data['value'] ?? '');
-        return $driver instanceof ContentDriver ? $driver->getAssets($profile).$driver->getWidget($id, $name, $value, $profile, $data) : '';
+        return $driver instanceof ContentDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $profile, $data) : '';
     }
 
     # Render code editor widget; lang required, validated against manifest
@@ -60,11 +66,14 @@ class Editor {
         $list = (array)($man['lang'] ?? []);
         if ($list && !in_array($lang, $list, true)) $lang = 'text';
         $driver = self::getDriver($key);
-        if (!$driver instanceof CodeDriver) $driver = self::getDriver('codemirror');
+        if (!$driver instanceof CodeDriver) {
+            $key = 'codemirror';
+            $driver = self::getDriver($key);
+        }
         $id = (string)($data['id'] ?? 'code');
         $name = (string)($data['name'] ?? '');
         $value = (string)($data['text'] ?? '');
-        return $driver instanceof CodeDriver ? $driver->getAssets($profile).$driver->getWidget($id, $name, $value, $lang, $profile) : '';
+        return $driver instanceof CodeDriver ? $driver->getAssets($profile).self::getThemeSkin($key).$driver->getWidget($id, $name, $value, $lang, $profile) : '';
     }
 
     # Render editor select dropdown for settings UI
@@ -85,6 +94,23 @@ class Editor {
             'select_attr' => $selectAttr,
             'options_html' => $html,
         ]);
+    }
+
+    # Emit the active theme skin stylesheet for an editor that declares one in its manifest; deduplicated per theme/editor pair, a declared but missing skin file is logged
+    private static function getThemeSkin(string $key): string {
+        global $theme, $tpl;
+        static $done = [];
+        $man = self::getManifest($key);
+        if (empty($man['theme']['skin'])) return '';
+        $mark = $theme.':'.$key;
+        if (isset($done[$mark])) return '';
+        $done[$mark] = true;
+        $skin = 'templates/'.$theme.'/assets/editors/'.$key.'/skin.css';
+        if (!is_file($skin)) {
+            Logger::addSite('error', 'Editor theme skin missing: '.$skin, ['editor' => $key, 'theme' => (string)$theme]);
+            return '';
+        }
+        return $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $skin, 'type' => '', 'title' => '']);
     }
 
     # Return parsed manifest for one editor; null if missing or invalid

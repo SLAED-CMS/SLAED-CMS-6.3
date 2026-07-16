@@ -455,19 +455,15 @@ function setExit(string $msg, string $typ = '', string $title = ''): never {
         .$tpl->getHtmlFrag('head-meta', ['name' => 'robots', 'content' => 'noindex, follow'])."\n";
     $license = getLicenseHtml();
     $adlogo = basename((string)($conf['admin_logo'] ?? 'slaed_logo_256x73.png'));
-    $adpath = img_find('logos/'.$adlogo);
-    if (!is_file($adpath)) $adpath = img_find('logos/slaed_logo_256x73.png');
+    $adpath = getThemeImagePath('logos/'.$adlogo);
+    if (!is_file($adpath)) $adpath = getThemeImagePath('logos/slaed_logo_256x73.png');
     $linksrc = [];
     $favicon = 'templates/'.$theme.'/images/favicon.svg';
     if (is_file(BASE_DIR.'/'.$favicon)) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'shortcut icon', 'href' => $favicon, 'type' => 'image/svg+xml', 'title' => '']);
     }
-    foreach (getThemeCssFiles($theme) as $asset) {
+    foreach (getThemeAssets($theme, 'css') as $asset) {
         $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $asset, 'type' => '', 'title' => '']);
-    }
-    $iconcss = 'plugins/bootstrap-icons/bootstrap-icons.min.css';
-    if (is_file(BASE_DIR.'/'.$iconcss)) {
-        $linksrc[] = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $iconcss, 'type' => '', 'title' => '']);
     }
     $links = implode("\n", $linksrc);
     die($tpl->getHtmlPage('message', [

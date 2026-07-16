@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Блок «Голосование»: варианты</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -13,7 +13,7 @@
 body {
 	margin: 0;
 	padding: 0 0 70px;
-	background: var(--sl-color-surface);
+	background: var(--sl-color-bg-soft);
 	color: var(--sl-color-text);
 	font: 15px/1.5 Arial, Tahoma, sans-serif;
 }
@@ -21,7 +21,7 @@ a { text-decoration: none; color: inherit; }
 button { font: inherit; }
 .demo-head {
 	padding: 26px clamp(14px, 4vw, 48px);
-	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%);
 	border-bottom: 1px solid var(--sl-color-border);
 }
 .demo-head h1 {
@@ -66,11 +66,11 @@ button { font: inherit; }
    (кандидаты в theme.css — селекторы целятся в системные классы)
    ================================================================== */
 .sys-fx .sl-vote-list li { border-radius: 8px; padding: 4px 7px; margin: 0 -7px 2px; transition: background .15s; }
-.sys-fx .sl-vote-list li:hover { background: var(--sl-color-surface-alt); }
+.sys-fx .sl-vote-list li:hover { background: var(--sl-color-bg-soft-alt); }
 .sys-fx .sl-vote-list label { cursor: pointer; display: flex; align-items: center; gap: 7px; }
 .sys-fx .sl-vote-list input { accent-color: var(--sl-color-brand-strong); width: 15px; height: 15px; flex: 0 0 auto; transition: transform .18s cubic-bezier(.3,1.6,.5,1); }
 .sys-fx .sl-vote-list input:checked { transform: scale(1.15); }
-.sys-fx .sl-vote-list li:has(input:checked) { background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent); font-weight: bold; color: var(--sl-color-text-heading); }
+.sys-fx .sl-vote-list li:has(input:checked) { background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent); font-weight: bold; color: var(--sl-color-text-heading); }
 .sys-fx .sl-vote-list input:focus-visible { outline: 2px solid var(--sl-color-brand); outline-offset: 2px; border-radius: 3px; }
 .sys-fx .sl-but { transition: transform .15s, opacity .2s; }
 .sys-fx .sl-but:active { transform: scale(.96); }
@@ -105,7 +105,7 @@ button { font: inherit; }
 /* ---- общая анатомия опроса ---- */
 .vt-q { font-size: 14px; font-weight: bold; color: var(--sl-color-text-heading); margin: 0 0 12px; line-height: 1.35; }
 .vt-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
-.vt-tones { --t1: var(--sl-color-brand-link); --t2: var(--sl-color-success); --t3: var(--sl-color-warning); --t4: var(--sl-color-accent); --t5: var(--sl-color-danger); }
+.vt-tones { --t1: var(--sl-color-primary); --t2: var(--sl-color-success); --t3: var(--sl-color-warning); --t4: var(--sl-color-accent); --t5: var(--sl-color-danger); }
 
 /* ---------- V1: Карточки-варианты ---------- */
 .f1-list { display: grid; gap: 7px; }
@@ -126,7 +126,7 @@ button { font: inherit; }
 	content: ""; width: 9px; height: 9px; border-radius: 50%;
 	background: #fff; transform: scale(0); transition: transform .18s cubic-bezier(.3,1.6,.5,1);
 }
-.f1-opt:has(input:checked) { border-color: var(--sl-color-brand); background: color-mix(in srgb, var(--sl-color-brand-link) 7%, #fff); }
+.f1-opt:has(input:checked) { border-color: var(--sl-color-brand); background: color-mix(in srgb, var(--sl-color-primary) 7%, #fff); }
 .f1-opt:has(input:checked) .mark { border-color: var(--sl-color-brand-strong); background: var(--sl-color-brand-strong); }
 .f1-opt:has(input:checked) .mark::after { transform: scale(1); }
 .f1-vote { width: 100%; margin-top: 12px; }
@@ -139,13 +139,13 @@ button { font: inherit; }
 .f2-opt span {
 	display: inline-flex; align-items: center; gap: 6px;
 	padding: 8px 14px; border-radius: 999px; font-size: 13px;
-	background: var(--sl-color-surface-alt); color: var(--sl-color-text);
+	background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text);
 	border: 1.5px solid transparent;
 	transition: background .18s, color .18s, border-color .18s, transform .15s;
 }
 .f2-opt:hover span { transform: translateY(-1px); border-color: var(--sl-color-border-muted); }
 .f2-opt:has(input:checked) span {
-	background: color-mix(in srgb, var(--sl-color-brand-link) 15%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 15%, transparent);
 	color: var(--sl-color-brand-strong); border-color: var(--sl-color-brand);
 	font-weight: bold;
 }
@@ -243,7 +243,7 @@ button { font: inherit; }
 .r1-top .txt { color: var(--sl-color-text); min-width: 0; }
 .r1-top .pct { color: var(--sl-color-text-heading); font-weight: bold; white-space: nowrap; }
 .r1-top .pct small { color: var(--sl-color-text-subtle); font-weight: normal; }
-.r1-track { height: 12px; border-radius: 999px; background: var(--sl-color-surface-alt); overflow: hidden; }
+.r1-track { height: 12px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); overflow: hidden; }
 .r1-fill {
 	display: block; height: 100%; border-radius: inherit; width: var(--w);
 	background: linear-gradient(90deg, color-mix(in srgb, var(--t) 75%, #fff) 0%, var(--t) 100%);
@@ -263,7 +263,7 @@ button { font: inherit; }
 /* ---------- R2: Тонкие треки с маркером ---------- */
 .r2-item { margin-bottom: 13px; }
 .r2-top { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 7px; }
-.r2-track { position: relative; height: 5px; border-radius: 999px; background: var(--sl-color-surface-alt); }
+.r2-track { position: relative; height: 5px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); }
 .r2-fill { display: block; height: 100%; border-radius: inherit; width: var(--w); background: var(--t); animation: grow 1s cubic-bezier(.2,.7,.3,1) both; }
 .r2-dot {
 	position: absolute; top: 50%; left: var(--w); transform: translate(-50%, -50%);
@@ -278,7 +278,7 @@ button { font: inherit; }
 .r3-donut {
 	width: 118px; height: 118px; border-radius: 50%; flex: 0 0 auto;
 	background:
-		radial-gradient(closest-side, var(--sl-color-surface) 74%, transparent 75% 100%),
+		radial-gradient(closest-side, var(--sl-color-bg-soft) 74%, transparent 75% 100%),
 		conic-gradient(var(--t1) 0 43%, var(--t2) 43% 71.5%, var(--t3) 71.5% 89.5%, var(--t4) 89.5% 100%);
 	display: grid; place-items: center; text-align: center;
 }

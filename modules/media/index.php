@@ -379,7 +379,7 @@ function view(): void {
                         preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
                         $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
                     }
-                    $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
+                    $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png')) : getThemeImagePath('logos/slaed_logo_60x60.png');
                     $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]);
                     $cont .= $tpl->getHtmlFrag('related-item', [
                         'href'       => $href,

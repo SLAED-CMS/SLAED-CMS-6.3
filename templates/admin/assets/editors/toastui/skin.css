@@ -1,27 +1,4 @@
-/* Keep plugin windows independent from active theme variables */
-div[id$="_toast"],
-.sl-toastui-upload,
-.slaed-emoji-panel {
-    --sl-color-bg: #fff;
-    --sl-color-bg-soft: #f7f9fc;
-    --sl-color-border: #dadde6;
-    --sl-color-border-strong: #cbcfdb;
-    --sl-color-brand-link: #00a9ff;
-    --sl-color-muted: #777;
-    --sl-color-primary: #00a9ff;
-    --sl-color-surface: #f7f9fc;
-    --sl-color-text: #333;
-    --sl-color-text-muted: #777;
-    --sl-color-warning: #f2994a;
-    --sl-radius-control: 2px;
-    --sl-shadow-medium: 0 8px 24px rgba(0, 0, 0, .14);
-    --sl-shadow-panel: 0 8px 24px rgba(0, 0, 0, .14);
-    --sl-space-lg: 16px;
-    --sl-space-md: 12px;
-    --sl-space-sm: 8px;
-    --sl-space-xs: 4px;
-}
-
+/* Toast UI editor skin: consumes design tokens from base.css; the vendor engine CSS stays in the plugin */
 /* Keep the editor mount div at the full width of its form field */
 div[id$="_toast"] {
     flex: 1 1 auto;
@@ -48,9 +25,9 @@ div[id$="_toast"] {
     margin-right: 4px;
 }
 
-.toastui-editor-toolbar-icons {
+button.toastui-editor-toolbar-icons {
     background-image: none !important;
-    color: #555;
+    color: var(--sl-color-text-muted, #555);
     font-size: 0;
     position: relative;
 }
@@ -138,35 +115,35 @@ div[id$="_toast"] {
     content: "\f5d4";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-quote::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-quote::before {
     content: "\f190";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-hide::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-hide::before {
     content: "\f340";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-tabs::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-tabs::before {
     content: "\f52b";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-html::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-html::before {
     content: "\f749";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-php::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-php::before {
     content: "\f757";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-files::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-files::before {
     content: "\f3d8";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-fullscreen::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-fullscreen::before {
     content: "\f3df";
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-fullscreen.sl-toastui-fullscreen-active::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-fullscreen.sl-toastui-fullscreen-active::before {
     content: "\f3de";
 }
 
@@ -232,9 +209,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     background: var(--sl-color-bg);
     border: 1px solid var(--sl-color-border-strong);
     border-radius: var(--sl-radius-control);
-    box-shadow: var(--sl-shadow-medium, var(--sl-shadow-panel));
+    box-shadow: var(--sl-shadow-panel);
     box-sizing: border-box;
-    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: inherit;
     font-size: 12px;
     left: 50%;
     max-height: calc(100vh - 48px);
@@ -249,11 +226,11 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-window-head {
     align-items: center;
-    background: var(--sl-color-surface, var(--sl-color-bg-soft));
+    background: var(--sl-color-bg-soft);
     border-bottom: 1px solid var(--sl-color-border);
     box-sizing: border-box;
     display: flex;
-    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: inherit;
     gap: var(--sl-space-sm);
     height: 36px;
     padding: 0 var(--sl-space-md);
@@ -331,8 +308,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .sl-toastui-upload-info {
     align-items: flex-start;
-    background: color-mix(in srgb, var(--sl-color-brand-link, var(--sl-color-primary)) 8%, transparent);
-    border-left: 3px solid var(--sl-color-brand-link, var(--sl-color-primary));
+    background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
+    border-left: 3px solid var(--sl-color-primary);
     box-shadow: none;
     font-size: 12px;
     margin-bottom: var(--sl-space-lg);
@@ -345,7 +322,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .toastui-editor-popup-add-image.sl-toastui-window-popup,
 .toastui-editor-popup-add-link.sl-toastui-window-popup {
-    box-shadow: var(--sl-shadow-medium, var(--sl-shadow-panel));
+    box-shadow: var(--sl-shadow-panel);
     box-sizing: border-box;
     font-size: 12px;
     max-height: calc(100vh - 48px);
@@ -373,8 +350,8 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .toastui-editor-popup-add-image.sl-toastui-image-popup[data-slaed-info]::before {
-    background: color-mix(in srgb, var(--sl-color-brand-link, var(--sl-color-primary)) 8%, transparent);
-    border-left: 3px solid var(--sl-color-brand-link, var(--sl-color-primary));
+    background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
+    border-left: 3px solid var(--sl-color-primary);
     content: attr(data-slaed-info);
     margin: var(--sl-space-lg) 20px 0;
     white-space: pre-line;
@@ -447,7 +424,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     align-items: flex-start;
     color: var(--sl-color-text);
     display: flex;
-    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: inherit;
     font-size: 12px;
     gap: var(--sl-space-md);
     position: absolute;
@@ -469,7 +446,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-image-mode small {
-    color: var(--sl-color-text-muted, var(--sl-color-muted));
+    color: var(--sl-color-text-muted);
     font-size: 11px;
     line-height: 1.35;
     margin-top: var(--sl-space-xs);
@@ -529,7 +506,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-message {
-    border-left: 3px solid var(--sl-color-brand-link);
+    border-left: 3px solid var(--sl-color-primary);
     border-radius: var(--sl-radius-control);
     box-sizing: border-box;
     margin: var(--sl-space-md) 0;
@@ -537,7 +514,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-message-info {
-    background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent);
+    background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
 }
 
 .sl-toastui-message-warn {
@@ -561,13 +538,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload-file-row:focus-visible {
-    outline-color: var(--sl-color-brand-link);
+    outline-color: var(--sl-color-primary);
 }
 
 .sl-toastui-upload-file-row.sl-drag-over,
 .sl-toastui-file-row.sl-drag-over {
-    background: color-mix(in srgb, var(--sl-color-brand-link, var(--sl-color-primary)) 8%, transparent);
-    outline-color: var(--sl-color-brand-link, var(--sl-color-primary));
+    background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
+    outline-color: var(--sl-color-primary);
 }
 
 .sl-toastui-upload-file-row .toastui-editor-file-name,
@@ -594,7 +571,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload-picker > small {
-    color: var(--sl-color-text-muted, var(--sl-color-muted));
+    color: var(--sl-color-text-muted);
     display: block;
     margin-top: var(--sl-space-sm);
 }
@@ -612,7 +589,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 .sl-toastui-upload input[type="button"],
 .sl-toastui-window-popup .toastui-editor-close-button,
 .sl-toastui-window-popup .toastui-editor-file-select-button {
-    background: var(--sl-color-bg-soft, var(--sl-color-surface)) !important;
+    background: var(--sl-color-bg-soft) !important;
     border: 1px solid var(--sl-color-border) !important;
     border-radius: 2px !important;
     color: var(--sl-color-text) !important;
@@ -636,22 +613,22 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 }
 
 .sl-toastui-upload .sl-editor-upload-files .toastui-editor-close-button {
-    background: #f7f9fc;
-    border: 1px solid #dadde6;
-    color: #333;
+    background: var(--sl-color-bg-soft);
+    border: 1px solid var(--sl-color-border);
+    color: var(--sl-color-text);
 }
 
 .sl-toastui-upload .sl-editor-upload-files .toastui-editor-close-button:hover {
-    border-color: #cbcfdb;
+    border-color: var(--sl-color-border-strong);
 }
 
 .sl-toastui-upload .sl-editor-upload-files .toastui-editor-ok-button {
-    background: #00a9ff;
+    background: var(--sl-color-primary);
     color: #fff;
 }
 
 .sl-toastui-upload .sl-editor-upload-files .toastui-editor-ok-button:hover {
-    background: #009bf2;
+    background: color-mix(in srgb, var(--sl-color-primary) 92%, #000);
 }
 
 .sl-toastui-upload .sl-editor-upload-files {
@@ -694,17 +671,17 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     }
 }
 
-.toastui-editor-toolbar-icons.slaed-bi-emoji::before {
+.toastui-editor-toolbar-icons.sl-editor-icon-emoji::before {
     content: "\f327";
 }
 
-.slaed-emoji-panel {
+.sl-editor-emoji-panel {
     background: var(--sl-color-bg);
     border: 1px solid var(--sl-color-border-strong);
     border-radius: var(--sl-radius-control);
-    box-shadow: var(--sl-shadow-medium, var(--sl-shadow-panel));
+    box-shadow: var(--sl-shadow-panel);
     box-sizing: border-box;
-    font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: inherit;
     font-size: 12px;
     max-height: 420px;
     padding: 8px;
@@ -713,15 +690,15 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     z-index: 10020;
 }
 
-.slaed-emoji-panel.sl-toastui-window-popup {
+.sl-editor-emoji-panel.sl-toastui-window-popup {
     padding-top: 44px;
 }
 
-.slaed-emoji-panel.sl-none {
+.sl-editor-emoji-panel.sl-none {
     display: none;
 }
 
-.slaed-emoji-search {
+.sl-editor-emoji-search {
     border: 1px solid var(--sl-color-border);
     border-radius: 2px;
     box-sizing: border-box;
@@ -730,14 +707,14 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     width: 100%;
 }
 
-.slaed-emoji-tabs {
+.sl-editor-emoji-tabs {
     display: flex;
     gap: 4px;
     margin: 6px 0;
     overflow: hidden;
 }
 
-.slaed-emoji-tab {
+.sl-editor-emoji-tab {
     background: var(--sl-color-bg-soft);
     border: 1px solid var(--sl-color-border);
     border-radius: 2px;
@@ -748,13 +725,13 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     padding: 0 8px;
 }
 
-.slaed-emoji-tab.active {
-    background: color-mix(in srgb, var(--sl-color-brand-link, var(--sl-color-primary)) 10%, transparent);
-    border-color: var(--sl-color-brand-link, var(--sl-color-primary));
-    color: var(--sl-color-brand-link, var(--sl-color-primary));
+.sl-editor-emoji-tab.active {
+    background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent);
+    border-color: var(--sl-color-primary);
+    color: var(--sl-color-primary);
 }
 
-.slaed-emoji-grid {
+.sl-editor-emoji-grid {
     display: grid;
     gap: 3px;
     grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
@@ -762,7 +739,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     overflow: auto;
 }
 
-.slaed-emoji-item {
+.sl-editor-emoji-item {
     background: var(--sl-color-bg);
     border: 1px solid transparent;
     border-radius: 4px;
@@ -775,18 +752,23 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     width: 32px;
 }
 
-.slaed-emoji-item:hover,
-.slaed-emoji-item:focus {
+.sl-editor-emoji-item:hover,
+.sl-editor-emoji-item:focus {
     background: var(--sl-color-bg-soft);
     border-color: var(--sl-color-border-strong);
 }
 
-.slaed-emoji-empty {
-    color: var(--sl-color-text-muted, var(--sl-color-muted));
+.sl-editor-emoji-empty {
+    color: var(--sl-color-text-muted);
     grid-column: 1 / -1;
     padding: 12px 4px;
 }
 
-.slaed-emoji-panel.sl-toastui-window-expanded .slaed-emoji-grid {
+.sl-editor-emoji-panel.sl-toastui-window-expanded .sl-editor-emoji-grid {
     max-height: calc(100vh - 150px);
+}
+
+.sl-toastui-file-thumb {
+    max-height: 50px;
+    max-width: 80px;
 }

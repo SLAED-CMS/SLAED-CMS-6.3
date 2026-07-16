@@ -1457,3 +1457,14 @@ DROP PROCEDURE IF EXISTS finalize_user_names;
 #    - passwords are now stored as bcrypt via getPassHash() / password_hash()
 #    - existing md5_salt hashes are upgraded transparently on next user login
 #    - no bulk SQL re-hash needed
+
+# =============================================================================
+# Avatars moved into the themes (templates/<theme>/images/avatars/)
+# Old stored values `default/NN.<ext>` map to theme presets `presets/NN.svg`;
+# legacy defaults without a matching preset are cleared to the user.svg fallback.
+# Both statements are idempotent: a re-run affects zero rows.
+# =============================================================================
+
+UPDATE `{prefix}_users` SET `avatar` = CONCAT('presets/', SUBSTRING(`avatar`, 9, 2), '.svg') WHERE `avatar` REGEXP '^default/[0-9]{2}[.](gif|png|jpg|jpeg|svg)$' AND SUBSTRING(`avatar`, 9, 2) BETWEEN '01' AND '56';
+
+UPDATE `{prefix}_users` SET `avatar` = '' WHERE `avatar` LIKE 'default/%';

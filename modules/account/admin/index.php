@@ -299,7 +299,7 @@ function add(): void {
         $themeopts = '';
         $themecount = 0;
         foreach (scandir(BASE_DIR.'/templates') as $file) {
-            if (!preg_match('/\./', $file) && $file != 'admin') {
+            if (!preg_match('/\./', $file) && $file != 'admin' && checkThemeAssets($file)) {
                 $themeopts .= $tpl->getHtmlFrag('select-option', [
                     'value_attr' => $file,
                     'label_text' => $file,
@@ -473,6 +473,7 @@ function addsave(): void {
         $blockon = getVar('post', 'blockon', 'num');
         $block = getVar('post', 'block', 'text');
         $theme = getVar('post', 'theme');
+        if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
         $news = getVar('post', 'news', 'num');
         $lang = getVar('post', 'lang');
         $point = getVar('post', 'point', 'num');

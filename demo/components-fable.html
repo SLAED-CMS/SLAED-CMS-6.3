@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED Components — Fable</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -19,29 +19,29 @@
 .cf-head h1 { margin: 0 0 8px; font-size: var(--sl-font-display); color: var(--sl-color-text-heading); }
 .cf-head p { margin: 0 0 6px; color: var(--sl-color-text-muted); max-width: 900px; line-height: 1.5; }
 .cf-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; padding: 0; list-style: none; }
-.cf-stats li { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-surface-alt); color: var(--sl-color-text-heading); font-size: 13px; }
+.cf-stats li { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font-size: 13px; }
 .cf-stats b { color: var(--sl-color-brand-strong); }
 .cf-toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 0; padding: 0; list-style: none; }
-.cf-toc a { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-brand-link) 10%, transparent); color: var(--sl-color-brand-strong); font-size: 13px; text-decoration: none; }
-.cf-toc a:hover { background: color-mix(in srgb, var(--sl-color-brand-link) 20%, transparent); }
+.cf-toc a { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent); color: var(--sl-color-brand-strong); font-size: 13px; text-decoration: none; }
+.cf-toc a:hover { background: color-mix(in srgb, var(--sl-color-primary) 20%, transparent); }
 .cf-section { margin: 44px 0 0; }
 .cf-section > h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-size: var(--sl-h2); color: var(--sl-color-text-heading); }
-.cf-section > h2 .bi { color: var(--sl-color-brand-link); font-size: 20px; }
+.cf-section > h2 .bi { color: var(--sl-color-primary); font-size: 20px; }
 .cf-section > .cf-lead { margin: 0 0 18px; color: var(--sl-color-text-muted); line-height: 1.5; max-width: 920px; }
 .cf-card { margin: 0 0 18px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-soft); overflow: hidden; }
-.cf-card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 12px 16px; background: var(--sl-color-surface); border-bottom: 1px solid var(--sl-color-border-subtle); }
+.cf-card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 12px 16px; background: var(--sl-color-bg-soft); border-bottom: 1px solid var(--sl-color-border-subtle); }
 .cf-card-head h3 { margin: 0; font-size: 15px; font-weight: bold; color: var(--sl-color-text-heading); }
-.cf-card-head code { font: 12px/1.6 Consolas, Menlo, monospace; color: var(--sl-color-brand-strong); background: color-mix(in srgb, var(--sl-color-brand-link) 8%, transparent); padding: 1px 6px; border-radius: 4px; }
+.cf-card-head code { font: 12px/1.6 Consolas, Menlo, monospace; color: var(--sl-color-brand-strong); background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent); padding: 1px 6px; border-radius: 4px; }
 .cf-demo { padding: 18px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
 .cf-demo.cf-col { flex-direction: column; align-items: stretch; gap: 12px; }
 .cf-demo.cf-plain { display: block; }
-.cf-usage { padding: 10px 16px 12px; border-top: 1px dashed var(--sl-color-border); background: var(--sl-color-surface); font-size: 13px; color: var(--sl-color-text-muted); line-height: 1.55; }
+.cf-usage { padding: 10px 16px 12px; border-top: 1px dashed var(--sl-color-border); background: var(--sl-color-bg-soft); font-size: 13px; color: var(--sl-color-text-muted); line-height: 1.55; }
 .cf-usage b { color: var(--sl-color-text-heading); font-weight: bold; }
 .cf-usage code { font: 12px/1.5 Consolas, Menlo, monospace; color: var(--sl-color-text-heading); }
-.cf-dark { background: var(--sl-color-surface-dark); border-radius: var(--sl-radius-card); padding: 12px 16px; display: inline-flex; align-items: center; gap: 8px; }
+.cf-dark { background: var(--sl-color-bg-soft-dark); border-radius: var(--sl-radius-card); padding: 12px 16px; display: inline-flex; align-items: center; gap: 8px; }
 .cf-label { flex: 0 0 100%; margin: 4px 0 -2px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; color: var(--sl-color-text-subtle); }
 .cf-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.cf-table th { text-align: left; padding: 9px 12px; background: var(--sl-color-surface-alt); border-bottom: 1px solid var(--sl-color-border-stronger); font-weight: bold; white-space: nowrap; }
+.cf-table th { text-align: left; padding: 9px 12px; background: var(--sl-color-bg-soft-alt); border-bottom: 1px solid var(--sl-color-border-stronger); font-weight: bold; white-space: nowrap; }
 .cf-table td { padding: 8px 12px; border-bottom: 1px solid var(--sl-color-border-subtle); vertical-align: top; line-height: 1.5; }
 .cf-table code { font: 12px/1.5 Consolas, Menlo, monospace; color: var(--sl-color-brand-strong); }
 .cf-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -281,7 +281,7 @@
       </nav>
       <span style="color: var(--sl-color-text-muted);">← наведите: тёмная выпадающая панель, как у главного меню</span>
     </div>
-    <div class="cf-usage"><b>Где используется:</b> <code>fragments/popover.html</code> (ветка editor) — инлайн-администрирование по всему сайту: строки списков контента, комментарии, посты форума, инструменты голосования (<code>.sl-vote-tools</code>). Триггер — <code>.sl-but-mini</code> с <code>bi-gear-fill</code> (для юзер-меню — <code>bi-three-dots</code>), панель наследует тёмный стиль <code>.sl-menu .sl-float-panel</code> (--sl-color-surface-dark).</div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/popover.html</code> (ветка editor) — инлайн-администрирование по всему сайту: строки списков контента, комментарии, посты форума, инструменты голосования (<code>.sl-vote-tools</code>). Триггер — <code>.sl-but-mini</code> с <code>bi-gear-fill</code> (для юзер-меню — <code>bi-three-dots</code>), панель наследует тёмный стиль <code>.sl-menu .sl-float-panel</code> (--sl-color-bg-soft-dark).</div>
   </div>
 
   <div class="cf-card">
@@ -424,7 +424,7 @@
         <button type="submit" class="sl-but">Искать</button>
       </form>
     </div>
-    <div class="cf-usage"><b>Где используется:</b> <code>fragments/search-form.html</code> — однострочная панель модуля поиска: селект области, растягивающееся поле запроса и кнопка <code>.sl-but</code> на подложке <code>--sl-color-surface</code>.</div>
+    <div class="cf-usage"><b>Где используется:</b> <code>fragments/search-form.html</code> — однострочная панель модуля поиска: селект области, растягивающееся поле запроса и кнопка <code>.sl-but</code> на подложке <code>--sl-color-bg-soft</code>.</div>
   </div>
 </section>
 
@@ -661,7 +661,7 @@
         <span class="cf-sw"><i style="background: var(--sl-color-tone-accent);"></i>--sl-color-tone-accent</span>
         <span class="cf-sw"><i style="background: var(--sl-color-tone-neutral);"></i>--sl-color-tone-neutral</span>
         <span class="cf-sw"><i style="background: var(--sl-color-tone-primary);"></i>--sl-color-tone-primary</span>
-        <span class="cf-sw"><i style="background: var(--sl-color-brand-link);"></i>--sl-color-brand-link</span>
+        <span class="cf-sw"><i style="background: var(--sl-color-primary);"></i>--sl-color-primary</span>
         <span class="cf-sw"><i style="background: var(--sl-color-brand-strong);"></i>--sl-color-brand-strong</span>
       </div>
     </div>

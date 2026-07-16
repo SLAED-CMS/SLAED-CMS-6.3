@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Категории V1 + подкатегории</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
 * { box-sizing: border-box; }
-body { margin: 0; padding: 0 0 60px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+body { margin: 0; padding: 0 0 60px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
 a { text-decoration: none; color: inherit; }
-.demo-head { padding: 26px clamp(14px,4vw,48px); background: linear-gradient(180deg,#fff,var(--sl-color-surface)); border-bottom: 1px solid var(--sl-color-border); }
+.demo-head { padding: 26px clamp(14px,4vw,48px); background: linear-gradient(180deg,#fff,var(--sl-color-bg-soft)); border-bottom: 1px solid var(--sl-color-border); }
 .demo-head h1 { margin: 0 0 6px; font: bold clamp(22px,3vw,30px)/1.1 "Magistral",Arial,sans-serif; color: var(--sl-color-text-heading); }
 .demo-head p { margin: 0; max-width: 900px; color: var(--sl-color-text-muted); }
 .demo-wrap { padding: 0 clamp(14px,4vw,48px); }
@@ -30,7 +30,7 @@ a { text-decoration: none; color: inherit; }
 	border: 1px solid color-mix(in srgb, var(--t, var(--sl-color-tone-info)) 26%, var(--sl-color-border));
 	color: var(--t, var(--sl-color-tone-info)); }
 .c-count { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: bold; line-height: 1; white-space: nowrap;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent); color: var(--sl-color-brand-strong); }
+	background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent); color: var(--sl-color-brand-strong); }
 .c-title { color: var(--sl-color-text-heading); font-weight: bold; }
 .c-desc { color: var(--sl-color-text-muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -43,20 +43,20 @@ a { text-decoration: none; color: inherit; }
 .v1-box .c-tile .bi { font-size: 24px; }
 .v1-body { min-width: 0; flex: 1 1 auto; }
 .v1-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.v1-top .c-title:hover { color: var(--sl-color-brand-link); }
+.v1-top .c-title:hover { color: var(--sl-color-primary); }
 .v1-body .c-desc { margin-top: 2px; }
 
 /* ---- A: подкатегории как чипсы ---- */
 .subs-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--sl-color-border); }
 .subs-chips a { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; font-size: 12.5px;
-	background: var(--sl-color-surface-alt); color: var(--sl-color-text-muted); border: 1px solid var(--sl-color-border-subtle); transition: all .15s; }
+	background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); border: 1px solid var(--sl-color-border-subtle); transition: all .15s; }
 .subs-chips a:hover { background: color-mix(in srgb, var(--t) 10%, #fff); color: var(--t); border-color: color-mix(in srgb, var(--t) 40%, var(--sl-color-border)); }
 .subs-chips .bi { font-size: 11px; opacity: .8; }
 
 /* ---- B: подкатегории как мини-список ---- */
 .subs-list { display: grid; gap: 1px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--sl-color-border); }
 .subs-list a { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 6px; font-size: 13px; color: var(--sl-color-text-muted); transition: background-color .15s, color .15s; }
-.subs-list a:hover { background: var(--sl-color-surface); color: var(--sl-color-brand-link); }
+.subs-list a:hover { background: var(--sl-color-bg-soft); color: var(--sl-color-primary); }
 .subs-list .bi { font-size: 13px; color: var(--t); flex: 0 0 auto; }
 .subs-list .nm { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

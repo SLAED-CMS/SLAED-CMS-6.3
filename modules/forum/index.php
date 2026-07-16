@@ -416,7 +416,7 @@ function view(): void {
                 $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$fid, 'title' => _MESSAGE.': '.$pos, 'label' => (string)$pos, 'is_card_id' => true]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
-                $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? $tpl->getHtmlFrag('image', ['src' => img_find('ranks/'.$grank), 'alt' => $trank, 'title' => $trank]) : '';
+                $rlink = (!empty($grank) && file_exists(getThemeImagePath('ranks/'.$grank))) ? $tpl->getHtmlFrag('image', ['src' => getThemeImagePath('ranks/'.$grank), 'alt' => $trank, 'title' => $trank]) : '';
                 $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';
                 $utip = getUserTip((string)($gname ?? ''), $point ?? 0, (string)($reg ?? ''), (int)($gender ?? 0), (string)($from ?? ''), (string)($warn ?? ''), empty($nick), (int)$val[3] > 0 && empty($val[4]));
                 $uname_html = (!empty($nick)) ? user_info($nick, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

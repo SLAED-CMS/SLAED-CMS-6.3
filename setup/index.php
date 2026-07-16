@@ -597,6 +597,8 @@ function save(): void {
         setConfigFile('modules.php', $cont);
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
+        $bodytext .= getInfo($xprefix.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0);
     }
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'

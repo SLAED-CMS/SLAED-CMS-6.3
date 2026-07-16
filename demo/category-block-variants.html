@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Категории: варианты блока</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
@@ -13,14 +13,14 @@
 body {
 	margin: 0;
 	padding: 0 0 60px;
-	background: var(--sl-color-surface);
+	background: var(--sl-color-bg-soft);
 	color: var(--sl-color-text);
 	font: 15px/1.5 Arial, Tahoma, sans-serif;
 }
 a { text-decoration: none; color: inherit; }
 .demo-head {
 	padding: 26px clamp(14px, 4vw, 48px);
-	background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%);
+	background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%);
 	border-bottom: 1px solid var(--sl-color-border);
 }
 .demo-head h1 {
@@ -66,7 +66,7 @@ a { text-decoration: none; color: inherit; }
 	display: inline-flex; align-items: center; gap: 4px;
 	height: 20px; padding: 0 8px; border-radius: 999px;
 	font-size: 12px; font-weight: bold; line-height: 1; white-space: nowrap;
-	background: color-mix(in srgb, var(--sl-color-brand-link) 14%, transparent);
+	background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
 	color: var(--sl-color-brand-strong);
 }
 .c-title { color: var(--sl-color-text-heading); font-weight: bold; }
@@ -92,7 +92,7 @@ a { text-decoration: none; color: inherit; }
 	display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px;
 	transition: background-color .15s;
 }
-.v2 a:hover { background: var(--sl-color-surface); }
+.v2 a:hover { background: var(--sl-color-bg-soft); }
 .v2 .c-tile { width: 30px; height: 30px; border-radius: 7px; }
 .v2 .c-tile .bi { font-size: 16px; }
 .v2 .c-title { flex: 1 1 auto; font-weight: normal; }
@@ -105,7 +105,7 @@ a { text-decoration: none; color: inherit; }
 	display: flex; align-items: stretch; gap: 0; border: 1px solid var(--sl-color-border);
 	border-radius: 10px; overflow: hidden; background: #fff; transition: box-shadow .18s, border-color .18s;
 }
-.v3 a:hover { box-shadow: var(--sl-shadow-medium); border-color: color-mix(in srgb, var(--t) 40%, var(--sl-color-border)); }
+.v3 a:hover { box-shadow: var(--sl-shadow-panel); border-color: color-mix(in srgb, var(--t) 40%, var(--sl-color-border)); }
 .v3 .c-tile { width: 62px; border: 0; border-radius: 0; }
 .v3 .c-tile .bi { font-size: 28px; }
 .v3 .body { flex: 1 1 auto; min-width: 0; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; }
@@ -115,7 +115,7 @@ a { text-decoration: none; color: inherit; }
 .v4 { display: flex; flex-wrap: wrap; gap: 8px; }
 .v4 a {
 	display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 6px 0 6px;
-	border-radius: 999px; background: var(--sl-color-surface-alt);
+	border-radius: 999px; background: var(--sl-color-bg-soft-alt);
 	border: 1px solid var(--sl-color-border); transition: background-color .15s, border-color .15s;
 }
 .v4 a:hover { border-color: color-mix(in srgb, var(--t) 50%, var(--sl-color-border)); background: color-mix(in srgb, var(--t) 8%, #fff); }
@@ -130,7 +130,7 @@ a { text-decoration: none; color: inherit; }
 	display: block; padding: 14px; text-align: center; background: #fff;
 	border: 1px solid var(--sl-color-border-subtle); border-radius: 8px; transition: all .18s;
 }
-.v5 a:hover { background: var(--sl-color-surface); border-color: var(--sl-color-border-strong); }
+.v5 a:hover { background: var(--sl-color-bg-soft); border-color: var(--sl-color-border-strong); }
 .v5 .c-tile { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 10px; }
 .v5 .c-tile .bi { font-size: 26px; }
 .v5 .c-title { display: block; }
@@ -142,10 +142,10 @@ a { text-decoration: none; color: inherit; }
 	display: flex; align-items: center; gap: 10px; padding: 9px 4px;
 	border-bottom: 1px solid var(--sl-color-border-subtle);
 }
-.v6 a:hover .c-title { color: var(--sl-color-brand-link); }
+.v6 a:hover .c-title { color: var(--sl-color-primary); }
 .v6 .bi { font-size: 18px; color: var(--t); flex: 0 0 auto; }
 .v6 .c-title { flex: 1 1 auto; font-weight: normal; }
-.v6 .c-count { background: var(--sl-color-surface-alt); color: var(--sl-color-text-muted); }
+.v6 .c-count { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); }
 
 /* ---------- V7: Крупные плитки-лаунчер ---------- */
 .v7 { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
@@ -178,7 +178,7 @@ a { text-decoration: none; color: inherit; }
 	display: block; border: 1px solid var(--sl-color-border); border-radius: 12px; overflow: hidden;
 	background: #fff; transition: box-shadow .18s;
 }
-.v9 a:hover { box-shadow: var(--sl-shadow-medium); }
+.v9 a:hover { box-shadow: var(--sl-shadow-panel); }
 .v9 .cap {
 	height: 54px; display: flex; align-items: center; gap: 10px; padding: 0 14px;
 	color: #fff; background: linear-gradient(135deg, var(--t) 0%, color-mix(in srgb, var(--t) 60%, #000) 100%);
@@ -199,12 +199,12 @@ a { text-decoration: none; color: inherit; }
 .v10 .c-tile .bi { font-size: 15px; }
 .v10 .body { flex: 1 1 auto; min-width: 0; }
 .v10 .c-title { font-weight: bold; }
-.v10 .c-count { background: var(--sl-color-surface-alt); color: var(--sl-color-text-muted); }
+.v10 .c-count { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); }
 
 /* ---------- V11: Компактная навигация (sidebar-style) ---------- */
 .v11 { max-width: 340px; display: grid; gap: 1px; background: var(--sl-color-border-subtle); border: 1px solid var(--sl-color-border-subtle); border-radius: 10px; overflow: hidden; }
 .v11 a { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: #fff; transition: background-color .15s; }
-.v11 a:hover { background: var(--sl-color-surface); }
+.v11 a:hover { background: var(--sl-color-bg-soft); }
 .v11 .bi { font-size: 18px; color: var(--t); width: 22px; text-align: center; }
 .v11 .c-title { flex: 1 1 auto; font-weight: normal; }
 .v11 .chev { color: var(--sl-color-text-subtle); font-size: 12px; }

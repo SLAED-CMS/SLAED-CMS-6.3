@@ -29,12 +29,12 @@
   --sl-changelog-header: #f3f4f6;
   /* Canonical color roles for the lite theme */
   --sl-color-bg: #ffffff;
-  --sl-color-surface: #f8f9fb;
-  --sl-color-surface-alt: #f2f4f7;
-  --sl-color-surface-dark: #2a303c;
-  --sl-color-surface-darker: #22272f;
-  --sl-color-surface-divider: #3b4049;
-  --sl-color-surface-soft: #e4e9ef;
+  --sl-color-bg-soft: #f8f9fb;
+  --sl-color-bg-soft-alt: #f2f4f7;
+  --sl-color-bg-soft-dark: #2a303c;
+  --sl-color-bg-soft-darker: #22272f;
+  --sl-color-bg-soft-divider: #3b4049;
+  --sl-color-bg-soft-soft: #e4e9ef;
   --sl-color-border-subtle: #ebebee;
   --sl-color-border-stronger: #e7e7eb;
   --sl-color-border-muted: #d9d9dc;
@@ -45,7 +45,7 @@
   --sl-color-text-subtle: #a5b2bf;
   --sl-color-brand: #64b1e1;
   --sl-color-brand-banner: #62b4ea;
-  --sl-color-brand-link: #30a2f6;
+  --sl-color-primary: #30a2f6;
   --sl-color-brand-strong: #207fb6;
   --sl-color-success: #5c9425;
   --sl-color-success-soft: #9fd779;
@@ -70,7 +70,7 @@
     rgba(100, 177, 225, 0) 100%
   );
   --sl-shadow-soft: 0 1px 2px rgba(42, 48, 60, 0.12);
-  --sl-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.2);
+  --sl-shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.2);
   --sl-shadow-strong: 0 6px 12px rgba(0, 0, 0, 0.175);
   --sl-overlay-10: rgba(0, 0, 0, 0.1);
   --sl-overlay-12: rgba(0, 0, 0, 0.12);
@@ -88,16 +88,16 @@
   --sl-field-bg: var(--sl-color-bg);
   --sl-field-border: var(--sl-color-border-strong);
   --sl-field-radius: var(--sl-radius-control);
-  --sl-field-focus: var(--sl-color-brand-link);
+  --sl-field-focus: var(--sl-color-primary);
   --sl-field-focus-ring: rgba(48, 162, 246, 0.18);
   --sl-field-placeholder: var(--sl-color-text-subtle);
-  --sl-field-disabled-bg: var(--sl-color-surface-alt);
+  --sl-field-disabled-bg: var(--sl-color-bg-soft-alt);
   --sl-field-invalid: var(--sl-color-danger);
   --sl-field-invalid-ring: rgba(169, 44, 44, 0.16);
   --sl-field-valid: var(--sl-color-success);
   --sl-field-valid-ring: rgba(92, 148, 37, 0.16);
   --sl-check-size: 16px;
-  --sl-check-checked: var(--sl-color-brand-link);
+  --sl-check-checked: var(--sl-color-primary);
   --sl-switch-width: 58px;
   --sl-switch-height: 24px;
   --sl-size-icon-xs: 16px;
@@ -350,7 +350,7 @@ button {
 a {
   outline: none;
   text-decoration: none;
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
 }
 
 a:hover {
@@ -413,7 +413,7 @@ blockquote {
 }
 
 legend {
-  color: var(--sl-color-brand-link);
+  color: var(--sl-color-primary);
   font-weight: bold;
   padding: var(--sl-space-sm);
   border: 1px solid var(--sl-color-border);
@@ -485,7 +485,7 @@ input[type="radio"],
 input[type="checkbox"] {
   line-height: normal;
   margin: 4px 0 0;
-  accent-color: var(--sl-color-brand-link);
+  accent-color: var(--sl-color-primary);
 }
 
 input[type="file"],

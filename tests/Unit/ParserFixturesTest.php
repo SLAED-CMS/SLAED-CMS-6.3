@@ -12,8 +12,8 @@ namespace {
     if (!defined('_SMILIE'))   define('_SMILIE',   'Smilie');
     if (!defined('_CODE'))     define('_CODE',     'Code');
 
-    if (!function_exists('img_find')) {
-        function img_find(string $path): string { return '/img/'.$path; }
+    if (!function_exists('getThemeImagePath')) {
+        function getThemeImagePath(string $path): string { return '/img/'.$path; }
     }
     if (!function_exists('replace_break')) {
         function replace_break(string $s): string { return $s; }

@@ -326,7 +326,7 @@ function view(): void {
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
             $seodesc   = cutstr(trim(strip_tags($prs->filterContent($sig ?? '', false, $conf['name']))), 160);
-            $seoimg    = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['homeurl'].'/'.$conf['users']['adirectory'].'/'.$avatar : '';
+            $seoimg    = ($avatar) ? $conf['homeurl'].'/'.getUserAvatarUrl(['avatar' => $avatar]) : '';
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
             setHead([
                 'title' => $seotitle,
@@ -391,7 +391,7 @@ function view(): void {
                 $groups = [_USER_GROUPS, _NO];
             }
             $trank = ($gname) ? _GROUP.': '.$gname : ((is_array($rgroup)) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
-            $rankImage = ($grank && file_exists(img_find('ranks/'.$grank))) ? img_find('ranks/'.$grank) : '';
+            $rankImage = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
             $title[] = _COMMENTS;
             $text[] = last($uid, 'comm');
             if (is_active('faq')) {
@@ -872,7 +872,7 @@ function edithome(): void {
             $list = scandir(BASE_DIR.'/templates');
             foreach ($list ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
-                if (!is_dir(BASE_DIR.'/templates/'.$file)) continue;
+                if (!is_dir(BASE_DIR.'/templates/'.$file) || !checkThemeAssets($file)) continue;
                 $theme .= $tpl->getHtmlFrag('select-option', ['value_attr' => (string)$file, 'label_text' => (string)$file, 'is_selected' => $file == $userinfo['theme']]);
                 $tcount++;
             }
@@ -1019,10 +1019,10 @@ function edithome(): void {
         $i = 1;
         $aset = [];
         $arows = [];
-        $adir = $conf['users']['adirectory'].'/default';
+        $adir = 'templates/'.getTheme().'/images/avatars/presets';
         $list = scandir($adir);
         foreach ($list ?: [] as $file) {
-            if (preg_match("#\.(gif|png|jpe?g|svg)$#is", $file) && !preg_match("#^(guest|user|deleted)\.svg$#i", $file)) {
+            if (preg_match("#\.(gif|png|jpe?g|svg)$#is", $file)) {
                 $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
                 $aset[] = [
                     'href' => 'index.php?name='.$conf['name'].'&op=saveavatar&avatar='.$file,
@@ -1103,6 +1103,7 @@ function savehome(): void {
             $blockon = getVar('post', 'blockon', 'num');
             $block = getVar('post', 'block', 'text');
             $theme = getVar('post', 'theme', 'text');
+            if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
             $news = getVar('post', 'news', 'num');
             $fsmail = getVar('post', 'fsmail', 'num');
             $psmail = getVar('post', 'psmail', 'num');
@@ -1130,7 +1131,8 @@ function saveavatar(): void {
             $uavatar = upload(1, $conf['users']['adirectory'], $conf['users']['atypefile'], $conf['users']['amaxsize'], $conf['name'], $conf['users']['awidth'], $conf['users']['aheight'], $uid);
             $avatar = (!$uavatar) ? $avatar : $uavatar;
         } elseif ($avatar) {
-            $avatar = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avatar) && !preg_match("#^(guest|user|deleted)\.svg$#i", $avatar) && file_exists($conf['users']['adirectory'].'/default/'.$avatar)) ? 'default/'.$avatar : '';
+            $avatar = basename($avatar);
+            $avatar = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avatar) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avatar)) ? 'presets/'.$avatar : '';
         }
         if (!$stop && $avatar) {
             $avatar = filterText($avatar);

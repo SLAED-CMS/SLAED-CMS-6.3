@@ -301,7 +301,7 @@ function view(): void {
 					$date = ($conf['shop']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
 					$text = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
-					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
+					$img = ($img) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png');
 					$href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]);
 					$cont .= $tpl->getHtmlFrag('related-item', ['href' => $href, 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['shop']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img, 'image_link' => ['href' => $href, 'title' => $title, 'img_src' => $img, 'img_alt' => $title, 'is_related_image' => true], 'title_link' => ['href' => $href, 'title' => $title, 'label' => $title], 'date_badge' => ($date) ? ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => $date, 'is_related_date' => true] : []]);
 				}
@@ -554,7 +554,7 @@ function rech(): void {
 			echo $tpl->getHtmlFrag('shop-invoice', [
 				'charset' => _CHARSET,
 				'title' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
-				'logo_src' => img_find('logos/'.$conf['site_logo']),
+				'logo_src' => getThemeImagePath('logos/'.$conf['site_logo']),
 				'logo_alt' => $conf['sitename'],
 				'shopinfo' => $prs->filterContent($conf['shop']['shopinfo'], false, $conf['name']),
 				'lbl_name' => _C_PIN,

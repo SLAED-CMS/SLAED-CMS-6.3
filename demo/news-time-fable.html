@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SLAED — Свежесть материала (Fable): чип-индикатор у заголовка</title>
-<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/base.css">
 <link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
 <style>
 /* ---- demo chrome (не часть системы) ---- */
 * { box-sizing: border-box; }
-body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
-.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-surface) 100%); border-bottom: 1px solid var(--sl-color-border); }
+body { margin: 0; padding: 0 0 90px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); font: 15px/1.5 Arial, Tahoma, sans-serif; }
+.demo-head { padding: 26px clamp(14px, 4vw, 48px); background: linear-gradient(180deg, #fff 0%, var(--sl-color-bg-soft) 100%); border-bottom: 1px solid var(--sl-color-border); }
 .demo-head h1 { margin: 0 0 6px; font: bold clamp(22px, 3vw, 32px)/1.1 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
 .demo-head p { margin: 0; max-width: 960px; color: var(--sl-color-text-muted); }
 .demo-wrap { padding: 0 clamp(14px, 4vw, 48px); max-width: 1400px; margin: 0 auto; }
@@ -26,7 +26,7 @@ body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color:
 .demo-article { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); padding: 24px 28px; }
 .demo-muted { color: var(--sl-color-text-muted); font-size: 13px; }
 .demo-slider { display: flex; align-items: center; gap: 16px; margin-top: 14px; }
-.demo-slider input[type="range"] { flex: 1; accent-color: var(--sl-color-brand-link); }
+.demo-slider input[type="range"] { flex: 1; accent-color: var(--sl-color-primary); }
 .demo-slider output { min-width: 130px; font-weight: bold; color: var(--sl-color-text-heading); }
 
 /* ==== ПРЕДЛОЖЕНИЕ ДЛЯ theme.css: чип свежести .sl-fresh ==== */
@@ -57,7 +57,7 @@ body { margin: 0; padding: 0 0 90px; background: var(--sl-color-surface); color:
 .sl-fresh-now { --sl-fresh-tone: var(--sl-color-danger); }
 .sl-fresh-day { --sl-fresh-tone: var(--sl-color-danger-soft); }
 .sl-fresh-days { --sl-fresh-tone: var(--sl-color-warning); }
-.sl-fresh-week { --sl-fresh-tone: var(--sl-color-brand-link); }
+.sl-fresh-week { --sl-fresh-tone: var(--sl-color-primary); }
 .sl-fresh-month { --sl-fresh-tone: var(--sl-color-text-muted); }
 
 /* Ambient tier effects: always-on, the fresher the livelier; no hover effect by design */

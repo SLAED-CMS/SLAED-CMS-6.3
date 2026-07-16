@@ -330,7 +330,7 @@ function view(): void {
                         ENT_QUOTES, 'UTF-8'
                     ), 80);
                     $img = getImgText($hometext);
-                    $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
+                    $img = ($img) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png');
                     $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]);
                     $cont .= $tpl->getHtmlFrag('related-item', [
                         'href'       => $href,
