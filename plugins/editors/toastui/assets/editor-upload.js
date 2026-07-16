@@ -302,13 +302,23 @@
         return true;
     }
 
+    function getMsg(id, text, warn) {
+        var el = api.getTpl(id, warn ? 'msg-warn' : 'msg-info');
+        if (el) el.textContent = text;
+        return el;
+    }
+
     function setMsg(id, text, warn, image) {
         var opt = getOpt(id);
         var el = opt.msg ? doc.getElementById(opt.msg) : null;
+        var node;
         if (image && setImageMsg(id, text, warn)) return;
         if (!el) return;
-        el.className = warn ? 'sl-toastui-message sl-toastui-message-warn' : 'sl-toastui-message sl-toastui-message-info';
-        el.textContent = text || '';
+        el.replaceChildren();
+        if (text) {
+            node = getMsg(id, text, warn);
+            if (node) el.appendChild(node);
+        }
         if (warn) setPanel(id, true);
     }
 
@@ -369,21 +379,10 @@
         setPanel(id, false);
     }
 
-    function getWarn(id, text) {
-        var el = api.getTpl(id, 'msg-warn');
-        if (el) el.textContent = text;
-        return el;
-    }
-
     function getRows(id, rows) {
         var table;
         var body;
-        var info;
-        if (!rows || !rows.length) {
-            info = api.getTpl(id, 'msg-info');
-            if (info) info.textContent = getLab(id, 'nofiles', 'No files');
-            return info;
-        }
+        if (!rows || !rows.length) return getMsg(id, getLab(id, 'nofiles', 'No files'), false);
         table = api.getTpl(id, 'file-table');
         body = table ? table.querySelector('tbody') : null;
         if (!body) return null;
@@ -428,11 +427,11 @@
         fetch(opt.files, { credentials: 'same-origin' }).then(function(res) {
             return res.json();
         }).then(function(json) {
-            var node = json.ok ? getRows(id, json.files || []) : getWarn(id, json.error || getLab(id, 'load', 'Load failed'));
+            var node = json.ok ? getRows(id, json.files || []) : getMsg(id, json.error || getLab(id, 'load', 'Load failed'), true);
             el.replaceChildren();
             if (node) el.appendChild(node);
         }).catch(function() {
-            var node = getWarn(id, getLab(id, 'load', 'Load failed'));
+            var node = getMsg(id, getLab(id, 'load', 'Load failed'), true);
             el.replaceChildren();
             if (node) el.appendChild(node);
         });
