@@ -1,0 +1,16 @@
+{% if entries %}
+<div class="sl-profile-scroll" data-sl-profile-scroll>
+  <div class="sl-profile-scroll-feed">
+    {% for entry in entries %}
+    <div class="sl-profile-entry">
+      <time datetime="{{ entry.iso }}" title="{{ entry.datetitle }}" class="sl-chip sl-chip-neutral">{{ entry.date }}</time>
+      <i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>
+      <a href="{{ entry.href }}" title="{{ entry.label }}">{{ entry.label }}</a>
+      {% if entry.rating %}<span class="sl-chip sl-chip-success"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ entry.rating }}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="sl-profile-empty">{{ empty_text }}</div>
+{% endif %}

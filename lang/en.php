@@ -266,6 +266,7 @@ define('_LANGUAGE','Language');
 define('_LASTMOD','Last modified');
 define('_LASTPOSTER','Last');
 define('_LAST_VISIT','Last visit');
+define('_LASTACTIVITY','Last activity');
 define('_LINKEXIST','The site with the given address already exists in our catalogue!');
 define('_LINKS','Catalogue of sites');
 define('_LIST','List');

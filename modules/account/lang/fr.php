@@ -5,6 +5,15 @@
 # Website: slaed.net
 
 define('_ACCOUNTCREATED',"Créé le compte d'un nouvel utilisateur");
+define('_ACCOUNT_CLEAN','Aucun avertissement');
+define('_ACCOUNT_HUB','Contribution par modules');
+define('_ACCOUNT_ITEMS','Contenus');
+define('_ACCOUNT_MEMBER','Membre ordinaire');
+define('_ACCOUNT_NEXT','Jusqu\'au groupe suivant : %s');
+define('_ACCOUNT_PERSON','Personnel');
+define('_ACCOUNT_SYSTEM','Système');
+define('_ACCOUNT_WORK','Profession');
+define('_ACCOUNT_YEARS','Années avec le projet');
 define('_ACTERROR1',"Données de l'utilisateur ne sont pas valides.<br>S'il vous Plaît, vérifiez les données saisies, ou si Vous n'êtes pas encore membre, alors cliquez inscription <a href=\"index.php?name=account\">ici</a>.");
 define('_ACTERROR2',"Utilisateur à ces données dans notre base de données n'est pas trouvé.<br>Vous pouvez Vous enregistrer de <a href=\"index.php?name=account\">ici</a>.");
 define('_ACTIVATIONERROR','Erreur lors de la revitalisation nouvel utilisateur');

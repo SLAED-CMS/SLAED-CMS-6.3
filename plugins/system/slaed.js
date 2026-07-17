@@ -761,6 +761,32 @@
         }
     }
 
+    // Profile activity feeds: clone entries once and auto-scroll the visible list; hidden tab panels are measured after their tab becomes active
+    function initProfileScroll(view) {
+        if (view.getAttribute('data-sl-profile-ready') === '1' || view.offsetParent === null) return;
+        var feed = view.querySelector('.sl-profile-scroll-feed');
+        if (!feed) return;
+        view.setAttribute('data-sl-profile-ready', '1');
+        var items = Array.prototype.slice.call(feed.children);
+        if (items.length <= 4 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        items.forEach(function (item) {
+            var clone = item.cloneNode(true);
+            clone.setAttribute('aria-hidden', 'true');
+            feed.appendChild(clone);
+        });
+        window.requestAnimationFrame(function () {
+            view.style.setProperty('--sl-profile-scroll-distance', feed.scrollHeight / 2 + 'px');
+            view.style.setProperty('--sl-profile-scroll-duration', Math.max(15, items.length * 3) + 's');
+            view.classList.add('sl-is-scrolling');
+        });
+    }
+
+    function setProfileScrolls(root) {
+        var scope = root && root.querySelectorAll ? root : document;
+        var views = scope.querySelectorAll('[data-sl-profile-scroll]');
+        for (var i = 0; i < views.length; i++) initProfileScroll(views[i]);
+    }
+
     function setAlerts(node) {
         var root = node && node.querySelectorAll ? node : document;
         var list = root.querySelectorAll('[data-sl-autohide]');
@@ -1282,7 +1308,14 @@
         setVoteBlocks(document);
         setUiActions();
         setLiveChips(document);
+        setProfileScrolls(document);
     }
+
+    // Feed lists inside inactive tabs have zero height: re-measure pending ones right after any tab switch
+    document.addEventListener('click', function (event) {
+        if (!event.target || !event.target.closest || !event.target.closest('[data-sl-tab-link]')) return;
+        window.requestAnimationFrame(function () { setProfileScrolls(document); });
+    });
 
     document.addEventListener('htmx:afterSwap', function (event) {
         setTableSort(event.target);
@@ -1294,6 +1327,7 @@
         var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;
         if (live) live.setAttribute('data-sl-live-stamp', Date.now());
         setLiveChips(event.target);
+        setProfileScrolls(document);
         if (live === event.target && window.htmx) {
             var detail = live.querySelector('[data-sl-toggle-control][aria-expanded="true"]');
             var rows = live.querySelector('.sl-session-list [id$="-rows"]');

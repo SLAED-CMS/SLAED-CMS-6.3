@@ -1,37 +1,96 @@
-<div class="sl-comment">
-  <div class="sl-com-left">
-    <div class="sl-com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}" class="sl-avatar">{% endif %}</div>
-    <div class="sl-min-rate">
-      <div class="sl-rate-like-box">{{{ rating }}}</div>
+<div class="sl-profile-card sl-profile-split">
+  <aside class="sl-profile-split-rail">
+    <div class="sl-profile-avatar"{% if has_level %} style="--sl-profile-level:{{ level }}%"{% endif %}>
+      {% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}">{% endif %}
+      {% if is_online %}<span class="sl-profile-status" title="{{ online_label }}"></span>{% endif %}
     </div>
-    <ul class="sl-fp-user-info">
-      <li>{{ urank }}</li>
-      <li>{% if has_rank_image %}<img src="{{ rank_src }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}</li>
-    </ul>
+    <h1 class="sl-font sl-profile-name">{{ name }}</h1>
+    {% if urank %}<div class="sl-profile-rank">{{ urank }}</div>{% endif %}
+    {% if has_rank_image %}<img class="sl-profile-rank-img" src="{{ rank_src }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}
+    {% if has_special_group or is_online %}
+    <div class="sl-profile-chips">
+      {% if has_special_group %}<span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i> {{ sgroup }}</span>{% endif %}
+      {% if is_online %}<span class="sl-chip sl-chip-success"><i class="bi bi-circle-fill" aria-hidden="true"></i> {{ online_label }}</span>{% endif %}
+    </div>
+    {% endif %}
+    {% if pm_href %}<div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}">{{ pm_label }}</a></div>{% endif %}
+    {% if rating_html %}
+    <div class="sl-profile-score">
+      <b>{{ rating_label }}</b>
+      {{{ rating_html }}}
+    </div>
+    {% endif %}
+    {% if has_level %}
+    <div class="sl-profile-meter">
+      <div class="sl-profile-meter-head"><span>{{ level_group }}</span><b>{{ level }}%</b></div>
+      <div class="sl-profile-meter-track"><span style="width:{{ level }}%"></span></div>
+    </div>
+    <div class="sl-profile-chips">
+      <span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i> {{ points_text }}</span>
+      {% if level_next %}<span class="sl-chip sl-chip-neutral" title="{{ level_next }}">{{ level_next }}</span>{% endif %}
+    </div>
+    {% endif %}
+  </aside>
+  <div class="sl-profile-split-main">
+    <div class="sl-profile-head">
+      <span class="sl-profile-kicker">{{ kicker }}</span>
+      <div class="sl-meta-actions">{{{ user_menu_html }}}{% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}{% if share_url %}{% include 'fragments/share.html' %}{% endif %}</div>
+    </div>
+    <div class="sl-profile-trust">
+      <div class="sl-profile-proof"><i class="bi bi-hourglass-split" aria-hidden="true"></i><b>{{ years_label }}: {{ years }}</b><small>{{ reg_note }}</small></div>
+      <div class="sl-profile-proof{% if is_warned %} sl-is-warn{% endif %}"><i class="bi {% if is_warned %}bi-exclamation-triangle{% else %}bi-shield-check{% endif %}" aria-hidden="true"></i><b>{{ warn_title }}</b>{% if warn_note %}<small>{{ warn_note }}</small>{% endif %}</div>
+      <div class="sl-profile-proof"><i class="bi {% if has_special_group %}bi-patch-check{% else %}bi-person{% endif %}" aria-hidden="true"></i><b>{{ group_title }}</b><small>{{ group_note }}</small></div>
+    </div>
+    <div class="sl-profile-facts">
+      {% for panel in panels %}
+      <div class="sl-profile-panel">
+        <h3><i class="bi bi-{{ panel.icon }}" aria-hidden="true"></i> {{ panel.title }}</h3>
+        <div class="sl-profile-info">
+          {% for row in panel.rows %}
+          <div class="sl-profile-info-row{% if row.is_private %} sl-profile-row-private{% endif %}"><i class="bi bi-{{ row.icon }}" aria-hidden="true"></i><span>{{ row.label }}</span>{% if row.value_html %}<b>{{{ row.value_html }}}</b>{% else %}<b title="{{ row.value }}"{% if row.is_hidden %} class="sl-profile-hidden"{% endif %}>{{ row.value }}</b>{% endif %}</div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if tags or group_chips %}
+    <div class="sl-profile-panel sl-profile-wide">
+      {% if tags %}
+      <h3><i class="bi bi-tags" aria-hidden="true"></i> {{ interests_label }}</h3>
+      <div class="sl-profile-tags">{% for tag in tags %}<span class="sl-profile-tag"><i class="bi bi-tag" aria-hidden="true"></i>{{ tag }}</span>{% endfor %}</div>
+      {% endif %}
+      {% if group_chips %}
+      <h3><i class="bi bi-people" aria-hidden="true"></i> {{ groups_label }}</h3>
+      <div class="sl-profile-chips">{% for grp in group_chips %}<span class="sl-chip sl-chip-{{ grp.tone }}" title="{{ grp.name }}">{{ grp.name }}</span>{% endfor %}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if has_field %}<div class="sl-profile-panel sl-profile-wide">{{{ field }}}</div>{% endif %}
+    {% if has_warn_list %}
+    <div class="sl-profile-panel sl-profile-wide sl-is-warn">
+      <h3><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ warn_label }}</h3>
+      {{{ warn_html }}}
+    </div>
+    {% endif %}
+    {% if has_sign %}<div class="sl-profile-sign"><blockquote>{{{ sign }}}</blockquote></div>{% endif %}
   </div>
-  <div class="sl-com-right">
-    <div class="sl-com-top">
-      <div class="sl-carg">{% if report %}{{{ report }}}{% endif %}<h1 class="sl-title">{{ name }}</h1></div>
-      <div class="sl-meta-actions sl-com-edit">{{{ user_menu_html }}}{% if has_admin_actions %}{{{ admin_actions_html }}}{% endif %}</div>
-    </div>
-    <div class="sl-com-cont">
-      <div class="sl-table-shell">
-        <table class="sl-table-acc-info">
-          <tr><td>{{ cmail }}:</td><td>{{{ mail }}}</td><td>{{ cbirth }}:</td><td>{{ birth }}</td></tr>
-          <tr><td>{{ csite }}:</td><td>{{{ site }}}</td><td>{{ cfrom }}:</td><td>{{ from }}</td></tr>
-          <tr><td>{{ cregdate }}:</td><td>{{ regdate }}</td><td>{{ cgender }}:</td><td>{{ gender }}</td></tr>
-          <tr><td>{{ clastvisit }}:</td><td>{{ lastvisit }}</td><td>{{ clang }}:</td><td>{{ lang }}</td></tr>
-          <tr><td>{{ cpoints }}:</td><td>{{ points }}</td><td>{{ csgroup }}:</td><td>{% if has_special_group %}<span class="sl-user-group-special">{{ sgroup }}</span>{% else %}{{ sgroup }}{% endif %}</td></tr>
-          <tr><td colspan="4"><hr>{{ coccup }}: {{ occup }}</td></tr>
-          <tr><td colspan="4">{{ cinter }}: {{ inter }}</td></tr>
-          <tr><td colspan="4">{{ cgroups }}: {{ groups }}</td></tr>
-          <tr><td colspan="4">{{ cwarn }}: {{{ warn }}}</td></tr>
-          {% if has_field %}<tr><td colspan="4"><hr>{{{ field }}}</td></tr>{% endif %}
-          <tr><td colspan="4">{{ cagent }}: {{ agent }}</td></tr>
-          {% if has_sign %}<tr><td colspan="4"><hr>{{{ sign }}}</td></tr>{% endif %}
-        </table>
+  <section class="sl-profile-hub">
+    <div class="sl-profile-hub-head">
+      <h2 class="sl-font">{{ hub_title }}</h2>
+      <div class="sl-profile-hub-total">
+        <span class="sl-chip sl-chip-info" title="{{ col_items }}"><i class="bi bi-grid" aria-hidden="true"></i> {{ tot_items }}</span>
+        {% if tot_rating %}<span class="sl-chip sl-chip-success" title="{{ col_rating }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ tot_rating }}</span>{% endif %}
+        <span class="sl-chip sl-chip-accent" title="{{ col_favs }}"><i class="bi bi-bookmark-fill" aria-hidden="true"></i> {{ tot_favs }}</span>
       </div>
     </div>
-  </div>
+    <div class="sl-profile-hub-table">
+      <div class="sl-profile-hub-row sl-profile-hub-row-head"><span>{{ col_module }}</span><span>{{ col_items }}</span><span>{{ col_rating }}</span><span>{{ col_favs }}</span></div>
+      {% for row in hub %}
+      {% if row.href %}<a class="sl-profile-hub-row" href="{{ row.href }}" title="{{ row.title }}">{% else %}<div class="sl-profile-hub-row">{% endif %}
+        <i class="bi bi-{{ row.icon }}" aria-hidden="true"></i><b>{{ row.title }}</b><span>{{ row.count }}</span><span>{% if row.rating %}<i class="bi bi-star-fill" aria-hidden="true"></i>{{ row.rating }}{% endif %}</span><span>{% if row.favs %}<i class="bi bi-bookmark-fill" aria-hidden="true"></i>{{ row.favs }}{% endif %}</span>
+      {% if row.href %}</a>{% else %}</div>{% endif %}
+      {% endfor %}
+    </div>
+    {{{ feed_html }}}
+  </section>
 </div>
-{{{ tabs }}}

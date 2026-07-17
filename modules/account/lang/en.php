@@ -5,6 +5,15 @@
 # Website: slaed.net
 
 define('_ACCOUNTCREATED','New User Account Created');
+define('_ACCOUNT_CLEAN','No warnings');
+define('_ACCOUNT_HUB','Contribution by modules');
+define('_ACCOUNT_ITEMS','Materials');
+define('_ACCOUNT_MEMBER','Regular member');
+define('_ACCOUNT_NEXT','To the next group: %s');
+define('_ACCOUNT_PERSON','Personal');
+define('_ACCOUNT_SYSTEM','System');
+define('_ACCOUNT_WORK','Profession');
+define('_ACCOUNT_YEARS','Years with the project');
 define('_ACTERROR1','New user verification number is invalid.<br>Please be sure to click on the link you received by email or apply for a new account <a href="index.php?name=account">here</a>.');
 define('_ACTERROR2','There is no user in the database with this information.<br>You can register a new user from <a href="index.php?name=account">here</a>.');
 define('_ACTIVATIONERROR','New User Activation Error');

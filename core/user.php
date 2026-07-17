@@ -690,6 +690,76 @@ function deletePrivateMessage() {
     return getPrivateMessageView(0, '', '', $typ);
 }
 
+# Per-module map for profile contribution views: label constant, icon name, table, where clause and rating column pair (count, total); fav marks the favorites modul key
+function getProfileModules(): array {
+    return [
+        'comm' => ['title' => _COMMENTS, 'icon' => 'chat-text', 'table' => 'comment', 'where' => "uid = :uid AND status != '0'", 'rate' => [], 'fav' => ''],
+        'faq' => ['title' => _FAQ, 'icon' => 'question-circle', 'table' => 'faq', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'faq'],
+        'files' => ['title' => _FILES, 'icon' => 'file-earmark-arrow-down', 'table' => 'files', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'files'],
+        'forum' => ['title' => _FORUM, 'icon' => 'window-stack', 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
+        'jokes' => ['title' => _JOKES, 'icon' => 'emoji-smile', 'table' => 'jokes', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratetot', 'rating'], 'fav' => ''],
+        'links' => ['title' => _LINKS, 'icon' => 'link-45deg', 'table' => 'links', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'links'],
+        'media' => ['title' => _MEDIA, 'icon' => 'camera-reels', 'table' => 'media', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'media'],
+        'news' => ['title' => _NEWS, 'icon' => 'newspaper', 'table' => 'news', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'news'],
+        'pages' => ['title' => _PAGES, 'icon' => 'file-text', 'table' => 'pages', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'pages'],
+    ];
+}
+
+# Build the "last activity" feed with per-module tabs for a public profile as one UNION ALL round-trip; shared by the profile view page and the own-profile page
+function getProfileLastView(int $uid): string {
+    global $db, $conf, $tpl, $prs;
+    if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
+    $limit = intval(getUserNews(25));
+    $parts = [];
+    $params = [];
+    $lists = [];
+    foreach (getProfileModules() as $mod => $inf) {
+        if ($mod != 'comm' && !is_active($mod)) continue;
+        if ($mod == 'comm') {
+            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".PREFIX_DB.'_comment WHERE '.str_replace(':uid', ':ucomm', $inf['where']).' ORDER BY id DESC LIMIT 0,'.$limit.')';
+        } else {
+            $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+            $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
+            $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']).' ORDER BY id DESC LIMIT 0,'.$limit.')';
+        }
+        $params['u'.$mod] = $uid;
+        $lists[$mod] = [];
+    }
+    if (!$parts) return '';
+    $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
+    while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
+        if ($key == 'comm') {
+            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, false, $conf['name']))), 70);
+            $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid]).'#'.$id;
+        } elseif ($key == 'jokes') {
+            $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
+        } elseif ($key == 'forum') {
+            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
+        } else {
+            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
+        }
+        $lists[$key][] = [
+            'iso' => date('c', strtotime($time)),
+            'date' => format_time($time),
+            'datetitle' => format_time($time, _TIMESTRING),
+            'href' => $href,
+            'label' => $label,
+            'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',
+        ];
+    }
+    $tabs = [];
+    $texts = [];
+    foreach (getProfileModules() as $mod => $inf) {
+        if (!isset($lists[$mod])) continue;
+        $tabs[] = $inf['title'];
+        $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
+    }
+    return $tpl->getHtmlPart('account-profile-feed', [
+        'title' => _LASTACTIVITY,
+        'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts),
+    ]);
+}
+
 # Render the favorites star button for an item as a round mini toggle (add/on/limit-reached state) with a tooltip panel
 # The whole favorites set of the user is loaded once per request into a static cache, so list pages render many stars without per-item SQL
 function getFavoriteButton(?int $fid, string $mod): string {

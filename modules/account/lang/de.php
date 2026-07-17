@@ -5,6 +5,15 @@
 # Website: slaed.net
 
 define('_ACCOUNTCREATED','Neuer Benutzer wurde angelegt');
+define('_ACCOUNT_CLEAN','Keine Verwarnungen');
+define('_ACCOUNT_HUB','Beitrag nach Modulen');
+define('_ACCOUNT_ITEMS','Materialien');
+define('_ACCOUNT_MEMBER','Normales Mitglied');
+define('_ACCOUNT_NEXT','Bis zur nächsten Gruppe: %s');
+define('_ACCOUNT_PERSON','Persönliches');
+define('_ACCOUNT_SYSTEM','System');
+define('_ACCOUNT_WORK','Beruf');
+define('_ACCOUNT_YEARS','Jahre im Projekt');
 define('_ACTERROR1','Die Prüfzahl zur Freischaltung Ihres neuen Accounts ist nicht korrekt.<br>Sie müssen auf den per eMail erhaltenen Link klicken, damit Ihr Benutzerkonto freigeschaltet wird - <a href="index.php?name=account">hier</a>.');
 define('_ACTERROR2','Es existiert kein Benutzer mit diesen Angaben in unserer Datenbank.<br>Sie können sich <a href="index.php?name=account">hier</a> als neuen Benutzer kostenlos anmelden.');
 define('_ACTIVATIONERROR','Fehler bei der Benutzeraktivierung');

@@ -266,6 +266,7 @@ define('_LANGUAGE','Sprache');
 define('_LASTMOD','Zuletzt geändert');
 define('_LASTPOSTER','Letzter Beitrag');
 define('_LAST_VISIT','Letzter Besuch');
+define('_LASTACTIVITY','Letzte Aktivität');
 define('_LINKEXIST','Seite mit der gegebenen Adresse existiert schon in unserem Katalog!');
 define('_LINKS','Seiten Katalog');
 define('_LIST','Liste');

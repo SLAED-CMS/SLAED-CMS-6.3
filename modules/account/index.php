@@ -319,9 +319,9 @@ function view(): void {
             $where = 'u.id = :uid';
             $params['uid'] = getVar('get', 'id', 'num');
         }
-        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
+        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
         if ($db->getSqlRowCount($result) > 0) {
-            [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $gcolor] = $db->getSqlRow($result);
+            [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $ison] = $db->getSqlRow($result);
             $userIpRaw = $ip;
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
@@ -336,98 +336,133 @@ function view(): void {
                 'img' => $seoimg,
                 'author' => $seoauthor,
             ]);
-            if (isAdmin()) {
-                $id = [_ID, $uid];
-                $regdate = [_REG, format_time($reg, _TIMESTRING)];
-                $lastvisit = [_LAST_VISIT, format_time($last, _TIMESTRING)];
-                $ip = [_IP, Geoip::getIpHtml($ip)];
-                $agent = [_BROWSER, $agent];
+            $adm = isAdmin();
+            $mkrow = fn(string $icon, string $label, string $value, string $html = '', bool $priv = false): array => ['icon' => $icon, 'label' => $label, 'value' => $value, 'value_html' => $html, 'is_hidden' => ($value === _HIDE), 'is_private' => $priv];
+            if ($adm) {
+                $idv = (string)$uid;
+                $regdate = format_time($reg, _TIMESTRING);
+                $lastvisit = format_time($last, _TIMESTRING);
+                $georow = $mkrow('hdd-network', _IP, '', Geoip::getIpHtml($userIpRaw), true);
+                $agentv = $agent ?: _NO_INFO;
             } else {
-                $id = [_ID, _HIDE];
-                $regdate = [_REG, format_time($reg)];
-                $lastvisit = [_LAST_VISIT, format_time($last)];
+                $idv = _HIDE;
+                $regdate = format_time($reg);
+                $lastvisit = format_time($last);
                 $geo = Geoip::getInfo($ip);
                 $coun = (string)($geo['country_name'] ?: $geo['country']);
-                $ip = [_COUNTRY, $coun ?: _NO_INFO];
-                $agent = [_BROWSER, _HIDE];
+                $georow = $mkrow('geo-alt', _COUNTRY, $coun ?: _NO_INFO);
+                $agentv = _HIDE;
             }
-            $name = [_NICKNAME, $nick];
-            $urank = ($rank) ? [_URANK, $rank] : [_URANK, ''];
-            $mail = ((isAdmin() || $view) && $mail) ? [_EMAIL, htmlspecialchars($mail, ENT_QUOTES, 'UTF-8')] : [_EMAIL, _HIDE];
-            $site = ($site) ? ((isAdmin() || is_user()) ? [_SITEURL, domain($site)] : [_SITEURL, _HIDE]) : [_SITEURL, _NO_INFO];
+            $mailv = (($adm || $view) && $mail) ? $mail : _HIDE;
+            $sitev = ($site) ? (($adm || is_user()) ? domain($site) : _HIDE) : _NO_INFO;
             $avatar = getUserAvatarUrl(['avatar' => $avatar]);
-            $occup = ($occ) ? [_OCCUPATION, $occ] : [_OCCUPATION, _NO_INFO];
-            $from = ($from) ? [_LOCALITYLANG, $from] : [_LOCALITYLANG, _NO_INFO];
-            $inter = ($inter) ? [_INTERESTS, $inter] : [_INTERESTS, _NO_INFO];
-            $sign = ((isAdmin() || is_user()) && $sig) ? $prs->filterContent($sig, false, $conf['name']) : '';
-            $lang = ($lang) ? [_LANGUAGE, getLangName($lang)] : [_LANGUAGE, getLangName($conf['language'])];
-            $points = ($conf['users']['point'] && $point) ? [_POINTS, $point] : [_POINTS, _NO_INFO];
-            $warn = [_UWARNS, warnings($warn)];
+            $sign = ($sig) ? $prs->filterContent($sig, false, $conf['name']) : '';
+            $lang = getLangName($lang ?: $conf['language']);
+            $points = ($conf['users']['point'] && $point) ? number_format((int)$point, 0, '', "\u{202F}") : _NO_INFO;
+            $wnum = count(array_filter(explode('|', (string)$warn)));
+            $warnhtml = ($wnum) ? warnings($warn) : '';
             if ($birth) {
                 preg_match('#([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})#', $birth, $datetime);
-                $birth = [_BIRTHDAY, $datetime[3].'.'.$datetime[2].'.'.$datetime[1]];
+                $birth = $datetime[3].'.'.$datetime[2].'.'.$datetime[1];
             } else {
-                $birth = [_BIRTHDAY, _NO_INFO];
+                $birth = _NO_INFO;
             }
-            $gender = [_GENDER, getGenderText($gender)];
-            $rating = [_RATING, getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1)];
+            $rating = getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1);
             $field = ($field) ? getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]) : '';
-            $sgroup = ($gname) ? [_SPEC_GROUP, $gname] : [_SPEC_GROUP, _NO];
             $rgroup = [];
             $uranks = '';
-            $groupsText = _NO;
+            $base = 0;
+            $next = 0;
+            $level = 0;
+            $nextlab = '';
             if ($conf['users']['point'] && $point) {
-                $result = $db->getSqlQuery('SELECT name, rank, color FROM '.PREFIX_DB."_groups WHERE points <= :points AND extra != '1' ORDER BY points ASC", ['points' => (int)$point]);
-                $group = [];
-                while([$guname, $gurank, $gcolor] = $db->getSqlRow($result)) {
-                    $group[] = $guname;
+                $result = $db->getSqlQuery('SELECT name, rank, points FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
+                while([$guname, $gurank, $gupts] = $db->getSqlRow($result)) {
+                    if ((int)$gupts > (int)$point) {
+                        if (!$next) $next = (int)$gupts;
+                        continue;
+                    }
                     $rgroup[] = $guname;
                     $uranks = $gurank;
+                    $base = (int)$gupts;
                 }
-                $groupsText = ($group) ? implode(', ', $group) : _NO_INFO;
-                $groups = [_USER_GROUPS, $groupsText];
                 $grank = ($grank) ? $grank : $uranks;
-            } else {
-                $groups = [_USER_GROUPS, _NO];
+                if ($next > $base) {
+                    $level = min(99, intval(($point - $base) / ($next - $base) * 100));
+                    $nextlab = sprintf(_ACCOUNT_NEXT, $next - $point);
+                } else {
+                    $level = 100;
+                }
             }
-            $trank = ($gname) ? _GROUP.': '.$gname : ((is_array($rgroup)) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
+            $tones = ['neutral', 'neutral', 'info', 'info', 'success', 'accent'];
+            $chips = [];
+            foreach ($rgroup as $pos => $guname) $chips[] = ['name' => $guname, 'tone' => $tones[min($pos, 5)]];
+            $tags = ($inter) ? array_values(array_filter(array_map('trim', explode(',', $inter)))) : [];
+            $trank = ($gname) ? _GROUP.': '.$gname : (($rgroup) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
             $rankImage = ($grank && file_exists(getThemeImagePath('ranks/'.$grank))) ? getThemeImagePath('ranks/'.$grank) : '';
-            $title[] = _COMMENTS;
-            $text[] = last($uid, 'comm');
-            if (is_active('faq')) {
-                $title[] = _FAQ;
-                $text[] = last($uid, 'faq');
+            $panels = [
+                ['title' => _ACCOUNT, 'icon' => 'person-vcard', 'rows' => [
+                    $mkrow('calendar3', _REG, $regdate),
+                    $mkrow('clock-history', _LAST_VISIT, $lastvisit),
+                    $mkrow('stars', _POINTS, $points),
+                    $mkrow('people', _SPEC_GROUP, $gname ?: _NO),
+                ]],
+                ['title' => _ACCOUNT_PERSON, 'icon' => 'person-badge', 'rows' => [
+                    $mkrow('cake2', _BIRTHDAY, $birth),
+                    $mkrow('geo-alt', _LOCALITYLANG, $from ?: _NO_INFO),
+                    $mkrow('person', _GENDER, getGenderText($gender)),
+                    $mkrow('translate', _LANGUAGE, $lang),
+                ]],
+                ['title' => _ACCOUNT_WORK, 'icon' => 'briefcase', 'rows' => [
+                    $mkrow('person-workspace', _OCCUPATION, $occ ?: _NO_INFO),
+                    ($sitev !== _HIDE && $sitev !== _NO_INFO) ? $mkrow('globe', _SITEURL, '', $sitev) : $mkrow('globe', _SITEURL, $sitev),
+                    $mkrow('envelope-at', _EMAIL, $mailv, '', $adm && !$view && $mailv !== _HIDE),
+                ]],
+                ['title' => _ACCOUNT_SYSTEM, 'icon' => 'pc-display', 'rows' => [
+                    $mkrow('hash', _ID, $idv, '', $adm),
+                    $georow,
+                    $mkrow('browser-chrome', _BROWSER, $agentv, '', $adm),
+                ]],
+            ];
+            $hub = [];
+            $parts = [];
+            $params = [];
+            foreach (getProfileModules() as $mod => $inf) {
+                if ($mod != 'comm' && !is_active($mod)) continue;
+                $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+                $rsel = ($ron && $inf['rate']) ? 'SUM('.$inf['rate'][0].') AS rc, SUM('.$inf['rate'][1].') AS rt' : '0 AS rc, 0 AS rt';
+                $fsel = '0';
+                if ($inf['fav'] !== '') {
+                    $fsel = '(SELECT COUNT(f.id) FROM '.PREFIX_DB.'_favorites AS f INNER JOIN '.PREFIX_DB.'_'.$inf['table']." AS n ON (f.fid = n.id) WHERE f.modul = '".$inf['fav']."' AND n.uid = :f".$mod.')';
+                    $params['f'.$mod] = $uid;
+                }
+                $parts[] = "SELECT '".$mod."' AS mkey, COUNT(id) AS num, ".$rsel.', '.$fsel.' AS fav FROM '.PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
+                $params['u'.$mod] = $uid;
+                $hub[$mod] = [
+                    'icon' => $inf['icon'],
+                    'title' => $inf['title'],
+                    'count' => '0',
+                    'rating' => '',
+                    'favs' => '',
+                    'href' => ($mod != 'comm') ? getSeoUrl(['name' => $mod]) : '',
+                ];
             }
-            if (is_active('files')) {
-                $title[] = _FILES;
-                $text[] = last($uid, 'files');
+            $sumn = 0;
+            $sumc = 0;
+            $sumt = 0;
+            $sumf = 0;
+            $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
+            while ([$key, $num, $rc, $rt, $fav] = $db->getSqlRow($result)) {
+                $hub[$key]['count'] = (string)$num;
+                $hub[$key]['rating'] = ($rc > 0) ? number_format($rt / $rc, 2) : '';
+                $hub[$key]['favs'] = (string)$fav;
+                $sumn += (int)$num;
+                $sumc += (int)$rc;
+                $sumt += (int)$rt;
+                $sumf += (int)$fav;
             }
-            if (is_active('forum')) {
-                $title[] = _FORUM;
-                $text[] = last($uid, 'forum');
-            }
-            if (is_active('jokes')) {
-                $title[] = _JOKES;
-                $text[] = last($uid, 'jokes');
-            }
-            if (is_active('links')) {
-                $title[] = _LINKS;
-                $text[] = last($uid, 'links');
-            }
-            if (is_active('media')) {
-                $title[] = _MEDIA;
-                $text[] = last($uid, 'media');
-            }
-            if (is_active('news')) {
-                $title[] = _NEWS;
-                $text[] = last($uid, 'news');
-            }
-            if (is_active('pages')) {
-                $title[] = _PAGES;
-                $text[] = last($uid, 'pages');
-            }
-            $tabs = getNaviTabs(0, 'tab', $title, $text);
-            $acts = isAdmin() ? getActionMenu([
+            $hub = array_values($hub);
+            $acts = $adm ? getActionMenu([
                 ['href' => $afile.'.php?op=users_add&id='.$uid, 'title' => _FULLEDIT, 'icon_name' => 'pencil'],
                 [
                     'href' => $afile.'.php?op=security_block&new_ip='.$userIpRaw,
@@ -442,71 +477,72 @@ function view(): void {
                     'confirm_text' => _DELETE.' "'.$nick.'"?',
                 ],
             ]) : '';
-            $report = getTplTitleTip([
-                ['label' => $id[0], 'value' => htmlspecialchars((string)$id[1], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-                ['label' => $ip[0], 'value' => $ip[1]],
-            ]);
+            $pmhref = (($conf['privat']['act'] ?? 0) && !empty($nick)) ? getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]) : '';
             $uacts = [];
-            if (($conf['privat']['act'] ?? 0) && !empty($nick)) {
-                $uacts[] = ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]), 'title' => _SENDMES, 'icon_name' => 'envelope'];
-            }
+            if ($pmhref !== '') $uacts[] = ['href' => $pmhref, 'title' => _SENDMES, 'icon_name' => 'envelope'];
             if (is_user() && $uname == $nick) {
                 $uacts[] = ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _ACCOUNT, 'icon_name' => 'person'];
             }
             $uacts[] = ['href' => '#', 'title' => _BACK, 'icon_name' => 'arrow-left', 'onclick_attr' => 'onclick="window.history.go(-1);return false;"'];
             echo $tpl->getHtmlPart('account-profile', [
-                'has_sign' => !empty($sign),
-                'has_field' => !empty($field),
-                'has_rank_image' => !empty($rankImage),
-                'has_special_group' => !empty($gname),
-                'has_admin_actions' => isAdmin(),
-                'report' => $report,
-                'user_menu_html' => getActionMenu($uacts, true),
-                'cname' => $name[0],
-                'name' => $name[1],
-                'curank' => $urank[0],
-                'urank' => $urank[1],
-                'cmail' => $mail[0],
-                'mail' => $mail[1],
-                'csite' => $site[0],
-                'site' => $site[1],
+                'name' => $nick,
+                'kicker' => _PERSONALINFO,
                 'avatar' => $avatar,
-                'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $name[1], 'title' => $name[1], 'is_avatar' => true]),
-                'cregdate' => $regdate[0],
-                'regdate' => $regdate[1],
-                'coccup' => $occup[0],
-                'occup' => $occup[1],
-                'cfrom' => $from[0],
-                'from' => $from[1],
-                'cinter' => $inter[0],
-                'inter' => $inter[1],
-                'sign' => $sign,
-                'clastvisit' => $lastvisit[0],
-                'lastvisit' => $lastvisit[1],
-                'clang' => $lang[0],
-                'lang' => $lang[1],
-                'cpoints' => $points[0],
-                'points' => $points[1],
-                'cwarn' => $warn[0],
-                'warn' => $warn[1],
-                'cbirth' => $birth[0],
-                'birth' => $birth[1],
-                'cgender' => $gender[0],
-                'gender' => $gender[1],
-                'crating' => $rating[0],
-                'rating' => $rating[1],
-                'field' => $field,
-                'cagent' => $agent[0],
-                'agent' => $agent[1],
-                'csgroup' => $sgroup[0],
-                'sgroup' => $sgroup[1],
-                'cgroups' => $groups[0],
-                'groups' => $groups[1],
+                'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $nick, 'title' => $nick, 'is_avatar' => true]),
+                'is_online' => $ison,
+                'online_label' => _ONLINE,
+                'urank' => $rank,
+                'has_rank_image' => !empty($rankImage),
                 'rank_src' => $rankImage,
                 'rank_alt' => $trank,
+                'has_special_group' => !empty($gname),
+                'sgroup' => $gname,
+                'sgroup_label' => _SPEC_GROUP,
+                'pm_href' => $pmhref,
+                'pm_label' => _MESSAGE,
+                'rating_label' => _RATING,
+                'rating_html' => $rating,
+                'has_level' => !empty($conf['users']['point']) && !empty($point),
+                'level' => $level,
+                'level_group' => ($rgroup) ? end($rgroup) : '',
+                'level_next' => $nextlab,
+                'points_text' => $points,
+                'points_label' => _POINTS,
+                'user_menu_html' => getActionMenu($uacts, true),
+                'has_admin_actions' => $adm,
                 'admin_actions_html' => $acts,
-                'tabs' => $tabs,
-                'info' => _PERSONALINFO,
+                'share_url' => getPublicUrl(['name' => $conf['name'], 'op' => 'view', 'uname' => urlencode($nick)]),
+                'share_title' => $nick,
+                'years' => max(0, intval((time() - strtotime($reg)) / 31556952)),
+                'years_label' => _ACCOUNT_YEARS,
+                'reg_note' => _REG.': '.format_time($reg),
+                'is_warned' => $wnum > 0,
+                'warn_title' => ($wnum > 0) ? _UWARNS.': '.$wnum : _ACCOUNT_CLEAN,
+                'warn_note' => ($wnum > 0) ? '' : _UWARNS.': '._NO,
+                'group_title' => $gname ?: _ACCOUNT_MEMBER,
+                'group_note' => ($gname) ? _SPEC_GROUP : _SPEC_GROUP.': '._NO,
+                'panels' => $panels,
+                'interests_label' => _INTERESTS,
+                'tags' => $tags,
+                'groups_label' => _USER_GROUPS,
+                'group_chips' => $chips,
+                'has_field' => !empty($field),
+                'field' => $field,
+                'has_warn_list' => $wnum > 0,
+                'warn_label' => _UWARNS,
+                'warn_html' => $warnhtml,
+                'has_sign' => !empty($sign),
+                'sign' => $sign,
+                'hub_title' => _ACCOUNT_HUB,
+                'hub' => $hub,
+                'col_module' => _MODUL,
+                'col_items' => _ACCOUNT_ITEMS,
+                'col_rating' => _RATING,
+                'col_favs' => _FAVORITES,
+                'tot_items' => (string)$sumn,
+                'tot_rating' => ($sumc > 0) ? number_format($sumt / $sumc, 2) : '',
+                'tot_favs' => (string)$sumf,
+                'feed_html' => getProfileLastView($uid),
             ]);
             setFoot();
         } else {
@@ -529,40 +565,9 @@ function profil(): void {
         setHead(['title' => _THISISYOURPAGE]);
         $cont = $tpl->getHtmlFrag('title', ['title' => _THISISYOURPAGE, 'is_level_one' => true]);
         $cont .= getUserNav();
-        $title[] = _COMMENTS;
-        $text[] = last($user[0], 'comm');
-        if (is_active('faq')) {
-            $title[] = _FAQ;
-            $text[] = last($user[0], 'faq');
-        }
-        if (is_active('files')) {
-            $title[] = _FILES;
-            $text[] = last($user[0], 'files');
-        }
-        if (is_active('forum')) {
-            $title[] = _FORUM;
-            $text[] = last($user[0], 'forum');
-        }
-        if (is_active('jokes')) {
-            $title[] = _JOKES;
-            $text[] = last($user[0], 'jokes');
-        }
-        if (is_active('links')) {
-            $title[] = _LINKS;
-            $text[] = last($user[0], 'links');
-        }
-        if (is_active('media')) {
-            $title[] = _MEDIA;
-            $text[] = last($user[0], 'media');
-        }
-        if (is_active('news')) {
-            $title[] = _NEWS;
-            $text[] = last($user[0], 'news');
-        }
-        if (is_active('pages')) {
-            $title[] = _PAGES;
-            $text[] = last($user[0], 'pages');
-        }
+        $cont .= getProfileLastView(intval($user[0]));
+        $title = [];
+        $text = [];
         if (($conf['rss']['use'] ?? 0) == 1) {
             $url = getVar('post', 'url', 'url');
             $link = ($url) ? $url : 'http://';
@@ -592,85 +597,6 @@ function profil(): void {
     } else {
         account();
     }
-}
-
-function last(int|string $uid, string $modul): string {
-    global $db, $conf, $user, $tpl, $prs;
-    $uid   = (int)$uid;
-    $num   = getUserNews(25);
-    $limit = (int)$num;
-    $rows = [];
-    $handled = true;
-    $lastRow = static function (string $time, string $href, string $title) use ($tpl): array {
-        return ['cells' => [
-            ['content_html' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'text' => format_time($time)])],
-            ['content_html' => $tpl->getHtmlFrag('link', ['href' => $href, 'title' => $title, 'label' => $title, 'is_last' => true])],
-        ]];
-    };
-    if ($modul == 'comm') {
-        $result = $db->getSqlQuery('SELECT id, cid, modul, time, body FROM '.PREFIX_DB."_comment WHERE uid = :user_id AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $cid, $commentModul, $date, $comment] = $row;
-            $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($comment, false, $conf['name']))), 70);
-            $rows[] = $lastRow($date, getSeoUrl(['name' => $commentModul, 'op' => 'view', 'id' => $cid]).'#'.$id, $comment);
-        }
-    } elseif ($modul == 'faq') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_faq WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, $title);
-        }
-    } elseif ($modul == 'files') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_files WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, $title);
-        }
-    } elseif ($modul == 'forum') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_forum WHERE uid = :user_id AND pid = '0' AND time <= NOW() AND status > '1' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
-        }
-    } elseif ($modul == 'jokes') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_jokes WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, 'index.php?name=jokes#'.$id, $title);
-        }
-    } elseif ($modul == 'links') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
-        }
-    } elseif ($modul == 'media') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_media WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
-        }
-    } elseif ($modul == 'news') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
-        }
-    } elseif ($modul == 'pages') {
-        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
-            [$id, $title, $time] = $row;
-            $rows[] = $lastRow($time, getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), $title);
-        }
-    } else {
-        $handled = false;
-    }
-    return $handled ? $tpl->getHtmlPart('content-list', [
-        'rows' => $rows,
-        'table_open' => ['open' => true, 'is_amount' => true],
-        'table_close' => [],
-        'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
-    ]) : '';
 }
 
 function privat(): void {

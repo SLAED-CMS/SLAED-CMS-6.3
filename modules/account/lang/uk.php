@@ -5,6 +5,15 @@
 # Website: slaed.net
 
 define('_ACCOUNTCREATED','Створений обліковий запис нового користувача');
+define('_ACCOUNT_CLEAN','Без попереджень');
+define('_ACCOUNT_HUB','Внесок за модулями');
+define('_ACCOUNT_ITEMS','Матеріали');
+define('_ACCOUNT_MEMBER','Звичайний учасник');
+define('_ACCOUNT_NEXT','До наступної групи: %s');
+define('_ACCOUNT_PERSON','Особисте');
+define('_ACCOUNT_SYSTEM','Система');
+define('_ACCOUNT_WORK','Професія');
+define('_ACCOUNT_YEARS','Років із проектом');
 define('_ACTERROR1','Дані для користувача недійсні.<br>Будь ласка, перевірте введені дані, або якщо Ви ще не зареєстровані, то пройдіть реєстрацію <a href="index.php?name=account">тут</a>.');
 define('_ACTERROR2','Користувача з такими даними в нашій базі даних не знайдено.<br>Ви можете пройти реєстрацію <a href="index.php?name=account">тут</a>.');
 define('_ACTIVATIONERROR','Помилка при активізації нового користувача');
