@@ -3044,6 +3044,8 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-block-user-ava .sl-live-avatar {
+  box-sizing: border-box;
+  display: block;
   width: 64px;
   height: 64px;
   padding: 4px;
@@ -3056,6 +3058,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-block-user-ava .sl-ava-min {
   display: block;
+  box-sizing: border-box;
   width: 56px;
   height: 56px;
   border: 3px solid var(--sl-color-bg-soft);
@@ -3074,7 +3077,7 @@ ol.sl-sublist-two li:hover:before {
 
 .sl-block-user-ava p {
   min-width: 0;
-  margin: 0;
+  margin: 0 8px;
   color: var(--sl-color-text);
   font-size: 14px;
   font-weight: 600;
@@ -3127,7 +3130,6 @@ ol.sl-sublist-two li:hover:before {
 .sl-block-pm a {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) auto;
-  gap: 8px;
   align-items: center;
   box-sizing: border-box;
   height: 38px;
@@ -7283,6 +7285,7 @@ dialog.sl-modal.sl-modal-wide {
 
 .sl-profile-avatar {
   --sl-profile-level: 0%;
+  --sl-profile-ring: var(--sl-color-primary);
   position: relative;
   display: grid;
   place-items: center;
@@ -7291,12 +7294,13 @@ dialog.sl-modal.sl-modal-wide {
   margin: 0 auto;
   padding: 6px;
   border-radius: 50%;
-  background: conic-gradient(var(--sl-color-primary) 0 var(--sl-profile-level), var(--sl-color-bg-soft-soft) var(--sl-profile-level) 100%);
+  background: conic-gradient(var(--sl-profile-ring) 0 var(--sl-profile-level), var(--sl-color-bg-soft-soft) var(--sl-profile-level) 100%);
   box-shadow: 0 0 0 4px var(--sl-color-bg), var(--sl-shadow-panel);
 }
 
 .sl-profile-avatar img {
   display: block;
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   border: 4px solid var(--sl-color-bg);
@@ -7351,6 +7355,11 @@ dialog.sl-modal.sl-modal-wide {
   overflow: hidden;
   line-height: 24px;
   text-overflow: ellipsis;
+}
+
+/* The offline status chip is informational, not clickable */
+.sl-profile-chips .sl-chip-danger {
+  cursor: default;
 }
 
 .sl-profile-actions {
@@ -7728,6 +7737,39 @@ a.sl-profile-hub-row:hover {
   font-size: 13px;
 }
 
+/* Activity indicator overlays the top-right of the first chip row; tab panels keep the full feed width */
+.sl-profile-feed-bar {
+  position: relative;
+}
+
+.sl-profile-feed-bar .sl-tabs-nav {
+  padding-right: 38px;
+}
+
+.sl-profile-feed-live {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: var(--sl-size-chip);
+  height: var(--sl-size-chip);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sl-color-primary) 14%, transparent);
+  color: var(--sl-color-primary);
+  font-size: var(--sl-size-icon-xs);
+}
+
+.sl-profile-feed-live i {
+  animation: sl-profile-feed-spin 6s linear infinite;
+}
+
+@keyframes sl-profile-feed-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .sl-profile-feed .sl-tabs {
   margin: 10px 0 0;
   border: 0;
@@ -7823,9 +7865,14 @@ a.sl-profile-hub-row:hover {
   animation-play-state: paused;
 }
 
+/* The spinning indicator freezes together with the hovered feed scroll */
+.sl-profile-feed:has(.sl-profile-scroll:hover) .sl-profile-feed-live i {
+  animation-play-state: paused;
+}
+
 .sl-profile-entry {
   display: grid;
-  grid-template-columns: 92px 30px minmax(0, 1fr) auto;
+  grid-template-columns: auto 30px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   min-height: 42px;
@@ -7834,12 +7881,6 @@ a.sl-profile-hub-row:hover {
 
 .sl-profile-entry:last-child {
   border-bottom: 0;
-}
-
-.sl-profile-entry time {
-  justify-content: center;
-  margin: 0;
-  font-size: 10px;
 }
 
 .sl-profile-entry > i {
@@ -7933,7 +7974,7 @@ a.sl-profile-hub-row:hover {
   }
 
   .sl-profile-entry {
-    grid-template-columns: 68px 22px minmax(0, 1fr) auto;
+    grid-template-columns: auto 22px minmax(0, 1fr) auto;
     gap: var(--sl-space-sm);
   }
 }
@@ -7943,7 +7984,8 @@ a.sl-profile-hub-row:hover {
     animation: none;
   }
 
-  .sl-profile-status {
+  .sl-profile-status,
+  .sl-profile-feed-live i {
     animation: none;
   }
 }

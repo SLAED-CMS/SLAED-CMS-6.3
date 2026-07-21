@@ -1,18 +1,16 @@
 <div class="sl-profile-card sl-profile-split">
   <aside class="sl-profile-split-rail">
-    <div class="sl-profile-avatar"{% if has_level %} style="--sl-profile-level:{{ level }}%"{% endif %}>
+    <div class="sl-profile-avatar"{% if has_level or ring %} style="{% if has_level %}--sl-profile-level:{{ level }}%;{% endif %}{% if ring %}--sl-profile-ring:{{ ring }};{% endif %}"{% endif %}>
       {% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ name }}" title="{{ name }}">{% endif %}
       {% if is_online %}<span class="sl-profile-status" title="{{ online_label }}"></span>{% endif %}
     </div>
     <h1 class="sl-font sl-profile-name">{{ name }}</h1>
     {% if urank %}<div class="sl-profile-rank">{{ urank }}</div>{% endif %}
     {% if has_rank_image %}<img class="sl-profile-rank-img" src="{{ rank_src }}" alt="{{ rank_alt }}" title="{{ rank_alt }}">{% endif %}
-    {% if has_special_group or is_online %}
     <div class="sl-profile-chips">
       {% if has_special_group %}<span class="sl-chip sl-chip-accent" title="{{ sgroup_label }}: {{ sgroup }}"><i class="bi bi-people-fill" aria-hidden="true"></i> {{ sgroup }}</span>{% endif %}
-      {% if is_online %}<span class="sl-chip sl-chip-success"><i class="bi bi-circle-fill" aria-hidden="true"></i> {{ online_label }}</span>{% endif %}
+      {% if is_online %}<span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i> {{ online_label }}</span>{% else %}<span class="sl-chip sl-chip-danger"><i class="bi bi-wifi-off" aria-hidden="true"></i> {{ offline_label }}</span>{% endif %}
     </div>
-    {% endif %}
     {% if pm_href %}<div class="sl-profile-actions"><a class="sl-but sl-but-blue" href="{{ pm_href }}" title="{{ pm_label }}">{{ pm_label }}</a></div>{% endif %}
     {% if rating_html %}
     <div class="sl-profile-score">

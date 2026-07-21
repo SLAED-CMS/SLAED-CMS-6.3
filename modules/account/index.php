@@ -319,9 +319,9 @@ function view(): void {
             $where = 'u.id = :uid';
             $params['uid'] = getVar('get', 'id', 'num');
         }
-        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
+        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color, (SELECT COUNT(s.id) FROM '.PREFIX_DB.'_session AS s WHERE s.uname = u.name) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
         if ($db->getSqlRowCount($result) > 0) {
-            [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $ison] = $db->getSqlRow($result);
+            [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $gcolor, $ison] = $db->getSqlRow($result);
             $userIpRaw = $ip;
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
@@ -371,19 +371,21 @@ function view(): void {
             $field = ($field) ? getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]) : '';
             $rgroup = [];
             $uranks = '';
+            $ucolor = '';
             $base = 0;
             $next = 0;
             $level = 0;
             $nextlab = '';
             if ($conf['users']['point'] && $point) {
-                $result = $db->getSqlQuery('SELECT name, rank, points FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
-                while([$guname, $gurank, $gupts] = $db->getSqlRow($result)) {
+                $result = $db->getSqlQuery('SELECT name, rank, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
+                while([$guname, $gurank, $gupts, $gucol] = $db->getSqlRow($result)) {
                     if ((int)$gupts > (int)$point) {
                         if (!$next) $next = (int)$gupts;
                         continue;
                     }
                     $rgroup[] = $guname;
                     $uranks = $gurank;
+                    $ucolor = $gucol;
                     $base = (int)$gupts;
                 }
                 $grank = ($grank) ? $grank : $uranks;
@@ -394,6 +396,8 @@ function view(): void {
                     $level = 100;
                 }
             }
+            $ring = $gcolor ?: $ucolor;
+            $ring = ($ring && preg_match('/^#[0-9a-f]{6}$/i', $ring)) ? $ring : '';
             $tones = ['neutral', 'neutral', 'info', 'info', 'success', 'accent'];
             $chips = [];
             foreach ($rgroup as $pos => $guname) $chips[] = ['name' => $guname, 'tone' => $tones[min($pos, 5)]];
@@ -491,6 +495,8 @@ function view(): void {
                 'avatar_html' => $tpl->getHtmlFrag('image', ['src' => $avatar, 'alt' => $nick, 'title' => $nick, 'is_avatar' => true]),
                 'is_online' => $ison,
                 'online_label' => _ONLINE,
+                'offline_label' => _OFFLINE,
+                'ring' => $ring,
                 'urank' => $rank,
                 'has_rank_image' => !empty($rankImage),
                 'rank_src' => $rankImage,

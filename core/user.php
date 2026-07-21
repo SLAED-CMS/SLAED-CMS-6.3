@@ -739,9 +739,7 @@ function getProfileLastView(int $uid): string {
             $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
         }
         $lists[$key][] = [
-            'iso' => date('c', strtotime($time)),
-            'date' => format_time($time),
-            'datetitle' => format_time($time, _TIMESTRING),
+            'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),
             'href' => $href,
             'label' => $label,
             'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',

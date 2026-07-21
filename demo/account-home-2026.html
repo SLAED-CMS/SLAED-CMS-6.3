@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — личный кабинет: направления 2026</title>
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 80px;
+  background: var(--sl-color-bg-soft);
+  color: var(--sl-color-text);
+  font: 13px/1.45 Arial, system-ui, sans-serif;
+}
+
+a { text-decoration: none; }
+
+.sl-cab-demo-head {
+  padding: 32px max(20px, calc((100vw - 896px) / 2));
+  border-bottom: 1px solid var(--sl-color-border);
+  background:
+    radial-gradient(circle at 82% 0, color-mix(in srgb, var(--sl-color-brand) 20%, transparent), transparent 28%),
+    var(--sl-color-bg);
+}
+
+.sl-cab-demo-head h1 {
+  margin: 0 0 var(--sl-space-md);
+  color: var(--sl-color-text-heading);
+  font-size: clamp(25px, 4vw, 36px);
+  line-height: 1.1;
+}
+
+.sl-cab-demo-head p { max-width: 760px; margin: 0; color: var(--sl-color-text-muted); }
+.sl-cab-demo-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); margin-top: var(--sl-space-lg); }
+.sl-cab-demo-main { width: 896px; max-width: calc(100% - 32px); margin: 34px auto 0; }
+.sl-cab-demo-item { margin-bottom: 40px; }
+
+.sl-cab-demo-label {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sl-cab-demo-number {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sl-color-text-heading);
+  color: var(--sl-color-on-dark);
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.sl-cab-demo-label b { display: block; color: var(--sl-color-text-heading); font-size: 14px; }
+.sl-cab-demo-label small { display: block; color: var(--sl-color-text-muted); font-size: 11px; }
+
+/* Shared card shell, mirrors the live sl-profile-card frame */
+.sl-cab-card {
+  overflow: hidden;
+  border: 1px solid var(--sl-color-border-subtle);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-soft);
+}
+
+.sl-cab-ava {
+  --sl-cab-ring: var(--sl-color-primary);
+  --sl-cab-level: 100%;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  padding: 5px;
+  border-radius: 50%;
+  background: conic-gradient(var(--sl-cab-ring) 0 var(--sl-cab-level), var(--sl-color-bg-soft-soft) var(--sl-cab-level) 100%);
+  box-shadow: 0 0 0 4px var(--sl-color-bg), var(--sl-shadow-panel);
+}
+
+.sl-cab-ava img { display: block; box-sizing: border-box; width: 100%; height: 100%; border: 4px solid var(--sl-color-bg); border-radius: 50%; object-fit: cover; background: var(--sl-color-bg); }
+.sl-cab-status { position: absolute; right: 3px; bottom: 8px; width: 15px; height: 15px; border: 3px solid var(--sl-color-bg); border-radius: 50%; background: var(--sl-color-success); }
+.sl-cab-name { margin: 12px 0 2px; color: var(--sl-color-text-heading); font-size: 20px; line-height: 1.1; }
+.sl-cab-rank { color: var(--sl-color-primary); font-weight: bold; }
+.sl-cab-kicker { color: var(--sl-color-text-muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.sl-cab-chips { display: flex; flex-wrap: wrap; gap: var(--sl-space-sm); justify-content: center; margin-top: 12px; }
+.sl-cab-chips .sl-chip { margin: 0; max-width: 100%; overflow: hidden; display: inline-block; line-height: 24px; text-overflow: ellipsis; }
+
+.sl-cab-meter { margin-top: 12px; }
+.sl-cab-meter-head { display: flex; justify-content: space-between; margin-bottom: 5px; color: var(--sl-color-text-muted); font-size: 10px; }
+.sl-cab-meter-head b { color: var(--sl-color-primary); }
+.sl-cab-meter-track { height: 8px; overflow: hidden; border-radius: 999px; background: var(--sl-color-bg-soft-soft); }
+.sl-cab-meter-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--sl-color-brand), var(--sl-color-primary)); }
+
+.sl-cab-panel { min-width: 0; padding: 12px; border: 1px solid var(--sl-color-border-subtle); border-radius: var(--sl-radius-card); background: var(--sl-color-bg-soft); }
+.sl-cab-panel h3 { margin: 0 0 10px; color: var(--sl-color-text-heading); font-size: 13px; }
+.sl-cab-panel h3 i { margin-right: 5px; color: var(--sl-color-primary); }
+
+/* Action tiles with counter badges */
+.sl-cab-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sl-space-md); }
+.sl-cab-act {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 14px 8px 12px;
+  border: 1px solid var(--sl-color-border-subtle);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text-muted);
+  text-align: center;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.sl-cab-act:hover { border-color: var(--sl-color-primary); transform: translateY(-2px); }
+.sl-cab-act i { font-size: var(--sl-size-icon-md); color: var(--sl-color-primary); }
+.sl-cab-act b { color: var(--sl-color-text-heading); font-size: 12px; }
+.sl-cab-act .sl-cab-badge { position: absolute; top: 8px; right: 10px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--sl-color-danger); color: var(--sl-color-on-dark); font-size: 10px; font-weight: bold; line-height: 20px; }
+.sl-cab-act.sl-is-exit i { color: var(--sl-color-danger); }
+
+.sl-cab-rows { display: grid; gap: 0; }
+.sl-cab-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 38px; border-bottom: 1px solid var(--sl-color-border-subtle); color: var(--sl-color-text-muted); }
+.sl-cab-row:last-child { border-bottom: 0; }
+.sl-cab-row > i { color: var(--sl-color-primary); text-align: center; }
+.sl-cab-row b { color: var(--sl-color-text-heading); font-size: 12px; }
+.sl-cab-row .sl-chip { margin: 0; }
+
+/* 01 Command Deck */
+.sl-cab-deck { display: grid; grid-template-columns: 220px minmax(0, 1fr); }
+.sl-cab-deck-rail { padding: 22px 18px; border-right: 1px solid var(--sl-color-border-subtle); background: linear-gradient(180deg, var(--sl-color-bg-soft), var(--sl-color-bg)); text-align: center; }
+.sl-cab-deck-rail .sl-cab-ava { margin: 0 auto; }
+.sl-cab-deck-main { min-width: 0; padding: 18px; }
+.sl-cab-deck-main .sl-cab-actions { margin-top: 12px; }
+.sl-cab-deck-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sl-cab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+
+/* 02 Action Grid */
+.sl-cab-hero { display: flex; align-items: center; gap: 18px; padding: 18px; }
+.sl-cab-hero .sl-cab-ava { flex: 0 0 96px; }
+.sl-cab-hero-copy { min-width: 0; flex: 1 1 auto; }
+.sl-cab-hero-side { display: grid; gap: var(--sl-space-sm); justify-items: end; }
+.sl-cab-agrid { padding: 0 18px 18px; }
+.sl-cab-agrid .sl-cab-actions { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+/* 03 Inbox First */
+.sl-cab-inbox { display: grid; grid-template-columns: minmax(0, 1fr) 260px; }
+.sl-cab-inbox-main { min-width: 0; padding: 18px; }
+.sl-cab-inbox-side { padding: 18px; border-left: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); }
+.sl-cab-tabsline { display: flex; flex-wrap: wrap; gap: var(--sl-space-xs); margin: 12px 0; }
+.sl-cab-tabsline .sl-chip { margin: 0; }
+.sl-cab-msg { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 44px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-cab-msg:last-child { border-bottom: 0; }
+.sl-cab-msg b { display: block; color: var(--sl-color-text-heading); font-size: 12px; }
+.sl-cab-msg small { display: block; overflow: hidden; color: var(--sl-color-text-muted); text-overflow: ellipsis; white-space: nowrap; }
+.sl-cab-msg-ava { width: 32px; height: 32px; border-radius: 50%; background: var(--sl-color-bg-soft-soft); overflow: hidden; }
+.sl-cab-msg-ava img { width: 100%; height: 100%; object-fit: cover; }
+
+/* 04 Bento */
+.sl-cab-bento { display: grid; grid-template-columns: 1.15fr 0.95fr 0.9fr; grid-auto-rows: auto; gap: 12px; padding: 18px; }
+.sl-cab-bento .sl-cab-panel:first-child { grid-row: span 2; display: grid; justify-items: center; align-content: start; text-align: center; }
+.sl-cab-bento-wide { grid-column: 2 / -1; }
+.sl-cab-stat { text-align: center; padding: 8px 4px; }
+.sl-cab-stat b { display: block; color: var(--sl-color-text-heading); font-size: 20px; line-height: 1.1; }
+.sl-cab-stat small { color: var(--sl-color-text-muted); font-size: 10px; }
+
+/* 05 Toolbar */
+.sl-cab-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sl-space-sm); padding: 14px 18px; border-bottom: 1px solid var(--sl-color-border-subtle); background: var(--sl-color-bg-soft); }
+.sl-cab-toolbar .sl-cab-who { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.sl-cab-toolbar .sl-cab-ava { width: 44px; height: 44px; padding: 3px; box-shadow: none; }
+.sl-cab-toolbar .sl-cab-ava img { border-width: 2px; }
+.sl-cab-toolbar-body { padding: 18px; }
+.sl-cab-feedline { display: grid; grid-template-columns: auto 26px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 40px; border-bottom: 1px solid var(--sl-color-border-subtle); }
+.sl-cab-feedline:last-child { border-bottom: 0; }
+.sl-cab-feedline > i { color: var(--sl-color-primary); text-align: center; }
+.sl-cab-feedline a { overflow: hidden; color: var(--sl-color-text-heading); text-overflow: ellipsis; white-space: nowrap; }
+.sl-cab-feedline a:hover { color: var(--sl-color-primary); }
+.sl-cab-feedline .sl-chip { margin: 0; }
+
+/* 06 Progress Hub */
+.sl-cab-prog { padding: 20px; }
+.sl-cab-prog-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 14px; }
+.sl-cab-ring { display: grid; place-items: center; width: 168px; height: 168px; margin: 0 auto; border-radius: 50%; background: conic-gradient(var(--sl-color-success) 0 76%, var(--sl-color-bg-soft-soft) 76%); }
+.sl-cab-ring > span { display: grid; place-items: center; width: 138px; height: 138px; border-radius: 50%; background: var(--sl-color-bg); text-align: center; }
+.sl-cab-ring b { display: block; color: var(--sl-color-text-heading); font-size: 24px; }
+.sl-cab-ring small { color: var(--sl-color-text-muted); }
+
+@media (max-width: 760px) {
+  .sl-cab-demo-main { max-width: calc(100% - 20px); }
+  .sl-cab-demo-label { grid-template-columns: 34px minmax(0, 1fr); }
+  .sl-cab-demo-label > .sl-chip { display: none; }
+  .sl-cab-deck,
+  .sl-cab-inbox,
+  .sl-cab-prog-layout { grid-template-columns: 1fr; }
+  .sl-cab-deck-rail { border-right: 0; border-bottom: 1px solid var(--sl-color-border-subtle); }
+  .sl-cab-inbox-side { border-left: 0; border-top: 1px solid var(--sl-color-border-subtle); }
+  .sl-cab-actions,
+  .sl-cab-agrid .sl-cab-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sl-cab-grid,
+  .sl-cab-bento { grid-template-columns: 1fr; }
+  .sl-cab-bento .sl-cab-panel:first-child { grid-row: auto; }
+  .sl-cab-bento-wide { grid-column: auto; }
+  .sl-cab-hero { flex-direction: column; text-align: center; }
+  .sl-cab-hero-side { justify-items: center; }
+}
+</style>
+</head>
+<body>
+<header class="sl-cab-demo-head">
+  <h1 class="sl-font">Личный кабинет · 2026</h1>
+  <p>Направления для «Вашей персональной страницы» (index.php?name=account). Реальные механики системы: навигация кабинета, счётчики личных сообщений, фавориты, уровень и пункты, лента последней активности, RSS-каналы и собственное меню. Ширина 896 px, токены темы lite.</p>
+  <div class="sl-cab-demo-chips">
+    <span class="sl-chip sl-chip-info"><i class="bi bi-layout-text-window-reverse"></i> 6 направлений</span>
+    <span class="sl-chip sl-chip-success"><i class="bi bi-arrows"></i> 896 px</span>
+    <span class="sl-chip sl-chip-neutral"><i class="bi bi-palette"></i> Lite tokens</span>
+    <span class="sl-chip sl-chip-accent"><i class="bi bi-code-slash"></i> системные механики</span>
+  </div>
+</header>
+
+<main class="sl-cab-demo-main">
+
+  <article class="sl-cab-demo-item">
+    <div class="sl-cab-demo-label"><span class="sl-cab-demo-number">01</span><span><b>Command Deck</b><small>родной брат Dense Split: рейка личности + плитки действий + лента</small></span><span class="sl-chip sl-chip-success">консистентный</span></div>
+    <div class="sl-cab-card sl-cab-deck">
+      <aside class="sl-cab-deck-rail">
+        <div class="sl-cab-ava" style="--sl-cab-ring:#ffa200"><img src="../templates/lite/images/avatars/presets/01.svg" alt="SLAED CMS"><span class="sl-cab-status" title="Онлайн"></span></div>
+        <h2 class="sl-font sl-cab-name">SLAED CMS</h2>
+        <div class="sl-cab-rank">Администратор</div>
+        <div class="sl-cab-chips"><span class="sl-chip sl-chip-accent"><i class="bi bi-people-fill"></i> Клиент</span><span class="sl-chip sl-chip-success"><i class="bi bi-wifi"></i> Онлайн</span></div>
+        <div class="sl-cab-meter"><div class="sl-cab-meter-head"><span>Опытные</span><b>100%</b></div><div class="sl-cab-meter-track"><span style="width:100%"></span></div></div>
+        <div class="sl-cab-chips"><span class="sl-chip sl-chip-info"><i class="bi bi-stars"></i> 50 349</span><span class="sl-chip sl-chip-neutral">Рейтинг 3.25</span></div>
+      </aside>
+      <div class="sl-cab-deck-main">
+        <div class="sl-cab-deck-head"><span class="sl-cab-kicker">Ваша персональная страница</span><a class="sl-but" href="#" title="Выход"><i class="bi bi-box-arrow-right"></i> Выход</a></div>
+        <div class="sl-cab-actions">
+          <a class="sl-cab-act" href="#"><span class="sl-cab-badge">2</span><i class="bi bi-envelope"></i><b>Сообщения</b></a>
+          <a class="sl-cab-act" href="#"><i class="bi bi-star"></i><b>Фавориты</b></a>
+          <a class="sl-cab-act" href="#"><i class="bi bi-person-vcard"></i><b>Мой профиль</b></a>
+          <a class="sl-cab-act" href="#"><i class="bi bi-gear"></i><b>Настройки</b></a>
+        </div>
+        <div class="sl-cab-grid">
+          <div class="sl-cab-panel"><h3><i class="bi bi-activity"></i> Последняя активность</h3>
+            <div class="sl-cab-rows">
+              <div class="sl-cab-row"><i class="bi bi-chat-text"></i><b>rvg, да, это возможно. Обновлять нужно…</b><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 22.12.2024</time></div>
+              <div class="sl-cab-row"><i class="bi bi-window-stack"></i><b>Пожелания к версии SLAED CMS 6.3</b><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 14.07.2026</time></div>
+              <div class="sl-cab-row"><i class="bi bi-file-earmark-arrow-down"></i><b>SLAED CMS 6.2 Pro — система управления</b><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 28.04.2017</time></div>
+            </div>
+          </div>
+          <div class="sl-cab-panel"><h3><i class="bi bi-rss"></i> RSS-каналы</h3>
+            <div class="sl-cab-rows">
+              <div class="sl-cab-row"><i class="bi bi-rss"></i><b>slaed.net — новости проекта</b><span class="sl-chip sl-chip-success">читать</span></div>
+              <div class="sl-cab-row"><i class="bi bi-rss"></i><b>Форум поддержки</b><span class="sl-chip sl-chip-neutral">добавить</span></div>
+              <div class="sl-cab-row"><i class="bi bi-plus-lg"></i><b>Свой адрес канала…</b><span class="sl-chip sl-chip-info">OK</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="sl-cab-demo-item">
+    <div class="sl-cab-demo-label"><span class="sl-cab-demo-number">02</span><span><b>Action Grid</b><small>шапка-герой и вся навигация кабинета крупными плитками с бейджами</small></span><span class="sl-chip sl-chip-info">навигация</span></div>
+    <div class="sl-cab-card">
+      <div class="sl-cab-hero">
+        <div class="sl-cab-ava" style="--sl-cab-ring:#ffa200"><img src="../templates/lite/images/avatars/presets/01.svg" alt="SLAED CMS"><span class="sl-cab-status" title="Онлайн"></span></div>
+        <div class="sl-cab-hero-copy"><span class="sl-cab-kicker">Личный кабинет</span><h2 class="sl-font sl-cab-name">SLAED CMS</h2><div class="sl-cab-rank">Администратор · Клиент</div></div>
+        <div class="sl-cab-hero-side"><span class="sl-chip sl-chip-info"><i class="bi bi-stars"></i> 50 349 пунктов</span><span class="sl-chip sl-chip-success"><i class="bi bi-graph-up-arrow"></i> Опытные · 100%</span><a class="sl-but sl-but-blue" href="#"><i class="bi bi-person-vcard"></i> Публичный профиль</a></div>
+      </div>
+      <div class="sl-cab-agrid">
+        <div class="sl-cab-actions">
+          <a class="sl-cab-act" href="#"><span class="sl-cab-badge">2</span><i class="bi bi-envelope"></i><b>Сообщения</b></a>
+          <a class="sl-cab-act" href="#"><i class="bi bi-people"></i><b>Клиент</b></a>
+          <a class="sl-cab-act" href="#"><span class="sl-cab-badge">12</span><i class="bi bi-star"></i><b>Фавориты</b></a>
+          <a class="sl-cab-act" href="#"><i class="bi bi-gear"></i><b>Настройки</b></a>
+          <a class="sl-cab-act sl-is-exit" href="#"><i class="bi bi-box-arrow-right"></i><b>Выход</b></a>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="sl-cab-demo-item">
+    <div class="sl-cab-demo-label"><span class="sl-cab-demo-number">03</span><span><b>Inbox First</b><small>личные сообщения — главное содержание кабинета</small></span><span class="sl-chip sl-chip-accent">общение</span></div>
+    <div class="sl-cab-card sl-cab-inbox">
+      <div class="sl-cab-inbox-main">
+        <span class="sl-cab-kicker">Личные сообщения</span>
+        <div class="sl-cab-tabsline">
+          <span class="sl-chip sl-chip-info"><i class="bi bi-inbox"></i> Входящие · 2</span>
+          <span class="sl-chip sl-chip-neutral"><i class="bi bi-send"></i> Исходящие · 5</span>
+          <span class="sl-chip sl-chip-neutral"><i class="bi bi-archive"></i> Сохранённые</span>
+          <span class="sl-chip sl-chip-success"><i class="bi bi-pencil"></i> Написать</span>
+        </div>
+        <div class="sl-cab-rows">
+          <div class="sl-cab-msg"><span class="sl-cab-msg-ava"><img src="../templates/lite/images/avatars/presets/04.svg" alt="zik"></span><span><b>zik</b><small>Подскажите по обновлению до 6.3, столкнулся с…</small></span><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 16.07.2026</time></div>
+          <div class="sl-cab-msg"><span class="sl-cab-msg-ava"><img src="../templates/lite/images/avatars/presets/07.svg" alt="VAN"></span><span><b>VAN</b><small>Спасибо за фикс парсера, всё завелось!</small></span><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 15.07.2026</time></div>
+          <div class="sl-cab-msg"><span class="sl-cab-msg-ava"><img src="../templates/lite/images/avatars/presets/05.svg" alt="olevpa"></span><span><b>olevpa</b><small>Вопрос по правам групп в новом профиле…</small></span><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 12.07.2026</time></div>
+        </div>
+      </div>
+      <aside class="sl-cab-inbox-side">
+        <div style="text-align:center"><div class="sl-cab-ava" style="--sl-cab-ring:#ffa200;margin:0 auto"><img src="../templates/lite/images/avatars/presets/01.svg" alt="SLAED CMS"><span class="sl-cab-status"></span></div><h2 class="sl-font sl-cab-name">SLAED CMS</h2><div class="sl-cab-rank">Администратор</div></div>
+        <div class="sl-cab-rows" style="margin-top:12px">
+          <a class="sl-cab-row" href="#"><i class="bi bi-star"></i><b>Фавориты</b><span class="sl-chip sl-chip-accent">12</span></a>
+          <a class="sl-cab-row" href="#"><i class="bi bi-person-vcard"></i><b>Мой профиль</b><span></span></a>
+          <a class="sl-cab-row" href="#"><i class="bi bi-gear"></i><b>Настройки</b><span></span></a>
+          <a class="sl-cab-row" href="#"><i class="bi bi-box-arrow-right"></i><b>Выход</b><span></span></a>
+        </div>
+      </aside>
+    </div>
+  </article>
+
+  <article class="sl-cab-demo-item">
+    <div class="sl-cab-demo-label"><span class="sl-cab-demo-number">04</span><span><b>Bento Cabinet</b><small>кабинет как набор живых плиток: личность, ЛС, фавориты, лента, RSS</small></span><span class="sl-chip sl-chip-warn">bento</span></div>
+    <div class="sl-cab-card sl-cab-bento">
+      <div class="sl-cab-panel">
+        <div class="sl-cab-ava" style="--sl-cab-ring:#ffa200"><img src="../templates/lite/images/avatars/presets/01.svg" alt="SLAED CMS"><span class="sl-cab-status"></span></div>
+        <h2 class="sl-font sl-cab-name">SLAED CMS</h2>
+        <div class="sl-cab-rank">Администратор</div>
+        <div class="sl-cab-chips"><span class="sl-chip sl-chip-accent">Клиент</span><span class="sl-chip sl-chip-success"><i class="bi bi-wifi"></i> Онлайн</span></div>
+        <div class="sl-cab-meter" style="width:100%"><div class="sl-cab-meter-head"><span>Опытные</span><b>100%</b></div><div class="sl-cab-meter-track"><span style="width:100%"></span></div></div>
+        <div class="sl-cab-chips"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-person-vcard"></i> Профиль</a><a class="sl-but" href="#"><i class="bi bi-box-arrow-right"></i></a></div>
+      </div>
+      <div class="sl-cab-panel"><h3><i class="bi bi-envelope"></i> Сообщения</h3><div class="sl-cab-stat"><b>2</b><small>новых входящих</small></div><div class="sl-cab-chips"><span class="sl-chip sl-chip-neutral">исходящих 5</span></div></div>
+      <div class="sl-cab-panel"><h3><i class="bi bi-star"></i> Фавориты</h3><div class="sl-cab-stat"><b>12</b><small>сохранённых материалов</small></div><div class="sl-cab-chips"><span class="sl-chip sl-chip-info">лимит 50</span></div></div>
+      <div class="sl-cab-panel sl-cab-bento-wide"><h3><i class="bi bi-activity"></i> Последняя активность</h3>
+        <div class="sl-cab-rows">
+          <div class="sl-cab-row"><i class="bi bi-chat-text"></i><b>rvg, да, это возможно. Обновлять нужно последовательно…</b><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 22.12.2024</time></div>
+          <div class="sl-cab-row"><i class="bi bi-newspaper"></i><b>SLAED ищет единомышленников — вместе мы сила!</b><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 13.10.2021</time></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="sl-cab-demo-item">
+    <div class="sl-cab-demo-label"><span class="sl-cab-demo-number">05</span><span><b>Slim Toolbar</b><small>тонкая панель личности и действий, вся ширина — контенту</small></span><span class="sl-chip sl-chip-success">компактный</span></div>
+    <div class="sl-cab-card">
+      <div class="sl-cab-toolbar">
+        <span class="sl-cab-who"><span class="sl-cab-ava" style="--sl-cab-ring:#ffa200"><img src="../templates/lite/images/avatars/presets/01.svg" alt="SLAED CMS"></span><span><b style="color:var(--sl-color-text-heading)">SLAED CMS</b><br><small style="color:var(--sl-color-text-muted)">Администратор · Клиент</small></span></span>
+        <span class="sl-chip sl-chip-info"><i class="bi bi-stars"></i> 50 349</span>
+        <a class="sl-but-mini" href="#" title="Сообщения (2)"><i class="bi bi-envelope"></i></a>
+        <a class="sl-but-mini" href="#" title="Фавориты"><i class="bi bi-star"></i></a>
+        <a class="sl-but-mini" href="#" title="Мой профиль"><i class="bi bi-person-vcard"></i></a>
+        <a class="sl-but-mini" href="#" title="Настройки"><i class="bi bi-gear"></i></a>
+        <a class="sl-but-mini" href="#" title="Выход"><i class="bi bi-box-arrow-right"></i></a>
+      </div>
+      <div class="sl-cab-toolbar-body">
+        <span class="sl-cab-kicker">Последняя активность</span>
+        <div class="sl-cab-rows" style="margin-top:8px">
+          <div class="sl-cab-feedline"><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 22.12.2024</time><i class="bi bi-chat-text"></i><a href="#">rvg, да, это возможно. Обновлять нужно последовательно, с версии до версии…</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.8</span></div>
+          <div class="sl-cab-feedline"><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 14.07.2026</time><i class="bi bi-window-stack"></i><a href="#">Пожелания к версии SLAED CMS 6.3</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.9</span></div>
+          <div class="sl-cab-feedline"><time class="sl-chip sl-chip-info sl-date"><i class="bi bi-calendar3"></i> 28.04.2017</time><i class="bi bi-file-earmark-arrow-down"></i><a href="#">SLAED CMS 6.2 Pro — система управления содержимым сайта</a><span class="sl-chip sl-chip-success"><i class="bi bi-star-fill"></i> 4.7</span></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="sl-cab-demo-item">
+    <div class="sl-cab-demo-label"><span class="sl-cab-demo-number">06</span><span><b>Progress Hub</b><small>уровень и вклад в центре, действия вторичны</small></span><span class="sl-chip sl-chip-warn">gamified</span></div>
+    <div class="sl-cab-card sl-cab-prog">
+      <div class="sl-cab-deck-head"><span class="sl-cab-kicker">Ваш прогресс в сообществе</span><div class="sl-cab-chips" style="margin:0"><a class="sl-but sl-but-blue" href="#"><i class="bi bi-person-vcard"></i> Профиль</a><a class="sl-but" href="#"><i class="bi bi-gear"></i></a></div></div>
+      <div class="sl-cab-prog-layout">
+        <div>
+          <div class="sl-cab-ring"><span><span><b>50 349</b><small>пунктов · Опытные</small></span></span></div>
+          <div class="sl-cab-chips"><span class="sl-chip sl-chip-success">Рейтинг 3.25</span><span class="sl-chip sl-chip-accent">Клиент</span></div>
+        </div>
+        <div>
+          <div class="sl-cab-panel"><h3><i class="bi bi-boxes"></i> Вклад по модулям</h3>
+            <div class="sl-cab-rows">
+              <div class="sl-cab-row"><i class="bi bi-chat-text"></i><b>Комментарии</b><span class="sl-chip sl-chip-info">227</span></div>
+              <div class="sl-cab-row"><i class="bi bi-newspaper"></i><b>Новости</b><span class="sl-chip sl-chip-info">90</span></div>
+              <div class="sl-cab-row"><i class="bi bi-question-circle"></i><b>Вопросы и ответы</b><span class="sl-chip sl-chip-info">71</span></div>
+            </div>
+          </div>
+          <div class="sl-cab-panel" style="margin-top:12px"><h3><i class="bi bi-envelope"></i> Быстрые действия</h3>
+            <div class="sl-cab-chips" style="justify-content:flex-start"><span class="sl-chip sl-chip-info"><i class="bi bi-envelope"></i> Сообщения · 2</span><span class="sl-chip sl-chip-accent"><i class="bi bi-star"></i> Фавориты · 12</span><span class="sl-chip sl-chip-neutral"><i class="bi bi-rss"></i> RSS</span><span class="sl-chip sl-chip-danger"><i class="bi bi-box-arrow-right"></i> Выход</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+</main>
+</body>
+</html>
