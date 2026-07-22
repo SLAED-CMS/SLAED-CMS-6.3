@@ -7519,14 +7519,20 @@ dialog.sl-modal.sl-modal-wide {
 }
 
 .sl-profile-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   margin: 0 0 10px;
   color: var(--sl-color-text-heading);
   font-size: 13px;
 }
 
 .sl-profile-panel h3 i {
-  margin-right: 5px;
   color: var(--sl-color-primary);
+}
+
+.sl-profile-panel h3 .sl-profile-feed-live {
+  margin-left: auto;
 }
 
 .sl-profile-wide {
@@ -7722,6 +7728,7 @@ a.sl-profile-hub-row:hover {
 }
 
 .sl-profile-feed {
+  position: relative;
   margin-top: 14px;
 }
 
@@ -7737,19 +7744,8 @@ a.sl-profile-hub-row:hover {
   font-size: 13px;
 }
 
-/* Activity indicator overlays the top-right of the first chip row; tab panels keep the full feed width */
-.sl-profile-feed-bar {
-  position: relative;
-}
-
-.sl-profile-feed-bar .sl-tabs-nav {
-  padding-right: 38px;
-}
-
+/* Live indicator circle; inside the feed it pins to the title line, inside a panel heading it flows to the right corner */
 .sl-profile-feed-live {
-  position: absolute;
-  top: 10px;
-  right: 0;
   display: grid;
   place-items: center;
   width: var(--sl-size-chip);
@@ -7760,8 +7756,20 @@ a.sl-profile-hub-row:hover {
   font-size: var(--sl-size-icon-xs);
 }
 
+.sl-profile-feed .sl-profile-feed-live {
+  position: absolute;
+  top: -5px;
+  right: 0;
+}
+
 .sl-profile-feed-live i {
   animation: sl-profile-feed-spin 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-profile-feed-live i {
+    animation: none;
+  }
 }
 
 @keyframes sl-profile-feed-spin {
@@ -7901,6 +7909,280 @@ a.sl-profile-hub-row:hover {
 
 .sl-profile-entry .sl-chip {
   margin: 0;
+}
+
+/* Cabinet home (Command Deck): identity rail reuses the sl-profile-* pieces, action shelf reuses the files-category icon mechanics (sl-cat-ico + sl-cat-tone-N) */
+.sl-cab-deck {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--sl-color-border-subtle);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  box-shadow: var(--sl-shadow-soft);
+}
+
+.sl-cab-rail {
+  padding: 22px 18px;
+  border-right: 1px solid var(--sl-color-border-subtle);
+  background: linear-gradient(180deg, var(--sl-color-bg-soft), var(--sl-color-bg));
+  text-align: center;
+}
+
+.sl-cab-main {
+  min-width: 0;
+  padding: 18px;
+}
+
+.sl-cab-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sl-space-md);
+  margin-bottom: 12px;
+}
+
+.sl-cab-kicker {
+  color: var(--sl-color-text-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sl-cab-actions {
+  --sl-cat-tone: var(--sl-color-tone-info);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: var(--sl-space-md);
+}
+
+.sl-cab-act {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 14px 8px 12px;
+  border: 1px solid var(--sl-color-border-subtle);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text-muted);
+  text-align: center;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sl-cab-act:hover {
+  border-color: color-mix(in srgb, var(--sl-cat-tone) 45%, var(--sl-color-border));
+  transform: translateY(-2px);
+}
+
+.sl-cab-act:hover .sl-cat-ico .bi {
+  transform: scale(1.1);
+}
+
+.sl-cab-act b {
+  color: var(--sl-color-text-heading);
+  font-size: 12px;
+}
+
+.sl-cab-act small {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--sl-color-text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-cab-badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--sl-color-danger);
+  color: var(--sl-color-on-dark);
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 20px;
+}
+
+/* Community progress ring: conic fill follows the point-level percent, the center shows the points and reached group; sized and shadowed exactly like sl-profile-avatar */
+.sl-cab-ring {
+  --sl-cab-level: 0%;
+  display: grid;
+  place-items: center;
+  width: 124px;
+  height: 124px;
+  margin: 18px auto 6px;
+  border-radius: 50%;
+  background: conic-gradient(var(--sl-color-success) 0 var(--sl-cab-level), var(--sl-color-bg-soft-soft) var(--sl-cab-level) 100%);
+  box-shadow: 0 0 0 4px var(--sl-color-bg), var(--sl-shadow-panel);
+}
+
+.sl-cab-ring > span {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: var(--sl-color-bg);
+  text-align: center;
+}
+
+.sl-cab-ring b {
+  display: block;
+  color: var(--sl-color-text-heading);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.sl-cab-ring small {
+  display: block;
+  padding: 0 8px;
+  color: var(--sl-color-text-muted);
+  font-size: 9px;
+}
+
+/* Compact strip of the same tiles for inner cabinet pages */
+.sl-cab-nav {
+  --sl-cat-tone: var(--sl-color-tone-info);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sl-space-sm);
+  margin-bottom: 16px;
+}
+
+.sl-cab-nav .sl-cab-act {
+  --sl-size-tile: 34px;
+  flex: 0 0 auto;
+  gap: 4px;
+  padding: 8px 10px 7px;
+  min-width: 76px;
+}
+
+.sl-cab-nav .sl-cab-act b {
+  font-size: 11px;
+}
+
+.sl-cab-nav .sl-cab-act .sl-cat-ico .bi {
+  font-size: var(--sl-size-icon-sm);
+}
+
+/* The lower section spans the whole deck width under the rail, like the profile contribution hub; the grid gap spaces the stacked panels */
+.sl-cab-lower {
+  display: grid;
+  gap: 12px;
+  grid-column: 1 / -1;
+  padding: 16px 18px 18px;
+  border-top: 1px solid var(--sl-color-border-subtle);
+}
+
+/* Cabinet panels reuse sl-profile-panel; only the scroll-window sizing and column spacing are cabinet-specific */
+.sl-cab-main > .sl-profile-panel {
+  margin-top: 12px;
+}
+
+.sl-profile-panel .sl-profile-scroll {
+  height: 150px;
+  background: var(--sl-color-bg);
+}
+
+.sl-profile-panel .sl-profile-scroll::before {
+  background: linear-gradient(180deg, var(--sl-color-bg), transparent);
+}
+
+.sl-profile-panel .sl-profile-scroll::after {
+  background: linear-gradient(0deg, var(--sl-color-bg), transparent);
+}
+
+.sl-cab-row {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  border-bottom: 1px solid var(--sl-color-border-subtle);
+  color: var(--sl-color-text-muted);
+}
+
+.sl-cab-row:last-child {
+  border-bottom: 0;
+}
+
+.sl-cab-row > i {
+  color: var(--sl-color-primary);
+  text-align: center;
+}
+
+.sl-cab-row b {
+  overflow: hidden;
+  color: var(--sl-color-text-heading);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sl-cab-row .sl-chip {
+  margin: 0;
+}
+
+.sl-cab-msg-ava {
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--sl-color-bg-soft-soft);
+}
+
+.sl-cab-msg-ava img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sl-cab-rss-form {
+  display: flex;
+  gap: var(--sl-space-sm);
+  margin-top: 10px;
+}
+
+.sl-cab-rss-form .sl-form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sl-cab-rss-form .sl-but {
+  flex: 0 0 auto;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sl-cab-rss-out:empty {
+  display: none;
+}
+
+.sl-profile-panel .sl-profile-feed {
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .sl-cab-deck {
+    grid-template-columns: 1fr;
+  }
+
+  .sl-cab-rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--sl-color-border-subtle);
+  }
+
+  .sl-cab-actions {
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  }
 }
 
 .sl-profile-empty {

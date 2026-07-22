@@ -1,0 +1,82 @@
+<div class="sl-cab-deck">
+  <aside class="sl-cab-rail">
+    <div class="sl-profile-avatar"{% if has_level or ring %} style="{% if has_level %}--sl-profile-level:{{ level }}%;{% endif %}{% if ring %}--sl-profile-ring:{{ ring }};{% endif %}"{% endif %}>
+      <img src="{{ avatar }}" alt="{{ name }}">
+      <span class="sl-profile-status" title="{{ online_label }}"></span>
+    </div>
+    <h1 class="sl-font sl-profile-name">{{ name }}</h1>
+    {% if rank %}<div class="sl-profile-rank">{{ rank }}</div>{% endif %}
+    <div class="sl-profile-chips">
+      {% if group_name %}<span class="sl-chip sl-chip-accent" title="{{ group_label }}"><i class="bi bi-people-fill" aria-hidden="true"></i> {{ group_name }}</span>{% endif %}
+      <span class="sl-chip sl-chip-success"><i class="bi bi-wifi" aria-hidden="true"></i> {{ online_label }}</span>
+    </div>
+    <div class="sl-profile-chips">
+      {% if rating %}<span class="sl-chip sl-chip-success" title="{{ rating_label }}"><i class="bi bi-star-fill" aria-hidden="true"></i> {{ rating }}</span>{% endif %}
+      {% if has_points and not has_level %}<span class="sl-chip sl-chip-info" title="{{ points_label }}"><i class="bi bi-stars" aria-hidden="true"></i> {{ points_text }}</span>{% endif %}
+    </div>
+    {% if has_level %}
+    <div class="sl-cab-ring" style="--sl-cab-level:{{ level }}%"{% if level_next %} title="{{ level_next }}"{% endif %}>
+      <span><span><b>{{ points_text }}</b><small>{{ points_label }}{% if level_group %} · {{ level_group }}{% endif %}</small><small>{{ level }}%</small></span></span>
+    </div>
+    {% endif %}
+  </aside>
+  <div class="sl-cab-main">
+    <div class="sl-cab-head">
+      <span class="sl-cab-kicker">{{ kicker }}</span>
+      {% if lastvisit %}<span class="sl-chip sl-chip-neutral" title="{{ lastvisit_label }}"><i class="bi bi-clock-history" aria-hidden="true"></i> {{ lastvisit }}</span>{% endif %}
+    </div>
+    <div class="sl-cab-actions">
+      {% for item in actions %}
+      <a class="sl-cab-act sl-cat-tone-{{ item.tone }}" href="{{ item.href }}" title="{{ item.title }}">
+        {% if item.badge %}<span class="sl-cab-badge">{{ item.badge }}</span>{% endif %}
+        <span class="sl-cat-ico"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span>
+        <b>{{ item.label }}</b>
+        {% if item.sub %}<small>{{ item.sub }}</small>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% if pms %}
+    <div class="sl-profile-panel">
+      <h3><i class="bi bi-envelope" aria-hidden="true"></i> {{ pm_title }}<span class="sl-profile-feed-live" title="{{ pm_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
+      <div class="sl-profile-scroll" data-sl-profile-scroll>
+        <div class="sl-profile-scroll-feed">
+          {% for pm in pms %}
+          <a class="sl-cab-row" href="{{ pm_href }}"><span class="sl-cab-msg-ava"><img src="{{ pm.avatar }}" alt="{{ pm.name }}"></span><b>{{ pm.name }} · {{ pm.title }}</b><span class="sl-chip sl-chip-info"><i class="bi bi-calendar3" aria-hidden="true"></i> {{ pm.date }}</span></a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="sl-cab-lower">
+    {% if favs %}
+    <div class="sl-profile-panel">
+      <h3><i class="bi bi-star" aria-hidden="true"></i> {{ fav_title }}<span class="sl-profile-feed-live" title="{{ fav_title }}"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span></h3>
+      <div class="sl-profile-scroll" data-sl-profile-scroll>
+        <div class="sl-profile-scroll-feed">
+          {% for fav in favs %}
+          <a class="sl-cab-row" href="{{ fav.href }}"><i class="bi bi-{{ fav.icon }}" aria-hidden="true"></i><b>{{ fav.title }}</b><span class="sl-chip sl-chip-neutral"><i class="bi bi-{{ fav.chip_icon }}" aria-hidden="true"></i> {{ fav.mod }}</span></a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% if activity_html %}<div class="sl-profile-panel">{{{ activity_html }}}</div>{% endif %}
+    {% if has_rss %}
+    <div class="sl-profile-panel">
+      <h3><i class="bi bi-rss" aria-hidden="true"></i> {{ rss_title }}</h3>
+      {% if rss_options_html %}
+      <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
+        <select class="sl-form-control" name="url" title="{{ rss_select_label }}">{{{ rss_options_html }}}</select>
+        <button class="sl-but" type="submit">{{ rss_select_label }}</button>
+      </form>
+      {% endif %}
+      <form class="sl-cab-rss-form" method="post" action="{{ rss_action }}" hx-post="{{ rss_action }}" hx-target="#repcabrss" hx-swap="innerHTML" hx-push-url="false">
+        <input class="sl-form-control" type="text" name="url" maxlength="200" placeholder="{{ rss_url_label }}" title="{{ rss_url_label }}">
+        <button class="sl-but" type="submit">{{ ok_label }}</button>
+      </form>
+    </div>
+    {% endif %}
+    <div id="repcabrss" class="sl-profile-panel sl-cab-rss-out"></div>
+  </div>
+</div>

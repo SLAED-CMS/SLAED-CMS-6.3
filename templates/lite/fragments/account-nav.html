@@ -1,0 +1,9 @@
+<nav class="sl-cab-nav">
+  {% for item in items %}
+  <a class="sl-cab-act sl-cat-tone-{{ item.tone }}" href="{{ item.href }}" title="{{ item.title }}">
+    {% if item.badge %}<span class="sl-cab-badge">{{ item.badge }}</span>{% endif %}
+    <span class="sl-cat-ico"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i></span>
+    <b>{{ item.label }}</b>
+  </a>
+  {% endfor %}
+</nav>

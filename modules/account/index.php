@@ -369,35 +369,12 @@ function view(): void {
             }
             $rating = getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1);
             $field = ($field) ? getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]) : '';
-            $rgroup = [];
-            $uranks = '';
-            $ucolor = '';
-            $base = 0;
-            $next = 0;
-            $level = 0;
-            $nextlab = '';
-            if ($conf['users']['point'] && $point) {
-                $result = $db->getSqlQuery('SELECT name, rank, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
-                while([$guname, $gurank, $gupts, $gucol] = $db->getSqlRow($result)) {
-                    if ((int)$gupts > (int)$point) {
-                        if (!$next) $next = (int)$gupts;
-                        continue;
-                    }
-                    $rgroup[] = $guname;
-                    $uranks = $gurank;
-                    $ucolor = $gucol;
-                    $base = (int)$gupts;
-                }
-                $grank = ($grank) ? $grank : $uranks;
-                if ($next > $base) {
-                    $level = min(99, intval(($point - $base) / ($next - $base) * 100));
-                    $nextlab = sprintf(_ACCOUNT_NEXT, $next - $point);
-                } else {
-                    $level = 100;
-                }
-            }
-            $ring = $gcolor ?: $ucolor;
-            $ring = ($ring && preg_match('/^#[0-9a-f]{6}$/i', $ring)) ? $ring : '';
+            $lvl = getUserLevelData((int)$point, (string)$gcolor, (string)$grank);
+            $rgroup = $lvl['groups'];
+            $grank = $lvl['rank'];
+            $ring = $lvl['ring'];
+            $level = $lvl['level'];
+            $nextlab = $lvl['nextlab'];
             $tones = ['neutral', 'neutral', 'info', 'info', 'success', 'accent'];
             $chips = [];
             foreach ($rgroup as $pos => $guname) $chips[] = ['name' => $guname, 'tone' => $tones[min($pos, 5)]];
@@ -566,43 +543,99 @@ function view(): void {
 }
 
 function profil(): void {
-    global $conf, $user, $tpl;
-    if (is_user()) {
-        setHead(['title' => _THISISYOURPAGE]);
-        $cont = $tpl->getHtmlFrag('title', ['title' => _THISISYOURPAGE, 'is_level_one' => true]);
-        $cont .= getUserNav();
-        $cont .= getProfileLastView(intval($user[0]));
-        $title = [];
-        $text = [];
-        if (($conf['rss']['use'] ?? 0) == 1) {
-            $url = getVar('post', 'url', 'url');
-            $link = ($url) ? $url : 'http://';
-            $title[] = _RSS;
-            $text[] = $tpl->getHtmlPart('form-add', [
-                'action' => 'index.php?name='.$conf['name'],
-                'fields' => $tpl->getHtmlFrag('form-field-row', [
-                    'label' => _SELECTASITE,
-                    'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'url', 'options_html' => rss_select()]),
-                ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
-            ])
-            .$tpl->getHtmlPart('form-add', [
-                'action' => 'index.php?name='.$conf['name'],
-                'fields' => $tpl->getHtmlFrag('form-field-row', [
-                    'label' => _ORTYPEURL,
-                    'hide_label' => true,
-                    'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'url', 'value_attr' => $link, 'maxlength_num' => 200, 'placeholder_text' => _ORTYPEURL]),
-                ]),
-                'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK]),
-            ])
-            .rss_read($url, '');
-        }
-        $cont .= getNaviTabs(0, 'tab', $title, $text);
-        echo $cont;
-        setFoot();
-    } else {
+    global $db, $conf, $tpl;
+    if (!is_user()) {
         account();
+        return;
     }
+    $inf = getUserInfo();
+    $uid = intval($inf['id'] ?? 0);
+    setHead(['title' => _THISISYOURPAGE]);
+    $grow = ($inf['grp'] ?? 0)
+        ? $db->getSqlRow($db->getSqlQuery('SELECT name, rank, color FROM '.PREFIX_DB.'_groups WHERE id = :gid', ['gid' => $inf['grp']]))
+        : null;
+    $lvl = getUserLevelData((int)($inf['points'] ?? 0), (string)($grow['color'] ?? ''), (string)($grow['rank'] ?? ''));
+    $pms = [];
+    if ($conf['privat']['act']) {
+        $result = $db->getSqlQuery('SELECT p.title, p.time, u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id)'
+            .' WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT 6', ['uid' => $uid]);
+        while ($row = $db->getSqlRow($result)) {
+            $pms[] = [
+                'avatar' => ($row['name']) ? getUserAvatarUrl(['avatar' => (string)$row['avatar']]) : getUserAvatarUrl(),
+                'name' => $row['name'] ?: _ANONYM,
+                'title' => cutstr($row['title'], 45),
+                'date' => format_time($row['time']),
+            ];
+        }
+    }
+    $favs = [];
+    if ($conf['favorites']['favact']) {
+        $fmap = [];
+        $result = $db->getSqlQuery('SELECT fid, modul FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC LIMIT 8', ['uid' => $uid]);
+        while ([$fid, $fmod] = $db->getSqlRow($result)) {
+            if (preg_match('/^[a-z_]+$/', (string)$fmod)) $fmap[$fmod][] = (int)$fid;
+        }
+        $micons = getProfileModules();
+        foreach ($fmap as $fmod => $fids) {
+            $ftable = ($fmod === 'shop') ? 'products' : $fmod;
+            $fres = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_'.$ftable.' WHERE id IN ('.implode(', ', $fids).')');
+            while ([$fid, $ftitle] = $db->getSqlRow($fres)) {
+                $favs[] = [
+                    'icon' => $micons[$fmod]['icon'] ?? (($fmod === 'help') ? 'life-preserver' : (($fmod === 'shop') ? 'bag' : 'star')),
+                    'chip_icon' => $conf['modules'][$fmod]['icon'] ?? 'folder',
+                    'title' => cutstr($ftitle, 60),
+                    'href' => 'index.php?name='.$fmod.'&op=view&id='.$fid,
+                    'mod' => getModuleName($fmod),
+                ];
+            }
+        }
+    }
+    echo $tpl->getHtmlPart('account-home', [
+        'kicker' => _THISISYOURPAGE,
+        'name' => (string)$inf['name'],
+        'avatar' => getUserAvatarUrl(['avatar' => (string)($inf['avatar'] ?? '')]),
+        'ring' => $lvl['ring'],
+        'has_level' => !empty($conf['users']['point']) && !empty($inf['points']),
+        'level' => $lvl['level'],
+        'level_group' => ($lvl['groups']) ? end($lvl['groups']) : '',
+        'level_next' => $lvl['nextlab'],
+        'rank' => (string)($inf['rank'] ?? ''),
+        'online_label' => _ONLINE,
+        'group_name' => (string)($grow['name'] ?? ''),
+        'group_label' => _SPEC_GROUP,
+        'has_points' => !empty($conf['users']['point']),
+        'points_text' => number_format((int)($inf['points'] ?? 0), 0, '', "\u{202F}"),
+        'points_label' => _POINTS,
+        'rating' => ((int)($inf['votes'] ?? 0) > 0) ? number_format($inf['tvotes'] / $inf['votes'], 2) : '',
+        'rating_label' => _RATING,
+        'profile_href' => 'index.php?name='.$conf['name'].'&op=view&id='.$uid,
+        'profile_label' => _PERSONALINFO,
+        'lastvisit' => ($inf['lastvis'] ?? '') ? format_time($inf['lastvis'], _TIMESTRING) : '',
+        'lastvisit_label' => _LAST_VISIT,
+        'actions' => getUserNavItems(),
+        'pm_title' => _PRIVAT,
+        'pm_href' => 'index.php?name='.$conf['name'].'&op=privat',
+        'pms' => $pms,
+        'fav_title' => _FAVORITES,
+        'favs' => $favs,
+        'has_rss' => ($conf['rss']['use'] ?? 0) == 1,
+        'rss_title' => _RSS,
+        'rss_action' => 'index.php?name='.$conf['name'].'&op=rss',
+        'rss_select_label' => _SELECTASITE,
+        'rss_options_html' => (($conf['rss']['use'] ?? 0) == 1) ? rss_select() : '',
+        'rss_url_label' => _ORTYPEURL,
+        'ok_label' => _OK,
+        'activity_html' => getProfileLastView($uid),
+    ]);
+    setFoot();
+}
+
+function rssfeed(): void {
+    global $conf;
+    if (!is_user() || ($conf['rss']['use'] ?? 0) != 1) exit;
+    echo rss_read(getVar('req', 'url', 'url', ''), '');
+    exit;
 }
 
 function privat(): void {
@@ -1123,6 +1156,7 @@ switch ($op) {
     case 'finnewuser': finnewuser(); break;
     case 'network': network(); break;
     case 'privat': privat(); break;
+    case 'rss': rssfeed(); break;
     case 'favorites': favorites(); break;
     case 'view': view(); break;
     case 'login': login(); break;

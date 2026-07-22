@@ -4363,7 +4363,7 @@ function rss_read(mixed $url, mixed $id): string {
                     preg_match('#<pubDate>(.*)</pubDate>#Uism', $items[1][$i], $rss_date);
                     preg_match('#<guid>(.*)</guid>(.*)#Uism', $items[1][$i], $rss_guid);
                     preg_match('#<description>(.*)</description>#Uism', $items[1][$i], $rss_desc);
-                    $temp = $conf['rss']['temp'];
+                    $temp = html_entity_decode($conf['rss']['temp'], ENT_QUOTES, 'UTF-8');
                     $rss_title = $rss_title[1] ?? '';
                     $rss_date = $rss_date[1] ?? '';
                     $rss_guid = $rss_guid[1] ?? '';

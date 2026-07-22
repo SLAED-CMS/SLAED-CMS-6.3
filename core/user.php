@@ -108,47 +108,53 @@ function setMessageShow(): string {
     return '';
 }
 
-# Render the user account navigation menu with icon links
-function getUserNav(): string {
-    global $conf, $tpl;
+# Build the account navigation items with icon, tone, tooltip and optional badge/sub texts per active module; $home prepends the cabinet home link for inner pages
+function getUserNavItems(bool $home = false): array {
+    global $db, $conf;
     $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
     if ($conf['name'] !== 'account') getLang('account');
-
-    $navs = [[_HOME, _RETURNACCOUNT, 'index.php?name=account', 'account/home.png']];
-
+    $items = [];
+    if ($home) $items[] = ['label' => _HOME, 'title' => _RETURNACCOUNT, 'href' => 'index.php?name=account', 'icon' => 'house'];
     if ($conf['privat']['act']) {
-        $navs[] = [_MESSAGES, _PRIVAT, 'index.php?name=account&op=privat', 'account/messages.png'];
+        [$new] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 0', ['uid' => $uid]));
+        $items[] = ['label' => _MESSAGES, 'title' => _PRIVAT, 'href' => 'index.php?name=account&op=privat', 'icon' => 'envelope', 'badge' => $new ? (string)$new : ''];
     }
     if (is_active('clients') && isModGroup('clients')) {
         getLang('clients');
-        $navs[] = [_PRODUCTS, _PRODUCTSINFO, 'index.php?name=clients', 'account/product.png'];
+        $items[] = ['label' => _PRODUCTS, 'title' => _PRODUCTSINFO, 'href' => 'index.php?name=clients', 'icon' => 'box-seam'];
     }
     if (is_active('shop')) {
         getLang('shop');
-        $navs[] = [_CLIENT, _CLIENTINFO, 'index.php?name=shop&op=clients', 'account/clients.png'];
+        $items[] = ['label' => _CLIENT, 'title' => _CLIENTINFO, 'href' => 'index.php?name=shop&op=clients', 'icon' => 'people'];
         if (($conf['shop']['part'] ?? 0) === 1) {
-            $navs[] = [_PARTNER, _PARTNERINFO, 'index.php?name=shop&op=partners', 'account/partners.png'];
+            $items[] = ['label' => _PARTNER, 'title' => _PARTNERINFO, 'href' => 'index.php?name=shop&op=partners', 'icon' => 'briefcase'];
         }
     }
     if (is_active('help') && isModGroup('help')) {
         getLang('help');
-        $navs[] = [_HELP, _HELPINFO, 'index.php?name=help', 'account/help.png'];
+        $items[] = ['label' => _HELP, 'title' => _HELPINFO, 'href' => 'index.php?name=help', 'icon' => 'life-preserver'];
     }
     if ($conf['favorites']['favact']) {
-        $navs[] = [_FAVORITES, _FAVORITES, 'index.php?name=account&op=favorites', 'account/favorites.png'];
+        [$fnum] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
+        $items[] = [
+            'label' => _FAVORITES, 'title' => _FAVORITES, 'href' => 'index.php?name=account&op=favorites',
+            'icon' => 'star', 'sub' => $fnum.' / '.$conf['favorites']['favorites'],
+        ];
     }
-    $navs[] = [_INFO,   _PERSONALINFO, 'index.php?name=account&op=view&id='.$uid, 'account/account.png'];
-    $navs[] = [_CHANGE, _CHANGE,       'index.php?name=account&op=edithome',           'account/preferences.png'];
-    $navs[] = [_LOGOUT, _LOGOUT,       'index.php?name=account&op=logout',             'account/exit.png'];
+    $items[] = ['label' => _INFO, 'title' => _PERSONALINFO, 'href' => 'index.php?name=account&op=view&id='.$uid, 'icon' => 'person-vcard'];
+    $items[] = ['label' => _CHANGE, 'title' => _CHANGE, 'href' => 'index.php?name=account&op=edithome', 'icon' => 'gear'];
+    $items[] = ['label' => _LOGOUT, 'title' => _LOGOUT, 'href' => 'index.php?name=account&op=logout', 'icon' => 'box-arrow-right'];
+    foreach ($items as $pos => $item) {
+        $items[$pos]['tone'] = $pos % 6;
+        if (!isset($item['sub'])) $items[$pos]['sub'] = ($item['title'] !== $item['label']) ? $item['title'] : '';
+    }
+    return $items;
+}
 
-    $items = '';
-    foreach ($navs as [$titl, $itit, $link, $icon]) {
-        $items .= $tpl->getHtmlFrag('block-content', [
-            'is_catflex_box' => true,
-            'content' => $tpl->getHtmlFrag('link', ['href' => $link, 'title' => $itit, 'img_src' => getThemeImagePath($icon), 'img_alt' => $itit, 'label' => $titl, 'is_line_break' => true]),
-        ]);
-    }
-    return $tpl->getHtmlFrag('block-content', ['is_catflex_cont' => true, 'content' => $items]);
+# Render the compact account navigation strip with icon tiles for inner cabinet pages
+function getUserNav(): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('account-nav', ['items' => getUserNavItems(true)]);
 }
 
 # Check if the logged-in user meets the group or points requirement for a module
@@ -196,6 +202,45 @@ function getUserAvatarUrl(array $userinfo = [], bool $deleted = false): string {
     $ava = $userinfo['avatar'] ?? '';
     if (str_starts_with($ava, 'presets/')) return (preg_match('#^presets/[\w.-]+\.(gif|png|jpe?g|svg)$#i', $ava) && file_exists($base.$ava)) ? $base.$ava : $base.'system/user.svg';
     return ($ava && file_exists($conf['users']['adirectory'].'/'.$ava)) ? $conf['users']['adirectory'].'/'.$ava : $base.'system/user.svg';
+}
+
+# Resolve point-level data for a user: reached point groups, ring color, progress percent and next-group hint; group color/rank override the point-group ones
+function getUserLevelData(int $point, string $gcolor = '', string $grank = ''): array {
+    global $db, $conf;
+    $rgroup = [];
+    $uranks = '';
+    $ucolor = '';
+    $base = 0;
+    $next = 0;
+    $level = 0;
+    $nextlab = '';
+    if ($conf['users']['point'] && $point) {
+        $result = $db->getSqlQuery('SELECT name, rank, points, color FROM '.PREFIX_DB."_groups WHERE extra != '1' ORDER BY points ASC");
+        while ([$guname, $gurank, $gupts, $gucol] = $db->getSqlRow($result)) {
+            if ((int)$gupts > $point) {
+                if (!$next) $next = (int)$gupts;
+                continue;
+            }
+            $rgroup[] = $guname;
+            $uranks = $gurank;
+            $ucolor = $gucol;
+            $base = (int)$gupts;
+        }
+        if ($next > $base) {
+            $level = min(99, intval(($point - $base) / ($next - $base) * 100));
+            $nextlab = sprintf(_ACCOUNT_NEXT, $next - $point);
+        } else {
+            $level = 100;
+        }
+    }
+    $ring = $gcolor ?: $ucolor;
+    return [
+        'groups' => $rgroup,
+        'rank' => $grank ?: $uranks,
+        'ring' => ($ring && preg_match('/^#[0-9a-f]{6}$/i', $ring)) ? $ring : '',
+        'level' => $level,
+        'nextlab' => $nextlab,
+    ];
 }
 
 # Drop the cached sidebar private-message counters so the next page render recounts them after a mailbox mutation
@@ -818,10 +863,12 @@ function getFavoriteList(int $obj = 0): string {
         $fstatus = 'info';
     }
 
+    $fmassiv = [];
+    $ffmassiv = [];
     $result = $db->getSqlQuery('SELECT fid, modul FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
     while ([$fid, $modul] = $db->getSqlRow($result)) $fmassiv[$modul][] = $fid;
 
-    if (is_array($fmassiv)) {
+    if ($fmassiv) {
         foreach ($fmassiv as $key => $val) {
             $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
             if (!$ids) continue;
