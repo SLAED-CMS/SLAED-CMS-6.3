@@ -17,6 +17,7 @@
           <a href="{{ lost_link.href }}" title="{{ lost_link.title }}" class="sl-chip sl-chip-danger"><i class="bi bi-key" aria-hidden="true"></i>{{ lost_link.label }}</a>
           <a href="{{ register_link.href }}" title="{{ register_link.title }}" class="sl-chip sl-chip-success"><i class="bi bi-person-plus" aria-hidden="true"></i>{{ register_link.label }}</a>
         </li>
+        {% if oauth_html %}<li class="sl-login-oauth">{{{ oauth_html }}}</li>{% endif %}
       </ul>
       {% if token %}<input type="hidden" name="{{ token_field.name_attr }}" value="{{ token_field.value_attr }}">{% endif %}
       <input type="hidden" name="{{ refer_field.name_attr }}" value="{{ refer_field.value_attr }}">

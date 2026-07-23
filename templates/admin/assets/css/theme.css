@@ -324,6 +324,18 @@ input.sl-but-blue[value="ОК"] {
   cursor: help;
 }
 
+.sl-session-note {
+  opacity: 0.75;
+}
+
+.sl-code-row-odd {
+  background-color: var(--sl-color-bg-soft);
+}
+
+.sl-code-row-even {
+  background-color: var(--sl-color-bg);
+}
+
 .sl-small {
   margin: 5px;
   font-style: italic;
@@ -2071,7 +2083,6 @@ tr.sl-row-collapsed {
   display: flex;
   flex-direction: row-reverse;
   align-items: center;
-  gap: var(--sl-space-xs);
   padding: 2px;
   border: 1px solid transparent;
   border-radius: 9999px;
@@ -2100,6 +2111,11 @@ tr.sl-row-collapsed {
 }
 
 .sl-dial .sl-dial-item {
+  min-width: 0;
+  max-width: 0;
+  margin-inline-end: 0;
+  padding-inline: 0;
+  overflow: hidden;
   opacity: 0;
   transform: translateX(8px) scale(0.6);
   pointer-events: none;
@@ -2107,11 +2123,17 @@ tr.sl-row-collapsed {
     background-color 0.2s ease,
     color 0.2s ease,
     transform 0.18s ease,
-    opacity 0.18s ease;
+    opacity 0.18s ease,
+    max-width 0.18s ease,
+    min-width 0.18s ease,
+    margin 0.18s ease;
 }
 
 .sl-dial.sl-open .sl-dial-item,
 .sl-dial:hover .sl-dial-item {
+  min-width: var(--sl-size-chip);
+  max-width: var(--sl-size-chip);
+  margin-inline-end: var(--sl-space-xs);
   opacity: 1;
   transform: none;
   pointer-events: auto;

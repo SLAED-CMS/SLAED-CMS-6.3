@@ -1,0 +1,21 @@
+{% if nopw_text %}
+<div class="sl-alert sl-alert-info">
+  <div class="sl-alert-body">
+    <p class="sl-alert-text">{{ nopw_text }} <a href="{{ nopw_href }}">{{ nopw_label }}</a></p>
+  </div>
+</div>
+{% endif %}
+{% if rows %}
+<ul class="sl-oauth-list">
+  {% for item in rows %}
+  <li class="sl-oauth-item">
+    <span class="sl-oauth-name"><i class="bi bi-{{ item.prov }}" aria-hidden="true"></i> {{ item.label }}</span>
+    {% if item.email %}<span class="sl-oauth-mail">{{ item.email }}</span>{% endif %}
+    {% if item.since %}<span class="sl-oauth-since">{{ item.since }}</span>{% endif %}
+    {{{ item.unlink_html }}}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if none_text %}<p class="sl-oauth-note">{{ none_text }}</p>{% endif %}
+{{{ buttons_html }}}

@@ -448,6 +448,21 @@ CREATE TABLE `{prefix}_newsletter` (
   KEY `time` (`time`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_oauth_temp` (
+  `token` CHAR(64) NOT NULL,
+  `kind` VARCHAR(10) NOT NULL DEFAULT '',
+  `provider` VARCHAR(32) NOT NULL DEFAULT '',
+  `nonce` CHAR(64) NOT NULL DEFAULT '',
+  `verifier` VARCHAR(128) NOT NULL DEFAULT '',
+  `uid` VARCHAR(255) NOT NULL DEFAULT '',
+  `email` VARCHAR(255) NOT NULL DEFAULT '',
+  `uname` VARCHAR(128) NOT NULL DEFAULT '',
+  `redirect` VARCHAR(512) NOT NULL DEFAULT '',
+  `time` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`token`),
+  KEY `time` (`time`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_order` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `email` VARCHAR(255) NOT NULL,
@@ -602,6 +617,19 @@ CREATE TABLE `{prefix}_session` (
   KEY `ip` (`ip`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_user_oauth` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `provider` VARCHAR(32) NOT NULL DEFAULT '',
+  `puid` VARCHAR(255) NOT NULL DEFAULT '',
+  `email` VARCHAR(255) NOT NULL DEFAULT '',
+  `linked` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `lastlog` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_puid` (`provider`, `puid`(191)),
+  UNIQUE KEY `uid_provider` (`uid`, `provider`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_users` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(25) NOT NULL,
@@ -636,7 +664,6 @@ CREATE TABLE `{prefix}_users` (
   `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
   `field` TEXT NOT NULL,
   `agent` VARCHAR(255) NOT NULL DEFAULT '',
-  `network` VARCHAR(255) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `email` (`email`(191)),

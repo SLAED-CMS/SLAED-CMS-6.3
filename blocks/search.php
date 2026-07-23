@@ -10,7 +10,8 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $tpl;
-$content = $tpl->getHtmlFrag('block-search-form', [
+$content = $tpl->getHtmlFrag('search-form', [
+    'is_block' => true,
     'search_label' => _SEARCH,
     'ok_label' => _OK,
 ]);

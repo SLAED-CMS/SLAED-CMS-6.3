@@ -32,9 +32,7 @@ function account(): void {
             'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true])
                 .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']), 'title' => _REGNEWUSER, 'label' => _REGNEWUSER, 'is_footer_button' => true]),
         ]);
-        if (!empty($conf['users']['network'])) {
-            $after .= $tpl->getHtmlFrag('field-value', ['label' => _LOGINNETWORK, 'value_html' => getNetworks()]);
-        }
+        $after .= Oauth::getButtons();
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
             'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
@@ -114,9 +112,7 @@ function newuser(): void {
                 'content' => $tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name']]), 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true])
                     .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]),
             ]);
-            if (!empty($conf['users']['network'])) {
-                $after .= $tpl->getHtmlFrag('field-value', ['label' => _LOGINNETWORK, 'value_html' => getNetworks()]);
-            }
+            $after .= Oauth::getButtons();
             $cont .= $tpl->getHtmlPart('form-add', [
                 'action' => 'index.php?name='.$conf['name'],
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
@@ -161,7 +157,7 @@ function finnewuser(): void {
             $mail = filterText($mail);
             $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code, time) VALUES (NULL, :name, :email, :password, NOW(), :code, :time)',
-                ['name' => $nick, 'email' => $mail, 'password' => $pass, 'code' => $check, 'time' => $time]
+                ['name' => $nick, 'email' => $mail, 'password' => getPassHash($pass), 'code' => $check, 'time' => $time]
             );
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
@@ -197,86 +193,6 @@ function finnewuser(): void {
     }
 }
 
-function network(): void {
-    global $db, $conf, $tpl;
-    $conf['users']['network'] = 1;
-    $token = getVar('post', 'token', 'text');
-    if ($conf['users']['network'] && $token) {
-        $host = filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_DEFAULT) ?: (parse_url($conf['homeurl'], PHP_URL_HOST) ?: 'localhost');
-        $url = 'https://ulogin.ru/token.php?token='.rawurlencode($token).'&host='.rawurlencode($host);
-        set_error_handler(static function () {
-            return true;
-        }, E_WARNING);
-        $s = file_get_contents($url);
-        restore_error_handler();
-        $ulog = is_string($s) ? json_decode($s, true) : [];
-        if (empty($ulog['error']) && isArray($ulog)) {
-            $nickname = isset($ulog['nickname']) ? ucfirst(getTranslit($ulog['nickname'], 1)) : '';
-            $first = isset($ulog['first_name']) ? ucfirst(getTranslit($ulog['first_name'], 1)) : '';
-            $lastn = isset($ulog['last_name']) ? ucfirst(getTranslit($ulog['last_name'], 1)) : '';
-            $variants = [];
-            $variants[] = substr($first, 0, 25);
-            if (!empty($nickname)) {
-                $variants[] = substr($nickname, 0, 25);
-                $variants[] = substr($nickname.'-'.$first, 0, 25);
-            }
-            if (!empty($lastn)) {
-                $variants[] = substr($lastn, 0, 25);
-                $variants[] = substr($first.'-'.$lastn, 0, 25);
-            }
-            $variants[] = substr($first, 0, 20).'-'.date('Y');
-            $variants[] = substr($first, 0, 22).'-'.rand(1, 99);
-            $variants[] = substr($first, 0, 20).'-'.getRandomString(4);
-            foreach ($variants as $var) {
-                if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $var])) == 0) {
-                    $uname = $var;
-                    break;
-                }
-            }
-            $uip = getIp();
-            $uagent = getAgent();
-            $network = isset($ulog['profile']) ? $ulog['profile'] : $ulog['network'];
-            $result = $db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]);
-            [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
-            if ($db->getSqlRowCount($result) == 1) {
-                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
-                $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => $uagent, 'id' => $uid]);
-                login_report(0, 1, $nick, '');
-                setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
-            } else {
-                $uemail = isset($ulog['email']) ? mb_strtolower($ulog['email']) : '';
-                $upass = getPassHash(getRandomString(32));
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, ip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :ip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => '', 'password' => $upass, 'ip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
-                [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]));
-                setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
-                $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastvis = NOW() WHERE id = :id', ['id' => $uid]);
-                $uphoto = isset($ulog['photo']) ? $ulog['photo'] : '';
-                if ($uphoto) {
-                    $anetwork = isset($ulog['network']) ? substr(getTranslit($ulog['network'], 1), 0, 25) : 'network';
-                    $uavatar = upload(4, $conf['users']['adirectory'], $conf['users']['atypefile'], '104857600', $anetwork, '1600', '1600', $uid, $uphoto);
-                    $afile = $conf['users']['adirectory'].'/'.$uavatar;
-                    if (file_exists($afile)) {
-                        [$awidth] = getimagesize($afile);
-                        if ($awidth > $conf['users']['awidth']) create_img_gd($afile, $afile, $conf['users']['awidth']);
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => $uavatar, 'id' => $uid]);
-                    }
-                }
-                login_report(0, 1, $nick, '');
-                setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
-            }
-        } else {
-            setHead(['title' => _ERRORINPUT]);
-            $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
-            echo $tpl->getHtmlFrag('title', ['title' => _ERRORINPUT, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERRORSESS, 'meta' => $meta]);
-            setFoot();
-        }
-    } else {
-        setRedirect('index.php?name='.$conf['name']);
-    }
-}
-
 function activate(): void {
     global $db, $conf, $locale, $tpl;
     $user = getVar('get', 'user', 'name', '');
@@ -291,7 +207,7 @@ function activate(): void {
             $uip = getIp();
             $uagent = getAgent();
             $rank = '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => '', 'regdate' => $reg, 'pwd' => str_starts_with($pass, '$2') ? $pass : getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'block' => '', 'warnings' => '', 'field' => '']);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 15]);
@@ -731,12 +647,11 @@ function passmail(): void {
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     checkemail($email);
     if (!$stop) {
-        $result = $db->getSqlQuery('SELECT name, email, password, network FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email]);
+        $result = $db->getSqlQuery('SELECT name, email, password FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $email]);
         if ($db->getSqlRowCount($result) == 0) {
             $stop = _NOUSERINFO;
         } else {
-            [$nick, $mail, $pass, $network] = $db->getSqlRow($result);
-            if (!empty($network)) $stop = _NETWORKPASS;
+            [$nick, $mail, $pass] = $db->getSqlRow($result);
         }
     }
     if (!$stop) {
@@ -775,8 +690,8 @@ function login(): void {
     $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
     if (!$uname || !$upass) $stop[] = _LOGININCOR;
     $result = $db->getSqlQuery(
-        'SELECT id, name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :name AND network = :network',
-        ['name' => $uname, 'network' => '']
+        'SELECT id, name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :name',
+        ['name' => $uname]
     );
     [$uid, $nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
     if ($db->getSqlRowCount($result) != 1 || !$uid || $nick != $uname || !checkPassHash($upass, $pass)) $stop[] = _LOGININCOR;
@@ -1015,9 +930,10 @@ function edithome(): void {
                     'empty_alert' => ['is_warn' => false, 'text' => _NO_INFO],
                 ]);
         }
-        $uid = (int)$user[0];
-        [$network] = $db->getSqlRow($db->getSqlQuery('SELECT network FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
-        if (empty($network)) {
+        if (str_starts_with((string)($userinfo['password'] ?? ''), '!')) {
+            $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OAUTHNOPW])
+                .$tpl->getHtmlFrag('link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']), 'title' => _PASSWORDLOST, 'label' => _PASSWORDLOST, 'is_footer_button' => true]);
+        } else {
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label' => _PASSNEW,
                 'hide_label' => true,
@@ -1037,10 +953,41 @@ function edithome(): void {
                 'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]).$fields,
                 'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'savepass', 'label' => _SAVECHANGES]),
             ]);
-        } else {
-            $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NETWORKPASS]);
         }
-        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
+        $orows = [];
+        foreach (Oauth::getLinks((int)($userinfo['id'] ?? 0)) as $lnk) {
+            $ohid = $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'oauth_unlink'])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'prov', 'value_attr' => (string)$lnk['provider']])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account')]);
+            $orows[] = [
+                'prov' => (string)$lnk['provider'],
+                'label' => ucfirst((string)$lnk['provider']),
+                'email' => (string)$lnk['email'],
+                'since' => ($lnk['linked']) ? format_time(date('Y-m-d H:i:s', (int)$lnk['linked'])) : '',
+                'unlink_html' => $tpl->getHtmlFrag('post-button', [
+                    'action' => 'index.php?name='.$conf['name'],
+                    'hidden' => $ohid,
+                    'icon_name' => 'x-lg',
+                    'title' => _DELETE,
+                    'confirm_text' => _DELETE.' '.ucfirst((string)$lnk['provider']).'?',
+                ]),
+            ];
+        }
+        $obtn = Oauth::getButtons();
+        $tabs = [_CHANGE, _AVATARSETUP, _PASSSETUP];
+        $texts = [$change, $asetup, $psetup];
+        if ($orows || $obtn !== '') {
+            $tabs[] = _OAUTHTAB;
+            $texts[] = $tpl->getHtmlPart('account-oauth-links', [
+                'nopw_text' => '',
+                'nopw_href' => '',
+                'nopw_label' => '',
+                'rows' => $orows,
+                'none_text' => ($orows) ? '' : _OAUTHNONE,
+                'buttons_html' => $obtn,
+            ]);
+        }
+        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE, 'is_level_one' => true]).getUserNav().$cont.getNaviTabs(0, 'tab', $tabs, $texts);
         setFoot();
     } else {
         account();
@@ -1120,7 +1067,7 @@ function savepass(): void {
     if (is_user() && $oldpass && $newpass && $newpass2) {
         if (strlen($newpass) >= $conf['users']['minpass']) {
             $uid = (int)$user[0];
-            [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :id AND network = :network', ['id' => $uid, 'network' => '']));
+            [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
             if (!empty($pass) && checkPassHash($oldpass, $pass)) {
                 if ($newpass == $newpass2) {
                     $userinfo = getUserInfo();
@@ -1150,11 +1097,266 @@ function savepass(): void {
     }
 }
 
+function oautherror(): void {
+    global $conf, $tpl;
+    Oauth::setCookie('pt', '', 0);
+    Oauth::setCookie('st', '', 0);
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Referrer-Policy: no-referrer');
+    setHead(['title' => _ERROR]);
+    echo $tpl->getHtmlFrag('title', ['title' => _ERROR, 'is_level_one' => true])
+        .$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _OAUTHFAIL])
+        .$tpl->getHtmlFrag('link', ['href' => 'index.php?name='.$conf['name'], 'title' => _USERLOGIN, 'label' => _USERLOGIN, 'is_footer_button' => true]);
+    setFoot();
+    exit;
+}
+
+function oauthlogin(int $uid, string $prov, string $redir): void {
+    global $db, $conf;
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
+    if (!is_array($row) || empty($row['id'])) oautherror();
+    setCookies('account', time() + (int)$conf['user_c_t'], [$row['id'], $row['name'], $row['password'], $row['storynum'], $row['blockon'], $row['theme']]);
+    $uip = getIp();
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = :time WHERE uid = :uid AND provider = :prov', ['time' => time(), 'uid' => $uid, 'prov' => $prov]);
+    Captcha::clearLoginFailures('user');
+    login_report(0, 1, $row['name'], '');
+    setRedirect($redir !== '' ? $redir : 'index.php?name='.$conf['name'].'&op=profil');
+}
+
+function oauthinit(): void {
+    $prov = strtolower(getVar('get', 'prov', 'word'));
+    if (!Oauth::getProvider($prov)) {
+        Oauth::setLog('oauth_provider_disabled', $prov);
+        oautherror();
+    }
+    $redir = Oauth::getRedirect(getVar('get', 'redirect', 'text'));
+    $state = bin2hex(random_bytes(32));
+    $nonce = bin2hex(random_bytes(32));
+    $verif = bin2hex(random_bytes(32));
+    if (!Oauth::setTemp('state', $state, ['provider' => $prov, 'nonce' => $nonce, 'verifier' => $verif, 'redirect' => $redir])) oautherror();
+    Oauth::setCookie('st', $state, 600);
+    Oauth::setLog('oauth_init', $prov);
+    setRedirect(Oauth::getAuthUrl($prov, $state, $verif, $nonce));
+}
+
+function oauthback(): void {
+    global $user;
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Referrer-Policy: no-referrer');
+    $state = getVar('get', 'state', 'word');
+    $fail = getVar('get', 'error', 'word');
+    if ($fail !== '') {
+        Oauth::deleteTemp($state);
+        Oauth::setLog('oauth_provider_error', '', 0, substr($fail, 0, 50));
+        oautherror();
+    }
+    $ck = Oauth::getCookie('st');
+    if ($state === '' || $ck === '' || !hash_equals($ck, $state)) {
+        Oauth::setLog('state_not_found', '', 0, 'browser binding failed');
+        oautherror();
+    }
+    Oauth::setCookie('st', '', 0);
+    $row = Oauth::getTemp('state', $state);
+    if ($row === null) {
+        Oauth::setLog('state_not_found');
+        oautherror();
+    }
+    Oauth::deleteTemp($state);
+    $prov = (string)$row['provider'];
+    if (!Oauth::getProvider($prov)) {
+        Oauth::setLog('oauth_bad_config', $prov);
+        oautherror();
+    }
+    $code = trim((string)getVar('get', 'code', 'raw', ''));
+    if ($code === '') {
+        Oauth::setLog('oauth_provider_error', $prov, 0, 'code missing');
+        oautherror();
+    }
+    $data = Oauth::getTokens($prov, $code, (string)$row['verifier']);
+    if (!$data['ok'] || empty($data['data']['id_token'])) {
+        Oauth::setLog('oauth_provider_error', $prov, 0, $data['error'] ?: 'no id_token');
+        oautherror();
+    }
+    try {
+        $pay = Oauth::getJwtPayload((string)$data['data']['id_token'], $prov, (string)$row['nonce']);
+    } catch (RuntimeException $err) {
+        Oauth::setLog($err->getMessage(), $prov);
+        oautherror();
+    }
+    $claims = Oauth::getClaims($pay, $prov);
+    $acc = (string)($data['data']['access_token'] ?? '');
+    if ($acc !== '' && ($claims['email'] === '' || $claims['name'] === '')) {
+        $uinf = Oauth::getUserinfo($prov, $acc);
+        if ($uinf) {
+            $more = Oauth::getClaims($uinf + ['tid' => $pay['tid'] ?? '', 'xms_edov' => $pay['xms_edov'] ?? ''], $prov);
+            if ($claims['email'] === '') {
+                $claims['email'] = $more['email'];
+                $claims['verified'] = $more['verified'];
+            }
+            if ($claims['name'] === '') $claims['name'] = $more['name'];
+        }
+    }
+    $claims = Oauth::filterClaims($claims);
+    if ($claims['sub'] === '') {
+        Oauth::setLog('oauth_claims_missing', $prov);
+        oautherror();
+    }
+    $mail = $claims['verified'] ? $claims['email'] : '';
+    $redir = Oauth::getRedirect((string)$row['redirect']);
+    $uid = Oauth::getUserId($prov, $claims['sub']);
+    if ($uid !== null) {
+        Oauth::setLog('oauth_callback_success', $prov, $uid);
+        oauthlogin($uid, $prov, $redir);
+    }
+    if (is_user()) {
+        $cuid = (int)$user[0];
+        $ecode = Oauth::setLink($cuid, $prov, $claims['sub'], $mail);
+        if ($ecode !== '') {
+            Oauth::setLog($ecode, $prov, $cuid);
+            oautherror();
+        }
+        Oauth::setLog('oauth_link', $prov, $cuid);
+        setRedirect($redir, false, 302, _OAUTHDONE);
+    }
+    $tok = bin2hex(random_bytes(32));
+    if (!Oauth::setTemp('pending', $tok, ['provider' => $prov, 'uid' => $claims['sub'], 'email' => $mail, 'uname' => $claims['name'], 'redirect' => $redir])) oautherror();
+    Oauth::setCookie('pt', $tok, 900);
+    Oauth::setLog('oauth_callback_pending', $prov);
+    setRedirect('index.php?name=account&op=oauth_finish');
+}
+
+function oauthfinish(): void {
+    global $db, $conf, $locale, $tpl;
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Referrer-Policy: no-referrer');
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+        $tok = Oauth::getCookie('pt');
+        if ($tok === '') setRedirect('index.php?name='.$conf['name']);
+        $row = Oauth::getTemp('pending', $tok);
+        if ($row === null) {
+            Oauth::setCookie('pt', '', 0);
+            setRedirect('index.php?name='.$conf['name']);
+        }
+        setHead(['title' => _OAUTHTITLE]);
+        echo $tpl->getHtmlPart('account-oauth-finish', [
+            'title' => _OAUTHTITLE,
+            'provider' => ucfirst((string)$row['provider']),
+            'intro' => _OAUTHINTRO,
+            'ext_name' => (string)$row['uname'],
+            'ext_email' => (string)$row['email'],
+            'name_label' => _NICKNAME,
+            'email_label' => _EMAIL,
+            'link_title' => _OAUTHLINK,
+            'link_text' => _OAUTHLINKT,
+            'create_title' => _OAUTHNEW,
+            'create_text' => _OAUTHNEWT,
+            'password_label' => _PASSWORD,
+            'login_label' => _USERLOGIN,
+            'create_label' => _NEWUSER,
+            'suggest' => htmlspecialchars(substr((string)$row['uname'], 0, 25), ENT_QUOTES, 'UTF-8'),
+            'captcha' => getCaptcha('login'),
+            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+            'action' => 'index.php?name='.$conf['name'],
+        ]);
+        setFoot();
+        return;
+    }
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) {
+        Oauth::setLog('csrf_failed');
+        oautherror();
+    }
+    $tok = Oauth::getCookie('pt');
+    if ($tok === '') {
+        Oauth::setLog('pending_expired');
+        oautherror();
+    }
+    $row = Oauth::getTemp('pending', $tok);
+    if ($row === null) {
+        Oauth::setLog('pending_expired');
+        oautherror();
+    }
+    Oauth::deleteTemp($tok);
+    Oauth::setCookie('pt', '', 0);
+    $prov = (string)$row['provider'];
+    if (!Oauth::getProvider($prov)) {
+        Oauth::setLog('oauth_bad_config', $prov);
+        oautherror();
+    }
+    $redir = Oauth::getRedirect((string)$row['redirect']);
+    $act = getVar('post', 'act', 'word');
+    if ($act === 'link') {
+        $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
+        $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
+        $ures = $db->getSqlQuery('SELECT id, password FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname]);
+        $urow = $db->getSqlRow($ures);
+        $badcap = checkCaptcha('login');
+        if ($badcap || !$uname || !$upass || !is_array($urow) || empty($urow['id']) || !checkPassHash($upass, (string)$urow['password'])) {
+            Captcha::registerLoginFailure('user');
+            login_report(0, 0, $uname, $upass);
+            Oauth::setLog('link_login_failed', $prov);
+            oautherror();
+        }
+        $luid = (int)$urow['id'];
+        $ecode = Oauth::setLink($luid, $prov, (string)$row['uid'], (string)$row['email']);
+        if ($ecode !== '') {
+            Oauth::setLog($ecode, $prov, $luid);
+            oautherror();
+        }
+        Oauth::setLog('oauth_link', $prov, $luid);
+        oauthlogin($luid, $prov, $redir);
+    }
+    if ($act === 'create') {
+        $uname = getVar('post', 'uname', 'name');
+        $uname = trim(substr((string)$uname, 0, 25));
+        $nameb = explode(',', $conf['users']['name_b']);
+        $badnm = !$uname || !analyze_name($uname) || in_array(strtolower($uname), array_filter($nameb), true);
+        if (!$badnm && $db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $uname])) > 0) $badnm = true;
+        if (!$badnm && $db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname])) > 0) $badnm = true;
+        if ($badnm) {
+            Oauth::setLog('create_login_taken', $prov);
+            oautherror();
+        }
+        $mail = (string)$row['email'];
+        if ($mail !== '' && $db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $mail])) > 0) {
+            Oauth::setLog('email_exists', $prov);
+            oautherror();
+        }
+        $pass = '!'.bin2hex(random_bytes(20));
+        $ok = $db->getSqlQuery(
+            'INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :block, :warnings, :field)',
+            ['uname' => $uname, 'rank' => '', 'email' => $mail, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale, 'ip' => getIp(), 'agent' => getAgent(), 'block' => '', 'warnings' => '', 'field' => '']
+        );
+        if ($ok === false) oautherror();
+        $nuid = (int)$db->getSqlLastId();
+        $ecode = Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail);
+        if ($ecode !== '') {
+            Oauth::setLog($ecode, $prov, $nuid);
+            oautherror();
+        }
+        Oauth::setLog('oauth_create', $prov, $nuid);
+        oauthlogin($nuid, $prov, $redir);
+    }
+    oautherror();
+}
+
+function oauthunlink(): void {
+    global $user, $conf;
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !is_user()) setRedirect('index.php?name='.$conf['name']);
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _TOKENMISS, true);
+    $prov = strtolower(getVar('post', 'prov', 'word'));
+    $cuid = (int)$user[0];
+    $ecode = Oauth::deleteLink($cuid, $prov);
+    if ($ecode !== '') setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _OAUTHLAST, true);
+    Oauth::setLog('oauth_unlink', $prov, $cuid);
+    setRedirect('index.php?name='.$conf['name'].'&op=edithome', false, 302, _OAUTHOFF);
+}
+
 switch ($op) {
     default: account(); break;
     case 'newuser': newuser(); break;
     case 'finnewuser': finnewuser(); break;
-    case 'network': network(); break;
     case 'privat': privat(); break;
     case 'rss': rssfeed(); break;
     case 'favorites': favorites(); break;
@@ -1168,4 +1370,8 @@ switch ($op) {
     case 'activate': activate(); break;
     case 'saveavatar': saveavatar(); break;
     case 'savepass': savepass(); break;
+    case 'oauth_init': oauthinit(); break;
+    case 'oauth': oauthback(); break;
+    case 'oauth_finish': oauthfinish(); break;
+    case 'oauth_unlink': oauthunlink(); break;
 }

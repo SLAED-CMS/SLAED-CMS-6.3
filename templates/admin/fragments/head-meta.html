@@ -1,1 +1,1 @@
-<meta name="{{ name }}" content="{{ content }}">
+<meta {% if is_property %}property="{{ property }}"{% else %}name="{{ name }}"{% endif %} content="{{ content }}">

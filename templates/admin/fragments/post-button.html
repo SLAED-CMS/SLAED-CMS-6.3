@@ -1,0 +1,4 @@
+<form action="{{ action }}" method="post" class="sl-post-button">
+  {{{ hidden }}}
+  <button type="submit" class="{% if is_mini %}sl-dial-item sl-but-mini{% else %}sl-but{% endif %}" title="{{ title }}"{% if confirm_text %} data-sl-confirm="{{ confirm_text }}"{% endif %}><i class="bi bi-{{ icon_name }}" aria-hidden="true"></i>{% if label %} {{ label }}{% endif %}</button>
+</form>

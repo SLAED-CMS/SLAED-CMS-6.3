@@ -1468,3 +1468,79 @@ DROP PROCEDURE IF EXISTS finalize_user_names;
 UPDATE `{prefix}_users` SET `avatar` = CONCAT('presets/', SUBSTRING(`avatar`, 9, 2), '.svg') WHERE `avatar` REGEXP '^default/[0-9]{2}[.](gif|png|jpg|jpeg|svg)$' AND SUBSTRING(`avatar`, 9, 2) BETWEEN '01' AND '56';
 
 UPDATE `{prefix}_users` SET `avatar` = '' WHERE `avatar` LIKE 'default/%';
+
+# =============================================================================
+# OAuth2/OIDC login replaces the removed uLogin integration
+# - two new tables: {prefix}_oauth_temp (one-time state/pending records with
+#   TTL cleanup on access) and {prefix}_user_oauth (permanent provider links)
+# - legacy uLogin identities are archived as provider 'ulogin' rows in
+#   {prefix}_user_oauth, then the obsolete users.network column is dropped;
+#   affected accounts regain access through the standard password recovery
+# - the whole block is idempotent: a re-run affects zero rows
+# =============================================================================
+
+CREATE TABLE IF NOT EXISTS `{prefix}_oauth_temp` (
+  `token` CHAR(64) NOT NULL,
+  `kind` VARCHAR(10) NOT NULL DEFAULT '',
+  `provider` VARCHAR(32) NOT NULL DEFAULT '',
+  `nonce` CHAR(64) NOT NULL DEFAULT '',
+  `verifier` VARCHAR(128) NOT NULL DEFAULT '',
+  `uid` VARCHAR(255) NOT NULL DEFAULT '',
+  `email` VARCHAR(255) NOT NULL DEFAULT '',
+  `uname` VARCHAR(128) NOT NULL DEFAULT '',
+  `redirect` VARCHAR(512) NOT NULL DEFAULT '',
+  `time` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`token`),
+  KEY `time` (`time`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CREATE TABLE IF NOT EXISTS `{prefix}_user_oauth` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `uid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `provider` VARCHAR(32) NOT NULL DEFAULT '',
+  `puid` VARCHAR(255) NOT NULL DEFAULT '',
+  `email` VARCHAR(255) NOT NULL DEFAULT '',
+  `linked` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `lastlog` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_puid` (`provider`, `puid`(191)),
+  UNIQUE KEY `uid_provider` (`uid`, `provider`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+DROP PROCEDURE IF EXISTS movenet;
+
+DELIMITER $$
+
+CREATE PROCEDURE movenet(IN pusers VARCHAR(128), IN plinks VARCHAR(128))
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = pusers
+       AND column_name = 'network';
+
+    IF ccol > 0 THEN
+        SET @sql = CONCAT(
+            'INSERT IGNORE INTO `', plinks, '` (`uid`, `provider`, `puid`, `email`, `linked`) ',
+            'SELECT `id`, ''ulogin'', `network`, `email`, UNIX_TIMESTAMP() ',
+            'FROM `', pusers, '` WHERE `network` != '''''
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SET @sql = CONCAT('ALTER TABLE `', pusers, '` DROP COLUMN `network`');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+DELIMITER ;
+
+CALL movenet('{prefix}_users', '{prefix}_user_oauth');
+
+DROP PROCEDURE IF EXISTS movenet;

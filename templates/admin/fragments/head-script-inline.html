@@ -1,1 +1,1 @@
-<script>{{{ js }}}</script>
+<script{% if is_jsonld %} type="application/ld+json"{% endif %}>{% if is_jsonld %}{{{ json_html }}}{% else %}{{{ js }}}{% endif %}</script>

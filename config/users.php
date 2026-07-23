@@ -19,9 +19,6 @@ return [
         'mail_b' => '',
         'minpass' => '5',
         'name_b' => 'alter,drop,insert,outfile,select,truncate,union',
-        'network' => '0',
-        'network_c' => '<script src="//ulogin.ru/js/ulogin.js"></script>
-<div id="uLogin" data-ulogin="display=panel;theme=flat;fields=nickname,first_name,last_name,email,photo;providers=vkontakte,odnoklassniki,mailru,facebook;hidden=other;redirect_uri=[url];mobilebuttons=0;"></div>',
         'news' => '1',
         'nomail' => '1',
         'point' => '1',

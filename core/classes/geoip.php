@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) die('Illegal file access');
+if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class Geoip {
     # Return normalized empty GeoIP result

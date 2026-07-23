@@ -3212,8 +3212,7 @@ ol.sl-sublist-two li:hover:before {
 }
 
 .sl-block-login > .sl-but,
-.sl-user-captcha,
-.sl-net-login {
+.sl-user-captcha {
   grid-column: 1 / -1;
 }
 
@@ -3225,7 +3224,6 @@ ol.sl-sublist-two li:hover:before {
   width: 100%;
 }
 .sl-user-captcha > * { max-width: 100%; }
-.sl-net-login { margin: 0; }
 
 .sl-block-session { margin-top: var(--sl-space-lg); }
 
@@ -8270,4 +8268,87 @@ a.sl-profile-hub-row:hover {
   .sl-profile-feed-live i {
     animation: none;
   }
+}
+
+/* OAuth provider sign-in buttons and account link management */
+.sl-oauth-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  margin-top: var(--sl-space-md);
+}
+
+.sl-block-login .sl-oauth-row,
+.sl-login-oauth .sl-oauth-row {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+.sl-oauth-label {
+  color: var(--sl-color-text-muted);
+}
+
+.sl-oauth-but {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sl-oauth-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--sl-space-lg);
+  margin-top: var(--sl-space-lg);
+}
+
+.sl-oauth-card {
+  padding: var(--sl-space-lg);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-card);
+  background: var(--sl-color-bg-soft);
+}
+
+.sl-oauth-note {
+  color: var(--sl-color-text-muted);
+  margin: var(--sl-space-sm) 0 var(--sl-space-md);
+}
+
+.sl-oauth-captcha {
+  margin-bottom: var(--sl-space-md);
+}
+
+.sl-oauth-list {
+  list-style: none;
+  margin: 0 0 var(--sl-space-md);
+  padding: 0;
+}
+
+.sl-oauth-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sl-space-sm);
+  padding: var(--sl-space-sm) 0;
+  border-bottom: 1px solid var(--sl-color-border);
+}
+
+.sl-oauth-name {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sl-oauth-mail,
+.sl-oauth-since {
+  color: var(--sl-color-text-muted);
+}
+
+.sl-oauth-item .sl-post-button {
+  margin-left: auto;
+}
+
+.sl-post-button {
+  display: inline-flex;
 }

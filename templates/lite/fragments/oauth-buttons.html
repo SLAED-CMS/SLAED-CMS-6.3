@@ -1,0 +1,6 @@
+{% if providers %}
+<div class="sl-oauth-row">
+  <span class="sl-oauth-label">{{ title }}</span>
+  {% for item in providers %}<a class="sl-but sl-oauth-but sl-oauth-{{ item.prov }}" href="{{ item.href }}" rel="nofollow"><i class="bi bi-{{ item.prov }}" aria-hidden="true"></i> {{ item.label }}</a>{% endfor %}
+</div>
+{% endif %}

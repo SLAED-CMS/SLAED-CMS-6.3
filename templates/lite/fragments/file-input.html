@@ -1,8 +1,9 @@
 <input
   type="file"
-  name="{{ name_attr }}"
   {% if input_id %}id="{{ input_id }}"{% endif %}
-  {% if is_multiple %}multiple="multiple"{% endif %}
-  class="sl-field{% if input_class %} {{ input_class }}{% endif %}"
+  name="{{ name_attr }}"
+  class="{% if input_class %}{{ input_class }}{% else %}sl-field-auto{% endif %}"
+  {% if is_required %}required{% endif %}
+  {% if is_disabled %}disabled{% endif %}
   {% if input_attr %}{{{ input_attr }}}{% endif %}
 >

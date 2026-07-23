@@ -112,9 +112,7 @@ if (is_user()) {
         'captcha_html' => $captcha,
         'hidden_inputs' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'refer', 'value_attr' => '1', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'login', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account'), 'input_attr' => '']),
         'login_label' => _LOGIN,
-        'has_network' => $conf['users']['network'],
-        'network_label' => _LOGINNETWORK,
-        'networks_html' => ($conf['users']['network']) ? getNetworks() : '',
+        'oauth_html' => Oauth::getButtons(),
     ];
 }
 $data['session_html'] = ($conf['session']) ? getUserSessionInfo(1) : '';

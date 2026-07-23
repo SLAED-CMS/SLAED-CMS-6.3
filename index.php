@@ -148,6 +148,8 @@ if (empty($go)) {
                 echo json_encode(['status' => 'denied', 'message' => 'Access denied'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 exit;
             }
+            # Release the session lock so long-running jobs do not block parallel requests of the same visitor
+            session_write_close();
             echo json_encode(addSchedulerRun($name ?: null, $type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             exit;
         }

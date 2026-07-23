@@ -124,6 +124,11 @@ function account(): void {
                                 'title' => _FULLEDIT,
                             ],
                             [
+                                'href' => $afile.'.php?name=account&op=oauthlist&id='.$uid,
+                                'icon_name' => 'key',
+                                'title' => _OAUTHLIST,
+                            ],
+                            [
                                 'href' => $afile.'.php?name=security&op=banlist&new_ip='.$ip,
                                 'icon_name' => 'ban',
                                 'title' => _BANIPSENDER,
@@ -544,18 +549,18 @@ function newuser(): void {
     ]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $conf['users']['anum'];
-    $result = $db->getSqlQuery('SELECT id, name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
+    $result = $db->getSqlQuery('SELECT id, name, email, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
     $body = '';
     if ($db->getSqlRowCount($result) > 0) {
         $rows = [];
-        while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
+        while ([$uid, $name, $mail, $reg, $check] = $db->getSqlRow($result)) {
             $delhref = $afile.'.php?name=account&op=newdrop&id='.$uid.'&token='.getSiteToken();
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$uid],
                     ['is_truncate' => true, 'title_text' => $name, 'content_html' => $name],
                     ['is_truncate' => true, 'title_text' => $mail, 'content_html' => $mail],
-                    ['content_html' => $pass],
+                    ['is_truncate' => true, 'title_text' => $check, 'content_html' => $check],
                     ['is_col_date' => true, 'content_html' => $reg],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _FUNCTIONS,
@@ -582,7 +587,7 @@ function newuser(): void {
                 ['content' => _ID, 'is_col_id' => true],
                 ['content' => _NICKNAME, 'is_truncate' => true],
                 ['content' => _EMAIL, 'is_truncate' => true],
-                ['content' => _PASSWORD],
+                ['content' => _CODE, 'is_truncate' => true],
                 ['content' => _REG, 'is_col_date' => true],
                 ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
             ],
@@ -787,10 +792,6 @@ function config(): void {
             'field_html' => getTplRadioGroup(['name' => 'prof', 'value' => (string)$conf['users']['prof'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
         [
-            'label_html' => _NETWORKACTIVE,
-            'field_html' => getTplRadioGroup(['name' => 'network', 'value' => (string)$conf['users']['network'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
-        ],
-        [
             'label_html' => _RULACT,
             'field_html' => getTplRadioGroup(['name' => 'rule', 'value' => (string)$conf['users']['rule'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
         ],
@@ -799,9 +800,32 @@ function config(): void {
             'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'rules', 'value_text' => (string)$conf['users']['rules'], 'rows_num' => 6, 'is_config' => true]),
         ],
         [
-            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _NETWORKCODE, 'hint' => _NOKOMA]),
-            'field_html' => Editor::getCode(['id' => 'code', 'name' => 'code', 'lang' => 'html', 'text' => (string)$conf['users']['network_c']]),
-            'is_full' => true,
+            'label_html' => _OAUTHACT,
+            'field_html' => getTplRadioGroup(['name' => 'oactive', 'value' => (string)($conf['oauth']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _OAUTHGACT,
+            'field_html' => getTplRadioGroup(['name' => 'gactive', 'value' => (string)($conf['oauth']['google']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _OAUTHGID,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'gclientid', 'value_attr' => (string)($conf['oauth']['google']['clientid'] ?? ''), 'is_config' => true]),
+        ],
+        [
+            'label_html' => _OAUTHGKEY,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'gsecret', 'value_attr' => (string)($conf['oauth']['google']['secret'] ?? ''), 'is_config' => true]),
+        ],
+        [
+            'label_html' => _OAUTHMACT,
+            'field_html' => getTplRadioGroup(['name' => 'mactive', 'value' => (string)($conf['oauth']['microsoft']['active'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+        ],
+        [
+            'label_html' => _OAUTHMID,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'mclientid', 'value_attr' => (string)($conf['oauth']['microsoft']['clientid'] ?? ''), 'is_config' => true]),
+        ],
+        [
+            'label_html' => _OAUTHMKEY,
+            'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'msecret', 'value_attr' => (string)($conf['oauth']['microsoft']['secret'] ?? ''), 'is_config' => true]),
         ],
         [
             'label_html' => _NAME_BLOCK,
@@ -850,15 +874,27 @@ function save(): void {
             'reg' => getVar('post', 'reg', 'num'),
             'theme' => getVar('post', 'theme', 'num'),
             'prof' => getVar('post', 'prof', 'num'),
-            'network' => getVar('post', 'network', 'num'),
             'rule' => getVar('post', 'rule', 'num'),
             'rules' => getVar('post', 'rules', 'text'),
-            'network_c' => "<<<HTML\n".getVar('post', 'code', 'text')."\nHTML",
             'name_b' => strtolower(strtr(getVar('post', 'name', 'text'), $protect)),
             'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
             'points' => $conf['users']['points']
         ];
         setConfigFile('users.php', $cont);
+        $oanew = [
+            'active' => getVar('post', 'oactive', 'num'),
+            'google' => [
+                'active' => getVar('post', 'gactive', 'num'),
+                'clientid' => strtr(getVar('post', 'gclientid', 'text'), $protect),
+                'secret' => strtr(getVar('post', 'gsecret', 'text'), $protect),
+            ],
+            'microsoft' => [
+                'active' => getVar('post', 'mactive', 'num'),
+                'clientid' => strtr(getVar('post', 'mclientid', 'text'), $protect),
+                'secret' => strtr(getVar('post', 'msecret', 'text'), $protect),
+            ],
+        ];
+        setConfigFile('oauth.php', $oanew, $conf['oauth'] ?? []);
     }
     setRedirect($afile.'.php?name=account&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
 }
@@ -881,10 +917,91 @@ function delete(): void {
         if ($id) {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]);
             # $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
         }
     }
     setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+}
+
+function oauthlist(): void {
+    global $db, $afile, $tpl;
+    setHead();
+    $cont = getTplAdminTabs([
+        'ops'  => ['name=account', 'name=account&op=add', 'name=account&op=newuser', 'name=account&op=pointreset', 'name=account&op=config', 'name=account&op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _DOCS],
+        'subtitle_html' => getAccountSearch(),
+    ]);
+    $id = getVar('get', 'id', 'num');
+    $query = 'SELECT o.uid, o.provider, o.puid, o.email, o.linked, o.lastlog, u.name FROM '.PREFIX_DB.'_user_oauth AS o LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = o.uid)';
+    $params = [];
+    if ($id) {
+        $query .= ' WHERE o.uid = :id';
+        $params['id'] = $id;
+    }
+    $result = $db->getSqlQuery($query.' ORDER BY o.id DESC LIMIT 100', $params);
+    $body = '';
+    if ($db->getSqlRowCount($result) > 0) {
+        $rows = [];
+        while ([$uid, $prov, $puid, $mail, $linked, $lastlog, $name] = $db->getSqlRow($result)) {
+            $hidden = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'account'])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'oauthunlink'])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$uid])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'prov', 'value_attr' => $prov])
+                .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]);
+            $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
+                'cells' => [
+                    ['is_col_id' => true, 'content_html' => (string)$uid],
+                    ['is_truncate' => true, 'title_text' => (string)$name, 'content_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'label' => (string)$name])],
+                    ['content_html' => ucfirst((string)$prov)],
+                    ['is_truncate' => true, 'title_text' => (string)$puid, 'content_html' => (string)$puid],
+                    ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => (string)$mail],
+                    ['is_col_date' => true, 'content_html' => ($linked) ? date(_TIMESTRING, (int)$linked) : ''],
+                    ['is_col_date' => true, 'content_html' => ($lastlog) ? date(_TIMESTRING, (int)$lastlog) : ''],
+                    ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('post-button', [
+                        'action' => $afile.'.php',
+                        'hidden' => $hidden,
+                        'is_mini' => true,
+                        'icon_name' => 'trash',
+                        'title' => _ONDELETE,
+                        'confirm_text' => _DELETE.' '.ucfirst((string)$prov).' ("'.$name.'")?',
+                    ])],
+                ],
+            ])]);
+        }
+        $body .= $tpl->getHtmlFrag('table', [
+            'is_fixed' => true,
+            'head' => [
+                ['content' => _ID, 'is_col_id' => true],
+                ['content' => _NICKNAME, 'is_truncate' => true],
+                ['content' => _MODUL],
+                ['content' => 'ID', 'is_truncate' => true],
+                ['content' => _EMAIL, 'is_truncate' => true],
+                ['content' => _REG, 'is_col_date' => true],
+                ['content' => _LAST_VISIT, 'is_col_date' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+            ],
+            'rows_html' => implode('', $rows),
+            'is_wrapless' => true,
+        ]);
+    } else {
+        $body .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
+    }
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
+    echo $cont;
+    setFoot();
+}
+
+function oauthunlink(): void {
+    global $db, $afile, $admin;
+    $iswarn = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !checkSiteToken();
+    $id = getVar('post', 'id', 'num');
+    $prov = strtolower(getVar('post', 'prov', 'word'));
+    if (!$iswarn && $id && $prov !== '') {
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id AND provider = :prov', ['id' => $id, 'prov' => $prov]);
+        Oauth::setLog('oauth_admin_unlink', $prov, (int)$id, '', (int)($admin[0] ?? 0));
+    }
+    setRedirect($afile.'.php?name=account&op=oauthlist'.($id ? '&id='.$id : ''), false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function info(): void {
@@ -906,5 +1023,7 @@ switch ($op) {
     case 'resave': resave(); break;
     case 'config': config(); break;
     case 'save': save(); break;
+    case 'oauthlist': oauthlist(); break;
+    case 'oauthunlink': oauthunlink(); break;
     case 'info': info(); break;
 }

@@ -1,6 +1,7 @@
 <input
   type="hidden"
-  name="{{ name_attr }}"
-  value="{{ value_attr }}"
+  {% if input_id %}id="{{ input_id }}"{% endif %}
+  name="{{ name_attr }}{{ nameattr }}"
+  value="{{ value_attr }}{{ valueattr }}"
   {% if input_attr %}{{{ input_attr }}}{% endif %}
 >

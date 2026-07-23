@@ -4,10 +4,10 @@
     {% if name_link %}
     {% include 'fragments/link.html' with name_link %}
     {% else %}
-    <span title="{{ name_title }}"{% if name_class %} class="{{ name_class }}"{% endif %}>{{ name_text }}</span>
+    <span title="{{ name_title }}"{% if is_name_note %} class="sl-session-note"{% endif %}>{{ name_text }}</span>
     {% endif %}
   </div>
-  <div title="{{ module_title }}" class="{% if module_class %}{{ module_class }}{% else %}sl-session-module sl-note{% endif %}">
+  <div title="{{ module_title }}" class="sl-session-module sl-session-note">
     {% if module_link %}
     {% include 'fragments/link.html' with module_link %}
     {% else %}

@@ -114,6 +114,7 @@ require_once BASE_DIR.'/core/classes/parser.php';
 require_once BASE_DIR.'/core/classes/geoip.php';
 require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
+require_once BASE_DIR.'/core/classes/oauth.php';
 $tpl = new Template($theme);
 $prs = new Parser();
 
@@ -1442,7 +1443,7 @@ function getSeoRoute(array $seo = []): array {
     $services = ['contact', 'money', 'order', 'recommend', 'search', 'whois'];
     $forms = [
         'add', 'activate', 'broc', 'check', 'client', 'edithome', 'favorites', 'kasse',
-        'network', 'partner', 'passlost', 'preview', 'privat', 'send', 'upload',
+        'partner', 'passlost', 'preview', 'privat', 'send', 'upload',
     ];
     $noindex = in_array($name, $services, true) || in_array($op, $forms, true) || $op === 'liste' || ($name === 'account' && $op !== 'view');
     if (getVar('get', 'status', 'num')) $noindex = true;
@@ -1891,6 +1892,7 @@ function setHead(array $seo = []): void {
             'token_field' => ['name_attr' => 'token', 'value_attr' => $atok],
             'refer_field' => ['name_attr' => 'refer', 'value_attr' => '1'],
             'op_field' => ['name_attr' => 'op', 'value_attr' => 'login'],
+            'oauth_html' => Oauth::getButtons(),
         ]);
     } else {
         $item = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
@@ -2915,19 +2917,6 @@ function getTranslit(string $st, string $lo = ''): string {
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
     $st = trim($st);
     return $st;
-}
-
-# Social networks code
-function getNetworks(): string {
- global $conf;
-    if ($conf['users']['network_c']) {
-        $url = urlencode($conf['homeurl'].'/index.php?name=account&op=network');
-        $st = ['[url]' => $url];
-        $cont = strtr($conf['users']['network_c'], $st);
-    } else {
-        $cont = '';
-    }
-    return $cont;
 }
 
 # Render the captcha block for a form action (empty when not required)

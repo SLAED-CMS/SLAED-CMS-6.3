@@ -1,0 +1,33 @@
+<h1 class="sl-title">{{ title }}</h1>
+<div class="sl-alert sl-alert-info">
+  <div class="sl-alert-body">
+    <p class="sl-alert-text">{{ intro }}</p>
+    <p class="sl-alert-text"><i class="bi bi-person-check" aria-hidden="true"></i> <strong>{{ provider }}</strong>{% if ext_name %} &middot; {{ name_label }}: {{ ext_name }}{% endif %}{% if ext_email %} &middot; {{ email_label }}: {{ ext_email }}{% endif %}</p>
+  </div>
+</div>
+<div class="sl-oauth-cols">
+  <section class="sl-oauth-card">
+    <h2 class="sl-title-sub">{{ link_title }}</h2>
+    <p class="sl-oauth-note">{{ link_text }}</p>
+    <form action="{{ action }}" method="post" class="sl-oauth-form">
+      <input type="hidden" name="op" value="oauth_finish">
+      <input type="hidden" name="act" value="link">
+      <input type="hidden" name="token" value="{{ token }}">
+      <p><input type="text" name="user_name" maxlength="25" class="sl-field sl-field--block" placeholder="{{ name_label }}" autocomplete="username" required></p>
+      <p><input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></p>
+      {% if captcha %}<div class="sl-oauth-captcha">{{{ captcha }}}</div>{% endif %}
+      <p><button type="submit" class="sl-but"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ login_label }}</button></p>
+    </form>
+  </section>
+  <section class="sl-oauth-card">
+    <h2 class="sl-title-sub">{{ create_title }}</h2>
+    <p class="sl-oauth-note">{{ create_text }}</p>
+    <form action="{{ action }}" method="post" class="sl-oauth-form">
+      <input type="hidden" name="op" value="oauth_finish">
+      <input type="hidden" name="act" value="create">
+      <input type="hidden" name="token" value="{{ token }}">
+      <p><input type="text" name="uname" maxlength="25" class="sl-field sl-field--block" placeholder="{{ name_label }}" value="{{ suggest }}" required></p>
+      <p><button type="submit" class="sl-but"><i class="bi bi-person-plus" aria-hidden="true"></i> {{ create_label }}</button></p>
+    </form>
+  </section>
+</div>

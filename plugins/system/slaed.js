@@ -1212,7 +1212,11 @@
                 var box = okay.closest('dialog');
                 var ask = box ? box.slask : null;
                 if (box) box.close();
-                if (ask && ask.href) window.location.href = ask.href;
+                if (ask && ask.href) { window.location.href = ask.href; return; }
+                if (ask) {
+                    var askform = ask.closest('form');
+                    if (askform) askform.submit();
+                }
                 return;
             }
             var toggle = node.closest('[data-sl-live-toggle]');

@@ -28,14 +28,7 @@
     <a href="index.php?name=account&amp;op=logout&amp;refer=1" title="{{ logout_label }}" aria-label="{{ logout_label }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i></a>
   </nav>
   {% else %}
-  <form action="index.php?name=account" method="post" class="sl-block-login">
-    <label class="sl-user-field"><i class="bi bi-person" aria-hidden="true"></i><span class="sl-visually-hidden">{{ nickname_label }}</span>{{{ name_input }}}</label>
-    <label class="sl-user-field"><i class="bi bi-lock" aria-hidden="true"></i><span class="sl-visually-hidden">{{ password_label }}</span><input type="password" name="user_password" maxlength="25" class="sl-field sl-field--block" placeholder="{{ password_label }}" autocomplete="current-password" required></label>
-    {% if captcha_html %}<div class="sl-user-captcha">{{{ captcha_html }}}</div>{% endif %}
-    {{{ hidden_inputs }}}
-    {% if has_network %}<p class="sl-net-login">{{ network_label }}: {{{ networks_html }}}</p>{% endif %}
-    <button type="submit" class="sl-but"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> {{ login_label }}</button>
-  </form>
+  {% include 'fragments/block-login-form.html' %}
   <ul class="sl-block-pm">
     <li><a href="index.php?name=account&amp;op=reg"><i class="bi bi-person-plus" aria-hidden="true"></i><span>{{ register_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
     <li><a href="index.php?name=account&amp;op=passfor"><i class="bi bi-key" aria-hidden="true"></i><span>{{ passfor_label }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a></li>
