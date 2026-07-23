@@ -20,4 +20,4 @@ $mode = intval($conf['voting']['block'] ?? 0);
 $where .= ($mode == 1 || $mode == 3) ? " AND enddate <= now() AND status = '1'" : ' AND enddate >= now()';
 $order = ($mode >= 2) ? 'RAND()' : 'id DESC';
 [$bid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY '.$order.' LIMIT 1', $params)) ?: [''];
-$content = $bid ? $tpl->getHtmlFrag('block-content', ['id' => 'repblockvoting', 'content' => getVotingView($bid, 'blockvoting')]) : '';
+$content = $bid ? $tpl->getHtmlFrag('block-content', ['id' => 'repblockvoting', 'content' => checkPageCache() ? getDynamicMark('voting', (string)$bid) : getVotingView((int)$bid, 'blockvoting')]) : '';

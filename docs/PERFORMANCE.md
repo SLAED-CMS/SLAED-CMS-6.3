@@ -2,14 +2,15 @@
 
 This document is the single performance reference for the current repository.
 It describes confirmed current code paths, performance risks, and measurement
-workflow.
+workflow. Every durable performance fact lives here; time-bound audit and
+remediation plans are separate documents and are removed once implemented.
 
 ## Status
 
-- Current baseline: code-backed architecture map and risk register
+- Current baseline: code-backed architecture map and measurement workflow
 - Rule: measure the current code path before assigning priority
-- Scope: frontend, admin, template runtime, config bootstrap, changelog, GeoIP,
-  tracking, blocks, scheduler, and security request overhead
+- Scope: frontend, admin, template runtime, config bootstrap, changelog,
+  scheduler, security request overhead, and web-server static caching
 
 ## Current Request Flow
 
@@ -42,9 +43,9 @@ workflow.
 ### Config Bootstrap
 
 `getConfig()` first reads `config/local.php` if it contains `_meta` and `_config`
-with `cache_version = 1`. Only when that generated cache is missing or invalid
-does it scan `config/*.php`, hash source config files, merge config arrays, and
-rewrite `config/local.php`.
+with a valid `cache_version`. Only when that generated cache is missing or
+invalid does it scan `config/*.php`, hash source config files, merge config
+arrays, and rewrite `config/local.php`.
 
 Implication:
 
@@ -57,36 +58,46 @@ Implication:
 
 ### Page Cache
 
-Frontend page cache exists, but current `config/global.php` has:
+The frontend page cache is enabled for guests (`cache = 1`) and is safe for
+visitor-bound content through the dynamic-regions mechanism:
 
-- `cache = 0`
-- `cache_css = 0`
-- `cache_script = 0`
+- **Dynamic regions**: visitor-bound content (CSRF tokens, captcha, the whole
+  voting widget) is stored in the cache as signed markers
+  (`[[sldyn:type:par:hmac]]`, HMAC via `getSecret('dynreg')` so user content
+  cannot forge substitutable markers) and substituted with freshly rendered
+  content at serve time — on cache hits over `Cache::getBody()` and on misses
+  before the direct echo. Cache files on disk contain zero live tokens.
+  Emitters: `getPageToken()` (token-or-marker), captcha/voting ternaries in
+  `setHead`, `blocks/login.php`, `blocks/user_info.php`, `blocks/voting.php`.
+- **Default-deny allowlist**: `checkPageCache()` only caches route/op pairs
+  explicitly allowlisted (currently `news` list); everything else renders
+  live.
+- **Poison guard**: any live `getSiteToken()`/`getCaptcha()` call during a
+  cacheable build marks the build poisoned (`checkCachePoison()`) and the
+  page is never stored — unregistered visitor-bound content on an
+  allowlisted route disables caching automatically instead of leaking.
+- **Fail-closed sidecar**: every cached body has a `.json` sidecar with the
+  body hash and a `dyn` flag. A missing, corrupt, or mismatched sidecar is
+  treated as dynamic. Dynamic pages are served with no-store browser headers
+  and never answer 304; only a valid `dyn=false` sidecar allows the public
+  `cache_b` header branch.
 
-Implication:
-
-- normal frontend pages are rendered live in the current default config
-- CSS/JS bundling cache is also disabled by default
-- page-cache cleanup is implemented as `addCacheGcTask()` and is not a normal
-  per-request full cache sweep
+Page-cache cleanup runs as a scheduler task (`cachegc`), not a per-request
+sweep. CSS/JS bundling cache (`cache_css`/`cache_script`) remains a separate
+setting.
 
 ### Template Runtime
 
-The active template engine is `core/classes/template.php`.
-
-Confirmed costs and risks:
-
-- every template render checks source/cache freshness with `filemtime()`
-- every template file validation goes through `checkFile()`
-- `checkFile()` calls `realpath($this->base)` and validates the target path
-- high-fragment pages can produce many small filesystem checks, especially on
-  Windows/NTFS
-
-Recommended direction:
-
-- add in-request metadata caches for `checkFile()`, `realpath()`, and `filemtime()`
-- keep template validation semantics intact
-- avoid deep template rewrites before cheaper request-path fixes are exhausted
+The active engine (`core/classes/template.php`) compiles templates to PHP on
+disk (`storage/cache/templates/<theme>/`) with a stable content key and
+request-local memoization (`$fresh`, `$rpath`). On a warm cache a template
+render performs no template source reads and no re-compilation of template
+content (a cheap name-validation `preg_match` per call remains) — roughly ten
+stat-class calls on the first render of a file, then a plain `include` for
+repeats. String-sourced
+fragments (bodies of `{% block %}` / `{% slot %}`) are compiled to
+content-addressed `inline-*.php` files; superseded ones are not
+garbage-collected.
 
 ### Changelog
 
@@ -120,36 +131,6 @@ Recommended direction:
    changelog is used as a public page.
 4. Add a short fallback path when no cache exists and GitHub is slow or unavailable.
 
-### Frontend Tracking And Blocks
-
-`setHead()` still performs live request work when enabled:
-
-- session tracking when `conf['session']` is truthy
-- referer tracking when `conf['referers']['refer']` is truthy
-- statistic tracking when `conf['statistic']['stat']` is truthy
-
-`setFoot()` still collects footer, left, right, center, and down blocks before
-final page rendering.
-
-Current config enables:
-
-- `session = 1`
-- `referers.refer = 1`
-- `statistic.stat = 1`
-
-Performance risk:
-
-- monitoring and analytics are in the render path
-- right/left block zones can add DB, template, and parser work before the final
-  page can be emitted
-
-Recommended direction:
-
-- cache or batch tracking writes where correctness allows it
-- avoid rendering invisible block zones
-- cache stable block fragments with explicit invalidation
-- profile each block before optimizing globally
-
 ### Admin Runtime
 
 Admin layout assembly still performs live work:
@@ -173,24 +154,6 @@ Recommended direction:
    `COUNT(*)` where possible.
 5. Optionally cache admin counter blocks for a short TTL.
 
-### GeoIP
-
-`Geoip::getInfo()` has request-local result caching, but `getMmdb()` reads the
-entire MMDB file into memory with `file_get_contents()` and keeps it in a static
-per-process cache.
-
-Performance risk:
-
-- first lookup per PHP worker can be expensive with large MMDB files
-- cache is not shared across workers
-- ASN and country databases can both be loaded
-
-Recommended direction:
-
-- use a shared cache if available, or
-- read MMDB data through file handles and offsets instead of loading full files,
-  if this code path becomes a measured bottleneck
-
 ### Security Request Checks
 
 `core/security.php` always starts a PHP session and runs blocker checks. Request
@@ -211,42 +174,23 @@ Recommended direction:
 ### Scheduler And Heavy Jobs
 
 Scheduler config has pseudo-triggering enabled. Frontend output can include a
-small asynchronous trigger for due scheduler work.
-
-Heavy system jobs include:
-
-- database backup
-- file scan
-- sitemap generation
-- page-cache cleanup
-
-Current scheduler config enables database backup, file scan, and sitemap jobs.
-Page-cache cleanup is defined but inactive in the current default config.
-
-Performance risk:
-
-- heavy jobs are not part of normal PHP render when they are executed correctly,
-  but pseudo-triggered jobs can still compete for the same local PHP/IO resources
+small asynchronous trigger for due scheduler work. Heavy system jobs include
+database backup, file scan, sitemap generation, and page-cache cleanup.
 
 Recommended direction:
 
-- prefer a dedicated scheduler trigger outside normal page rendering for heavy
-  jobs
+- prefer a real OS cron (`pseudo = 0`) so frontend renders skip the trigger
+  file checks entirely
 - keep file scan and backup under locks and progress state
 - do not run heavy jobs synchronously in normal user requests
 
-## Priority Register
+### PHP Environment
 
-| Priority | Area | Current confidence | Main risk | First action |
-|---:|---|---|---|---|
-| P0 | Changelog GitHub cache miss | High | seconds on cold/missing cache | stale cache + async refresh |
-| P1 | Template filesystem metadata | High | repeated small IO on heavy pages | in-request metadata cache |
-| P1 | Admin module/sidebar assembly | High | repeated module scan, icons, counters | request-local caches + `COUNT(*)` |
-| P1 | Frontend tracking/block zones | Medium | live analytics/block work in render path | measure per block/track function |
-| P2 | GeoIP MMDB load | Medium | expensive first lookup per worker | shared cache or file-offset reads |
-| P2 | Asset discovery/bundling | Medium | disabled bundling and repeated file checks | enable/test asset cache |
-| P2 | Security blocker scans | Medium | large lists and regex cost | parsed-list cache, no behavior change |
-| P3 | Scheduler heavy jobs | Medium | background work competes with requests | dedicated scheduler trigger |
+The single largest generation-time factor measured in 2026-07 was OPcache being
+disabled in the local OSPanel PHP config (`;zend_extension = opcache`): every
+request re-compiled ~150-200 ms of PHP (core files plus compiled templates).
+Verify OPcache is loaded in the web SAPI before profiling anything else; without
+it, code-size growth translates directly into generation time.
 
 ## Static Asset Caching And Compression (Web Server)
 
@@ -419,8 +363,11 @@ ErrorDocument 504 /error.html
 - Do not assume page-cache cleanup scans cache files on every request; current
   cleanup is a scheduler task.
 - Do not treat SQL as the primary bottleneck without current measurements.
-- Do not treat template IO as the only root cause; it is a persistent overhead,
-  not the only proven multi-second source.
+- Do not treat template IO as a bottleneck: on a warm cache the compiled
+  engine performs no template source reads and no re-compilation.
+- Do not add visitor-bound markup to cacheable routes without registering a
+  dynamic region or accepting that the poison guard disables caching for the
+  route (see Page Cache above).
 - Do not refactor security checks for speed without focused security regression
   tests.
 

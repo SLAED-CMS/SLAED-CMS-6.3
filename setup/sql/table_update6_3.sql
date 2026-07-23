@@ -26,6 +26,7 @@ DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
 DROP PROCEDURE IF EXISTS mkuseruniq;
+DROP PROCEDURE IF EXISTS mksessuniq;
 DROP PROCEDURE IF EXISTS fixgrppk;
 DROP PROCEDURE IF EXISTS finalize_user_names;
 
@@ -224,6 +225,58 @@ BEGIN
                 EXECUTE stmt;
                 DEALLOCATE PREPARE stmt;
             END IF;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE mksessuniq(IN ptab VARCHAR(128))
+BEGIN
+    DECLARE ctab     INT DEFAULT 0;
+    DECLARE has_key  INT DEFAULT 0;
+    DECLARE has_uniq INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(DISTINCT index_name)
+          INTO has_uniq
+          FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND index_name = 'uname'
+           AND non_unique = 0;
+
+        IF has_uniq = 0 THEN
+            SET @sql = CONCAT(
+                'DELETE s FROM `', ptab, '` s JOIN `', ptab, '` t ',
+                'ON s.`uname` = t.`uname` AND (s.`time` < t.`time` OR (s.`time` = t.`time` AND s.`id` < t.`id`))'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+
+            SELECT COUNT(DISTINCT index_name)
+              INTO has_key
+              FROM information_schema.statistics
+             WHERE table_schema = DATABASE()
+               AND table_name = ptab
+               AND index_name = 'uname';
+
+            IF has_key > 0 THEN
+                SET @sql = CONCAT('ALTER TABLE `', ptab, '` DROP INDEX `uname`');
+                PREPARE stmt FROM @sql;
+                EXECUTE stmt;
+                DEALLOCATE PREPARE stmt;
+            END IF;
+
+            SET @sql = CONCAT('ALTER TABLE `', ptab, '` ADD UNIQUE KEY `uname` (`uname`)');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
         END IF;
     END IF;
 END$$
@@ -707,7 +760,7 @@ CALL addidx('{prefix}_search', 'word_modul', '`word`(191), `modul`', 0);
 
 CALL rencol('{prefix}_session', 'host_addr', 'ip');
 CALL renidx('{prefix}_session', 'host_addr', 'ip');
-CALL addidx('{prefix}_session', 'uname', '`uname`', 0);
+CALL mksessuniq('{prefix}_session');
 CALL addidx('{prefix}_session', 'time', '`time`', 0);
 CALL addidx('{prefix}_session', 'ip', '`ip`', 0);
 
@@ -1441,6 +1494,7 @@ DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
 DROP PROCEDURE IF EXISTS mkuseruniq;
+DROP PROCEDURE IF EXISTS mksessuniq;
 DROP PROCEDURE IF EXISTS fixgrppk;
 DROP PROCEDURE IF EXISTS finalize_user_names;
 

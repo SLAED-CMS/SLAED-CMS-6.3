@@ -612,7 +612,7 @@ CREATE TABLE `{prefix}_session` (
   `modul` VARCHAR(25) NOT NULL DEFAULT '',
   `url` VARCHAR(2048) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  KEY `uname` (`uname`),
+  UNIQUE KEY `uname` (`uname`),
   KEY `time` (`time`),
   KEY `ip` (`ip`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};

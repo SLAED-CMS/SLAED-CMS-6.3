@@ -113,6 +113,33 @@ class Cache {
         return $num;
     }
 
+    # Write the page sidecar describing one stored body: body hash plus dynamic flag, published after the body so a mismatched pair fails closed
+    public static function setMeta(string $file, string $body, bool $dyn): bool {
+        return self::setBody($file.'.json', json_encode(['sha1' => sha1($body), 'dyn' => $dyn ? 1 : 0]));
+    }
+
+    # Read and validate the page sidecar against the actual body; a missing, corrupt, or mismatched sidecar reports dynamic so serving fails closed to no-store
+    public static function getMeta(string $file, string $body): array {
+        $data = json_decode(self::getBody($file.'.json'), true);
+        if (!is_array($data) || !isset($data['sha1'], $data['dyn']) || !hash_equals((string)$data['sha1'], sha1($body))) return ['dyn' => true, 'valid' => false];
+        return ['dyn' => (bool)$data['dyn'], 'valid' => true];
+    }
+
+    # Recursively remove cached files under one directory older than the retention window, keeping protected markers and the directory tree; evicted live entries only trigger a cheap rebuild
+    public static function deleteStaleTree(string $dir, int $ttl): int {
+        if ($ttl < 1 || !is_dir($dir)) return 0;
+        $num = 0;
+        $edge = time() - $ttl;
+        $iter = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+        foreach ($iter as $file) {
+            if (!$file->isFile()) continue;
+            $name = $file->getFilename();
+            if ($name === '.htaccess' || $name === 'index.html') continue;
+            if ($file->getMTime() < $edge && unlink($file->getPathname())) $num++;
+        }
+        return $num;
+    }
+
     # Read the current page-cache generation counter, returning zero when it is missing
     public static function getEpoch(): int {
         $file = CACHE_DIR.'/pages/epoch';

@@ -10,7 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $tpl;
-$captcha = getCaptcha('login');
+$captcha = getPageCaptcha('login');
 $content = $tpl->getHtmlFrag('block-login-form', [
     'nickname_label' => _NICKNAME,
     'password_label' => _PASSWORD,
@@ -22,7 +22,7 @@ $content = $tpl->getHtmlFrag('block-login-form', [
         'value_attr' => '',
     ]),
     'captcha_html' => $captcha,
-    'hidden_inputs' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'refer', 'value_attr' => '1', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'login', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('account'), 'input_attr' => '']),
+    'hidden_inputs' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'refer', 'value_attr' => '1', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'login', 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken('account'), 'input_attr' => '']),
     'login_label' => _LOGIN,
     'oauth_html' => Oauth::getButtons(),
 ]);

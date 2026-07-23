@@ -34,12 +34,12 @@ define('UPLOADS_DIR', BASE_DIR.'/uploads');
 # cached immutable bundles are invalidated even when deployment preserves mtimes
 define('ASSETS_VER', 2);
 
-# Load the runtime config from cache, rebuilding it from source if needed
+# Load the runtime config from cache, rebuilding it from source if needed; the rebuild also stores derived data (asset manifests per theme, parsed SEO graph/schema, logo sizes) under $conf['derived'], so theme asset or logo changes need a config rebuild (admin save or deleting config/local.php) to take effect
 function getConfig(): array {
     $local_file = CONFIG_DIR.'/local.php';
     if (is_file($local_file) && is_readable($local_file)) {
         $cache = require $local_file;
-        if (is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']) && (($cache['_meta']['cache_version'] ?? 0) === 1)) {
+        if (is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']) && (($cache['_meta']['cache_version'] ?? 0) === 2)) {
             return $cache['_config'];
         }
     }
@@ -58,6 +58,28 @@ function getConfig(): array {
     }
     $conf['dev_mode'] ??= false;
     unset($conf['style']);
+    $stat = static function(array $files): string {
+        $map = [];
+        foreach ($files as $file) $map[$file] = is_file($file) ? filemtime($file).':'.filesize($file) : '0:0';
+        return sha1(serialize($map));
+    };
+    $conf['derived'] = [];
+    foreach (glob('templates/*', GLOB_ONLYDIR) ?: [] as $tdir) {
+        $tname = basename($tdir);
+        $centr = explode(',', str_replace('[theme]', $tname, (string)($conf['css_f'] ?? '')));
+        $sentr = explode(',', (string)($conf['script_f'] ?? ''));
+        $clist = array_values(array_unique(array_merge(getAssetFiles($centr, 'css'), getThemeAssets($tname, 'css'))));
+        $slist = array_values(array_unique(array_merge(getAssetFiles($sentr, 'js'), getThemeAssets($tname, 'js'))));
+        $conf['derived']['assets'][$tname] = ['css' => $clist, 'cssfp' => $stat($clist), 'js' => $slist, 'jsfp' => $stat($slist)];
+        $conf['derived']['logo'][$tname] = getImageBox($tdir.'/images/logos/'.($conf['site_logo'] ?? ''));
+    }
+    if (!empty($conf['graph'])) $conf['derived']['graph'] = getSeoGraph((string)$conf['graph'], []);
+    if (!empty($conf['schema'])) {
+        try {
+            $conf['derived']['schema'] = getSeoJsonItems((string)$conf['schema']);
+        } catch (Throwable) {
+        }
+    }
     $export = function (array $arr, int $dep = 0) use (&$export): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
@@ -72,7 +94,7 @@ function getConfig(): array {
     $data = [
         '_meta' => [
             'base_fingerprint' => sha1($hash),
-            'cache_version' => 1,
+            'cache_version' => 2,
             'generated_at' => time(),
         ],
         '_config' => $conf,
@@ -414,7 +436,7 @@ function addSchedulerTrigger(): string {
     if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return '';
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
-    return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.rawurlencode(getSiteToken('scheduler'));
+    return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.(checkPageCache() ? getDynamicMark('token', 'scheduler') : rawurlencode(getSiteToken('scheduler')));
 }
 
 # Fetches a remote scheduler target through a safe GET request and captures transport errors
@@ -971,9 +993,40 @@ function getAdminModuleNames(string $modules): array {
     return array_values(array_unique($list));
 }
 
-# Track the current visitor session and return derived tracking context
+# Queue one post-response task or return and clear the queue when called without arguments; the shutdown hook backstops exits that skip an explicit drain
+function addDeferredTask(?callable $task = null): array {
+    static $queue = [];
+    static $init = false;
+    if ($task !== null) {
+        $queue[] = $task;
+        if (!$init) {
+            $init = true;
+            register_shutdown_function('setDeferredTasks');
+        }
+        return [];
+    }
+    $out = $queue;
+    $queue = [];
+    return $out;
+}
+
+# Run all queued post-response tracking tasks, releasing the session lock first so the tasks never block the visitor's next request
+function setDeferredTasks(): void {
+    $tasks = addDeferredTask();
+    if ($tasks === []) return;
+    if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+    foreach ($tasks as $task) {
+        try {
+            $task();
+        } catch (Throwable $err) {
+            if (class_exists('Logger')) Logger::addSite('error', 'Deferred task failed', ['error' => $err->getMessage()]);
+        }
+    }
+}
+
+# Resolve the visitor identity for tracking and queue the session bookkeeping writes for the post-response phase
 function updateSessionTrack(int $ctime, string $request, string $name): array {
-    global $db, $conf, $user, $admin;
+    global $user, $admin;
     $ip = getIp();
     $url = substr(urlencode($request), 0, 2048);
     $guest = 0;
@@ -994,29 +1047,29 @@ function updateSessionTrack(int $ctime, string $request, string $name): array {
             $guest = 0;
         }
     }
-    $sessf = COUNTER_DIR.'/session.log';
-    $sesst = (file_exists($sessf) && filesize($sessf) != 0) ? file_get_contents($sessf) : 0;
-    $past = $ctime - intval($conf['sess_t']);
-    if ($sesst < $past) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE time < :past', ['past' => $past]);
-        if (file_exists($sessf)) unlink($sessf);
-        $fp = fopen($sessf, 'wb');
-        fwrite($fp, $ctime);
-        fclose($fp);
-    }
-    if ($uname !== '') {
-        if (!defined('ADMIN_FILE') && is_user()) {
-            $uagent = getAgent();
-            $uid = intval($user[0]);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
+    $uid = (!defined('ADMIN_FILE') && is_user()) ? intval($user[0]) : 0;
+    $uagent = ($uid) ? getAgent() : '';
+    addDeferredTask(static function() use ($ctime, $uname, $guest, $ip, $url, $name, $uid, $uagent): void {
+        global $db, $conf;
+        $sessf = COUNTER_DIR.'/session.log';
+        $sesst = (file_exists($sessf) && filesize($sessf) != 0) ? file_get_contents($sessf) : 0;
+        $past = $ctime - intval($conf['sess_t']);
+        if ($sesst < $past) {
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE time < :past', ['past' => $past]);
+            if (file_exists($sessf)) unlink($sessf);
+            $fp = fopen($sessf, 'wb');
+            fwrite($fp, $ctime);
+            fclose($fp);
         }
-        $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session WHERE uname = :uname', ['uname' => $uname]));
-        if ($num >= 1) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, ip = :ip, guest = :guest, modul = :modul, url = :url WHERE uname = :uname', ['time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url, 'uname' => $uname]);
-        } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, modul, url) VALUES (:uname, :time, :ip, :guest, :modul, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url]);
+        if ($uname !== '') {
+            if ($uid) {
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid AND lastvis < NOW() - INTERVAL 60 SECOND', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
+            }
+            $sql = 'INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, modul, url) VALUES (:uname, :time, :ip, :guest, :modul, :url)'
+                .' ON DUPLICATE KEY UPDATE time = VALUES(time), ip = VALUES(ip), guest = VALUES(guest), modul = VALUES(modul), url = VALUES(url)';
+            $db->getSqlQuery($sql, ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url]);
         }
-    }
+    });
     return ['uname' => $uname, 'guest' => $guest];
 }
 
@@ -1047,18 +1100,16 @@ function updateRefererTrack(int $ctime, string $request, string $uname): void {
             }
             return;
         }
-        $islink = 0;
-        $slink = '';
-        $result = $db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links');
-        while ([$slink] = $db->getSqlRow($result)) {
-            if (preg_match('#'.$slink.'#i', $referer)) {
-                $islink = 1;
+        $lid = 0;
+        $result = $db->getSqlQuery('SELECT id, url FROM '.PREFIX_DB.'_auto_links');
+        while ([$aid, $aurl] = $db->getSqlRow($result)) {
+            if ($aurl !== '' && stripos($referer, $aurl) !== false) {
+                $lid = intval($aid);
                 break;
             }
         }
-        if ($islink) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE url = :url', ['url' => $slink]);
-            [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $slink]));
+        if ($lid) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE id = :lid', ['lid' => $lid]);
             $args['lid'] = $lid;
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
             return;
@@ -1197,62 +1248,81 @@ function getAgentInfo(string $ua, int $guest): array {
     return ['browser' => $browser, 'os' => $os, 'device' => $device];
 }
 
-# Update the active session state in the sliding session log
-function updateSessionState(string $sid, int $ctime): array {
-    $file = COUNTER_DIR.'/sessions.log';
-    $ret = ['is_new' => false, 'depth' => 1, 'duration' => 0];
-    $fp = fopen($file, 'c+');
-    if ($fp === false) return $ret;
-    if (!flock($fp, LOCK_EX)) {
-        fclose($fp);
-        return $ret;
-    }
-    try {
-        rewind($fp);
-        $data = stream_get_contents($fp);
-        $lim = $ctime - 1800;
-        $rows = [];
-        $found = false;
-        $lines = ($data !== false && $data !== '') ? explode("\n", trim($data)) : [];
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') continue;
-            $pts = array_pad(explode('|', $line, 4), 4, '');
-            $csid = (string)$pts[0];
-            $fst = (int)$pts[1];
-            $lst = (int)$pts[2];
-            $hits = (int)$pts[3];
-            if ($lst < $lim) continue;
-            if ($csid === $sid) {
-                if ($found) continue;
-                $found = true;
-                $hits = ($hits > 0) ? $hits + 1 : 1;
-                $lst = $ctime;
-                $ret['depth'] = $hits;
-                $ret['duration'] = max(0, $lst - $fst);
-                $rows[] = $csid.'|'.$fst.'|'.$lst.'|'.$hits;
-                continue;
+# Refresh and persist the signed visitor stats cookie in the pre-output phase; session metrics are cookie-borne approximations while file and DB counters stay exact, the unique-day and user-count marks are optimistic skip-fast-paths and the locked counter files remain the source of truth
+function updateStatsCookie(int $guest): array {
+    global $conf, $user;
+    $state = ['sess' => null, 'country' => '', 'uniq' => false, 'ucnt' => false];
+    if ($guest === 1 || $guest === 3) return $state;
+    $ip = getIp();
+    $key = getSecret('stats');
+    $iph = substr(hash_hmac('sha256', $ip, $key), 0, 16);
+    $now = time();
+    $today = date('d.m.Y');
+    $sid = '';
+    $fst = 0;
+    $lst = 0;
+    $hits = 0;
+    $cc = '';
+    $cts = 0;
+    $uniq = '';
+    $raw = (string)($_COOKIE[$conf['user_c'].'-stats'] ?? '');
+    if ($raw !== '' && preg_match('#^[A-Za-z0-9_-]+$#', $raw)) {
+        $data = base64_decode(strtr($raw, '-_', '+/'), true);
+        $pos = ($data !== false) ? strrpos($data, '|') : false;
+        if ($pos !== false && hash_equals(hash_hmac('sha256', substr($data, 0, $pos), $key), substr($data, $pos + 1))) {
+            $part = array_pad(explode('|', substr($data, 0, $pos)), 9, '');
+            if ($part[0] === 'v1' && preg_match('#^[a-f0-9]{16}$#', $part[1])) {
+                [, $sid, $fst, $lst, $hits, $cc, $cts, $uniq, $oiph] = $part;
+                $fst = (int)$fst;
+                $lst = (int)$lst;
+                $hits = (int)$hits;
+                $cts = (int)$cts;
+                if ($oiph !== $iph) {
+                    $cc = '';
+                    $cts = 0;
+                    $uniq = '';
+                }
             }
-            $rows[] = $csid.'|'.$fst.'|'.$lst.'|'.$hits;
         }
-        if (!$found) {
-            $ret['is_new'] = true;
-            $rows[] = $sid.'|'.$ctime.'|'.$ctime.'|1';
-        }
-        $txt = $rows !== [] ? implode(PHP_EOL, $rows).PHP_EOL : '';
-        rewind($fp);
-        ftruncate($fp, 0);
-        if ($txt !== '') fwrite($fp, $txt);
-        fflush($fp);
-    } finally {
-        flock($fp, LOCK_UN);
-        fclose($fp);
     }
-    return $ret;
+    if ($sid === '') {
+        try {
+            $sid = bin2hex(random_bytes(8));
+        } catch (Exception) {
+            return $state;
+        }
+    }
+    $isnew = ($lst < $now - 1800);
+    if ($isnew) {
+        $fst = $now;
+        $hits = 1;
+    } else {
+        $hits++;
+    }
+    $lst = $now;
+    $state['sess'] = ['is_new' => $isnew, 'depth' => $hits, 'duration' => max(0, $lst - $fst)];
+    if ($cc === '' || $cts < $now - 86400) {
+        $cc = class_exists('Geoip') ? Geoip::getCountry($ip) : '';
+        $cts = $now;
+    }
+    $state['country'] = $cc;
+    $state['uniq'] = ($uniq === $today);
+    if ($guest === 2 && session_status() === PHP_SESSION_ACTIVE) {
+        $skey = $conf['user_c'].'-ucount';
+        $uval = $today.'|'.filterText(substr((string)($user[1] ?? ''), 0, 25), 1);
+        $state['ucnt'] = (($_SESSION[$skey] ?? '') === $uval);
+        if (!$state['ucnt']) $_SESSION[$skey] = $uval;
+    }
+    if (!headers_sent()) {
+        $body = implode('|', ['v1', $sid, $fst, $lst, $hits, $cc, $cts, $today, $iph]);
+        $val = rtrim(strtr(base64_encode($body.'|'.hash_hmac('sha256', $body, $key)), '+/', '-_'), '=');
+        setCookies('stats', $now + 31536000, $val);
+    }
+    return $state;
 }
 
-# Track daily statistics and rotate counter files when periods change
-function updateStatsTrack(string $request, int $guest): void {
+# Write daily statistics counters in the post-response phase from the pre-computed cookie state, all statistic.log access runs under one exclusive lock on a single handle
+function updateStatsTrack(string $request, int $guest, array $state): void {
     global $conf;
     $sreferer = getReferer();
     $sreqhom = filterText($request);
@@ -1260,36 +1330,8 @@ function updateStatsTrack(string $request, int $guest): void {
     $slog = $spath.'statistic.log';
     $info = getAgentInfo(getAgent(), $guest);
     $rcat = ($guest !== 1) ? getRefCategory($sreferer) : '';
-    $ip = getIp();
-    $cc = class_exists('Geoip') ? Geoip::getCountry($ip) : '';
-    $sid = '';
-    if ($guest !== 1 && $guest !== 3) {
-        $sid = getCookies('stats') ?: (string)($_COOKIE['stats_id'] ?? '');
-        if ($sid === '' && !headers_sent()) {
-            try {
-                $sid = bin2hex(random_bytes(8));
-            } catch (Exception) {
-                $sid = '';
-            }
-            if ($sid !== '') setCookies('stats', time() + 31536000, $sid);
-        }
-    }
-    $sess = null;
-    if ($guest !== 1 && $guest !== 3 && $sid !== '' && is_dir(COUNTER_DIR) && is_writable(COUNTER_DIR)) {
-        $sess = updateSessionState($sid, time());
-    }
-    $safeReadLines = static function(string $file) {
-        if (!is_file($file) || !is_readable($file)) return false;
-        set_error_handler(static function(): bool {
-            return true;
-        });
-        try {
-            $lines = file($file);
-        } finally {
-            restore_error_handler();
-        }
-        return $lines ?: false;
-    };
+    $cc = ($state['country'] !== '') ? $state['country'] : (class_exists('Geoip') ? Geoip::getCountry(getIp()) : '');
+    $sess = $state['sess'];
     $safeOpen = static function(string $file, string $mode) {
         set_error_handler(static function(): bool {
             return true;
@@ -1301,84 +1343,58 @@ function updateStatsTrack(string $request, int $guest): void {
         }
         return $handle ?: false;
     };
-    $sdate = $safeReadLines($slog);
-    if ($sdate) {
-        $con = explode('|', trim($sdate[0]));
-        if (date('d.m.Y') != $con[0]) {
-            $fpd = $safeOpen($spath.'days.log', 'ab');
-            if ($fpd && flock($fpd, LOCK_EX)) {
-                fwrite($fpd, $sdate[0].PHP_EOL);
-                fflush($fpd);
-                flock($fpd, LOCK_UN);
-            }
-            if ($fpd) fclose($fpd);
-            if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');
-            if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
-            if (file_exists($spath.'user.log')) unlink($spath.'user.log');
-            if (substr($con[0], 3) != date('m.Y')) {
-                $month = date('Y-m', strtotime('-1 month'));
-                $sdir = $spath.'statistic';
-                if (!is_dir($sdir)) mkdir($sdir, 0755, true);
-                rename($spath.'days.log', $sdir.'/statistic_'.$month.'.log');
-                if (file_exists($spath.'days.log')) unlink($spath.'days.log');
-            }
-            $ahits = ($con[3] ?? 0) ? (($con[3] ?? 0) + 1) : '1';
-            $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
-            $srefer = ($sreferer) ? '1' : '0';
-            $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
-            $wc = date('d.m.Y').'|0|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-            $prev = (isset($con) && ($con[0] ?? '') === date('d.m.Y')) ? $con : [];
-            $ext = explode('|', $wc);
-            $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
-            $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
-            $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
-            $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
-            $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
-            $ext[13] = updateHoursField($prev[13] ?? '', (int)date('G'));
-            $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
-            $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
-            $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
-            $wc = implode('|', $ext);
-        } else {
-            $check = checkUniqueIp();
-            $checku = check_user();
+    $fps = $safeOpen($slog, 'c+');
+    if ($fps === false) return;
+    if (!flock($fps, LOCK_EX)) {
+        fclose($fps);
+        return;
+    }
+    try {
+        rewind($fps);
+        $data = stream_get_contents($fps);
+        $line = ($data !== false) ? trim($data) : '';
+        $con = ($line !== '') ? explode('|', $line) : [];
+        $today = date('d.m.Y');
+        $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? 1 : 0;
+        if ($con !== [] && $con[0] === $today) {
+            $check = checkUniqueIp($state['uniq']);
+            $checku = check_user($state['ucnt']);
             $shost = ($check) ? intval(($con[1] ?? 0) + 1) : ($con[1] ?? 0);
             $sengine = ($check && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
             $srefer = ($check && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
-            $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
+            $shome = ($reqhom) ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
             $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
-            $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
-            $prev = (isset($con) && ($con[0] ?? '') === date('d.m.Y')) ? $con : [];
-            $ext = explode('|', $wc);
-            $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
-            $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
-            $ext[10] = updateCounterField($prev[10] ?? '', $info['device']);
-            $ext[11] = ($cc !== '') ? updateCounterField($prev[11] ?? '', $cc) : ($prev[11] ?? '');
-            $ext[12] = ($guest !== 1) ? updateCounterField($prev[12] ?? '', $rcat) : ($prev[12] ?? '');
-            $ext[13] = updateHoursField($prev[13] ?? '', (int)date('G'));
-            $ext[14] = ($sess !== null) ? updateCounterField($prev[14] ?? '', $sess['is_new'] ? 'new' : 'returning') : ($prev[14] ?? '');
-            $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
-            $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
-            $wc = implode('|', $ext);
+            $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$shome.'|'.$suser;
+            $prev = $con;
+        } else {
+            if ($con !== []) {
+                $fpd = $safeOpen($spath.'days.log', 'ab');
+                if ($fpd && flock($fpd, LOCK_EX)) {
+                    fwrite($fpd, $line.PHP_EOL);
+                    fflush($fpd);
+                    flock($fpd, LOCK_UN);
+                }
+                if ($fpd) fclose($fpd);
+                if (substr($con[0], 3) != date('m.Y')) {
+                    $month = date('Y-m', strtotime('-1 month'));
+                    $sdir = $spath.'statistic';
+                    if (!is_dir($sdir)) mkdir($sdir, 0755, true);
+                    rename($spath.'days.log', $sdir.'/statistic_'.$month.'.log');
+                    if (file_exists($spath.'days.log')) unlink($spath.'days.log');
+                }
+            }
+            if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
+            if (file_exists($spath.'user.log')) unlink($spath.'user.log');
+            $check = checkUniqueIp();
+            $checku = check_user();
+            $ahits = ($con[3] ?? 0) ? intval(($con[3] ?? 0) + 1) : 1;
+            $shost = ($check) ? 1 : 0;
+            $sengine = ($conf['session'] && $guest == 1) ? 1 : 0;
+            $srefer = ($sreferer) ? 1 : 0;
+            $suser = ($checku && $conf['session'] && $guest == 2) ? 1 : 0;
+            $wc = $today.'|'.$shost.'|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
+            $prev = [];
         }
-        $fps = $safeOpen($spath.'statistic.log', 'wb');
-        if ($fps && flock($fps, LOCK_EX)) {
-            ftruncate($fps, 0);
-            fwrite($fps, $wc);
-            fflush($fps);
-            flock($fps, LOCK_UN);
-        }
-        if ($fps) fclose($fps);
-        return;
-    }
-    if (!file_exists($slog) || filemtime($slog) < strtotime('today midnight')) {
-        if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
-        if (file_exists($spath.'user.log')) unlink($spath.'user.log');
-        $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
-        $srefer = ($sreferer) ? '1' : '0';
-        $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
-        $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-        $prev = [];
         $ext = explode('|', $wc);
         $ext[8] = updateCounterField($prev[8] ?? '', $info['browser']);
         $ext[9] = updateCounterField($prev[9] ?? '', $info['os']);
@@ -1390,13 +1406,13 @@ function updateStatsTrack(string $request, int $guest): void {
         $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
         $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
         $wc = implode('|', $ext);
-        $fps = $safeOpen($slog, 'wb');
-        if ($fps && flock($fps, LOCK_EX)) {
-            fwrite($fps, $wc);
-            fflush($fps);
-            flock($fps, LOCK_UN);
-        }
-        if ($fps) fclose($fps);
+        rewind($fps);
+        ftruncate($fps, 0);
+        fwrite($fps, $wc);
+        fflush($fps);
+    } finally {
+        flock($fps, LOCK_UN);
+        fclose($fps);
     }
 }
 
@@ -1581,18 +1597,32 @@ function getSeoSchema(string $kind, array $seo, bool $ishome = false): array {
     return $data;
 }
 
+# Return the shared category map for one module or all modules as id => raw title, parent, ordern; epoch-keyed persistent data cache plus request-static, callers apply getConst and escaping at their own boundary
+function getCategoryMap(string $mod = ''): array {
+    global $db;
+    static $maps = [];
+    $key = ($mod === '') ? '*' : $mod;
+    if (isset($maps[$key])) return $maps[$key];
+    $file = Cache::getPath('data', Cache::getHash(['catmap', $key, Cache::getEpoch()]), 'json');
+    if (Cache::isFresh($file, 86400)) {
+        $data = json_decode(Cache::getBody($file), true);
+        if (is_array($data)) return $maps[$key] = $data;
+    }
+    $where = ($mod !== '') ? ' WHERE modul = :modul' : '';
+    $pars = ($mod !== '') ? ['modul' => $mod] : [];
+    $res = $db->getSqlQuery('SELECT id, title, parent, ordern FROM '.PREFIX_DB.'_categories'.$where, $pars);
+    $map = [];
+    while ([$cid, $title, $parent, $ordern] = $db->getSqlRow($res)) {
+        $map[(int)$cid] = ['title' => (string)$title, 'parent' => (int)$parent, 'ordern' => (int)$ordern];
+    }
+    Cache::setBody($file, json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    return $maps[$key] = $map;
+}
+
 # Build a visible module/category/page breadcrumb trail as BreadcrumbList data
 function getSeoBreadcrumbSchema(string $name, int $cid, string $title, string $url): array {
-    global $db;
     if ($name === '' || $cid < 1) return [];
-    $res = $db->getSqlQuery(
-        'SELECT id, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :modul',
-        ['modul' => $name]
-    );
-    $cats = [];
-    while ([$id, $ctit, $parent] = $db->getSqlRow($res)) {
-        $cats[(int)$id] = ['title' => filterSeoText(getConst($ctit)), 'parent' => (int)$parent];
-    }
+    $cats = getCategoryMap($name);
     $chain = [];
     $cur = $cid;
     $guard = 0;
@@ -1614,25 +1644,66 @@ function getSeoBreadcrumbSchema(string $name, int $cid, string $title, string $u
         $items[] = [
             '@type' => 'ListItem',
             'position' => $pos++,
-            'name' => $cats[$id]['title'],
+            'name' => filterSeoText(getConst($cats[$id]['title'])),
             'item' => getPublicUrl(['name' => $name, 'cat' => $id]),
         ];
     }
-    if ($title !== '' && $title !== $cats[$cid]['title']) {
+    if ($title !== '' && $title !== filterSeoText(getConst($cats[$cid]['title']))) {
         $items[] = ['@type' => 'ListItem', 'position' => $pos, 'name' => $title, 'item' => $url];
     }
     return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $items];
 }
 
-# Decide whether the current frontend request may be served from or stored into the page cache
+# Record or report visitor-bound content leaking into a cacheable page build; a poisoned build is never stored in the page cache
+function checkCachePoison(bool $mark = false): bool {
+    static $bad = false;
+    if ($mark) $bad = true;
+    return $bad;
+}
+
+# Build one signed dynamic-region marker for cacheable page builds; the HMAC keeps user-supplied content from forging substitutable markers
+function getDynamicMark(string $type, string $par = ''): string {
+    return '[[sldyn:'.$type.':'.$par.':'.substr(hash_hmac('sha256', $type.':'.$par, getSecret('dynreg')), 0, 16).']]';
+}
+
+# Return the CSRF token for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable
+function getPageToken(string $scope = 'ajax'): string {
+    return checkPageCache() ? getDynamicMark('token', $scope) : getSiteToken($scope);
+}
+
+# Return the captcha block for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable
+function getPageCaptcha(string $act): string {
+    return checkPageCache() ? getDynamicMark('captcha', $act) : getCaptcha($act);
+}
+
+# Render one known dynamic region fresh for the current visitor; markers carry only a validated type and parameter, never code
+function getDynamicRegion(string $type, string $par): string {
+    if ($type === 'token') return htmlspecialchars(getSiteToken($par !== '' ? $par : 'ajax'), ENT_QUOTES, 'UTF-8');
+    if ($type === 'captcha') return getCaptcha($par !== '' ? $par : 'login');
+    if ($type === 'voting') return ((int)$par > 0) ? getVotingView((int)$par, 'blockvoting') : '';
+    return '';
+}
+
+# Replace signed dynamic-region markers with freshly rendered visitor-bound content; unsigned or forged markers stay literal text
+function setDynamicRegions(string $html): string {
+    if (!str_contains($html, '[[sldyn:')) return $html;
+    return preg_replace_callback('#\[\[sldyn:([a-z]+):([a-z0-9_-]*):([a-f0-9]{16})\]\]#', static function(array $m): string {
+        if (!hash_equals(substr(hash_hmac('sha256', $m[1].':'.$m[2], getSecret('dynreg')), 0, 16), $m[3])) return $m[0];
+        return getDynamicRegion($m[1], $m[2]);
+    }, $html) ?? $html;
+}
+
+# Decide whether the current frontend request may be served from or stored into the page cache; routes are default-deny and must be allowlisted per module and op
 function checkPageCache(): bool {
-    global $conf, $home, $name;
+    global $conf, $home, $name, $op;
     if (defined('ADMIN_FILE')) return false;
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') return false;
     if (empty($conf['cache'])) return false;
     if ($conf['cache'] == 2 && !$home) return false;
     if (is_user() || isAdmin()) return false;
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
+    $ops = ['news' => ['']];
+    if (!in_array((string)($op ?? ''), $ops[$name ?? ''] ?? [], true)) return false;
     $url = str_replace('/', '', $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '');
     $url = $url ?: 'index.php';
     if ($conf['cache'] == 2) {
@@ -1653,7 +1724,7 @@ function getPageHash(): string {
 function addCacheGcTask(): array {
     global $conf;
     $ttl = max((int)$conf['cache_t'] * 24, 86400);
-    $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl);
+    $num = Cache::deleteStale('html', $ttl) + Cache::deleteStale('locks', $ttl) + Cache::deleteStale('data', $ttl) + Cache::deleteStaleTree(CACHE_DIR.'/templates', $ttl);
     return ['status' => 'success', 'message' => 'Removed '.$num.' cache files'];
 }
 
@@ -1671,24 +1742,40 @@ function setHead(array $seo = []): void {
         $uname = '';
         $guest = 0;
     }
-    if ($conf['referers']['refer']) updateRefererTrack($ctime, $request, $uname);
-    if ($conf['statistic']['stat']) updateStatsTrack($request, $guest);
+    if ($conf['referers']['refer']) addDeferredTask(static fn() => updateRefererTrack($ctime, $request, $uname));
+    if ($conf['statistic']['stat']) {
+        $stats = updateStatsCookie($guest);
+        addDeferredTask(static fn() => updateStatsTrack($request, $guest, $stats));
+    }
     if (checkPageCache()) {
         $hash = getPageHash();
         $file = Cache::getPath('html', $hash, 'html');
         if (Cache::isFresh($file, $conf['cache_t'])) {
-            if ($conf['cache_b'] === '1' && $conf['db_t'] != '1') {
-                $mtime = filemtime($file);
-                Cache::setHeaders(true, $conf['cache_d'], 'text/html', $mtime);
-                if (Cache::checkNotModified($mtime)) exit;
+            $body = Cache::getBody($file);
+            if ($body !== '') {
+                $meta = Cache::getMeta($file, $body);
+                if (!$meta['dyn'] && $conf['cache_b'] === '1' && $conf['db_t'] != '1') {
+                    $mtime = filemtime($file);
+                    Cache::setHeaders(true, $conf['cache_d'], 'text/html', $mtime);
+                    if (Cache::checkNotModified($mtime)) {
+                        setDeferredTasks();
+                        exit;
+                    }
+                } elseif ($meta['dyn']) {
+                    Cache::setHeaders(false);
+                }
+                echo getTimedHtml(setDynamicRegions($body));
+                setDeferredTasks();
+                exit;
             }
-            echo getTimedHtml(Cache::getBody($file));
-            exit;
         }
         if (!empty($conf['cache_l']) && is_file($file) && !Cache::getRebuildLock($hash)) {
             $body = Cache::getBody($file);
             if ($body !== '') {
-                echo getTimedHtml($body);
+                $meta = Cache::getMeta($file, $body);
+                if ($meta['dyn']) Cache::setHeaders(false);
+                echo getTimedHtml(setDynamicRegions($body));
+                setDeferredTasks();
                 exit;
             }
         }
@@ -1759,7 +1846,11 @@ function setHead(array $seo = []): void {
         if (!empty($conf['agraph'])) {
             $graph = ['og:site_name' => $site, 'og:locale' => _LOCALE, 'og:title' => $title, 'og:image' => $img, 'og:type' => $type, 'og:url' => $purl];
             if ($desc !== '') $graph['og:description'] = $desc;
-            if (!empty($conf['graph'])) $graph = array_replace($graph, getSeoGraph((string)$conf['graph'], $gvars));
+            if (!empty($conf['graph'])) {
+                $gset = $conf['derived']['graph'] ?? getSeoGraph((string)$conf['graph'], []);
+                foreach ($gset as $gkey => $gval) $gset[$gkey] = str_replace(array_keys($gvars), array_values($gvars), $gval);
+                $graph = array_replace($graph, $gset);
+            }
             foreach ($graph as $prop => $value) {
                 $strmeta .= $tpl->getHtmlFrag('head-meta', [
                     'is_property' => true,
@@ -1791,7 +1882,7 @@ function setHead(array $seo = []): void {
             if ($bread) $items[] = $bread;
             if (!empty($conf['schema'])) {
                 try {
-                    $custom = getSeoJsonItems((string)$conf['schema']);
+                    $custom = $conf['derived']['schema'] ?? getSeoJsonItems((string)$conf['schema']);
                     foreach ($custom as $item) $items[] = setSeoJsonVars($item, $jvars);
                 } catch (Throwable $e) {
                     static $bad = [];
@@ -1874,8 +1965,8 @@ function setHead(array $seo = []): void {
         }
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'is_logged' => true, 'items_html' => $html]);
     } elseif ($conf['users']['enter']) {
-        $captcha = getCaptcha('login');
-        $atok = htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8');
+        $captcha = getPageCaptcha('login');
+        $atok = htmlspecialchars(getPageToken('account'), ENT_QUOTES, 'UTF-8');
         $login = $tpl->getHtmlPart('login-nav', [
             'login'    => _LOGIN,
             'nickname' => _NICKNAME,
@@ -1898,7 +1989,7 @@ function setHead(array $seo = []): void {
         $item = $tpl->getHtmlFrag('link', ['href' => 'index.php?name=account', 'title' => _BREG, 'label' => _BREG, 'is_login_button' => true, 'is_bold_label' => true]);
         $login = $tpl->getHtmlFrag('list', ['is_unordered' => true, 'is_login_top' => true, 'items_html' => $tpl->getHtmlFrag('list-item', ['content_html' => $item])]);
     }
-    [$logo_w, $logo_h] = getImageBox(BASE_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
+    [$logo_w, $logo_h] = $conf['derived']['logo'][$theme] ?? getImageBox(BASE_DIR.'/templates/'.$theme.'/images/logos/'.($conf['site_logo'] ?? ''));
     $sitevars = [
         'theme' => getTheme(),
         'lang' => substr(_LOCALE, 0, 2),
@@ -2015,17 +2106,22 @@ function setFoot(): void {
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     $html = getOutputHtml($tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app'));
     unset($sitepage, $sitevars);
-    if ($docache && $html !== '') {
+    if ($docache && $html !== '' && !checkCachePoison()) {
+        $body = !empty($conf['cache_c']) ? getOutputHtml($html, true) : $html;
+        $dyn = str_contains($body, '[[sldyn:');
         $file = Cache::getPath('html', getPageHash(), 'html');
-        $done = Cache::setBody($file, !empty($conf['cache_c']) ? getOutputHtml($html, true) : $html);
-        if ($done && $conf['cache_b'] === '1' && $conf['db_t'] != '1') {
+        $done = Cache::setBody($file, $body) && Cache::setMeta($file, $body, $dyn);
+        if ($done && !$dyn && $conf['cache_b'] === '1' && $conf['db_t'] != '1') {
             clearstatcache(true, $file);
             Cache::setHeaders(true, $conf['cache_d'], 'text/html', filemtime($file));
         }
+        if ($dyn && !headers_sent()) Cache::setHeaders(false);
     }
     Cache::setRebuildFree();
-    echo getTimedHtml($html);
+    echo getTimedHtml(setDynamicRegions($html));
     while (ob_get_level() > 0) ob_end_flush();
+    flush();
+    setDeferredTasks();
     exit;
 }
 
@@ -2139,7 +2235,8 @@ function checkCompress(): array {
 }
 
 # Check if IP exists in log, add once if missing
-function checkUniqueIp(): bool {
+function checkUniqueIp(bool $known = false): bool {
+    if ($known) return false;
     $file = COUNTER_DIR.'/ips.log';
     $ip = getIp();
     if (file_exists($file)) {
@@ -2557,19 +2654,24 @@ function getAssetFiles(array $entries, string $ext): array {
 function doScript(): string {
     global $theme, $conf, $tpl;
     $async = ($conf['script_a']) ? 'async ' : '';
-    $entries = explode(',', $conf['script_f']);
-    $entries = is_array($entries) ? $entries : [];
-    $array = array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'));
-    $array = array_values(array_unique($array));
+    $drv = $conf['derived']['assets'][$theme] ?? null;
+    if ($drv !== null) {
+        $array = $drv['js'];
+    } else {
+        $entries = explode(',', $conf['script_f']);
+        $array = array_values(array_unique(array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'))));
+    }
     $arr = [];
     $cont = '';
     if (!defined('ADMIN_FILE')) {
-        $mtimes = array_map(fn($file) => is_file($file) ? filemtime($file) : 0, $array);
-        $sizes = array_map(fn($file) => is_file($file) ? filesize($file) : 0, $array);
-        $bits = array_merge(['assets-v'.ASSETS_VER, $theme, 'js'], $array, $mtimes, $sizes, [$conf['script_c'], $conf['script_h'], $conf['script_a']]);
-        $hash = Cache::getHash($bits);
-        $sfile = Cache::getPath('assets', $hash, 'js');
-        $route = 'index.php?go=asset&file='.$hash.'&type=js';
+        $sfile = '';
+        $route = '';
+        if ($conf['cache_script']) {
+            $fp = $drv['jsfp'] ?? sha1(serialize(array_map(static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0', array_combine($array, $array) ?: [])));
+            $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'js', $fp, $conf['script_c'], $conf['script_h'], $conf['script_a']]);
+            $sfile = Cache::getPath('assets', $hash, 'js');
+            $route = 'index.php?go=asset&file='.$hash.'&type=js';
+        }
         if ($conf['cache_script'] && Cache::isFresh($sfile, $conf['cache_t'])) {
             $cont = ($conf['script_h']) ? Cache::getBody($sfile) : $tpl->getHtmlFrag('head-script-src', ['src' => $route, 'attr' => trim($async)]);
         } else {
@@ -2608,22 +2710,25 @@ function doScript(): string {
 # Definition and processing of CSS files
 function doCss(): string {
     global $theme, $conf, $tpl;
-    $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
-    $array = array_merge(
-        getAssetFiles(is_array($entries) ? $entries : [], 'css'),
-        getThemeAssets($theme, 'css')
-    );
-    $array = array_values(array_unique($array));
+    $drv = $conf['derived']['assets'][$theme] ?? null;
+    if ($drv !== null) {
+        $array = $drv['css'];
+    } else {
+        $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
+        $array = array_values(array_unique(array_merge(getAssetFiles($entries, 'css'), getThemeAssets($theme, 'css'))));
+    }
     $arr = [];
     $cont = '';
     if (!defined('ADMIN_FILE')) {
         $bundle = !empty($conf['cache_css']) || !empty($conf['css_h']);
-        $mtimes = array_map(fn($file) => is_file($file) ? filemtime($file) : 0, $array);
-        $sizes = array_map(fn($file) => is_file($file) ? filesize($file) : 0, $array);
-        $bits = array_merge(['assets-v'.ASSETS_VER, $theme, 'css'], $array, $mtimes, $sizes, [$conf['css_c'], $conf['css_h'], $conf['css_e']]);
-        $hash = Cache::getHash($bits);
-        $cfile = Cache::getPath('assets', $hash, 'css');
-        $route = 'index.php?go=asset&file='.$hash.'&type=css';
+        $cfile = '';
+        $route = '';
+        if ($bundle) {
+            $fp = $drv['cssfp'] ?? sha1(serialize(array_map(static fn($file) => is_file($file) ? filemtime($file).':'.filesize($file) : '0:0', array_combine($array, $array) ?: [])));
+            $hash = Cache::getHash(['assets-v'.ASSETS_VER, $theme, 'css', $fp, $conf['css_c'], $conf['css_h'], $conf['css_e']]);
+            $cfile = Cache::getPath('assets', $hash, 'css');
+            $route = 'index.php?go=asset&file='.$hash.'&type=css';
+        }
         if ($bundle && Cache::isFresh($cfile, $conf['cache_t'])) {
             $cont = $tpl->getHtmlFrag('head-link', ['rel' => 'stylesheet', 'href' => $route, 'type' => '', 'title' => '']);
         } else {
@@ -2919,8 +3024,9 @@ function getTranslit(string $st, string $lo = ''): string {
     return $st;
 }
 
-# Render the captcha block for a form action (empty when not required)
+# Render the captcha block for a form action (empty when not required); a live captcha inside a cacheable build poisons the page cache
 function getCaptcha(string $act): string {
+    if (!defined('ADMIN_FILE') && checkPageCache()) checkCachePoison(true);
     return Captcha::html($act);
 }
 
@@ -4446,34 +4552,36 @@ function domain(string $url, string $str = ''): string {
     return implode(', ', $dom);
 }
 
-# Check bot
+# Check the user agent against the configured bot list with literal case-insensitive matching, result cached per request
 function is_bot(): int|string {
- global $conf;
-    $bots = explode(',', $conf['bots']);
-    for ($i = 0; $i < count($bots); $i++) {
-        list($uagent, $bname) = explode('=', $bots[$i]);
-        if (preg_match('#'.$uagent.'#i', getAgent())) {
-            $name = filterText(substr($bname, 0, 25), 1);
+    global $conf;
+    static $found = null;
+    if ($found !== null) return $found;
+    $agent = getAgent();
+    $found = 0;
+    foreach (explode(',', $conf['bots']) as $item) {
+        [$mask, $bname] = array_pad(explode('=', $item, 2), 2, '');
+        if ($mask !== '' && stripos($agent, $mask) !== false) {
+            $found = filterText(substr($bname, 0, 25), 1);
             break;
-        } else {
-            $name = 0;
         }
     }
-    return $name;
+    return $found;
 }
-# Check referer from bot
+# Check the referer against the configured bot referer list with literal case-insensitive matching, result cached per request
 function from_bot(): int|string {
- global $conf;
-    $bots = explode(',', $conf['fbots']);
-    for ($i = 0; $i < count($bots); $i++) {
-        if (preg_match('#'.$bots[$i].'#i', getReferer())) {
-            $name = filterText(substr($bots[$i], 0, 25), 1);
+    global $conf;
+    static $found = null;
+    if ($found !== null) return $found;
+    $refer = getReferer();
+    $found = 0;
+    foreach (explode(',', $conf['fbots']) as $mask) {
+        if ($mask !== '' && stripos($refer, $mask) !== false) {
+            $found = filterText(substr($mask, 0, 25), 1);
             break;
-        } else {
-            $name = 0;
         }
     }
-    return $name;
+    return $found;
 }
 
 # Check referer from Search Engines
@@ -4618,8 +4726,9 @@ function url_types(string $urls): string {
 }
 
 # Check user
-function check_user(): ?bool {
+function check_user(bool $known = false): ?bool {
  global $user;
+    if ($known) return false;
     if (is_user()) {
         $f = COUNTER_DIR.'/user.log';
         $un = filterText(substr($user[1], 0, 25), 1);

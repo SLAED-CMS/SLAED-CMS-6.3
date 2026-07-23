@@ -200,31 +200,38 @@ class Geoip {
             }
             if ($node <= (int)$meta['node_count']) return [];
             $offs = $node - (int)$meta['node_count'] + (int)$meta['datab'] - 16;
-            [$data] = self::getMmdbDecode($db['bin'], $offs, (int)$meta['datab']);
+            [$data] = self::getMmdbDecode($db, $offs, (int)$meta['datab']);
             return is_array($data) ? $data : [];
         } catch (Throwable) {
             return [];
         }
     }
 
-    # Return cached MMDB payload and metadata
+    # Return cached MMDB handle and metadata, reading only the metadata tail instead of loading the whole database file
     private static function getMmdb(string $path): ?array {
         static $list = [];
         if ($path === '' || !is_file($path) || !is_readable($path)) return null;
         if (array_key_exists($path, $list)) return $list[$path];
-        $bin = file_get_contents($path);
-        if ($bin === false) {
+        $size = filesize($path);
+        $fh = ($size !== false && $size > 0) ? fopen($path, 'rb') : false;
+        if ($fh === false) {
             $list[$path] = null;
             return null;
         }
+        $tlen = min($size, 131072);
+        fseek($fh, $size - $tlen);
+        $tail = (string)fread($fh, $tlen);
         $mark = "\xAB\xCD\xEFMaxMind.com";
-        $pos = strrpos($bin, $mark);
+        $pos = strrpos($tail, $mark);
         if ($pos === false) {
+            fclose($fh);
             $list[$path] = null;
             return null;
         }
-        [$meta] = self::getMmdbDecode($bin, $pos + strlen($mark), 0);
+        $db = ['fh' => $fh, 'meta' => []];
+        [$meta] = self::getMmdbDecode($db, $size - $tlen + $pos + strlen($mark), 0);
         if (!is_array($meta) || empty($meta['node_count']) || empty($meta['record_size'])) {
+            fclose($fh);
             $list[$path] = null;
             return null;
         }
@@ -232,65 +239,69 @@ class Geoip {
         $meta['record'] = (int)$meta['record_size'];
         $meta['nsize'] = (int)($meta['record'] / 4);
         $meta['datab'] = $meta['nodes'] * $meta['nsize'] + 16;
-        $list[$path] = ['bin' => $bin, 'meta' => $meta];
+        $db['meta'] = $meta;
+        $list[$path] = $db;
         return $list[$path];
+    }
+
+    # Read one byte range from the database handle
+    private static function getMmdbRead(array $db, int $offs, int $len): string {
+        if ($len < 1) return '';
+        fseek($db['fh'], $offs);
+        return (string)fread($db['fh'], $len);
     }
 
     # Return one search tree node pointer
     private static function getMmdbNode(array $db, int $node, int $side): int {
         $meta = $db['meta'];
         $base = $node * (int)$meta['nsize'];
-        $bin = $db['bin'];
         if ((int)$meta['record'] === 24) {
-            $offs = $base + $side * 3;
-            return self::getMmdbUint(substr($bin, $offs, 3), 3);
+            return self::getMmdbUint(self::getMmdbRead($db, $base + $side * 3, 3), 3);
         }
         if ((int)$meta['record'] === 28) {
-            $offs = $base + 3 * $side;
-            $buf = substr($bin, $offs, 4);
+            $buf = self::getMmdbRead($db, $base + 3 * $side, 4);
             $mid = $side === 0 ? ((ord($buf[3]) & 0xF0) >> 4) : (ord($buf[0]) & 0x0F);
             return self::getMmdbUint(chr($mid).substr($buf, $side, 3), 4);
         }
         if ((int)$meta['record'] === 32) {
-            $offs = $base + $side * 4;
-            return self::getMmdbUint(substr($bin, $offs, 4), 4);
+            return self::getMmdbUint(self::getMmdbRead($db, $base + $side * 4, 4), 4);
         }
         return 0;
     }
 
-    # Decode one MMDB value
-    private static function getMmdbDecode(string $bin, int $offs, int $base): array {
-        $ctrl = ord($bin[$offs]);
+    # Decode one MMDB value through streamed range reads
+    private static function getMmdbDecode(array $db, int $offs, int $base): array {
+        $ctrl = ord(self::getMmdbRead($db, $offs, 1));
         $offs++;
         $type = $ctrl >> 5;
         if ($type === 1) {
-            [$ptr, $offs] = self::getMmdbPointer($bin, $ctrl, $offs, $base);
-            [$data] = self::getMmdbDecode($bin, $ptr, $base);
+            [$ptr, $offs] = self::getMmdbPointer($db, $ctrl, $offs, $base);
+            [$data] = self::getMmdbDecode($db, $ptr, $base);
             return [$data, $offs];
         }
         if ($type === 0) {
-            $type = ord($bin[$offs]) + 7;
+            $type = ord(self::getMmdbRead($db, $offs, 1)) + 7;
             $offs++;
         }
-        [$size, $offs] = self::getMmdbSize($bin, $ctrl, $offs);
+        [$size, $offs] = self::getMmdbSize($db, $ctrl, $offs);
         if ($type === 11) {
             $arr = [];
             for ($i = 0; $i < $size; $i++) {
-                [$arr[], $offs] = self::getMmdbDecode($bin, $offs, $base);
+                [$arr[], $offs] = self::getMmdbDecode($db, $offs, $base);
             }
             return [$arr, $offs];
         }
         if ($type === 7) {
             $map = [];
             for ($i = 0; $i < $size; $i++) {
-                [$key, $offs] = self::getMmdbDecode($bin, $offs, $base);
-                [$val, $offs] = self::getMmdbDecode($bin, $offs, $base);
+                [$key, $offs] = self::getMmdbDecode($db, $offs, $base);
+                [$val, $offs] = self::getMmdbDecode($db, $offs, $base);
                 $map[(string)$key] = $val;
             }
             return [$map, $offs];
         }
         if ($type === 14) return [$size !== 0, $offs];
-        $data = substr($bin, $offs, $size);
+        $data = self::getMmdbRead($db, $offs, $size);
         $offs += $size;
         return [self::getMmdbValue($type, $data, $size), $offs];
     }
@@ -316,11 +327,11 @@ class Geoip {
     }
 
     # Return variable MMDB value size
-    private static function getMmdbSize(string $bin, int $ctrl, int $offs): array {
+    private static function getMmdbSize(array $db, int $ctrl, int $offs): array {
         $size = $ctrl & 0x1F;
         if ($size < 29) return [$size, $offs];
         $read = $size - 28;
-        $data = substr($bin, $offs, $read);
+        $data = self::getMmdbRead($db, $offs, $read);
         $offs += $read;
         if ($size === 29) return [29 + ord($data[0]), $offs];
         if ($size === 30) return [285 + self::getMmdbUint($data, 2), $offs];
@@ -328,9 +339,9 @@ class Geoip {
     }
 
     # Return decoded MMDB data pointer
-    private static function getMmdbPointer(string $bin, int $ctrl, int $offs, int $base): array {
+    private static function getMmdbPointer(array $db, int $ctrl, int $offs, int $base): array {
         $size = (($ctrl >> 3) & 0x03) + 1;
-        $data = substr($bin, $offs, $size);
+        $data = self::getMmdbRead($db, $offs, $size);
         $offs += $size;
         $part = $ctrl & 0x07;
         if ($size === 1) return [$base + self::getMmdbUint(chr($part).$data, 2), $offs];

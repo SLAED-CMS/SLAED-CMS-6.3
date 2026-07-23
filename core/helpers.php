@@ -721,7 +721,7 @@ function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $sc
         'has_score' => $scored,
         'target_id' => 'rep'.$id.$obj,
         'vote_query' => $vote,
-        'token' => $live ? getSiteToken() : '',
+        'token' => $live ? getPageToken() : '',
         'is_live' => $live,
     ] + $part);
     $wrap = $live || $typ == 2 ? ['id' => 'rep'.$id.$obj] : [];
@@ -769,17 +769,14 @@ function getTplCategorySelect(string $mod = '', int $id = 0, string $name = '', 
 
 # Render the shared category breadcrumb trail; rich mode emits tone-aware crumbs, plain mode keeps flat links for the head banner
 function getTplCategoryTrail(string $mod = '', int $id = 0, string $sep = '', string $home = '', bool $rich = true): string {
-    global $db, $conf, $tpl;
+    global $conf, $tpl;
     $mod = filterVar($mod);
     $name = $mod ?: $conf['name'];
     $symbol = urldecode($sep ?: $conf['defis']);
     static $cache = [];
     if (!isset($cache[$name])) {
-        $where = $mod ? 'WHERE modul = :modul' : '';
-        $pars = $mod ? ['modul' => $mod] : [];
-        $res = $db->getSqlQuery('SELECT id, title, parent, ordern FROM '.PREFIX_DB.'_categories '.$where, $pars);
         $mass = [];
-        while ([$cid, $title, $parent, $ordern] = $db->getSqlRow($res)) $mass[(int)$cid] = [getConst($title), (int)$parent, (int)$ordern];
+        foreach (getCategoryMap($mod) as $cid => $row) $mass[$cid] = [getConst($row['title']), $row['parent'], $row['ordern']];
         $cache[$name] = $mass;
     }
     $mass = $cache[$name];

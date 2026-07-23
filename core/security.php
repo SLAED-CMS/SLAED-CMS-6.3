@@ -658,6 +658,7 @@ function getSecret(string $purpose): string {
 # Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context.
 # Token is valid for the lifetime of the PHP session; invalidated when the master secret changes.
 function getSiteToken(string $scope = 'ajax'): string {
+    if (!defined('ADMIN_FILE') && function_exists('checkPageCache') && checkPageCache()) checkCachePoison(true);
     $sid  = session_id();
     $data = $sid !== '' ? $scope.'|'.$sid : $scope;
     return hash_hmac('sha256', $data, getSecret('csrf'));
