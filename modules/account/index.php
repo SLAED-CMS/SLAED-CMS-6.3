@@ -682,6 +682,16 @@ function passmail(): void {
     }
 }
 
+function setUserLogin(int $uid, string $name, string $pass, int $story, int $blockon, string $theme): void {
+    global $db, $conf;
+    setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $name, $pass, $story, $blockon, $theme]);
+    $uip = getIp();
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
+    Captcha::clearLoginFailures('user');
+    login_report(0, 1, $name, '');
+}
+
 function login(): void {
     global $db, $conf, $stop;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
@@ -700,13 +710,7 @@ function login(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :pwd WHERE id = :id', ['pwd' => $pass, 'id' => $uid]);
     }
     if (!$stop) {
-        setCookies('account', time() + (int)$conf['user_c_t'], [$uid, $nick, $pass, $story, $blockon, $theme]);
-        $uip = getIp();
-        $uagent = getAgent();
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => $uagent, 'id' => $uid]);
-        Captcha::clearLoginFailures('user');
-        login_report(0, 1, $uname, '');
+        setUserLogin((int)$uid, (string)$nick, (string)$pass, (int)$story, (int)$blockon, (string)$theme);
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
         Captcha::registerLoginFailure('user');
@@ -1111,17 +1115,20 @@ function oautherror(): void {
     exit;
 }
 
-function oauthlogin(int $uid, string $prov, string $redir): void {
+function oauthretry(string $msg): void {
+    global $conf;
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Referrer-Policy: no-referrer');
+    setRedirect('index.php?name='.$conf['name'].'&op=oauth_finish', false, 302, $msg, true);
+}
+
+function oauthlogin(int $uid, string $prov, string $redir, string $event = ''): void {
     global $db, $conf;
     $row = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
     if (!is_array($row) || empty($row['id'])) oautherror();
-    setCookies('account', time() + (int)$conf['user_c_t'], [$row['id'], $row['name'], $row['password'], $row['storynum'], $row['blockon'], $row['theme']]);
-    $uip = getIp();
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => getAgent(), 'id' => $uid]);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_user_oauth SET lastlog = :time WHERE uid = :uid AND provider = :prov', ['time' => time(), 'uid' => $uid, 'prov' => $prov]);
-    Captcha::clearLoginFailures('user');
-    login_report(0, 1, $row['name'], '');
+    if ($event !== '') Oauth::setLog($event, $prov, $uid);
+    setUserLogin((int)$row['id'], (string)$row['name'], (string)$row['password'], (int)$row['storynum'], (int)$row['blockon'], (string)$row['theme']);
     setRedirect($redir !== '' ? $redir : 'index.php?name='.$conf['name'].'&op=profil');
 }
 
@@ -1158,12 +1165,15 @@ function oauthback(): void {
         oautherror();
     }
     Oauth::setCookie('st', '', 0);
-    $row = Oauth::getTemp('state', $state);
+    $row = Oauth::getTempOnce('state', $state);
     if ($row === null) {
         Oauth::setLog('state_not_found');
         oautherror();
     }
-    Oauth::deleteTemp($state);
+    if (!empty($row['expired'])) {
+        Oauth::setLog('state_expired');
+        oautherror();
+    }
     $prov = (string)$row['provider'];
     if (!Oauth::getProvider($prov)) {
         Oauth::setLog('oauth_bad_config', $prov);
@@ -1190,10 +1200,10 @@ function oauthback(): void {
     if ($acc !== '' && ($claims['email'] === '' || $claims['name'] === '')) {
         $uinf = Oauth::getUserinfo($prov, $acc);
         if ($uinf) {
-            $more = Oauth::getClaims($uinf + ['tid' => $pay['tid'] ?? '', 'xms_edov' => $pay['xms_edov'] ?? ''], $prov);
+            $more = Oauth::getClaims($uinf, $prov);
             if ($claims['email'] === '') {
                 $claims['email'] = $more['email'];
-                $claims['verified'] = $more['verified'];
+                $claims['verified'] = false;
             }
             if ($claims['name'] === '') $claims['name'] = $more['name'];
         }
@@ -1207,8 +1217,7 @@ function oauthback(): void {
     $redir = Oauth::getRedirect((string)$row['redirect']);
     $uid = Oauth::getUserId($prov, $claims['sub']);
     if ($uid !== null) {
-        Oauth::setLog('oauth_callback_success', $prov, $uid);
-        oauthlogin($uid, $prov, $redir);
+        oauthlogin($uid, $prov, $redir, 'oauth_callback_success');
     }
     if (is_user()) {
         $cuid = (int)$user[0];
@@ -1277,10 +1286,9 @@ function oauthfinish(): void {
         Oauth::setLog('pending_expired');
         oautherror();
     }
-    Oauth::deleteTemp($tok);
-    Oauth::setCookie('pt', '', 0);
     $prov = (string)$row['provider'];
     if (!Oauth::getProvider($prov)) {
+        Oauth::deleteTemp($tok);
         Oauth::setLog('oauth_bad_config', $prov);
         oautherror();
     }
@@ -1296,18 +1304,25 @@ function oauthfinish(): void {
             Captcha::registerLoginFailure('user');
             login_report(0, 0, $uname, $upass);
             Oauth::setLog('link_login_failed', $prov);
-            oautherror();
+            oauthretry(_LOGININCOR);
         }
         $luid = (int)$urow['id'];
         $ecode = Oauth::setLink($luid, $prov, (string)$row['uid'], (string)$row['email']);
         if ($ecode !== '') {
+            Oauth::deleteTemp($tok);
             Oauth::setLog($ecode, $prov, $luid);
             oautherror();
         }
-        Oauth::setLog('oauth_link', $prov, $luid);
-        oauthlogin($luid, $prov, $redir);
+        Oauth::deleteTemp($tok);
+        Oauth::setCookie('pt', '', 0);
+        oauthlogin($luid, $prov, $redir, 'oauth_link');
     }
     if ($act === 'create') {
+        if (empty($conf['users']['reg'])) {
+            Oauth::deleteTemp($tok);
+            Oauth::setLog('oauth_reg_disabled', $prov);
+            oautherror();
+        }
         $uname = getVar('post', 'uname', 'name');
         $uname = trim(substr((string)$uname, 0, 25));
         $nameb = explode(',', $conf['users']['name_b']);
@@ -1316,27 +1331,54 @@ function oauthfinish(): void {
         if (!$badnm && $db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $uname])) > 0) $badnm = true;
         if ($badnm) {
             Oauth::setLog('create_login_taken', $prov);
-            oautherror();
+            oauthretry(_NICKTAKEN);
         }
         $mail = (string)$row['email'];
-        if ($mail !== '' && $db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $mail])) > 0) {
-            Oauth::setLog('email_exists', $prov);
-            oautherror();
+        if ($mail !== '') {
+            $mailb = explode(',', (string)$conf['users']['mail_b']);
+            if (in_array(strtolower($mail), array_filter($mailb), true)) {
+                Oauth::deleteTemp($tok);
+                Oauth::setLog('email_blocked', $prov);
+                oautherror();
+            }
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $mail])) > 0) {
+                Oauth::setLog('email_exists', $prov);
+                oauthretry(_ERROR_EMAIL);
+            }
         }
         $pass = '!'.bin2hex(random_bytes(20));
-        $ok = $db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :block, :warnings, :field)',
-            ['uname' => $uname, 'rank' => '', 'email' => $mail, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale, 'ip' => getIp(), 'agent' => getAgent(), 'block' => '', 'warnings' => '', 'field' => '']
-        );
-        if ($ok === false) oautherror();
-        $nuid = (int)$db->getSqlLastId();
-        $ecode = Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail);
-        if ($ecode !== '') {
-            Oauth::setLog($ecode, $prov, $nuid);
-            oautherror();
+        if (!$db->setSqlBegin()) {
+            Oauth::setLog('create_tx_failed', $prov);
+            oauthretry(_ERROR);
         }
-        Oauth::setLog('oauth_create', $prov, $nuid);
-        oauthlogin($nuid, $prov, $redir);
+        $ok = $db->getSqlQuery(
+            'INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, block, warnings, field)'
+            .' VALUES (NULL, :uname, :rank, :email, :avatar, NOW(), :pwd, :lang, :ip, :agent, :block, :warnings, :field)',
+            [
+                'uname' => $uname, 'rank' => '', 'email' => $mail, 'avatar' => '', 'pwd' => $pass, 'lang' => $locale,
+                'ip' => getIp(), 'agent' => getAgent(), 'block' => '', 'warnings' => '', 'field' => '',
+            ]
+        );
+        $nuid = ($ok !== false) ? (int)$db->getSqlLastId() : 0;
+        $ecode = ($nuid > 0) ? Oauth::setLink($nuid, $prov, (string)$row['uid'], $mail) : 'link_failed';
+        if ($nuid < 1 || $ecode !== '') {
+            $db->setSqlRollback();
+            if ($ecode === 'link_duplicate') {
+                Oauth::deleteTemp($tok);
+                Oauth::setLog($ecode, $prov, $nuid);
+                oautherror();
+            }
+            Oauth::setLog(($ecode !== '') ? $ecode : 'create_login_taken', $prov, $nuid);
+            oauthretry(_NICKTAKEN);
+        }
+        if (!$db->setSqlCommit()) {
+            $db->setSqlRollback();
+            Oauth::setLog('create_tx_failed', $prov, $nuid);
+            oauthretry(_ERROR);
+        }
+        Oauth::deleteTemp($tok);
+        Oauth::setCookie('pt', '', 0);
+        oauthlogin($nuid, $prov, $redir, 'oauth_create');
     }
     oautherror();
 }

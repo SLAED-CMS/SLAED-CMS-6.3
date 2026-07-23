@@ -48,12 +48,11 @@ class Oauth {
         return preg_match('/^[a-f0-9]{64}$/', $val) ? $val : '';
     }
 
-    # Normalizes a post-login redirect target to a safe internal path, rejects schemes, hosts, backslashes, CRLF and protocol-relative input
+    # Normalizes a post-login redirect target to a safe internal path, rejects any scheme, host, backslash, CRLF, control chars and protocol-relative input
     public static function getRedirect(string $raw): string {
-        $raw = trim(str_replace(["\r", "\n", '\\'], '', $raw));
-        if ($raw === '' || str_contains($raw, '://') || str_starts_with($raw, '//')) return 'index.php';
-        $raw = ltrim($raw, '/');
-        if ($raw === '' || str_starts_with($raw, 'javascript:') || str_starts_with($raw, 'data:')) return 'index.php';
+        $raw = trim(preg_replace('/[\x00-\x1F\x7F\\\\]/', '', $raw));
+        if ($raw === '' || str_starts_with($raw, '/')) return 'index.php';
+        if (preg_match('#^[a-z][a-z0-9+.-]*:#i', $raw)) return 'index.php';
         return $raw;
     }
 
@@ -62,26 +61,35 @@ class Oauth {
         $curl = curl_init($url);
         $head = ['Accept: application/json'];
         if ($auth !== '') $head[] = 'Authorization: Bearer '.$auth;
+        $body = '';
+        $over = false;
         curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_MAXREDIRS => 0,
             CURLOPT_TIMEOUT => 10,
             CURLOPT_HTTPHEADER => $head,
+            CURLOPT_WRITEFUNCTION => function ($ch, string $chunk) use (&$body, &$over): int {
+                $body .= $chunk;
+                if (strlen($body) > 65536) {
+                    $over = true;
+                    return 0;
+                }
+                return strlen($chunk);
+            },
         ]);
         if ($post) {
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));
         }
-        $body = curl_exec($curl);
+        $ok = curl_exec($curl);
         $err = curl_error($curl);
         $code = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         $ctype = (string)curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
         curl_close($curl);
-        if (!is_string($body) || $err !== '') return ['ok' => false, 'code' => $code, 'data' => [], 'error' => ($err !== '') ? $err : 'transport error'];
-        if (strlen($body) > 65536) return ['ok' => false, 'code' => $code, 'data' => [], 'error' => 'response too large'];
+        if ($over) return ['ok' => false, 'code' => $code, 'data' => [], 'error' => 'response too large'];
+        if ($ok === false || $err !== '') return ['ok' => false, 'code' => $code, 'data' => [], 'error' => ($err !== '') ? $err : 'transport error'];
         if ($code !== 200) return ['ok' => false, 'code' => $code, 'data' => [], 'error' => 'http '.$code];
         if (stripos($ctype, 'application/json') === false) return ['ok' => false, 'code' => $code, 'data' => [], 'error' => 'bad content type'];
         $data = json_decode($body, true);
@@ -126,7 +134,11 @@ class Oauth {
     public static function getUserinfo(string $prov, string $tok): array {
         global $conf;
         $data = self::getHttp((string)($conf['oauth'][$prov]['userinfo'] ?? ''), [], $tok);
-        return $data['ok'] ? $data['data'] : [];
+        if (!$data['ok']) {
+            self::setLog('userinfo_failed', $prov, 0, $data['error']);
+            return [];
+        }
+        return $data['data'];
     }
 
     # Returns the provider JWKS key list from a 24h file cache; force bypasses the cache, network errors fall back to stale cache
@@ -153,8 +165,10 @@ class Oauth {
         $json = json_encode(['time' => time(), 'keys' => $keys], JSON_UNESCAPED_SLASHES);
         $tmp = $file.'.'.getmypid().'.tmp';
         if (is_string($json) && file_put_contents($tmp, $json, LOCK_EX) !== false) {
-            if (is_file($file)) unlink($file);
-            rename($tmp, $file);
+            if (!rename($tmp, $file)) {
+                if (is_file($file)) unlink($file);
+                rename($tmp, $file);
+            }
         }
         return $keys;
     }
@@ -257,13 +271,25 @@ class Oauth {
         return ['sub' => $sub, 'email' => $mail, 'verified' => ($mail !== '') && !empty($claims['verified']), 'name' => $uname];
     }
 
+    # Columns of the one-time flow record, shared by the read and consume queries
+    private const TEMPCOLS = 'token, kind, provider, nonce, verifier, uid, email, uname, redirect, time';
+
+    # Lifetimes of state and pending one-time records in seconds
+    private const TEMPTTL = ['state' => 600, 'pending' => 900];
+
+    # Returns the lifetime of a one-time record kind while preserving pending as the fallback policy
+    private static function getTempTtl(string $kind): int {
+        return self::TEMPTTL[$kind] ?? self::TEMPTTL['pending'];
+    }
+
     # Stores a one-time flow record (kind state or pending) and removes expired rows of that kind in the same call
     public static function setTemp(string $kind, string $tok, array $data): bool {
         global $db;
-        $ttl = ($kind === 'state') ? 600 : 900;
+        $ttl = self::getTempTtl($kind);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_oauth_temp WHERE kind = :kind AND time < :old', ['kind' => $kind, 'old' => time() - $ttl]);
         $res = $db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_oauth_temp (token, kind, provider, nonce, verifier, uid, email, uname, redirect, time) VALUES (:tok, :kind, :prov, :nonce, :verif, :uid, :email, :uname, :redir, :time)',
+            'INSERT INTO '.PREFIX_DB.'_oauth_temp ('.self::TEMPCOLS.')'
+            .' VALUES (:tok, :kind, :prov, :nonce, :verif, :uid, :email, :uname, :redir, :time)',
             [
                 'tok' => $tok,
                 'kind' => $kind,
@@ -280,18 +306,35 @@ class Oauth {
         return $res !== false;
     }
 
-    # Returns a one-time flow record when it exists, matches the kind and is not expired, null otherwise
+    # Returns a one-time record for read-only inspection when it exists and is not expired; keeps the row for a later atomic consume
     public static function getTemp(string $kind, string $tok): ?array {
         global $db;
         if ($tok === '') return null;
-        $ttl = ($kind === 'state') ? 600 : 900;
-        $res = $db->getSqlQuery('SELECT token, kind, provider, nonce, verifier, uid, email, uname, redirect, time FROM '.PREFIX_DB.'_oauth_temp WHERE token = :tok AND kind = :kind', ['tok' => $tok, 'kind' => $kind]);
+        $ttl = self::getTempTtl($kind);
+        $res = $db->getSqlQuery('SELECT '.self::TEMPCOLS.' FROM '.PREFIX_DB.'_oauth_temp WHERE token = :tok AND kind = :kind', ['tok' => $tok, 'kind' => $kind]);
         $row = ($res) ? $db->getSqlRow($res) : null;
         if (!is_array($row) || !isset($row['token'])) return null;
         if ((int)$row['time'] < time() - $ttl) {
             self::deleteTemp($tok);
             return null;
         }
+        return $row;
+    }
+
+    # Consumes a one-time record atomically: the DELETE is the single serialization point so only one concurrent request wins; the row carries an 'expired' flag, null means gone
+    public static function getTempOnce(string $kind, string $tok): ?array {
+        global $db;
+        if ($tok === '') return null;
+        $res = $db->getSqlQuery(
+            'SELECT '.self::TEMPCOLS.' FROM '.PREFIX_DB.'_oauth_temp WHERE token = :tok AND kind = :kind',
+            ['tok' => $tok, 'kind' => $kind]
+        );
+        $row = ($res) ? $db->getSqlRow($res) : null;
+        if (!is_array($row) || !isset($row['token'])) return null;
+        $del = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_oauth_temp WHERE token = :tok', ['tok' => $tok]);
+        if ($del === false || $db->getSqlAffected() < 1) return null;
+        $ttl = self::getTempTtl($kind);
+        $row['expired'] = ((int)$row['time'] < time() - $ttl) ? 1 : 0;
         return $row;
     }
 
@@ -331,18 +374,41 @@ class Oauth {
         return ((int)($err['code'] ?? 0) === 1062) ? 'link_duplicate' : 'link_failed';
     }
 
-    # Unlinks a provider from a SLAED user; refuses when neither a usable password nor another provider link would remain
+    # Unlinks a provider only when a usable password or another link survives; a FOR UPDATE lock on the user row serializes concurrent unlinks so neither can drop the last method
     public static function deleteLink(int $uid, string $prov): string {
         global $db;
-        $res = $db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
-        $row = ($res) ? $db->getSqlRow($res) : null;
-        $pass = is_array($row) ? (string)($row['password'] ?? '') : '';
+        if (!$db->setSqlBegin()) return 'link_failed';
+        $lock = $db->getSqlQuery('SELECT id, password FROM '.PREFIX_DB.'_users WHERE id = :uid FOR UPDATE', ['uid' => $uid]);
+        $urow = ($lock) ? $db->getSqlRow($lock) : null;
+        if (!is_array($urow) || empty($urow['id'])) {
+            $db->setSqlRollback();
+            return 'link_failed';
+        }
+        $pass = (string)($urow['password'] ?? '');
         $haspw = $pass !== '' && !str_starts_with($pass, '!');
-        $links = self::getLinks($uid);
-        $other = 0;
-        foreach ($links as $row) if (($row['provider'] ?? '') !== $prov) $other++;
-        if (!$haspw && $other === 0) return 'unlink_last_method';
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
+        if (!$haspw) {
+            $other = $db->getSqlQuery(
+                'SELECT 1 FROM '.PREFIX_DB.'_user_oauth WHERE uid = :uid AND provider <> :prov LIMIT 1',
+                ['uid' => $uid, 'prov' => $prov]
+            );
+            if ($other === false) {
+                $db->setSqlRollback();
+                return 'link_failed';
+            }
+            if ($db->getSqlRow($other) === false) {
+                $db->setSqlRollback();
+                return 'unlink_last_method';
+            }
+        }
+        $del = $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :uid AND provider = :prov', ['uid' => $uid, 'prov' => $prov]);
+        if ($del === false) {
+            $db->setSqlRollback();
+            return 'link_failed';
+        }
+        if (!$db->setSqlCommit()) {
+            $db->setSqlRollback();
+            return 'link_failed';
+        }
         return '';
     }
 

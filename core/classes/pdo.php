@@ -239,6 +239,39 @@ class Database {
         return ($this->sqlconnid) ? $this->sqlconnid->lastInsertId() : false;
     }
 
+    # Starts a transaction on the shared connection so a multi-statement unit either commits whole or rolls back whole
+    function setSqlBegin(): bool {
+        if (!$this->sqlconnid instanceof PDO) return false;
+        try {
+            return !$this->sqlconnid->inTransaction() && $this->sqlconnid->beginTransaction();
+        } catch (PDOException $error) {
+            $this->laste = $error;
+            return false;
+        }
+    }
+
+    # Commits the active transaction
+    function setSqlCommit(): bool {
+        if (!$this->sqlconnid instanceof PDO) return false;
+        try {
+            return $this->sqlconnid->inTransaction() && $this->sqlconnid->commit();
+        } catch (PDOException $error) {
+            $this->laste = $error;
+            return false;
+        }
+    }
+
+    # Rolls back the active transaction; safe to call when no transaction is open
+    function setSqlRollback(): bool {
+        if (!$this->sqlconnid instanceof PDO) return false;
+        try {
+            return $this->sqlconnid->inTransaction() && $this->sqlconnid->rollBack();
+        } catch (PDOException $error) {
+            $this->laste = $error;
+            return false;
+        }
+    }
+
     # Free result memory
     function getSqlFree(PDOStatement|int $query_id = 0): bool {
         if (!$query_id) $query_id = $this->qresult;

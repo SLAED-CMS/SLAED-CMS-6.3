@@ -953,9 +953,9 @@ function oauthlist(): void {
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$uid],
                     ['is_truncate' => true, 'title_text' => (string)$name, 'content_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?name=account&op=add&id='.$uid, 'title' => _FULLEDIT, 'label' => (string)$name])],
-                    ['content_html' => ucfirst((string)$prov)],
-                    ['is_truncate' => true, 'title_text' => (string)$puid, 'content_html' => (string)$puid],
-                    ['is_truncate' => true, 'title_text' => (string)$mail, 'content_html' => (string)$mail],
+                    ['has_content_text' => true, 'content_text' => ucfirst((string)$prov)],
+                    ['is_truncate' => true, 'title_text' => (string)$puid, 'has_content_text' => true, 'content_text' => (string)$puid],
+                    ['is_truncate' => true, 'title_text' => (string)$mail, 'has_content_text' => true, 'content_text' => (string)$mail],
                     ['is_col_date' => true, 'content_html' => ($linked) ? date(_TIMESTRING, (int)$linked) : ''],
                     ['is_col_date' => true, 'content_html' => ($lastlog) ? date(_TIMESTRING, (int)$lastlog) : ''],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('post-button', [
