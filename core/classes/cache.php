@@ -27,28 +27,24 @@ class Cache {
         return sha1(implode('|', $parts));
     }
 
-    # Drop tracking parameters and order query groups so equivalent URLs map to one cache key
-    public static function filterCacheUrl(string $url): string {
+    # Validate the query part of one request URL against a per-route parameter allowlist of key => value regex; tracking keys are dropped, any unknown, duplicate, or malformed key returns null
+    public static function getQueryVars(string $url, array $allow): ?array {
         $cut = strpos($url, '?');
-        if ($cut === false) return $url;
-        $path = substr($url, 0, $cut);
+        if ($cut === false) return [];
         $query = substr($url, $cut + 1);
-        if ($query === '') return $path;
-        $groups = [];
+        if ($query === '') return [];
+        $vars = [];
         foreach (explode('&', $query) as $pair) {
             if ($pair === '') continue;
             $eq = strpos($pair, '=');
             $key = urldecode(($eq === false) ? $pair : substr($pair, 0, $eq));
             if (in_array($key, self::DROP, true)) continue;
-            $groups[$key][] = $pair;
+            if (!isset($allow[$key]) || isset($vars[$key])) return null;
+            $val = ($eq === false) ? '' : urldecode(substr($pair, $eq + 1));
+            if (!preg_match($allow[$key], $val)) return null;
+            $vars[$key] = $val;
         }
-        if ($groups === []) return $path;
-        ksort($groups);
-        $out = [];
-        foreach ($groups as $pairs) {
-            foreach ($pairs as $pair) $out[] = $pair;
-        }
-        return $path.'?'.implode('&', $out);
+        return $vars;
     }
 
     # Report whether a cache file exists, is not empty, and is still within the TTL window

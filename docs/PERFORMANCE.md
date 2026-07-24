@@ -72,6 +72,22 @@ visitor-bound content through the dynamic-regions mechanism:
 - **Default-deny allowlist**: `checkPageCache()` only caches route/op pairs
   explicitly allowlisted (currently `news` list); everything else renders
   live.
+- **Bounded identity**: `getCacheRouteVars()` validates the request against a
+  per-route parameter contract (`Cache::getQueryVars()`; for the `news` list:
+  `name`, `op`, `cat`, `num`, with tracking keys dropped through the central
+  list). Unknown, duplicate, or malformed query keys make the request render
+  live and never create a cache entry. The cache identity (`getPageHash()`,
+  identity version `pc2`) is built from the validated values plus the
+  canonical `homeurl` host — `num=1` and the omitted page share one entry,
+  alternate encodings collapse, and a foreign `Host` header cannot create a
+  cache namespace. Pre-contract cache files are unreachable and removed by
+  normal GC.
+- **Marker contract**: only approved type/parameter combinations
+  (`checkDynamicMark()`: `token` scopes `ajax`/`account`/`scheduler`,
+  `captcha` action `login`, `voting` positive IDs) can be signed; an invalid
+  emitter poisons the build, is logged, and falls back to live rendering.
+  The contract is revalidated at serve time, so forged or stale markers stay
+  inert.
 - **Poison guard**: any live `getSiteToken()`/`getCaptcha()` call during a
   cacheable build marks the build poisoned (`checkCachePoison()`) and the
   page is never stored — unregistered visitor-bound content on an
@@ -96,8 +112,11 @@ content (a cheap name-validation `preg_match` per call remains) — roughly ten
 stat-class calls on the first render of a file, then a plain `include` for
 repeats. String-sourced
 fragments (bodies of `{% block %}` / `{% slot %}`) are compiled to
-content-addressed `inline-*.php` files; superseded ones are not
-garbage-collected.
+content-addressed `inline-*.php` files; superseded ones are swept by the
+scheduler `cachegc` task (`addCacheGcTask()` runs `Cache::deleteStaleTree`
+over `storage/cache/templates` with the same `cache_t`-derived retention as
+page, data, and lock caches), so stale compiled templates are collected
+instead of accumulating forever.
 
 ### Changelog
 

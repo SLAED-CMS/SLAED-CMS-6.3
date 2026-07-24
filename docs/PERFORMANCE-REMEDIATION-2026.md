@@ -3,10 +3,11 @@
 ## Status
 
 - Audit date: 2026-07-23
-- Status: OPEN
+- Status: OPEN — code batches implemented, environment and full-matrix verification pending
+- Implementation date: 2026-07-24 (Batches 1, 2, 3 and the code/documentation part of Batch 5)
 - Scope: follow-up fixes required after the implementation audit of the 2026 performance work
 - Release rule: do not mark this document complete or remove it until every acceptance check is backed by a recorded test result
-- Source changes: none in this document; this is an implementation and verification plan
+- Source changes: `core/system.php`, `core/classes/cache.php`, `tests/Unit/PageCacheContractTest.php`, `docs/PERFORMANCE.md`
 
 ## Goal
 
@@ -21,18 +22,18 @@ Close the remaining correctness, availability, deployment, and verification gaps
 
 ## Findings
 
-| Priority | Finding | Evidence | Required outcome |
-|---:|---|---|---|
-| P0 | A guest can create a distinct page-cache file with every unknown query parameter/value | `core/system.php:1697-1720`, `core/classes/cache.php:30-51` | Cacheability and cache identity use a bounded per-route parameter contract |
-| P0 | The page-cache hash includes the request host without canonical-host validation | `core/security.php:638-641`, `core/system.php:1715-1720` | Cache identity uses the configured canonical host or an explicit host allowlist |
-| P1 | Unique-day cookie and user-session marks are set before the locked server-side count succeeds | `core/system.php:1309-1319`, failure exits at `:1346-1351` | Client state never suppresses an exact count unless server persistence has already succeeded |
-| P1 | A failed monthly `rename()` is followed by deletion of the source `days.log` | `core/system.php:1378-1383` | Rotation failure preserves the source and is logged |
-| P1 | Counter truncation and writes are not checked completely | `core/system.php:1409-1412` | Failed or partial persistence is detected and reported without a false success acknowledgement |
-| P1 | OPcache is disabled in the configured OSPanel PHP runtime | `C:\OSPanel\modules\PHP-8.4\PHP\php.ini:309` | OPcache is loaded and enabled in the web SAPI after an OSPanel restart |
-| P2 | Pseudo-cron is still enabled | `config/scheduler.php:74` | A real cron trigger is proven healthy before `pseudo` is changed to `0` |
-| P2 | Marker creation accepts unknown types and unvalidated parameters | `core/system.php:1665-1693` | Only known region types with type-specific validated parameters can be signed |
-| P2 | The implementation has no permanent regression tests for the new performance contracts | `tests/` and the verification matrix below | Every critical contract is covered by an automated or recorded integration check |
-| P3 | Durable documentation still says superseded inline template caches are never collected | `docs/PERFORMANCE.md:98-100`, implementation at `core/system.php:1723-1728` | Documentation describes the implemented template/data GC |
+| Priority | Finding | Evidence | Required outcome | State |
+|---:|---|---|---|---|
+| P0 | A guest can create a distinct page-cache file with every unknown query parameter/value | `core/system.php:1697-1720`, `core/classes/cache.php:30-51` | Cacheability and cache identity use a bounded per-route parameter contract | FIXED 2026-07-24: `getCacheRouteVars()` + `Cache::getQueryVars()` |
+| P0 | The page-cache hash includes the request host without canonical-host validation | `core/security.php:638-641`, `core/system.php:1715-1720` | Cache identity uses the configured canonical host or an explicit host allowlist | FIXED 2026-07-24: identity uses the `homeurl` host, foreign hosts render live |
+| P1 | Unique-day cookie and user-session marks are set before the locked server-side count succeeds | `core/system.php:1309-1319`, failure exits at `:1346-1351` | Client state never suppresses an exact count unless server persistence has already succeeded | FIXED 2026-07-24: v2 cookie carries no uniqueness field, session mark removed; the `ips.log`/`user.log` sets are now the single source of truth and the hosts/users counters are derived from set size inside `updateStatsTrack`, so a failed mark write retries and a failed counter write self-heals — no loss and no double count |
+| P1 | A failed monthly `rename()` is followed by deletion of the source `days.log` | `core/system.php:1378-1383` | Rotation failure preserves the source and is logged | FIXED 2026-07-24: any archive-dir/destination/rename/unlink failure aborts the day transition before destroying state and retries later; `days.log` appends are duplicate-date guarded; an existing archive is trusted only when it actually contains the pending day line, otherwise the transition aborts with a logged conflict; the archive name is derived from the data date in `statistic.log`, not from today |
+| P1 | Counter truncation and writes are not checked completely | `core/system.php:1409-1412` | Failed or partial persistence is detected and reported without a false success acknowledgement | FIXED 2026-07-24: `statistic.log` is replaced atomically via temp file and rename under a stable `statistic.lock` exclusive lock, so a partial counter write can never persist or trigger a false day reset; `days.log` and archive guards compare the full day line, short appends are rolled back via `ftruncate`, unterminated tail fragments are repaired, and a same-date line with different content aborts with a logged conflict; set appends, reads, and resets are all checked |
+| P1 | OPcache is disabled in the configured OSPanel PHP runtime | `C:\OSPanel\modules\PHP-8.4\PHP\php.ini:309` | OPcache is loaded and enabled in the web SAPI after an OSPanel restart | OPEN — environment change, performed manually |
+| P2 | Pseudo-cron is still enabled | `config/scheduler.php:74` | A real cron trigger is proven healthy before `pseudo` is changed to `0` | OPEN — requires OS-level cron installation and heartbeat proof |
+| P2 | Marker creation accepts unknown types and unvalidated parameters | `core/system.php:1665-1693` | Only known region types with type-specific validated parameters can be signed | FIXED 2026-07-24: `checkDynamicMark()` validates at sign and serve time |
+| P2 | The implementation has no permanent regression tests for the new performance contracts | `tests/` and the verification matrix below | Every critical contract is covered by an automated or recorded integration check | PARTIAL 2026-07-24: `tests/Unit/PageCacheContractTest.php` exercises the production functions (`Cache::getQueryVars` directly; marker contract, v2 cookie, route decision through `tests/Support/contract_probe.php` booting the real core per scenario); stats-concurrency/failure-injection and DB rows still pending |
+| P3 | Durable documentation still says superseded inline template caches are never collected | `docs/PERFORMANCE.md:98-100`, implementation at `core/system.php:1723-1728` | Documentation describes the implemented template/data GC | FIXED 2026-07-24: `PERFORMANCE.md` describes `cachegc` template GC and the new contracts |
 
 ## Decisions
 
@@ -205,23 +206,23 @@ Work:
 
 | Area | Required check | Source of truth | Status |
 |---|---|---|---|
-| Syntax | `php -l` on every changed PHP file | Command output | Pending |
-| Static analysis | `vendor/bin/phpstan analyse --no-progress` | Command output | Pending |
-| Unit/integration suite | `vendor/bin/phpunit --colors=never` | PHPUnit result | Pending |
-| Formatting | PHP-CS-Fixer dry-run on changed PHP files | Command output | Pending |
-| Diff hygiene | `git diff --check` | Command output | Pending |
-| Cache cardinality | Random unknown query keys create no files | `storage/cache/pages/html` before/after | Pending |
-| Cache canonicalization | Equivalent valid inputs share one identity | Cache filenames and response equality | Pending |
-| Host isolation | Unapproved Host cannot create an entry | Cache filenames and HTTP status | Pending |
-| Dynamic isolation | Two cookie jars receive different live tokens | HTTP response bodies | Pending |
+| Syntax | `php -l` on every changed PHP file | Command output | PASS 2026-07-24 (system.php, cache.php, voting.php, PageCacheContractTest.php, contract_probe.php) |
+| Static analysis | `vendor/bin/phpstan analyse --no-progress` | Command output | PASS 2026-07-24 (no errors) |
+| Unit/integration suite | `vendor/bin/phpunit --colors=never` | PHPUnit result | PASS 2026-07-24 (230 tests, 547 assertions, 3 pre-existing skips; contract tests run production code via the CLI probe) |
+| Formatting | PHP-CS-Fixer dry-run on changed PHP files | Command output | PASS 2026-07-24 (no violations) |
+| Diff hygiene | `git diff --check` | Command output | PASS 2026-07-24 (clean) |
+| Cache cardinality | Random unknown query keys create no files | `storage/cache/pages/html` before/after | PASS 2026-07-24: 20 unknown-key + malformed/duplicate HTTP requests created 0 files; valid `cat=1` created exactly 1 entry + sidecar |
+| Cache canonicalization | Equivalent valid inputs share one identity | Cache filenames and response equality | PASS 2026-07-24: `num=1` and `%6E%65%77%73`-encoded requests created 0 new files over the plain entry |
+| Host isolation | Unapproved Host cannot create an entry | Cache filenames and HTTP status | PASS 2026-07-24: `Host: evil.example` request created 0 files |
+| Dynamic isolation | Two cookie jars receive different live tokens | HTTP response bodies | PASS 2026-07-24: two fresh curl jars received distinct 64-hex tokens, no `[[sldyn:` residue in output; cached file holds 16 markers and no live token |
 | Cached captcha | Challenge from cached output validates before expiry | Real GET/POST flow | Pending |
 | Voting isolation | Form/results follow each visitor's cookie/IP/user state | Two independent visitor flows | Pending |
 | Dynamic browser policy | Dynamic page is no-store and future IMS returns 200 | HTTP response headers/status | Pending |
 | Static browser policy | Static allowlisted fixture supports public headers and 304 | HTTP response headers/status | Pending |
 | Stats cookie | First/next hit, tamper, IP change, expiry, disabled cookies | Cookie jar and counter files | Pending |
 | Stats concurrency | Exact hits/hosts/users under parallel requests | `statistic.log`, `ips.log`, `user.log` | Pending |
-| Stats failure | Injected IO failures preserve later countability | Counter files and error log | Pending |
-| Day rollover | Parallel first requests retain old day and count new day | `days.log`, archive, `statistic.log` | Pending |
+| Stats failure | Injected IO failures preserve later countability | Counter files and error log | Pending — unique counters are now derived from the `ips.log`/`user.log` sets so a failed mark write retries and a failed counter write self-heals without loss or double count; the injected-failure integration run itself is still outstanding |
+| Day rollover | Parallel first requests retain old day and count new day | `days.log`, archive, `statistic.log` | PARTIAL 2026-07-24: single-request live rollover simulation passed (old day retained, new day counted, sets reset); a second simulation with a conflicting synthetic day line was correctly rejected by the full-line conflict guard with a logged error and no data destroyed; the parallel-first-requests run is still outstanding |
 | Session schema | Duplicate fixture migrates and concurrent upsert stays unique | MySQL DB state | Pending |
 | Session schema | Duplicate fixture migrates and concurrent upsert stays unique | MariaDB DB state | Pending |
 | GeoIP equality | Old/new corpus equality for IPv4/IPv6 and records 24/28/32 | Test output | Pending |
@@ -230,7 +231,7 @@ Work:
 | Config cache | Old version, invalid schema, theme/assets/logo changes | `config/local.php` and rendered output | Pending |
 | OPcache | Loaded and enabled in web SAPI after restart | Web-SAPI diagnostic | Pending |
 | Scheduler | Cron heartbeat and due-job success, pseudo trigger absent | Scheduler state files and HTML | Pending |
-| Runtime logs | No new unexpected PHP, SQL, or site errors | `storage/logs/error_*.log` | Pending |
+| Runtime logs | No new unexpected PHP, SQL, or site errors | `storage/logs/error_*.log` | PASS 2026-07-24 (re-verified): all error logs 0 bytes after the full PHPUnit suite and live HTTP checks; the test probe redirects `LOGS_DIR` to a scratch directory before bootstrap, so its intentional failure-path writes never touch the runtime logs and are asserted from the scratch log instead |
 
 ## Rollout order
 

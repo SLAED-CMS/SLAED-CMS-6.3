@@ -1248,31 +1248,29 @@ function getAgentInfo(string $ua, int $guest): array {
     return ['browser' => $browser, 'os' => $os, 'device' => $device];
 }
 
-# Refresh and persist the signed visitor stats cookie in the pre-output phase; session metrics are cookie-borne approximations while file and DB counters stay exact, the unique-day and user-count marks are optimistic skip-fast-paths and the locked counter files remain the source of truth
+# Refresh and persist the signed visitor stats cookie in the pre-output phase; the v2 cookie carries only approximate session metrics and the country cache, exact unique hosts and users are counted solely by the locked server-side counter files and never read any client acknowledgement
 function updateStatsCookie(int $guest): array {
-    global $conf, $user;
-    $state = ['sess' => null, 'country' => '', 'uniq' => false, 'ucnt' => false];
+    global $conf;
+    $state = ['sess' => null, 'country' => ''];
     if ($guest === 1 || $guest === 3) return $state;
     $ip = getIp();
     $key = getSecret('stats');
     $iph = substr(hash_hmac('sha256', $ip, $key), 0, 16);
     $now = time();
-    $today = date('d.m.Y');
     $sid = '';
     $fst = 0;
     $lst = 0;
     $hits = 0;
     $cc = '';
     $cts = 0;
-    $uniq = '';
     $raw = (string)($_COOKIE[$conf['user_c'].'-stats'] ?? '');
     if ($raw !== '' && preg_match('#^[A-Za-z0-9_-]+$#', $raw)) {
         $data = base64_decode(strtr($raw, '-_', '+/'), true);
         $pos = ($data !== false) ? strrpos($data, '|') : false;
         if ($pos !== false && hash_equals(hash_hmac('sha256', substr($data, 0, $pos), $key), substr($data, $pos + 1))) {
-            $part = array_pad(explode('|', substr($data, 0, $pos)), 9, '');
-            if ($part[0] === 'v1' && preg_match('#^[a-f0-9]{16}$#', $part[1])) {
-                [, $sid, $fst, $lst, $hits, $cc, $cts, $uniq, $oiph] = $part;
+            $part = array_pad(explode('|', substr($data, 0, $pos)), 8, '');
+            if ($part[0] === 'v2' && preg_match('#^[a-f0-9]{16}$#', $part[1])) {
+                [, $sid, $fst, $lst, $hits, $cc, $cts, $oiph] = $part;
                 $fst = (int)$fst;
                 $lst = (int)$lst;
                 $hits = (int)$hits;
@@ -1280,7 +1278,6 @@ function updateStatsCookie(int $guest): array {
                 if ($oiph !== $iph) {
                     $cc = '';
                     $cts = 0;
-                    $uniq = '';
                 }
             }
         }
@@ -1306,24 +1303,17 @@ function updateStatsCookie(int $guest): array {
         $cts = $now;
     }
     $state['country'] = $cc;
-    $state['uniq'] = ($uniq === $today);
-    if ($guest === 2 && session_status() === PHP_SESSION_ACTIVE) {
-        $skey = $conf['user_c'].'-ucount';
-        $uval = $today.'|'.filterText(substr((string)($user[1] ?? ''), 0, 25), 1);
-        $state['ucnt'] = (($_SESSION[$skey] ?? '') === $uval);
-        if (!$state['ucnt']) $_SESSION[$skey] = $uval;
-    }
     if (!headers_sent()) {
-        $body = implode('|', ['v1', $sid, $fst, $lst, $hits, $cc, $cts, $today, $iph]);
+        $body = implode('|', ['v2', $sid, $fst, $lst, $hits, $cc, $cts, $iph]);
         $val = rtrim(strtr(base64_encode($body.'|'.hash_hmac('sha256', $body, $key)), '+/', '-_'), '=');
         setCookies('stats', $now + 31536000, $val);
     }
     return $state;
 }
 
-# Write daily statistics counters in the post-response phase from the pre-computed cookie state, all statistic.log access runs under one exclusive lock on a single handle
+# Write daily statistics counters in the post-response phase under one exclusive lock on the stable statistic.lock file; statistic.log is replaced atomically via temp file and rename so it can never persist partially, the ips.log/user.log sets are the source of truth for exact unique hosts/users with counters derived from set size, day lines are verified as full lines with short appends rolled back, and every rollover step aborts on failure before destroying state
 function updateStatsTrack(string $request, int $guest, array $state): void {
-    global $conf;
+    global $conf, $user;
     $sreferer = getReferer();
     $sreqhom = filterText($request);
     $spath = COUNTER_DIR.'/';
@@ -1343,55 +1333,124 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         }
         return $handle ?: false;
     };
-    $fps = $safeOpen($slog, 'c+');
-    if ($fps === false) return;
-    if (!flock($fps, LOCK_EX)) {
-        fclose($fps);
+    $flk = $safeOpen($spath.'statistic.lock', 'c');
+    if ($flk === false) return;
+    if (!flock($flk, LOCK_EX)) {
+        fclose($flk);
         return;
     }
     try {
-        rewind($fps);
-        $data = stream_get_contents($fps);
-        $line = ($data !== false) ? trim($data) : '';
+        $data = is_file($slog) ? file_get_contents($slog) : '';
+        if ($data === false) {
+            addErrorFile(_ERR_READ.': '.$slog);
+            return;
+        }
+        $line = trim($data);
         $con = ($line !== '') ? explode('|', $line) : [];
         $today = date('d.m.Y');
         $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? 1 : 0;
-        if ($con !== [] && $con[0] === $today) {
-            $check = checkUniqueIp($state['uniq']);
-            $checku = check_user($state['ucnt']);
-            $shost = ($check) ? intval(($con[1] ?? 0) + 1) : ($con[1] ?? 0);
-            $sengine = ($check && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
-            $srefer = ($check && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
+        $isday = ($con !== [] && $con[0] === $today);
+        if (!$isday && $con !== []) {
+            $rotate = preg_match('#^\d{2}\.\d{2}\.\d{4}$#', $con[0]) === 1 && substr($con[0], 3) != date('m.Y');
+            $sdir = $spath.'statistic';
+            $dest = $rotate ? $sdir.'/statistic_'.substr($con[0], 6).'-'.substr($con[0], 3, 2).'.log' : '';
+            $done = false;
+            if ($rotate && file_exists($dest) && (!is_file($spath.'days.log') || !filesize($spath.'days.log'))) {
+                $arch = file_get_contents($dest);
+                if ($arch === false || !preg_match('#^'.preg_quote($line, '#').'\r?$#m', $arch)) {
+                    addErrorFile('Statistic rotation failed: existing archive misses day '.$con[0]);
+                    return;
+                }
+                $done = true;
+            }
+            if (!$done) {
+                $keep = $line.PHP_EOL;
+                $saved = false;
+                $why = 'days.log append';
+                $fpd = $safeOpen($spath.'days.log', 'c+');
+                if ($fpd) {
+                    if (flock($fpd, LOCK_EX)) {
+                        $dlog = stream_get_contents($fpd);
+                        if ($dlog !== false && $dlog !== '' && !str_ends_with($dlog, "\n")) {
+                            $cut = strrpos($dlog, "\n");
+                            $len = ($cut === false) ? 0 : $cut + 1;
+                            $dlog = ftruncate($fpd, $len) ? substr($dlog, 0, $len) : false;
+                        }
+                        if ($dlog !== false && preg_match('#^'.preg_quote($line, '#').'\r?$#m', $dlog)) {
+                            $saved = true;
+                        } elseif ($dlog !== false && preg_match('#^'.preg_quote($con[0], '#').'\|#m', $dlog)) {
+                            $why = 'days.log day conflict for '.$con[0];
+                        } elseif ($dlog !== false) {
+                            fseek($fpd, 0, SEEK_END);
+                            $pos = (int)ftell($fpd);
+                            if (fwrite($fpd, $keep) === strlen($keep) && fflush($fpd)) {
+                                $saved = true;
+                            } else {
+                                ftruncate($fpd, $pos);
+                            }
+                        }
+                        flock($fpd, LOCK_UN);
+                    }
+                    fclose($fpd);
+                }
+                if (!$saved) {
+                    addErrorFile('Statistic rollover failed: '.$why);
+                    return;
+                }
+                if ($rotate) {
+                    if (!is_dir($sdir) && !mkdir($sdir, 0755, true) && !is_dir($sdir)) {
+                        addErrorFile('Statistic rotation failed: archive directory');
+                        return;
+                    }
+                    if (file_exists($dest)) {
+                        addErrorFile('Statistic rotation failed: archive already exists for day '.$con[0]);
+                        return;
+                    }
+                    if (!rename($spath.'days.log', $dest)) {
+                        addErrorFile('Statistic rotation failed: archive move for day '.$con[0]);
+                        return;
+                    }
+                }
+            }
+        }
+        if (!$isday) {
+            if (file_exists($spath.'ips.log') && !unlink($spath.'ips.log')) {
+                addErrorFile('Statistic rollover failed: reset ips.log');
+                return;
+            }
+            if (file_exists($spath.'user.log') && !unlink($spath.'user.log')) {
+                addErrorFile('Statistic rollover failed: reset user.log');
+                return;
+            }
+        }
+        $ip = getIp();
+        $uname = ($conf['session'] && $guest == 2 && is_user()) ? filterText(substr((string)($user[1] ?? ''), 0, 25), 1) : '';
+        $iplog = is_file($spath.'ips.log') ? file_get_contents($spath.'ips.log') : '';
+        if ($iplog === false) {
+            addErrorFile(_ERR_READ.': '.$spath.'ips.log');
+            return;
+        }
+        $unlog = is_file($spath.'user.log') ? file_get_contents($spath.'user.log') : '';
+        if ($unlog === false) {
+            addErrorFile(_ERR_READ.': '.$spath.'user.log');
+            return;
+        }
+        $ipnew = !str_contains(','.$iplog, ','.$ip.',');
+        if ($ipnew && addFile($spath.'ips.log', $ip.',', 'none', false, 'a') !== 0) $ipnew = false;
+        $unew = $uname !== '' && !str_contains(','.$unlog, ','.$uname.',');
+        if ($unew && addFile($spath.'user.log', $uname.',', 'none', false, 'a') !== 0) $unew = false;
+        $shost = substr_count($iplog, ',') + ($ipnew ? 1 : 0);
+        $suser = substr_count($unlog, ',') + ($unew ? 1 : 0);
+        if ($isday) {
+            $sengine = ($ipnew && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
+            $srefer = ($ipnew && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
             $shome = ($reqhom) ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
-            $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
             $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$shome.'|'.$suser;
             $prev = $con;
         } else {
-            if ($con !== []) {
-                $fpd = $safeOpen($spath.'days.log', 'ab');
-                if ($fpd && flock($fpd, LOCK_EX)) {
-                    fwrite($fpd, $line.PHP_EOL);
-                    fflush($fpd);
-                    flock($fpd, LOCK_UN);
-                }
-                if ($fpd) fclose($fpd);
-                if (substr($con[0], 3) != date('m.Y')) {
-                    $month = date('Y-m', strtotime('-1 month'));
-                    $sdir = $spath.'statistic';
-                    if (!is_dir($sdir)) mkdir($sdir, 0755, true);
-                    rename($spath.'days.log', $sdir.'/statistic_'.$month.'.log');
-                    if (file_exists($spath.'days.log')) unlink($spath.'days.log');
-                }
-            }
-            if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
-            if (file_exists($spath.'user.log')) unlink($spath.'user.log');
-            $check = checkUniqueIp();
-            $checku = check_user();
             $ahits = ($con[3] ?? 0) ? intval(($con[3] ?? 0) + 1) : 1;
-            $shost = ($check) ? 1 : 0;
             $sengine = ($conf['session'] && $guest == 1) ? 1 : 0;
             $srefer = ($sreferer) ? 1 : 0;
-            $suser = ($checku && $conf['session'] && $guest == 2) ? 1 : 0;
             $wc = $today.'|'.$shost.'|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
             $prev = [];
         }
@@ -1406,13 +1465,13 @@ function updateStatsTrack(string $request, int $guest, array $state): void {
         $ext[15] = ($sess !== null) ? updateCounterField($prev[15] ?? '', getSessionDepthBucket($sess['depth'])) : ($prev[15] ?? '');
         $ext[16] = ($sess !== null) ? updateCounterField($prev[16] ?? '', getSessionDurationBucket($sess['duration'])) : ($prev[16] ?? '');
         $wc = implode('|', $ext);
-        rewind($fps);
-        ftruncate($fps, 0);
-        fwrite($fps, $wc);
-        fflush($fps);
+        if (!Cache::setBody($slog, $wc)) {
+            addErrorFile('Statistic counter write failed: statistic.log');
+            return;
+        }
     } finally {
-        flock($fps, LOCK_UN);
-        fclose($fps);
+        flock($flk, LOCK_UN);
+        fclose($flk);
     }
 }
 
@@ -1661,27 +1720,44 @@ function checkCachePoison(bool $mark = false): bool {
     return $bad;
 }
 
-# Build one signed dynamic-region marker for cacheable page builds; the HMAC keeps user-supplied content from forging substitutable markers
+# Validate one dynamic-region type and parameter against the approved marker contract; only these exact combinations may ever be signed or rendered
+function checkDynamicMark(string $type, string $par): bool {
+    if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler'], true);
+    if ($type === 'captcha') return $par === 'login';
+    if ($type === 'voting') return preg_match('#^[1-9][0-9]{0,8}$#', $par) === 1;
+    return false;
+}
+
+# Build one signed dynamic-region marker for cacheable page builds; an unknown type or invalid parameter poisons the build, is logged, and never produces a signed marker, the HMAC keeps user-supplied content from forging substitutable markers
 function getDynamicMark(string $type, string $par = ''): string {
+    if (!checkDynamicMark($type, $par)) {
+        checkCachePoison(true);
+        addErrorFile('Rejected dynamic-region marker: '.$type);
+        return '';
+    }
     return '[[sldyn:'.$type.':'.$par.':'.substr(hash_hmac('sha256', $type.':'.$par, getSecret('dynreg')), 0, 16).']]';
 }
 
-# Return the CSRF token for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable
+# Return the CSRF token for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable; a rejected marker falls back to the live token on the already poisoned build
 function getPageToken(string $scope = 'ajax'): string {
-    return checkPageCache() ? getDynamicMark('token', $scope) : getSiteToken($scope);
+    if (!checkPageCache()) return getSiteToken($scope);
+    $mark = getDynamicMark('token', $scope);
+    return ($mark !== '') ? $mark : getSiteToken($scope);
 }
 
-# Return the captcha block for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable
+# Return the captcha block for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable; a rejected marker falls back to the live captcha on the already poisoned build
 function getPageCaptcha(string $act): string {
-    return checkPageCache() ? getDynamicMark('captcha', $act) : getCaptcha($act);
+    if (!checkPageCache()) return getCaptcha($act);
+    $mark = getDynamicMark('captcha', $act);
+    return ($mark !== '') ? $mark : getCaptcha($act);
 }
 
-# Render one known dynamic region fresh for the current visitor; markers carry only a validated type and parameter, never code
+# Render one known dynamic region fresh for the current visitor; the marker contract is revalidated at serve time so forged or stale markers stay inert, markers carry only data and never code
 function getDynamicRegion(string $type, string $par): string {
-    if ($type === 'token') return htmlspecialchars(getSiteToken($par !== '' ? $par : 'ajax'), ENT_QUOTES, 'UTF-8');
-    if ($type === 'captcha') return getCaptcha($par !== '' ? $par : 'login');
-    if ($type === 'voting') return ((int)$par > 0) ? getVotingView((int)$par, 'blockvoting') : '';
-    return '';
+    if (!checkDynamicMark($type, $par)) return '';
+    if ($type === 'token') return htmlspecialchars(getSiteToken($par), ENT_QUOTES, 'UTF-8');
+    if ($type === 'captcha') return getCaptcha($par);
+    return getVotingView((int)$par, 'blockvoting');
 }
 
 # Replace signed dynamic-region markers with freshly rendered visitor-bound content; unsigned or forged markers stay literal text
@@ -1693,7 +1769,26 @@ function setDynamicRegions(string $html): string {
     }, $html) ?? $html;
 }
 
-# Decide whether the current frontend request may be served from or stored into the page cache; routes are default-deny and must be allowlisted per module and op
+# Validate the current request against the bounded per-route page-cache contract: the host must match the configured canonical homeurl host and the query may only carry known, single, well-formed semantic keys; null means the request must render live and never create a cache entry
+function getCacheRouteVars(): ?array {
+    global $conf;
+    static $memo = false;
+    if ($memo !== false) return $memo;
+    $canon = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
+    $port = parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_PORT);
+    if ($canon === '' || strtolower(getHost()) !== $canon.($port ? ':'.$port : '')) return $memo = null;
+    $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
+    $allow = ['name' => '#^news$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
+    if (Cache::getQueryVars($url, $allow) === null) return $memo = null;
+    $vars = ['name' => getVar('get', 'name', 'var')];
+    $cat = getVar('get', 'cat', 'num');
+    if ($cat) $vars['cat'] = (string)$cat;
+    $num = getVar('get', 'num', 'num');
+    if ($num > 1) $vars['num'] = (string)$num;
+    return $memo = $vars;
+}
+
+# Decide whether the current frontend request may be served from or stored into the page cache; routes are default-deny, must be allowlisted per module and op, and must satisfy the bounded parameter contract
 function checkPageCache(): bool {
     global $conf, $home, $name, $op;
     if (defined('ADMIN_FILE')) return false;
@@ -1704,20 +1799,17 @@ function checkPageCache(): bool {
     if (!empty($_SESSION[$conf['user_c'].'-flash'])) return false;
     $ops = ['news' => ['']];
     if (!in_array((string)($op ?? ''), $ops[$name ?? ''] ?? [], true)) return false;
-    $url = str_replace('/', '', $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '');
-    $url = $url ?: 'index.php';
-    if ($conf['cache'] == 2) {
-        return ($conf['rewrite']) ? ($url == 'index.php' || $url == 'index.html') : ($url == 'index.php');
-    }
-    return ($conf['rewrite']) ? ($url == 'index.php' || $url == 'index.html' || strstr($url, 'index.php?name='.$name) || strstr($url, $name)) : ($url == 'index.php' || strstr($url, 'index.php?name='.$name));
+    return getCacheRouteVars() !== null;
 }
 
-# Build the page cache hash from CMS version, content epoch, host, scheme, theme, locale, and the normalized request URI
+# Build the page cache identity from version, content epoch, canonical host, scheme, theme, locale, and the validated route parameters; the pc2 identity version keeps every pre-contract cache file unreachable until normal GC removes it
 function getPageHash(): string {
     global $theme, $locale, $conf;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $url = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
-    return Cache::getHash([$conf['version'] ?? '', Cache::getEpoch(), getHost(), $scheme, $theme, $locale, Cache::filterCacheUrl($url)]);
+    $canon = strtolower((string)parse_url((string)($conf['homeurl'] ?? ''), PHP_URL_HOST));
+    $vars = getCacheRouteVars() ?? [];
+    ksort($vars);
+    return Cache::getHash(['pc2', $conf['version'] ?? '', Cache::getEpoch(), $canon, $scheme, $theme, $locale, http_build_query($vars)]);
 }
 
 # Sweep stale page-cache files older than the retention window as a scheduler job and report the removed count
@@ -2232,23 +2324,6 @@ function deleteDir(string $dir): bool {
 # Check which compression methods are available
 function checkCompress(): array {
     return ['zip' => class_exists('ZipArchive'), 'gz' => function_exists('gzopen'), 'bz2' => function_exists('bzopen')];
-}
-
-# Check if IP exists in log, add once if missing
-function checkUniqueIp(bool $known = false): bool {
-    if ($known) return false;
-    $file = COUNTER_DIR.'/ips.log';
-    $ip = getIp();
-    if (file_exists($file)) {
-        $cont = file_get_contents($file);
-        if ($cont === false) {
-            addErrorFile(_ERR_READ.': '.$file);
-            return false;
-        }
-        if ($cont !== '' && str_contains(','.$cont, ','.$ip.',')) return false;
-    }
-    addFile($file, $ip.',', 'none', false, 'a');
-    return true;
 }
 
 # Compress a file, folder or string (zip, gz, bz2)
@@ -4723,34 +4798,6 @@ function url_types(string $urls): string {
         }
     }
     return $con ? implode(', ', array_unique($con)) : '';
-}
-
-# Check user
-function check_user(bool $known = false): ?bool {
- global $user;
-    if ($known) return false;
-    if (is_user()) {
-        $f = COUNTER_DIR.'/user.log';
-        $un = filterText(substr($user[1], 0, 25), 1);
-        if (file_exists($f)) {
-            $fun = file_get_contents($f);
-            $fun = explode(',', $fun);
-            foreach ($fun as $val) {
-                if ($val != '' && $val == $un) {
-                    return false;
-                    break;
-                }
-            }
-        }
-        $fp = fopen($f, 'ab');
-        flock($fp, 2);
-        fwrite($fp, $un.',');
-        flock($fp, 3);
-        fclose($fp);
-        return true;
-    } else {
-        return false;
-    }
 }
 
 # Log files report
