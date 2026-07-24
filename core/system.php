@@ -1248,7 +1248,7 @@ function getAgentInfo(string $ua, int $guest): array {
     return ['browser' => $browser, 'os' => $os, 'device' => $device];
 }
 
-# Refresh and persist the signed visitor stats cookie in the pre-output phase; the v2 cookie carries only approximate session metrics and the country cache, exact unique hosts and users are counted solely by the locked server-side counter files and never read any client acknowledgement
+# Refresh the signed v2 visitor stats cookie in the pre-output phase; it carries only approximate session metrics and the country cache, exact unique counts never read client state
 function updateStatsCookie(int $guest): array {
     global $conf;
     $state = ['sess' => null, 'country' => ''];
@@ -1311,7 +1311,7 @@ function updateStatsCookie(int $guest): array {
     return $state;
 }
 
-# Write daily statistics counters in the post-response phase under one exclusive lock on the stable statistic.lock file; statistic.log is replaced atomically via temp file and rename so it can never persist partially, the ips.log/user.log sets are the source of truth for exact unique hosts/users with counters derived from set size, day lines are verified as full lines with short appends rolled back, and every rollover step aborts on failure before destroying state
+# Write daily statistics under one exclusive statistic.lock; statistic.log is written atomically, unique counters derive from the ips/user sets, rollover aborts on any failure
 function updateStatsTrack(string $request, int $guest, array $state): void {
     global $conf, $user;
     $sreferer = getReferer();
@@ -1728,7 +1728,7 @@ function checkDynamicMark(string $type, string $par): bool {
     return false;
 }
 
-# Build one signed dynamic-region marker for cacheable page builds; an unknown type or invalid parameter poisons the build, is logged, and never produces a signed marker, the HMAC keeps user-supplied content from forging substitutable markers
+# Build one signed dynamic-region marker for cacheable builds; an invalid type or parameter poisons the build, is logged, and never yields a signed marker
 function getDynamicMark(string $type, string $par = ''): string {
     if (!checkDynamicMark($type, $par)) {
         checkCachePoison(true);
@@ -1738,21 +1738,21 @@ function getDynamicMark(string $type, string $par = ''): string {
     return '[[sldyn:'.$type.':'.$par.':'.substr(hash_hmac('sha256', $type.':'.$par, getSecret('dynreg')), 0, 16).']]';
 }
 
-# Return the CSRF token for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable; a rejected marker falls back to the live token on the already poisoned build
+# Return the CSRF token for page markup, or a signed dynamic-region marker when the build is cacheable; a rejected marker falls back to the live token
 function getPageToken(string $scope = 'ajax'): string {
     if (!checkPageCache()) return getSiteToken($scope);
     $mark = getDynamicMark('token', $scope);
     return ($mark !== '') ? $mark : getSiteToken($scope);
 }
 
-# Return the captcha block for page markup, emitting a signed dynamic-region marker instead when the current page build is cacheable; a rejected marker falls back to the live captcha on the already poisoned build
+# Return the captcha block for page markup, or a signed dynamic-region marker when the build is cacheable; a rejected marker falls back to the live captcha
 function getPageCaptcha(string $act): string {
     if (!checkPageCache()) return getCaptcha($act);
     $mark = getDynamicMark('captcha', $act);
     return ($mark !== '') ? $mark : getCaptcha($act);
 }
 
-# Render one known dynamic region fresh for the current visitor; the marker contract is revalidated at serve time so forged or stale markers stay inert, markers carry only data and never code
+# Render one known dynamic region fresh for the current visitor; the contract is revalidated at serve time so forged or stale markers stay inert
 function getDynamicRegion(string $type, string $par): string {
     if (!checkDynamicMark($type, $par)) return '';
     if ($type === 'token') return htmlspecialchars(getSiteToken($par), ENT_QUOTES, 'UTF-8');
@@ -1769,7 +1769,7 @@ function setDynamicRegions(string $html): string {
     }, $html) ?? $html;
 }
 
-# Validate the current request against the bounded per-route page-cache contract: the host must match the configured canonical homeurl host and the query may only carry known, single, well-formed semantic keys; null means the request must render live and never create a cache entry
+# Validate the current request against the per-route page-cache contract: canonical homeurl host plus known, single, well-formed query keys; null means render live without caching
 function getCacheRouteVars(): ?array {
     global $conf;
     static $memo = false;
@@ -1788,7 +1788,7 @@ function getCacheRouteVars(): ?array {
     return $memo = $vars;
 }
 
-# Decide whether the current frontend request may be served from or stored into the page cache; routes are default-deny, must be allowlisted per module and op, and must satisfy the bounded parameter contract
+# Decide whether the request may be served from or stored into the page cache; routes are default-deny per module and op and must satisfy the parameter contract
 function checkPageCache(): bool {
     global $conf, $home, $name, $op;
     if (defined('ADMIN_FILE')) return false;
@@ -1802,7 +1802,7 @@ function checkPageCache(): bool {
     return getCacheRouteVars() !== null;
 }
 
-# Build the page cache identity from version, content epoch, canonical host, scheme, theme, locale, and the validated route parameters; the pc2 identity version keeps every pre-contract cache file unreachable until normal GC removes it
+# Build the pc2 page cache identity from version, epoch, canonical host, scheme, theme, locale, and validated route parameters; old cache files stay unreachable until GC
 function getPageHash(): string {
     global $theme, $locale, $conf;
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';

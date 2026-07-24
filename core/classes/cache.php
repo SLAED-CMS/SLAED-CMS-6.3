@@ -27,7 +27,7 @@ class Cache {
         return sha1(implode('|', $parts));
     }
 
-    # Validate the query part of one request URL against a per-route parameter allowlist of key => value regex; tracking keys are dropped, any unknown, duplicate, or malformed key returns null
+    # Validate the query part of one URL against a per-route key => value regex allowlist; tracking keys are dropped, any unknown, duplicate, or malformed key returns null
     public static function getQueryVars(string $url, array $allow): ?array {
         $cut = strpos($url, '?');
         if ($cut === false) return [];

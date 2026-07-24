@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for PageCacheContractTest: boots the real core exactly like index.php and reports the behavior of the production contract functions as JSON, one scenario per process because getCacheRouteVars memoizes per request; LOGS_DIR is redirected to a scratch directory before bootstrap so intentional failure-path log writes never touch the runtime logs and stay assertable
+# CLI probe for PageCacheContractTest: boots the real core like index.php, one scenario per process (route memoization), LOGS_DIR redirected to scratch so runtime logs stay clean
 error_reporting(0);
 ini_set('display_errors', '0');
 ini_set('log_errors', '0');
