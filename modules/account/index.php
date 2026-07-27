@@ -15,7 +15,7 @@ function account(): void {
         profil();
     } else {
         setHead(['title' => _USERREGLOGIN]);
-        $captcha = getCaptcha('login');
+        $captcha = getPageCaptcha('login');
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN, 'is_level_one' => true]);
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);
         $fields = $tpl->getHtmlFrag('form-field-row', [
@@ -82,7 +82,7 @@ function newuser(): void {
             $nick = ($nick) ? filterText(substr($nick, 0, 25)) : '';
             $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? filterText($mail) : '';
-            $captcha = getCaptcha('register');
+            $captcha = getPageCaptcha('register');
             $fields = $tpl->getHtmlFrag('form-field-row', [
                 'label' => _NICKNAME,
                 'hide_label' => true,
@@ -1265,7 +1265,7 @@ function oauthfinish(): void {
             'login_label' => _USERLOGIN,
             'create_label' => _NEWUSER,
             'suggest' => htmlspecialchars(substr((string)$row['uname'], 0, 25), ENT_QUOTES, 'UTF-8'),
-            'captcha' => getCaptcha('login'),
+            'captcha' => getPageCaptcha('login'),
             'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
             'action' => 'index.php?name='.$conf['name'],
         ]);

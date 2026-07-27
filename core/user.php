@@ -54,7 +54,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
             'form_name' => 'post',
             'no_enctype' => true,
             'fields' => $fields,
-            'captcha' => getCaptcha('comment'),
+            'captcha' => getPageCaptcha('comment'),
             'submit' => $submit,
         ]);
     }
@@ -274,11 +274,11 @@ function addComment() {
     [$date] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
     $stime = ($date ? strtotime($date) : 0) + $conf['comments']['send'];
     $checks = str_replace(["\n", "\r", "\t"], ' ', $comment);
-    $e = explode(' ', $checks);
-    for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
+    $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', $checks));
+    $long = $words ? max($words) : 0;
     $stop = '';
     if ($comment === '') $stop = _CERROR1;
-    if ($o > $conf['comments']['letter']) $stop = _CERROR2;
+    if ($long > $conf['comments']['letter']) $stop = _CERROR2;
     if ((!is_user() && $postname === '') || (!is_user() && $conf['comments']['anonpost'] == 0)) $stop = _CERROR3;
     if ($stime > time()) $stop = sprintf(_CERROR5, $conf['comments']['send']);
     if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($comment, 'http://') !== false) $stop = _CERROR9;

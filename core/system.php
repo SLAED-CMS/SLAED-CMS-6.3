@@ -1723,7 +1723,7 @@ function checkCachePoison(bool $mark = false): bool {
 # Validate one dynamic-region type and parameter against the approved marker contract; only these exact combinations may ever be signed or rendered
 function checkDynamicMark(string $type, string $par): bool {
     if ($type === 'token') return in_array($par, ['ajax', 'account', 'scheduler'], true);
-    if ($type === 'captcha') return $par === 'login';
+    if ($type === 'captcha') return in_array($par, ['login', 'register', 'comment', 'contact'], true);
     if ($type === 'voting') return preg_match('#^[1-9][0-9]{0,8}$#', $par) === 1;
     return false;
 }

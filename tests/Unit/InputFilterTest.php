@@ -1,291 +1,102 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Tests\Unit;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Safety net tests for input filtering functions from core/security.php.
- * Uses local replicas to avoid loading security.php (function redeclaration conflicts).
- * Algorithms are copied verbatim from security.php lines 1013-1126.
+ * Safety net for the input filters in core/security.php. The scenarios run against the booted core
+ * through tests/Support/contract_probe.php, so the assertions describe the shipped functions rather
+ * than a replica: the earlier revision of this file copied the algorithms and drifted away from them.
  */
 final class InputFilterTest extends TestCase
 {
-    // --- Replicated filter functions ---
+    private static array $probe = [];
 
-    private function numFilter(string $var): int
+    # Run the filter probe once and memoize its report for every scenario in this class
+    private function getProbe(): array
     {
-        $con = preg_replace('#[^0-9]#', '', $var);
-        return intval($con);
+        if (self::$probe !== []) return self::$probe;
+        $script = dirname(__DIR__).'/Support/contract_probe.php';
+        $out = (string)shell_exec(escapeshellarg(PHP_BINARY).' '.escapeshellarg($script).' filters 2>&1');
+        $data = json_decode($out, true);
+        $this->assertIsArray($data, 'Probe filters did not return JSON: '.$out);
+        return self::$probe = $data;
     }
 
-    private function varFilter(string $var): string
-    {
-        return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var);
-    }
-
-    private function isVarLocal(string|array $var): string|array
-    {
-        if (is_array($var)) {
-            return (preg_grep('#[^a-zA-Z0-9_\-]#', $var)) ? '' : $var;
-        }
-        return (preg_match('#[^a-zA-Z0-9_\-]#', $var)) ? '' : $var;
-    }
-
-    private function textFilterLocal(string $message, string $type = ''): string
-    {
-        // Simplified: skip admin check and censor (not relevant for filter logic tests)
-        while (preg_match('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', $message)) {
-            $message = preg_replace('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', '', $message);
-        }
-        if (intval($type) == 2) {
-            $message = htmlspecialchars(trim($message), ENT_QUOTES);
-        } else {
-            $message = strip_tags(urldecode($message));
-            $message = htmlspecialchars(trim($message), ENT_QUOTES);
-        }
-        return $message;
-    }
-
-    private function urlFilterLocal(string $url): string
-    {
-        $url = strtolower($url);
-        $url = (preg_match('#http\:\/\/|https\:\/\/#i', $url)) ? $url : 'http://'.$url;
-        $url = ($url == 'http://') ? '' : $this->textFilterLocal($url);
-        return $url;
-    }
-
-    private function filterHtmlLocal(string $text): ?string
-    {
-        if ($text) {
-            // Non-editor mode (redaktor=0): escape special chars
-            return str_replace(
-                ['"', '$', "'", '\\'],
-                ['&#034;', '&#036;', '&#039;', '&#092;'],
-                stripslashes($text)
-            );
-        }
-        return null;
-    }
-
-    // --- num_filter tests ---
-
+    # filterNum() keeps digits only and always yields an int, so a sign or letters can never reach a query
     #[Test]
-    public function numFilterExtractsDigits(): void
+    public function numFilterExtractsDigitsOnly(): void
     {
-        $this->assertSame(123, $this->numFilter('123'));
+        $this->assertSame([123, 123, 0, 0, 5, 999999999], $this->getProbe()['num']);
     }
 
+    # filterWord() keeps letters, digits and a small punctuation set; angle brackets and quotes are dropped
     #[Test]
-    public function numFilterStripsNonDigits(): void
+    public function wordFilterStripsMarkupAndQuotes(): void
     {
-        $this->assertSame(123, $this->numFilter('abc123def'));
+        $word = $this->getProbe()['word'];
+        $this->assertSame('hello123', $word[0]);
+        $this->assertSame('a%b&c/d', $word[1]);
+        $this->assertStringNotContainsString('<', $word[2]);
+        $this->assertStringNotContainsString('>', $word[2]);
+        $this->assertSame('Привет', $word[3]);
+        $this->assertStringNotContainsString('"', $word[4]);
+        $this->assertStringNotContainsString("'", $word[4]);
+        $this->assertSame('hello world', $word[5]);
     }
 
+    # filterVar() passes a strict identifier through and blanks anything else; a single space is enough to reject
     #[Test]
-    public function numFilterReturnsZeroForNonNumeric(): void
+    public function varFilterAcceptsIdentifiersOnly(): void
     {
-        $this->assertSame(0, $this->numFilter('abc'));
+        $this->assertSame(['hello-world_123', '', '', ''], $this->getProbe()['var']);
     }
 
+    # An array keeps its type: a clean list survives, a list holding one bad element collapses to an empty array
     #[Test]
-    public function numFilterHandlesEmpty(): void
+    public function varFilterReturnsArrayForArrayInput(): void
     {
-        $this->assertSame(0, $this->numFilter(''));
+        $this->assertSame([['one', 'two-three'], []], $this->getProbe()['vararr']);
     }
 
+    # filterText() strips tags by default, escapes quotes, keeps escaped markup for type 2 and removes usephp blocks
     #[Test]
-    public function numFilterStripsNegativeSign(): void
+    public function textFilterEscapesAndStripsMarkup(): void
     {
-        $this->assertSame(5, $this->numFilter('-5'));
+        $text = $this->getProbe()['text'];
+        $this->assertSame('bold', $text[0]);
+        $this->assertStringContainsString('&quot;', $text[1]);
+        $this->assertSame('&lt;b&gt;tag&lt;/b&gt;', $text[2]);
+        $this->assertStringNotContainsString('[usephp]', $text[3]);
+        $this->assertStringContainsString('normal text', $text[3]);
+        $this->assertSame('hello', $text[4]);
     }
 
+    # filterUrl() forces a scheme, keeps an existing https one and returns an empty string for a bare protocol
     #[Test]
-    public function numFilterLargeNumber(): void
+    public function urlFilterNormalizesScheme(): void
     {
-        $this->assertSame(999999999, $this->numFilter('999999999'));
+        $this->assertSame(['http://example.com', 'https://example.com', '', ''], $this->getProbe()['url']);
     }
 
-    // --- var_filter tests ---
-
+    # filterHtml() encodes the dollar sign and quotes; a lone backslash is consumed by stripslashes before the encoding runs
     #[Test]
-    public function varFilterAllowsLettersAndDigits(): void
+    public function htmlFilterEncodesTemplateCharacters(): void
     {
-        $this->assertSame('hello123', $this->varFilter('hello123'));
+        $html = $this->getProbe()['html'];
+        $this->assertStringContainsString('&#036;', $html[0]);
+        $this->assertSame('backslash', $html[1]);
+        $this->assertStringContainsString('&quot;', $html[2]);
+        $this->assertStringContainsString('&#039;', $html[2]);
+        $this->assertSame('', $html[3]);
     }
 
+    # filterFields() joins an array with the pipe separator and stays a string for empty and scalar input
     #[Test]
-    public function varFilterAllowsSpecialChars(): void
+    public function fieldsFilterJoinsArraysAndSurvivesScalars(): void
     {
-        $this->assertSame('a%b&c/d', $this->varFilter('a%b&c/d'));
-    }
-
-    #[Test]
-    public function varFilterStripsAngleBrackets(): void
-    {
-        $result = $this->varFilter('<script>alert(1)</script>');
-        $this->assertStringNotContainsString('<', $result);
-        $this->assertStringNotContainsString('>', $result);
-    }
-
-    #[Test]
-    public function varFilterAllowsUnicode(): void
-    {
-        $this->assertSame('Привет', $this->varFilter('Привет'));
-    }
-
-    #[Test]
-    public function varFilterStripsQuotes(): void
-    {
-        $result = $this->varFilter('test"value\'end');
-        $this->assertStringNotContainsString('"', $result);
-        $this->assertStringNotContainsString("'", $result);
-    }
-
-    #[Test]
-    public function varFilterAllowsSpaces(): void
-    {
-        $this->assertSame('hello world', $this->varFilter('hello world'));
-    }
-
-    // --- isVar tests ---
-
-    #[Test]
-    public function isVarAllowsAlphanumericHyphenUnderscore(): void
-    {
-        $this->assertSame('hello-world_123', $this->isVarLocal('hello-world_123'));
-    }
-
-    #[Test]
-    public function isVarRejectsSpaces(): void
-    {
-        $this->assertSame('', $this->isVarLocal('hello world'));
-    }
-
-    #[Test]
-    public function isVarRejectsHtml(): void
-    {
-        $this->assertSame('', $this->isVarLocal('test<script>'));
-    }
-
-    #[Test]
-    public function isVarRejectsQuotes(): void
-    {
-        $this->assertSame('', $this->isVarLocal("test'injection"));
-    }
-
-    #[Test]
-    public function isVarArrayWithInvalidElement(): void
-    {
-        $result = $this->isVarLocal(['valid-name', 'not valid']);
-        $this->assertSame('', $result);
-    }
-
-    #[Test]
-    public function isVarArrayAllValid(): void
-    {
-        $input = ['valid-name', 'also_valid', 'abc123'];
-        $this->assertSame($input, $this->isVarLocal($input));
-    }
-
-    // --- text_filter tests ---
-
-    #[Test]
-    public function textFilterEscapesHtml(): void
-    {
-        $result = $this->textFilterLocal('<b>bold</b>');
-        $this->assertStringNotContainsString('<b>', $result);
-    }
-
-    #[Test]
-    public function textFilterEscapesQuotes(): void
-    {
-        $result = $this->textFilterLocal('test"value');
-        $this->assertStringContainsString('&quot;', $result);
-    }
-
-    #[Test]
-    public function textFilterType2KeepsTags(): void
-    {
-        $result = $this->textFilterLocal('<b>bold</b>', '2');
-        $this->assertStringContainsString('&lt;b&gt;', $result);
-    }
-
-    #[Test]
-    public function textFilterStripsUsephpBBCode(): void
-    {
-        $result = $this->textFilterLocal('[usephp]echo 1;[/usephp] normal text');
-        $this->assertStringNotContainsString('[usephp]', $result);
-        $this->assertStringContainsString('normal text', $result);
-    }
-
-    #[Test]
-    public function textFilterTrimsWhitespace(): void
-    {
-        $this->assertSame('hello', $this->textFilterLocal('  hello  '));
-    }
-
-    #[Test]
-    public function textFilterHandlesNestedBBCode(): void
-    {
-        $result = $this->textFilterLocal('[usephp][usephp]nested[/usephp][/usephp]');
-        $this->assertStringNotContainsString('[usephp]', $result);
-    }
-
-    // --- url_filter tests ---
-
-    #[Test]
-    public function urlFilterAddsHttpPrefix(): void
-    {
-        $result = $this->urlFilterLocal('example.com');
-        $this->assertStringStartsWith('http://', $result);
-    }
-
-    #[Test]
-    public function urlFilterKeepsHttps(): void
-    {
-        $result = $this->urlFilterLocal('https://example.com');
-        $this->assertStringStartsWith('https://', $result);
-    }
-
-    #[Test]
-    public function urlFilterReturnsEmptyForEmpty(): void
-    {
-        $this->assertSame('', $this->urlFilterLocal(''));
-    }
-
-    // --- filterHtml tests ---
-
-    #[Test]
-    public function filterHtmlEscapesDollarSign(): void
-    {
-        $result = $this->filterHtmlLocal('$var');
-        $this->assertStringContainsString('&#036;', $result);
-    }
-
-    #[Test]
-    public function filterHtmlEscapesBackslash(): void
-    {
-        // Input with literal backslash (double-escaped in PHP source)
-        // stripslashes() in filterHtml removes one level of escaping
-        $result = $this->filterHtmlLocal('\\\\path');
-        $this->assertStringContainsString('&#092;', $result);
-    }
-
-    #[Test]
-    public function filterHtmlEscapesQuotes(): void
-    {
-        $result = $this->filterHtmlLocal('He said "hello" and \'bye\'');
-        $this->assertStringContainsString('&#034;', $result);
-        $this->assertStringContainsString('&#039;', $result);
-    }
-
-    #[Test]
-    public function filterHtmlReturnsNullForEmpty(): void
-    {
-        $this->assertNull($this->filterHtmlLocal(''));
+        $this->assertSame(['one |two', '', 'plain'], $this->getProbe()['fields']);
     }
 }

@@ -127,7 +127,7 @@ function add_admin() {
     global $db, $afile, $conf, $stop;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) {
         $aname     = filterText(trim(substr($_POST['aname'] ?? '', 0, 25)));
-        $aurl      = filterUrl($_POST['aurl'] ?? '');
+        $aurl      = filterWebUrl($_POST['aurl'] ?? '');
         $aemail    = filterText($_POST['aemail'] ?? '');
         $apwdraw   = trim(substr($_POST['apwd'] ?? '', 0, 25));
         $apwd2raw  = trim(substr($_POST['apwd2'] ?? '', 0, 25));

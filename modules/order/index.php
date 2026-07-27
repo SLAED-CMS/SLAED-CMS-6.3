@@ -44,7 +44,7 @@ function order(): void {
         ]);
         $cont .= $tpl->getHtmlFrag('title', ['is_level_two' => true, 'title' => _OR_1]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'captcha' => getCaptcha('comment'),
+            'captcha' => getPageCaptcha('comment'),
             'extrafields' => $rows,
             'name' => $conf['name'],
             'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OR_4]),

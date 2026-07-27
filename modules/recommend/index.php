@@ -51,7 +51,7 @@ function recommend(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('recommend')]).$fields,
-        'captcha' => getCaptcha('comment'),
+        'captcha' => getPageCaptcha('comment'),
         'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'label' => _SEND]),
     ]);
     echo $cont;

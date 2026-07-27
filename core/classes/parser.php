@@ -154,11 +154,12 @@ class Parser {
         return $fall;
     }
 
-    # Memoized wrapper so repeated image paths hit the filesystem only once per request
+    # Memoized wrapper so repeated image paths hit the filesystem only once per request; the key is hashed because an inline data URI would otherwise be kept twice in memory
     private function normalizeImageSource(string $src): ?string {
         static $memo = [];
-        if (array_key_exists($src, $memo)) return $memo[$src];
-        return $memo[$src] = $this->checkImageSource($src);
+        $key = md5($src);
+        if (array_key_exists($key, $memo)) return $memo[$key];
+        return $memo[$key] = $this->checkImageSource($src);
     }
 
     # Convert a local/absolute image source into a stable public path; data URIs survive only as whitelisted base64 raster images and are length-capped before any regex or decode allocates a copy

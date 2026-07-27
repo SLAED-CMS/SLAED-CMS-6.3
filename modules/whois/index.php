@@ -225,7 +225,7 @@ function add(): void {
 		$cont .= $tpl->getHtmlPart('form-add', [
 			'name'               => $conf['name'],
 			'fields'             => $fields,
-			'captcha'            => getCaptcha('comment'),
+			'captcha'            => getPageCaptcha('comment'),
 			'submit'             => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND]),
 		]);
 		echo $cont;

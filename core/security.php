@@ -793,7 +793,8 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         if ($last === '') $allarr = true;
         else $arridx = $last;
     }
-    $filters = [
+    static $filters = null;
+    $filters ??= [
         'num' => fn($v) => filterNum($v),
         'let' => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
         'word' => fn($v) => is_string($v) ? filterWord(urldecode(trim($v))) : $v,
@@ -801,7 +802,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'title' => fn($v) => is_string($v) ? filterHtml(trim($v), 1) : $v,
         'text' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
         'field' => fn($v) => is_string($v) ? filterFields(trim($v)) : $v,
-        'url' => fn($v) => is_string($v) ? filterUrl(trim($v)) : $v,
+        'url' => fn($v) => is_string($v) ? filterWebUrl(trim($v)) : $v,
         'var' => fn($v) => is_string($v) ? filterVar($v) : $v,
         'bool' => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
         'defis' => fn($v) => is_string($v) ? (($v = trim($v)) !== '' ? urlencode($v) : '') : $v,
@@ -891,8 +892,8 @@ function filterVar(string|array $var): string|array {
     return preg_match('#[^a-zA-Z0-9_\-]#', $var) ? '' : $var;
 }
 
-# Normalize URL: ensure http(s) prefix, lowercase, run through text_filter; return '' if bare protocol
-function filterUrl(string $url): string {
+# Normalize a submitted web address: lowercase, force an http(s) prefix, run through the text filter; a bare protocol returns '' — not to be confused with the parser link policy in Parser::filterUrl()
+function filterWebUrl(string $url): string {
     $url = strtolower($url);
     $url = preg_match('#https?://#i', $url) ? $url : 'http://'.$url;
     return ($url === 'http://') ? '' : filterText($url);
@@ -987,8 +988,8 @@ function filterHtml(string $text, mixed $id = ''): string {
 
 # Filter and join an array of custom fields into a pipe-separated string
 function filterFields(mixed $field): string {
-    if (isArray($field)) return stripslashes(filterText(implode('|', $field), 2));
-    return '';
+    if (is_array($field)) return isArray($field) ? stripslashes(filterText(implode('|', $field), 2)) : '';
+    return is_string($field) && $field !== '' ? stripslashes(filterText($field, 2)) : '';
 }
 
 # Format a duration in seconds as human-readable hours/minutes/seconds

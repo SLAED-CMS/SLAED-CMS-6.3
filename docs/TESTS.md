@@ -142,9 +142,12 @@ Current unit test files include:
 - `StructureTest.php`
 - `ViewBridgeSmokeTest.php`
 
-Contract tests (`GeoipReaderTest`, `InputVarContractTest`, `PageCacheContractTest`,
-`StatsContractTest`) drive production code through `tests/Support/contract_probe.php`,
-which boots the real core in an isolated CLI process per scenario.
+Contract tests (`GeoipReaderTest`, `InputFilterTest`, `InputVarContractTest`,
+`PageCacheContractTest`, `StatsContractTest`) drive production code through
+`tests/Support/contract_probe.php`, which boots the real core in an isolated CLI
+process per scenario. Prefer that route over copying an algorithm into a test:
+the previous replica-based `InputFilterTest` silently drifted away from the
+functions it claimed to cover.
 
 ### Validation
 Directory:

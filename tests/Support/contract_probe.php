@@ -65,6 +65,10 @@ if ($mode === 'core') {
         'token_account' => checkDynamicMark('token', 'account'),
         'token_scheduler' => checkDynamicMark('token', 'scheduler'),
         'captcha_login' => checkDynamicMark('captcha', 'login'),
+        'captcha_register' => checkDynamicMark('captcha', 'register'),
+        'captcha_contact' => checkDynamicMark('captcha', 'contact'),
+        'captcha_admin' => checkDynamicMark('captcha', 'adminlogin'),
+        'captcha_empty' => checkDynamicMark('captcha', ''),
         'voting_id' => checkDynamicMark('voting', '17'),
         'token_empty' => checkDynamicMark('token', ''),
         'token_admin' => checkDynamicMark('token', 'admin'),
@@ -122,6 +126,15 @@ if ($mode === 'core') {
     $out['again'] = addFile(COUNTER_DIR.'/plain.log', 'second,', 'none', false, 'a');
     $out['body'] = is_file(COUNTER_DIR.'/plain.log') ? (string)file_get_contents(COUNTER_DIR.'/plain.log') : '';
     $out['log'] = is_file(LOGS_DIR.'/error_file.log') ? (string)file_get_contents(LOGS_DIR.'/error_file.log') : '';
+} elseif ($mode === 'filters') {
+    $out['num'] = [filterNum('123'), filterNum('abc123def'), filterNum('abc'), filterNum(''), filterNum('-5'), filterNum('999999999')];
+    $out['word'] = [filterWord('hello123'), filterWord('a%b&c/d'), filterWord('test<script>alert</script>'), filterWord('Привет'), filterWord('say "hi" \'now\''), filterWord('hello world')];
+    $out['var'] = [filterVar('hello-world_123'), filterVar('hello world'), filterVar('test<script>'), filterVar('test\'injection')];
+    $out['vararr'] = [filterVar(['one', 'two-three']), filterVar(['ok', 'bad value'])];
+    $out['text'] = [filterText('<b>bold</b>'), filterText('say "hi"'), filterText('<b>tag</b>', 2), filterText('[usephp]echo 1;[/usephp]normal text'), filterText('  hello  ')];
+    $out['url'] = [filterWebUrl('example.com'), filterWebUrl('https://example.com'), filterWebUrl(''), filterWebUrl('http://')];
+    $out['html'] = [filterHtml('cost $5'), filterHtml('back\\slash'), filterHtml('say "hi" and \'bye\''), filterHtml('')];
+    $out['fields'] = [filterFields(['a' => ' one ', 'b' => 'two']), filterFields([]), filterFields('plain')];
 } elseif ($mode === 'getvar') {
     $_POST = [
         'flat' => ['red', '', 'blue'],

@@ -71,7 +71,7 @@ function contact(): void {
         'form_name' => 'post',
         'no_enctype' => true,
         'fields' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('contact')]).$fields,
-        'captcha' => getCaptcha('contact'),
+        'captcha' => getPageCaptcha('contact'),
         'submit' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'send', 'value_attr' => '1']),
             'op' => 'contact',

@@ -128,10 +128,12 @@ final class PageCacheContractTest extends TestCase
     public function markerContractAcceptsOnlyApprovedCombinations(): void
     {
         $valid = $this->getProbe('core')['valid'];
-        foreach (['token_ajax', 'token_account', 'token_scheduler', 'captcha_login', 'voting_id'] as $key) {
+        $pass = ['token_ajax', 'token_account', 'token_scheduler', 'captcha_login', 'captcha_register', 'captcha_comment', 'captcha_contact', 'voting_id'];
+        foreach ($pass as $key) {
             $this->assertTrue($valid[$key], $key.' must be accepted');
         }
-        foreach (['token_empty', 'token_admin', 'captcha_comment', 'voting_zero', 'voting_neg', 'voting_huge', 'voting_inject', 'shell'] as $key) {
+        $fail = ['token_empty', 'token_admin', 'captcha_admin', 'captcha_empty', 'voting_zero', 'voting_neg', 'voting_huge', 'voting_inject', 'shell'];
+        foreach ($fail as $key) {
             $this->assertFalse($valid[$key], $key.' must be rejected');
         }
     }
