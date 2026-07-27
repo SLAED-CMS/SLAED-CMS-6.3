@@ -42,7 +42,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
-            'hx_post' => 'index.php?go=1&op=addComment&id='.$id.'&cid='.$cid.'&mod='.$conf['name'],
+            'hx_post' => 'index.php?go=1&op=addComment&id='.$id.'&cid='.$cid.'&mod='.$conf['name'].'&token='.getPageToken(),
             'hx_include' => '#formcsave',
             'hx_target' => '#repcsave',
             'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }',
@@ -265,14 +265,14 @@ function getUserBlock(): string {
 # Validate and save a new comment; echoes the updated comment list on success
 function addComment() {
     global $db, $user, $conf, $tpl;
-    $id       = getVar('post', 'id',   'num',  0);
-    $cid      = getVar('post', 'cid',  'num',  0);
-    $mod      = filterVar(getVar('post', 'mod',  'text', ''));
+    $id       = getVar('req', 'id',   'num',  0);
+    $cid      = getVar('req', 'cid',  'num',  0);
+    $mod      = filterVar(getVar('req', 'mod',  'text', ''));
     $postname = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $ip       = getip();
     $comment  = trim(getVar('post', 'text', 'raw', ''));
     [$date] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
-    $stime = strtotime($date) + $conf['comments']['send'];
+    $stime = ($date ? strtotime($date) : 0) + $conf['comments']['send'];
     $checks = str_replace(["\n", "\r", "\t"], ' ', $comment);
     $e = explode(' ', $checks);
     for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
