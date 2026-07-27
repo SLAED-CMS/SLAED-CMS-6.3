@@ -178,7 +178,9 @@ class EditorToastUi implements ContentDriver {
         $js .= 'var foc=box&&box.querySelector(".toastui-editor-contents[contenteditable=true],.ProseMirror.toastui-editor-contents,"+';
         $js .= '".toastui-editor textarea:not(.toastui-editor-pseudo-clipboard)");';
         $js .= 'if(foc){foc.focus();}else{try{ed.focus();}catch(e){}}},300);}';
-        $js .= 'ta.form&&ta.form.addEventListener("submit",function(){ta.value=ed.getMarkdown();},true);';
+        $js .= 'var sync=function(){ta.value=ed.getMarkdown();};';
+        $js .= 'ed.on("change",sync);ed.on("blur",sync);';
+        $js .= 'ta.form&&ta.form.addEventListener("submit",sync,true);';
         $js .= '})();';
         return $ta.$panel.$wins.$tpl->getHtmlFrag('head-script-inline', ['js' => $js]);
     }
