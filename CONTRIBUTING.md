@@ -148,7 +148,7 @@ Current repository rules are stricter than the examples in this section:
 - variable names must be lowercase only
 - variable names must use letters only
 - variable names must not use digits
-- variable names must be 2-8 characters long
+- variable names must be 2-8 characters long, except loop counters (`$i`, `$j`, `$k`) and parameters of single-expression closures (`fn($v) => ...`)
 
 ```php
 $id = 0;

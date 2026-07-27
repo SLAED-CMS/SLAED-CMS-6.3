@@ -127,12 +127,24 @@ Current unit test files include:
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
+- `DatabaseTest.php`
+- `EditorFormatTest.php`
 - `ExampleTest.php`
+- `GeoipReaderTest.php`
 - `InputFilterTest.php`
+- `InputVarContractTest.php`
+- `OauthLinkTest.php`
+- `OauthTest.php`
+- `PageCacheContractTest.php`
 - `ParserFixturesTest.php`
 - `PasswordHashTest.php`
+- `StatsContractTest.php`
 - `StructureTest.php`
 - `ViewBridgeSmokeTest.php`
+
+Contract tests (`GeoipReaderTest`, `InputVarContractTest`, `PageCacheContractTest`,
+`StatsContractTest`) drive production code through `tests/Support/contract_probe.php`,
+which boots the real core in an isolated CLI process per scenario.
 
 ### Validation
 Directory:
@@ -145,6 +157,7 @@ Excludes:
 Current validation test files include:
 - `BlockValidationTest.php`
 - `ConfigValidationTest.php`
+- `ErrorPageContractTest.php`
 - `InsertValidationTest.php`
 - `LanguageConstantsUsageTest.php`
 - `LanguageValidationTest.php`
