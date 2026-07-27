@@ -335,7 +335,7 @@ function actions(): void {
     $chng = (string)getVar('post', 'chng', 'raw', '');
     $typ = getVar('post', 'typ', 'text', '');
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id', 'num', []);
+    $id = getVar('post', 'id[]', 'num');
     if (!$id && $get_id) $id = [$get_id];
     if (!$warn && is_array($id) && $typ !== '') {
         foreach ($id as $val) {
@@ -455,7 +455,7 @@ function approve(): void {
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id', 'num', []);
+    $id = getVar('post', 'id[]', 'num');
     if (!$id && $get_id) $id = [$get_id];
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
@@ -488,7 +488,7 @@ function delete(): void {
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id', 'num', []);
+    $id = getVar('post', 'id[]', 'num');
     if (!$id && $get_id) $id = [$get_id];
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {

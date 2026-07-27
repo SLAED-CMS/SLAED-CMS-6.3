@@ -197,7 +197,7 @@ function add(): void {
         $news = getVar('post', 'news', 'num', 0);
         $lang = getVar('post', 'lang', 'text', '');
         $point = getVar('post', 'point', 'text', '0');
-        $warn = getVar('post', 'warn', '', []);
+        $warn = getVar('post', 'warn[]', '', []);
         $access = getVar('post', 'access', 'num', 0);
         $group = getVar('post', 'group', 'num', 0);
         $birth = getVar('post', 'birth', 'time', '');

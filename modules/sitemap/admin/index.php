@@ -205,7 +205,7 @@ function configsave(): void {
     global $afile;
     $iswarn = !checkSiteToken();
     if (!$iswarn) {
-        $mod = getVar('post', 'mod', 'num', []);
+        $mod = getVar('post', 'mod[]', 'var');
         $cont = [
             'mod' => empty($mod[0]) ? '0' : implode(',', $mod),
             'auto_t' => getVar('post', 'auto_t', 'num', 1) * 3600,

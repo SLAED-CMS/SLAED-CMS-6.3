@@ -14,6 +14,18 @@ function getLangPath(string $mod = '', string $typ = ''): string {
     return $base.$module.$type.'/lang';
 }
 
+function getLangConstants(string $file): array {
+    if (!is_file($file)) return [];
+    preg_match_all('#define\(\s*([\'"])((?:\\\\.|(?!\1).)*)\1\s*,\s*([\'"])((?:\\\\.|(?!\3).)*)\3\s*\);#s', (string)file_get_contents($file), $found);
+    $unesc = static fn(string $val): string => strtr($val, ['\\\\' => '\\', '\\\'' => '\'', '\\"' => '"']);
+    $list = [];
+    $ci = count($found[2]);
+    for ($i = 0; $i < $ci; $i++) {
+        $list[$unesc($found[2][$i])] = $unesc($found[4][$i]);
+    }
+    return $list;
+}
+
 function lang(): void {
     global $conf, $afile, $tpl;
     $modbase = [];
@@ -110,30 +122,15 @@ function fileedit(): void {
     foreach (scandir($lang_path) as $file) {
         if (preg_match('#^(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
     }
-    $gl_tmp = $cnst_arr;
-    $cnst_arr = [];
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
         $lng_src = $lang_path.'/'.$lng_cn[$j].'.php';
         checkPerms($lng_src);
-        $lng = file_get_contents($lng_src);
-        preg_match_all('#define\(["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\);#sU', $lng, $out);
-        unset($out[0]);
-        $ci = count($out[1]);
-        for ($i = 0; $i < $ci; $i++) {
-            $lng_arr[$lng_cn[$j]][$out[1][$i]] = $out[2][$i];
-            $cnst_tmp[$out[1][$i]] = '';
-        }
-        $cnst_arr = array_merge($cnst_arr, $cnst_tmp);
-        unset($cnst_tmp);
+        $vals = getLangConstants($lng_src);
+        $lng_arr[$lng_cn[$j]] = $vals;
+        $cnst_arr = array_merge($cnst_arr, array_fill_keys(array_keys($vals), ''));
     }
-    $sch_tmp = [];
-    unset($out);
-    $gl_tmp = array_keys($gl_tmp);
-    $cnst_arr = array_merge($cnst_arr, $sch_tmp);
     $cnst_arr = array_keys($cnst_arr);
-    $cnst_arr = array_diff($cnst_arr, $gl_tmp);
-    unset($gl_tmp, $sch_tmp, $cnst_tmp);
     sort($cnst_arr);
     $total = count($cnst_arr);
     $total_pages = max(1, (int)ceil($total / $per_page));
@@ -150,7 +147,7 @@ function fileedit(): void {
             'is_lang_edit' => true,
             'field_html' => $tpl->getHtmlFrag('input', [
                 'itype' => 'text',
-                'name_attr' => 'cnst[]',
+                'name_attr' => 'cnst['.$i.']',
                 'value_attr' => $valc,
                 'placeholder_text' => _CONST,
                 'is_form_control' => true,
@@ -158,7 +155,7 @@ function fileedit(): void {
         ]];
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
-            $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';
+            $val = $valc ? trim((string)($lng_arr[$lng_cn[$j]][$valc] ?? '')) : '';
             if ($lng_cn[$j] == $conf['lang']['lang']) {
                 $class = 'from_'.$i;
                 $btn = '';
@@ -176,7 +173,7 @@ function fileedit(): void {
                 'is_lang_edit' => true,
                 'field_html' => $tpl->getHtmlFrag('input', [
                     'itype' => 'text',
-                    'name_attr' => 'lng['.$lng_cn[$j].'][]',
+                    'name_attr' => 'lng['.$lng_cn[$j].']['.$i.']',
                     'value_attr' => $val,
                     'placeholder_text' => getLangName($lng_cn[$j]),
                     'is_form_control' => true,
@@ -194,6 +191,7 @@ function fileedit(): void {
             [
                 ['nameattr' => 'typ', 'valueattr' => $typ],
                 ['nameattr' => 'mod', 'valueattr' => $mod],
+                ['nameattr' => 'rows', 'valueattr' => (string)$ci],
                 ['nameattr' => 'page', 'valueattr' => (string)$page],
                 ['nameattr' => 'name', 'valueattr' => 'lang'],
                 ['nameattr' => 'op', 'valueattr' => 'save'],
@@ -213,44 +211,28 @@ function save(): void {
     $warn = !checkSiteToken();
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
-    $lng_cn = getVar('post', 'lcn[]', 'var', []);
+    $locs = getVar('post', 'lcn[]', 'var', []);
     $page = getVar('post', 'page', 'num', 1);
-    $cnst = getVar('post', 'cnst', 'var', []);
-    $lng = getVar('post', 'lng', 'var', []);
-    $lang_path = getLangPath($mod, $typ);
-    if (!$warn) {
-        $cj = count($lng_cn);
-        for ($j = 0; $j < $cj; $j++) {
-            $lng_cnj = $lng_cn[$j];
-            $lng_src = $lang_path.'/'.$lng_cnj.'.php';
-            $existing = [];
-            if (file_exists($lng_src)) {
-                $lng = file_get_contents($lng_src);
-                preg_match_all('#define\(["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\);#sU', $lng, $matches);
-                $ck = count($matches[1]);
-                for ($k = 0; $k < $ck; $k++) {
-                    $existing[$matches[1][$k]] = $matches[2][$k];
-                }
+    $rows = getVar('post', 'rows', 'num', 0);
+    $path = getLangPath($mod, $typ);
+    if (!$warn && $rows) {
+        foreach ($locs as $loc) {
+            $file = $path.'/'.$loc.'.php';
+            $keep = getLangConstants($file);
+            for ($i = 0; $i < $rows; $i++) {
+                $cons = getVar('post', 'cnst['.$i.']', 'var', '');
+                $cont = getVar('post', 'lng['.$loc.']['.$i.']', '', '');
+                if ($cons === '' || $cont === '') continue;
+                $keep[trim($cons)] = trim(str_replace(['<?php', '?>', "\r", "\n"], ['&lt;?php', '?&gt;', '', ''], $cont));
             }
-            $ci = count($cnst);
-            for ($i = 0; $i < $ci; $i++) {
-                if (empty($cnst[$i])) continue;
-                if (empty($lng[$lng_cnj][$i])) continue;
-                $cons = trim($cnst[$i]);
-                $in = ['\\\'', '\\$', '<?php', '?>'];
-                $ou = ['\'', '\$', '&lt;?php', '?&gt;'];
-                $cont = trim(str_replace($in, $ou, $lng[$lng_cnj][$i]));
-                $existing[$cons] = $cont;
+            $body = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: MIT'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
+            foreach ($keep as $cons => $cont) {
+                $body .= 'define(\''.addcslashes((string)$cons, "\\'").'\',\''.addcslashes((string)$cont, "\\'").'\');'.PHP_EOL;
             }
-            $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: MIT'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
-            foreach ($existing as $cons => $cont) {
-                $cons_esc = str_replace("'", "\\'", $cons);
-                $cont_esc = str_replace("'", "\\'", $cont);
-                $lng_str .= 'define(\''.$cons_esc.'\',\''.$cont_esc.'\');'.PHP_EOL;
-            }
-            $handle = fopen($lng_src, 'wb');
-            fwrite($handle, $lng_str);
-            fclose($handle);
+            $hand = fopen($file, 'wb');
+            if ($hand === false) continue;
+            fwrite($hand, $body);
+            fclose($hand);
         }
     }
     $url = $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;

@@ -27,7 +27,7 @@ function rss(): void {
             $tpl->getHtmlFrag('select-option', ['value_attr' => '0', 'label_text' => _RSSSITE, 'is_selected' => $uses === 0])
             .$tpl->getHtmlFrag('select-option', ['value_attr' => '1', 'label_text' => _RSSHOME, 'is_selected' => $uses === 1]);
         $block = $tpl->getHtmlPart('div', ['rows' => [
-            ['label_html' => _NAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME, 'is_required' => true])],
+            ['label_html' => _NAME, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field1[]', 'value_attr' => $name, 'placeholder_text' => _NAME])],
             ['label_html' => _ADDRESS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'field2[]', 'value_attr' => $addr, 'placeholder_text' => _ADDRESS])],
             ['label_html' => _USES, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'field3[]', 'options_html' => $opts])],
         ]]);
@@ -79,12 +79,15 @@ function save(): void {
             $cont['use'] = getVar('post', 'use', 'bool', 0);
         } else {
             $rss = '';
-            $field1 = getVar('post', 'field1', 'raw', []);
-            $field2 = getVar('post', 'field2', 'raw', []);
-            $field3 = getVar('post', 'field3', 'raw', []);
+            $feed = getVar('post', 'field1[]', '');
+            $link = getVar('post', 'field2[]', '');
+            $uses = getVar('post', 'field3[]', '');
+            $clean = static fn(mixed $val): string => str_replace(['|', "\r", "\n"], '', trim((string)$val));
             for ($i = 0; $i < 50; $i++) {
                 $part = $i == 0 ? '' : '||';
-                $rss .= $part.($field1[$i] ?? '0').'|'.($field2[$i] ?? '0').'|'.(int)($field3[$i] ?? 0);
+                $one = $clean($feed[$i] ?? '');
+                $two = $clean($link[$i] ?? '');
+                $rss .= $part.($one !== '' ? $one : '0').'|'.($two !== '' ? $two : '0').'|'.(int)($uses[$i] ?? 0);
             }
             $cont['rss'] = $rss;
         }
