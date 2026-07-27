@@ -213,6 +213,101 @@ Recommended direction:
 - keep file scan and backup under locks and progress state
 - do not run heavy jobs synchronously in normal user requests
 
+### Outgoing Mail
+
+Every outgoing message is sent synchronously inside the request that triggers
+it. There is exactly one send point, `mail()` inside `addMail()`
+(`core/security.php:1047`), reached from 26 call sites in 16 files. The return
+value is discarded and warnings are suppressed by a local handler
+(`core/security.php:1044-1048`), so a failed delivery leaves no trace.
+
+Measured and re-verified against the database on 2026-07-27:
+
+- adding a comment took **26.7 s**, of which `addAdminMail()` was **26.6 s** and
+  rendering **0.02 s**;
+- that total was produced by **one** recipient, not many: `_admins` holds 3 rows
+  and exactly one carries `smail = '1'` (`super = 1`, empty `modules`). An
+  earlier reading of "13 recipients, ~2.05 s per call, 51 admins" does not hold —
+  there are not 51 admins on this installation;
+- so the figure is roughly **26 s for a single `mail()` call**, which is what a
+  blocking connect to an unconfigured SMTP host looks like on this development
+  host. It is a timeout artefact, not a per-message production cost.
+
+Implication:
+
+- the split is the durable fact — mail dominates the request and rendering is
+  free. The absolute number is environment-specific and must be re-measured on a
+  host with a working transport before it is quoted;
+- any before/after comparison for mail work has to state which transport was
+  configured, or it compares two different timeouts.
+
+Newsletter throughput, same date:
+
+- `{prefix}_newsletter.mails` is a comma-separated `MEDIUMTEXT`;
+  `updateNewsletter()` (`core/system.php:3747`) slices `newsletter.count = 4`
+  addresses per run and rewrites the remainder;
+- the `newsletter` job is scheduled `1 * * * *` but ships `active = '0'`;
+- 164 subscribers carry `users.newslet = 1`, so a full mailing at that rate would
+  run about 41 hours;
+- history: 62 mailings, largest delivered to 12775 recipients, no row currently
+  mid-flight.
+
+User base age, same date — this decides what a mass mailing actually costs:
+
+- 11 845 accounts, registrations spanning 2005-04-30 to 2024-10-15;
+- last visit within 1 year: 9; 1-3 years: 45; 3-5 years: 57;
+  **older than 5 years: 11 734**; never: 0;
+- one syntactically invalid address.
+
+Implication:
+
+- the "mass mail" audience in `admin/modules/newsletter.php:84-85` counts the
+  whole user table, so it would send 11 734 messages to addresses dormant for
+  over five years;
+- a list that old hard-bounces at tens of percent, while providers throttle above
+  roughly 5%. Sending it is a domain-reputation event, not a throughput problem;
+- the numbers above describe **this** installation. Dormancy is not a reliable
+  proxy for a dead address in general — a shop customer or a newsletter reader
+  can be perfectly reachable without ever logging in — so the protection belongs
+  in measurement, not in a usage heuristic: a canary batch before the full send,
+  a hard-failure-rate circuit breaker during it, and suppression driven by
+  recorded outcomes. None of the three needs inbound mail or an assumption about
+  the project.
+
+Address verification cost, same date:
+
+- 11 845 addresses resolve to only **864 distinct domains**, so per-domain checks
+  scale with the domain count rather than the list size;
+- **330 of those domains (38%) no longer resolve at all** — neither MX nor A —
+  and **902 addresses, 7.6% of the list**, sit behind them;
+- resolving all 864 sequentially and uncached took **152 s**, which is why
+  verdicts are cached per domain rather than recomputed per mailing.
+
+Implication:
+
+- a domain-level check removes 7.6% of this list before any SMTP connection, on
+  its own crossing the ~5% band where providers start throttling;
+- it removes dead providers, not dead mailboxes — a resolving domain says nothing
+  about whether the address exists;
+- a resolver failure must never be read as a dead domain, so verification fails
+  open and the message is sent.
+
+Comment storage, same date:
+
+- `{prefix}_comment`: 7353 rows — files 4821, voting 1084, news 1083, faq 141,
+  pages 116, links 104, shop 2, media 0; 7348 published, 3 pending;
+- indexes are `PRIMARY(id)`, `cid`, `uid`, `modul_status(modul, status)`,
+  `time` — **nothing on `ip`**, while the flood check queries `WHERE ip = ?`
+  (`core/user.php:274`);
+- the live list query reports `type=ref key=cid rows=20`,
+  `Extra=Using where; Using filesort` — no composite index backs the sort;
+- `_comment`, `_users`, `_news`, `_files`, `_voting` and `_newsletter` are all
+  InnoDB.
+
+Remediation is planned separately in `docs/MAIL-2026.md` and
+`docs/COMMENTS-REDESIGN-2026.md`; the facts above stay here when those documents
+are removed.
+
 ### PHP Environment
 
 The single largest generation-time factor measured in 2026-07 was OPcache being

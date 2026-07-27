@@ -37,7 +37,7 @@ tar -czf slaed_backup_$(date +%Y%m%d).tar.gz /path/to/slaed/
 
 Confirmed current baseline:
 
-- **PHP:** 8.1+
+- **PHP:** 8.4+
 - **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 
 ### Review Writable Directories

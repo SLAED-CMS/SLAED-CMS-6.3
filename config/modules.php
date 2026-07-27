@@ -31,7 +31,7 @@ return [
         'auto_links' => [
             'lang' => '_A_LINKS',
             'icon' => 'link',
-            'active' => '0',
+            'active' => '1',
             'view' => '0',
             'menu' => '1',
             'group' => '0',
@@ -229,7 +229,7 @@ return [
         'jokes' => [
             'lang' => '_JOKES',
             'icon' => 'emoji-laughing',
-            'active' => '0',
+            'active' => '1',
             'view' => '0',
             'menu' => '1',
             'group' => '0',
@@ -273,7 +273,7 @@ return [
         'media' => [
             'lang' => '_MEDIA',
             'icon' => 'image',
-            'active' => '0',
+            'active' => '1',
             'view' => '0',
             'menu' => '1',
             'group' => '0',
@@ -306,7 +306,7 @@ return [
         'money' => [
             'lang' => '_MONEY',
             'icon' => 'currency-exchange',
-            'active' => '0',
+            'active' => '1',
             'view' => '0',
             'menu' => '1',
             'group' => '0',
@@ -350,7 +350,7 @@ return [
         'order' => [
             'lang' => '_ORDER',
             'icon' => 'receipt',
-            'active' => '0',
+            'active' => '1',
             'view' => '0',
             'menu' => '1',
             'group' => '0',

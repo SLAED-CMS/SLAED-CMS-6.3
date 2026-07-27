@@ -114,6 +114,62 @@ php tools/seo-audit.php https://slaed.loc '/index.php?name=main'
 
 The default audit discovers one current detail URL for each active content module from its landing page. Additional installation-specific routes may be passed as further arguments. The audit fails on HTTP errors, a missing or duplicate `H1` inside `main`, a heading level that deepens by more than one step, invalid JSON-LD, a missing schema type, an invalid canonical, an Open Graph URL mismatch, or an indexability mismatch. Each route report includes the full `main` heading sequence.
 
+### Comment Markup Baseline
+```bash
+php tools/comment-baseline.php capture
+php tools/comment-baseline.php verify
+```
+
+Stage 1 of `docs/COMMENTS-REDESIGN-2026.md` requires the rendered comment list to
+survive the move into the `Comment` class unchanged. That claim is only checkable
+against markup captured **before** the refactor, so `capture` must be run first
+and `verify` after every step of it.
+
+The tool picks the most commented target per module from the database, fetches
+the guest view, extracts the `repcsave` region and stores it under
+`storage/baseline/comments/` with a `manifest.json` of sizes and SHA-256 hashes.
+Request-scoped values are normalised first — URL `token=`, the `X-CSRF-TOKEN`
+inside `hx-headers`, `[[sldyn:...]]` markers and the captcha field — otherwise
+the list never compares equal even to itself. On a difference the fresh capture
+is written next to the baseline as `<module>.actual.html` for diffing.
+
+All eight modules are covered: `faq`, `files`, `links`, `media`, `news`, `pages`,
+`shop`, `voting`.
+
+Coverage assumes **every module is enabled**, and `config/modules.php` now has
+all 50 active. An inactive module is a gap in the test stand, not a reason to
+skip it — the comment engine has to keep working for all eight regardless of what
+any single site switches on.
+
+Two needed the stand prepared, and both causes are worth knowing because they
+look identical from the outside:
+
+- `shop` — product 24 carried two comments while its `acomm` mode was `0`, so the
+  region was never rendered. Revert with
+  `UPDATE {prefix}_products SET acomm = 0 WHERE id = 24;`
+- `media` — the module was **inactive**, so the view page answered 404 before
+  comments were ever reached, *and* the table was empty. It is now active with one
+  category, one item and two comments. Revert the fixture rows with
+  `DELETE FROM {prefix}_comment WHERE cid = 1 AND modul = 'media';`,
+  `DELETE FROM {prefix}_media WHERE id = 1;`,
+  `DELETE FROM {prefix}_categories WHERE id = 110;`. The module stays enabled.
+
+After any change to `config/modules.php`, delete `config/local.php` so the
+generated config cache rebuilds — a direct edit to a source config file is not
+re-fingerprinted while the cache remains valid.
+
+An empty comment region and a disabled module produce the same "no rendered
+comment region" line, so check module activity first.
+
+On an installation that already carries content in these modules, no preparation
+is needed — the tool tries up to eight commented targets per module and takes the
+first that renders.
+
+Baselines are data- and host-specific, so `storage/baseline/` is ignored by git —
+capture them locally against the database you are refactoring against. Logged-in
+and moderator views carry session state and belong to the browser path, not to
+this tool.
+
 ## PHPUnit Layout
 `phpunit.xml` defines two suites:
 
@@ -182,6 +238,34 @@ For focused code work:
 4. run PHP-CS-Fixer dry-run on changed paths when style is relevant
 5. run browser audit scripts when the change touches browser behavior, frontend
    rendering, or live UI flows
+
+## Planned Coverage
+Tests owed by the two approved 2026 plans, listed so they are added with the
+stage that introduces the behaviour rather than at the end. Nothing here exists
+yet.
+
+From `docs/MAIL-2026.md`:
+
+- stage 1 — header assembly per transport; address sanitising rejects `\r`/`\n`;
+  SMTP reply parsing for multi-line, single-line and unexpected codes;
+  dot-stuffing leaves a body line starting with `.` intact; line length stays
+  within 1000 octets; a body stored with bare LF goes on the wire as CRLF
+- stage 2 — claim atomicity across two `getBatch()` calls; backoff moves `ntime`
+  forward; the attempt cap moves a row to failed; a non-ASCII subject
+  round-trips; retention prunes per `kind`; a shared `ref` body resolves once
+  per batch and a dangling `ref` fails the row instead of sending an empty
+  message
+
+From `docs/COMMENTS-REDESIGN-2026.md`:
+
+- stage 0 — a request cannot choose its own moderation mode or module
+- stage 1 — each of the eight modules increments its own counter and points slot;
+  markup parity through `tools/comment-baseline.php`
+- stage 2 — `checkRules()` measures the longest word in characters, not the last
+  in bytes; a repeated `setStatus()` leaves counters and points untouched; soft
+  delete is idempotent; a row renders through its stored `format` after the site
+  editor mode changes
+- stage 4 — two POSTs carrying one `reqkey` produce one row
 
 ## Notes
 - test names such as `ViewBridgeSmokeTest` are current repository filenames

@@ -224,10 +224,11 @@ class Parser {
         return implode('', array_map(fn($p) => preg_match($pat, $p) ? $p : $this->filterEsc($p), $parts));
     }
 
-    # Validate a link URL: data: is refused in every mode because a link must never carry an inline payload, safe mode additionally allows only http/https/mailto/relative, trusted content keeps its href
+    # Validate a link URL: data:/javascript:/vbscript: never pass, in any mode; safe mode also allows only http/https/mailto/relative, trusted content keeps its href
     private function filterUrl(string $url): string {
         $url = trim($url);
-        if (stripos($url, 'data:') === 0) return '#';
+        $bare = preg_replace('#[\s\x00-\x1f]+#', '', $url) ?? $url;
+        if (preg_match('#^(?:data|javascript|vbscript):#i', $bare)) return '#';
         if (!$this->safe) return $url;
         return preg_match('/^(?:https?:\/\/|mailto:|[\/\.#?])/i', $url) ? $url : '#';
     }

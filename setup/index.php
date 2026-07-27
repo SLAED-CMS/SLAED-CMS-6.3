@@ -31,7 +31,10 @@ $op = (isset($_REQUEST['op'])) ? filterVar($_REQUEST['op']) : '';
 require_once BASE_DIR.'/lang/'.$clang.'.php';
 require_once BASE_DIR.'/setup/lang/'.$clang.'.php';
 
-if (version_compare(PHP_VERSION, '8.1.0', '<')) setExit(_PHPSETUP);
+if (version_compare(PHP_VERSION, '8.4.0', '<')) setExit(_PHPSETUP);
+foreach (['mbstring', 'pdo', 'json'] as $ext) {
+    if (!extension_loaded($ext)) setExit(_EXTSETUP.': '.$ext);
+}
 $copy = '<a href="https://slaed.net" target="_blank" title="SLAED CMS">SLAED CMS</a> © 2005-'.date('Y').' Eduard Laas. Released under MIT License.';
 
 # Saving configurations to a file

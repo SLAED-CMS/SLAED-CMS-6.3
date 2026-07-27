@@ -1,6 +1,6 @@
 # SLAED CMS 6.3
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-slateblue.svg)](https://www.php.net/)
+[![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-slateblue.svg)](https://www.php.net/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -47,14 +47,14 @@ http://localhost/slaed-cms/
 
 ## System Requirements
 
-- **PHP:** 8.1+
+- **PHP:** 8.4+
 - **Database:** PDO MySQL-compatible server (MySQL 8.0+ or MariaDB 10+)
 - **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
-- **Extensions:** PDO and JSON are required by the current runtime; image-related flows use GD functions
+- **Extensions:** PDO, JSON and mbstring are required by the current runtime; image-related flows use GD functions; SMTP over TLS uses OpenSSL and the Sendmail transport uses `proc_open`
 - **Encoding:** UTF-8 / utf8mb4
 
 > [!NOTE]
-> Some development documentation and modernization work target newer PHP releases, but the current Composer requirement is `>=8.1`.
+> SLAED CMS has no runtime Composer dependency. `composer.json` declares only the PHP version; PHPStan, PHPUnit and PHP-CS-Fixer live in `require-dev` and are not part of a release.
 
 ---
 
@@ -116,7 +116,7 @@ composer quality
 
 ## Tech Stack
 
-- **Backend:** PHP 8.1+
+- **Backend:** PHP 8.4+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
 - **Template Runtime:** `core/classes/template.php`
 - **Editors / JS Plugins:** `Editor` class in `core/classes/editor.php`, pluggable editor system under `plugins/editors/` (bundled drivers: ckeditor, codemirror, plain, tinymce, toastui); additional plugins: altcha, highlightjs, htmx, tablesort, system

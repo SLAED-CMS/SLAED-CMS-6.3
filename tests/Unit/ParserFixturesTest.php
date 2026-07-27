@@ -95,6 +95,16 @@ namespace Tests\Unit {
                 'url bb safe local'      => ['[url]/local/path[/url]',         true, '', '<p><a href="/local/path">/local/path</a></p>'],
                 'url bb safe relative'   => ['[url]../uploads/file.pdf[/url]', true, '', '<p><a href="../uploads/file.pdf">../uploads/file.pdf</a></p>'],
 
+                # Script-bearing schemes must die in trusted mode too: comments render at safe=false, so an allowlist that only applies to safe mode leaves stored XSS reachable
+                'url bb unsafe javascript'        => ['[url]javascript:x[/url]',      false, '', '<p><a href="#">javascript:x</a></p>'],
+                'url md unsafe javascript'        => ['[l](javascript:x)',            false, '', '<p><a href="#">l</a></p>'],
+                'url bb unsafe vbscript'          => ['[url]vbscript:x[/url]',        false, '', '<p><a href="#">vbscript:x</a></p>'],
+                'url bb safe vbscript'            => ['[url]vbscript:x[/url]',        true,  '', '<p><a href="#">vbscript:x</a></p>'],
+                'url bb unsafe mixed case js'     => ['[url]JaVaScRiPt:x[/url]',      false, '', '<p><a href="#">JaVaScRiPt:x</a></p>'],
+                'url bb unsafe javascript space'  => ['[url] javascript:x[/url]',     false, '', '<p><a href="#">javascript:x</a></p>'],
+                'url bb unsafe javascript tab'    => ["[url]java\tscript:x[/url]",    false, '', "<p><a href=\"#\">java\tscript:x</a></p>"],
+                'url bb unsafe javascript entity' => ['[url]java&#9;script:x[/url]',  false, '', "<p><a href=\"#\">java\tscript:x</a></p>"],
+
                 'safe script tag' => ['<script>alert(1)</script>',              true,  '', '<p>&lt;script&gt;alert(1)&lt;/script&gt;</p>'],
                 'safe b tag'      => ['<b>ok</b>',                              true,  '', '<p>&lt;b&gt;ok&lt;/b&gt;</p>'],
                 'safe a js href'  => ['<a href="javascript:x">click</a>',       true,  '', '<p>&lt;a href=&quot;javascript:x&quot;&gt;click&lt;/a&gt;</p>'],

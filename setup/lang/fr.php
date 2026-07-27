@@ -15,7 +15,8 @@ define('_CONF_10','Le nom de fichier de l\'entrée dans le département de l\'ad
 define('_CONF_10_INFO','À des fins de sécurité modifiez le nom par défaut de fichier admin.php. Renommez-le à ce que Vous arriver à, par exemple: %1$s.php et, indiquez son nouveau titre, mais sans fin «.php» dans notre cas: %1$s');
 define('_LANG','Sélectionnez la langue');
 define('_NEXT_SE','Continuer');
-define('_PHPSETUP','La version de PHP installée sur Votre serveur ne répond pas aux exigences minimales du système, il devrait être en dessous de PHP 8.1!');
+define('_EXTSETUP','Une extension PHP requise n\'est pas installée sur votre serveur');
+define('_PHPSETUP','La version de PHP installée sur Votre serveur ne répond pas aux exigences minimales du système, il devrait être en dessous de PHP 8.4!');
 define('_SAVE_NEW','Installation et configuration');
 define('_SAVE_UPDATE','La mise à jour et de configuration');
 define('_SERRORPERM','n\'a pas les autorisations appropriées pour l\'enregistrement sur le serveur.<br>, Téléchargez les attributs souhaités');

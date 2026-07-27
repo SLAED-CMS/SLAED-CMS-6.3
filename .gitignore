@@ -8,6 +8,7 @@
 /storage/sitemap/*
 !/storage/sitemap/sitemap.xsl
 /storage/captcha/*
+/storage/baseline/*
 
 # Keep directory structure
 !*/index.html
