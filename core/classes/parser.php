@@ -7,6 +7,7 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class Parser {
+    public const EMBEDMAX = 65536;
     public static bool $freeoff = false;
     private static array $pcache = [];
     private array $stash = [];
@@ -160,11 +161,17 @@ class Parser {
         return $memo[$src] = $this->checkImageSource($src);
     }
 
-    # Convert a local/absolute image source into a stable public path
+    # Convert a local/absolute image source into a stable public path; data URIs survive only as whitelisted base64 raster images and are length-capped before any regex or decode allocates a copy
     private function checkImageSource(string $src): ?string {
         global $conf;
         $raw = trim($this->filterDec($src));
-        if ($raw === '' || str_starts_with($raw, 'data:') || str_starts_with($raw, '#')) return $raw;
+        if ($raw === '' || str_starts_with($raw, '#')) return $raw;
+        if (stripos($raw, 'data:') === 0) {
+            if (strlen($raw) > intdiv(self::EMBEDMAX + 2, 3) * 4 + 32) return null;
+            if (!preg_match('#^data:image/(?:png|jpe?g|gif|webp);base64,([A-Za-z0-9+/]+={0,2})$#i', $raw, $dm)) return null;
+            $bin = base64_decode($dm[1], true);
+            return ($bin !== false && strlen($bin) <= self::EMBEDMAX) ? $raw : null;
+        }
 
         $host = parse_url($raw, PHP_URL_HOST);
         $path = parse_url($raw, PHP_URL_PATH);
@@ -198,7 +205,7 @@ class Parser {
             function(array $m): string {
                 $tag = $m[0];
                 if (!preg_match('#\bsrc\s*=\s*(["\'])(.*?)\1#i', $tag, $sm)) return $tag;
-                $file = basename(rawurldecode((string)(parse_url($sm[2], PHP_URL_PATH) ?: $sm[2]))) ?: 'image';
+                $file = stripos($sm[2], 'data:') === 0 ? 'image' : (basename(rawurldecode((string)(parse_url($sm[2], PHP_URL_PATH) ?: $sm[2]))) ?: 'image');
                 $resolved = $this->normalizeImageSource($sm[2]);
                 if ($resolved === null) return $this->getParserImage(null, $file, $file);
                 $resolved = $this->filterEsc($resolved);
@@ -216,9 +223,11 @@ class Parser {
         return implode('', array_map(fn($p) => preg_match($pat, $p) ? $p : $this->filterEsc($p), $parts));
     }
 
-    # Validate URL: allow http/https/mailto/relative, everything else becomes '#'
+    # Validate a link URL: data: is refused in every mode because a link must never carry an inline payload, safe mode additionally allows only http/https/mailto/relative, trusted content keeps its href
     private function filterUrl(string $url): string {
         $url = trim($url);
+        if (stripos($url, 'data:') === 0) return '#';
+        if (!$this->safe) return $url;
         return preg_match('/^(?:https?:\/\/|mailto:|[\/\.#?])/i', $url) ? $url : '#';
     }
 
@@ -800,10 +809,10 @@ class Parser {
             '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
             function(array $m): string {
                 $raw  = $this->filterDec($m[2]);
-                $url  = $this->safe ? $this->filterUrl($raw) : $raw;
+                $url  = stripos(trim($raw), 'data:') === 0 ? $raw : $this->filterUrl($raw);
                 $path = parse_url($raw, PHP_URL_PATH);
                 $path = is_string($path) && $path !== '' ? $path : $raw;
-                $file = basename(rawurldecode($path)) ?: 'image';
+                $file = stripos($raw, 'data:') === 0 ? 'image' : (basename(rawurldecode($path)) ?: 'image');
                 $alt  = trim($this->filterDec($m[1]));
                 $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $alt;
                 $ttl  = isset($m[3]) ? trim($this->filterDec($m[3])) : '';
@@ -817,7 +826,7 @@ class Parser {
         $src = preg_replace_callback(
             '/\[([^\]]+)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
             function(array $m): string {
-                $href = $this->filterEsc($this->safe ? $this->filterUrl($this->filterDec($m[2])) : $this->filterDec($m[2]));
+                $href = $this->filterEsc($this->filterUrl($this->filterDec($m[2])));
                 $ttl  = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
                 return $this->addStash('<a href="'.$href.'"'.$ttl.'>'.$m[1].'</a>');
             },
@@ -831,10 +840,10 @@ class Parser {
     private function getBbImage(string $url, string $alt = '', string $align = ''): string {
         $url = trim($this->filterDec($url));
         if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-        $link = $this->safe ? $this->filterUrl($url) : $url;
+        $link = stripos($url, 'data:') === 0 ? $url : $this->filterUrl($url);
         $path = parse_url($url, PHP_URL_PATH);
         $path = is_string($path) && $path !== '' ? $path : $url;
-        $file = basename(rawurldecode($path)) ?: 'image';
+        $file = stripos($url, 'data:') === 0 ? 'image' : (basename(rawurldecode($path)) ?: 'image');
         $alt = trim($this->filterDec($alt));
         $alt = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $alt;
         $align = strtolower(trim($align));
@@ -846,7 +855,7 @@ class Parser {
     private function getBbLink(string $url, ?string $lbl = null): string {
         $url = trim($this->filterDec($url));
         if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
-        $href = $this->filterEsc($this->safe ? $this->filterUrl($url) : $url);
+        $href = $this->filterEsc($this->filterUrl($url));
         return $this->addStash('<a href="'.$href.'">'.($lbl ?? $this->filterEsc($url)).'</a>');
     }
 

@@ -121,7 +121,7 @@ class EditorToastUi implements ContentDriver {
             $oid = $id.'_toast_object';
             $opt['labels']['toobig'] = _ERROR_SIZE;
             $opt += [
-                'embedmax' => 32768,
+                'embedmax' => Parser::EMBEDMAX,
                 'token' => $tok,
                 'panel' => $pid,
                 'msg' => $mid,

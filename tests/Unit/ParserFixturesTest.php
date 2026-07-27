@@ -84,6 +84,12 @@ namespace Tests\Unit {
                 ],
 
                 'url bb safe javascript' => ['[url]javascript:x[/url]',       true, '', '<p><a href="#">javascript:x</a></p>'],
+                'url bb safe data html'  => ['[url]data:text/html,x[/url]',    true, '', '<p><a href="#">data:text/html,x</a></p>'],
+                'url md safe data html'  => ['[l](data:text/html,x)',          true, '', '<p><a href="#">l</a></p>'],
+                'url bb unsafe data html' => ['[url]data:text/html,x[/url]',   false, '', '<p><a href="#">data:text/html,x</a></p>'],
+                'url md unsafe data html' => ['[l](data:text/html,x)',         false, '', '<p><a href="#">l</a></p>'],
+                'url bb unsafe uppercase data' => ['[url]DATA:text/html,x[/url]', false, '', '<p><a href="#">DATA:text/html,x</a></p>'],
+                'url bb unsafe other scheme'   => ['[url]ftp://ok.com/f[/url]',   false, '', '<p><a href="ftp://ok.com/f">ftp://ok.com/f</a></p>'],
                 'url bb safe https'      => ['[url]https://ok.com[/url]',      true, '', '<p><a href="https://ok.com">https://ok.com</a></p>'],
                 'url bb safe mailto'     => ['[url]mailto:a@b.com[/url]',      true, '', '<p><a href="mailto:a@b.com">mailto:a@b.com</a></p>'],
                 'url bb safe local'      => ['[url]/local/path[/url]',         true, '', '<p><a href="/local/path">/local/path</a></p>'],
@@ -166,6 +172,84 @@ namespace Tests\Unit {
                 $this->assertStringContainsString('class="sl-img sl-img-right"', $existing);
                 $this->assertStringContainsString('onerror="this.onerror=null;this.hidden=true;this.nextElementSibling.hidden=false"', $existing);
                 $this->assertStringNotContainsString('style=', $existing);
+            } finally {
+                if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
+                else unset($GLOBALS['tpl']);
+            }
+        }
+
+        #[Test]
+        public function checkDataUriImagePolicy(): void
+        {
+            if (!class_exists('Template', false)) {
+                require_once BASE_DIR.'/core/classes/template.php';
+            }
+            $hadtpl = array_key_exists('tpl', $GLOBALS);
+            $oldtpl = $GLOBALS['tpl'] ?? null;
+            $GLOBALS['tpl'] = new \Template('lite');
+
+            $png = base64_encode(str_repeat('a', 1024));
+            $limit = base64_encode(str_repeat('a', \Parser::EMBEDMAX));
+            $over = base64_encode(str_repeat('a', \Parser::EMBEDMAX + 1));
+            $svg = base64_encode('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+
+            $pass = [
+                'small png' => 'data:image/png;base64,'.$png,
+                'jpeg' => 'data:image/jpeg;base64,'.$png,
+                'jpg' => 'data:image/jpg;base64,'.$png,
+                'gif' => 'data:image/gif;base64,'.$png,
+                'webp' => 'data:image/webp;base64,'.$png,
+                'uppercase scheme and mime' => 'DATA:IMAGE/PNG;BASE64,'.$png,
+                'exact size limit' => 'data:image/png;base64,'.$limit,
+            ];
+            $block = [
+                'oversized png' => 'data:image/png;base64,'.$over,
+                'svg with script' => 'data:image/svg+xml;base64,'.$svg,
+                'text html' => 'data:text/html,%3Cscript%3Ealert(1)%3C/script%3E',
+                'text html base64' => 'data:text/html;base64,'.$png,
+                'octet stream' => 'data:application/octet-stream;base64,'.$png,
+                'no base64 marker' => 'data:image/png,'.$png,
+            ];
+            $tricks = [
+                'space before mime' => 'data: image/png;base64,'.$png,
+                'payload with whitespace' => 'data:image/png;base64,'.substr($png, 0, 8).' '.substr($png, 8),
+            ];
+
+            try {
+                $parser = new \Parser();
+                foreach ([true, false] as $safe) {
+                    $mode = $safe ? ' safe' : ' unsafe';
+                    foreach ($pass as $case => $uri) {
+                        $html = $parser->filterContent('![x]('.$uri.')', $safe, '');
+                        $this->assertStringContainsString('src="'.$uri.'"', $html, 'markdown pass '.$case.$mode);
+                        $this->assertStringNotContainsString('sl-img-placeholder sl-img', $html, 'markdown pass '.$case.$mode);
+
+                        $bbc = $parser->filterContent('[img]'.$uri.'[/img]', $safe, '');
+                        $this->assertStringContainsString('src="'.$uri.'"', $bbc, 'bbcode pass '.$case.$mode);
+                    }
+                    foreach ($block + $tricks as $case => $uri) {
+                        $bbc = $parser->filterContent('[img]'.$uri.'[/img]', $safe, '');
+                        $this->assertStringContainsString('sl-img-placeholder', $bbc, 'bbcode block '.$case.$mode);
+                        $this->assertStringNotContainsString('data:', $bbc, 'bbcode block '.$case.$mode);
+                    }
+                }
+                foreach ($block as $case => $uri) {
+                    $html = $parser->filterContent('![x]('.$uri.')', false, '');
+                    $this->assertStringContainsString('sl-img-placeholder', $html, 'markdown block '.$case);
+                    $this->assertStringNotContainsString('data:', $html, 'markdown block '.$case);
+                }
+                foreach ($block + $tricks as $case => $uri) {
+                    $raw = $parser->filterContent('<img src="'.$uri.'">', false, '');
+                    $this->assertStringContainsString('sl-img-placeholder', $raw, 'html block '.$case);
+                    $this->assertStringNotContainsString('data:', $raw, 'html block '.$case);
+                }
+                $huge = 'data:image/png;base64,'.base64_encode(str_repeat('a', 3145728));
+                foreach ([true, false] as $safe) {
+                    $md = $parser->filterContent('![x]('.$huge.')', $safe, '');
+                    $this->assertStringContainsString('sl-img-placeholder', $md, 'huge markdown');
+                    $this->assertStringNotContainsString('src="data:', $md, 'huge markdown');
+                    $this->assertStringNotContainsString('src="data:', $parser->filterContent('[img]'.$huge.'[/img]', $safe, ''), 'huge bbcode');
+                }
             } finally {
                 if ($hadtpl) $GLOBALS['tpl'] = $oldtpl;
                 else unset($GLOBALS['tpl']);

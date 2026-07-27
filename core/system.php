@@ -3565,7 +3565,7 @@ function getProtocol(): string {
     return $proto;
 }
 
-# Get the image from the text
+# Get the image from the text; inline data URIs are never returned because meta image tags must point to a real fetchable resource
 function getImgText(string $text, string $type = '', bool $check = true): string|false {
  global $conf;
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
@@ -3578,6 +3578,7 @@ function getImgText(string $text, string $type = '', bool $check = true): string
     } else {
         $img = '';
     }
+    if ($img !== '' && stripos($img, 'data:') === 0) $img = '';
     $path = empty($img) ? '' : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/');
     $img = empty($img) ? false : ($check ? (file_exists($path) ? $img : false) : $img);
     return $img;
