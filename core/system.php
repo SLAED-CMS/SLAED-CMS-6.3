@@ -2287,7 +2287,7 @@ function filterTextHighlight(string $sourse, string $word): string {
     return str_replace($to, $from, $sourse);
 }
 
-# Write, append, or compress file
+# Write, append, or compress file; a short write counts as a failure and an incomplete append is rolled back so callers never see a partial record as success
 function addFile(string $file, string $src, string $comp = 'none', bool $del = false, string $mode = 'w', int $max = 10485760): int {
     if (is_file($src)) {
         $data = file_get_contents($src);
@@ -2298,8 +2298,24 @@ function addFile(string $file, string $src, string $comp = 'none', bool $del = f
     } else {
         $data = $src;
     }
-    $flags = ($mode === 'a' ? FILE_APPEND : 0) | LOCK_EX;
-    if (file_put_contents($file, $data, $flags) === false) {
+    $done = false;
+    if ($mode === 'a') {
+        $hand = fopen($file, 'ab');
+        if ($hand !== false) {
+            if (flock($hand, LOCK_EX)) {
+                fseek($hand, 0, SEEK_END);
+                $pos = (int)ftell($hand);
+                $put = fwrite($hand, $data);
+                $done = ($put === strlen($data) && fflush($hand));
+                if (!$done) ftruncate($hand, $pos);
+                flock($hand, LOCK_UN);
+            }
+            fclose($hand);
+        }
+    } else {
+        $done = (file_put_contents($file, $data, LOCK_EX) === strlen($data));
+    }
+    if (!$done) {
         addErrorFile(_ERR_WRITE.': '.$file);
         return 2;
     }

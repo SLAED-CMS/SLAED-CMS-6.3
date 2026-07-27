@@ -18,10 +18,28 @@ final class PageCacheContractTest extends TestCase
 {
     private const NEWS_ALLOW = ['name' => '#^news$#', 'op' => '#^$#', 'cat' => '#^[1-9][0-9]{0,8}$#', 'num' => '#^[1-9][0-9]{0,8}$#'];
     private static array $probes = [];
+    private array $temps = [];
 
     public static function setUpBeforeClass(): void
     {
         require_once dirname(__DIR__, 2).'/core/classes/cache.php';
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->temps as $file) {
+            if (is_file($file)) unlink($file);
+            if (is_file($file.'.json')) unlink($file.'.json');
+        }
+        $this->temps = [];
+    }
+
+    # Reserve one scratch cache path for a sidecar scenario and register it for cleanup
+    private function getScratchFile(): string
+    {
+        $file = str_replace('\\', '/', sys_get_temp_dir()).'/slaed_sidecar_'.bin2hex(random_bytes(6)).'.html';
+        $this->temps[] = $file;
+        return $file;
     }
 
     # Run one probe scenario in a fresh PHP process and decode its JSON report, memoized per scenario
@@ -170,6 +188,34 @@ final class PageCacheContractTest extends TestCase
         $this->assertTrue($route['cache']);
         $this->assertMatchesRegularExpression('#^[a-f0-9]{40}$#', $route['hash']);
         $this->assertSame($route['hash'], $again['hash'], 'identity must be stable across processes');
+    }
+
+    # A sidecar written next to one body validates that exact body and reports its dynamic flag
+    #[Test]
+    public function sidecarValidatesTheStoredBody(): void
+    {
+        $file = $this->getScratchFile();
+        $body = '<html>cached body</html>';
+        $this->assertTrue(\Cache::setBody($file, $body));
+        $this->assertTrue(\Cache::setMeta($file, $body, false));
+        $this->assertSame(['dyn' => false, 'valid' => true], \Cache::getMeta($file, $body));
+        $this->assertTrue(\Cache::setMeta($file, $body, true));
+        $this->assertSame(['dyn' => true, 'valid' => true], \Cache::getMeta($file, $body));
+    }
+
+    # A missing, corrupt, or mismatched sidecar fails closed to dynamic so the body is never served with public headers
+    #[Test]
+    public function brokenSidecarFailsClosedToDynamic(): void
+    {
+        $file = $this->getScratchFile();
+        $body = '<html>cached body</html>';
+        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body), 'a missing sidecar must fail closed');
+        \Cache::setMeta($file, $body, false);
+        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body.'tampered'), 'a mismatched body must fail closed');
+        file_put_contents($file.'.json', '{"sha1":');
+        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body), 'a corrupt sidecar must fail closed');
+        file_put_contents($file.'.json', json_encode(['dyn' => 0]));
+        $this->assertSame(['dyn' => true, 'valid' => false], \Cache::getMeta($file, $body), 'an incomplete sidecar must fail closed');
     }
 
     # The real contract makes unknown query keys and foreign hosts non-cacheable

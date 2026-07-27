@@ -61,18 +61,18 @@ class Cache {
         return ($body !== false) ? $body : '';
     }
 
-    # Write a cache file atomically through a temp file, exclusive lock, and rename
+    # Write a cache file atomically through a temp file, exclusive lock, and rename; a short write is a failure and never reaches the target path
     public static function setBody(string $file, string $body): bool {
         $dir = dirname($file);
         if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
         $tmp = tempnam($dir, basename($file).'.');
         if ($tmp === false) return false;
-        if (file_put_contents($tmp, $body, LOCK_EX) === false) {
-            @unlink($tmp);
+        if (file_put_contents($tmp, $body, LOCK_EX) !== strlen($body)) {
+            if (is_file($tmp)) unlink($tmp);
             return false;
         }
         if (!rename($tmp, $file)) {
-            @unlink($tmp);
+            if (is_file($tmp)) unlink($tmp);
             return false;
         }
         return true;
@@ -189,11 +189,12 @@ class Cache {
         self::$hold = null;
     }
 
-    # Emit browser cache, content type, and security headers for public or no-store responses
+    # Emit browser cache, content type, and security headers; a public response drops every pending cookie so a shared proxy can never hand one visitor state to another
     public static function setHeaders(bool $public, int $days = 0, string $type = 'text/html', int $mtime = 0, bool $immutable = false): void {
         $ctype = ($type === 'text/html') ? $type.'; charset='._CHARSET : $type;
         header('Content-Type: '.$ctype);
         if ($public) {
+            header_remove('Set-Cookie');
             $max = $immutable ? 31536000 : $days * 86400;
             header('Cache-Control: public, max-age='.$max.($immutable ? ', immutable' : ''));
             header('Expires: '.gmdate('D, d M Y H:i:s', time() + $max).' GMT');

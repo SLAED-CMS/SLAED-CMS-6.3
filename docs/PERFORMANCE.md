@@ -97,6 +97,16 @@ visitor-bound content through the dynamic-regions mechanism:
   treated as dynamic. Dynamic pages are served with no-store browser headers
   and never answer 304; only a valid `dyn=false` sidecar allows the public
   `cache_b` header branch.
+- **No cookies on public responses**: `Cache::setHeaders()` drops every
+  pending `Set-Cookie` whenever it emits `Cache-Control: public`, so a shared
+  proxy or CDN can never store one visitor's stats cookie, locale cookie, or
+  `PHPSESSID` and hand it to the next visitor. A first request that lands on
+  a publicly cacheable page therefore receives no cookie until the next
+  no-store response; exact counters are unaffected because they come from the
+  server-side `ips.log`/`user.log` sets, and `?newlang=` requests are never
+  cacheable. Existing sessions survive (PHP sends the session cookie only when
+  it creates a new ID), and CSRF is unaffected because any page carrying a
+  token or captcha is dynamic and therefore no-store.
 
 Page-cache cleanup runs as a scheduler task (`cachegc`), not a per-request
 sweep. CSS/JS bundling cache (`cache_css`/`cache_script`) remains a separate
