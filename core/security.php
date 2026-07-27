@@ -779,17 +779,19 @@ function getLang(string $module = '', bool $admin = false): string {
 }
 
 # Clean access to POST, GET or Request parameters
-# A 'key[]' name returns the whole array value; 'key[n]' returns one element; other keys return a filtered scalar
+# A trailing '[]' returns the whole array, a trailing '[n]' or '[name]' returns one element, and leading segments walk nested form fields ('lng[ru][]', 'row[2][id]')
+# Plain keys return a filtered scalar; an array value reached through a scalar key counts as missing so a mismatched form name yields the default instead of a filter error
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
     $arridx = null;
     $allarr = false;
-    if (preg_match('/^([^\[]+)\[(\d*)\]$/', $key, $matches)) {
+    $path = [];
+    if (preg_match('/^([^\[\]]+)((?:\[[^\[\]]*\])+)$/', $key, $matches)) {
+        preg_match_all('/\[([^\[\]]*)\]/', $matches[2], $parts);
         $key = $matches[1];
-        if ($matches[2] === '') {
-            $allarr = true;
-        } else {
-            $arridx = (int)$matches[2];
-        }
+        $path = $parts[1];
+        $last = array_pop($path);
+        if ($last === '') $allarr = true;
+        else $arridx = $last;
     }
     $filters = [
         'num' => fn($v) => filterNum($v),
@@ -815,9 +817,16 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         },
         'raw' => fn($v) => $v,
     ];
+    if ($allarr || $arridx !== null) {
+        if ($arridx !== null) $path[] = $arridx;
+        $p = $_POST[$key] ?? null;
+        $g = $_GET[$key] ?? null;
+        foreach ($path as $step) {
+            $p = (is_array($p) && isset($p[$step])) ? $p[$step] : null;
+            $g = (is_array($g) && isset($g[$step])) ? $g[$step] : null;
+        }
+    }
     if ($allarr) {
-        $p = $_POST[$key] ?? [];
-        $g = $_GET[$key] ?? [];
         $value = match(strtolower($var)) {
             'post' => $p,
             'get' => $g,
@@ -837,11 +846,11 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         return $value;
     }
     if ($arridx !== null) {
-        $p = $_POST[$key][$arridx] ?? '';
-        $g = $_GET[$key][$arridx] ?? '';
+        $p = is_array($p) ? '' : ($p ?? '');
+        $g = is_array($g) ? '' : ($g ?? '');
     } else {
-        $p = filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '';
-        $g = filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '';
+        $p = is_array($_POST[$key] ?? null) ? '' : (filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '');
+        $g = is_array($_GET[$key] ?? null) ? '' : (filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '');
     }
     $value = match(strtolower($var)) {
         'post' => $p,
@@ -857,6 +866,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         return ($value !== '' && $value !== null) ? $value : (($default !== '' && $default !== null) ? $default : false);
     }
     $value = ($value !== null && $value !== '') ? $value : $default;
+    if (is_array($value)) return $default;
     $lt = strtolower($type);
     if ($lt && isset($filters[$lt])) {
         $value = $filters[$lt]($value);
