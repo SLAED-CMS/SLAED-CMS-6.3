@@ -19,6 +19,20 @@ $_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) probe';
 $_SERVER['HTTPS'] = 'on';
+# The moderator half of the comment class needs a signed-in administrator, and isAdmin() memoizes its verdict on the first call the boot itself makes
+# So the session is opened and filled here, before core/security.php reads it: the boot then skips its own session_start() and finds the administrator already there
+if (($argv[1] ?? '') === 'commentstage') {
+    $acon = (require BASE_DIR.'/config/db.php')['db'];
+    $akey = (string)((require BASE_DIR.'/config/global.php')['admin_c'] ?? 'panel');
+    $apdo = new PDO('mysql:host='.$acon['host'].';dbname='.$acon['name'].';charset=utf8mb4', $acon['uname'], $acon['pass']);
+    $arow = $apdo->query('SELECT id, name, password, ip FROM '.$acon['prefix'].'_admins WHERE super = 1 AND ip != \'\' ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+    if ($arow) {
+        $_SERVER['REMOTE_ADDR'] = (string)$arow['ip'];
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION[$akey] = base64_encode($arow['id'].':'.$arow['name'].':'.$arow['password']);
+    }
+    $apdo = null;
+}
 require_once BASE_DIR.'/core/system.php';
 
 # Build one signed stats cookie value from raw fields using the real purpose-scoped secret
@@ -70,16 +84,16 @@ function getProbeComment(): array {
     $hide = $pick('news', 'acomm != 0 AND (status = \'0\' OR time > NOW())');
     $vote = $pick('voting', 'acomm != 0 AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')');
     $out = [
-        'open' => $open ? [$open['acomm'], $com->getTargetMode('news', $open['id'])] : [],
-        'off' => $off ? [0, $com->getTargetMode('news', $off['id'])] : [],
-        'hide' => $hide ? [0, $com->getTargetMode('news', $hide['id'])] : [],
-        'vote' => $vote ? [$vote['acomm'], $com->getTargetMode('voting', $vote['id'])] : [],
-        'missing' => $com->getTargetMode('news', 999999999),
-        'zero' => $open ? $com->getTargetMode('news', 0) : 0,
+        'open' => $open ? [$open['acomm'], $com->getTargetMode('news', $open['id'])->value] : [],
+        'off' => $off ? [0, $com->getTargetMode('news', $off['id'])->value] : [],
+        'hide' => $hide ? [0, $com->getTargetMode('news', $hide['id'])->value] : [],
+        'vote' => $vote ? [$vote['acomm'], $com->getTargetMode('voting', $vote['id'])->value] : [],
+        'missing' => $com->getTargetMode('news', 999999999)->value,
+        'zero' => $open ? $com->getTargetMode('news', 0)->value : 0,
     ];
     $out['unknown'] = [];
     foreach (['gallery', 'account', 'members', 'multimedia', 'forum', '', 'news_', 'news; DROP'] as $mod) {
-        $out['unknown'][$mod] = $open ? $com->getTargetMode($mod, $open['id']) : -1;
+        $out['unknown'][$mod] = $open ? $com->getTargetMode($mod, $open['id'])->value : -1;
     }
     return $out;
 }
@@ -202,7 +216,7 @@ function getProbeCommentWrite(bool $guest): array {
         $tid = 0;
         foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.$tab.' ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
-            if ($com->getTargetMode($mod, intval($one['id'])) === 2) {
+            if ($com->getTargetMode($mod, intval($one['id'])) === CommentMode::Open) {
                 $tid = intval($one['id']);
                 break;
             }
@@ -256,11 +270,142 @@ function getProbeCommentWrite(bool $guest): array {
         ];
         $com->addComment('news', $open, 'probe body for the flood window', 'Probe');
         $out['refuse']['flood'] = [$com->addComment('news', $open, 'probe body again', 'Probe')['error'], sprintf(_CERROR5, $conf['comments']['send'])];
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $ip]);
+        $word = trim(explode(',', (string)$conf['censor_l'])[0]);
+        $text = '[usehtml]<b>x</b>[/usehtml] '.$word.' cost $5 back\\slash <i>kept</i>';
+        $new = $com->addComment('news', $open, $text, 'Probe');
+        $row = $new['id'] ? $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $new['id']])) : [];
+        $out['norm'] = [$new['error'], (string)($row['body'] ?? ''), $word, (bool)$conf['censor'], (string)$conf['censor_r']];
     }
     $db->setSqlRollback();
     $now = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment'));
     $out['clean'] = (intval($was['num']) === intval($now['num']));
     return $out;
+}
+
+# Report what stage 2 promises about a comment write: one rule set, a stable sort, a conditional state change, a soft delete and a stored format
+# The run signs in as the administrator whose stored address this process reports, because the moderator half of the class cannot be reached otherwise from a CLI probe
+function getProbeCommentStage2(): array {
+    global $db, $com, $conf, $user;
+    $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('news'), 'clean' => false];
+    if (!$out['admin']) return $out;
+    $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
+    $one = $db->getSqlRow($db->getSqlQuery($sql));
+    $uid = $one ? intval($one['id']) : 0;
+    if ($one) $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    $out['user'] = [$uid, is_user() ? $uid : 0];
+    $pts = explode(',', (string)$conf['users']['points']);
+    $gain = ($conf['users']['point'] == 1) ? intval($pts[31] ?? 0) : 0;
+    $long = intval($conf['comments']['letter']);
+    $word = str_repeat('a', $long + 1);
+    $out['rules'] = [
+        'longest' => $com->checkRules('news', $word.' tail', 'Probe', '', false),
+        'last' => $com->checkRules('news', 'tail '.$word, 'Probe', '', false),
+        'chars' => $com->checkRules('news', str_repeat('я', $long), 'Probe', '', false),
+        'bytes' => strlen(str_repeat('я', $long)),
+        'limit' => $long,
+        'empty' => $com->checkRules('news', '', 'Probe', '', false),
+    ];
+    $all = getProbeCommentCount();
+    $db->setSqlBegin();
+    $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE iphash = :hash', ['hash' => $hash]);
+    $tid = 0;
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news ORDER BY id DESC LIMIT 25')) ?: [] as $row) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => intval($row['id'])]);
+        if ($com->getTargetMode('news', intval($row['id'])) === CommentMode::Open) {
+            $tid = intval($row['id']);
+            break;
+        }
+    }
+    if (!$tid) {
+        $db->setSqlRollback();
+        return $out + ['target' => 0];
+    }
+    $read = static function () use ($db, $tid, $uid): array {
+        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.'_news WHERE id = :id', ['id' => $tid]));
+        $pnt = $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
+        return [intval($cnt['comments'] ?? 0), intval($pnt['points'] ?? 0)];
+    };
+    $out['target'] = $tid;
+    $new = $com->addComment('news', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $cid = intval($new['id']);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT format, reqkey, iphash, status, deleted, edited FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
+    $out['stored'] = [
+        'error' => $new['error'],
+        'format' => (string)($row['format'] ?? ''),
+        'reqkey' => (string)($row['reqkey'] ?? ''),
+        'iphash' => strlen((string)($row['iphash'] ?? '')),
+        'status' => intval($row['status'] ?? -1),
+        'deleted' => $row['deleted'] ?? null,
+        'edited' => $row['edited'] ?? null,
+    ];
+    $out['rules']['flood'] = [$com->checkRules('news', 'body', 'Probe', $hash, true), $com->checkRules('news', 'body', 'Probe', $hash, false)];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $cid]);
+    $again = $com->addComment('news', $tid, 'stage two probe replay', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $out['replay'] = [$cid, intval($again['id']), $again['error'], getProbeCommentCount('reqkey = :key', ['key' => 'abcdef0123456789abcdef0123456789'])];
+    $was = $read();
+    $out['hide'] = [$com->setStatus($cid, false), $read()];
+    $out['hideagain'] = [$com->setStatus($cid, false), $read()];
+    $out['show'] = [$com->setStatus($cid, true), $read()];
+    $out['showagain'] = [$com->setStatus($cid, true), $read()];
+    $out['counters'] = [$was, $read(), $gain];
+    $edit = $com->updateComment($cid, 'stage two probe edited');
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT body, edited FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
+    $out['edit'] = [$edit['allow'], $edit['saved'], (string)($row['body'] ?? ''), $row['edited'] !== null];
+    $out['before'] = $read();
+    $out['delete'] = $com->deleteComment($cid);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
+    $out['deleted'] = [(string)($row['deleted'] ?? ''), $read()];
+    $out['deleteagain'] = $com->deleteComment($cid);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
+    $out['deletedagain'] = [(string)($row['deleted'] ?? ''), $read()];
+    $out['gone'] = [
+        'single' => $com->getComment($cid),
+        'list' => in_array($cid, array_column($com->getList('news', $tid, 1)['rows'], 'id'), true),
+        'admin' => in_array($cid, array_column($com->getAdminList(CommentStatus::Published, 'news', 2, '', 1)['rows'], 'id'), true),
+        'edit' => $com->updateComment($cid, 'after the delete')['saved'],
+        'status' => $com->setStatus($cid, false),
+    ];
+    $pend = $com->addComment('news', $tid, 'stage two pending probe', 'Probe', '');
+    $pid = intval($pend['id']);
+    $com->setStatus($pid, false);
+    $was = $read();
+    $out['pending'] = [$com->deleteComment($pid), $was, $read()];
+    $out['round'] = [];
+    foreach (['plain', 'markdown'] as $fmt) {
+        $pick = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE format = :fmt AND deleted IS NULL ORDER BY id DESC LIMIT 1', ['fmt' => $fmt]));
+        if (!$pick) continue;
+        $one = intval($pick['id']);
+        $was = $com->getComment($one)['body'] ?? '';
+        $com->updateBody($one, $was);
+        $now = $com->getComment($one)['body'] ?? '';
+        $edit = $com->updateComment($one, $was);
+        $out['round'][$fmt] = [$was === $now, $edit['saved'], $was === ($com->getComment($one)['body'] ?? ''), mb_substr($was, 0, 60)];
+    }
+    $out['sort'] = [];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = \'2020-01-01 00:00:00\' WHERE cid = :cid AND modul = \'news\'', ['cid' => $tid]);
+    for ($i = 0; $i < 2; $i++) {
+        $out['sort'][] = array_column($com->getList('news', $tid, 1)['rows'], 'id');
+    }
+    $db->setSqlRollback();
+    $out['clean'] = ($all === getProbeCommentCount());
+    return $out;
+}
+
+# Report how one stored body renders through the format the row carries, so a format is proven to be an input to rendering rather than a column nobody reads
+function getProbeCommentFormat(): array {
+    global $prs;
+    $body = "**bold** *it* [b]bb[/b]\nsecond # not a heading\n\n- item";
+    return [
+        'plain' => $prs->filterContent($body, true, 'news', 0, 'plain'),
+        'markdown' => $prs->filterContent($body, true, 'news', 0, 'markdown'),
+        'empty' => $prs->filterContent($body, true, 'news', 0, ''),
+        'html' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'news', 0, 'markdown'),
+        'htmlplain' => $prs->filterContent('<b>x</b> <img src=x onerror=alert(1)>', true, 'news', 0, 'plain'),
+        'url' => $prs->filterContent('[url=javascript:alert(1)]click[/url]', true, 'news', 0, 'plain'),
+        'usehtml' => $prs->filterContent('[usehtml]<b>raw</b>[/usehtml]', true, 'news', 0, 'markdown'),
+    ];
 }
 
 # Render the profile feed the way it was rendered before batch 5, from the single UNION that still carried the comment branch
@@ -275,8 +420,8 @@ function getProbeFeedLegacy(int $uid): string {
     foreach (getProfileModules() as $mod => $inf) {
         if ($mod != 'comm' && !is_active($mod)) continue;
         if ($mod == 'comm') {
-            $from = PREFIX_DB.'_comment WHERE uid = :ucomm AND status != \'0\'';
-            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
+            $from = PREFIX_DB.'_comment WHERE uid = :ucomm AND status != \'0\' AND deleted IS NULL';
+            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, format AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
         } else {
             $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
             $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
@@ -290,7 +435,8 @@ function getProbeFeedLegacy(int $uid): string {
     $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
     while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
         if ($key == 'comm') {
-            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, false, $conf['name']))), 70);
+            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, true, $conf['name'], 0, (string)$cnt))), 70);
+            $cnt = 0;
             $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid]).'#'.$id;
         } elseif ($key == 'jokes') {
             $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
@@ -331,7 +477,9 @@ function getProbeCommentFeed(): array {
         $now = preg_replace('#profeed0-\d+#', 'profeed0-N', getProfileLastView($uid));
         $at = 0;
         while ($at < strlen($was) && $at < strlen($now) && $was[$at] === $now[$at]) $at++;
-        $out['feed'][$uid] = [strlen($was), strlen($now), ($was === $now), ($was === $now) ? '' : substr($was, $at, 90), ($was === $now) ? '' : substr($now, $at, 90)];
+        $seen = ($was === $now);
+        $cut = static fn(string $one): string => $seen ? '' : mb_substr(substr($one, $at), 0, 90, 'UTF-8');
+        $out['feed'][$uid] = [strlen($was), strlen($now), $seen, $cut($was), $cut($now)];
     }
     foreach ($uids as $uid) {
         $one = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status != \'0\'', ['uid' => $uid]));
@@ -530,6 +678,10 @@ if ($mode === 'core') {
     $out = getProbeCommentWrite(true);
 } elseif ($mode === 'commenttarget') {
     $out = getProbeCommentTarget();
+} elseif ($mode === 'commentstage') {
+    $out = getProbeCommentStage2();
+} elseif ($mode === 'commentformat') {
+    $out = getProbeCommentFormat();
 } elseif ($mode === 'commentfeed') {
     $out = getProbeCommentFeed();
 } elseif ($mode === 'geoip') {

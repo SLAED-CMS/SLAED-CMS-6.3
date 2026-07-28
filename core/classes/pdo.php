@@ -250,6 +250,11 @@ class Database {
         }
     }
 
+    # Answers whether a transaction is already open on the shared connection, so a unit that may run inside another one knows whether it owns the transaction or joins it
+    function checkSqlActive(): bool {
+        return ($this->sqlconnid instanceof PDO) && $this->sqlconnid->inTransaction();
+    }
+
     # Commits the active transaction
     function setSqlCommit(): bool {
         if (!$this->sqlconnid instanceof PDO) return false;

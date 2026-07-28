@@ -137,11 +137,19 @@ CREATE TABLE `{prefix}_comment` (
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
   `body` TEXT NOT NULL,
   `status` BOOLEAN NOT NULL DEFAULT 0,
+  `format` VARCHAR(20) NOT NULL DEFAULT '',
+  `edited` DATETIME DEFAULT NULL,
+  `deleted` DATETIME DEFAULT NULL,
+  `reqkey` CHAR(32) NOT NULL DEFAULT '',
+  `iphash` CHAR(64) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
-  KEY `cid` (`cid`),
+  UNIQUE KEY `reqkey` (`reqkey`),
   KEY `uid` (`uid`),
-  KEY `modul_status` (`modul`, `status`),
-  KEY `time` (`time`)
+  KEY `time` (`time`),
+  KEY `modul_cid_status_deleted` (`modul`, `cid`, `status`, `deleted`, `time`, `id`),
+  KEY `modul_cid_deleted` (`modul`, `cid`, `deleted`, `time`, `id`),
+  KEY `status_deleted_time` (`status`, `deleted`, `time`, `id`),
+  KEY `iphash_time` (`iphash`, `time`, `id`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_content` (

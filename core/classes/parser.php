@@ -16,12 +16,15 @@ class Parser {
     private bool $safe = true;
     private string $mod = '';
     private int $hoff = 0;
+    private string $fmt = '';
     private array $hids = [];
 
     # Parse src through the pipeline; heading offset raises Markdown levels inside an already titled container and caps them at H6
-    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0): string {
+    # The format names the syntax the source was written in: plain recognizes no Markdown construct and turns line endings into breaks, anything else is Markdown
+    public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = ''): string {
         $hoff = max(0, min(5, $hoff));
-        $key = md5($src.(int)$safe.$mod.$hoff);
+        $fmt = ($fmt === 'plain') ? 'plain' : '';
+        $key = md5($src.(int)$safe.$mod.$hoff.$fmt);
         if (isset(self::$pcache[$key])) return self::$pcache[$key];
         $this->stash = [];
         $this->hids  = [];
@@ -30,11 +33,12 @@ class Parser {
         $this->safe  = $safe;
         $this->mod   = $mod;
         $this->hoff  = $hoff;
+        $this->fmt   = $fmt;
         $src = str_replace(["\r\n", "\r"], "\n", $src);
         $src = $this->filterBbBlocks($src);
-        $src = $this->filterCode($src);
+        if ($fmt !== 'plain') $src = $this->filterCode($src);
         $src = $this->filterFreeBlocks($src);
-        $out = $this->filterBlocks($src);
+        $out = ($fmt === 'plain') ? $this->filterPlain($src) : $this->filterBlocks($src);
         $out = $this->filterSafe($out);
         $out = $this->filterStash($out);
         $out = trim($out);
@@ -56,9 +60,9 @@ class Parser {
     }
 
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
-    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0): string {
+    public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = ''): string {
         return $this->normalizeHtmlImages(
-            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff), $mod)
+            $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt), $mod)
         );
     }
 
@@ -672,6 +676,23 @@ class Parser {
         return $out;
     }
 
+    # Render a plain-format body: no Markdown block is recognized, a blank line separates paragraphs and every other line ending becomes a break, exactly as the author typed it
+    private function filterPlain(string $src): string {
+        $pat = '/^\x02'.preg_quote($this->salt, '/').':\d+\x03$/';
+        $out = '';
+        $para = [];
+        foreach (explode("\n", $src) as $line) {
+            if (preg_match($pat, trim($line)) || trim($line) === '') {
+                if ($para) { $out .= $this->addStash('<p>'.implode("<br>\n", $para).'</p>')."\n"; $para = []; }
+                $out .= (trim($line) === '') ? "\n" : $line."\n";
+                continue;
+            }
+            $para[] = $this->filterInline($line);
+        }
+        if ($para) $out .= $this->addStash('<p>'.implode("<br>\n", $para).'</p>')."\n";
+        return $out;
+    }
+
     # Inline entry point: pre-escape user text via filterText() in safe mode, then run the inline pipeline
     private function filterInline(string $src): string {
         return $this->filterInlines($this->safe ? $this->filterText($src) : $src);
@@ -699,7 +720,7 @@ class Parser {
             }
         }
 
-        if (strpbrk($src, '*_~=') !== false) {
+        if ($this->fmt !== 'plain' && strpbrk($src, '*_~=') !== false) {
             $src = preg_replace(['/\*{3}(.+?)\*{3}/s', '/_{3}(.+?)_{3}/s'], '<strong><em>$1</em></strong>', $src);
             $src = preg_replace(['/\*{2}(.+?)\*{2}/s', '/_{2}(.+?)_{2}/s'], '<strong>$1</strong>', $src);
             $src = preg_replace(['/\*([^*\n]+)\*/', '/(?<![_\w])_([^_\n]+)_(?![_\w])/'], '<em>$1</em>', $src);
@@ -712,6 +733,7 @@ class Parser {
     }
 
     # Bracket inline tags: ed2k before generic [url], then BB pairs and markdown links/images; stashed tags bypass the safe check, non-stashed ([b], [color]) get escaped
+    # A plain body returns before the markdown pair, because [t](u) is Markdown syntax and means nothing in the format the author wrote in
     private function filterBbInline(string $src): string {
         $src = preg_replace_callback(
             '/\[url\](ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\[\/url\]/si',
@@ -725,13 +747,15 @@ class Parser {
             $src
         ) ?? $src;
 
-        for ($i = 0; $i < 3; $i++) {
-            $prev = $src;
-            $src = preg_replace('/\[b\](.*?)\[\/b\]/si', '<strong>$1</strong>', $src) ?? $src;
-            $src = preg_replace('/\[i\](.*?)\[\/i\]/si', '<em>$1</em>', $src) ?? $src;
-            $src = preg_replace('/\[u\](.*?)\[\/u\]/si', '<u>$1</u>', $src) ?? $src;
-            $src = preg_replace('/\[s\](.*?)\[\/s\]/si', '<del>$1</del>', $src) ?? $src;
-            if ($prev === $src) break;
+        foreach (['b' => 'strong', 'i' => 'em', 'u' => 'u', 's' => 'del'] as $tag => $html) {
+            if (stripos($src, '['.$tag.']') === false) continue;
+            $beg = $this->addStash('<'.$html.'>');
+            $end = $this->addStash('</'.$html.'>');
+            for ($i = 0; $i < 3; $i++) {
+                $prev = $src;
+                $src = preg_replace('/\['.$tag.'\](.*?)\[\/'.$tag.'\]/si', $beg.'$1'.$end, $src) ?? $src;
+                if ($prev === $src) break;
+            }
         }
 
         $src = preg_replace_callback(
@@ -739,14 +763,14 @@ class Parser {
             function(array $m): string {
                 $color = strtolower(trim($m[1]));
                 if (!preg_match('/^#[0-9a-f]{6}$/', $color) && !preg_match('/^[a-z]+$/', $color)) return $m[2];
-                return '<span style="color:'.$this->filterEsc($color).'">'.$m[2].'</span>';
+                return $this->addStash('<span style="color:'.$this->filterEsc($color).'">').$m[2].$this->addStash('</span>');
             },
             $src
         ) ?? $src;
 
         $src = preg_replace_callback(
             '/\[family=([A-Za-z ]+)\](.*?)\[\/family\]/si',
-            fn(array $m): string => '<span style="font-family:'.$this->filterEsc(trim($m[1])).'">'.$m[2].'</span>',
+            fn(array $m): string => $this->addStash('<span style="font-family:'.$this->filterEsc(trim($m[1])).'">').$m[2].$this->addStash('</span>'),
             $src
         ) ?? $src;
 
@@ -754,7 +778,7 @@ class Parser {
             '/\[size=([0-9]{1,2})\](.*?)\[\/size\]/si',
             function(array $m): string {
                 $size = max(8, min(48, (int)$m[1]));
-                return '<span style="font-size:'.$size.'px">'.$m[2].'</span>';
+                return $this->addStash('<span style="font-size:'.$size.'px">').$m[2].$this->addStash('</span>');
             },
             $src
         ) ?? $src;
@@ -807,6 +831,7 @@ class Parser {
             $src
         ) ?? $src;
 
+        if ($this->fmt === 'plain') return $src;
         $src = preg_replace_callback(
             '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
             function(array $m): string {

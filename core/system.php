@@ -5523,7 +5523,7 @@ function updateComment(): string {
         ]);
         return '';
     }
-    echo $prs->filterContent($edit['body'], false, $edit['mod'], 2);
+    echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, $edit['format']);
     return '';
 }
 

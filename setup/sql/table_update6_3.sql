@@ -22,6 +22,7 @@
 # - legacy source tables are not dropped automatically
 
 DROP PROCEDURE IF EXISTS rencol;
+DROP PROCEDURE IF EXISTS addcol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
@@ -63,6 +64,37 @@ BEGIN
             SET @sql = CONCAT(
                 'ALTER TABLE `', ptab, '` ',
                 'RENAME COLUMN `', pold, '` TO `', pnew, '`'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE addcol(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN pdef TEXT)
+BEGIN
+    DECLARE ctab INT DEFAULT 0;
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(*)
+          INTO ccol
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = pcol;
+
+        IF ccol = 0 THEN
+            SET @sql = CONCAT(
+                'ALTER TABLE `', ptab, '` ',
+                'ADD COLUMN `', pcol, '` ', pdef
             );
             PREPARE stmt FROM @sql;
             EXECUTE stmt;
@@ -489,10 +521,9 @@ CALL addidx('{prefix}_clients', 'email', '`email`(191)', 0);
 CALL rencol('{prefix}_comment', 'date', 'time');
 CALL rencol('{prefix}_comment', 'host_name', 'ip');
 CALL renidx('{prefix}_comment', 'date', 'time');
-CALL addidx('{prefix}_comment', 'cid', '`cid`', 0);
 CALL addidx('{prefix}_comment', 'uid', '`uid`', 0);
-CALL addidx('{prefix}_comment', 'modul_status', '`modul`, `status`', 0);
 CALL addidx('{prefix}_comment', 'time', '`time`', 0);
+# cid and modul_status are not created here: batch Y below adds the composites that supersede them and drops both
 
 # =============================================================================
 # Batch G — _faq
@@ -1524,10 +1555,50 @@ CALL addidx('{prefix}_mail', 'lockid',                 '`lockid`',              
 CALL addidx('{prefix}_mail', 'locked',                 '`locked`',                                0);
 
 # =============================================================================
+# Batch Y — _comment, the storage format, the soft delete and the write keys
+# =============================================================================
+#
+# Five columns and five indexes are added, two superseded indexes are dropped and
+# KEY time is kept, because the unfiltered moderation list orders by time alone.
+# The order matters: reqkey is filled for every row before its unique index is
+# created, otherwise the ALTER would fail halfway on the shared default. UUID()
+# is evaluated per row on MySQL and MariaDB alike and its hex form is exactly the
+# 32 characters the column and the server-side key check expect.
+#
+# format and iphash are backfilled by tools/comment-migrate.php, which classifies
+# every stored body first and rewrites it afterwards; a hex HMAC cannot be built
+# in SQL because the purpose secret lives in the site configuration.
+#
+# That tool is not optional. Comments render as source from 6.3 on, so until
+# "php tools/comment-migrate.php classify" and "convert" have run, every stored
+# body still carries the escaping of the old writer and is shown with it -
+# &lt;b&gt; instead of a bold word. Take a dump of the table first.
+#
+# On a large comment table this is not instant: five index builds and a full
+# update of every row rewrite the table, and the site should be closed for it.
+
+CALL addcol('{prefix}_comment', 'format',  'VARCHAR(20) NOT NULL DEFAULT \'\'');
+CALL addcol('{prefix}_comment', 'edited',  'DATETIME DEFAULT NULL');
+CALL addcol('{prefix}_comment', 'deleted', 'DATETIME DEFAULT NULL');
+CALL addcol('{prefix}_comment', 'reqkey',  'CHAR(32) NOT NULL DEFAULT \'\'');
+CALL addcol('{prefix}_comment', 'iphash',  'CHAR(64) NOT NULL DEFAULT \'\'');
+
+UPDATE `{prefix}_comment` SET `reqkey` = REPLACE(UUID(), '-', '') WHERE `reqkey` = '';
+
+CALL addidx('{prefix}_comment', 'reqkey',                   '`reqkey`',                                              1);
+CALL addidx('{prefix}_comment', 'modul_cid_status_deleted', '`modul`, `cid`, `status`, `deleted`, `time`, `id`',     0);
+CALL addidx('{prefix}_comment', 'modul_cid_deleted',        '`modul`, `cid`, `deleted`, `time`, `id`',               0);
+CALL addidx('{prefix}_comment', 'status_deleted_time',      '`status`, `deleted`, `time`, `id`',                     0);
+CALL addidx('{prefix}_comment', 'iphash_time',              '`iphash`, `time`, `id`',                                0);
+CALL delidx('{prefix}_comment', 'cid');
+CALL delidx('{prefix}_comment', 'modul_status');
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 
 DROP PROCEDURE IF EXISTS rencol;
+DROP PROCEDURE IF EXISTS addcol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;

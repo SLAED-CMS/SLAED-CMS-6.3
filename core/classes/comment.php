@@ -21,6 +21,7 @@ enum CommentMode: int {
 
 # Comment subsystem: every read and write of the comment table with its permissions, pagination and target bookkeeping in one place
 # Nothing outside this class reaches the comment table any more; the resolver that authorizes a target and the counter that follows a write live here as well
+# Add, edit, status and delete wrap their own writes; when a transaction is already open they join it and leave begin, commit and rollback to whoever owns it
 class Comment {
 
     # The eight modules that render comments, each with the table its target rows live in and the points slot its author is credited from
@@ -36,15 +37,28 @@ class Comment {
         'voting' => ['_voting', 43],
     ];
 
+    # The two syntaxes a comment body may be written in; html is a trust grant rather than a format and is never stored against a comment
+    private const FORMATS = ['plain', 'markdown'];
+
+    # The columns every read of one comment row answers with, so a consumer never has to know which of them a given query needed
+    private const FIELDS = 'id, cid, modul, time, edited, deleted, uid, name, ip, body, format, status';
+
     private Database $db;
     private Parser $prs;
     private array $conf;
+    private array $site;
 
-    # Build the subsystem from the services the request already carries; the parser is kept because the read helpers that render a body move here in a later batch
+    # Build the subsystem from the services the request already carries; the settings the write normalization needs are snapshotted so no method reaches for a global
     public function __construct(Database $db, Parser $prs, array $conf) {
         $this->db = $db;
         $this->prs = $prs;
         $this->conf = is_array($conf['comments'] ?? null) ? $conf['comments'] : [];
+        $this->site = [
+            'click' => !empty($conf['clickable']),
+            'cens' => !empty($conf['censor']),
+            'from' => (string)($conf['censor_l'] ?? ''),
+            'to' => (string)($conf['censor_r'] ?? ''),
+        ];
     }
 
     # Count the comments of one target that the current viewer may see
@@ -60,8 +74,9 @@ class Comment {
         $out = $this->getPager($this->getTotal(PREFIX_DB.'_comment '.$where, $pars), $page, intval($this->conf['num'] ?? 15));
         $out['rows'] = [];
         if ($out['total'] < 1) return $out;
-        $sql = 'SELECT id, cid, modul, time, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment '.$where
-            .' ORDER BY time '.($out['isasc'] ? 'ASC' : 'DESC').' LIMIT '.$out['offset'].', '.$out['limit'];
+        $dir = $out['isasc'] ? 'ASC' : 'DESC';
+        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment '.$where
+            .' ORDER BY time '.$dir.', id '.$dir.' LIMIT '.$out['offset'].', '.$out['limit'];
         $uids = [];
         $list = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
@@ -83,8 +98,9 @@ class Comment {
         $out = $this->getPager($this->getTotal($join, $pars), $page, intval($this->conf['anum'] ?? 25));
         $out['rows'] = [];
         if ($out['total'] < 1) return $out;
-        $sql = 'SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name AS unam FROM '.$join
-            .' ORDER BY s.time '.($out['isasc'] ? 'ASC' : 'DESC').' LIMIT '.$out['offset'].', '.$out['limit'];
+        $dir = $out['isasc'] ? 'ASC' : 'DESC';
+        $sql = 'SELECT s.'.str_replace(', ', ', s.', self::FIELDS).', u.name AS unam FROM '.$join
+            .' ORDER BY s.time '.$dir.', s.id '.$dir.' LIMIT '.$out['offset'].', '.$out['limit'];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $out['rows'][] = $this->getRowData($row) + ['nick' => (string)($row['unam'] ?? '')];
         }
@@ -93,8 +109,8 @@ class Comment {
 
     # Return one comment by its id, with the account name of a registered author, or an empty array when the row is gone
     public function getComment(int $id): array {
-        $sql = 'SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name AS unam FROM '.PREFIX_DB.'_comment AS s'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.id = :id';
+        $sql = 'SELECT s.'.str_replace(', ', ', s.', self::FIELDS).', u.name AS unam FROM '.PREFIX_DB.'_comment AS s'
+            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.id = :id AND s.deleted IS NULL';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         return $row ? $this->getRowData($row) + ['nick' => (string)($row['unam'] ?? '')] : [];
     }
@@ -102,7 +118,7 @@ class Comment {
     # Return the published comments of one account, newest first, for the activity feed of a profile
     public function getUserList(int $uid, int $limit): array {
         if ($uid < 1 || $limit < 1) return [];
-        $sql = 'SELECT id, cid, modul, time, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat ORDER BY id DESC LIMIT 0, '.intval($limit);
+        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL ORDER BY id DESC LIMIT 0, '.intval($limit);
         $out = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, ['uid' => $uid, 'stat' => CommentStatus::Published->value])) ?: [] as $row) {
             $out[] = $this->getRowData($row);
@@ -113,18 +129,19 @@ class Comment {
     # Count the published comments of one account, the number the profile hub shows beside the counters of the other modules
     public function getUserCount(int $uid): int {
         if ($uid < 1) return 0;
-        return $this->getTotal(PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat', ['uid' => $uid, 'stat' => CommentStatus::Published->value]);
+        $from = PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat AND deleted IS NULL';
+        return $this->getTotal($from, ['uid' => $uid, 'stat' => CommentStatus::Published->value]);
     }
 
     # Count the comments in one moderation state across every module, the number the waiting-content chip of the admin sidebar shows
     public function getStatusCount(CommentStatus $stat): int {
-        return $this->getTotal(PREFIX_DB.'_comment WHERE status = :stat', ['stat' => $stat->value]);
+        return $this->getTotal(PREFIX_DB.'_comment WHERE status = :stat AND deleted IS NULL', ['stat' => $stat->value]);
     }
 
-    # Resolve a comment target through the fixed module map and return its moderation mode; 0 when the module is unknown, the row is missing or invisible, or comments are disabled
+    # Resolve a comment target through the fixed module map and answer its moderation mode; Disabled when the module is unknown, the row is gone, hidden or closed
     # Visibility is the module's own view predicate, so an unpublished, hidden or out-of-category target refuses a write exactly as its own page refuses a read
-    public function getTargetMode(string $mod, int $id): int {
-        if (!$id || !isset(self::MODULES[$mod])) return 0;
+    public function getTargetMode(string $mod, int $id): CommentMode {
+        if (!$id || !isset(self::MODULES[$mod])) return CommentMode::Disabled;
         $tab = PREFIX_DB.self::MODULES[$mod][0];
         if ($mod == 'voting') {
             $sql = 'SELECT acomm FROM '.$tab.' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')';
@@ -132,86 +149,163 @@ class Comment {
             $sql = 'SELECT acomm FROM '.$tab.' AS t WHERE t.id = :id AND t.time <= NOW() AND t.status != \'0\' '.catmids($mod, 't.cid');
         }
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
-        return $row ? intval($row['acomm']) : 0;
+        return $row ? (CommentMode::tryFrom(intval($row['acomm'])) ?? CommentMode::Disabled) : CommentMode::Disabled;
     }
 
     # Return the module names the stored comments actually use, for the module selector of the moderation list
     public function getModuleList(): array {
         $out = [];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment ORDER BY modul ASC')) ?: [] as $row) {
+        $sql = 'SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment WHERE deleted IS NULL ORDER BY modul ASC';
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql)) ?: [] as $row) {
             if ($row['modul'] !== '') $out[] = (string)$row['modul'];
         }
         return $out;
     }
 
+    # Resolve the syntax a new comment body is stored under; an html editor grants trust rather than naming a format, so it is refused here and the body is kept as markdown source
+    public function getBodyFormat(): string {
+        $fmt = getEditorMode();
+        return in_array($fmt, self::FORMATS, true) ? $fmt : 'markdown';
+    }
+
     # Store one new comment against a target the resolver accepts and answer its id, the name it was stored under and the refusal that stopped it
-    # Mode, author, address and moderation state are resolved from the server context; the request supplies only the module key, the target id, the body and the guest name
-    public function addComment(string $mod, int $id, string $body, string $name): array {
+    # Mode, author, address and moderation state come from the server context; the request supplies the module key, the target id, the body, the guest name and its key
+    public function addComment(string $mod, int $id, string $body, string $name, string $key = ''): array {
         global $user;
-        $acomm = $this->getTargetMode($mod, $id);
+        $mode = $this->getTargetMode($mod, $id);
         $ip = getIp();
-        $stop = $this->checkAddRules($mod, $body, $name, $ip);
-        if ($stop !== '' || !$acomm) return ['id' => 0, 'name' => $name, 'error' => $stop ?: _ERROR];
-        $body = filterHtml($body, $this->getLinkFlag($mod));
+        $hash = $this->getIpHash($ip);
+        $stop = $this->checkRules($mod, $body, $name, $hash, true);
+        $last = $stop ? (string)end($stop) : '';
+        if ($last !== '' || $mode === CommentMode::Disabled) return ['id' => 0, 'name' => $name, 'error' => $last ?: _ERROR];
+        $body = $this->filterCommentBody($body, $this->getLinkFlag($mod));
         if (is_user()) {
             $uid = intval($user[0]);
             $info = getUserInfo();
             $name = $info['name'];
-            $stat = (!is_moder($mod) && ($acomm == 1 || $info['access'])) ? CommentStatus::Pending : CommentStatus::Published;
+            $stat = (!is_moder($mod) && ($mode === CommentMode::Moderated || $info['access'])) ? CommentStatus::Pending : CommentStatus::Published;
         } else {
             $uid = 0;
-            $stat = (!is_moder($mod) && ($acomm == 1 || $this->conf['anonpost'] == 1)) ? CommentStatus::Pending : CommentStatus::Published;
+            $stat = (!is_moder($mod) && ($mode === CommentMode::Moderated || $this->conf['anonpost'] == 1)) ? CommentStatus::Pending : CommentStatus::Published;
         }
-        $this->db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :ip, :comment, :status)',
-            ['cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip, 'comment' => $body, 'status' => $stat->value]
-        );
-        if ($stat === CommentStatus::Published) $this->updateTargetCount($id, $mod, false, $uid);
-        return ['id' => $this->getLastId($id, $uid), 'name' => $name, 'error' => ''];
+        $key = $this->getRequestKey($key);
+        $own = !$this->db->checkSqlActive();
+        if ($own && !$this->db->setSqlBegin()) return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+        $sql = 'INSERT INTO '.PREFIX_DB.'_comment (cid, modul, time, uid, name, ip, iphash, body, format, reqkey, status)'
+            .' VALUES (:cid, :modul, NOW(), :uid, :name, :ip, :hash, :body, :format, :reqkey, :status)';
+        $done = $this->db->getSqlQuery($sql, [
+            'cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip, 'hash' => $hash,
+            'body' => $body, 'format' => $this->getBodyFormat(), 'reqkey' => $key, 'status' => $stat->value,
+        ]);
+        if (!$done) {
+            $fail = intval($this->db->getSqlError()['code']) === 1062;
+            if ($own) $this->db->setSqlRollback();
+            return $fail ? $this->getKeyResult($key, $name) : ['id' => 0, 'name' => $name, 'error' => _ERROR];
+        }
+        $new = intval($this->db->getSqlLastId());
+        if ($stat === CommentStatus::Published && !$this->updateTargetCount($id, $mod, false, $uid)) {
+            if ($own) $this->db->setSqlRollback();
+            return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+        }
+        if ($own && !$this->db->setSqlCommit()) {
+            $this->db->setSqlRollback();
+            return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+        }
+        return ['id' => $new, 'name' => $name, 'error' => ''];
     }
 
     # Load one comment for editing and, when a body is given, store the edited text once the edit rules accept it
     # The permission, the module and the edit window all come from the stored row, so a request can neither name the module nor extend its own window
     public function updateComment(int $id, string $body): array {
         global $user;
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT uid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $sql = 'SELECT uid, time, body, format, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $uid = $row ? intval($row['uid']) : 0;
-        $out = ['allow' => false, 'mod' => $mod, 'body' => (string)($row['body'] ?? ''), 'saved' => false, 'error' => []];
+        $out = ['allow' => false, 'mod' => $mod, 'body' => (string)($row['body'] ?? ''), 'format' => (string)($row['format'] ?? ''), 'saved' => false, 'error' => []];
         $wait = strtotime((string)($row['time'] ?? '')) + intval($this->conf['edit']);
         if (!is_moder($mod) && !(is_user() && $uid == intval($user[0]) && time() < $wait)) return $out;
         $out['allow'] = true;
         if ($id < 1 || $mod === '' || !$body) return $out;
-        $out['error'] = $this->checkEditRules($mod, $body);
+        $out['error'] = $this->checkRules($mod, $body, '', '', false);
         if ($out['error']) return $out;
-        $out['body'] = filterHtml($body, $this->getLinkFlag($mod));
-        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $out['body'], 'id' => $id]);
+        $text = $this->filterCommentBody($body, $this->getLinkFlag($mod));
+        $own = !$this->db->checkSqlActive();
+        if ($own && !$this->db->setSqlBegin()) return $out;
+        $done = $this->db->getSqlQuery(
+            'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL',
+            ['body' => $text, 'id' => $id]
+        );
+        if (!$done || ($own && !$this->db->setSqlCommit())) {
+            if ($own) $this->db->setSqlRollback();
+            return $out;
+        }
+        $out['body'] = $text;
         $out['saved'] = true;
         return $out;
     }
 
     # Publish or hide one comment as a moderator of the module the stored row names, and move the counter and the points of its target with it
-    # A comment that already carries the wanted state is answered as done without writing, so a repeated moderation click cannot count its target twice
+    # The state is changed by a conditional update rather than by a read followed by a write, so two parallel requests cannot both count the same transition
+    # The wanted state is bound twice under two names because a native prepared statement rejects one named placeholder used in two positions
     public function setStatus(int $id, bool $open): bool {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $own = !$this->db->checkSqlActive();
+        if ($id < 1 || ($own && !$this->db->setSqlBegin())) return false;
+        $sql = 'SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL FOR UPDATE';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $cid = $row ? intval($row['cid']) : 0;
-        if ($id < 1 || !$cid || $mod === '' || !is_moder($mod)) return false;
+        if (!$cid || $mod === '' || !is_moder($mod)) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
         $stat = $open ? CommentStatus::Published : CommentStatus::Pending;
-        if (intval($row['status']) === $stat->value) return true;
-        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $stat->value, 'id' => $id]);
-        $this->updateTargetCount($cid, $mod, !$open, intval($row['uid']));
+        $done = $this->db->getSqlQuery(
+            'UPDATE '.PREFIX_DB.'_comment SET status = :next WHERE id = :id AND status != :curr AND deleted IS NULL',
+            ['next' => $stat->value, 'curr' => $stat->value, 'id' => $id]
+        );
+        if ($done === false) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
+        if (intval($this->db->getSqlAffected()) > 0 && !$this->updateTargetCount($cid, $mod, !$open, intval($row['uid']))) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
+        if ($own && !$this->db->setSqlCommit()) {
+            $this->db->setSqlRollback();
+            return false;
+        }
         return true;
     }
 
     # Remove one comment as a moderator of the module the stored row names, and take the counter and the points of its target back when the removed row was published
+    # The row is marked rather than erased and the mark is set by a conditional update, so a repeated delete answers the same result without moving a counter twice
     public function deleteComment(int $id): bool {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $own = !$this->db->checkSqlActive();
+        if ($id < 1 || ($own && !$this->db->setSqlBegin())) return false;
+        $sql = 'SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id FOR UPDATE';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $cid = $row ? intval($row['cid']) : 0;
-        if ($id < 1 || !$cid || $mod === '' || !is_moder($mod)) return false;
-        $this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
-        if (intval($row['status']) === CommentStatus::Published->value) $this->updateTargetCount($cid, $mod, true, intval($row['uid']));
+        if (!$cid || $mod === '' || !is_moder($mod)) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
+        $done = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET deleted = NOW() WHERE id = :id AND deleted IS NULL', ['id' => $id]);
+        if ($done === false) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
+        $gone = intval($this->db->getSqlAffected()) > 0 && intval($row['status']) === CommentStatus::Published->value;
+        if ($gone && !$this->updateTargetCount($cid, $mod, true, intval($row['uid']))) {
+            if ($own) $this->db->setSqlRollback();
+            return false;
+        }
+        if ($own && !$this->db->setSqlCommit()) {
+            $this->db->setSqlRollback();
+            return false;
+        }
         return true;
     }
 
@@ -232,31 +326,51 @@ class Comment {
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
     public function updateBody(int $id, string $body): bool {
         if ($id < 1) return false;
-        return (bool)$this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $body, 'id' => $id]);
+        $sql = 'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL';
+        return (bool)$this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]);
+    }
+
+    # Apply the write rules of one comment and answer every refusal it collects, in the order the submit path applies them, so its caller can show the last one or the whole list
+    # The rules a new comment adds are the ones an edit never had: a guest name, the flood window and the captcha; the length rule measures the longest word in characters for both
+    public function checkRules(string $mod, string $body, string $name, string $hash, bool $isnew): array {
+        $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)));
+        $long = $words ? max($words) : 0;
+        $last = $isnew ? $this->getLastTime($hash) : '';
+        $wait = ($last !== '' ? strtotime($last) : 0) + intval($this->conf['send']);
+        $stop = [];
+        if ($body === '') $stop[] = _CERROR1;
+        if ($long > $this->conf['letter']) $stop[] = _CERROR2;
+        if ($isnew && !is_user() && ($name === '' || $this->conf['anonpost'] == 0)) $stop[] = _CERROR3;
+        if ($isnew && $wait > time()) $stop[] = sprintf(_CERROR5, $this->conf['send']);
+        if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop[] = _CERROR9;
+        if ($isnew && checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
+        return $stop;
     }
 
     # Move the comment counter of one target and the points of its author in the direction the write that calls this took
-    # A module outside the map moves nothing, which is what the three retired branches of the old helper did for names no comment can carry any more
-    private function updateTargetCount(int $id, string $mod, bool $del, int $uid): void {
-        if (!$id || !isset(self::MODULES[$mod])) return;
+    # The result of the counter statement is answered rather than swallowed, because the write that calls this is inside a transaction and has to roll back when the counter fails
+    private function updateTargetCount(int $id, string $mod, bool $del, int $uid): bool {
+        if (!$id || !isset(self::MODULES[$mod])) return true;
         [$tab, $slot] = self::MODULES[$mod];
-        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET comments = comments + :delta WHERE id = :id', ['delta' => $del ? -1 : 1, 'id' => $id]);
+        $done = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET comments = comments + :delta WHERE id = :id', ['delta' => $del ? -1 : 1, 'id' => $id]);
+        if ($done === false) return false;
         updatePoints($slot, $uid, $del ? 1 : 0);
+        return true;
     }
 
     # Build the visibility scope of one target once, so a count and the page it belongs to can never disagree about what is visible
     # A moderator of the module sees the pending comments as well, which is why the scope depends on the viewer and not on the caller
     private function getScope(string $mod, int $id): array {
         $pars = ['cid' => $id, 'mod' => $mod];
-        if (is_moder($mod)) return ['WHERE cid = :cid AND modul = :mod', $pars];
+        if (is_moder($mod)) return ['WHERE cid = :cid AND modul = :mod AND deleted IS NULL', $pars];
         $pars['stat'] = CommentStatus::Published->value;
-        return ['WHERE cid = :cid AND modul = :mod AND status = :stat', $pars];
+        return ['WHERE cid = :cid AND modul = :mod AND status = :stat AND deleted IS NULL', $pars];
     }
 
     # Build the moderation scope against the comment and account join, so the count query carries exactly the predicate the result query carries
     # The author search needs two placeholders for one term because a native prepared statement rejects a named placeholder used twice
     private function getAdminScope(CommentStatus $stat, string $mod, int $find, string $term): array {
-        $where = 'WHERE s.status = :stat';
+        $where = 'WHERE s.status = :stat AND s.deleted IS NULL';
         $pars = ['stat' => $stat->value];
         if ($mod !== '') {
             $where .= ' AND s.modul = :mod';
@@ -278,50 +392,52 @@ class Comment {
         return [$where, $pars];
     }
 
-    # Apply the write rules of a new comment and answer the refusal the submit path answers, in the order it applies them, so the last rule that fires is the one the visitor reads
-    private function checkAddRules(string $mod, string $body, string $name, string $ip): string {
-        $last = $this->getLastTime($ip);
-        $wait = ($last !== '' ? strtotime($last) : 0) + intval($this->conf['send']);
-        $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)));
-        $long = $words ? max($words) : 0;
-        $stop = '';
-        if ($body === '') $stop = _CERROR1;
-        if ($long > $this->conf['letter']) $stop = _CERROR2;
-        if (!is_user() && ($name === '' || $this->conf['anonpost'] == 0)) $stop = _CERROR3;
-        if ($wait > time()) $stop = sprintf(_CERROR5, $this->conf['send']);
-        if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop = _CERROR9;
-        if (checkCaptcha('comment')) $stop = _SECCODEINCOR;
-        return $stop;
+    # Normalize a submitted comment into the source the row stores: the shared writer escapes, breaks lines and hides quotes for a render model comments no longer use
+    # What stays is what changes the text itself rather than its markup: the trusted-html tokens a visitor may not open, the clickable-link rewrite and the censor list
+    private function filterCommentBody(string $body, int $flag): string {
+        if ($body === '') return '';
+        if (!isAdmin()) $body = (string)preg_replace('#\[/?(?:usehtml|usephp)\]#si', '', $body);
+        if ($this->site['click'] && $flag != 1) $body = filterClickable($body);
+        if (!isAdmin() && $this->site['cens']) {
+            foreach (explode(',', $this->site['from']) as $one) {
+                $one = trim($one);
+                if ($one !== '') $body = (string)preg_replace('#'.preg_quote($one, '#').'#i', $this->site['to'], $body);
+            }
+        }
+        return trim($body);
     }
 
-    # Apply the edit rules to a changed body and answer every refusal the edit path collects, because that path shows all of them at once
-    # The length rule measures the last word in bytes, which is what the edit path does today; measuring the longest word in characters is a stage 2 change of the plan
-    private function checkEditRules(string $mod, string $body): array {
-        $size = 0;
-        foreach (explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)) as $word) $size = strlen($word);
-        $stop = [];
-        if ($body === '') $stop[] = _CERROR1;
-        if ($size > $this->conf['letter']) $stop[] = _CERROR2;
-        if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop[] = _CERROR9;
-        return $stop;
-    }
-
-    # Build the link flag the html filter takes: 1 keeps the bare links of this author as text, 0 lets the filter make them clickable
+    # Build the link flag the body normalization takes: 1 keeps the bare links of this author as text, 0 lets the rewrite make them clickable
     private function getLinkFlag(string $mod): int {
         return (!is_moder($mod) && (($this->conf['alink'] == 1 && !is_user()) || $this->conf['alink'] == 2)) ? 1 : 0;
     }
 
     # Read the time of the most recent comment of one address, the value the flood window of a new submit is measured against
-    private function getLastTime(string $ip): string {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
+    # The address is matched through its keyed hash rather than through the stored text, so the flood window needs no index on a value that identifies a visitor
+    private function getLastTime(string $hash): string {
+        if ($hash === '') return '';
+        $sql = 'SELECT time FROM '.PREFIX_DB.'_comment WHERE iphash = :hash ORDER BY time DESC, id DESC LIMIT 1';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['hash' => $hash]));
         return (string)($row['time'] ?? '');
     }
 
-    # Read back the id of the row a submit has just written, through the query the submit path has always used to build its anchor link
-    private function getLastId(int $id, int $uid): int {
-        $sql = 'SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1';
-        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['cid' => $id, 'uid' => $uid]));
-        return $row ? intval($row['id']) : 0;
+    # Derive the flood-control fingerprint of one address, keyed by a purpose secret so a stolen table cannot be walked back to the addresses it was built from
+    private function getIpHash(string $ip): string {
+        $ip = strtolower(trim($ip));
+        return $ip !== '' ? hash_hmac('sha256', $ip, getSecret('commentip')) : '';
+    }
+
+    # Accept the idempotency key of a submit only in the shape the unique index expects, and mint one when the request carries none, so no add can ever store an empty key
+    private function getRequestKey(string $key): string {
+        $key = strtolower(trim($key));
+        return preg_match('/^[0-9a-f]{32}$/', $key) ? $key : bin2hex(random_bytes(16));
+    }
+
+    # Answer a replayed submit with the result of the row the first one stored, which is what makes a repeated POST return the same comment instead of a second one
+    private function getKeyResult(string $key, string $name): array {
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_comment WHERE reqkey = :key', ['key' => $key]));
+        if (!$row) return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+        return ['id' => intval($row['id']), 'name' => (string)$row['name'], 'error' => ''];
     }
 
     # Count the rows of one already-built source, so the count of a list is always written against the very source the list itself reads
@@ -337,10 +453,13 @@ class Comment {
             'cid' => intval($row['cid']),
             'modul' => (string)$row['modul'],
             'time' => (string)$row['time'],
+            'edited' => (string)($row['edited'] ?? ''),
+            'deleted' => (string)($row['deleted'] ?? ''),
             'uid' => intval($row['uid']),
             'name' => (string)$row['name'],
             'ip' => (string)$row['ip'],
             'body' => (string)$row['body'],
+            'format' => (string)($row['format'] ?? ''),
             'status' => intval($row['status']),
         ];
     }

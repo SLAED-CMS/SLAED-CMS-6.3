@@ -12,16 +12,24 @@ The parser uses a caching mechanism and internally employs a stateless "stash" t
 
 The `Parser` should be instantiated and used dynamically where needed, or invoked via the global context if already bootstrapped. The primary public APIs are:
 
-### `Parser::filterContent(string $src, bool $safe, string $mod, int $hoff = 0): string`
+### `Parser::filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = ''): string`
 The standard rendering pipeline for all modules. It processes Markdown, BBCode, applies safe HTML escaping (if `$safe` is `true`), and **applies module-specific word-replacement rules** (such as automatic censoring or dynamic acronym expansions from `$conf['replace']`).
 
-### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0): string`
+### `Parser::filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = ''): string`
 The core parser operation. Processes all markup but **skips** the global search-and-replace rules. Use this for static documents, changelogs, search rendering, or anywhere where automatic keyword replacement could corrupt the output.
+
+## Source Format (`$fmt`)
+
+The format names the syntax the stored source was written in. It is an input to rendering, not a security switch:
+* **`'plain'`:** no Markdown construct is recognised — no headings, lists, tables, quotes, emphasis, code fences, inline code or `[t](u)` links. A blank line separates paragraphs and every other line ending becomes a `<br>`. The bracket layer (BBCode, smilies, attachments) still runs.
+* **anything else, including `''`:** Markdown, which is the behaviour every caller had before the parameter existed.
+
+Comments pass the `format` column of their row (`docs/COMMENTS-REDESIGN-2026.md`, stage 2). Every other caller omits the argument.
 
 ## Security Context (`$safe`)
 
 The `$safe` boolean parameter is crucial:
-* **`true` (User Content):** The parser strictly escapes all HTML tags injected in the raw source using `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. Indented code blocks are allowed. Unsafe URL protocols are blocked. Raw `[usephp]` and `[usehtml]` BB tags are stripped or ignored.
+* **`true` (User Content):** The parser strictly escapes all HTML tags injected in the raw source using `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. Indented code blocks are allowed. Unsafe URL protocols are blocked. Raw `[usephp]` and `[usehtml]` BB tags are stripped or ignored. The parser's **own** output is not escaped: the inline BB pairs (`[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]`, `[size]`) render like `[url]` and `[img]` always did, so legacy content stays readable. What the author wrote as a tag stays text; what the parser produced stays markup.
 * **`false` (Admin Content):** The parser inherently trusts the source. It preserves manually injected HTML tags. It processes `[usehtml]` blocks literally and executes PHP code inside `[usephp]` blocks via `eval()`.
 
 ## Supported Markup

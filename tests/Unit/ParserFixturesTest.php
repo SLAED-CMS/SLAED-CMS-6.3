@@ -61,7 +61,13 @@ namespace Tests\Unit {
                 'italic md'       => ['*italic*',   true, '', '<p><em>italic</em></p>'],
                 'del mark'        => ['~~del~~ ==mark==', true, '', '<p><del>del</del> <mark>mark</mark></p>'],
                 'link md'         => ['[link](https://example.com)', true, '', '<p><a href="https://example.com">link</a></p>'],
-                'bold md + bb bold' => ['**bold** и [b]bb-bold[/b]', true, '', '<p><strong>bold</strong> и &lt;strong&gt;bb-bold&lt;/strong&gt;</p>'],
+                # Stage 2 of docs/COMMENTS-REDESIGN-2026.md renders comments at safe = true, so the inline BB pairs the parser reads for old content survive the safe escape
+                'bold md + bb bold' => ['**bold** и [b]bb-bold[/b]', true, '', '<p><strong>bold</strong> и <strong>bb-bold</strong></p>'],
+                'bb pairs safe'     => ['[i]i[/i] [u]u[/u] [s]s[/s]', true, '', '<p><em>i</em> <u>u</u> <del>s</del></p>'],
+                'bb color safe'     => ['[color=red]r[/color]', true, '', '<p><span style="color:red">r</span></p>'],
+                'bb color bad safe' => ['[color=x:y]r[/color]', true, '', '<p>r</p>'],
+                'bb size safe'      => ['[size=99]big[/size]', true, '', '<p><span style="font-size:48px">big</span></p>'],
+                'bb html stays out' => ['[b]<img src=x onerror=alert(1)>[/b]', true, '', '<p><strong>&lt;img src=x onerror=alert(1)&gt;</strong></p>'],
 
                 'ul basic' => ["- a\n- b\n- c", true, '', "<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n</ul>"],
                 'ol basic' => ["1. a\n2. b",     true, '', "<ol>\n<li>a</li>\n<li>b</li>\n</ol>"],

@@ -103,7 +103,7 @@ function comments(): void {
             $modname = trim((string)getModuleName($cmod));
             $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
             $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
-            $comment = trim(strip_tags((string)$prs->filterContent($val['body'], false, $cmod)));
+            $comment = trim(strip_tags((string)$prs->filterContent($val['body'], true, $cmod, 0, $val['format'])));
             $comment = cutstr($comment, 120);
             $comment = filterTextHighlight($comment, $chng);
             $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
@@ -276,7 +276,7 @@ function editsave(): void {
     global $afile, $com;
     $warn = !checkSiteToken();
     $id = getVar('post', 'id', 'num');
-    $text = getVar('post', 'comment', 'text', '');
+    $text = trim((string)getVar('post', 'comment', 'raw', ''));
     $status = getVar('post', 'status', 'num', 0);
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);

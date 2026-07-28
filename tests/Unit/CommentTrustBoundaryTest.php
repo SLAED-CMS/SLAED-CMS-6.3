@@ -78,7 +78,8 @@ final class CommentTrustBoundaryTest extends TestCase
         }
     }
 
-    # The stored write path decides the status from the resolved mode, and the request handler feeds it nothing but the module key and the target id
+    # The stored write path decides the status from the resolved mode, and the request handler feeds it nothing but the module key, the target id and the idempotency key
+    # Stage 2 replaced the bare acomm comparisons with the CommentMode enum, so the shape this reads changed while what it guards did not
     #[Test]
     public function addCommentTakesModeFromServer(): void
     {
@@ -86,12 +87,12 @@ final class CommentTrustBoundaryTest extends TestCase
         $this->assertStringContainsString('$this->getTargetMode($mod, $id)', $code);
         $this->assertStringNotContainsString('getVar(', $code);
         $this->assertStringNotContainsString('$cid', $code);
-        $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$info\[\'access\'\]#', $code);
-        $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$this->conf\[\'anonpost\'\]#', $code);
-        $this->assertStringContainsString('if ($stop !== \'\' || !$acomm)', $code);
+        $this->assertMatchesRegularExpression('#\$mode === CommentMode::Moderated \|\| \$info\[\'access\'\]#', $code);
+        $this->assertMatchesRegularExpression('#\$mode === CommentMode::Moderated \|\| \$this->conf\[\'anonpost\'\]#', $code);
+        $this->assertStringContainsString('if ($last !== \'\' || $mode === CommentMode::Disabled)', $code);
         $route = $this->getSource('core/user.php', 'addComment');
         $this->assertStringNotContainsString('cid', $route);
-        $this->assertStringContainsString('$com->addComment($mod, $id, $body, $name)', $route);
+        $this->assertStringContainsString('$com->addComment($mod, $id, $body, $name, $key)', $route);
     }
 
     # The submit URL carries no moderation mode any more

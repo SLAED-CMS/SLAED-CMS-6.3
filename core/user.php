@@ -26,6 +26,7 @@ function getCommentList(int $cid = 0, string $mod = ''): string {
         $cnam = $val['name'];
         $host = $val['ip'];
         $body = $val['body'];
+        $fmt = $val['format'];
         $stat = $val['status'];
         unset($auid, $anam, $arnk, $aweb, $aava, $areg, $afrm, $asig, $apts, $awrn, $agen, $avot, $atot, $agnam, $agrnk);
         if ($val['user']) {
@@ -106,7 +107,7 @@ function getCommentList(int $cid = 0, string $mod = ''): string {
                 $edit = '';
             }
         }
-        $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($body, false, $cmod, 2)]);
+        $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($body, true, $cmod, 2, $fmt)]);
         $cont .= $tpl->getHtmlFrag('comment', [
             'id' => $cmid,
             'username' => $avname,
@@ -153,7 +154,9 @@ function setComShow(int $id = 0, int $acomm = 0): string {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
         $userinfo = getUserInfo();
-        if ($acomm == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        $mode = CommentMode::tryFrom($acomm) ?? CommentMode::Disabled;
+        $note = ($mode === CommentMode::Moderated || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1));
+        if ($note) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         if (is_user()) {
             $name_field = filterText(substr($user[1], 0, 25)).$tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => '', 'input_attr' => '']);
         } else {
@@ -407,7 +410,8 @@ function addComment(): void {
     $mod  = filterVar(getVar('req', 'mod',  'text', ''));
     $name = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $body = trim(getVar('post', 'text', 'raw', ''));
-    $new = $com->addComment($mod, $id, $body, $name);
+    $key = (string)getVar('req', 'reqkey', 'var', '');
+    $new = $com->addComment($mod, $id, $body, $name, $key);
     if ($new['error'] !== '') {
         echo $tpl->getHtmlFrag('alert', ['text' => $new['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         return;
@@ -876,7 +880,7 @@ function getProfileLastView(int $uid): string {
     }
     foreach ($com->getUserList($uid, $limit) as $row) {
         $when = $row['time'];
-        $text = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($row['body'], false, $conf['name']))), 70);
+        $text = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($row['body'], true, $conf['name'], 0, $row['format']))), 70);
         $lists['comm'][] = [
             'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($when)), 'title' => format_time($when, _TIMESTRING), 'text' => format_time($when)]),
             'href' => getSeoUrl(['name' => $row['modul'], 'op' => 'view', 'id' => $row['cid']]).'#'.$row['id'],

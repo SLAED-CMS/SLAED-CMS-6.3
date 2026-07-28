@@ -1,6 +1,6 @@
 # Comments Subsystem Redesign
 
-Status date: 2026-07-28. Approved; stage 0 and stage 1 delivered. The comment
+Status date: 2026-07-28. Approved; stages 0, 1 and 2 delivered. The comment
 engine is shared by eight frontend modules, the admin panel, the user activity
 feed and every module delete handler, so each stage below has to keep all of them
 working while the internals move into one place.
@@ -20,6 +20,8 @@ knows nothing of previous ones; this is the only place decisions survive.
 | 2026-07-28 | Stage 1, batch 4 — the moderation module moves to the class | done. `admin/modules/comments.php` holds no `_comment` SQL any more, takes no `$db` in any handler, and shrank from 529 to 467 lines: the module selector reads `getModuleList()`, the list and its count read `getAdminList()`, the edit form reads `getComment()`, and the four write handlers call `setStatus()` and the new `deleteComment()` and `updateBody()`. The separately built count query is gone with `getTplPager()` — the pager renders through `getTplPagerView()` from the total the list itself counted, so result and count can no longer disagree. Parity was measured over real HTTP with a signed-in administrator, which closes the **moderator** gap batches 1-3 left open. **42 admin URLs in two rounds, 39 byte-identical** in the module content region: round one covered both tabs, all five search fields, the module filter, first, second and last page, two empty-result cases, the edit form, the edit form of a missing id, `config` and `info`; round two added the shapes the first could not reach — the pending tab crossed with every search field, the module filter crossed with two of them, the edit form of a pending row and of `id=0`, and search terms carrying `%`, `_`, a backslash, `<b>`, Cyrillic, surrounding spaces and `' OR 1=1 --`, plus a quoted and an uppercased module filter. All three that differ are the same page clamp, recorded below. The write routes produced **identical** persistent state across 16 scenarios — status both ways, a repeated transition, a missing id, single and bulk delete, a repeated delete, bulk with no type, the moderation body save and four wrong-token refusals — same row states, same bodies, same target counter (6 → 3), same points (6 → 1), same row count; 15 of the 16 answered the same redirect, the sixteenth being the `delete()` deviation below. `php -l`, full `phpunit` (323 tests, 4 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_site.log` grew only by the `Mail:` entries of the suite runs; `error_php.log` and `error_sql.log` grew by the same entries in both code versions, except the one SQL syntax error the migration removed |
 | 2026-07-28 | Stage 1, batch 5 — activity feed, profile hub and the eight target-delete handlers | done. `deleteTarget()` and `getUserCount()` added to `core/classes/comment.php`; the eight module delete handlers, the profile feed (`core/user.php:722`) and the profile hub (`modules/account/index.php:327`) hold no `_comment` statement any more, and `productops()` in `modules/shop/admin/index.php` binds its whole id list instead of pasting it into six `IN (...)` clauses. **One runtime consumer is left and is not this batch's to take**: the waiting-content chip of the admin sidebar, `core/admin.php:319`, which counts pending comments through `getAdminCountRow()` — see the deviations. Parity was measured three ways. The **feed renders byte for byte**: `tests/Support/contract_probe.php` holds a verbatim copy of the pre-move function and puts it beside the migrated one on the live rows — 10 accounts, six with comments, one without, plus a missing, a zero and a negative id, all identical once the per-render instance counter of the tabs widget is normalised, and the hub triple (count, rating, favourites) matched for all seven accounts. `deleteTarget()` was driven **inside a rolled-back transaction**: each of the eight modules removed exactly the rows its target held and no others, a bulk selection removed both its targets, a target id shared by five modules was deleted for one and left the other four untouched, an empty module, an empty list and a list of non-positive ids each removed nothing, and a crafted list and a crafted module name removed exactly the id they decode to and no row at all. The eight handlers were then exercised **over real HTTP with a signed-in administrator**: a fixture of 2 comments per module against a target id that belongs to no row, a wrong token first (fixture untouched), then the eight routes one at a time — each removed **only its own module's** two rows, the `files` route also removed its fixture target row, a repeated delete was a no-op, and every per-module total returned to the value it started from. `php -l`, full `phpunit` (334 tests, 12 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_sql.log` grew by one entry the migration does not own, and `error_php.log` grew by the same two entries in both code versions — both recorded below |
 | 2026-07-28 | Stage 1, batch 6 — `numcom()` and the resolver absorbed, `ashowcom()` deleted, the stage guard | done, **stage 1 closed**. The three globals are gone from `core/system.php`: `numcom()` is `updateTargetCount()` (`core/classes/comment.php:240`), `getCommentMode()` is `getTargetMode()` (`:126`), and both read one `MODULES` map (`:28`) that carries the target table and the points slot of the eight modules at once — the counter map and the supported-module list are now one list. The three retired branches (`account`/`members`, `gallery`, `multimedia`, slots 3, 17, 29) left with the move; the `users.points` CSV still holds its 45 positions. `ashowcom()` was deleted and its frontend half is `getCommentList()` in `core/user.php:10`, beside `setComShow()`, which is where the plan always put the rendering; the seven unreachable `defined('ADMIN_FILE')` branches went with it and `core/system.php` shrank by 255 lines. The **last runtime consumer batch 5 left is closed**: the waiting chip reads `getStatusCount(CommentStatus::Pending)` and `getAdminCountRow()` takes an optional precomputed number (`core/admin.php:274`, `:320`), and the three dead keys of the comment entry of `getProfileModules()` are gone with it. `tests/Unit/CommentIsolationTest.php` is the stage guard — 6 cases, and it was run against the stashed pre-batch tree: **3 fail there** (`ashowcom()` still defined, the module map absent, the profile map still carrying a table name) and the sidebar assertion was shown to fire on `core/admin.php:319` by hand. The other 3 pass against both trees by design — batch 5 had already removed the last literal statement and the points CSV was never touched, so those guard forward rather than backing this batch. Two deletions were also checked against the live table rather than argued: `status` is `tinyint(1)`, so the chip's old `status = '0'` and the new bound integer answer the same 3; and **no stored row carries a module outside the eight-entry map** (files 4821, voting 1084, news 1083, faq 141, pages 116, links 104, media 2, shop 2, and 0 anywhere else), so dropping the three retired counter branches cannot move a counter or a points award for any row that exists. Parity was measured over real HTTP against the pre-move tree, 80 URLs per round — per module the busiest target at first, middle and last page, `com=0`, `com=-3`, `com=99999`, `com=abc` and no page at all, its smallest target, a target with no comments, a missing id and a missing target parameter. Descending: **80/80 byte-identical**, 64 of them carrying a rendered region. Ascending: 73/80, and the 7 that differ were reproduced by **one code version against itself** across two runs — the unstable `ORDER BY time` tie-break stage 2 replaces with `time, id`, not this batch. The admin sidebar chip region is byte-identical between the two trees and reads `3` on both. What the guest probe cannot reach — the **moderator** branch of the render — was closed by **source equivalence** instead: the deleted `ashowcom()` and the new `getCommentList()` were put side by side with the rename map applied, and the only differences left are the seven `defined('ADMIN_FILE')` branches, `$afile`, `$mark` and `$val['cid']` that went with them, and the empty-list branch turning into an early return. The three htmx moderation links do not appear in that diff at all. `php -l`, full `phpunit` (340 tests, 12 skipped), `phpstan` and `php-cs-fixer check` all green, and `comment-baseline verify` answered OK on all eight modules **twice during the batch**; on the final run it reported CHANGED for `news`, `pages` and `shop`, which is the points drift batch 5 recorded and not markup — see the deviations. `error_sql.log` did not grow at all; `error_php.log` and `error_site.log` grew only by entries both trees produce — recorded below |
+
+| 2026-07-28 | Stage 2 — validation, storage and write consistency | done, **stage 2 closed**. The schema carries the five columns and the five indexes, `KEY cid` and `KEY modul_status` are gone and `KEY time` stayed; a scratch database proved that a fresh `table.sql` install and the upgrade batch produce a **byte-identical** table definition, that the upgrade is idempotent on a second run and that it repairs a table missing three of its indexes to the same definition. `reqkey` was backfilled in SQL before its unique index existed — 7353 rows, 7353 distinct 32-character keys, none empty. `tools/comment-migrate.php` classified and rewrote every body: 101 legacy, 1709 plain, 1 review, 4 multi-line, 5538 single-line, then backfilled `iphash` for all 7353. Parity was measured as **meaning rather than bytes**, as the plan asks: the pre-migration body rendered the old way and the migrated body rendered the new way were compared for all 7353 rows, **7232 identical**; of the 121 that differ, 68 are the plain format no longer applying Markdown, 9 are legacy tags becoming Markdown inside code-like text, 1 is the review row and the rest are constructs the old unsafe render swallowed and the new one shows. Both classes round-trip: the moderation save and the author edit both store back exactly what the editor was handed. `checkRules()` is one rule set for both paths and measures the longest word in characters; `CommentMode` replaced the bare `acomm` comparisons; add, edit, status and delete are transactional with checked results, conditional updates and a soft delete; `reqkey` answers a replay from the failed insert; the flood window reads `iphash`; listings sort on `time, id`. All four render sites moved to `safe = true` — the three the plan names and the profile feed label, which renders a comment body too. `tests/Unit/CommentStateTest.php` is the stage guard, 14 cases through a probe that **signs in as an administrator before the core boots**, which closes the moderator gap batches 1-3 left open for status and delete. `php -l`, full `phpunit` (398 tests, 12 skipped), `phpstan` and `php-cs-fixer check` all green; the eight module pages answer 200 and both routes refuse a wrong token without writing a row. The markup baseline was re-captured at the end, as this stage changes rendered output by design, and `verify` is green on all eight modules against it. `error_sql.log` did not grow at all; `error_php.log` grew only by the `core/user.php` guest defect batch 5 recorded; `error_site.log` grew only by the `Mail:` entries of the suite |
 
 ### Decisions made during execution
 
@@ -285,6 +287,88 @@ knows nothing of previous ones; this is the only place decisions survive.
   brings those two lines under the 180-character limit. Pure renames; the 64
   rendered regions of the parity round are byte-identical.
 
+- **`plain` means no Markdown, not no BB.** The plan defines the format by four
+  Markdown examples — `*text*`, `# title`, `` `code` `` and `[t](u)` — and says
+  nothing about BB. `filterPlain()` (`core/classes/parser.php:680`) therefore
+  runs the bracket layer and the escape and stops there: no headings, lists,
+  tables, quotes, emphasis, code fences or Markdown links, and every line ending
+  becomes a `<br>`. Killing BB as well would have made the 1709 migrated `plain`
+  rows show `[b]` as text, which is the appearance the migration promises to
+  preserve.
+- **The inline BB pairs had to survive `safe = true`, and that is a change to the
+  shared parser.** `[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]` and `[size]`
+  produced plain `<strong>`-style output, which `filterSafe()` then escaped, so
+  moving comments to `safe = true` would have rendered `&lt;strong&gt;` as
+  **visible text** in 294 single-line rows alone. They now stash their opening and
+  closing tag the way `[url]` and `[img]` always did, so the content between them
+  still goes through the rest of the pipeline. One fixture recorded the old
+  behaviour (`ParserFixturesTest`, `bold md + bb bold`) and was updated with five
+  new cases beside it. Every other safe-mode consumer gains the same reading of
+  inline BB, which is what "read-only legacy that still displays" already meant.
+- **An html editor no longer decides a comment format; it is refused and the body
+  is kept as markdown source.** `getBodyFormat()` maps `getEditorMode()` through
+  the two allowed values, and anything else falls back to `markdown`. Refusing
+  the write instead would stop commenting altogether on an installation running
+  CKEditor or TinyMCE, which is a bigger change than the one the stage is making,
+  and the trust grant is closed either way because the body is escaped at render.
+- **The legacy tag map does not escape what it does not cover.** The plan says
+  "everything else is escaped", which was written when escaping still belonged to
+  the write path; escaping at storage now would double-escape at render, exactly
+  the defect the same section warns about for legacy rows. An unknown tag is left
+  as the text it is and `safe = true` escapes it once, which is the same visible
+  result the plan asks for — measured on the 101 converted rows.
+- **The single review row is converted rather than parked.** Rule 3 has no verdict
+  in the plan, and a row without a `format` fails the migration's own invariant.
+  It is treated as `plain`, its `<br>` becomes the line ending it stood for, and
+  its id is printed by `report` and `classify` so an administrator can look at it.
+- **The idempotency key is minted on the server when the request carries none.**
+  The plan puts the key in the browser at submit time, and that belongs to the
+  transport work of stage 4 — but the unique index exists from this stage, so an
+  add that stored an empty key would fail for every comment after the first one.
+  `addComment()` accepts a `^[0-9a-f]{32}$` value from the request and generates
+  one otherwise, and the replay path is already live: a duplicate key answers the
+  comment the first request stored.
+- **The class joins a transaction that is already open instead of refusing.**
+  `Pdo::setSqlBegin()` answers `false` both when it cannot start a transaction and
+  when one is already running, so the first version of this stage broke every
+  parity probe stage 1 is built on — they drive the class inside a transaction
+  they roll back. `Database::checkSqlActive()` (`core/classes/pdo.php:254`) now
+  answers the question directly: an operation owns the transaction only when none
+  is open, and otherwise performs its writes and reports failure to whoever does.
+  Nothing in the project calls a comment write from inside another transaction, so
+  production behaviour is the plan's; what this buys is the ability to measure the
+  writes against live rows without leaving a row behind.
+- **`getTargetMode()` answers `CommentMode` rather than an int.** That is what
+  "apply `CommentMode` to every remaining bare `acomm` comparison" means for the
+  resolver itself; `setComShow()` still takes the column value its eight modules
+  read and converts it at the boundary. A backed enum encodes as its own value, so
+  the probe reports are unchanged.
+- **The moderation save writes `edited` and reads the raw field.** The body is
+  source from this stage on, and `getVar(..., 'text')` runs `filterHtml()`, which
+  would escape the moderator's text a second time on every save. `editsave()`
+  reads `raw` and `updateBody()` stores it verbatim, which is what makes the
+  round-trip check pass for both classes.
+- **The comment write path lost `stripslashes()` and the `$`/`\` escaping with
+  `filterHtml()`.** `filterCommentBody()` keeps only what changes the text rather
+  than its markup: the trusted-html tokens a visitor may not open, the clickable
+  link rewrite and the censor list. A backslash an author types is now stored and
+  shown as a backslash.
+- **`setStatus()` binds the wanted state twice under two names.** The conditional
+  update needs it in `SET` and in `WHERE`, and a native prepared statement rejects
+  one named placeholder used in two positions — the same rule the author search of
+  the moderation list already documents. It was found by the probe, which reported
+  every transition as refused until the second name was added.
+- **`deleteTarget()` stays a physical delete and opens no transaction.** A deleted
+  target has no row left to reference and no counter to move, so there is nothing
+  to keep consistent with; it is also the one write the probes drive in bulk, and
+  a transaction of its own would have made the batch-5 measurements unrepeatable.
+- **The migration keeps a ledger and can be rehearsed against a copy.** `classify`
+  writes the verdict of every row to `storage/migrate/comment-format.json` as well
+  as to the column, `convert` marks each row it finishes there and stores the body
+  it replaced, and `--db=` points the whole run at a restored copy. That is what
+  makes the destructive half re-runnable, reviewable and undoable in place, and it
+  is how the conversion of this installation was proved before it was applied.
+
 ### Deviations from the plan
 
 - The plan's `_comment` facts were re-measured on 2026-07-28 and updated in
@@ -503,6 +587,64 @@ knows nothing of previous ones; this is the only place decisions survive.
   redone with the cache deleted. Both files were restored afterwards and
   `'sort' => '0'` was verified in each.
 
+- **Stage 2 changed what 121 of 7353 rendered comments say, and every one of them
+  was looked at by class.** 68 are `plain` rows where the old render applied
+  Markdown to text that was never Markdown — a line beginning `1.` became an
+  ordered list, `==x==` became a highlight — and the migrated row now shows what
+  the author typed. 9 are legacy rows whose `<b>`/`<tt>` tags became `**` and
+  `` ` `` inside pasted code, where the emphasis lands on a different word than
+  the tag did; they are exactly the rows `report` lists so an administrator can
+  review them. 1 is the review row. The rest are text the old render swallowed
+  because it looked like a tag — `<--- if (...)` is the clearest case — and which
+  now appears. No row lost text.
+- **Two rows show an entity the migration does not reverse**, ids 1133 and 1872:
+  they carry `&#8206;`, `&#229;` and their kind, which no branch of the writer
+  could have produced and which the plan therefore does not decode. Before the
+  stage the browser decoded them; now they read as their own text. `report` counts
+  and lists them, because an installation whose content came from another engine
+  can carry many more.
+- **The moderator half was measured through the class, not over HTTP.** Batches 4
+  and 5 signed an administrator in over real HTTP; no credentials for this stand
+  were available to this session, so the probe signs in by filling the admin
+  session **before the core boots** — `isAdmin()` memoizes its verdict on the
+  first call the boot itself makes, so signing in afterwards cannot work. What
+  that leaves unmeasured is the admin **routes** of `admin.php?name=comments`,
+  which this stage changes in one place only: `editsave()` reads the raw field.
+  The round-trip it exists for is measured directly on the class instead.
+- **`KEY cid` and `KEY modul_status` left batch F rather than being added and
+  dropped in one run.** The 6.2 → 6.3 batch created both a few hundred lines
+  before batch Y would drop them again. Batch Y still calls `delidx` for both, so
+  a 6.2 database that carries them from its own past loses them exactly once.
+- **`addidx` cannot repair an index whose columns changed, only one that is
+  missing.** Dropping the `iphash` column leaves `iphash_time` behind as
+  `(time, id)`, and the helper skips it because the name exists. That state cannot
+  arise from a partially applied upgrade — it needs a column to be dropped by
+  hand — and it was found while trying to build a partial state, not in one. The
+  realistic case, three missing indexes, repairs to the identical definition.
+- **The row count is 7353 and the class counts differ from the plan's table.**
+  Rule 4 holds 4 rows here where the plan measured 10 and rule 5 holds 5538 where
+  it measured 5535; the plan's numbers were taken on 7355 rows before two batches
+  drove HTTP write scenarios against live rows. The table above carries the
+  measured values and the methodology is unchanged.
+- **The points drift of batches 5 and 6 is absorbed rather than fixed.** `verify`
+  reported CHANGED for `news`, `pages` and `shop` at the start of this batch — the
+  same one number at equal byte length — and the re-capture this stage owns took
+  the current value with it. It then recurred during the self-review, because
+  every probe run that signs an administrator in renders the author card and
+  `updatePoints(1)` awards a point for it, so the baseline was captured once more
+  after the last measurement. The property is unchanged and will keep costing a
+  re-capture: as long as `users.point` is on, signed-in traffic moves a number the
+  markup baseline compares.
+- **The page cache still bumps by route.** `index.php:130` invalidates after the
+  five ajax writes whether they succeeded or were refused, and `Comment` does not
+  own the decision. Stage 4 owns that half of the **Page cache** contract; nothing
+  in this stage changed it.
+- **`deleteUser()` is still not delivered.** It was stage 1's one missing item and
+  stage 2 does not list it; the commented-out statement at
+  `modules/account/admin/index.php:921` is still the last `_comment` text outside
+  the class, and the behaviour question the **Verification / Write** list asks is
+  still unanswered.
+
 ### Open blockers
 
 - ~~Stage 1 cannot be called complete until the frontend page-cache helper is
@@ -550,10 +692,10 @@ knows nothing of previous ones; this is the only place decisions survive.
   `docs/MAIL-2026.md` and the workflow in `docs/PERFORMANCE.md`.
 - `EXPLAIN` on the live list query: `type=ref key=cid rows=20`,
   `Extra=Using where; Using filesort` — no composite index backs the sort.
-- The flood check runs `WHERE ip = ?` (`getLastTime()`,
-  `core/classes/comment.php:315` since batch 3) with **no index on
-  `ip`**; `_comment` carries only `cid`, `uid`, `modul_status` and `time`
-  (`setup/sql/table.sql:141-144`).
+- ~~The flood check runs `WHERE ip = ?` with **no index on `ip`**~~ — **closed by
+  stage 2**: `getLastTime()` matches `iphash` and `KEY iphash_time`
+  (`iphash`, `time`, `id`) backs it. The stage also dropped `KEY cid` and
+  `KEY modul_status` for the composites that supersede them and kept `KEY time`.
 - Table `_comment` (re-checked 2026-07-28, after batch 4): **7353 rows**. `body`
   is `TEXT`, the IP is stored in clear text. Distribution: files 4821,
   voting 1084, news 1083, faq 141, pages 116, links 104, media 2, shop 2.
@@ -565,23 +707,26 @@ knows nothing of previous ones; this is the only place decisions survive.
   actually runs on rather than against either number here.
 - Confirmed InnoDB on this installation: `_comment`, `_users`, `_news`, `_files`,
   `_voting`, `_newsletter`.
-- Confirmed index list on `_comment`: `PRIMARY(id)`, `cid`, `uid`,
+- Index list on `_comment` after stage 2: `PRIMARY(id)`, `UNIQUE reqkey`, `uid`,
+  `time`, `modul_cid_status_deleted`, `modul_cid_deleted`, `status_deleted_time`,
+  `iphash_time`. Before it: `PRIMARY(id)`, `cid`, `uid`,
   `modul_status(modul, status)`, `time` — and nothing on `ip`.
-- Validation is duplicated in `addComment()` and `updateComment()`. The word
-  length defect fixed in the first copy still lives in the second — both copies
-  moved into the class in batch 3 and the defect with them
-  (`checkEditRules()`, `core/classes/comment.php:299`): the loop keeps only the
-  last word it saw, so only that one is measured, and it measures bytes with
-  `strlen()` rather than characters.
+- ~~Validation is duplicated in `addComment()` and `updateComment()`, and the word
+  length defect fixed in the first copy still lives in the second~~ — **closed by
+  stage 2**: `checkRules()` is one ordered rule set for both paths, the add-only
+  rules are gated on the path, and the length rule measures the **longest** word
+  in **characters**. The add path shows the last rule that fired and the edit path
+  the whole list, which is what each of them did before.
 - Replying inserts `[b]name[/b],` into the editor: there is no thread structure.
 - `acomm` is a three-state mode per target row: `0` = disabled (`_DEACTIVATE`),
   `1` = moderated (`_APOSTMOD`), `2` = open (`_APOSTNOMOD`). The final status of
   a submission also depends on the global anonymous-posting mode, moderator
   permissions and user access restrictions.
-- The storage format of `body` is decided at write time by `getEditorMode()`
-  (`core/system.php:3849`, called from `filterHtml()`,
-  `core/security.php:976-983`). It is a **site-wide** setting and `_comment`
-  carries no per-row record of which format a row was written in.
+- ~~The storage format of `body` is decided at write time by `getEditorMode()`
+  and `_comment` carries no per-row record of it~~ — **closed by stage 2**: every
+  row carries `format`, the write path resolves it through `getBodyFormat()`
+  (`plain` or `markdown`, never `html`), and all four render sites pass it to the
+  parser. `filterHtml()` itself is untouched and keeps its other callers.
 - Direct `_comment` consumers outside the render path. **Two entries in this list
   were found by reading, not by grepping, and both assemble the table name from a
   variable** — `PREFIX_DB.'_'.$table` with `'comment'` arriving as data. A sweep
@@ -1404,6 +1549,14 @@ last. Reversing any of it means deleting something still in use.
 
 ### Stage 2 — validation, storage and write consistency
 
+**Delivered 2026-07-28, one release.** Every item of the list below shipped. The
+storage migration ran on this installation through `tools/comment-migrate.php`,
+the markup baseline was re-captured afterwards because this stage changes
+rendered output on purpose, and `tests/Unit/CommentStateTest.php` guards the
+behaviour. What the stage did **not** do is recorded in the **Deviations**: the
+admin routes were measured through the class rather than over HTTP, and
+`deleteUser()` is still outstanding from stage 1.
+
 - Merge add and edit validation into `checkRules()`.
 - Fix the maximum word length check: measure the longest word, not the last one,
   and measure characters rather than bytes (`checkEditRules()`,
@@ -1431,27 +1584,31 @@ last. Reversing any of it means deleting something still in use.
 
 Rendering at `safe = true` requires the stored body to be source rather than
 pre-escaped HTML, so all existing rows are converted once. There is no `format`
-column to consult, but the writer left signatures, and they were measured across
-all 7355 rows on 2026-07-28:
+column to consult, but the writer left signatures, and they were re-measured
+across all 7353 rows on 2026-07-28, when the migration ran:
 
 **The signatures overlap, so classification is ordered, not parallel.** Measured
-on this installation: 1766 rows carry a machine-written `<br>`, 100 carry an
-unescaped tag, and **56 carry both**. Counting each signature independently — as
+on this installation: 1769 rows carry a machine-written `<br>`, 100 carry an
+unescaped tag, and 56 carry both. Counting each signature independently — as
 an earlier revision of this table did — produces groups that sum past the row
 count and a row that would receive two verdicts. Every row gets exactly one
 `format`, decided by the first rule that matches:
 
 | # | Rule | Verdict | Rows here |
 |---|---|---|---|
-| 1 | contains an unescaped tag other than `<br>` | `legacy` | 100 |
+| 1 | contains an unescaped tag other than `<br>`, **or carries `&#034;`** | `legacy` | 101 |
 | 2 | contains `<br>`, `<br/>` or `<br />` immediately followed by `\n` or `\r\n` | `plain` | 1709 |
-| 3 | contains any `<br>` form not followed by a line break | manual review | 1 |
-| 4 | contains a line break | `markdown` | 10 |
-| 5 | anything else — a single line | `markdown` | 5535 |
+| 3 | contains any `<br>` form not followed by a line break | `plain`, listed for review | 1 |
+| 4 | contains a line break | `markdown` | 4 |
+| 5 | anything else — a single line | `markdown` | 5538 |
 
 Rule 1 comes first because a row carrying real tags cannot be treated as plain
 text no matter what else it contains; the 56 overlapping rows land there. The
-counts above are what an ordered pass produces, and they sum to 7355 exactly.
+counts above are what the ordered pass of `tools/comment-migrate.php` produced,
+and they sum to 7353 exactly. `&#034;` was added to rule 1 during execution: only
+the `html` branch of the writer could produce it, so a body carrying it is a
+legacy row even without a tag — it moved exactly one row here and it is the
+difference between that row reading `"quoted"` and reading `&#034;quoted&#034;`.
 
 Rule 5 assigns `markdown` to single-line rows rather than leaving them unset.
 **A format is required even when the body needs no conversion**, because `plain`
