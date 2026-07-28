@@ -174,6 +174,95 @@ function getProbeCommentRead(): array {
     return $out;
 }
 
+# Report what the write path of the Comment class stores, counts and awards for each of the eight modules, inside a transaction that is always rolled back
+# The registered run needs an account whose stored hash is_user() accepts, because the moderation state, the counter and the points slot of a published add all depend on it
+function getProbeCommentWrite(bool $guest): array {
+    global $db, $com, $conf, $user;
+    $map = ['faq' => '_faq', 'files' => '_files', 'links' => '_links', 'media' => '_media', 'news' => '_news', 'pages' => '_pages', 'shop' => '_products', 'voting' => '_voting'];
+    $slot = ['faq' => 7, 'files' => 10, 'links' => 22, 'media' => 26, 'news' => 32, 'pages' => 36, 'shop' => 40, 'voting' => 43];
+    $pts = explode(',', (string)$conf['users']['points']);
+    $out = ['guest' => $guest, 'user' => true, 'rows' => [], 'refuse' => [], 'clean' => false];
+    $uid = 0;
+    if (!$guest) {
+        $sql = 'SELECT id, name, password FROM '.PREFIX_DB.'_users WHERE access = 0 AND password != \'\' AND name REGEXP \'^[A-Za-z0-9_.-]+$\' ORDER BY id ASC LIMIT 1';
+        $one = $db->getSqlRow($db->getSqlQuery($sql));
+        if (!$one) return ['guest' => $guest, 'user' => false, 'rows' => [], 'refuse' => [], 'clean' => true];
+        $uid = intval($one['id']);
+        $user = [(string)$one['id'], (string)$one['name'], (string)$one['password']];
+    }
+    $out['uid'] = [$uid, is_user() ? $uid : 0];
+    $ip = getIp();
+    $stamp = $db->getSqlRow($db->getSqlQuery('SELECT NOW() AS now'));
+    $out['skew'] = strtotime((string)$stamp['now']) - time();
+    $was = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment'));
+    $db->setSqlBegin();
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $ip]);
+    $open = 0;
+    foreach ($map as $mod => $tab) {
+        $tid = 0;
+        foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.$tab.' ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
+            if (getCommentMode($mod, intval($one['id'])) === 2) {
+                $tid = intval($one['id']);
+                break;
+            }
+        }
+        if (!$tid) {
+            $out['rows'][$mod] = ['target' => 0];
+            continue;
+        }
+        if ($mod === 'news') $open = $tid;
+        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
+        $pnt = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
+        $new = $com->addComment($mod, $tid, 'probe body for '.$mod, 'Probe');
+        $row = $new['id'] ? $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $new['id']])) : [];
+        $cnn = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
+        $pnn = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
+        $gain = ($uid && $conf['users']['point'] == 1) ? intval($pts[$slot[$mod] - 1] ?? 0) : 0;
+        $out['rows'][$mod] = [
+            'target' => $tid,
+            'error' => $new['error'],
+            'stored' => $row ? [intval($row['cid']), (string)$row['modul'], intval($row['uid']), (string)$row['ip'], intval($row['status'])] : [],
+            'want' => [$tid, $mod, $uid, $ip, $guest ? 0 : 1],
+            'delta' => [intval($cnn['comments']) - intval($cnt['comments']), intval($pnn['points'] ?? 0) - intval($pnt['points'] ?? 0)],
+            'wantdelta' => [$guest ? 0 : 1, $guest ? 0 : $gain],
+        ];
+        if ($new['id']) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $new['id']]);
+    }
+    $out['edit'] = [];
+    if ($open) {
+        $new = $com->addComment('news', $open, 'probe body for the edit window', 'Probe');
+        $eid = intval($new['id']);
+        $out['edit']['skewed'] = $eid ? $com->updateComment($eid, 'probe body edited')['allow'] : null;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :time WHERE id = :id', ['time' => date('Y-m-d H:i:s'), 'id' => $eid]);
+        $edit = $com->updateComment($eid, 'probe body edited');
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $eid]));
+        $out['edit']['fresh'] = [$edit['allow'], $edit['saved'], $edit['mod'], $edit['body'], (string)($row['body'] ?? '')];
+        $past = date('Y-m-d H:i:s', time() - intval($conf['comments']['edit']) - 60);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :time WHERE id = :id', ['time' => $past, 'id' => $eid]);
+        $out['edit']['stale'] = $com->updateComment($eid, 'probe body edited again')['allow'];
+        $out['edit']['status'] = $com->setStatus($eid, true);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $eid]);
+    }
+    if ($open) {
+        $off = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE acomm = 0 ORDER BY id DESC LIMIT 1'));
+        $out['refuse'] = [
+            'empty' => [$com->addComment('news', $open, '', 'Probe')['error'], _CERROR1],
+            'long' => [$com->addComment('news', $open, str_repeat('a', intval($conf['comments']['letter']) + 1), 'Probe')['error'], _CERROR2],
+            'unknown' => [$com->addComment('gallery', $open, 'probe body', 'Probe')['error'], _ERROR],
+            'missing' => [$com->addComment('news', 999999999, 'probe body', 'Probe')['error'], _ERROR],
+            'off' => [$off ? $com->addComment('news', intval($off['id']), 'probe body', 'Probe')['error'] : _ERROR, _ERROR],
+            'noname' => [$guest ? $com->addComment('news', $open, 'probe body', '')['error'] : _CERROR3, _CERROR3],
+        ];
+        $com->addComment('news', $open, 'probe body for the flood window', 'Probe');
+        $out['refuse']['flood'] = [$com->addComment('news', $open, 'probe body again', 'Probe')['error'], sprintf(_CERROR5, $conf['comments']['send'])];
+    }
+    $db->setSqlRollback();
+    $now = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment'));
+    $out['clean'] = (intval($was['num']) === intval($now['num']));
+    return $out;
+}
+
 $mode = $argv[1] ?? 'core';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
@@ -284,6 +373,10 @@ if ($mode === 'core') {
     $out = getProbeComment();
 } elseif ($mode === 'commentread') {
     $out = getProbeCommentRead();
+} elseif ($mode === 'commentwrite') {
+    $out = getProbeCommentWrite(false);
+} elseif ($mode === 'commentguest') {
+    $out = getProbeCommentWrite(true);
 } elseif ($mode === 'geoip') {
     $peak = memory_get_peak_usage(true);
     $out['country'] = Geoip::getCountry((string)($conf['geoip_test'] ?? '217.50.80.228'));

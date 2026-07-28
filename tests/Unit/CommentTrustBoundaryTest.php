@@ -9,8 +9,9 @@ use PHPUnit\Framework\TestCase;
  * Stage 0 of docs/COMMENTS-REDESIGN-2026.md: the moderation mode and the target module of a comment
  * must come from the server, never from the request. The behaviour half runs through
  * tests/Support/contract_probe.php, which boots the real core in an isolated CLI process and calls
- * getCommentMode() against live rows; the contract half reads the three request handlers and asserts
- * that they no longer take cid or mod from the client. filter_input() cannot be driven from CLI, so
+ * getCommentMode() against live rows; the contract half reads the write path and asserts that it no longer
+ * takes cid or mod from the client. Stage 1, batch 3 moved that path into the Comment class, so the contract
+ * half reads the class and its three request handlers together. filter_input() cannot be driven from CLI, so
  * a full addComment() round trip belongs to the browser checks in docs/TESTS.md.
  */
 final class CommentTrustBoundaryTest extends TestCase
@@ -29,16 +30,16 @@ final class CommentTrustBoundaryTest extends TestCase
         return self::$probe = $data;
     }
 
-    # Return the source of one function, from its signature to the closing brace in column one
-    private function getSource(string $file, string $name): string
+    # Return the source of one function or method, from its signature to its closing brace at the given indentation
+    private function getSource(string $file, string $name, string $pad = ''): string
     {
         $key = $file.'::'.$name;
         if (isset(self::$src[$key])) return self::$src[$key];
-        $code = (string)file_get_contents(dirname(__DIR__, 2).'/core/'.$file);
+        $code = (string)file_get_contents(dirname(__DIR__, 2).'/'.$file);
         $beg = strpos($code, 'function '.$name.'(');
-        $this->assertNotFalse($beg, $name.'() not found in core/'.$file);
-        $end = strpos($code, "\n}\n", $beg);
-        $this->assertNotFalse($end, $name.'() has no closing brace in core/'.$file);
+        $this->assertNotFalse($beg, $name.'() not found in '.$file);
+        $end = strpos($code, "\n".$pad."}\n", $beg);
+        $this->assertNotFalse($end, $name.'() has no closing brace in '.$file);
         return self::$src[$key] = substr($code, $beg, $end - $beg);
     }
 
@@ -76,24 +77,27 @@ final class CommentTrustBoundaryTest extends TestCase
         }
     }
 
-    # addComment() decides the status from the resolved mode and no longer reads cid from the request
+    # The stored write path decides the status from the resolved mode, and the request handler feeds it nothing but the module key and the target id
     #[Test]
     public function addCommentTakesModeFromServer(): void
     {
-        $code = $this->getSource('user.php', 'addComment');
+        $code = $this->getSource('core/classes/comment.php', 'addComment', '    ');
         $this->assertStringContainsString('getCommentMode($mod, $id)', $code);
-        $this->assertStringNotContainsString('getVar(\'req\', \'cid\'', $code);
+        $this->assertStringNotContainsString('getVar(', $code);
         $this->assertStringNotContainsString('$cid', $code);
-        $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$userinfo\[\'access\'\]#', $code);
-        $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$conf\[\'comments\'\]\[\'anonpost\'\]#', $code);
-        $this->assertStringContainsString('if (!$stop && $acomm) {', $code);
+        $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$info\[\'access\'\]#', $code);
+        $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$this->conf\[\'anonpost\'\]#', $code);
+        $this->assertStringContainsString('if ($stop !== \'\' || !$acomm)', $code);
+        $route = $this->getSource('core/user.php', 'addComment');
+        $this->assertStringNotContainsString('cid', $route);
+        $this->assertStringContainsString('$com->addComment($mod, $id, $body, $name)', $route);
     }
 
     # The submit URL carries no moderation mode any more
     #[Test]
     public function commentFormSendsNoModeField(): void
     {
-        $code = $this->getSource('user.php', 'setComShow');
+        $code = $this->getSource('core/user.php', 'setComShow');
         $this->assertStringContainsString('op=addComment&id=', $code);
         $this->assertStringNotContainsString('&cid=', $code);
     }
@@ -102,14 +106,20 @@ final class CommentTrustBoundaryTest extends TestCase
     #[Test]
     public function updatePathsTakeModuleFromStoredRow(): void
     {
-        foreach (['updateComment', 'updateCommentStatus'] as $name) {
-            $code = $this->getSource('system.php', $name);
+        foreach (['updateComment', 'setStatus'] as $name) {
+            $code = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('modul FROM \'.PREFIX_DB.\'_comment WHERE id = :id', $code);
-            $this->assertStringContainsString('$mod = $row[\'modul\'] ?? \'\';', $code);
-            $this->assertStringNotContainsString('getVar(\'post\', \'mod\'', $code);
-            $this->assertStringNotContainsString('getVar(\'get\', \'mod\'', $code);
+            $this->assertStringContainsString('$mod = (string)($row[\'modul\'] ?? \'\');', $code);
+            $this->assertStringContainsString('is_moder($mod)', $code);
+            $this->assertStringNotContainsString('getVar(', $code);
         }
-        $code = $this->getSource('system.php', 'updateCommentStatus');
+        $code = $this->getSource('core/classes/comment.php', 'setStatus', '    ');
         $this->assertStringContainsString('numcom(intval($row[\'cid\']), $mod,', $code);
+        foreach (['updateComment', 'updateCommentStatus'] as $name) {
+            $route = $this->getSource('core/system.php', $name);
+            $this->assertStringNotContainsString('getVar(\'post\', \'mod\'', $route);
+            $this->assertStringNotContainsString('getVar(\'get\', \'mod\'', $route);
+            $this->assertStringNotContainsString('PREFIX_DB', $route);
+        }
     }
 }

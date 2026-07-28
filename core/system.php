@@ -5670,64 +5670,35 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 
 # Save edit comments
 function updateComment(): string {
- global $db, $conf, $user, $tpl, $prs;
+ global $conf, $tpl, $prs, $com;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
     $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
-    $row = $db->getSqlRow($db->getSqlQuery('SELECT uid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-    $uid = $row ? intval($row['uid']) : 0;
-    $date = $row['time'] ?? '';
-    $comment = $row['body'] ?? '';
-    $mod = $row['modul'] ?? '';
-    $stime = strtotime($date) + $conf['comments']['edit'];
-    if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
-        if ($id && $mod && !$text) {
-            $content = $typ
-                ? getTplAjaxTextarea([
-                    'obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id,
-                    'cid' => '0', 'typ' => '0', 'mod' => $mod, 'text' => $comment, 'rows' => 10,
-                ])
-                : $prs->filterContent($comment, false, $mod, 2);
-            echo $content;
-        } elseif ($id && $mod && $text) {
-            $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
-            $e = explode(' ', $checks);
-            for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
-            $stop = [];
-            if ($text == '') $stop[] = _CERROR1;
-            if ($o > $conf['comments']['letter']) $stop[] = _CERROR2;
-            if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($text, 'http://') !== false) $stop[] = _CERROR9;
-            $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
-            if (!$stop) {
-                $comm = filterHtml($text, $urlclick);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $comm, 'id' => $id]);
-                echo $prs->filterContent($comm, false, $mod, 2);
-            } else {
-                return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-            }
-        }
-    } else {
+    $edit = $com->updateComment($id, $text);
+    if (!$edit['allow']) {
         $info = sprintf(_PEDEND, intval($conf['comments']['edit'] / 60));
         return $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
+    if ($edit['error']) return $tpl->getHtmlFrag('alert', ['text' => $edit['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+    if (!$id || $edit['mod'] === '') return '';
+    if (!$text && $typ) {
+        echo getTplAjaxTextarea([
+            'obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id,
+            'cid' => '0', 'typ' => '0', 'mod' => $edit['mod'], 'text' => $edit['body'], 'rows' => 10,
+        ]);
+        return '';
+    }
+    echo $prs->filterContent($edit['body'], false, $edit['mod'], 2);
     return '';
 }
 
 # Close comments
 function updateCommentStatus(): void {
- global $db, $tpl;
+ global $tpl, $com;
     $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
     $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
-    $row = $db->getSqlRow($db->getSqlQuery('SELECT cid, uid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-    $mod = $row['modul'] ?? '';
-    if ($id && $mod && is_moder($mod)) {
-        $status = ($typ) ? 1 : 0;
-        $info = ($typ) ? _PCOPEN : _PCLOSED;
-        $numcom = ($typ) ? 0 : 1;
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $status, 'id' => $id]);
-        numcom(intval($row['cid']), $mod, $numcom, intval($row['uid']));
-        echo $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-    }
+    if (!$com->setStatus($id, (bool)$typ)) return;
+    echo $tpl->getHtmlFrag('alert', ['text' => $typ ? _PCOPEN : _PCLOSED, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
 }
 
 # Resolve a comment target through the fixed module map and return its moderation mode; 0 when the module is unknown, the row is missing or invisible, or comments are disabled

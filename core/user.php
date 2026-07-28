@@ -263,53 +263,21 @@ function getUserBlock(): string {
 }
 
 # Validate and save a new comment; echoes the updated comment list on success
-function addComment() {
-    global $db, $user, $conf, $tpl;
-    $id       = getVar('req', 'id',   'num',  0);
-    $mod      = filterVar(getVar('req', 'mod',  'text', ''));
-    $acomm    = getCommentMode($mod, $id);
-    $postname = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
-    $ip       = getip();
-    $comment  = trim(getVar('post', 'text', 'raw', ''));
-    [$date] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
-    $stime = ($date ? strtotime($date) : 0) + $conf['comments']['send'];
-    $checks = str_replace(["\n", "\r", "\t"], ' ', $comment);
-    $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', $checks));
-    $long = $words ? max($words) : 0;
-    $stop = '';
-    if ($comment === '') $stop = _CERROR1;
-    if ($long > $conf['comments']['letter']) $stop = _CERROR2;
-    if ((!is_user() && $postname === '') || (!is_user() && $conf['comments']['anonpost'] == 0)) $stop = _CERROR3;
-    if ($stime > time()) $stop = sprintf(_CERROR5, $conf['comments']['send']);
-    if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($comment, 'http://') !== false) $stop = _CERROR9;
-    $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
-    if (checkCaptcha('comment')) $stop = _SECCODEINCOR;
-    if (!$stop && $acomm) {
-        $comment = filterHtml($comment, $urlclick);
-        if (is_user()) {
-            $postid = intval($user[0]);
-            $userinfo = getUserInfo();
-            $postname = $userinfo['name'];
-            $status = (!is_moder($mod) && ($acomm == 1 || $userinfo['access'])) ? 0 : 1;
-        } else {
-            $postid = '0';
-            $postname = $postname;
-            $status = (!is_moder($mod) && ($acomm == 1 || $conf['comments']['anonpost'] == 1)) ? 0 : 1;
-        }
-        $db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :ip, :comment, :status)',
-            ['cid' => $id, 'modul' => $mod, 'uid' => $postid, 'name' => $postname, 'ip' => $ip, 'comment' => $comment, 'status' => $status]
-        );
-        if ($status) numcom($id, $mod, 0, $postid);
-        [$lcom_id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
-        $finishlink = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$lcom_id;
-        $clink = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => '', 'label_html' => $finishlink]);
-        addAdminMail($conf['comments']['addmail'], $mod, $postname, getModuleName($mod), 1, $clink);
-        echo ashowcom($id, $mod);
-    } else {
-        $stop = ($stop) ? $stop : _ERROR;
-        echo $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+function addComment(): void {
+    global $conf, $tpl, $com;
+    $id   = getVar('req', 'id',   'num',  0);
+    $mod  = filterVar(getVar('req', 'mod',  'text', ''));
+    $name = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
+    $body = trim(getVar('post', 'text', 'raw', ''));
+    $new = $com->addComment($mod, $id, $body, $name);
+    if ($new['error'] !== '') {
+        echo $tpl->getHtmlFrag('alert', ['text' => $new['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        return;
     }
+    $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$new['id'];
+    $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
+    addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
+    echo ashowcom($id, $mod);
 }
 
 # Validate and update an existing forum post in-place

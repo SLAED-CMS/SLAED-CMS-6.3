@@ -20,7 +20,7 @@ enum CommentMode: int {
 }
 
 # Comment subsystem: every read and write of the comment table with its permissions, pagination and target bookkeeping in one place
-# This batch adds the reads only; the write path, the target resolver and the counter update follow in the batches after it
+# The reads and the frontend write path live here; the moderation module, the activity feed and the target deletions follow in the batches after it
 class Comment {
 
     private Database $db;
@@ -106,6 +106,63 @@ class Comment {
         return $out;
     }
 
+    # Store one new comment against a target the resolver accepts and answer its id, the name it was stored under and the refusal that stopped it
+    # Mode, author, address and moderation state are resolved from the server context; the request supplies only the module key, the target id, the body and the guest name
+    public function addComment(string $mod, int $id, string $body, string $name): array {
+        global $user;
+        $acomm = getCommentMode($mod, $id);
+        $ip = getIp();
+        $stop = $this->checkAddRules($mod, $body, $name, $ip);
+        if ($stop !== '' || !$acomm) return ['id' => 0, 'name' => $name, 'error' => $stop ?: _ERROR];
+        $body = filterHtml($body, $this->getLinkFlag($mod));
+        if (is_user()) {
+            $uid = intval($user[0]);
+            $info = getUserInfo();
+            $name = $info['name'];
+            $stat = (!is_moder($mod) && ($acomm == 1 || $info['access'])) ? CommentStatus::Pending : CommentStatus::Published;
+        } else {
+            $uid = 0;
+            $stat = (!is_moder($mod) && ($acomm == 1 || $this->conf['anonpost'] == 1)) ? CommentStatus::Pending : CommentStatus::Published;
+        }
+        $this->db->getSqlQuery(
+            'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :ip, :comment, :status)',
+            ['cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip, 'comment' => $body, 'status' => $stat->value]
+        );
+        if ($stat === CommentStatus::Published) numcom($id, $mod, false, $uid);
+        return ['id' => $this->getLastId($id, $uid), 'name' => $name, 'error' => ''];
+    }
+
+    # Load one comment for editing and, when a body is given, store the edited text once the edit rules accept it
+    # The permission, the module and the edit window all come from the stored row, so a request can neither name the module nor extend its own window
+    public function updateComment(int $id, string $body): array {
+        global $user;
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT uid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $mod = (string)($row['modul'] ?? '');
+        $uid = $row ? intval($row['uid']) : 0;
+        $out = ['allow' => false, 'mod' => $mod, 'body' => (string)($row['body'] ?? ''), 'saved' => false, 'error' => []];
+        $wait = strtotime((string)($row['time'] ?? '')) + intval($this->conf['edit']);
+        if (!is_moder($mod) && !(is_user() && $uid == intval($user[0]) && time() < $wait)) return $out;
+        $out['allow'] = true;
+        if ($id < 1 || $mod === '' || !$body) return $out;
+        $out['error'] = $this->checkEditRules($mod, $body);
+        if ($out['error']) return $out;
+        $out['body'] = filterHtml($body, $this->getLinkFlag($mod));
+        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $out['body'], 'id' => $id]);
+        $out['saved'] = true;
+        return $out;
+    }
+
+    # Publish or hide one comment as a moderator of the module the stored row names, and move the counter and the points of its target with it
+    public function setStatus(int $id, bool $open): bool {
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $mod = (string)($row['modul'] ?? '');
+        if ($id < 1 || $mod === '' || !is_moder($mod)) return false;
+        $stat = $open ? CommentStatus::Published : CommentStatus::Pending;
+        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $stat->value, 'id' => $id]);
+        numcom(intval($row['cid']), $mod, !$open, intval($row['uid']));
+        return true;
+    }
+
     # Build the visibility scope of one target once, so a count and the page it belongs to can never disagree about what is visible
     # A moderator of the module sees the pending comments as well, which is why the scope depends on the viewer and not on the caller
     private function getScope(string $mod, int $id): array {
@@ -138,6 +195,52 @@ class Comment {
             default => ' AND s.body LIKE :find',
         };
         return [$where, $pars];
+    }
+
+    # Apply the write rules of a new comment and answer the refusal the submit path answers, in the order it applies them, so the last rule that fires is the one the visitor reads
+    private function checkAddRules(string $mod, string $body, string $name, string $ip): string {
+        $last = $this->getLastTime($ip);
+        $wait = ($last !== '' ? strtotime($last) : 0) + intval($this->conf['send']);
+        $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)));
+        $long = $words ? max($words) : 0;
+        $stop = '';
+        if ($body === '') $stop = _CERROR1;
+        if ($long > $this->conf['letter']) $stop = _CERROR2;
+        if (!is_user() && ($name === '' || $this->conf['anonpost'] == 0)) $stop = _CERROR3;
+        if ($wait > time()) $stop = sprintf(_CERROR5, $this->conf['send']);
+        if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop = _CERROR9;
+        if (checkCaptcha('comment')) $stop = _SECCODEINCOR;
+        return $stop;
+    }
+
+    # Apply the edit rules to a changed body and answer every refusal the edit path collects, because that path shows all of them at once
+    # The length rule measures the last word in bytes, which is what the edit path does today; measuring the longest word in characters is a stage 2 change of the plan
+    private function checkEditRules(string $mod, string $body): array {
+        $size = 0;
+        foreach (explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)) as $word) $size = strlen($word);
+        $stop = [];
+        if ($body === '') $stop[] = _CERROR1;
+        if ($size > $this->conf['letter']) $stop[] = _CERROR2;
+        if (!is_moder($mod) && (($this->conf['link'] == 1 && !is_user()) || $this->conf['link'] == 2) && stripos($body, 'http://') !== false) $stop[] = _CERROR9;
+        return $stop;
+    }
+
+    # Build the link flag the html filter takes: 1 keeps the bare links of this author as text, 0 lets the filter make them clickable
+    private function getLinkFlag(string $mod): int {
+        return (!is_moder($mod) && (($this->conf['alink'] == 1 && !is_user()) || $this->conf['alink'] == 2)) ? 1 : 0;
+    }
+
+    # Read the time of the most recent comment of one address, the value the flood window of a new submit is measured against
+    private function getLastTime(string $ip): string {
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
+        return (string)($row['time'] ?? '');
+    }
+
+    # Read back the id of the row a submit has just written, through the query the submit path has always used to build its anchor link
+    private function getLastId(int $id, int $uid): int {
+        $sql = 'SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['cid' => $id, 'uid' => $uid]));
+        return $row ? intval($row['id']) : 0;
     }
 
     # Count the rows of one already-built source, so the count of a list is always written against the very source the list itself reads
