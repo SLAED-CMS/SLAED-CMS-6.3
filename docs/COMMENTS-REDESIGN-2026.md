@@ -1,9 +1,9 @@
 # Comments Subsystem Redesign
 
-Status date: 2026-07-27. Approved, not started. The comment engine is shared by
-eight frontend modules, the admin panel, the user activity feed and every module
-delete handler, so each stage below has to keep all of them working while the
-internals move into one place.
+Status date: 2026-07-28. Approved; stage 0 delivered, stage 1 next. The comment
+engine is shared by eight frontend modules, the admin panel, the user activity
+feed and every module delete handler, so each stage below has to keep all of them
+working while the internals move into one place.
 
 ## Progress
 
@@ -13,21 +13,47 @@ knows nothing of previous ones; this is the only place decisions survive.
 | Date | Stage / batch | Outcome |
 |---|---|---|
 | 2026-07-27 | stage 0, URL schemes | **done, ahead of the stage.** `filterUrl()` (`core/classes/parser.php:228`) refuses `data:`, `javascript:` and `vbscript:` in every mode; 8 fixture cases added, verified to fail against the unpatched file |
+| 2026-07-28 | stage 0, client-chosen moderation and module | **done.** `getCommentMode()` (`core/system.php:5794`) resolves the target through the fixed eight-entry map; `addComment()` no longer reads `cid`, `updateComment()` and `updateCommentStatus()` read `modul` from the comment row. `tests/Unit/CommentTrustBoundaryTest.php` (6 cases) fails against the unpatched files; baseline `verify` unchanged |
 
 ### Decisions made during execution
 
 - The stored-XSS fix landed in the parser rather than in the comment render
   sites, so it covers forum posts and every other content path. The rendering
   mode itself is untouched and still moves to `safe = true` in stage 2.
+- The resolver is one procedural function, `getCommentMode($mod, $id)`, returning
+  the target's `acomm` and `0` for "not writable" — unknown module, missing row,
+  invisible row or comments disabled all collapse into the same refusal. Stage 1
+  absorbs it into `Comment`; it is deliberately not a class in a hotfix stage.
+- Visibility is the module's own `view()` predicate, copied per module rather
+  than generalized: `time <= NOW() AND status != '0'` plus `catmids()` for the
+  seven category modules, and the `modul = '' AND enddate/status` rule for
+  `voting` (`modules/voting/index.php:96`).
+- A target with `acomm = 0` now refuses the write for **everyone**, moderators
+  included. Previously the form was merely not rendered.
+- The request keeps carrying `mod`; it is a lookup key into the map and never a
+  table name. The moderator links inside `ashowcom()` still append `&mod=`, which
+  the server now ignores — removing it is markup churn and belongs to stage 4.
 
 ### Deviations from the plan
 
-- None yet.
+- The plan's `_comment` facts were re-measured on 2026-07-28 and updated in
+  place: 7355 rows instead of 7353, and the body-classification, `<br>`-spelling
+  and legacy-tag counts with them. The classification methodology is unchanged.
+- Stage 0 did not run a live "published add still works" check, because that
+  writes a row, moves a target counter and awards points on the stand the markup
+  baseline is captured from. The refusal path was exercised over real HTTP
+  (four crafted POSTs, `_comment` count unchanged); the accept path is verified
+  by code and by the resolver probe, and belongs to the browser checks.
 
 ### Open blockers
 
 - Stage 1 cannot be called complete until the frontend page-cache helper is
   identified — see **Open decisions**.
+- The markup baseline covers **six** of the eight modules on this stand, not
+  eight: `media` has no comments at all any more and `shop` product 24 is back to
+  `acomm = 0`, so neither renders a comment region. Stage 1 has to re-prepare
+  both fixtures per `docs/TESTS.md` **before** its `capture`, or its parity claim
+  silently excludes two modules.
 
 ## Facts (measured 2026-07-27)
 
@@ -55,18 +81,18 @@ knows nothing of previous ones; this is the only place decisions survive.
 - The flood check runs `WHERE ip = ?` (`core/user.php:274`) with **no index on
   `ip`**; `_comment` carries only `cid`, `uid`, `modul_status` and `time`
   (`setup/sql/table.sql:141-144`).
-- Table `_comment` (re-checked 2026-07-27): **7353 rows**, two of which are the
-  `media` fixture created for the markup baseline. `body` is `TEXT`, the
-  IP is stored in clear text. Distribution: files 4821, voting 1084, news 1083,
-  faq 141, pages 116, links 104, shop 2, media 0. Status: 7348 published,
-  3 pending.
+- Table `_comment` (re-checked 2026-07-28): **7355 rows**. `body` is `TEXT`, the
+  IP is stored in clear text. Distribution: files 4821, news 1088, voting 1083,
+  faq 141, pages 116, links 104, shop 2. Status: 7351 published, 4 pending. The
+  two `media` fixture rows created for the markup baseline are gone again, so
+  `media` holds no comments and no longer appears in the distribution at all.
 - Confirmed InnoDB on this installation: `_comment`, `_users`, `_news`, `_files`,
   `_voting`, `_newsletter`.
 - Confirmed index list on `_comment`: `PRIMARY(id)`, `cid`, `uid`,
   `modul_status(modul, status)`, `time` — and nothing on `ip`.
 - Validation is duplicated in `addComment()` and `updateComment()`. The word
   length defect fixed in the first copy still lives in the second
-  (`core/system.php:5752`): the loop overwrites `$o` on every iteration, so only
+  (`core/system.php:5755`): the loop overwrites `$o` on every iteration, so only
   the last word is measured, and it measures bytes with `strlen()` rather than
   characters.
 - Replying inserts `[b]name[/b],` into the editor: there is no thread structure.
@@ -96,15 +122,18 @@ knows nothing of previous ones; this is the only place decisions survive.
 
 ## Problems this causes
 
-1. **The moderation mode comes from the client.** `addComment()` reads `cid`
-   from the request (`core/user.php:269`) and decides the published/pending
-   status from it (`core/user.php:293`, `:297`). Submitting a different value
-   publishes past premoderation. `mod` is request-supplied too
-   (`core/user.php:270`) and feeds both `is_moder($mod)` and the stored `modul`
-   column, so a comment can be attached to an arbitrary module. The same holds
-   in `updateCommentStatus()` (`core/system.php:5774-5788`), where the request
-   `mod` drives the permission check **and** is passed to `numcom()` at
-   `core/system.php:5785`, moving the counter of the wrong target row.
+1. **The moderation mode came from the client — closed by stage 0 on
+   2026-07-28.** `addComment()` read `cid` from the request and decided the
+   published/pending status from it, so submitting a different value published
+   past premoderation; `mod` was request-supplied too and fed both
+   `is_moder($mod)` and the stored `modul` column, so a comment could be attached
+   to an arbitrary module. The same held in `updateCommentStatus()`, where the
+   request `mod` drove the permission check **and** was passed to `numcom()`,
+   moving the counter of the wrong target row. Today the mode comes from
+   `getCommentMode()` (`core/system.php:5794`, called at `core/user.php:270`) and
+   both update paths read `modul` from the comment row
+   (`core/system.php:5735`, `:5779`). The description stays here because the rest
+   of the plan is written against it.
 2. **Adding repaints everything.** A successful add returns the complete comment
    list, transfers about 51 KB and replaces the whole list container; scroll
    position and focus are lost.
@@ -173,7 +202,7 @@ same migration backfills every existing row with a random 32-character key. A
 nullable idempotency key is a key that can be absent, and an absent key is a
 replay that nobody detects.
 
-The DDL order matters, because the unique index cannot be created while 7353 rows
+The DDL order matters, because the unique index cannot be created while 7355 rows
 share the default:
 
 1. add the column as `CHAR(32) NOT NULL DEFAULT ''`, without the index;
@@ -253,7 +282,7 @@ every anonymous commenter full trust. `getEditorKey()` (`core/system.php:3838`)
 resolves one site-wide `editor.user` for all frontend authoring, and `ckeditor`
 and `tinymce` both declare `formats=html`, so this is one admin setting away at
 any time. Comments render with `safe = false`
-(`core/system.php:5662`, `:5747`, `:5761`, `admin/modules/comments.php:135`),
+(`core/system.php:5662`, `:5750`, `:5764`, `admin/modules/comments.php:135`),
 which means nothing downstream would catch it either.
 
 **Escaping belongs to the read path, and comments render with `safe = true`.**
@@ -296,7 +325,7 @@ project avoids; the alternative — trusting the author — is what the current
   normalisation inside `Comment`, and the shared `filterHtml()` is **not** changed
   on behalf of comments — it has callers in forum, private messages and money
   that are out of scope here;
-- the 7353 existing rows are pre-escaped, so rendering them at `safe = true`
+- the 7355 existing rows are pre-escaped, so rendering them at `safe = true`
   double-escapes: `&lt;b&gt;` becomes `&amp;lt;b&amp;gt;`, measured. They need a
   migration that decodes the stored escaping once;
 - that migration changes rendered output, so **stage 1 byte parity cannot cover
@@ -432,20 +461,20 @@ performed when a target row is removed, and bulk moderation.
 
 ### Counters and points
 
-`numcom()` (`core/system.php:5791`) is not a comment query — it writes the
+`numcom()` (`core/system.php:5817`) is not a comment query — it writes the
 `comments` column of the target table and calls `updatePoints()`. It becomes a
 **private** method of `Comment`, invoked from `addComment()`, `setStatus()` and
 `deleteComment()` inside their transactions, and disappears as a global
 function.
 
 Three of its eleven branches are dropped in the move, covering four module
-names: `account`/`members` (points slot 3, `core/system.php:5797-5799`),
-`gallery` (slot 17, `:5806-5808`) and `multimedia` (slot 29, `:5815-5817`).
+names: `account`/`members` (points slot 3, `core/system.php:5823-5825`),
+`gallery` (slot 17, `:5832-5834`) and `multimedia` (slot 29, `:5841-5843`).
 Each has its table `UPDATE` already
 commented out and does nothing but award points, and none of them is reachable:
 
 - `numcom()` is called only from the comment path — `core/user.php:303`,
-  `core/system.php:5785` and four sites in `admin/modules/comments.php`;
+  `core/system.php:5788` and four sites in `admin/modules/comments.php`;
 - `modules/` contains no `gallery`, `multimedia` or `members`, and `account`
   does not render comments, so `_comment.modul` can only hold one of the eight
   supported modules;
@@ -565,7 +594,7 @@ author — the read is `SELECT ... FOR UPDATE` inside the same transaction.
 
 `updateCommentStatus()` today does the opposite: it writes the status
 unconditionally and then re-reads the row to feed `numcom()`
-(`core/system.php:5783-5785`), which is precisely the double-count above.
+(`core/system.php:5786-5788`), which is precisely the double-count above.
 
 All participating tables are InnoDB — verified on this installation for
 `_comment`, `_users` and every target table — so the transaction is real. The
@@ -723,7 +752,7 @@ small, independently deployable, and does not wait on the class. It closes two
 separate holes that happen to live in the same request path.
 
 **Stored XSS in comments — already fixed, ahead of this plan.** Comments render
-at `safe = false` (`core/system.php:5662`, `:5747`, `:5761`,
+at `safe = false` (`core/system.php:5662`, `:5750`, `:5764`,
 `admin/modules/comments.php:135`), and the parser refused only `data:` links
 unconditionally, so `[url=javascript:alert(1)]` produced a working
 `href="javascript:..."` for every author, anonymous included. Neither author nor
@@ -769,8 +798,9 @@ correct, and the rest stays in this plan:
 - Verify existing comments still render byte for byte through
   `tools/comment-baseline.php verify`.
 
-The URL-scheme half is **done** — see the note above. What remains for stage 0 is
-the request-side trust boundary alone.
+Both halves are **done**: the URL-scheme fix on 2026-07-27 and the request-side
+trust boundary on 2026-07-28 — see the Progress table for what landed where.
+Stage 0 is closed; the next chat starts at stage 1.
 
 The four-editor check — `<script>` and `<img onerror=...>` neutralised under
 `toastui`, `plain`, `ckeditor` and `tinymce` alike — belongs to **stage 2**, not
@@ -824,7 +854,7 @@ last. Reversing any of it means deleting something still in use.
 
 - Merge add and edit validation into `checkRules()`.
 - Fix the maximum word length check: measure the longest word, not the last one,
-  and measure characters rather than bytes (`core/system.php:5752`).
+  and measure characters rather than bytes (`core/system.php:5755`).
 - Apply `CommentMode` to every remaining bare `acomm` comparison; the enum itself
   arrives in stage 1 with the class.
 - Make add/edit/status/delete transactional, with the explicit result checks and
@@ -833,7 +863,7 @@ last. Reversing any of it means deleting something still in use.
   drop `cid` and `modul_status`, **keep `time`**.
 - Backfill `reqkey` with a random key per row, and `iphash` from `ip`.
 - Run the body migration below, then switch **all four** render sites to
-  `safe = true` (`core/system.php:5662`, `:5747`, `:5761`,
+  `safe = true` (`core/system.php:5662`, `:5750`, `:5764`,
   `admin/modules/comments.php:135`).
 - Replace `filterHtml()` in the comment write path with the comment-specific
   normalisation that stores source; `filterHtml()` itself is not modified.
@@ -846,26 +876,26 @@ last. Reversing any of it means deleting something still in use.
 Rendering at `safe = true` requires the stored body to be source rather than
 pre-escaped HTML, so all existing rows are converted once. There is no `format`
 column to consult, but the writer left signatures, and they were measured across
-all 7353 rows on 2026-07-27:
+all 7355 rows on 2026-07-28:
 
 **The signatures overlap, so classification is ordered, not parallel.** Measured
-on this installation: 1765 rows carry a machine-written `<br>`, 99 carry an
-unescaped tag, and **55 carry both**. Counting each signature independently — as
+on this installation: 1766 rows carry a machine-written `<br>`, 100 carry an
+unescaped tag, and **56 carry both**. Counting each signature independently — as
 an earlier revision of this table did — produces groups that sum past the row
 count and a row that would receive two verdicts. Every row gets exactly one
 `format`, decided by the first rule that matches:
 
 | # | Rule | Verdict | Rows here |
 |---|---|---|---|
-| 1 | contains an unescaped tag other than `<br>` | `legacy` | 99 |
-| 2 | contains `<br>`, `<br/>` or `<br />` immediately followed by `\n` or `\r\n` | `plain` | 1710 |
+| 1 | contains an unescaped tag other than `<br>` | `legacy` | 100 |
+| 2 | contains `<br>`, `<br/>` or `<br />` immediately followed by `\n` or `\r\n` | `plain` | 1709 |
 | 3 | contains any `<br>` form not followed by a line break | manual review | 1 |
-| 4 | contains a line break | `markdown` | 4 |
-| 5 | anything else — a single line | `markdown` | 5539 |
+| 4 | contains a line break | `markdown` | 10 |
+| 5 | anything else — a single line | `markdown` | 5535 |
 
 Rule 1 comes first because a row carrying real tags cannot be treated as plain
-text no matter what else it contains; the 55 overlapping rows land there. The
-counts above are what an ordered pass produces, and they sum to 7353 exactly.
+text no matter what else it contains; the 56 overlapping rows land there. The
+counts above are what an ordered pass produces, and they sum to 7355 exactly.
 
 Rule 5 assigns `markdown` to single-line rows rather than leaving them unset.
 **A format is required even when the body needs no conversion**, because `plain`
@@ -876,8 +906,9 @@ existing rows keep their current appearance; an installation whose `editor.user`
 is `plain` sets the default the other way, which is a one-line change in the
 migration and must be a stated input to it, not a hardcoded assumption.
 
-**The `<br>` signature has three spellings and two line endings.** Of the 1765
-machine-written rows here, **1709 use `<br />`** and 56 use `<br>`, and **1645
+**The `<br>` signature has three spellings and two line endings.** Of the 1766
+machine-written rows here, **1709 carry `<br />`** and 59 carry `<br>` — two
+rows carry both, which is why the two figures sum past the total — and **1645
 end the line with CRLF**. Today's `nl2br($out, false)` (`core/security.php:980`)
 emits the bare form, but older SLAED releases called `nl2br()` with its XHTML
 default, and both are in the table. The migration matches
@@ -919,9 +950,10 @@ Within a class an author-typed entity is indistinguishable from a writer-inserte
 one, and the migration does not try to tell them apart; it reverses exactly what
 that class's writer could have produced, once, and records the row count touched.
 
-**Legacy HTML is converted, not preserved.** The 99 rows here contain only
-`<b>` 89, `<tt>` 12, `<i>` 8, `<u>` 3, `<li>` 2, `<a>` 1, with zero executable
-tags and zero `on*` attributes — but that is a fact about **this** database, and
+**Legacy HTML is converted, not preserved.** The 100 rows here contain only
+`<b>` 82, `<tt>` 11, `<i>` 8, `<u>` 3, `<li>` 2, `<a>` 1 — counted as rows
+carrying that tag, so a row using two of them appears twice — with zero
+executable tags and zero `on*` attributes — but that is a fact about **this** database, and
 the migration ships to installations whose contents nobody has seen. Keeping a
 `format = html` that renders through the trusted path would contradict the two
 rules this stage exists to establish: only `plain` and `markdown` are valid, and
@@ -1087,7 +1119,7 @@ user points, `reqkey`, `format`, the mail queue and `deleted`/`edited`.
   ships to 100 000 installations that cannot be inspected individually, so a DDL
   that fails halfway on one engine variant is not one bug but many;
 - the stage 2 migration adds five columns and five indexes to `_comment`, drops
-  two and backfills three of the new columns. That is instant against the 7353
+  two and backfills three of the new columns. That is instant against the 7355
   rows here and is not instant on
   an installation with a large comment table, so the upgrade notes must say so
   rather than letting an administrator discover it during a lock;
@@ -1180,7 +1212,7 @@ starts with.
   identify is which existing helper already does this for the frontend;
   `Cache::addEpoch()` covers admin mutations only (`core/classes/pdo.php:148`).
 - **Migration cost on a large comment table.** Stage 2 adds five columns and five
-  indexes, drops two and rewrites every body. Instant against the 7353 rows here;
+  indexes, drops two and rewrites every body. Instant against the 7355 rows here;
   the upgrade notes
   must state what it costs on an installation with orders of magnitude more,
   rather than letting an administrator find out during a lock.

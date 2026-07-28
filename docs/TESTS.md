@@ -133,8 +133,12 @@ inside `hx-headers`, `[[sldyn:...]]` markers and the captcha field — otherwise
 the list never compares equal even to itself. On a difference the fresh capture
 is written next to the baseline as `<module>.actual.html` for diffing.
 
-All eight modules are covered: `faq`, `files`, `links`, `media`, `news`, `pages`,
-`shop`, `voting`.
+All eight modules are meant to be covered: `faq`, `files`, `links`, `media`,
+`news`, `pages`, `shop`, `voting`. On 2026-07-28 a `capture` produced **six**:
+the `media` fixture rows are gone again and `shop` product 24 is back to
+`acomm = 0`, so neither renders a comment region. Both fixtures have to be
+re-prepared as described below **before** the next `capture`, or the parity claim
+silently excludes two modules.
 
 Coverage assumes **every module is enabled**, and `config/modules.php` now has
 all 50 active. An inactive module is a gap in the test stand, not a reason to
@@ -183,6 +187,7 @@ Current unit test files include:
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
+- `CommentTrustBoundaryTest.php`
 - `DatabaseTest.php`
 - `EditorFormatTest.php`
 - `ExampleTest.php`
@@ -198,10 +203,10 @@ Current unit test files include:
 - `StructureTest.php`
 - `ViewBridgeSmokeTest.php`
 
-Contract tests (`GeoipReaderTest`, `InputFilterTest`, `InputVarContractTest`,
-`PageCacheContractTest`, `StatsContractTest`) drive production code through
-`tests/Support/contract_probe.php`, which boots the real core in an isolated CLI
-process per scenario. Prefer that route over copying an algorithm into a test:
+Contract tests (`CommentTrustBoundaryTest`, `GeoipReaderTest`, `InputFilterTest`,
+`InputVarContractTest`, `PageCacheContractTest`, `StatsContractTest`) drive
+production code through `tests/Support/contract_probe.php`, which boots the real
+core in an isolated CLI process per scenario. Prefer that route over copying an algorithm into a test:
 the previous replica-based `InputFilterTest` silently drifted away from the
 functions it claimed to cover.
 
