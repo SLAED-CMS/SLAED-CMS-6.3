@@ -751,6 +751,34 @@
         }
     }
 
+    // Show a row only for one value of another field: the tab hook keys off the tab index and cannot express this, so the value of the named control decides
+    function applyFieldShow(field) {
+        var form = field.form || document;
+        var rows = form.querySelectorAll('[data-sl-show-when="' + field.name + '"]');
+        for (var i = 0; i < rows.length; i++) {
+            var want = (rows[i].getAttribute('data-sl-show-value') || '').split(' ');
+            rows[i].style.display = (want.indexOf(field.value) < 0) ? 'none' : '';
+        }
+    }
+
+    // Progressive by construction: a row is written visible and is only ever hidden here, so a page without this script offers every setting
+    function setFieldShows(node) {
+        var root = node && node.querySelectorAll ? node : document;
+        var rows = root.querySelectorAll('[data-sl-show-when]');
+        for (var i = 0; i < rows.length; i++) {
+            var form = rows[i].closest('form') || document;
+            var field = form.querySelector('[name="' + rows[i].getAttribute('data-sl-show-when') + '"]');
+            if (!field) continue;
+            if (field.getAttribute('data-sl-show-ready') !== '1') {
+                field.setAttribute('data-sl-show-ready', '1');
+                field.addEventListener('change', function () {
+                    applyFieldShow(this);
+                });
+            }
+            applyFieldShow(field);
+        }
+    }
+
     function setTabs(node) {
         var root = node && node.querySelectorAll ? node : document;
         var groups = root.querySelectorAll('[data-sl-tabs-init]');
@@ -1308,6 +1336,7 @@
         setEditorInsertHandler();
         setDialToggle();
         setTabs(document);
+        setFieldShows(document);
         setAlerts(document);
         setVoteBlocks(document);
         setUiActions();
@@ -1326,6 +1355,7 @@
         setToggleBlocks();
         setFloating(event.target);
         setTabs(event.target);
+        setFieldShows(event.target);
         setAlerts(event.target);
         setVoteBlocks(event.target);
         var live = event.target && event.target.closest ? event.target.closest('[data-sl-live-box]') : null;
