@@ -4,7 +4,8 @@ Status: proposed, not started. Last review: 2026-07-28.
 
 Replace the procedural upload pipeline with one final `Upload` class. Migrate
 all supported callers in the same change and remove the old functions and
-obsolete route. No compatibility wrapper or transitional implementation.
+generic upload fallback. No compatibility wrapper or transitional
+implementation.
 
 Source line numbers below describe the current working tree. Resolve the named
 symbols again before editing because adjacent work may move them.
@@ -67,6 +68,8 @@ addRemoteFile(
     string $base,
     ?int $uid = null
 ): array
+
+deleteStoredFile(string $path): bool
 ```
 
 Owner semantics:
@@ -105,6 +108,7 @@ total content stored in the destination.
 
 ### Validation and paths
 
+- `$dir` and returned `path` are always relative to the upload root.
 - Extensions are matched against the exact configured allowlist.
 - Executable and web-active formats are denied even if configuration is wrong.
 - MIME is detected with `finfo` and checked against an explicit map covering
@@ -113,8 +117,12 @@ total content stored in the destination.
 - The destination must resolve below `UPLOADS_DIR`; reject absolute paths,
   traversal, NUL/control bytes, symlink escapes, missing directories, and
   unwritable directories.
-- Stored names use a sanitized base plus sufficient randomness. Return a path
-  relative to the upload root, never an arbitrary filesystem path.
+- Stored names use `<sanitized-base>-<random>-<uid>.<ext>` when `$uid` is an
+  integer and omit the owner suffix only when `$uid` is `null`. This contract
+  remains compatible with editor ownership filtering.
+- `deleteStoredFile()` accepts a root-relative result path, verifies the
+  canonical class-owned filename, repeats containment checks, uses the
+  destination lock, and never follows a path outside the upload root.
 
 ### Publication and quota
 
@@ -150,6 +158,10 @@ Use ext-cURL only:
 - use uniquely named `.upload-<hex>.part` files and remove abandoned partials
   older than one hour.
 
+Keep DNS resolution, cURL execution, and the clock behind narrow replaceable
+internal methods so security cases can be tested without public network or DNS
+dependencies. The business-facing constructor and methods remain unchanged.
+
 ## Current findings
 
 | Priority | Finding | Evidence |
@@ -159,6 +171,8 @@ Use ext-cURL only:
 | High | The generic default branch inside `go=4` exposes an accidental upload endpoint. | `index.php:156` |
 | High | Editor upload duplicates validation and storage rules. | `core/system.php:4305` (`addEditorUpload()`) |
 | High | Destination construction lacks one canonical containment boundary. | `core/system.php:5359` (`upload()`) |
+| High | File publication happens before unchecked account/file SQL writes, so a failed write can leave an orphan. | `modules/account/index.php:1056`, `modules/files/index.php:534` |
+| High | Editor ownership depends on the current filename suffix contract. | `core/system.php:4392` (`getEditorFileJson()`) |
 | Medium | Admin upload does not provide one explicit local-first/remote-second decision. | `admin/modules/uploads.php:160` |
 
 ## Implementation plan
@@ -167,11 +181,13 @@ Use ext-cURL only:
    locking, quota, atomic publication, cleanup, and remote security.
 2. Migrate the account, file-module, editor, and admin adapters. For admin
    upload, prefer a supplied local file; otherwise process the remote URL.
-3. Preserve each flow's current database record and response format, but derive
-   stored metadata only from a successful class result.
-4. Move `editorUpload` and `editorFiles` to explicit routes, then delete
-   `upload()`, `check_file()`, `check_size()`, editor duplication, and the
-   generic `go=4` dispatcher. Do not leave aliases or wrappers.
+3. Preserve each flow's database record and response format, but check every
+   SQL result. If a write fails after publication, call `deleteStoredFile()` for
+   that exact result, report failure, and log a cleanup failure explicitly.
+4. Keep `go=4` as the supported editor route with only explicit
+   `editorUpload` and `editorFiles` cases; reject every other operation. Delete
+   `upload()`, `check_file()`, `check_size()`, and duplicated editor upload
+   logic without aliases or wrappers.
 5. Run the full verification matrix and inspect the final diff for remaining
    procedural callers.
 
@@ -192,15 +208,17 @@ Required automated checks:
 - unit tests for all result codes, malformed `$_FILES`, MIME mismatch, image
   limits, traversal/symlink escape, collision, quota boundaries, concurrent
   writes, partial cleanup, redirects, DNS rebinding defenses, proxy bypass,
-  timeout, and streaming overflow;
-- `rg` confirms no old functions, generic `go=4` dispatcher, or obsolete
-  callers remain.
+  timeout, streaming overflow, and safe compensating deletion;
+- adapter tests inject SQL failure and prove that only the newly published file
+  is removed; cleanup failure must be returned and logged;
+- `rg` confirms no old functions, generic `go=4` fallback, or obsolete callers
+  remain.
 
 Required integration checks:
 
 - real multipart requests through every supported route;
 - admin local and remote uploads;
-- editor JSON response;
+- editor upload and listing JSON, including moderator, user, and guest ownership;
 - filesystem and database persistence agree after success and remain unchanged
   after failure;
 - security and PHP logs contain no new warnings.
@@ -209,7 +227,8 @@ Required integration checks:
 
 - All supported flows use `Upload`.
 - No obsolete upload pipeline or hidden compatibility path remains.
-- Failed transfers never publish a final file or database record.
+- Failed transfers never publish a final file or database record. A later SQL
+  failure triggers checked compensation and can never be reported as success.
 - Concurrent uploads cannot exceed quota through a check/write race or
   overwrite one another.
 - Remote upload fails closed for unresolved, redirected, or non-public targets.

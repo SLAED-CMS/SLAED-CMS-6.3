@@ -56,7 +56,7 @@ addDatabaseBackup(): array
 
 The scheduler owns:
 
-- request authorization and CSRF;
+- request authorization, CSRF, and cron-token validation;
 - process serialization, execution status, logging, and presentation.
 
 Use existing settings at
@@ -70,6 +70,12 @@ Use existing settings at
     'compress' => 'auto',
 ]
 ```
+
+Keep these defaults synchronized in `config/scheduler.php` and
+`config/local.php`. The 6.3 upgrade path in `setup/index.php` fills only missing
+`dbbackup.settings` keys and never overwrites configured values. The dispatcher
+passes the complete settings array to `Backup`; malformed explicit values fail
+before output.
 
 Patterns are comma-separated full table-name globs where `*` matches any
 sequence and `?` one character. Validate them before creating output, respect
@@ -97,8 +103,11 @@ Before output:
 `schemaonly` means structure only by explicit operator choice.
 
 At review time the local database contains 37 base tables, all InnoDB, with
-single-column primary keys and none of the unsupported objects above. These are
-observations, not assumptions the implementation may hard-code.
+single-column primary keys, no views, triggers, events, foreign keys, or
+generated columns, but it does contain nine migration helper procedures. Their
+cleanup is already defined in `setup/sql/table_update6_3.sql`; completing that
+cleanup is a release prerequisite. `Backup` must not delete schema objects and
+must continue to fail closed while unsupported routines exist.
 
 ### Consistent deterministic export
 
@@ -114,8 +123,10 @@ observations, not assumptions the implementation may hard-code.
   through the database driver.
 - Use deterministic table order and include `DROP TABLE IF EXISTS` before each
   `CREATE TABLE` while foreign-key checks are disabled.
-- Fingerprint the selected schema before and after export and fail if DDL
-  changed.
+- Fingerprint canonical columns, indexes, constraints, and table definitions
+  before and after export and fail if DDL changed. Exclude volatile
+  `AUTO_INCREMENT` counters and table statistics so concurrent DML does not look
+  like schema drift.
 - Check every database call and every stream write. Roll back and clean up on
   any error.
 
@@ -127,7 +138,7 @@ checks, time zone, SQL mode, and charset/collation state. Export in UTC, use
 
 1. Reserve a collision-free artifact stem and create `<name>.sql` exclusively
    inside a private, uniquely named staging directory below the backup root.
-2. Stream the dump, flush it, close it, and calculate SHA-256.
+2. Stream the dump, flush and `fsync()` it, close it, and calculate SHA-256.
 3. If compression is disabled or `auto` has no supported compressor, publish
    the staged SQL atomically as `<name>.sql`.
 4. Otherwise compress through the existing `addCompress()` facility with
@@ -143,8 +154,10 @@ existing final artifact.
 
 ## Scheduler boundary
 
-All state-changing scheduler actions are POST-only and CSRF-protected:
-manual run, direct run, unlock, and delete. GET only displays state.
+All state-changing scheduler actions are POST-only: manual run, direct run,
+unlock, and delete. GET only displays state. Browser-originated actions require
+SLAED CSRF validation; cron uses its configured bearer token as authentication,
+not as CSRF.
 
 Access matrix:
 
@@ -153,17 +166,22 @@ Access matrix:
 - direct cron invocation: configured static scheduler token;
 - remove the unconditional `isAdmin()` bypass from direct dispatch.
 
-Keep scheduler action markup in `templates/admin/dial.html`: one form with
-common hidden fields, mutation buttons, and a separate edit link.
+Send pseudo and cron credentials in the POST body, never in the URL. Update the
+inline pseudo fetch, endpoint, and `admin/info/scheduler/ru.md` cron example
+together.
 
-Use one scheduler-wide OS `flock` held by `addSchedulerRun()` for the complete
-job execution. JSON status and heartbeat are diagnostic only, not lock
-authority. Unlock may repair stale status after the OS lock is free but must
-never break a live lock or delete the lock file. Treat configured timeout as an
-execution budget and stale-state diagnostic, not permission to overlap jobs.
+Render scheduler row actions through the real
+`templates/admin/fragments/dial.html`. In scheduler mode it owns one POST form
+with common hidden fields and submit buttons for mutations plus a separate edit
+link. PHP passes URLs, values, labels, icons, and semantic flags, not markup or
+CSS classes. Existing non-scheduler dial rendering must remain unchanged.
 
-Because the lock is scheduler-wide, regression coverage must include
-`dbbackup`, `maildrain`, and one ordinary/custom scheduler job.
+Use an OS `flock` keyed by canonical job name and held by `addSchedulerRun()` for
+that job's complete execution. JSON status and heartbeat are diagnostic only,
+not lock authority. Unlock may repair a job's stale status only after its OS
+lock is free; it must never break a live lock or delete the lock file. Timeout
+is an execution budget and stale-state diagnostic, not permission to start the
+same job again. Different jobs remain independent and may run concurrently.
 
 ## Current findings
 
@@ -175,19 +193,25 @@ Because the lock is scheduler-wide, regression coverage must include
 | High | SQL value serialization is not metadata-driven for every type. | `core/system.php:923` |
 | High | The routine guesses artifact identity and does not prove restoreability. | `core/system.php:973` |
 | High | Mutating scheduler routes include GET/weak direct-dispatch boundaries. | `admin/modules/scheduler.php:72`, `index.php:139`, `core/system.php:415` |
-| High | JSON timeout state can permit overlapping jobs without a process-held lock. | `core/system.php:331`, `core/system.php:539` |
+| High | JSON timeout state can permit two processes to run the same job. | `core/system.php:331`, `core/system.php:539` |
+| High | Nine migration helper procedures currently violate the supported database contract. | `setup/sql/table_update6_3.sql:36`, `setup/sql/table_update6_3.sql:1600` |
+| Medium | Default and installed `dbbackup.settings` are empty. | `config/scheduler.php:33`, `config/local.php:1193` |
+| Medium | Scheduler mutations are rendered as links by the shared dial fragment. | `admin/modules/scheduler.php:72`, `templates/admin/fragments/dial.html:1` |
 
 ## Implementation plan
 
-1. Add `Backup` with focused unit tests for filtering, discovery failures,
+1. Verify that the existing setup migration reaches its procedure-cleanup
+   block; do not delete routines from `Backup`. Add the canonical settings to
+   both config sources and the missing-key-only upgrade migration.
+2. Add `Backup` with focused unit tests for filtering, discovery failures,
    deterministic serialization, session restoration, checked writes, cleanup,
    compression verification, and exact results.
-2. Implement the consistent unbuffered export and atomic artifact pipeline.
-3. Harden the scheduler boundary: POST/CSRF access matrix, template actions,
-   process-held lock, stale-state repair, and exact artifact consumption.
-4. Replace the `dbbackup` dispatcher call and delete `addBackupTask()` without
+3. Implement the consistent unbuffered export and atomic artifact pipeline.
+4. Harden the scheduler boundary: POST authentication matrix, actual dial
+   template, per-job process lock, stale-state repair, and exact artifact use.
+5. Replace the `dbbackup` dispatcher call and delete `addBackupTask()` without
    leaving aliases or compatibility wrappers.
-5. Run the full verification matrix, including a real disposable restore, then
+6. Run the full verification matrix, including a real disposable restore, then
    inspect the final diff for obsolete routes and hidden fallback behavior.
 
 ## Verification
@@ -200,10 +224,14 @@ Required automated checks:
   values, generated columns, schema drift, read/write failures, cleanup,
   compression fallback/failure, checksum verification, and exact artifact
   metadata;
-- route tests proving GET cannot mutate, each accepted token path works, and
-  invalid/missing tokens fail;
-- concurrent process tests proving scheduler serialization for `dbbackup`,
-  `maildrain`, and one custom job;
+- upgrade tests proving missing settings are added and configured values are
+  preserved;
+- a real admin GET/POST sequence for run, unlock, and delete, followed by state
+  persistence and PHP/SQL/site log review;
+- route tests proving GET cannot mutate, pseudo and cron POST bodies work, and
+  invalid, missing, or query-string-only credentials fail;
+- concurrent process tests proving two `dbbackup` runs cannot overlap while
+  `dbbackup` and `maildrain` or a custom job remain independent;
 - `rg` confirms `addBackupTask()` and obsolete mutation routes are gone.
 
 Required restore test:
@@ -224,6 +252,7 @@ artifact was restore-tested unless an actual restore occurred.
 - No inconsistent, truncated, or unverified artifact is published.
 - Unsupported database scope fails before output.
 - Scheduler mutations cannot be triggered by GET or an authorization bypass.
-- Live jobs cannot overlap or be unlocked through stale JSON state.
+- Two instances of the same job cannot overlap or be unlocked through stale
+  JSON state; unrelated jobs are not globally serialized.
 - A generated artifact passes the disposable restore test.
 - Database and filesystem backup remain separate responsibilities.
