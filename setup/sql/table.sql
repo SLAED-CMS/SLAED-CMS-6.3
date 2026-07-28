@@ -341,6 +341,34 @@ CREATE TABLE `{prefix}_links` (
   KEY `ihome` (`ihome`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_mail` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kind` VARCHAR(20) NOT NULL DEFAULT '',
+  `sender` VARCHAR(100) NOT NULL DEFAULT '',
+  `email` VARCHAR(255) NOT NULL DEFAULT '',
+  `title` VARCHAR(255) NOT NULL DEFAULT '',
+  `body` MEDIUMTEXT NOT NULL,
+  `ref` INT UNSIGNED NOT NULL DEFAULT 0,
+  `prio` TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ntime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `tries` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `status` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `camp` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `hold` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `locked` DATETIME DEFAULT NULL,
+  `lockid` CHAR(32) NOT NULL DEFAULT '',
+  `phase` VARCHAR(10) NOT NULL DEFAULT '',
+  `code` VARCHAR(20) NOT NULL DEFAULT '',
+  `error` VARCHAR(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  KEY `hold_status_prio_ntime` (`hold`, `status`, `prio`, `ntime`, `id`),
+  KEY `kind_status_time` (`kind`, `status`, `time`),
+  KEY `kind_ref_status` (`kind`, `ref`, `status`),
+  KEY `lockid` (`lockid`),
+  KEY `locked` (`locked`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_media` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `cid` INT UNSIGNED NOT NULL DEFAULT 0,

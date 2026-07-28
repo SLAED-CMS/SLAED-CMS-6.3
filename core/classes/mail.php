@@ -6,17 +6,24 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Outgoing mail service: sender identity resolution, MIME header assembly, subject and body encoding, address validation, delivery and the shared error channel
+# Outgoing mail service: the queue every message is stored in, the drain that delivers it, sender identity, MIME header assembly, encoding, address validation and the error channel
 class Mail {
 
     public const CHARSET = 'UTF-8';
     public const CRLF = "\r\n";
     private const ERRLEN = 255;
     private const MAXLINE = 100;
+    private const MAXWAIT = 86400;
+    private const KINDLEN = 20;
+    private const FROMLEN = 100;
+    private const MAILLEN = 255;
+    private const SUBJLEN = 255;
+    private const PRUNENUM = 1000;
 
     private ?Database $db;
     private array $conf;
     private string $site;
+    private int $wait;
     private string $error = '';
     private bool $fback = false;
     private bool $ftry = false;
@@ -26,12 +33,18 @@ class Mail {
     private string $code = '';
     private string $repl = '';
     private string $mask = '';
+    private string $lock = '';
+    private array $refs = [];
+    private int $rsec = 0;
+    private int $rnum = 0;
 
-    # Build the service from the site config; the database handle is kept for the queue and is unused while mail still leaves inside the request
+    # Build the service from the site config; the database handle is what the queue is stored in and the lock window is read from the drain job, whose claims this object releases
     public function __construct(?Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
         $this->site = $conf['sitename'] ?? '';
+        $job = $conf['scheduler']['jobs']['maildrain'] ?? [];
+        $this->wait = max(60, intval(is_array($job) ? ($job['lock_timeout'] ?? 0) : 0) ?: 900);
     }
 
     # Close an open relay session when the service goes away, because a request or a drain run may end while the last message still holds the connection
@@ -39,17 +52,207 @@ class Mail {
         $this->deleteSmtpLink();
     }
 
-    # Accept one message from a call site and deliver it; from stage 2 the same call stores a queue row instead, which is why no caller learns more than accepted or rejected
+    # Accept one message from a call site and store it as a queue row; the answer means accepted into the queue, and no caller learns the delivery outcome synchronously any more
     # The client block is appended here, inside the request that owns the visitor data, and never at send time where only the scheduler's own address would be available
+    # Every value is bounded against the column that stores it, because under strict SQL mode an oversized write fails and would take the message with it
     public function addQueue(array $mesg): bool {
-        $kind = $mesg['kind'] ?? '';
+        $kind = substr($this->filterHeader($mesg['kind'] ?? ''), 0, self::KINDLEN);
         $rcpt = $this->filterAddress($mesg['email'] ?? '');
-        if ($rcpt === '') return $this->setError('rejected recipient address', ['kind' => $kind]);
-        $smail = $mesg['sender'] ?? '';
-        if ($this->getSender($smail) === '') return $this->setError('rejected sender address', ['kind' => $kind]);
-        $body = $mesg['body'] ?? '';
-        if (!empty($mesg['client'])) $body .= $this->getClientBlock();
-        return $this->setDelivery($rcpt, $smail, $mesg['title'] ?? '', $body, ($mesg['prio'] ?? 0) ?: 3);
+        if ($rcpt === '' || strlen($rcpt) > self::MAILLEN) return $this->setError('rejected recipient address', ['kind' => $kind]);
+        $smail = $this->filterAddress($mesg['sender'] ?? '');
+        if ($this->getSender($smail) === '' || strlen($smail) > self::FROMLEN) return $this->setError('rejected sender address', ['kind' => $kind]);
+        $subj = $this->filterHeader($mesg['title'] ?? '');
+        if (mb_strlen($subj) > self::SUBJLEN) return $this->setError('rejected subject, longer than '.self::SUBJLEN.' characters', ['kind' => $kind]);
+        if (!$this->db instanceof Database) return $this->setError('the queue is unreachable, there is no database connection', ['kind' => $kind]);
+        $ref = max(0, intval($mesg['ref'] ?? 0));
+        $body = ($ref > 0) ? '' : (string)($mesg['body'] ?? '');
+        if ($ref === 0 && !empty($mesg['client'])) $body .= $this->getClientBlock();
+        $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, time, ntime) VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, NOW(), NOW())';
+        $pars = ['kind' => $kind, 'from' => $smail, 'mail' => $rcpt, 'subj' => $subj, 'body' => $body, 'ref' => $ref, 'prio' => (intval($mesg['prio'] ?? 0) ?: 3)];
+        if (!$this->db->getSqlQuery($sql, $pars)) return $this->setError('the message could not be stored in the queue', ['kind' => $kind, 'mail' => $this->getMaskedMail($rcpt)]);
+        return true;
+    }
+
+    # Claim one batch of due rows under a fresh lock identifier and return them in send order; the claim is one conditional UPDATE, so two runs can never take the same row
+    # Taking a row moves its next attempt behind the lock window, which keeps a claimed row out of every other claim and gives a dead run its rows back when the window passes
+    # The predicate is exactly what the claim index leads with, so it stays one ordered range read: a marker column in it sends the optimizer to another index and adds a filesort
+    # Claims of a dead run are cleared first, which only tidies the marker columns, because the window has already made those rows claimable again
+    public function getBatch(int $num): array {
+        if (!$this->db instanceof Database || $num < 1) return [];
+        $this->deleteClaim();
+        $this->lock = bin2hex(random_bytes(16));
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NOW(), lockid = :lock, ntime = DATE_ADD(NOW(), INTERVAL :wait SECOND)'
+            .' WHERE hold = 0 AND status = 0 AND ntime <= NOW() ORDER BY prio ASC, ntime ASC, id ASC LIMIT '.intval($num);
+        if (!$this->db->getSqlQuery($sql, ['lock' => $this->lock, 'wait' => $this->wait]) || intval($this->db->getSqlAffected()) < 1) return [];
+        $sql = 'SELECT id, kind, sender, email, title, body, ref, prio, tries FROM '.PREFIX_DB.'_mail WHERE lockid = :lock ORDER BY prio ASC, id ASC';
+        return $this->db->getSqlRows($this->db->getSqlQuery($sql, ['lock' => $this->lock])) ?: [];
+    }
+
+    # Record what one attempt answered: an accepted row is done, a refused one waits behind a growing backoff until the attempt cap turns it into a failure the admin view keeps
+    # A hard failure skips the retries, because a message whose shared body is gone would be refused the same way on every attempt
+    # Every stored value is bounded here rather than by its column, since the write that records a failure must never be able to fail itself and leave the row claimed
+    public function setResult(int $id, bool $sent, string $mesg = '', bool $hard = false): bool {
+        if (!$this->db instanceof Database || $id < 1) return false;
+        if ($sent) {
+            $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 1, tries = tries + 1, locked = NULL, lockid = \'\', phase = \'\', code = \'\', error = \'\' WHERE id = :id';
+            return (bool)$this->db->getSqlQuery($sql, ['id' => $id]);
+        }
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT tries FROM '.PREFIX_DB.'_mail WHERE id = :id', ['id' => $id]));
+        $try = intval($row['tries'] ?? 0) + 1;
+        $cap = max(1, intval($this->conf['tries'] ?? 0) ?: 5);
+        $back = max(1, intval($this->conf['backoff'] ?? 0) ?: 300);
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = :stat, tries = tries + 1, ntime = DATE_ADD(NOW(), INTERVAL :wait SECOND), locked = NULL, lockid = \'\','
+            .' phase = :phase, code = :code, error = :err WHERE id = :id';
+        $pars = [
+            'stat' => ($hard || $try >= $cap) ? 2 : 0,
+            'wait' => min(self::MAXWAIT, $back * (2 ** min($try - 1, 10))),
+            'phase' => mb_substr($this->phase, 0, 10),
+            'code' => mb_substr($this->code, 0, 20),
+            'err' => mb_substr($this->filterHeader($mesg), 0, self::ERRLEN),
+            'id' => $id,
+        ];
+        return (bool)$this->db->getSqlQuery($sql, $pars);
+    }
+
+    # Drain the queue until nothing is due, the time budget is spent or the rate cap for the current minute is reached, then prune and report what the run did
+    # The run is time-boxed rather than count-boxed: under pseudo-cron it executes inside a web request and has to end politely instead of being killed with a row in hand
+    # One transport connection spans the whole run, which is what makes a drain one handshake rather than one per message
+    public function updateQueue(): array {
+        $out = ['sent' => 0, 'fail' => 0, 'kept' => 0, 'left' => 0, 'stop' => 'empty'];
+        if (!$this->db instanceof Database) {
+            $this->setError('the queue is unreachable, there is no database connection');
+            $out['stop'] = 'database';
+            return $out;
+        }
+        $cli = PHP_SAPI === 'cli';
+        if ($cli && function_exists('set_time_limit')) set_time_limit(0);
+        $tend = microtime(true) + $this->getBudget($cli);
+        $num = (max(1, intval($this->conf['batch'] ?? 0) ?: 25)) * ($cli ? 10 : 1);
+        $this->getRateWindow();
+        while (true) {
+            if (microtime(true) >= $tend) {
+                $out['stop'] = 'time';
+                break;
+            }
+            $rows = $this->getBatch($num);
+            if (!$rows) break;
+            $this->refs = [];
+            foreach ($rows as $row) {
+                if (microtime(true) >= $tend) {
+                    $out['stop'] = 'time';
+                    break 2;
+                }
+                if (!$this->checkRate()) {
+                    $out['stop'] = 'rate';
+                    break 2;
+                }
+                $this->rnum++;
+                if ($this->setQueueSend($row)) $out['sent']++;
+                else $out['fail']++;
+            }
+            $this->setRateWindow();
+        }
+        $this->deleteLock();
+        $this->setRateWindow();
+        $out['kept'] = $this->deleteQueue();
+        $out['left'] = $this->getPending();
+        return $out;
+    }
+
+    # Prune accepted rows past their retention window, per kind: one mailing is one row per account, so bulk history is kept far shorter than the transactional one
+    # A failed row is never pruned here, because it is exactly what the admin view exists to show
+    public function deleteQueue(): int {
+        if (!$this->db instanceof Database) return 0;
+        $keep = max(1, intval($this->conf['keep'] ?? 0) ?: 30);
+        $bulk = max(1, intval($this->conf['keepbulk'] ?? 0) ?: 3);
+        $num = 0;
+        $sql = 'DELETE FROM '.PREFIX_DB.'_mail WHERE status = 1 AND kind = \'newsletter\' AND time < DATE_SUB(NOW(), INTERVAL :days DAY) LIMIT '.self::PRUNENUM;
+        if ($this->db->getSqlQuery($sql, ['days' => $bulk])) $num += intval($this->db->getSqlAffected());
+        $sql = 'DELETE FROM '.PREFIX_DB.'_mail WHERE status = 1 AND kind <> \'newsletter\' AND time < DATE_SUB(NOW(), INTERVAL :days DAY) LIMIT '.self::PRUNENUM;
+        if ($this->db->getSqlQuery($sql, ['days' => $keep])) $num += intval($this->db->getSqlAffected());
+        return $num;
+    }
+
+    # Deliver one claimed row and record what the transport answered, which is the only place a stored message turns into a delivered one
+    private function setQueueSend(array $row): bool {
+        $id = intval($row['id']);
+        $body = (string)$row['body'];
+        $ref = intval($row['ref']);
+        if ($ref > 0) {
+            $text = $this->getRefBody((string)$row['kind'], $ref);
+            if ($text === null) {
+                $this->setResult($id, false, 'the shared body this message refers to no longer exists', true);
+                return false;
+            }
+            $body = $text;
+        }
+        $sent = $this->setDelivery((string)$row['email'], (string)$row['sender'], (string)$row['title'], $body, intval($row['prio']));
+        $this->setResult($id, $sent, $sent ? '' : $this->error);
+        return $sent;
+    }
+
+    # Resolve the shared body of a bulk message once per batch, because a mailing stores its text on its own row and its queue rows carry only the reference to it
+    private function getRefBody(string $kind, int $ref): ?string {
+        global $prs;
+        if (isset($this->refs[$ref])) return $this->refs[$ref];
+        if ($kind !== 'newsletter') return null;
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT body FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $ref]));
+        if (!$row) return null;
+        $body = (string)$row['body'];
+        $this->refs[$ref] = ($prs instanceof Parser) ? $prs->filterContent($body, false, 'all') : $body;
+        return $this->refs[$ref];
+    }
+
+    # Release the claims of a run that died before it recorded a result, so its rows become claimable again once the lock window of the drain job has passed
+    private function deleteClaim(): void {
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NULL, lockid = \'\' WHERE status = 0 AND locked IS NOT NULL AND locked < DATE_SUB(NOW(), INTERVAL :wait SECOND)';
+        $this->db->getSqlQuery($sql, ['wait' => $this->wait]);
+    }
+
+    # Give the rows this run still holds back to the queue, which is what a run stopped by its time budget or by the rate cap leaves behind for the next one
+    # The next attempt goes back to now, because a released row is due again immediately and must not sit out the lock window the claim moved it behind
+    private function deleteLock(): void {
+        if ($this->lock === '') return;
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NULL, lockid = \'\', ntime = NOW() WHERE lockid = :lock AND status = 0';
+        $this->db->getSqlQuery($sql, ['lock' => $this->lock]);
+        $this->lock = '';
+    }
+
+    # Count what is still waiting, which is the number a drain reports and the one that says whether a run ended because the queue was empty
+    private function getPending(): int {
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE status = 0 AND hold = 0'));
+        return intval($row['num'] ?? 0);
+    }
+
+    # Size the run against the context it was started in: a CLI run may use the lock window of its job, a run inside a web request only part of what the request itself has
+    private function getBudget(bool $cli): int {
+        if ($cli) return max(60, $this->wait - 60);
+        $max = intval(ini_get('max_execution_time'));
+        return ($max > 0) ? max(10, intval($max * 0.6)) : 120;
+    }
+
+    # Read the rate window the runs share, so a cap of messages per minute holds across two consecutive runs and across a manual trigger instead of only inside one run
+    private function getRateWindow(): void {
+        $state = function_exists('getSchedulerState') ? getSchedulerState('maildrain') : [];
+        $this->rsec = intval($state['rate_start'] ?? 0);
+        $this->rnum = intval($state['rate_count'] ?? 0);
+    }
+
+    # Persist the window this run leaves behind, which is what the next run resumes instead of opening a window of its own and doubling the cap
+    private function setRateWindow(): void {
+        if (!function_exists('getSchedulerState') || !function_exists('setSchedulerState')) return;
+        setSchedulerState('maildrain', array_replace(getSchedulerState('maildrain'), ['rate_start' => $this->rsec, 'rate_count' => $this->rnum]));
+    }
+
+    # Report whether one more message may leave inside the current minute, opening a fresh window when the last one has expired; a spent window stops the run rather than slowing it
+    private function checkRate(): bool {
+        $time = time();
+        if ($time - $this->rsec >= 60) {
+            $this->rsec = $time;
+            $this->rnum = 0;
+        }
+        $cap = max(0, intval($this->conf['rate'] ?? 0));
+        return $cap < 1 || $this->rnum < $cap;
     }
 
     # Return the description of the last failure
@@ -164,9 +367,12 @@ class Mail {
         return implode(self::CRLF, $head);
     }
 
-    # Encode the transport-independent parts of one message and hand it to the configured transport, which is the only path from stage 2 the drain uses
+    # Encode the transport-independent parts of one message and hand it to the configured transport, which is the only path out of the queue and is reachable from the drain alone
     # An unset or unknown transport delivers through PHP mail(), so an installation that upgrades and configures nothing keeps sending the way it did before
+    # The phase and the code are cleared per message, so what a failed row records is what its own attempt answered and never what an earlier row left behind
     private function setDelivery(string $rcpt, string $smail, string $text, string $body, int $prio): bool {
+        $this->phase = '';
+        $this->code = '';
         $subj = $this->getSubject($text);
         $body = $this->getBody($body);
         return match ($this->conf['transport'] ?? '') {

@@ -11,7 +11,8 @@ use ReflectionMethod;
  * core/classes/mail.php. Nothing here reaches mail() itself — the covered behaviour is what has to
  * happen before a transport is entered (an address that fails validation aborts the send instead of
  * being cleaned) and what the transport builds around it (the masked log address and the client
- * block that only the originating request can supply).
+ * block that only the originating request can supply). Since stage 2 the transports are reached the
+ * way the drain reaches them, through the private send path, because addQueue() only stores a row.
  */
 final class MailTransportTest extends TestCase
 {
@@ -34,6 +35,12 @@ final class MailTransportTest extends TestCase
     private function getCall(\Mail $mailer, string $meth, array $args): mixed
     {
         return (new ReflectionMethod(\Mail::class, $meth))->invokeArgs($mailer, $args);
+    }
+
+    # Deliver one message the way the drain does, through the transport rather than through the queue, which from stage 2 is the only path a message takes out
+    private function getSend(\Mail $mailer): bool
+    {
+        return (bool)$this->getCall($mailer, 'setDelivery', ['user@slaed.net', 'info@slaed.net', 'Test', 'Hello', 3]);
     }
 
     # A recipient carrying a line break is refused before any transport is entered, so an injected header can never reach mail()
@@ -88,7 +95,7 @@ final class MailTransportTest extends TestCase
     {
         if (!function_exists('proc_open')) $this->markTestSkipped('proc_open is disabled on this host');
         $mailer = $this->getMail(['transport' => 'sendmail', 'sendmail' => '/no/such/binary/sendmail']);
-        $this->assertFalse($mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']));
+        $this->assertFalse($this->getSend($mailer));
         $this->assertSame('the configured sendmail path is not an executable file', $mailer->getError());
     }
 
@@ -98,7 +105,7 @@ final class MailTransportTest extends TestCase
     {
         if (!function_exists('proc_open')) $this->markTestSkipped('proc_open is disabled on this host');
         $mailer = $this->getMail(['transport' => 'sendmail', 'sendmail' => '/usr/sbin/sendmail -OQueueDirectory=/tmp -X/tmp/trace']);
-        $this->assertFalse($mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']));
+        $this->assertFalse($this->getSend($mailer));
         $this->assertSame('the configured sendmail path is not an executable file', $mailer->getError());
     }
 

@@ -1486,6 +1486,44 @@ ALTER TABLE `{prefix}_voting`
   MODIFY `answer` TEXT NOT NULL;
 
 # =============================================================================
+# Batch X — _mail, the outgoing mail queue
+# =============================================================================
+#
+# The table is new in 6.3 and has no legacy source, so the create carries the
+# primary key alone and every secondary index is added through addidx. An
+# installation whose upgrade stopped midway therefore gains only the indexes it
+# is still missing instead of failing on the ones it already has.
+
+CREATE TABLE IF NOT EXISTS `{prefix}_mail` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `kind` VARCHAR(20) NOT NULL DEFAULT '',
+  `sender` VARCHAR(100) NOT NULL DEFAULT '',
+  `email` VARCHAR(255) NOT NULL DEFAULT '',
+  `title` VARCHAR(255) NOT NULL DEFAULT '',
+  `body` MEDIUMTEXT NOT NULL,
+  `ref` INT UNSIGNED NOT NULL DEFAULT 0,
+  `prio` TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ntime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `tries` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `status` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `camp` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `hold` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `locked` DATETIME DEFAULT NULL,
+  `lockid` CHAR(32) NOT NULL DEFAULT '',
+  `phase` VARCHAR(10) NOT NULL DEFAULT '',
+  `code` VARCHAR(20) NOT NULL DEFAULT '',
+  `error` VARCHAR(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CALL addidx('{prefix}_mail', 'hold_status_prio_ntime', '`hold`, `status`, `prio`, `ntime`, `id`', 0);
+CALL addidx('{prefix}_mail', 'kind_status_time',       '`kind`, `status`, `time`',                0);
+CALL addidx('{prefix}_mail', 'kind_ref_status',        '`kind`, `ref`, `status`',                 0);
+CALL addidx('{prefix}_mail', 'lockid',                 '`lockid`',                                0);
+CALL addidx('{prefix}_mail', 'locked',                 '`locked`',                                0);
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 

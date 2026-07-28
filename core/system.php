@@ -275,7 +275,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 # Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
-    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc'];
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -528,6 +528,7 @@ function addSchedulerSystemJob(string $name): array {
         'backup' => addBackupTask(),
         'filescan' => addFilescanTask(),
         'sitemap' => addSitemapTask(),
+        'maildrain' => addMailTask(),
         'newsletter' => updateNewsletter(true),
         'cachegc' => addCacheGcTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
@@ -3747,6 +3748,28 @@ function filterSize(mixed $size): string {
     $unit = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     for ($idx = 0, $max = count($unit) - 1; $val >= 1024 && $idx < $max; $idx++) $val /= 1024;
     return round($val, 2).' '.$unit[$idx];
+}
+
+# Drain the outgoing mail queue as a scheduler job and report what the run delivered, what it refused and what is still waiting
+# A run that delivered nothing while refusing something is reported as failed, because that is a transport the administrator has to be told about rather than a quiet retry
+# An empty queue is a successful run and never idle: this job runs every five minutes, and idle would count as a failure and leave the last success behind on a healthy installation
+function addMailTask(): array {
+    global $mailer;
+    if (!$mailer instanceof Mail) return ['status' => 'failed', 'message' => 'Mail service is unavailable'];
+    $data = $mailer->updateQueue();
+    if ($data['stop'] === 'database') return ['status' => 'failed', 'message' => 'The mail queue is unreachable'];
+    if ($data['sent'] === 0 && $data['fail'] === 0) return ['status' => 'success', 'message' => 'Nothing to send, pending '.$data['left']];
+    return [
+        'status' => ($data['sent'] === 0 && $data['fail'] > 0) ? 'failed' : 'success',
+        'message' => 'Sent '.$data['sent'].', failed '.$data['fail'].', pending '.$data['left'],
+        'extra' => [
+            'last_mail_sent' => $data['sent'],
+            'last_mail_failed' => $data['fail'],
+            'last_mail_pending' => $data['left'],
+            'last_mail_pruned' => $data['kept'],
+            'last_mail_stop' => $data['stop'],
+        ],
+    ];
 }
 
 # Newsletter send

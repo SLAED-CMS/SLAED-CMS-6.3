@@ -13,6 +13,8 @@ use ReflectionProperty;
  * real socket semantics rather than a mock: multi-line replies, an unexpected code, dot-stuffing, CRLF
  * line endings, the mechanism actually advertised, the timeout, and the socket being closed on every
  * failure path. No test reaches a real relay, and no credential is allowed into a failure message.
+ * Since stage 2 a message enters the transport the way the drain sends it, through the private send
+ * path, because addQueue() stores a row and delivers nothing.
  */
 final class MailSmtpTest extends TestCase
 {
@@ -51,6 +53,12 @@ final class MailSmtpTest extends TestCase
         fwrite($pair[1], $answ);
         (new ReflectionProperty(\Mail::class, 'sock'))->setValue($mailer, $pair[0]);
         return $pair[1];
+    }
+
+    # Deliver one message the way the drain does, through the transport rather than through the queue, which from stage 2 is the only path a message takes to a relay
+    private function getSend(\Mail $mailer, string $subj = 'Test', string $body = 'Hello'): bool
+    {
+        return (bool)$this->getCall($mailer, 'setDelivery', ['user@slaed.net', 'info@slaed.net', $subj, $body, 3]);
     }
 
     # Read everything the class wrote to the relay, without blocking on a connection it left open
@@ -211,14 +219,7 @@ final class MailSmtpTest extends TestCase
     {
         $mailer = $this->getMail(['transport' => 'smtp', 'host' => 'relay.slaed.net']);
         $peer = $this->getRelay($mailer, "250 sender ok\r\n250 recipient ok\r\n354 end with a dot\r\n250 queued as 2B1F\r\n");
-        $sent = $mailer->addQueue([
-            'kind' => 'account',
-            'email' => 'user@slaed.net',
-            'title' => 'Password reset',
-            'body' => '<p>Hello</p>',
-            'sender' => 'info@slaed.net',
-        ]);
-        $this->assertTrue($sent);
+        $this->assertTrue($this->getSend($mailer, 'Password reset', '<p>Hello</p>'));
         $text = $this->getSent($peer);
         $this->assertStringStartsWith("MAIL FROM:<info@slaed.net>\r\nRCPT TO:<user@slaed.net>\r\nDATA\r\n", $text);
         $this->assertStringEndsWith("\r\n.\r\n", $text);
@@ -233,9 +234,8 @@ final class MailSmtpTest extends TestCase
     {
         $mailer = $this->getMail(['transport' => 'smtp', 'host' => 'relay.slaed.net']);
         $peer = $this->getRelay($mailer, str_repeat("250 sender ok\r\n250 recipient ok\r\n354 end with a dot\r\n250 queued\r\n", 2));
-        $mesg = ['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net'];
-        $this->assertTrue($mailer->addQueue($mesg));
-        $this->assertTrue($mailer->addQueue($mesg));
+        $this->assertTrue($this->getSend($mailer));
+        $this->assertTrue($this->getSend($mailer));
         $text = $this->getSent($peer);
         $this->assertSame(2, substr_count($text, 'MAIL FROM:<info@slaed.net>'));
         $this->assertStringNotContainsString('EHLO', $text);
@@ -248,8 +248,7 @@ final class MailSmtpTest extends TestCase
     {
         $mailer = $this->getMail(['transport' => 'smtp', 'host' => 'relay.slaed.net']);
         $peer = $this->getRelay($mailer, "250 sender ok\r\n550 no such user here\r\n");
-        $sent = $mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']);
-        $this->assertFalse($sent);
+        $this->assertFalse($this->getSend($mailer));
         $this->assertSame('the relay refused at rcpt: 550 no such user here', $mailer->getError());
         $this->assertSame('rcpt', $this->getField($mailer, 'phase'));
         $this->assertStringNotContainsString('DATA', $this->getSent($peer));
@@ -286,8 +285,7 @@ final class MailSmtpTest extends TestCase
     public function theSmtpTransportRefusesAnEmptyHost(): void
     {
         $mailer = $this->getMail(['transport' => 'smtp']);
-        $sent = $mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']);
-        $this->assertFalse($sent);
+        $this->assertFalse($this->getSend($mailer));
         $this->assertSame('no smtp host is configured', $mailer->getError());
         $this->assertSame('connect', $this->getField($mailer, 'phase'));
     }
@@ -298,8 +296,7 @@ final class MailSmtpTest extends TestCase
     {
         $mailer = $this->getMail(['transport' => 'smtp', 'host' => '127.0.0.1', 'port' => '59991', 'timeout' => '1']);
         $time = microtime(true);
-        $sent = $mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']);
-        $this->assertFalse($sent);
+        $this->assertFalse($this->getSend($mailer));
         $this->assertStringStartsWith('the relay could not be reached', $mailer->getError());
         $this->assertNull($this->getField($mailer, 'sock'));
         $this->assertLessThan(10, microtime(true) - $time, 'The connect attempt outlived its timeout');

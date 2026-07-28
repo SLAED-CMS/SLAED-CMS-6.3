@@ -173,6 +173,15 @@ function getMailPanel(): string {
         'maxlength_num' => 255,
         'is_config' => true,
     ]).$noprc, 'sendmail');
+    foreach ([['mailbatch', _MAIL_BATCH, 'batch', '25'], ['mailrate', _MAIL_RATE, 'rate', '60'], ['mailtries', _MAIL_TRIES, 'tries', '5'],
+        ['mailback', _MAIL_BACKOFF, 'backoff', '300'], ['mailkeep', _MAIL_KEEP, 'keep', '30'], ['mailbulk', _MAIL_KEEPBULK, 'keepbulk', '3']] as $item) {
+        $rows[] = getMailRow($item[1], $tpl->getHtmlFrag('input', [
+            'itype' => 'number',
+            'name_attr' => $item[0],
+            'value_attr' => (string)($mail[$item[2]] ?? $item[3]),
+            'is_config' => true,
+        ]));
+    }
     $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEST, 'hint' => _MAIL_TESTINFO]), $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailto',
@@ -924,6 +933,12 @@ function save(): void {
             'auth' => getVar('post', 'mailauth', 'num'),
             'user' => trim(getVar('post', 'mailuser', 'raw')),
             'timeout' => getVar('post', 'mailtime', 'num', 10),
+            'batch' => max(1, getVar('post', 'mailbatch', 'num', 25)),
+            'rate' => max(0, getVar('post', 'mailrate', 'num', 60)),
+            'tries' => max(1, getVar('post', 'mailtries', 'num', 5)),
+            'backoff' => max(1, getVar('post', 'mailback', 'num', 300)),
+            'keep' => max(1, getVar('post', 'mailkeep', 'num', 30)),
+            'keepbulk' => max(1, getVar('post', 'mailbulk', 'num', 3)),
         ];
         if ($mpass !== '') $mail['pass'] = $mpass;
         setConfigFile('global.php', $cont);
@@ -934,6 +949,8 @@ function save(): void {
 
 # The test button sits inside the shared config form, so its POST carries the password field, and Logger writes every posted field into a failure entry
 # The send reads the stored configuration and never that field, so it is dropped before any transport can fail and record the request that produced it
+# The message is queued like every other one and the drain is then run inside this request, because a button that only stored a row would stop proving that the settings work
+# A run that sent nothing is reported as such: the rate window or the time budget can end a drain before the test message leaves, and success would be a claim nobody verified
 function mailtest(): void {
     global $afile, $conf, $mailer;
     unset($_POST['mailpass']);
@@ -944,9 +961,14 @@ function mailtest(): void {
     if (!$warn) {
         $mail = trim(getVar('post', 'mailto', 'raw')) ?: (string)$conf['adminmail'];
         $body = str_replace('[text]', _MAIL_TEST.': '.$conf['homeurl'], (string)$conf['mtemp']);
-        $sent = $mailer->addQueue(['kind' => 'test', 'email' => $mail, 'sender' => (string)$conf['adminmail'], 'title' => _MAIL_TEST, 'body' => $body, 'prio' => 1]);
-        $warn = !$sent;
-        $text = $sent ? _MAIL_TESTOK : _ERROR.': '.$mailer->getError();
+        $data = ['sent' => 0, 'fail' => 0];
+        if ($mailer->addQueue(['kind' => 'test', 'email' => $mail, 'sender' => (string)$conf['adminmail'], 'title' => _MAIL_TEST, 'body' => $body, 'prio' => 1])) {
+            $data = $mailer->updateQueue();
+        } else {
+            $data['fail'] = 1;
+        }
+        $warn = $data['sent'] < 1;
+        $text = ($data['fail'] > 0) ? _ERROR.': '.$mailer->getError() : (($data['sent'] > 0) ? _MAIL_TESTOK : _MAIL_TESTWAIT);
     }
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $text, $warn);
 }

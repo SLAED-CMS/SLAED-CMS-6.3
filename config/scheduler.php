@@ -45,6 +45,18 @@ return [
                 'settings' => [
                 ],
             ],
+            'maildrain' => [
+                'title' => 'Mail delivery',
+                'type' => 'system',
+                'active' => '1',
+                'system' => 'maildrain',
+                'schedule' => '*/5 * * * *',
+                'priority' => '2',
+                'lock_timeout' => '900',
+                'manual' => '1',
+                'settings' => [
+                ],
+            ],
             'newsletter' => [
                 'title' => 'Newsletter',
                 'type' => 'system',

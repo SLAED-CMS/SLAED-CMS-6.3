@@ -598,6 +598,25 @@ function save(): void {
             $cont = array_merge($cont, $existing);
         }
         setConfigFile('modules.php', $cont);
+        $sfile = CONFIG_DIR.'/scheduler.php';
+        if (file_exists($sfile)) {
+            $sdata = require $sfile;
+            $sched = $sdata['scheduler'] ?? [];
+            if (is_array($sched) && !isset($sched['jobs']['maildrain'])) {
+                $sched['jobs']['maildrain'] = [
+                    'title' => 'Mail delivery',
+                    'type' => 'system',
+                    'active' => '1',
+                    'system' => 'maildrain',
+                    'schedule' => '*/5 * * * *',
+                    'priority' => '2',
+                    'lock_timeout' => '900',
+                    'manual' => '1',
+                    'settings' => [],
+                ];
+                setConfigFile('scheduler.php', $sched);
+            }
+        }
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
         [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
