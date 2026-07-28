@@ -1,7 +1,6 @@
 # Contributing to SLAED CMS
 
 > **Contribution Guidelines for SLAED CMS 6.3**
-> *Last updated: June 2026*
 
 Thank you for your interest in contributing to SLAED CMS. This document describes the current contribution workflow, coding conventions, and project-specific rules that contributors should follow.
 

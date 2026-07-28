@@ -4,12 +4,11 @@
 [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-90%25_Complete-purple.svg)
+[![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg)](#)
+[![Migration](https://img.shields.io/badge/Migration-90%25_Complete-purple.svg)](#)
+[![Security](https://img.shields.io/badge/Security-90%2F100-brightgreen.svg)](SECURITY.md)
 
 **Modular PHP Content Management System**
-
-> *Last updated: June 2026*
 
 SLAED CMS is a modular content management system with a current PHP runtime, a PDO-backed database layer, multi-language support, and an actively evolving template stack.
 

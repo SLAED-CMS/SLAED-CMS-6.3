@@ -222,10 +222,13 @@ final class MailQueueTest extends TestCase
     }
 
     # Nothing outside the class may deliver: the queue is the only way out, so every transport and the composition around it stays private
+    # The campaign methods are state, not delivery: they mark rows claimable or held and never reach a transport, which is why they may be public
     #[Test]
     public function noPublicMethodDelivers(): void
     {
         $want = ['__construct', '__destruct', 'addQueue', 'getError', 'getBatch', 'setResult', 'updateQueue', 'deleteQueue'];
+        $want = array_merge($want, ['checkAddress', 'getCampLeft', 'setCampAbort', 'setCampFree', 'setCampReady']);
+        $want = array_merge($want, ['getList', 'getStats', 'setQueueRetry', 'deleteQueueRows']);
         $have = [];
         foreach ((new \ReflectionClass(\Mail::class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $meth) {
             $have[] = $meth->getName();

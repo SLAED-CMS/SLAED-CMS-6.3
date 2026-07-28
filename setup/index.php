@@ -598,10 +598,18 @@ function save(): void {
             $cont = array_merge($cont, $existing);
         }
         setConfigFile('modules.php', $cont);
+        $nlist = [];
+        $ntable = $xprefix.'_newsletter';
+        $ncols = $db->getSqlQuery('SHOW COLUMNS FROM `'.$ntable.'` LIKE :col', ['col' => 'mails']);
+        if ($ncols && $db->getSqlRowCount($ncols) > 0) {
+            $result = $db->getSqlQuery('SELECT id, title, mails FROM `'.$ntable.'` WHERE mails IS NOT NULL AND mails != \'\'');
+            while ($row = $db->getSqlRow($result)) $nlist[(int)$row['id']] = ['title' => (string)$row['title'], 'mails' => (string)$row['mails']];
+        }
         $sfile = CONFIG_DIR.'/scheduler.php';
         if (file_exists($sfile)) {
             $sdata = require $sfile;
             $sched = $sdata['scheduler'] ?? [];
+            $sdone = false;
             if (is_array($sched) && !isset($sched['jobs']['maildrain'])) {
                 $sched['jobs']['maildrain'] = [
                     'title' => 'Mail delivery',
@@ -614,11 +622,32 @@ function save(): void {
                     'manual' => '1',
                     'settings' => [],
                 ];
-                setConfigFile('scheduler.php', $sched);
+                $sdone = true;
             }
+            if (is_array($sched) && isset($sched['jobs']['newsletter']) && is_array($sched['jobs']['newsletter'])) {
+                $sched['jobs']['newsletter']['active'] = '1';
+                $sched['jobs']['newsletter']['schedule'] = '*/5 * * * *';
+                $sdone = true;
+            }
+            if ($sdone) setConfigFile('scheduler.php', $sched);
         }
+        setConfigFile('newsletter.php', ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500']);
         $title = _SAVE_UPDATE;
         $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $nsent = 0;
+        foreach ($nlist as $nid => $one) {
+            $mails = array_values(array_unique(array_filter(array_map('trim', explode(',', $one['mails'])), 'strlen')));
+            foreach ($mails as $mail) {
+                if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) continue;
+                $sql = 'INSERT INTO `'.$xprefix.'_mail` (kind, sender, email, title, body, ref, prio, time, ntime)'
+                    .' VALUES (\'newsletter\', :from, :mail, :title, \'\', :ref, 3, NOW(), NOW())';
+                $db->getSqlQuery($sql, ['from' => (string)$conf['adminmail'], 'mail' => $mail, 'title' => substr($one['title'], 0, 255), 'ref' => $nid]);
+                $nsent++;
+            }
+            $sql = 'UPDATE `'.$ntable.'` SET status = 5, audit = \'list\', expect = :num, total = :num WHERE id = :id';
+            $db->getSqlQuery($sql, ['num' => count($mails), 'id' => $nid]);
+        }
+        $bodytext .= getInfo($ntable.' pending recipients moved into the mail queue (rows written: '.$nsent.')', true);
         [$acount] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM `'.$xprefix.'_users` WHERE `avatar` LIKE \'default/%\''));
         $bodytext .= getInfo($xprefix.'_users avatar migration (legacy rows left: '.(int)$acount.')', (int)$acount === 0);
     }

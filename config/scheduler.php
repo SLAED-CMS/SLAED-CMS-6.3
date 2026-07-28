@@ -60,9 +60,9 @@ return [
             'newsletter' => [
                 'title' => 'Newsletter',
                 'type' => 'system',
-                'active' => '0',
+                'active' => '1',
                 'system' => 'newsletter',
-                'schedule' => '1 * * * *',
+                'schedule' => '*/5 * * * *',
                 'priority' => '1',
                 'lock_timeout' => '900',
                 'manual' => '1',

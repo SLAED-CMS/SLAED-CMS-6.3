@@ -2,9 +2,10 @@
   href="{% if href %}{{ href }}{% else %}#{% endif %}"
   title="{{ title }}"
 
-  {% if class or is_admin_language_link or rel or toggle_onclick or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_top_hidden or isdebug or isslaed %}
+  {% if class or is_admin_language_link or rel or toggle_onclick or is_account_button or is_num_anchor or is_button_blue or is_button_green or is_footer_button or is_votes or is_comments or is_top_hidden or isdebug or isslaed or is_mini %}
   class="
     {{ class }}
+    {% if is_mini %} sl-dial-item sl-but-mini{% endif %}
     {% if is_admin_language_link %} sl-admin-language-link{% endif %}
     {% if rel %} sl-tabs-link{% endif %}
     {% if rel and is_active %} sl-is-active{% endif %}

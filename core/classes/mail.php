@@ -19,9 +19,11 @@ class Mail {
     private const MAILLEN = 255;
     private const SUBJLEN = 255;
     private const PRUNENUM = 1000;
+    private const DEADCAP = 255;
 
     private ?Database $db;
     private array $conf;
+    private array $rule;
     private string $site;
     private int $wait;
     private string $error = '';
@@ -35,13 +37,17 @@ class Mail {
     private string $mask = '';
     private string $lock = '';
     private array $refs = [];
+    private array $camp = [];
+    private array $dns = [];
     private int $rsec = 0;
     private int $rnum = 0;
 
     # Build the service from the site config; the database handle is what the queue is stored in and the lock window is read from the drain job, whose claims this object releases
+    # Two sections are read, because delivery and campaign policy are different questions: mail says how a message leaves, newsletter says how a mailing is allowed to run
     public function __construct(?Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
+        $this->rule = is_array($conf['newsletter'] ?? null) ? $conf['newsletter'] : [];
         $this->site = $conf['sitename'] ?? '';
         $job = $conf['scheduler']['jobs']['maildrain'] ?? [];
         $this->wait = max(60, intval(is_array($job) ? ($job['lock_timeout'] ?? 0) : 0) ?: 900);
@@ -55,6 +61,7 @@ class Mail {
     # Accept one message from a call site and store it as a queue row; the answer means accepted into the queue, and no caller learns the delivery outcome synchronously any more
     # The client block is appended here, inside the request that owns the visitor data, and never at send time where only the scheduler's own address would be available
     # Every value is bounded against the column that stores it, because under strict SQL mode an oversized write fails and would take the message with it
+    # A campaign row is written held and marked as part of an audience, so nothing of a mailing is claimable until the state machine of that mailing says so
     public function addQueue(array $mesg): bool {
         $kind = substr($this->filterHeader($mesg['kind'] ?? ''), 0, self::KINDLEN);
         $rcpt = $this->filterAddress($mesg['email'] ?? '');
@@ -67,8 +74,10 @@ class Mail {
         $ref = max(0, intval($mesg['ref'] ?? 0));
         $body = ($ref > 0) ? '' : (string)($mesg['body'] ?? '');
         if ($ref === 0 && !empty($mesg['client'])) $body .= $this->getClientBlock();
-        $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, time, ntime) VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, NOW(), NOW())';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_mail (kind, sender, email, title, body, ref, prio, camp, hold, time, ntime)'
+            .' VALUES (:kind, :from, :mail, :subj, :body, :ref, :prio, :camp, :hold, NOW(), NOW())';
         $pars = ['kind' => $kind, 'from' => $smail, 'mail' => $rcpt, 'subj' => $subj, 'body' => $body, 'ref' => $ref, 'prio' => (intval($mesg['prio'] ?? 0) ?: 3)];
+        $pars += ['camp' => empty($mesg['camp']) ? 0 : 2, 'hold' => empty($mesg['hold']) ? 0 : 1];
         if (!$this->db->getSqlQuery($sql, $pars)) return $this->setError('the message could not be stored in the queue', ['kind' => $kind, 'mail' => $this->getMaskedMail($rcpt)]);
         return true;
     }
@@ -84,7 +93,7 @@ class Mail {
         $sql = 'UPDATE '.PREFIX_DB.'_mail SET locked = NOW(), lockid = :lock, ntime = DATE_ADD(NOW(), INTERVAL :wait SECOND)'
             .' WHERE hold = 0 AND status = 0 AND ntime <= NOW() ORDER BY prio ASC, ntime ASC, id ASC LIMIT '.intval($num);
         if (!$this->db->getSqlQuery($sql, ['lock' => $this->lock, 'wait' => $this->wait]) || intval($this->db->getSqlAffected()) < 1) return [];
-        $sql = 'SELECT id, kind, sender, email, title, body, ref, prio, tries FROM '.PREFIX_DB.'_mail WHERE lockid = :lock ORDER BY prio ASC, id ASC';
+        $sql = 'SELECT id, kind, sender, email, title, body, ref, prio, tries, camp FROM '.PREFIX_DB.'_mail WHERE lockid = :lock ORDER BY prio ASC, id ASC';
         return $this->db->getSqlRows($this->db->getSqlQuery($sql, ['lock' => $this->lock])) ?: [];
     }
 
@@ -147,13 +156,19 @@ class Mail {
                     break 2;
                 }
                 $this->rnum++;
-                if ($this->setQueueSend($row)) $out['sent']++;
+                $done = $this->setQueueSend($row);
+                if ($done === 'stop') {
+                    $out['stop'] = 'transport';
+                    break 2;
+                }
+                if ($done === 'sent') $out['sent']++;
                 else $out['fail']++;
             }
             $this->setRateWindow();
         }
         $this->deleteLock();
         $this->setRateWindow();
+        $this->updateCampState();
         $out['kept'] = $this->deleteQueue();
         $out['left'] = $this->getPending();
         return $out;
@@ -173,22 +188,240 @@ class Mail {
         return $num;
     }
 
-    # Deliver one claimed row and record what the transport answered, which is the only place a stored message turns into a delivered one
-    private function setQueueSend(array $row): bool {
+    # Deliver one claimed row, classify what the transport answered and record it, which is the only place a stored message turns into a delivered one
+    # The answer says what the run should do next: a refusal describing the transport rather than the message stops the run instead of spending an attempt on every remaining row
+    # A refusal is permanent for the row unless its code says otherwise, and only a permanent verdict at the recipient step is ever read as a statement about the address
+    # The phase and the code are cleared before anything is attempted, so a row refused before a transport is entered cannot be recorded under the answer the previous row got
+    private function setQueueSend(array $row): string {
         $id = intval($row['id']);
         $body = (string)$row['body'];
         $ref = intval($row['ref']);
+        $this->phase = '';
+        $this->code = '';
         if ($ref > 0) {
             $text = $this->getRefBody((string)$row['kind'], $ref);
             if ($text === null) {
                 $this->setResult($id, false, 'the shared body this message refers to no longer exists', true);
-                return false;
+                $this->setCampResult($row, false, 'message');
+                return 'fail';
             }
             $body = $text;
         }
         $sent = $this->setDelivery((string)$row['email'], (string)$row['sender'], (string)$row['title'], $body, intval($row['prio']));
-        $this->setResult($id, $sent, $sent ? '' : $this->error);
-        return $sent;
+        if ($sent) {
+            $this->setResult($id, true);
+            $this->setCampResult($row, true, '');
+            return 'sent';
+        }
+        $scope = $this->getFailScope();
+        if ($scope === 'transport') {
+            Logger::addSite('error', 'Mail: the run was stopped, the transport refused before any message was accepted', ['phase' => $this->phase, 'code' => $this->code]);
+            return 'stop';
+        }
+        $this->setResult($id, false, $this->error, $scope !== 'temp');
+        if ($scope === 'rcpt') $this->addDeadMail((string)$row['email']);
+        if ($scope === 'campaign' && (string)$row['kind'] === 'newsletter') $this->setCampAbort(intval($row['ref']), 'the relay refused the sender of this mailing');
+        $this->setCampResult($row, false, $scope);
+        return 'fail';
+    }
+
+    # Classify one refusal by the step it happened at, because a code without its phase cannot be interpreted and only one of the phases says anything about the recipient
+    # A refusal carrying no code at all is temporary by definition: nothing answered, so nothing was decided, which is also the shape every non-dialogue transport reports
+    private function getFailScope(): string {
+        if ($this->code === '' || $this->code[0] !== '5') return 'temp';
+        return match ($this->phase) {
+            'connect', 'ehlo', 'tls', 'auth' => 'transport',
+            'from' => 'campaign',
+            'rcpt' => 'rcpt',
+            default => 'message',
+        };
+    }
+
+    # Record one campaign result against the mailing that owns it: what was accepted, what was lost, and whether the sample it belongs to has finished
+    # The counters are the mailing's own history, so they are written per result rather than recomputed later from rows retention will eventually remove
+    # The classification is handed in rather than derived again here, because by this point it also describes a row that never reached a transport at all
+    private function setCampResult(array $row, bool $sent, string $scope): void {
+        if ((string)$row['kind'] !== 'newsletter') return;
+        $ref = intval($row['ref']);
+        if ($ref < 1) return;
+        $dead = ($scope !== '' && $scope !== 'temp');
+        $this->camp[$ref] = true;
+        if ($sent) $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET send = send + 1 WHERE id = :id', ['id' => $ref]);
+        elseif ($dead) $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET fails = fails + 1 WHERE id = :id', ['id' => $ref]);
+        if ($scope === 'rcpt') $this->checkCampBreak($ref);
+    }
+
+    # Stop a mailing whose recent results say the list is damaging the sender, counting only the refusals that were verdicts about a recipient
+    # The window is the last results of that campaign and is read once enough of them exist, because a rate over three results is not a rate
+    private function checkCampBreak(int $ref): void {
+        $win = max(1, intval($this->rule['breakwin'] ?? 0) ?: 100);
+        $bad = max(1, min(100, intval($this->rule['abort'] ?? 0) ?: 10));
+        $sql = 'SELECT status, phase FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status IN (1, 2) ORDER BY id DESC LIMIT '.$win;
+        $rows = $this->db->getSqlRows($this->db->getSqlQuery($sql, ['id' => $ref])) ?: [];
+        if (count($rows) < $win) return;
+        $num = 0;
+        foreach ($rows as $one) {
+            if (intval($one['status']) === 2 && (string)$one['phase'] === 'rcpt') $num++;
+        }
+        if (($num * 100 / $win) < $bad) return;
+        $this->setCampAbort($ref, 'the hard failure rate of this mailing crossed the configured limit');
+    }
+
+    # Hold back everything a mailing has not sent yet and say why, which is what an abort is: the rows stay, they simply stop being claimable
+    # Both slices are held, because aborting during the sample has to stop the sample as well and only a release decides what runs again
+    public function setCampAbort(int $ref, string $mesg): bool {
+        if ($ref < 1 || !$this->db instanceof Database) return false;
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET hold = 1 WHERE kind = \'newsletter\' AND ref = :id AND camp > 0 AND status = 0';
+        $this->db->getSqlQuery($sql, ['id' => $ref]);
+        $sql = 'UPDATE '.PREFIX_DB.'_newsletter SET status = 7, note = :note WHERE id = :id AND status IN (1, 3, 4, 5)';
+        $this->db->getSqlQuery($sql, ['note' => mb_substr($mesg, 0, self::ERRLEN), 'id' => $ref]);
+        Logger::addSite('warning', 'Mail: '.$mesg, ['kind' => 'newsletter', 'ref' => $ref]);
+        return true;
+    }
+
+    # Release the audience a held or aborted mailing is still holding, which is the one transition only an operator performs
+    # The sample is left alone: it was released once, it already has its results, and clearing its hold again would say nothing
+    # A release that frees nothing finishes the mailing instead of starting it: suppression can leave an audience no larger than the sample already sent
+    public function setCampFree(int $ref): bool {
+        if ($ref < 1 || !$this->db instanceof Database) return false;
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET hold = 0, ntime = NOW() WHERE kind = \'newsletter\' AND ref = :id AND camp = 2 AND status = 0';
+        $this->db->getSqlQuery($sql, ['id' => $ref]);
+        $sql = ($this->getCampLeft($ref) > 0)
+            ? 'UPDATE '.PREFIX_DB.'_newsletter SET status = 5, note = \'\' WHERE id = :id AND status IN (4, 7)'
+            : 'UPDATE '.PREFIX_DB.'_newsletter SET status = 6, note = \'\', endtime = NOW() WHERE id = :id AND status IN (4, 7)';
+        return (bool)$this->db->getSqlQuery($sql, ['id' => $ref]);
+    }
+
+    # Close the expansion of one mailing: either a sample is drawn and released while the rest stays held, or the whole audience is released at once
+    # Three tests decide it and all read the frozen audience size, so a restart cannot send a campaign down a different branch than the one it started on
+    # A sample of nothing would be a state no run could ever finish, which is what the size floor and the zero tests each guard from their own side
+    public function setCampReady(int $ref, int $size): int {
+        if ($ref < 1 || !$this->db instanceof Database) return 0;
+        $num = max(0, intval($this->rule['canary'] ?? 0));
+        $min = max(0, intval($this->rule['canarymin'] ?? 0));
+        $stat = ($num > 0 && $size > 0 && $size >= $min) ? 3 : 5;
+        $own = $this->db->setSqlBegin();
+        if ($stat === 3) $this->setCampSample($ref, $num);
+        else $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_mail SET hold = 0 WHERE kind = \'newsletter\' AND ref = :id AND status = 0', ['id' => $ref]);
+        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET status = :stat WHERE id = :id', ['stat' => $stat, 'id' => $ref]);
+        if ($own) $this->db->setSqlCommit();
+        return $stat;
+    }
+
+    # Draw the sample the first results are measured over: one address per recipient domain, chosen at random, topped up at random when the audience holds fewer domains
+    # A hundred addresses behind one provider would measure that provider rather than the list, which is why the domain comes first and the fill comes second
+    private function setCampSample(int $ref, int $num): void {
+        $sql = 'SELECT MIN(id) AS id FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status = 0'
+            .' GROUP BY SUBSTRING_INDEX(email, \'@\', -1) ORDER BY RAND() LIMIT '.$num;
+        $rows = $this->db->getSqlRows($this->db->getSqlQuery($sql, ['id' => $ref])) ?: [];
+        $list = [];
+        foreach ($rows as $one) $list[] = intval($one['id']);
+        if (count($list) < $num) {
+            $skip = $list ? ' AND id NOT IN ('.implode(', ', $list).')' : '';
+            $sql = 'SELECT id FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status = 0'.$skip.' ORDER BY RAND() LIMIT '.($num - count($list));
+            foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, ['id' => $ref])) ?: [] as $one) $list[] = intval($one['id']);
+        }
+        if (!$list) return;
+        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_mail SET camp = 1, hold = 0 WHERE id IN ('.implode(', ', $list).')');
+    }
+
+    # Count what a mailing still holds in the queue, which is what refuses to delete a campaign whose rows would then refer to a body that is gone
+    public function getCampLeft(int $ref): int {
+        if ($ref < 1 || !$this->db instanceof Database) return 0;
+        $sql = 'SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id AND status = 0';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $ref]));
+        return intval($row['num'] ?? 0);
+    }
+
+    # Move every campaign this run touched to the state its remaining rows now describe: a finished sample parks for an operator, an exhausted audience is done
+    # The sample never releases the rest of the audience by itself, at any measured rate, because that is the one decision a bad list must not be allowed to take unattended
+    private function updateCampState(): void {
+        foreach (array_keys($this->camp) as $ref) {
+            $sql = 'SELECT SUM(camp = 1 AND status = 0) AS wait, SUM(status = 0) AS live FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id';
+            $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $ref]));
+            if (!$row) continue;
+            if (intval($row['wait'] ?? 0) === 0) {
+                $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET status = 4 WHERE id = :id AND status = 3', ['id' => $ref]);
+            }
+            if (intval($row['live'] ?? 0) === 0) {
+                $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET status = 6, endtime = NOW() WHERE id = :id AND status = 5', ['id' => $ref]);
+            }
+        }
+        $this->camp = [];
+    }
+
+    # Report whether one address may enter a bulk audience, using every check the host offers and sending when none of them can answer
+    # The order is the order the answers become available: syntax costs nothing, the send history is already recorded, and the domain is asked only when the first two allow it
+    # No step may refuse for its own failure. A resolver that is unreachable, an extension that is missing or a lookup that errors all mean send it
+    public function checkAddress(string $mail): bool {
+        if ($this->filterAddress($mail) === '') return false;
+        if ($this->checkDeadMail($mail)) return false;
+        return $this->checkMailDomain($mail);
+    }
+
+    # Produce the one stored form of an address the registry is keyed by, so a lookup can never disagree with the unique index it reads through
+    # The domain is lowercased and a non-ASCII one is converted to its canonical form; the local part is left as it came, where case is significant by RFC
+    # A host without the conversion refuses a non-ASCII domain rather than storing a spelling that will not match itself on the next read
+    private function filterDeadMail(string $mail): string {
+        $mail = trim($mail);
+        if ($mail === '' || preg_match('/[\x00-\x1F\x7F]/', $mail)) return '';
+        $cut = strrpos($mail, '@');
+        if ($cut === false || $cut < 1 || $cut === strlen($mail) - 1) return '';
+        $user = substr($mail, 0, $cut);
+        $host = mb_strtolower(substr($mail, $cut + 1), self::CHARSET);
+        if (preg_match('/[^\x20-\x7E]/', $host)) {
+            if (!function_exists('idn_to_ascii')) return '';
+            $host = idn_to_ascii($host, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if (!is_string($host) || $host === '') return '';
+        }
+        $mail = $user.'@'.$host;
+        return (strlen($mail) > self::MAILLEN) ? '' : $mail;
+    }
+
+    # Report whether an address has failed as a recipient often enough to leave bulk audiences; transactional mail never asks, which is what makes a wrong verdict cheap
+    private function checkDeadMail(string $mail): bool {
+        $mail = $this->filterDeadMail($mail);
+        if ($mail === '' || !$this->db instanceof Database) return false;
+        $cap = max(1, intval($this->rule['bouncemax'] ?? 0) ?: 2);
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT fails FROM '.PREFIX_DB.'_maildead WHERE email = :mail', ['mail' => $mail]));
+        return $row && intval($row['fails']) >= $cap;
+    }
+
+    # Count one permanent recipient verdict against the address it was about, which is the only failure the taxonomy allows to be read as a fact about a mailbox
+    # The counter is a running total rather than a flag: one 5xx can be a policy answer, several are a pattern, and an administrator can clear it
+    private function addDeadMail(string $mail): void {
+        $mail = $this->filterDeadMail($mail);
+        if ($mail === '' || !$this->db instanceof Database) return;
+        $sql = 'INSERT INTO '.PREFIX_DB.'_maildead (email, fails, phase, code, time) VALUES (:mail, 1, :phase, :code, NOW())'
+            .' ON DUPLICATE KEY UPDATE fails = LEAST('.self::DEADCAP.', fails + 1), phase = :phase, code = :code, time = NOW()';
+        $this->db->getSqlQuery($sql, ['mail' => $mail, 'phase' => mb_substr($this->phase, 0, 10), 'code' => mb_substr($this->code, 0, 20)]);
+    }
+
+    # Ask whether the domain of an address accepts mail at all, which is the cheapest large win on an aged list and the one check that scales with domains rather than addresses
+    # A verdict is cached for the configured window, so a mailing resolves each domain once and a domain that comes back becomes usable again when the entry expires
+    # Every failure of the check itself is an acceptance: a resolver that is unreachable states nothing about the domain and must never hold up a send
+    private function checkMailDomain(string $mail): bool {
+        if (empty($this->conf['verify']) || !function_exists('checkdnsrr')) return true;
+        $cut = strrpos($mail, '@');
+        if ($cut === false) return true;
+        $host = mb_strtolower(trim(substr($mail, $cut + 1)), self::CHARSET);
+        if ($host === '' || !preg_match('/^[a-z0-9.\-]+$/', $host)) return true;
+        if (isset($this->dns[$host])) return $this->dns[$host];
+        $file = $this->getDnsFile($host);
+        $ttl = max(60, intval($this->conf['dnsttl'] ?? 0) ?: 604800);
+        if ($file !== '' && Cache::isFresh($file, $ttl)) {
+            $live = trim(Cache::getBody($file)) !== '0';
+            return $this->dns[$host] = $live;
+        }
+        $live = checkdnsrr($host, 'MX') || checkdnsrr($host, 'A');
+        if ($file !== '') Cache::setBody($file, $live ? '1' : '0');
+        return $this->dns[$host] = $live;
+    }
+
+    # Locate the cache entry one domain verdict is stored in, or report that this installation has no cache to store it in
+    private function getDnsFile(string $host): string {
+        if (!class_exists('Cache') || !defined('CACHE_DIR')) return '';
+        return Cache::getPath('data', Cache::getHash(['maildns', $host]), 'json');
     }
 
     # Resolve the shared body of a bulk message once per batch, because a mailing stores its text on its own row and its queue rows carry only the reference to it
@@ -255,6 +488,75 @@ class Mail {
         return $cap < 1 || $this->rnum < $cap;
     }
 
+    # Count what the queue holds, in the words the system can actually stand behind: a transport accepting a message is not a mailbox receiving it
+    # Held rows are counted apart from pending ones, because a campaign waiting for an operator is not the same as a queue waiting for a drain
+    public function getStats(): array {
+        $out = ['pend' => 0, 'sent' => 0, 'fail' => 0, 'hold' => 0];
+        if (!$this->db instanceof Database) return $out;
+        $sql = 'SELECT SUM(status = 0 AND hold = 0) AS pend, SUM(status = 1) AS sent, SUM(status = 2) AS fail, SUM(status = 0 AND hold = 1) AS hold FROM '.PREFIX_DB.'_mail';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql));
+        if (!$row) return $out;
+        foreach ($out as $key => $num) $out[$key] = intval($row[$key] ?? 0);
+        return $out;
+    }
+
+    # Read one page of the queue for the admin view, filtered by kind and by status, and report what its pager needs
+    # The same predicate builds the page and the count, so the list, the pager and the selected filter can never describe different sets
+    public function getList(array $filt): array {
+        $lim = max(1, min(200, intval($filt['limit'] ?? 0) ?: 20));
+        $out = ['rows' => [], 'total' => 0, 'page' => 1, 'pages' => 1, 'limit' => $lim];
+        if (!$this->db instanceof Database) return $out;
+        $kind = substr($this->filterHeader((string)($filt['kind'] ?? '')), 0, self::KINDLEN);
+        $stat = (string)($filt['status'] ?? '');
+        $cond = [];
+        $pars = [];
+        if ($kind !== '') {
+            $cond[] = 'kind = :kind';
+            $pars['kind'] = $kind;
+        }
+        if ($stat !== '') {
+            $cond[] = 'status = :stat';
+            $pars['stat'] = max(0, min(2, intval($stat)));
+        }
+        $where = $cond ? ' WHERE '.implode(' AND ', $cond) : '';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail'.$where, $pars));
+        $out['total'] = intval($row['num'] ?? 0);
+        $out['pages'] = max(1, (int)ceil($out['total'] / $lim));
+        $out['page'] = max(1, min($out['pages'], intval($filt['page'] ?? 1)));
+        $sql = 'SELECT id, kind, email, title, ref, prio, tries, status, hold, camp, phase, code, error, time, ntime FROM '.PREFIX_DB.'_mail'.$where
+            .' ORDER BY id DESC LIMIT '.(($out['page'] - 1) * $lim).', '.$lim;
+        $out['rows'] = $this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [];
+        return $out;
+    }
+
+    # Make named rows due again, which is what an operator asks for after fixing whatever refused them; the attempt count starts over because the reason it stopped is gone
+    public function setQueueRetry(array $list): int {
+        $list = $this->getIdList($list);
+        if ($list === '' || !$this->db instanceof Database) return 0;
+        $sql = 'UPDATE '.PREFIX_DB.'_mail SET status = 0, tries = 0, ntime = NOW(), locked = NULL, lockid = \'\', phase = \'\', code = \'\', error = \'\''
+            .' WHERE status = 2 AND id IN ('.$list.')';
+        if (!$this->db->getSqlQuery($sql)) return 0;
+        return intval($this->db->getSqlAffected());
+    }
+
+    # Remove named rows from the queue, which is the only way anything leaves it other than by being delivered or pruned
+    public function deleteQueueRows(array $list): int {
+        $list = $this->getIdList($list);
+        if ($list === '' || !$this->db instanceof Database) return 0;
+        if (!$this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_mail WHERE id IN ('.$list.')')) return 0;
+        return intval($this->db->getSqlAffected());
+    }
+
+    # Turn a submitted set of row identifiers into a list no statement can be reshaped by, because an IN list cannot be a placeholder
+    private function getIdList(array $list): string {
+        $ids = [];
+        foreach ($list as $one) {
+            $num = intval($one);
+            if ($num > 0) $ids[$num] = $num;
+        }
+        return implode(', ', $ids);
+    }
+
     # Return the description of the last failure
     public function getError(): string {
         return $this->error;
@@ -278,9 +580,11 @@ class Mail {
     }
 
     # Stop capturing and return the text of the last warning, stripped of control characters so nothing it carries can reshape a log line
+    # Entities are decoded first: with html_errors on, which is the default under a web SAPI, PHP hands the handler a message whose quotes are already escaped
+    # Storing it as it arrives would put &quot; in the queue row and then escape the ampersand again on the screen that exists to show an administrator what the transport said
     private function getWarnText(): string {
         restore_error_handler();
-        return $this->filterHeader($this->warn);
+        return $this->filterHeader(html_entity_decode($this->warn, ENT_QUOTES | ENT_HTML5, self::CHARSET));
     }
 
     # Mask an address for the log, because a log is read by more people than a queue row and must not accumulate readable address lists

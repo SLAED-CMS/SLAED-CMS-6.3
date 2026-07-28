@@ -30,12 +30,75 @@ final class MailDrainTest extends TestCase
         return self::$probe[$mode] = $data;
     }
 
-    # Neither scenario may leave a row behind: both write into the live queue and both remove what they wrote
+    # No scenario may leave a row behind: each writes into live tables and each removes exactly what it wrote
     #[Test]
     public function everyProbeRunLeavesTheTableAsItFoundIt(): void
     {
         $this->assertTrue($this->getProbe('mailqueue')['clean']);
         $this->assertTrue($this->getProbe('maildrain')['clean']);
+        $this->assertTrue($this->getProbe('mailcamp')['clean']);
+    }
+
+    # A criterion is expanded by the scheduler into one row per recipient, resumably, and the request that pressed save writes none of them
+    #[Test]
+    public function theProducerExpandsACriterionIntoQueueRows(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame('success', $data['expand']['status']);
+        $this->assertSame(3, $data['state']['total']);
+        $this->assertTrue($data['state']['cursor'], 'The producer finished without recording where it got to');
+    }
+
+    # An address the registry holds at its cap never enters a bulk audience and never costs a delivery attempt
+    #[Test]
+    public function aSuppressedAddressIsSkippedAtQueueTime(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(1, $data['expand']['extra']['last_newsletter_skipped']);
+        $this->assertSame(0, $data['dead'], 'A suppressed address was written into the queue');
+    }
+
+    # The expansion releases only its sample and holds the audience, and the campaign says which of the two branches it took
+    #[Test]
+    public function theSampleIsReleasedAndTheAudienceIsHeld(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(3, $data['state']['status'], 'The campaign did not enter the canary state');
+        $this->assertSame(['1-0' => 2, '2-1' => 1], $data['slice']);
+    }
+
+    # The drain sends the sample, counts it against the mailing and parks the campaign, and it releases nothing on its own however good the result was
+    #[Test]
+    public function theSampleParksTheCampaignInsteadOfReleasingIt(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(2, $data['canary']['sent']);
+        $this->assertSame(4, $data['held']['status'], 'A finished sample did not park the campaign');
+        $this->assertSame(2, $data['held']['send']);
+        $this->assertSame(0, $data['blocked']['sent'], 'A held campaign was drained without an operator releasing it');
+    }
+
+    # A release is what makes the rest of the audience claimable, and the drain then finishes the campaign
+    #[Test]
+    public function areleaseIsWhatFinishesTheMailing(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(['1-0' => 2, '2-0' => 1], $data['freed']);
+        $this->assertSame(1, $data['rest']['sent']);
+        $this->assertSame(6, $data['done']['status']);
+        $this->assertSame(3, $data['done']['send']);
+        $this->assertTrue($data['done']['ended'], 'A finished mailing carries no end time');
+        $this->assertSame(0, $data['left']);
+    }
+
+    # One body is stored once and read at send time, so a mailing of any size carries one copy of its text
+    #[Test]
+    public function everyRecipientOfAMailingGetsTheOneStoredBody(): void
+    {
+        $data = $this->getProbe('mailcamp');
+        $this->assertSame(3, $data['relay']['mails']);
+        $this->assertSame(3, $data['shared'], 'A recipient received something other than the stored mailing body');
+        $this->assertSame(1, $data['relay']['links']);
     }
 
     # What a call site queues is a pending row carrying the raw subject, the caller's priority and the client block of the request that queued it

@@ -1,7 +1,6 @@
 # Code of Conduct
 
 > **SLAED CMS Community Standards**
-> *Last updated: June 2026*
 
 ---
 

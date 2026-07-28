@@ -118,6 +118,19 @@ final class MailTransportTest extends TestCase
         $this->assertSame(str_repeat("\u{00FC}", 255), $mailer->getError());
     }
 
+    # A captured warning is stored as text, not as markup: under a web SAPI html_errors is on and PHP hands the handler a message whose quotes are already escaped
+    # Keeping it as it arrives would put the entity into the queue row and escape its ampersand again on the screen that exists to show what the transport actually said
+    #[Test]
+    public function acapturedWarningIsStoredAsPlainText(): void
+    {
+        $mailer = $this->getMail();
+        $this->getCall($mailer, 'setWarnCatch', []);
+        $prop = new \ReflectionProperty(\Mail::class, 'warn');
+        $prop->setValue($mailer, 'Failed to connect to mailserver at &quot;localhost&quot; port 25 &amp; gave up');
+        $text = $this->getCall($mailer, 'getWarnText', []);
+        $this->assertSame('Failed to connect to mailserver at "localhost" port 25 & gave up', $text);
+    }
+
     # Without a template the client block keeps the exact plain-text form the removed global mail helper produced, so the six call sites that ask for it read the same
     #[Test]
     public function theClientBlockKeepsItsPlainTextForm(): void

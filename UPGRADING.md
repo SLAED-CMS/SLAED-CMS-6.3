@@ -1,7 +1,6 @@
 # Upgrading SLAED CMS
 
 > **Migration Guide for SLAED CMS**
-> *Last updated: June 2026*
 
 This document describes the upgrade process using currently confirmed files and repository structure. Where the exact upgrade path cannot be verified from the current codebase alone, it is marked as `TODO:`.
 

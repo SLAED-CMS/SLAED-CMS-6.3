@@ -182,6 +182,17 @@ function getMailPanel(): string {
             'is_config' => true,
         ]));
     }
+    $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_VERIFY, 'hint' => _MAIL_VERIFYI]), getTplRadioGroup([
+        'name' => 'mailverify',
+        'value' => (string)(int)($mail['verify'] ?? 1),
+        'options' => $yesno,
+    ]));
+    $rows[] = getMailRow(_MAIL_DNSTTL, $tpl->getHtmlFrag('input', [
+        'itype' => 'number',
+        'name_attr' => 'mailttl',
+        'value_attr' => (string)($mail['dnsttl'] ?? '604800'),
+        'is_config' => true,
+    ]));
     $rows[] = getMailRow($tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEST, 'hint' => _MAIL_TESTINFO]), $tpl->getHtmlFrag('input', [
         'itype' => 'text',
         'name_attr' => 'mailto',
@@ -939,6 +950,8 @@ function save(): void {
             'backoff' => max(1, getVar('post', 'mailback', 'num', 300)),
             'keep' => max(1, getVar('post', 'mailkeep', 'num', 30)),
             'keepbulk' => max(1, getVar('post', 'mailbulk', 'num', 3)),
+            'verify' => getVar('post', 'mailverify', 'num'),
+            'dnsttl' => max(60, getVar('post', 'mailttl', 'num', 604800)),
         ];
         if ($mpass !== '') $mail['pass'] = $mpass;
         setConfigFile('global.php', $cont);
@@ -961,14 +974,15 @@ function mailtest(): void {
     if (!$warn) {
         $mail = trim(getVar('post', 'mailto', 'raw')) ?: (string)$conf['adminmail'];
         $body = str_replace('[text]', _MAIL_TEST.': '.$conf['homeurl'], (string)$conf['mtemp']);
-        $data = ['sent' => 0, 'fail' => 0];
+        $data = ['sent' => 0, 'fail' => 0, 'stop' => ''];
         if ($mailer->addQueue(['kind' => 'test', 'email' => $mail, 'sender' => (string)$conf['adminmail'], 'title' => _MAIL_TEST, 'body' => $body, 'prio' => 1])) {
             $data = $mailer->updateQueue();
         } else {
             $data['fail'] = 1;
         }
         $warn = $data['sent'] < 1;
-        $text = ($data['fail'] > 0) ? _ERROR.': '.$mailer->getError() : (($data['sent'] > 0) ? _MAIL_TESTOK : _MAIL_TESTWAIT);
+        $bad = ($data['fail'] > 0 || $data['stop'] === 'transport');
+        $text = $bad ? _ERROR.': '.$mailer->getError() : (($data['sent'] > 0) ? _MAIL_TESTOK : _MAIL_TESTWAIT);
     }
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $text, $warn);
 }

@@ -24,10 +24,10 @@ require_once BASE_DIR.'/core/system.php';
 # The kind every row this probe stores carries, so its own rows can be found and removed without touching anything the installation queued
 const PROBEKIND = 'probe';
 
-# Build one mail service over the site config with the given mail section merged in, which is how a scenario chooses a transport without writing a config file
-function getProbeMail(array $sect = []): Mail {
+# Build one mail service over the site config with the given sections merged in, which is how a scenario chooses a transport and a campaign policy without writing a config file
+function getProbeMail(array $sect = [], array $rule = []): Mail {
     global $db, $conf;
-    return new Mail($db, array_replace_recursive($conf, ['mail' => $sect]));
+    return new Mail($db, array_replace_recursive($conf, ['mail' => $sect, 'newsletter' => $rule]));
 }
 
 # Read one queue row as a plain array, or an empty array when it is gone
@@ -141,7 +141,7 @@ function getProbeDrain(): array {
     $subj = 'Пароль '.str_repeat('и', 60);
     $mailer->addQueue(['kind' => PROBEKIND, 'email' => 'one@slaed.net', 'sender' => 'info@slaed.net', 'title' => $subj, 'body' => '<p>first</p>', 'prio' => 1, 'client' => true]);
     $mailer->addQueue(['kind' => PROBEKIND, 'email' => 'two@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'second', 'body' => '<p>second</p>', 'prio' => 3]);
-    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_newsletter (title, body, mails, send, time) VALUES (\'probe mailing\', \'shared probe body\', \'\', 0, NOW())');
+    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_newsletter (title, body, send, time) VALUES (\'probe mailing\', \'shared probe body\', 0, NOW())');
     $nid = intval($db->getSqlLastId());
     $mailer->addQueue(['kind' => 'newsletter', 'email' => 'three@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'third', 'ref' => $nid]);
     $gone = $mailer->addQueue(['kind' => 'newsletter', 'email' => 'dead@slaed.net', 'sender' => 'info@slaed.net', 'title' => 'fourth', 'ref' => 999999999]);
@@ -174,6 +174,98 @@ function getProbeDrain(): array {
     return $out;
 }
 
+# Report what a campaign does end to end: a criterion expanded into held rows, the sample drawn and delivered, the campaign parking, an operator releasing it and the rest going out
+# The audience is a group this scenario creates for itself, so the expansion can be driven against the real tables without a single real subscriber entering the queue
+# The rows it writes into _users are removed by the identifiers it was given, never by a pattern over an address, because a pattern also matches accounts the installation owns
+function getProbeCamp(): array {
+    global $db, $conf;
+    $out = [];
+    $base = [];
+    foreach (['mail', 'users', 'groups', 'maildead', 'newsletter'] as $tabl) {
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_'.$tabl));
+        $base[$tabl] = intval($row['num'] ?? 0);
+    }
+    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, intro, points, extra, rank, color) VALUES (\'probe group\', \'\', 0, 1, \'\', \'\')');
+    $gid = intval($db->getSqlLastId());
+    $mail = ['camper@slaed.net', 'campertwo@slaed.net', 'camperthree@slaed.net', 'camperdead@slaed.net'];
+    $sql = 'INSERT INTO '.PREFIX_DB.'_users (name, email, password, block, warnings, field, grp, newslet, regdate, lastvis)'
+        .' VALUES (:name, :mail, \'x\', \'\', \'\', \'\', :grp, 1, NOW(), NOW())';
+    $ours = [];
+    foreach ($mail as $idx => $addr) {
+        $db->getSqlQuery($sql, ['name' => 'probeuser'.chr(97 + $idx), 'mail' => $addr, 'grp' => $gid]);
+        $ours[] = intval($db->getSqlLastId());
+    }
+    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_maildead (email, fails, phase, code, time) VALUES (:mail, 5, \'rcpt\', \'550\', NOW())', ['mail' => 'camperdead@slaed.net']);
+    $sql = 'INSERT INTO '.PREFIX_DB.'_newsletter (title, body, audit, apar, expect, status, time) VALUES (\'probe mailing\', \'shared probe body\', \'group\', :gid, 3, 1, NOW())';
+    $db->getSqlQuery($sql, ['gid' => (string)$gid]);
+    $nid = intval($db->getSqlLastId());
+    $port = getProbePort();
+    $file = LOGS_DIR.'/relay.json';
+    $proc = proc_open([PHP_BINARY, BASE_DIR.'/tests/Support/mail_relay.php', (string)$port, $file, '30'], [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
+    if (!is_resource($proc)) return $out + ['error' => 'the probe relay could not be started'];
+    usleep(400000);
+    $sect = ['transport' => 'smtp', 'host' => '127.0.0.1', 'port' => (string)$port, 'secure' => 'none', 'auth' => '0', 'timeout' => '5'];
+    $sect += ['verify' => '0', 'batch' => '10', 'rate' => '0'];
+    $rule = ['canary' => '2', 'canarymin' => '1', 'breakwin' => '100', 'abort' => '10', 'bouncemax' => '2'];
+    $GLOBALS['mailer'] = getProbeMail($sect, $rule);
+    $out['expand'] = updateNewsletter();
+    $out['state'] = getProbeCampRow($nid);
+    $out['slice'] = getProbeCampSlice($nid);
+    $out['dead'] = intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE email = \'camperdead@slaed.net\''))['num'] ?? 0);
+    $out['canary'] = $GLOBALS['mailer']->updateQueue();
+    $out['held'] = getProbeCampRow($nid);
+    $out['blocked'] = $GLOBALS['mailer']->updateQueue();
+    $GLOBALS['mailer']->setCampFree($nid);
+    $out['freed'] = getProbeCampSlice($nid);
+    $out['rest'] = $GLOBALS['mailer']->updateQueue();
+    $out['done'] = getProbeCampRow($nid);
+    $out['left'] = $GLOBALS['mailer']->getCampLeft($nid);
+    $data = json_decode((string)file_get_contents($file), true);
+    $out['relay'] = ['links' => intval($data['links'] ?? 0), 'mails' => count($data['mails'] ?? [])];
+    $out['shared'] = 0;
+    foreach ($data['mails'] ?? [] as $mesg) {
+        if (str_contains(getProbeMessage((string)$mesg)['body'], 'shared probe body')) $out['shared']++;
+    }
+    proc_terminate($proc);
+    proc_close($proc);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_maildead WHERE email = :mail', ['mail' => 'camperdead@slaed.net']);
+    if ($ours) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id IN ('.implode(', ', $ours).')');
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $gid]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $nid]);
+    $out['clean'] = deleteProbeRows($base['mail']);
+    foreach (['users', 'groups', 'maildead', 'newsletter'] as $tabl) {
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_'.$tabl));
+        if (intval($row['num'] ?? 0) !== $base[$tabl]) $out['clean'] = false;
+    }
+    return $out;
+}
+
+# Read the state of one campaign as the numbers an operator would be shown
+function getProbeCampRow(int $nid): array {
+    global $db;
+    $sql = 'SELECT status, `cursor`, expect, total, send, fails, note, endtime FROM '.PREFIX_DB.'_newsletter WHERE id = :id';
+    $row = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $nid]));
+    if (!$row) return [];
+    return [
+        'status' => intval($row['status']),
+        'cursor' => intval($row['cursor']) > 0,
+        'total' => intval($row['total']),
+        'send' => intval($row['send']),
+        'fails' => intval($row['fails']),
+        'ended' => $row['endtime'] !== null,
+    ];
+}
+
+# Count how the rows of one campaign are split between the sample, the audience and what is claimable right now
+function getProbeCampSlice(int $nid): array {
+    global $db;
+    $sql = 'SELECT camp, hold, COUNT(id) AS num FROM '.PREFIX_DB.'_mail WHERE kind = \'newsletter\' AND ref = :id GROUP BY camp, hold ORDER BY camp, hold';
+    $rows = $db->getSqlRows($db->getSqlQuery($sql, ['id' => $nid])) ?: [];
+    $out = [];
+    foreach ($rows as $row) $out[$row['camp'].'-'.$row['hold']] = intval($row['num']);
+    return $out;
+}
+
 # Split one delivered message into its header block and its decoded body, which is what the transcript has to be read through to assert anything about it
 # The block is kept as it arrived and read unfolded, because a folded header is one logical line and asserting the folding itself needs the wire form
 function getProbeMessage(string $mesg): array {
@@ -200,6 +292,8 @@ if ($mode === 'mailqueue') {
     $out = getProbeQueue();
 } elseif ($mode === 'maildrain') {
     $out = getProbeDrain();
+} elseif ($mode === 'mailcamp') {
+    $out = getProbeCamp();
 }
 while (ob_get_level() > 0) ob_end_clean();
 echo json_encode($out, JSON_UNESCAPED_SLASHES);

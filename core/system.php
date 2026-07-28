@@ -529,7 +529,7 @@ function addSchedulerSystemJob(string $name): array {
         'filescan' => addFilescanTask(),
         'sitemap' => addSitemapTask(),
         'maildrain' => addMailTask(),
-        'newsletter' => updateNewsletter(true),
+        'newsletter' => updateNewsletter(),
         'cachegc' => addCacheGcTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
@@ -3703,6 +3703,7 @@ function getTimedHtml(string $html): string {
 }
 
 # Notify subscribed admins by email on new content or comment submission
+# The stored module list is only read here; normalising it is a write and belongs to the admin screen that owns those records, which already writes the normalised form
 function addAdminMail(bool $enab, string $mod, string $username = '', string $title = '', bool $iscmt = false, string $text = ''): void {
     global $db, $conf, $locale, $mailer;
     $mod = filterVar($mod);
@@ -3719,18 +3720,13 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
             $where .= " AND (lang = :lang OR lang = '')";
             $params['lang'] = $locale;
         }
-        $result = $db->getSqlQuery('SELECT id, email, super, modules FROM '.PREFIX_DB.'_admins'.$where.' ORDER BY id', $params);
+        $result = $db->getSqlQuery('SELECT email, super, modules FROM '.PREFIX_DB.'_admins'.$where.' ORDER BY id', $params);
         while ($row = $db->getSqlRow($result)) {
-            [$id, $email, $super, $modules] = $row;
+            [$email, $super, $modules] = $row;
             if ($super) {
                 $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 1, 'client' => true]);
             } else {
-                $amid = getAdminModuleNames($modules);
-                $nmods = implode(',', $amid);
-                if ($nmods !== $modules) {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $nmods, 'id' => $id]);
-                }
-                foreach ($amid as $val) {
+                foreach (getAdminModuleNames($modules) as $val) {
                     if ($val !== '' && $val === $mod) {
                         $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 1, 'client' => true]);
                         break;
@@ -3758,6 +3754,7 @@ function addMailTask(): array {
     if (!$mailer instanceof Mail) return ['status' => 'failed', 'message' => 'Mail service is unavailable'];
     $data = $mailer->updateQueue();
     if ($data['stop'] === 'database') return ['status' => 'failed', 'message' => 'The mail queue is unreachable'];
+    if ($data['stop'] === 'transport') return ['status' => 'failed', 'message' => 'The transport refused before any message left: '.$mailer->getError()];
     if ($data['sent'] === 0 && $data['fail'] === 0) return ['status' => 'success', 'message' => 'Nothing to send, pending '.$data['left']];
     return [
         'status' => ($data['sent'] === 0 && $data['fail'] > 0) ? 'failed' : 'success',
@@ -3772,37 +3769,119 @@ function addMailTask(): array {
     ];
 }
 
-# Newsletter send
-function updateNewsletter(bool $force = false): array {
- global $db, $conf, $prs, $mailer;
-    if ($force || $conf['newsletter']['active']) {
-        $result = $db->getSqlQuery('SELECT id, title, body, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
-        if ($db->getSqlRowCount($result) > 0) {
-            list($id, $title, $body, $mails) = $db->getSqlRow($result);
-            $ncount = intval($conf['newsletter']['count']);
-            $id = intval($id);
-            $mails = explode(',', $mails);
-            $outmail = array_values(array_filter(array_slice($mails, 0, $ncount), 'strlen'));
-            $inmail = implode(',', array_slice($mails, $ncount));
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
-            $text = $prs->filterContent($body, false, 'all');
-            foreach ($outmail as $val) $mailer->addQueue(['kind' => 'newsletter', 'email' => $val, 'title' => $title, 'body' => $text, 'sender' => $conf['adminmail'], 'prio' => 3]);
-            if (!$inmail) {
-                $cont = ['active' => '0'];
-                setConfigFile('newsletter.php', $cont, $conf['newsletter']);
+# Resolve one audience criterion into the paged query its rows are expanded by and the count query the selector shows beside it
+# The client sets are grouped by address, because one person may hold several orders and the mailing is addressed to the person
+# Every source is ordered by its own primary key, which is what makes a cursor over it resumable after a run is killed
+function getMailAudience(string $audit, string $apar): array {
+    global $db;
+    $tabl = PREFIX_DB.'_users';
+    $cond = '';
+    $pars = [];
+    $uniq = false;
+    switch ($audit) {
+        case 'all': $cond = '1'; break;
+        case 'subs': $cond = 'newslet = 1'; break;
+        case 'group':
+            $grup = $db->getSqlRow($db->getSqlQuery('SELECT points, extra FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => intval($apar)]));
+            if (!$grup) return [];
+            if (intval($grup['extra']) === 1) {
+                $cond = 'grp = :grp';
+                $pars['grp'] = intval($apar);
+            } else {
+                $cond = 'points >= :pts';
+                $pars['pts'] = intval($grup['points']);
             }
-            return [
-                'status' => 'success',
-                'message' => 'Newsletter batch completed',
-                'extra' => [
-                    'last_newsletter_id' => $id,
-                    'last_batch_count' => count($outmail),
-                    'remaining_count' => $inmail === '' ? 0 : count(array_filter(explode(',', $inmail), 'strlen')),
-                ],
-            ];
-        }
+            break;
+        case 'active':
+            $cond = 'lastvis >= DATE_SUB(NOW(), INTERVAL :day DAY)';
+            $pars['day'] = max(1, intval($apar));
+            break;
+        case 'money': $tabl = PREFIX_DB.'_money'; $cond = 'status = 1'; $uniq = true; break;
+        case 'order': $tabl = PREFIX_DB.'_order'; $cond = 'status = 1'; $uniq = true; break;
+        case 'shop':
+            $tabl = PREFIX_DB.'_clients';
+            $cond = ($apar === 'on') ? 'status = 1' : (($apar === 'off') ? 'status = 0' : '1');
+            $uniq = true;
+            break;
+        default: return [];
     }
-    return ['status' => 'idle', 'message' => 'No pending newsletter batches'];
+    $cond .= ' AND email != \'\'';
+    $list = $uniq
+        ? 'SELECT MIN(id) AS id, email FROM '.$tabl.' WHERE '.$cond.' GROUP BY email HAVING id > :cur ORDER BY id ASC LIMIT '
+        : 'SELECT id, email FROM '.$tabl.' WHERE '.$cond.' AND id > :cur ORDER BY id ASC LIMIT ';
+    $nums = $uniq
+        ? 'SELECT COUNT(DISTINCT email) AS num FROM '.$tabl.' WHERE '.$cond
+        : 'SELECT COUNT(id) AS num FROM '.$tabl.' WHERE '.$cond;
+    return ['list' => $list, 'nums' => $nums, 'pars' => $pars];
+}
+
+# Count the recipients one audience criterion resolves to right now, which is the number every option of the selector carries
+function getMailAudienceNum(string $audit, string $apar): int {
+    global $db;
+    $data = getMailAudience($audit, $apar);
+    if (!$data) return 0;
+    $row = $db->getSqlRow($db->getSqlQuery($data['nums'], $data['pars']));
+    return intval($row['num'] ?? 0);
+}
+
+# Expand the audience of the mailing that is preparing into queue rows, one resumable slice at a time, and close the expansion when its source is exhausted
+# Writing one row per recipient inside the request that pressed save is what this replaces: at a hundred thousand accounts that request cannot finish and cannot be resumed
+# Every address is checked before a row is written, so an invalid or suppressed one never enters a bulk audience and never costs a delivery attempt
+# The run is time-boxed like the drain, and the cursor is written per slice, so a killed run resumes where it stopped instead of restarting or duplicating
+function updateNewsletter(): array {
+    global $db, $conf, $mailer;
+    $sql = 'SELECT id, title, audit, apar, `cursor`, expect FROM '.PREFIX_DB.'_newsletter WHERE status = 1 ORDER BY id ASC LIMIT 1';
+    $camp = $db->getSqlRow($db->getSqlQuery($sql));
+    if (!$camp) return ['status' => 'success', 'message' => 'No mailing is being prepared'];
+    $id = intval($camp['id']);
+    $data = getMailAudience((string)$camp['audit'], (string)$camp['apar']);
+    if (!$data) {
+        $note = 'the audience of this mailing can no longer be resolved';
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET status = 7, note = :note WHERE id = :id', ['note' => $note, 'id' => $id]);
+        return ['status' => 'failed', 'message' => 'Newsletter '.$id.': '.$note];
+    }
+    $cli = PHP_SAPI === 'cli';
+    if ($cli && function_exists('set_time_limit')) set_time_limit(0);
+    $lock = max(60, intval($conf['scheduler']['jobs']['newsletter']['lock_timeout'] ?? 0) ?: 900);
+    $exec = intval(ini_get('max_execution_time'));
+    $tend = microtime(true) + ($cli ? $lock - 60 : (($exec > 0) ? max(10, intval($exec * 0.6)) : 120));
+    $slice = 500;
+    $cur = intval($camp['cursor']);
+    $num = 0;
+    $skip = 0;
+    $over = false;
+    while (microtime(true) < $tend) {
+        $rows = $db->getSqlRows($db->getSqlQuery($data['list'].$slice, $data['pars'] + ['cur' => $cur])) ?: [];
+        if (!$rows) {
+            $over = true;
+            break;
+        }
+        foreach ($rows as $one) {
+            $cur = intval($one['id']);
+            $mail = trim((string)$one['email']);
+            if (!$mailer->checkAddress($mail)) {
+                $skip++;
+                continue;
+            }
+            $mesg = ['kind' => 'newsletter', 'email' => $mail, 'title' => (string)$camp['title'], 'sender' => (string)$conf['adminmail']];
+            if ($mailer->addQueue($mesg + ['ref' => $id, 'prio' => 3, 'camp' => true, 'hold' => true])) $num++;
+            else $skip++;
+        }
+        $sql = 'UPDATE '.PREFIX_DB.'_newsletter SET `cursor` = :cur, total = total + :num WHERE id = :id';
+        $db->getSqlQuery($sql, ['cur' => $cur, 'num' => $num, 'id' => $id]);
+        $num = 0;
+    }
+    $stat = $over ? $mailer->setCampReady($id, intval($camp['expect'])) : 1;
+    return [
+        'status' => 'success',
+        'message' => 'Newsletter '.$id.': expanded to cursor '.$cur.', skipped '.$skip.($over ? ', audience complete' : ', more to come'),
+        'extra' => [
+            'last_newsletter_id' => $id,
+            'last_newsletter_cursor' => $cur,
+            'last_newsletter_skipped' => $skip,
+            'last_newsletter_state' => $stat,
+        ],
+    ];
 }
 
 # Resolve a PHP constant by name; return the name itself if undefined

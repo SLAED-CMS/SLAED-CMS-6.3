@@ -23,6 +23,7 @@
 
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
+DROP PROCEDURE IF EXISTS delcol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
@@ -95,6 +96,37 @@ BEGIN
             SET @sql = CONCAT(
                 'ALTER TABLE `', ptab, '` ',
                 'ADD COLUMN `', pcol, '` ', pdef
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE delcol(IN ptab VARCHAR(128), IN pcol VARCHAR(128))
+BEGIN
+    DECLARE ctab INT DEFAULT 0;
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(*)
+          INTO ccol
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = pcol;
+
+        IF ccol > 0 THEN
+            SET @sql = CONCAT(
+                'ALTER TABLE `', ptab, '` ',
+                'DROP COLUMN `', pcol, '`'
             );
             PREPARE stmt FROM @sql;
             EXECUTE stmt;
@@ -1406,8 +1438,7 @@ ALTER TABLE `{prefix}_news`
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
-  MODIFY `body` TEXT,
-  MODIFY `mails` MEDIUMTEXT;
+  MODIFY `body` TEXT;
 
 UPDATE `{prefix}_order` SET `ip`    = '' WHERE `ip`    IS NULL;
 UPDATE `{prefix}_order` SET `agent` = '' WHERE `agent` IS NULL;
@@ -1594,11 +1625,53 @@ CALL delidx('{prefix}_comment', 'cid');
 CALL delidx('{prefix}_comment', 'modul_status');
 
 # =============================================================================
+# Batch Z — _maildead and the newsletter campaign state
+# =============================================================================
+#
+# The suppression registry is new in 6.3 and keyed by the normalised address, so
+# its unique index is part of the create rather than an addidx: a table that
+# exists without it could already hold two spellings of one mailbox.
+#
+# The email column carries a binary collation on purpose. The normaliser
+# lowercases the domain and leaves the local part as it came, and a
+# case-insensitive column would fold exactly the distinction it keeps.
+#
+# _newsletter gains the campaign state machine. The mails column is dropped last
+# and only here: setup/index.php reads whatever is still pending out of it before
+# this file runs and writes those addresses into the queue afterwards, so the
+# drop can never take a mailing with it.
+
+CREATE TABLE IF NOT EXISTS `{prefix}_maildead` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(255) COLLATE utf8mb4_bin NOT NULL DEFAULT '',
+  `fails` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `phase` VARCHAR(10) NOT NULL DEFAULT '',
+  `code` VARCHAR(20) NOT NULL DEFAULT '',
+  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
+CALL addcol('{prefix}_newsletter', 'fails',  'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_newsletter', 'status', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_newsletter', 'audit',  'VARCHAR(100) NOT NULL DEFAULT \'\'');
+CALL addcol('{prefix}_newsletter', 'apar',   'VARCHAR(100) NOT NULL DEFAULT \'\'');
+CALL addcol('{prefix}_newsletter', 'cursor', 'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_newsletter', 'expect', 'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_newsletter', 'total',  'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_newsletter', 'note',   'VARCHAR(255) NOT NULL DEFAULT \'\'');
+
+UPDATE `{prefix}_newsletter` SET `status` = 6 WHERE `status` = 0 AND `send` > 0;
+
+CALL delcol('{prefix}_newsletter', 'mails');
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
+DROP PROCEDURE IF EXISTS delcol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;

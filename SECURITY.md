@@ -1,7 +1,6 @@
 # Security Policy
 
 > **SLAED CMS Security Information**
-> *Last updated: June 2026*
 
 ---
 
@@ -9,7 +8,7 @@
 
 | Version | Supported | PHP Version | Status |
 | ------- | --------- | ----------- | ------ |
-| 6.3.x   | Yes       | 8.1+        | Active development |
+| 6.3.x   | Yes       | 8.4+        | Active development |
 
 Only version 6.3.x is currently supported for security fixes.
 

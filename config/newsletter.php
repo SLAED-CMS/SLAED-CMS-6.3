@@ -6,7 +6,10 @@
 
 return [
     'newsletter' => [
-        'active' => '0',
-        'count'  => '4',
+        'abort' => '10',
+        'bouncemax' => '2',
+        'breakwin' => '100',
+        'canary' => '100',
+        'canarymin' => '500',
     ],
 ];
