@@ -168,8 +168,9 @@ class Comment {
         return in_array($fmt, self::FORMATS, true) ? $fmt : 'markdown';
     }
 
-    # Store one new comment against a target the resolver accepts and answer its id, the name it was stored under and the refusal that stopped it
+    # Store one new comment against a target the resolver accepts and answer its id, the stored name, whether this call stored it and the refusal that stopped it
     # Mode, author, address and moderation state come from the server context; the request supplies the module key, the target id, the body, the guest name and its key
+    # The new flag is what a caller with side effects of its own asks: a replay answers the first comment without storing a second, so no notification may be written for it either
     public function addComment(string $mod, int $id, string $body, string $name, string $key = ''): array {
         global $user;
         $mode = $this->getTargetMode($mod, $id);
@@ -177,7 +178,7 @@ class Comment {
         $hash = $this->getIpHash($ip);
         $stop = $this->checkRules($mod, $body, $name, $hash, true);
         $last = $stop ? (string)end($stop) : '';
-        if ($last !== '' || $mode === CommentMode::Disabled) return ['id' => 0, 'name' => $name, 'error' => $last ?: _ERROR];
+        if ($last !== '' || $mode === CommentMode::Disabled) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => $last ?: _ERROR];
         $body = $this->filterCommentBody($body, $this->getLinkFlag($mod));
         if (is_user()) {
             $uid = intval($user[0]);
@@ -190,7 +191,7 @@ class Comment {
         }
         $key = $this->getRequestKey($key);
         $own = !$this->db->checkSqlActive();
-        if ($own && !$this->db->setSqlBegin()) return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+        if ($own && !$this->db->setSqlBegin()) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         $sql = 'INSERT INTO '.PREFIX_DB.'_comment (cid, modul, time, uid, name, ip, iphash, body, format, reqkey, status)'
             .' VALUES (:cid, :modul, NOW(), :uid, :name, :ip, :hash, :body, :format, :reqkey, :status)';
         $done = $this->db->getSqlQuery($sql, [
@@ -200,18 +201,18 @@ class Comment {
         if (!$done) {
             $fail = intval($this->db->getSqlError()['code']) === 1062;
             if ($own) $this->db->setSqlRollback();
-            return $fail ? $this->getKeyResult($key, $name) : ['id' => 0, 'name' => $name, 'error' => _ERROR];
+            return $fail ? $this->getKeyResult($key, $name) : ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
         $new = intval($this->db->getSqlLastId());
         if ($stat === CommentStatus::Published && !$this->updateTargetCount($id, $mod, false, $uid)) {
             if ($own) $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'error' => _ERROR];
+            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
-        return ['id' => $new, 'name' => $name, 'error' => ''];
+        return ['id' => $new, 'name' => $name, 'new' => true, 'error' => ''];
     }
 
     # Load one comment for editing and, when a body is given, store the edited text once the edit rules accept it
@@ -434,10 +435,11 @@ class Comment {
     }
 
     # Answer a replayed submit with the result of the row the first one stored, which is what makes a repeated POST return the same comment instead of a second one
+    # The answer is never new: this request stored nothing, so whatever the first one wrote beside the comment must not be written again
     private function getKeyResult(string $key, string $name): array {
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_comment WHERE reqkey = :key', ['key' => $key]));
-        if (!$row) return ['id' => 0, 'name' => $name, 'error' => _ERROR];
-        return ['id' => intval($row['id']), 'name' => (string)$row['name'], 'error' => ''];
+        if (!$row) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        return ['id' => intval($row['id']), 'name' => (string)$row['name'], 'new' => false, 'error' => ''];
     }
 
     # Count the rows of one already-built source, so the count of a list is always written against the very source the list itself reads

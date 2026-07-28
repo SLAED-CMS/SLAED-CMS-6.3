@@ -403,22 +403,28 @@ function getUserBlock(): string {
     return '';
 }
 
-# Validate and save a new comment; echoes the updated comment list on success
+# Validate and save a new comment together with the notification of the admins subscribed to its module; echoes the updated comment list on success
+# The handler owns the transaction the comment and its queue row share: a comment that never commits leaves no mail behind, and a job is written once per stored comment
+# The queue row is a stored job and nothing more, so no message is delivered inside the request and no delivery outcome can reach this path or take the comment with it
 function addComment(): void {
-    global $conf, $tpl, $com;
+    global $conf, $tpl, $com, $db;
     $id   = getVar('req', 'id',   'num',  0);
     $mod  = filterVar(getVar('req', 'mod',  'text', ''));
     $name = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $body = trim(getVar('post', 'text', 'raw', ''));
     $key = (string)getVar('req', 'reqkey', 'var', '');
+    $own = $db->setSqlBegin();
     $new = $com->addComment($mod, $id, $body, $name, $key);
-    if ($new['error'] !== '') {
-        echo $tpl->getHtmlFrag('alert', ['text' => $new['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+    if ($new['error'] === '' && $new['new']) {
+        $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$new['id'];
+        $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
+        addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
+    }
+    if ($new['error'] !== '' || ($own && !$db->setSqlCommit())) {
+        if ($own) $db->setSqlRollback();
+        echo $tpl->getHtmlFrag('alert', ['text' => $new['error'] ?: _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         return;
     }
-    $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$new['id'];
-    $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
-    addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
     echo getCommentList($id, $mod);
 }
 

@@ -1,6 +1,6 @@
 # Comments Subsystem Redesign
 
-Status date: 2026-07-28. Approved; stages 0, 1 and 2 delivered. The comment
+Status date: 2026-07-28. Approved; stages 0, 1, 2 and 3 delivered. The comment
 engine is shared by eight frontend modules, the admin panel, the user activity
 feed and every module delete handler, so each stage below has to keep all of them
 working while the internals move into one place.
@@ -22,6 +22,8 @@ knows nothing of previous ones; this is the only place decisions survive.
 | 2026-07-28 | Stage 1, batch 6 — `numcom()` and the resolver absorbed, `ashowcom()` deleted, the stage guard | done, **stage 1 closed**. The three globals are gone from `core/system.php`: `numcom()` is `updateTargetCount()` (`core/classes/comment.php:240`), `getCommentMode()` is `getTargetMode()` (`:126`), and both read one `MODULES` map (`:28`) that carries the target table and the points slot of the eight modules at once — the counter map and the supported-module list are now one list. The three retired branches (`account`/`members`, `gallery`, `multimedia`, slots 3, 17, 29) left with the move; the `users.points` CSV still holds its 45 positions. `ashowcom()` was deleted and its frontend half is `getCommentList()` in `core/user.php:10`, beside `setComShow()`, which is where the plan always put the rendering; the seven unreachable `defined('ADMIN_FILE')` branches went with it and `core/system.php` shrank by 255 lines. The **last runtime consumer batch 5 left is closed**: the waiting chip reads `getStatusCount(CommentStatus::Pending)` and `getAdminCountRow()` takes an optional precomputed number (`core/admin.php:274`, `:320`), and the three dead keys of the comment entry of `getProfileModules()` are gone with it. `tests/Unit/CommentIsolationTest.php` is the stage guard — 6 cases, and it was run against the stashed pre-batch tree: **3 fail there** (`ashowcom()` still defined, the module map absent, the profile map still carrying a table name) and the sidebar assertion was shown to fire on `core/admin.php:319` by hand. The other 3 pass against both trees by design — batch 5 had already removed the last literal statement and the points CSV was never touched, so those guard forward rather than backing this batch. Two deletions were also checked against the live table rather than argued: `status` is `tinyint(1)`, so the chip's old `status = '0'` and the new bound integer answer the same 3; and **no stored row carries a module outside the eight-entry map** (files 4821, voting 1084, news 1083, faq 141, pages 116, links 104, media 2, shop 2, and 0 anywhere else), so dropping the three retired counter branches cannot move a counter or a points award for any row that exists. Parity was measured over real HTTP against the pre-move tree, 80 URLs per round — per module the busiest target at first, middle and last page, `com=0`, `com=-3`, `com=99999`, `com=abc` and no page at all, its smallest target, a target with no comments, a missing id and a missing target parameter. Descending: **80/80 byte-identical**, 64 of them carrying a rendered region. Ascending: 73/80, and the 7 that differ were reproduced by **one code version against itself** across two runs — the unstable `ORDER BY time` tie-break stage 2 replaces with `time, id`, not this batch. The admin sidebar chip region is byte-identical between the two trees and reads `3` on both. What the guest probe cannot reach — the **moderator** branch of the render — was closed by **source equivalence** instead: the deleted `ashowcom()` and the new `getCommentList()` were put side by side with the rename map applied, and the only differences left are the seven `defined('ADMIN_FILE')` branches, `$afile`, `$mark` and `$val['cid']` that went with them, and the empty-list branch turning into an early return. The three htmx moderation links do not appear in that diff at all. `php -l`, full `phpunit` (340 tests, 12 skipped), `phpstan` and `php-cs-fixer check` all green, and `comment-baseline verify` answered OK on all eight modules **twice during the batch**; on the final run it reported CHANGED for `news`, `pages` and `shop`, which is the points drift batch 5 recorded and not markup — see the deviations. `error_sql.log` did not grow at all; `error_php.log` and `error_site.log` grew only by entries both trees produce — recorded below |
 
 | 2026-07-28 | Stage 2 — validation, storage and write consistency | done, **stage 2 closed**. The schema carries the five columns and the five indexes, `KEY cid` and `KEY modul_status` are gone and `KEY time` stayed; a scratch database proved that a fresh `table.sql` install and the upgrade batch produce a **byte-identical** table definition, that the upgrade is idempotent on a second run and that it repairs a table missing three of its indexes to the same definition. `reqkey` was backfilled in SQL before its unique index existed — 7353 rows, 7353 distinct 32-character keys, none empty. `tools/comment-migrate.php` classified and rewrote every body: 101 legacy, 1709 plain, 1 review, 4 multi-line, 5538 single-line, then backfilled `iphash` for all 7353. Parity was measured as **meaning rather than bytes**, as the plan asks: the pre-migration body rendered the old way and the migrated body rendered the new way were compared for all 7353 rows, **7232 identical**; of the 121 that differ, 68 are the plain format no longer applying Markdown, 9 are legacy tags becoming Markdown inside code-like text, 1 is the review row and the rest are constructs the old unsafe render swallowed and the new one shows. Both classes round-trip: the moderation save and the author edit both store back exactly what the editor was handed. `checkRules()` is one rule set for both paths and measures the longest word in characters; `CommentMode` replaced the bare `acomm` comparisons; add, edit, status and delete are transactional with checked results, conditional updates and a soft delete; `reqkey` answers a replay from the failed insert; the flood window reads `iphash`; listings sort on `time, id`. All four render sites moved to `safe = true` — the three the plan names and the profile feed label, which renders a comment body too. `tests/Unit/CommentStateTest.php` is the stage guard, 14 cases through a probe that **signs in as an administrator before the core boots**, which closes the moderator gap batches 1-3 left open for status and delete. `php -l`, full `phpunit` (398 tests, 12 skipped), `phpstan` and `php-cs-fixer check` all green; the eight module pages answer 200 and both routes refuse a wrong token without writing a row. The markup baseline was re-captured at the end, as this stage changes rendered output by design, and `verify` is green on all eight modules against it. `error_sql.log` did not grow at all; `error_php.log` grew only by the `core/user.php` guest defect batch 5 recorded; `error_site.log` grew only by the `Mail:` entries of the suite |
+
+| 2026-07-28 | Stage 3 — move comment mail off the request | done, **stage 3 closed**. The submit handler (`core/user.php:406`) owns one transaction now: it opens it, `Comment::addComment()` joins it instead of committing its own, `addAdminMail()` writes the queue rows inside it, and the handler's commit closes the comment and its notification together. `addComment()` answers a fourth key, `new`, so the notification is written **once per stored comment**: a replayed `reqkey` answers the first comment and queues nothing. Measured through the new `commentnotify` probe against live rows inside a transaction it rolls back: one add stored 1 comment and queued 1 row — exactly one administrator of this installation is subscribed and reaches the `news` audience — the row carries `kind = comment`, `status = 0`, `tries = 0`, `prio = 1`, `ref = 0` and a body linking to `#<new id>`, and the rollback took the comment and the job away together (both deltas 0). A refused add wrote neither; the replay wrote neither and answered the first id; a refused `addQueue()` (a rejected address) answered `false`, left the transaction open and left the stored comment in place, which is what "a delivery failure never rolls back the comment" means at the write boundary. Latency: the comment write and its notification cost **5.8 ms** together and the notification alone **0.8 ms**, against **77 ms** for one HTTP render of the target page — the 26.6 s of the old synchronous `mail()` left with stage 2 of `docs/MAIL-2026.md` and cannot recur, because `addAdminMail()` ends in `addQueue()` and holds no send of its own. `tests/Unit/CommentNotifyTest.php` is the stage guard, 10 cases, and **6 of them fail against the stashed pre-batch tree**. `php -l`, full `phpunit` (410 tests, 12 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_sql.log` did not grow at all; `error_php.log` grew by 6 entries of the known `core/user.php:158` guest defect, exactly two per `verify` run and nothing else; `error_site.log` grew only by the `Mail:` entries of the suite |
 
 ### Decisions made during execution
 
@@ -369,6 +371,38 @@ knows nothing of previous ones; this is the only place decisions survive.
   makes the destructive half re-runnable, reviewable and undoable in place, and it
   is how the conversion of this installation was proved before it was applied.
 
+- **The transaction moved to the handler; the mail did not move into the class.**
+  Composing the notification is `addAdminMail()`'s job — recipients, subject,
+  `$conf['mtemp']`, the anchor fragment — and it is shared with eleven module call
+  sites, so reproducing it inside `Comment` would have been a second copy of the
+  audience expander. The other direction is what the two designs already ask for:
+  `Mail::addQueue()` is documented as "called inside the caller's transaction"
+  (`docs/MAIL-2026.md:1379`) and every `Comment` write joins an open transaction
+  rather than insisting on its own, so the request handler is the only place that
+  can own both. It is not a new pattern here — `modules/account/index.php:1359`
+  already owns a transaction in a request handler, and
+  `tests/Support/contract_probe.php` has driven the class inside one since batch 3.
+- **`addComment()` answers a fourth key instead of the handler guessing.** Only
+  the class knows whether the row was inserted or the `reqkey` was replayed, and a
+  replay stores nothing, so it must queue nothing. `new` is that answer, and it is
+  a **behaviour change**: before this batch a replayed submit sent the subscribed
+  administrators a second notification for one comment. `getKeyResult()` therefore
+  answers `new = false` in both of its branches, and so does every refusal.
+- **A refused queue write is ignored on purpose.** `addQueue()` answers `false`
+  and records the reason through `Logger`; the handler does not read it, because a
+  comment that is already stored must not be lost over a notification that could
+  not be written. A statement that fails does not abort an InnoDB transaction, so
+  the commit still stores the comment — measured through the probe, which drives
+  a rejected address and finds the transaction open and the row in place.
+- **The probe drives the two writes, not the handler.** `getVar()` reads a plain
+  scalar through `filter_input()` (`core/security.php:856-857`), which reads the
+  real request and not `$_POST`, so a CLI process cannot feed the handler at all:
+  the first version of this probe called it and every add came back `_CERROR3`,
+  the guest-name refusal. The behaviour is therefore measured on the two writes in
+  the handler's order, and the handler's own wiring — the transaction spanning
+  them and the `new` gate — is asserted against its source, the way the stage 0
+  guard already reads the write path.
+
 ### Deviations from the plan
 
 - The plan's `_comment` facts were re-measured on 2026-07-28 and updated in
@@ -645,6 +679,37 @@ knows nothing of previous ones; this is the only place decisions survive.
   the class, and the behaviour question the **Verification / Write** list asks is
   still unanswered.
 
+- **Stage 3 did not drive the submit handler over HTTP.** Batches 4 and 5 signed
+  an administrator in over real HTTP; a guest submit needs no credentials but
+  **stores a pending comment and a real queue row**, and the drain would deliver
+  that row to the administrator's address within five minutes. No admin
+  credentials were available to this session to remove either through the app, and
+  a hand-written `DELETE` against live rows is not something a batch decides on its
+  own. What that leaves unmeasured is the handler's own wiring — the transaction it
+  opens, the `new` gate and the commit — which is asserted against its source
+  instead; every call it makes is measured against live rows through the probe. The
+  render figure in the Progress row is a plain `GET` and stores nothing.
+- **Atomicity moved the window in which a comment can be lost.** The commit is now
+  the last thing the handler does before rendering, so a fatal error between the
+  stored row and the commit — inside `addAdminMail()`, inside the `link` fragment —
+  loses the comment where it used to be committed already. That is what "one unit
+  of work" costs, and it is the trade the stage asks for; the alternative is a
+  notification for a comment nobody has. Nothing in the enlarged window can fail
+  loudly: `getSqlQuery()` catches its own exceptions, and the fragment is one line
+  of template.
+- **Three of the ten guard cases pass against the pre-batch tree by design.** The
+  submit-latency case, the refused-queue case and the "the notification path only
+  queues" case all guard what stage 2 of `docs/MAIL-2026.md` delivered — the
+  synchronous `mail()` had already left the comment path before this batch started.
+  They guard forward rather than backing this batch, exactly as three of the six
+  stage 1 guard cases did.
+- **`docs/TESTS.md` names two of the seven comment test files.** Its unit list
+  carries `CommentReadTest` and `CommentTrustBoundaryTest` and misses
+  `CommentIsolationTest`, `CommentStateTest`, `CommentTargetTest`,
+  `CommentWriteTest` and now `CommentNotifyTest`. It is left alone: repairing it
+  means adding five files owed by three different stages, and this batch owns one
+  of them.
+
 ### Open blockers
 
 - ~~Stage 1 cannot be called complete until the frontend page-cache helper is
@@ -681,15 +746,17 @@ knows nothing of previous ones; this is the only place decisions survive.
   (`core/user.php:151` and `:418`).
 - Adding a comment returns and replaces the whole list: one POST answers with
   51059 bytes. Edit and status actions already update a single comment region.
-- Adding a comment takes **26.7 s**, of which `addAdminMail()` is 26.6 s and
-  rendering is 0.02 s. The recipient breakdown once quoted alongside that figure
-  ("13 recipients, ~2.05 s per call") does not survive checking: `_admins` holds
-  3 rows and exactly one has `smail = '1'`. One recipient and 26.6 s means one
-  blocking `mail()` call against an unconfigured transport, which is a property
-  of this development host and not of production. The split between mail and
-  rendering is the part that matters here and it stands; the absolute number
-  must be re-measured before it is used to justify anything — see
-  `docs/MAIL-2026.md` and the workflow in `docs/PERFORMANCE.md`.
+- ~~Adding a comment takes **26.7 s**, of which `addAdminMail()` is 26.6 s and
+  rendering is 0.02 s~~ — **closed by stage 3**, and by stage 2 of
+  `docs/MAIL-2026.md` before it. Re-measured on 2026-07-28: the comment write and
+  its notification together cost **5.8 ms** and the notification alone **0.8 ms**,
+  against **77 ms** for one HTTP render of the target page. The recipient
+  breakdown once quoted alongside the old figure ("13 recipients, ~2.05 s per
+  call") never survived checking either: `_admins` holds 3 rows and exactly one
+  has `smail = '1'`, so 26.6 s was one blocking `mail()` call against an
+  unconfigured transport — a property of this development host. There is no
+  `mail()` in the request path any more; `addAdminMail()` ends in
+  `Mail::addQueue()` and the drain owns delivery.
 - `EXPLAIN` on the live list query: `type=ref key=cid rows=20`,
   `Extra=Using where; Using filesort` — no composite index backs the sort.
 - ~~The flood check runs `WHERE ip = ?` with **no index on `ip`**~~ — **closed by
@@ -1175,6 +1242,12 @@ concern — 26 call sites, a private newsletter queue and a synchronous
 `mail()` — and it has its own plan, `docs/MAIL-2026.md`. This redesign consumes
 it: once the queue exists, the comment path stores a job instead of calling
 `addAdminMail()`, and the job is written inside the comment transaction.
+
+**Delivered by stage 3.** The consumption turned out to be the other way round
+from the sketch above: `addAdminMail()` **is** the queue call now — stage 2 of
+that plan turned `addQueue()` into a store and every audience expander ends in
+it — so what stage 3 had left to do was make the two writes share one
+transaction, which the submit handler opens.
 
 Ordering: **stage 2 of `docs/MAIL-2026.md` ships before stage 3 of this plan.**
 That plan now has a transport stage in front of the queue — stage 1 replaces the
@@ -1725,6 +1798,12 @@ Order of operations, because it is destructive:
 
 Requires stage 2 of `docs/MAIL-2026.md` — the queue and its drain — to be
 delivered first.
+
+**Delivered 2026-07-28, one release.** Every item of the list below shipped and
+`tests/Unit/CommentNotifyTest.php` guards it. What the stage did **not** do is
+recorded in the **Deviations**: the submit handler was not driven over HTTP,
+because a guest submit on this stand stores a comment and a queue row that the
+drain would deliver, and nothing here could take either back.
 
 - Replace the synchronous `addAdminMail()` call with a queue job.
 - Write the job inside the same transaction as the comment.

@@ -408,6 +408,80 @@ function getProbeCommentFormat(): array {
     ];
 }
 
+# Report what stage 3 promises: the queue row is written inside the transaction the comment is written in, once per stored comment, and nothing is delivered inside the request
+# The two writes of the handler run in its order inside one rolled back transaction; the handler itself cannot run here, because getVar() reads a scalar through filter_input()
+# Every scenario is measured as a difference between two counts of both tables, so a job without a comment or a comment without its job is a number rather than an argument
+function getProbeCommentNotify(): array {
+    global $db, $conf, $com, $tpl, $mailer;
+    $out = ['addmail' => (string)($conf['comments']['addmail'] ?? ''), 'subs' => 0, 'target' => 0, 'clean' => false];
+    $mails = static function (string $where = '', array $pars = []) use ($db): int {
+        $sql = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_mail'.(($where !== '') ? ' WHERE '.$where : '');
+        $row = $db->getSqlRow($db->getSqlQuery($sql, $pars));
+        return $row ? intval($row['num']) : 0;
+    };
+    $post = static function (int $tid, string $body, string $key) use ($com, $conf, $tpl): array {
+        $new = $com->addComment('news', $tid, $body, 'Probe', $key);
+        if ($new['error'] === '' && $new['new']) {
+            $link = $conf['homeurl'].'/index.php?name=news&op=view&id='.$tid.'#'.$new['id'];
+            $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
+            addAdminMail((bool)$conf['comments']['addmail'], 'news', $new['name'], getModuleName('news'), 1, $clink);
+        }
+        return $new;
+    };
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT super, modules FROM '.PREFIX_DB.'_admins WHERE smail = \'1\'')) ?: [] as $one) {
+        if ($one['super'] || in_array('news', getAdminModuleNames((string)$one['modules']), true)) $out['subs']++;
+    }
+    $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
+    $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE iphash = :hash', ['hash' => $hash]);
+    $all = getProbeCommentCount();
+    $sent = $mails();
+    $db->setSqlBegin();
+    $free();
+    $tid = 0;
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
+        if ($com->getTargetMode('news', intval($one['id'])) === CommentMode::Open) {
+            $tid = intval($one['id']);
+            break;
+        }
+    }
+    if (!$tid) {
+        $db->setSqlRollback();
+        return $out;
+    }
+    $out['target'] = $tid;
+    $key = '00112233445566778899aabbccddeeff';
+    $was = [getProbeCommentCount(), $mails()];
+    $stop = $post($tid, '', '');
+    $out['refuse'] = [$stop['error'] !== '', $stop['new'], getProbeCommentCount() - $was[0], $mails() - $was[1]];
+    $free();
+    $was = [getProbeCommentCount(), $mails()];
+    $time = hrtime(true);
+    $new = $post($tid, 'stage three probe body', $key);
+    $out['msec'] = round((hrtime(true) - $time) / 1000000, 1);
+    $cid = intval($new['id']);
+    $out['add'] = [$new['error'], $new['new'], getProbeCommentCount() - $was[0], $mails() - $was[1], getProbeCommentCount('reqkey = :key', ['key' => $key])];
+    $sql = 'SELECT kind, status, tries, prio, body, ref FROM '.PREFIX_DB.'_mail ORDER BY id DESC LIMIT '.max(1, $mails() - $was[1]);
+    $out['queued'] = [];
+    foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $one) {
+        $link = str_contains((string)$one['body'], '#'.$cid);
+        $out['queued'][] = [(string)$one['kind'], intval($one['status']), intval($one['tries']), intval($one['prio']), intval($one['ref']), $link];
+    }
+    $free();
+    $was = [getProbeCommentCount(), $mails()];
+    $again = $post($tid, 'stage three probe replay', $key);
+    $out['replay'] = [$again['error'], $again['new'], $cid === intval($again['id']), getProbeCommentCount() - $was[0], $mails() - $was[1]];
+    $bad = $mailer->addQueue(['kind' => 'comment', 'email' => 'not an address', 'title' => 'probe', 'body' => 'probe', 'sender' => $conf['adminmail'], 'prio' => 1]);
+    $out['fail'] = [$bad, $db->checkSqlActive(), getProbeCommentCount('id = :id', ['id' => $cid]), $mailer->getError()];
+    $time = hrtime(true);
+    addAdminMail((bool)$conf['comments']['addmail'], 'news', 'Probe', getModuleName('news'), 1, 'probe link');
+    $out['notify'] = round((hrtime(true) - $time) / 1000000, 1);
+    $db->setSqlRollback();
+    $out['gone'] = [getProbeCommentCount() - $all, $mails() - $sent];
+    $out['clean'] = ($all === getProbeCommentCount() && $sent === $mails());
+    return $out;
+}
+
 # Render the profile feed the way it was rendered before batch 5, from the single UNION that still carried the comment branch
 # It is a verbatim copy of the pre-move function and exists only so the migrated one can be compared against it byte for byte on the live rows
 function getProbeFeedLegacy(int $uid): string {
@@ -680,6 +754,8 @@ if ($mode === 'core') {
     $out = getProbeCommentTarget();
 } elseif ($mode === 'commentstage') {
     $out = getProbeCommentStage2();
+} elseif ($mode === 'commentnotify') {
+    $out = getProbeCommentNotify();
 } elseif ($mode === 'commentformat') {
     $out = getProbeCommentFormat();
 } elseif ($mode === 'commentfeed') {
