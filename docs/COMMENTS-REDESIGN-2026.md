@@ -13,9 +13,11 @@ knows nothing of previous ones; this is the only place decisions survive.
 | Date | Stage / batch | Outcome |
 |---|---|---|
 | 2026-07-27 | stage 0, URL schemes | **done, ahead of the stage.** `filterUrl()` (`core/classes/parser.php:228`) refuses `data:`, `javascript:` and `vbscript:` in every mode; 8 fixture cases added, verified to fail against the unpatched file |
-| 2026-07-28 | stage 0, client-chosen moderation and module | **done.** `getCommentMode()` (`core/system.php:5794`) resolves the target through the fixed eight-entry map; `addComment()` no longer reads `cid`, `updateComment()` and `updateCommentStatus()` read `modul` from the comment row. `tests/Unit/CommentTrustBoundaryTest.php` (6 cases) fails against the unpatched files; baseline `verify` unchanged |
+| 2026-07-28 | stage 0, client-chosen moderation and module | **done.** `getCommentMode()` (`core/system.php:5705` today) resolves the target through the fixed eight-entry map; `addComment()` no longer reads `cid`, `updateComment()` and `updateCommentStatus()` read `modul` from the comment row. `tests/Unit/CommentTrustBoundaryTest.php` (6 cases) fails against the unpatched files; baseline `verify` unchanged |
 | 2026-07-28 | Stage 1, batch 1 — `Comment`, `CommentStatus`, `CommentMode`, read methods | done. `core/classes/comment.php` added and wired into `core/system.php:143`; six public reads (`getCount()`, `getList()`, `getAdminList()`, `getComment()`, `getUserList()`, `getModuleList()`) and six private helpers, called by nothing yet. The stage baseline was re-prepared and captured first: **all eight modules**, not the six stage 0 ran against. 8 parity tests in `tests/Unit/CommentReadTest.php` drive a new `commentread` probe mode that puts every legacy statement beside the method replacing it against the live rows; the list case was proven to fail by flipping the sort direction. `php -l`, full `phpunit` (314 tests, 3 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` all green; the front page, `admin.php` and the `news` and `media` comment pages answer 200. `error_php.log` and `error_sql.log` did not grow; `error_site.log` grew only by the `Mail:` entries the transport tests produce, which are the paths those tests own |
 | 2026-07-28 | Stage 1, batch 2 — frontend reads move to the class | done. `ashowcom()` (`core/system.php:5483`) lost its count query, its list query and its author join to one `$com->getList()` call and shrank by 67 lines; the render half is untouched. Parity was measured rather than asserted: `comment-baseline verify` stayed OK on all eight modules, and a 17-URL probe over `voting/17`, `news/53`, `files/604`, `links/1` and the two targets carrying pending rows — first, middle and last page, an out-of-range page and page 0 — produced byte-identical regions against the pre-move file, run twice, once per sort direction, the two directions differing from each other so both were really exercised. A second probe added the cases the first could not reach — a target with no comments at all, one that spills a single row onto a second page, one holding exactly the page size, and `com=abc`, `com=-3`, `com=0` and a missing target id — and every comment region matched the pre-move file there too. The four pending comments stayed invisible to a guest. `php -l`, full `phpunit` (314 tests, 3 skipped), `phpstan`, `php-cs-fixer check` all green. `error_php.log` and `error_sql.log` did not grow; `error_site.log` grew by the `Mail:` entries of the suite runs and by four `404` entries, one per probe run, produced by the missing-id case the probe requests on purpose — both code versions logged them alike |
+
+| 2026-07-28 | Stage 1, batch 3 — frontend writes move to the class | done. `addComment()`, `updateComment()` and `setStatus()` added to `core/classes/comment.php`, with five private helpers (`checkAddRules()`, `checkEditRules()`, `getLinkFlag()`, `getLastTime()`, `getLastId()`); the three request handlers shrank to 16, 22 and 7 lines (`core/user.php:266`, `core/system.php:5672` and `:5696`) and hold no `_comment` SQL any more. Parity was measured twice over. A rolled-back transaction drove the class against the live rows: all **eight** modules stored the row they resolved, each incremented **its own** target counter by one and awarded **its own** points slot, an anonymous add landed pending and moved neither, every refusal answered the message the submit path answered, the author edited inside the window and was refused after it, and a visitor could neither edit nor moderate — `tests/Unit/CommentWriteTest.php`, 9 cases, proven to bite by pointing `numcom()` at the wrong module, which failed on the counter and the slot at once. The six POSTs that reach the three migrated routes — empty text, wrong token, unknown module, guest edit, guest preview, guest status — answered **byte-identically** before and after the move, with the comment count and the target counter unchanged. The GET that fetches the form for its token is not part of that comparison: two runs of one code version already differ in page length and token, so the page is not byte-stable on this stand and `comment-baseline verify` is what covers it. `php -l`, full `phpunit` (320 tests, 4 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_sql.log` did not grow; `error_php.log` grew only by one warning from the scratch probe script itself; `error_site.log` grew only by the `Mail:` entries of the suite runs |
 
 ### Decisions made during execution
 
@@ -97,11 +99,56 @@ knows nothing of previous ones; this is the only place decisions survive.
   runtime, so the snapshot cannot drift inside a request. A later batch that
   introduces a per-request override would break the pager silently and has to move
   those two reads into the class instead.
-- **No new test in this batch.** The stage criterion this batch works toward is
+- **No new test in batch 2.** The stage criterion that batch works toward is
   "no direct `_comment` SQL outside `Comment`", which cannot be asserted while
   five call sites still hold it; that guard belongs to batch 6, once, for the
-  whole stage. What is checkable now is byte parity, and that is what the
-  baseline tool and the page probe measure.
+  whole stage. What was checkable there is byte parity, and that is what the
+  baseline tool and the page probe measured.
+- **The class calls `getCommentMode()` and `numcom()` as globals for now.** The
+  batch table says the counters still go through `numcom()`, and the resolver is
+  in the same position: both are absorbed by batch 6, which owns the deletions.
+  Moving the resolver here as well would have re-pointed the stage 0 guard twice
+  for no behaviour change.
+- **The write path returns data, and the handler renders.** `addComment()`
+  answers `id`, `name` and `error`; `updateComment()` answers `allow`, `mod`,
+  `body`, `saved` and `error`; `setStatus()` answers a bool. The alert fragments,
+  the ajax textarea, `$prs->filterContent()`, `ashowcom()` and `addAdminMail()`
+  all stay in the handler, because the point of the stage is to remove the HTML
+  monolith rather than move it into the class.
+- **Validation moved with the write it belongs to, both copies unmerged.**
+  `checkAddRules()` returns the single message the submit path shows and
+  `checkEditRules()` the list the edit path shows, because that is what the two
+  paths do today. Stage 2 merges them into `checkRules()`; merging them here
+  would have changed behaviour in a batch that promises none.
+- **The edit length check still measures the last word in bytes.** It is the
+  defect stage 2 fixes (`checkEditRules()` in the class now, `core/system.php:5695`
+  before the move), so it was moved verbatim; only the single-letter loop
+  variables it used were renamed to satisfy `.rules/global.md:106`.
+- **`!$body` guards the edit, not `$body === ''`.** The old branch tested `!$text`,
+  so a body of exactly `0` opened the editor instead of saving. A strict
+  comparison would have silently changed that; the falsy test keeps it, quirk
+  included.
+- **`CommentStatus` is applied, `CommentMode` is not.** The enum names the value
+  written to the `status` column, so the write path uses it. The `acomm == 1`
+  comparisons stay bare because the plan schedules `CommentMode` for stage 2, and
+  the two changes are independent.
+- **`checkCaptcha()` moved into the class with the rest of the rules.** It is the
+  last rule the submit path applies and therefore the one that overrides all
+  others; leaving it in the handler would have meant reproducing that precedence
+  at the call site.
+- **The write parity is measured inside a transaction that is rolled back.**
+  `tests/Support/contract_probe.php` opens one, sets the target it picked to
+  `acomm = 2`, writes through the class, reads the row, the counter and the
+  points back, and rolls the whole thing away; the probe reports the comment
+  count from before and after so the test can assert the rollback really
+  happened. Every table involved is InnoDB — checked before relying on it. That
+  is what makes a real "published add" checkable on the same stand the markup
+  baseline is captured from, which stage 0 could not do.
+- **The stage 0 guard follows the code it guards.** `CommentTrustBoundaryTest`
+  read the three request handlers by name; the handlers no longer hold the
+  decision, so it now reads the class methods and asserts of the handlers only
+  that they carry no `mod` from the request and no `_comment` SQL at all. The
+  behaviour half over `getCommentMode()` is untouched.
 
 ### Deviations from the plan
 
@@ -131,6 +178,44 @@ knows nothing of previous ones; this is the only place decisions survive.
   need a signed-in session and no credentials for this stand are available to the
   batch. The predicate itself did not change in this batch — `getScope()` landed
   in batch 1 — so what is unmeasured is the same branch batch 1 already flagged.
+- Batch 3 closes the "published add" gap of stage 0 and most of the
+  **Verification / Write** list — published add, pending add, edit by the owner,
+  edit after the window, and a visitor refused on edit and on status — by driving
+  the class inside a rolled-back transaction. What stays open is the **moderator**
+  half: edit by a moderator, a repeated status transition and the admin bulk
+  actions all need `isAdmin()`, which needs a session the CLI probe cannot hold.
+  It is the same gap batches 1 and 2 flagged, and it belongs to the browser
+  checks together with the moderator view of the list. The ajax-textarea branch
+  of the edit handler (`core/system.php:5685`) falls into the same gap: it needs
+  an allowed edit **and** a rendered response, so no check here reaches it and it
+  is covered by reading the diff alone.
+- Three defects were found while measuring batch 3 and left **untouched**,
+  because each is outside a batch that promises no behaviour change:
+  - the anchor query of a fresh comment, `getLastId()` in the class and
+    `core/user.php:304` before the move, reads back by `cid` and `uid` without
+    `modul`, so two targets that share an id across two modules can hand the
+    admin notification the wrong anchor. `getSqlLastId()` is the fix and belongs
+    to stage 2, which makes the write transactional and adds the explicit result
+    checks;
+  - `updateComment()` returns its alert (`_PEDEND`, and the validation list) but
+    `index.php:116` discards the return value, so a refused edit answers an empty
+    body over HTTP. The refusal itself works; only the message is lost. Stage 4
+    owns the fragment responses of this path;
+  - `is_moder('')` decides the edit permission for a comment id that no longer
+    exists, because `$mod` is then empty. A full administrator passes that test
+    and the handler falls through to an empty answer, so nothing is writable
+    either way — but the permission is being asked about a row that is gone.
+- **The two clocks of this stand disagree by an hour**, and it changes what two
+  of the write rules can do. MySQL runs at `Etc/GMT-1` while PHP runs at
+  `Europe/Berlin`, so a row written with `NOW()` reads back 3600 s in the past
+  for `strtotime()`. The flood window (`send`, 30 s) therefore never fires, and
+  the edit window (`edit`, 600 s) is already closed by the time the author sees
+  their own comment. Both are properties of the installation, not of the code —
+  the arithmetic is unchanged by the move — and the probe measures both: it
+  reports the skew, and the edit case is asserted against a row whose timestamp
+  the probe writes from PHP, so the branch itself is proven to work. Worth fixing
+  on the stand, or in the plan, before stage 2 assumes either window is
+  observable.
 
 ### Open blockers
 
@@ -152,7 +237,7 @@ knows nothing of previous ones; this is the only place decisions survive.
   `files`, `links`, `media`, `news`, `pages`, `shop`, `voting`.
 - The admin panel does **not** call `ashowcom()` — `admin/modules/comments.php`
   builds its own table. Its only two callers are `core/user.php:13` and
-  `core/user.php:308`, so the eight `defined('ADMIN_FILE')` branches inside
+  `core/user.php:280`, so the eight `defined('ADMIN_FILE')` branches inside
   `ashowcom()` are unreachable.
 - Adding a comment returns and replaces the whole list: one POST answers with
   51059 bytes. Edit and status actions already update a single comment region.
@@ -167,7 +252,8 @@ knows nothing of previous ones; this is the only place decisions survive.
   `docs/MAIL-2026.md` and the workflow in `docs/PERFORMANCE.md`.
 - `EXPLAIN` on the live list query: `type=ref key=cid rows=20`,
   `Extra=Using where; Using filesort` — no composite index backs the sort.
-- The flood check runs `WHERE ip = ?` (`core/user.php:274`) with **no index on
+- The flood check runs `WHERE ip = ?` (`getLastTime()`,
+  `core/classes/comment.php:234` since batch 3) with **no index on
   `ip`**; `_comment` carries only `cid`, `uid`, `modul_status` and `time`
   (`setup/sql/table.sql:141-144`).
 - Table `_comment` (re-checked 2026-07-28, after the stage 1 baseline fixtures):
@@ -181,10 +267,11 @@ knows nothing of previous ones; this is the only place decisions survive.
 - Confirmed index list on `_comment`: `PRIMARY(id)`, `cid`, `uid`,
   `modul_status(modul, status)`, `time` — and nothing on `ip`.
 - Validation is duplicated in `addComment()` and `updateComment()`. The word
-  length defect fixed in the first copy still lives in the second
-  (`core/system.php:5755`): the loop overwrites `$o` on every iteration, so only
-  the last word is measured, and it measures bytes with `strlen()` rather than
-  characters.
+  length defect fixed in the first copy still lives in the second — both copies
+  moved into the class in batch 3 and the defect with them
+  (`checkEditRules()`, `core/classes/comment.php:218`): the loop keeps only the
+  last word it saw, so only that one is measured, and it measures bytes with
+  `strlen()` rather than characters.
 - Replying inserts `[b]name[/b],` into the editor: there is no thread structure.
 - `acomm` is a three-state mode per target row: `0` = disabled (`_DEACTIVATE`),
   `1` = moderated (`_APOSTMOD`), `2` = open (`_APOSTNOMOD`). The final status of
@@ -220,9 +307,11 @@ knows nothing of previous ones; this is the only place decisions survive.
    to an arbitrary module. The same held in `updateCommentStatus()`, where the
    request `mod` drove the permission check **and** was passed to `numcom()`,
    moving the counter of the wrong target row. Today the mode comes from
-   `getCommentMode()` (`core/system.php:5794`, called at `core/user.php:270`) and
-   both update paths read `modul` from the comment row
-   (`core/system.php:5735`, `:5779`). The description stays here because the rest
+   `getCommentMode()` (`core/system.php:5705`, called at
+   `core/classes/comment.php:113` since batch 3) and both update paths read
+   `modul` from the comment row (`core/classes/comment.php:139`, `:157`, and
+   before batch 3 in the two handlers themselves). The description stays here
+   because the rest
    of the plan is written against it.
 2. **Adding repaints everything.** A successful add returns the complete comment
    list, transfers about 51 KB and replaces the whole list container; scroll
@@ -372,7 +461,7 @@ every anonymous commenter full trust. `getEditorKey()` (`core/system.php:3838`)
 resolves one site-wide `editor.user` for all frontend authoring, and `ckeditor`
 and `tinymce` both declare `formats=html`, so this is one admin setting away at
 any time. Comments render with `safe = false`
-(`core/system.php:5662`, `:5750`, `:5764`, `admin/modules/comments.php:135`),
+(`core/system.php:5602`, `:5691`, `admin/modules/comments.php:135`),
 which means nothing downstream would catch it either.
 
 **Escaping belongs to the read path, and comments render with `safe = true`.**
@@ -551,20 +640,20 @@ performed when a target row is removed, and bulk moderation.
 
 ### Counters and points
 
-`numcom()` (`core/system.php:5817`) is not a comment query — it writes the
+`numcom()` (`core/system.php:5728`) is not a comment query — it writes the
 `comments` column of the target table and calls `updatePoints()`. It becomes a
 **private** method of `Comment`, invoked from `addComment()`, `setStatus()` and
 `deleteComment()` inside their transactions, and disappears as a global
 function.
 
 Three of its eleven branches are dropped in the move, covering four module
-names: `account`/`members` (points slot 3, `core/system.php:5823-5825`),
-`gallery` (slot 17, `:5832-5834`) and `multimedia` (slot 29, `:5841-5843`).
+names: `account`/`members` (points slot 3, `core/system.php:5734-5736`),
+`gallery` (slot 17, `:5743-5745`) and `multimedia` (slot 29, `:5752-5754`).
 Each has its table `UPDATE` already
 commented out and does nothing but award points, and none of them is reachable:
 
-- `numcom()` is called only from the comment path — `core/user.php:303`,
-  `core/system.php:5788` and four sites in `admin/modules/comments.php`;
+- `numcom()` is called only from the comment path — `core/classes/comment.php:131`
+  and `:162` since batch 3, and four sites in `admin/modules/comments.php`;
 - `modules/` contains no `gallery`, `multimedia` or `members`, and `account`
   does not render comments, so `_comment.modul` can only hold one of the eight
   supported modules;
@@ -655,7 +744,8 @@ therefore checks explicitly:
 - `getSqlLastId()` is read only after an `INSERT` that returned success.
 
 The new row id comes from `$db->getSqlLastId()`. The current re-`SELECT` of the
-last inserted comment (`core/user.php:304`) is removed: it is redundant, racy,
+last inserted comment (`getLastId()`, `core/classes/comment.php:240` since batch
+3) is removed: it is redundant, racy,
 and matches on `cid` plus `uid`, so for an anonymous author (`uid = 0`) it can
 return a different guest's comment and build the wrong anchor link.
 
@@ -682,9 +772,9 @@ returns the same result as the winner and touches neither counters nor points.
 Where a value has to be read before it can be decided — the target id, the
 author — the read is `SELECT ... FOR UPDATE` inside the same transaction.
 
-`updateCommentStatus()` today does the opposite: it writes the status
-unconditionally and then re-reads the row to feed `numcom()`
-(`core/system.php:5786-5788`), which is precisely the double-count above.
+`setStatus()` today does the opposite: it writes the status unconditionally and
+then feeds the row it read beforehand to `numcom()`
+(`core/classes/comment.php:157-162`), which is precisely the double-count above.
 
 All participating tables are InnoDB — verified on this installation for
 `_comment`, `_users` and every target table — so the transaction is real. The
@@ -842,14 +932,14 @@ small, independently deployable, and does not wait on the class. It closes two
 separate holes that happen to live in the same request path.
 
 **Stored XSS in comments — already fixed, ahead of this plan.** Comments render
-at `safe = false` (`core/system.php:5662`, `:5750`, `:5764`,
+at `safe = false` (`core/system.php:5602`, `:5691`,
 `admin/modules/comments.php:135`), and the parser refused only `data:` links
 unconditionally, so `[url=javascript:alert(1)]` produced a working
 `href="javascript:..."` for every author, anonymous included. Neither author nor
 viewer needed any privilege: an anonymous comment lands pending and fires in the
 **moderator's** browser during review (`core/system.php:5497-5502` shows the
 moderator branch has no status filter), while an ordinary registered user
-publishes immediately (`core/user.php:293`).
+publishes immediately (`core/classes/comment.php:122` since batch 3).
 
 `filterUrl()` (`core/classes/parser.php:228`) now refuses `data:`, `javascript:`
 and `vbscript:` in **every** mode, comparing against a copy with whitespace and
@@ -944,7 +1034,8 @@ last. Reversing any of it means deleting something still in use.
 
 - Merge add and edit validation into `checkRules()`.
 - Fix the maximum word length check: measure the longest word, not the last one,
-  and measure characters rather than bytes (`core/system.php:5755`).
+  and measure characters rather than bytes (`checkEditRules()`,
+  `core/classes/comment.php:218`).
 - Apply `CommentMode` to every remaining bare `acomm` comparison; the enum itself
   arrives in stage 1 with the class.
 - Make add/edit/status/delete transactional, with the explicit result checks and
@@ -952,9 +1043,12 @@ last. Reversing any of it means deleting something still in use.
 - Add `format`, `reqkey`, `edited`, `deleted`, `iphash` and the five new indexes;
   drop `cid` and `modul_status`, **keep `time`**.
 - Backfill `reqkey` with a random key per row, and `iphash` from `ip`.
-- Run the body migration below, then switch **all four** render sites to
-  `safe = true` (`core/system.php:5662`, `:5750`, `:5764`,
-  `admin/modules/comments.php:135`).
+- Run the body migration below, then switch **all three** render sites to
+  `safe = true` (`core/system.php:5602`, `:5691`,
+  `admin/modules/comments.php:135`). They were four until batch 3 merged the two
+  inside `updateComment()` into one; the fourth, `core/system.php:5558`, sits in
+  the unreachable `defined('ADMIN_FILE')` branch of `ashowcom()` that batch 6
+  deletes with the function.
 - Replace `filterHtml()` in the comment write path with the comment-specific
   normalisation that stores source; `filterHtml()` itself is not modified.
 - Reject `html` as a comment format at the write boundary.
