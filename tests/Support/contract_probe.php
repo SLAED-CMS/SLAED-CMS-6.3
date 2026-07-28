@@ -55,6 +55,35 @@ function getProbeCounter(): array {
     ];
 }
 
+# Report how the comment trust boundary resolves a target while the request carries hostile cid and mod values
+function getProbeComment(): array {
+    global $db;
+    $_GET = ['id' => '1', 'cid' => '2', 'mod' => 'gallery'];
+    $_POST = ['cid' => '2', 'mod' => 'account'];
+    $_REQUEST = $_GET + $_POST;
+    $pick = static function(string $tab, string $where) use ($db): array {
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT id, acomm FROM '.PREFIX_DB.'_'.$tab.' WHERE '.$where.' ORDER BY id DESC LIMIT 1'));
+        return $row ? ['id' => intval($row['id']), 'acomm' => intval($row['acomm'])] : [];
+    };
+    $open = $pick('news', 'acomm != 0 AND time <= NOW() AND status != \'0\'');
+    $off = $pick('news', 'acomm = 0 AND time <= NOW() AND status != \'0\'');
+    $hide = $pick('news', 'acomm != 0 AND (status = \'0\' OR time > NOW())');
+    $vote = $pick('voting', 'acomm != 0 AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')');
+    $out = [
+        'open' => $open ? [$open['acomm'], getCommentMode('news', $open['id'])] : [],
+        'off' => $off ? [0, getCommentMode('news', $off['id'])] : [],
+        'hide' => $hide ? [0, getCommentMode('news', $hide['id'])] : [],
+        'vote' => $vote ? [$vote['acomm'], getCommentMode('voting', $vote['id'])] : [],
+        'missing' => getCommentMode('news', 999999999),
+        'zero' => $open ? getCommentMode('news', 0) : 0,
+    ];
+    $out['unknown'] = [];
+    foreach (['gallery', 'account', 'members', 'multimedia', 'forum', '', 'news_', 'news; DROP'] as $mod) {
+        $out['unknown'][$mod] = $open ? getCommentMode($mod, $open['id']) : -1;
+    }
+    return $out;
+}
+
 $mode = $argv[1] ?? 'core';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
@@ -161,6 +190,8 @@ if ($mode === 'core') {
     $out['scalar_key_on_array'] = getVar('post', 'flat', 'raw', 'fallback');
     $out['array_default_scalar_filter'] = getVar('post', 'missing', 'num', []);
     $out['branch_untouched'] = getVar('post', 'rows[]', 'raw');
+} elseif ($mode === 'comment') {
+    $out = getProbeComment();
 } elseif ($mode === 'geoip') {
     $peak = memory_get_peak_usage(true);
     $out['country'] = Geoip::getCountry((string)($conf['geoip_test'] ?? '217.50.80.228'));

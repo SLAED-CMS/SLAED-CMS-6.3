@@ -7,7 +7,7 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Render the comment list and submission form for an item
-function setComShow(int $id = 0, int $cid = 0): string {
+function setComShow(int $id = 0, int $acomm = 0): string {
     global $conf, $user, $tpl;
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
     $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]);
@@ -15,7 +15,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
         $userinfo = getUserInfo();
-        if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        if ($acomm == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         if (is_user()) {
             $name_field = filterText(substr($user[1], 0, 25)).$tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => '', 'input_attr' => '']);
         } else {
@@ -42,7 +42,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
-            'hx_post' => 'index.php?go=1&op=addComment&id='.$id.'&cid='.$cid.'&mod='.$conf['name'].'&token='.getPageToken(),
+            'hx_post' => 'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&token='.getPageToken(),
             'hx_include' => '#formcsave',
             'hx_target' => '#repcsave',
             'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }',
@@ -266,8 +266,8 @@ function getUserBlock(): string {
 function addComment() {
     global $db, $user, $conf, $tpl;
     $id       = getVar('req', 'id',   'num',  0);
-    $cid      = getVar('req', 'cid',  'num',  0);
     $mod      = filterVar(getVar('req', 'mod',  'text', ''));
+    $acomm    = getCommentMode($mod, $id);
     $postname = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $ip       = getip();
     $comment  = trim(getVar('post', 'text', 'raw', ''));
@@ -284,17 +284,17 @@ function addComment() {
     if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($comment, 'http://') !== false) $stop = _CERROR9;
     $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
     if (checkCaptcha('comment')) $stop = _SECCODEINCOR;
-    if (!$stop && $id && $mod) {
+    if (!$stop && $acomm) {
         $comment = filterHtml($comment, $urlclick);
         if (is_user()) {
             $postid = intval($user[0]);
             $userinfo = getUserInfo();
             $postname = $userinfo['name'];
-            $status = (!is_moder($mod) && ($cid == 1 || $userinfo['access'])) ? 0 : 1;
+            $status = (!is_moder($mod) && ($acomm == 1 || $userinfo['access'])) ? 0 : 1;
         } else {
             $postid = '0';
             $postname = $postname;
-            $status = (!is_moder($mod) && ($cid == 1 || $conf['comments']['anonpost'] == 1)) ? 0 : 1;
+            $status = (!is_moder($mod) && ($acomm == 1 || $conf['comments']['anonpost'] == 1)) ? 0 : 1;
         }
         $db->getSqlQuery(
             'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :ip, :comment, :status)',

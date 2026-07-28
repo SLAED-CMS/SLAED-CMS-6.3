@@ -5733,9 +5733,12 @@ function updateComment(): string {
  global $db, $conf, $user, $tpl, $prs;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
-    $mod  = filterVar(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
     $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
-    list($uid, $date, $comment) = $db->getSqlRow($db->getSqlQuery('SELECT uid, time, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT uid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+    $uid = $row ? intval($row['uid']) : 0;
+    $date = $row['time'] ?? '';
+    $comment = $row['body'] ?? '';
+    $mod = $row['modul'] ?? '';
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
@@ -5775,16 +5778,39 @@ function updateCommentStatus(): void {
  global $db, $tpl;
     $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
     $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
-    $mod = filterVar(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT cid, uid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+    $mod = $row['modul'] ?? '';
     if ($id && $mod && is_moder($mod)) {
         $status = ($typ) ? 1 : 0;
         $info = ($typ) ? _PCOPEN : _PCLOSED;
         $numcom = ($typ) ? 0 : 1;
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $status, 'id' => $id]);
-        list($cid, $uid) = $db->getSqlRow($db->getSqlQuery('SELECT cid, uid FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-        numcom($cid, $mod, $numcom, $uid);
+        numcom(intval($row['cid']), $mod, $numcom, intval($row['uid']));
         echo $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
+}
+
+# Resolve a comment target through the fixed module map and return its moderation mode; 0 when the module is unknown, the row is missing or invisible, or comments are disabled
+function getCommentMode(string $mod, int $id): int {
+ global $db;
+    $map = [
+        'faq' => '_faq',
+        'files' => '_files',
+        'links' => '_links',
+        'media' => '_media',
+        'news' => '_news',
+        'pages' => '_pages',
+        'shop' => '_products',
+        'voting' => '_voting',
+    ];
+    if (!$id || !isset($map[$mod])) return 0;
+    if ($mod == 'voting') {
+        $sql = 'SELECT acomm FROM '.PREFIX_DB.$map[$mod].' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')';
+    } else {
+        $sql = 'SELECT acomm FROM '.PREFIX_DB.$map[$mod].' AS t WHERE t.id = :id AND t.time <= NOW() AND t.status != \'0\' '.catmids($mod, 't.cid');
+    }
+    $row = $db->getSqlRow($db->getSqlQuery($sql, ['id' => $id]));
+    return $row ? intval($row['acomm']) : 0;
 }
 
 # Number comments
