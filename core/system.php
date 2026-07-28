@@ -140,8 +140,10 @@ require_once BASE_DIR.'/core/classes/geoip.php';
 require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
 require_once BASE_DIR.'/core/classes/oauth.php';
+require_once BASE_DIR.'/core/classes/comment.php';
 $tpl = new Template($theme);
 $prs = new Parser();
+$com = new Comment($db, $prs, $conf);
 
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';

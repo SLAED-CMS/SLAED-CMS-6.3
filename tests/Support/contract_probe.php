@@ -84,6 +84,96 @@ function getProbeComment(): array {
     return $out;
 }
 
+# Report whether the read methods of the Comment class answer exactly what the queries they replace answer, against the live rows of this installation
+function getProbeCommentRead(): array {
+    global $db, $com, $conf;
+    $sort = !empty($conf['comments']['sort']) ? 'ASC' : 'DESC';
+    $lnum = intval($conf['comments']['num'] ?? 15);
+    $anum = intval($conf['comments']['anum'] ?? 25);
+    $out = ['wired' => ($com instanceof Comment)];
+    $top = $db->getSqlRow($db->getSqlQuery('SELECT modul, cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE status = 1 GROUP BY modul, cid ORDER BY num DESC LIMIT 1'));
+    $mod = $top ? (string)$top['modul'] : '';
+    $cid = $top ? intval($top['cid']) : 0;
+    $out['target'] = [$mod, $cid];
+    if ($mod === '') return $out;
+    $pars = ['cid' => $cid, 'mod' => $mod, 'status' => 0];
+    $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(cid) AS num FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status != :status', $pars));
+    $tot = intval($cnt['num']);
+    $out['count'] = [$tot, $com->getCount($mod, $cid)];
+    $pgs = (int)ceil($tot / $lnum);
+    $out['list'] = [];
+    foreach (array_unique([1, $pgs]) as $page) {
+        $off = ($page - 1) * $lnum;
+        $sql = 'SELECT id, cid, modul, time, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status != :status'
+            .' ORDER BY time '.$sort.' LIMIT '.$off.', '.$lnum;
+        $was = [];
+        foreach ($db->getSqlRows($db->getSqlQuery($sql, $pars)) ?: [] as $one) $was[] = intval($one['id']);
+        $now = $com->getList($mod, $cid, $page);
+        $first = ($sort === 'ASC') ? $off + 1 : (($tot > $off) ? $tot - $off : $tot);
+        $out['list'][] = [$was, array_column($now['rows'], 'id'), [$off, $pgs, $first], [$now['offset'], $now['pages'], $now['first']]];
+    }
+    $urow = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0 AND status = 1 GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1'));
+    $uid = $urow ? intval($urow['uid']) : 0;
+    $out['author'] = [];
+    if ($uid) {
+        $sql = 'SELECT u.id, u.name, u.rank, u.points, g.name AS gnam, g.rank AS grnk, g.color AS gclr FROM '.PREFIX_DB.'_users AS u'
+            .' LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points))'
+            .' WHERE u.id IN (:uid) ORDER BY g.extra ASC, g.points ASC';
+        $was = [];
+        foreach ($db->getSqlRows($db->getSqlQuery($sql, ['uid' => $uid])) ?: [] as $one) {
+            $was = [(string)$one['name'], (string)$one['rank'], intval($one['points'])];
+            $was = array_merge($was, [(string)($one['gnam'] ?? ''), (string)($one['grnk'] ?? ''), (string)($one['gclr'] ?? '')]);
+        }
+        $urow = $db->getSqlRow($db->getSqlQuery('SELECT modul, cid FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status = 1 ORDER BY id DESC LIMIT 1', ['uid' => $uid]));
+        $now = $com->getList((string)$urow['modul'], intval($urow['cid']), 1);
+        $has = [];
+        foreach ($now['rows'] as $one) {
+            if ($one['uid'] !== $uid || !$one['user']) continue;
+            $has = [$one['user']['name'], $one['user']['rank'], $one['user']['points']];
+            $has = array_merge($has, [$one['user']['gname'], $one['user']['grank'], $one['user']['gcolor']]);
+        }
+        $out['author'] = [$was, $has];
+    }
+    $sql = 'SELECT id, cid, modul, body, time FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status != \'0\' ORDER BY id DESC LIMIT 0,25';
+    $was = [];
+    foreach ($db->getSqlRows($db->getSqlQuery($sql, ['uid' => $uid])) ?: [] as $one) $was[] = intval($one['id']);
+    $out['feed'] = [$was, array_column($com->getUserList($uid, 25), 'id')];
+    $was = [];
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment ORDER BY modul ASC')) ?: [] as $one) {
+        if ($one['modul'] !== '') $was[] = (string)$one['modul'];
+    }
+    $out['mods'] = [$was, $com->getModuleList()];
+    $join = PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) ';
+    $sel = 'SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name AS unam FROM '.$join;
+    $eid = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment ORDER BY id DESC LIMIT 1'));
+    $eid = $eid ? intval($eid['id']) : 0;
+    $one = $db->getSqlRow($db->getSqlQuery($sel.'WHERE s.id = :id', ['id' => $eid]));
+    $now = $com->getComment($eid);
+    $out['single'] = [
+        [intval($one['id']), (string)$one['modul'], intval($one['cid']), (string)$one['body'], intval($one['status']), (string)($one['unam'] ?? '')],
+        [$now['id'] ?? 0, $now['modul'] ?? '', $now['cid'] ?? 0, $now['body'] ?? '', $now['status'] ?? -1, $now['nick'] ?? ''],
+    ];
+    $out['missing'] = $com->getComment(999999999);
+    $aord = !empty($conf['comments']['sort']) ? 'ASC' : 'DESC';
+    $out['admin'] = [];
+    $cases = [
+        ['status != :status', ['status' => 0], CommentStatus::Published, '', 2, ''],
+        ['status = :status', ['status' => 0], CommentStatus::Pending, '', 2, ''],
+        ['status != :status AND s.modul LIKE :find', ['status' => 0, 'find' => '%news%'], CommentStatus::Published, '', 4, 'news'],
+        ['status != :status AND (s.name LIKE :fnam OR u.name LIKE :fusr)', ['status' => 0, 'fnam' => '%a%', 'fusr' => '%a%'], CommentStatus::Published, '', 3, 'a'],
+        ['status != :status AND s.modul = :mod', ['status' => 0, 'mod' => $mod], CommentStatus::Published, $mod, 2, ''],
+    ];
+    foreach ($cases as $case) {
+        [$where, $args, $stat, $amod, $find, $term] = $case;
+        $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.$join.'WHERE '.$where, $args));
+        $was = [];
+        foreach ($db->getSqlRows($db->getSqlQuery($sel.'WHERE '.$where.' ORDER BY s.time '.$aord.' LIMIT 0, '.$anum, $args)) ?: [] as $one) $was[] = intval($one['id']);
+        $now = $com->getAdminList($stat, $amod, $find, $term, 1);
+        $out['admin'][] = [$was, array_column($now['rows'], 'id'), intval($cnt['num']), $now['total']];
+    }
+    return $out;
+}
+
 $mode = $argv[1] ?? 'core';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
@@ -192,6 +282,8 @@ if ($mode === 'core') {
     $out['branch_untouched'] = getVar('post', 'rows[]', 'raw');
 } elseif ($mode === 'comment') {
     $out = getProbeComment();
+} elseif ($mode === 'commentread') {
+    $out = getProbeCommentRead();
 } elseif ($mode === 'geoip') {
     $peak = memory_get_peak_usage(true);
     $out['country'] = Geoip::getCountry((string)($conf['geoip_test'] ?? '217.50.80.228'));
