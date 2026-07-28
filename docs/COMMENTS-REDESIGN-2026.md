@@ -19,6 +19,8 @@ knows nothing of previous ones; this is the only place decisions survive.
 | 2026-07-28 | Stage 1, batch 3 — frontend writes move to the class | done. `addComment()`, `updateComment()` and `setStatus()` added to `core/classes/comment.php`, with five private helpers (`checkAddRules()`, `checkEditRules()`, `getLinkFlag()`, `getLastTime()`, `getLastId()`); the three request handlers shrank to 16, 22 and 7 lines (`core/user.php:266`, `core/system.php:5672` and `:5696`) and hold no `_comment` SQL any more. Parity was measured twice over. A rolled-back transaction drove the class against the live rows: all **eight** modules stored the row they resolved, each incremented **its own** target counter by one and awarded **its own** points slot, an anonymous add landed pending and moved neither, every refusal answered the message the submit path answered, the author edited inside the window and was refused after it, and a visitor could neither edit nor moderate — `tests/Unit/CommentWriteTest.php`, 9 cases, proven to bite by pointing `numcom()` at the wrong module, which failed on the counter and the slot at once. The six POSTs that reach the three migrated routes — empty text, wrong token, unknown module, guest edit, guest preview, guest status — answered **byte-identically** before and after the move, with the comment count and the target counter unchanged. The GET that fetches the form for its token is not part of that comparison: two runs of one code version already differ in page length and token, so the page is not byte-stable on this stand and `comment-baseline verify` is what covers it. `php -l`, full `phpunit` (320 tests, 4 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_sql.log` did not grow; `error_php.log` grew only by one warning from the scratch probe script itself; `error_site.log` grew only by the `Mail:` entries of the suite runs |
 | 2026-07-28 | Stage 1, batch 4 — the moderation module moves to the class | done. `admin/modules/comments.php` holds no `_comment` SQL any more, takes no `$db` in any handler, and shrank from 529 to 467 lines: the module selector reads `getModuleList()`, the list and its count read `getAdminList()`, the edit form reads `getComment()`, and the four write handlers call `setStatus()` and the new `deleteComment()` and `updateBody()`. The separately built count query is gone with `getTplPager()` — the pager renders through `getTplPagerView()` from the total the list itself counted, so result and count can no longer disagree. Parity was measured over real HTTP with a signed-in administrator, which closes the **moderator** gap batches 1-3 left open. **42 admin URLs in two rounds, 39 byte-identical** in the module content region: round one covered both tabs, all five search fields, the module filter, first, second and last page, two empty-result cases, the edit form, the edit form of a missing id, `config` and `info`; round two added the shapes the first could not reach — the pending tab crossed with every search field, the module filter crossed with two of them, the edit form of a pending row and of `id=0`, and search terms carrying `%`, `_`, a backslash, `<b>`, Cyrillic, surrounding spaces and `' OR 1=1 --`, plus a quoted and an uppercased module filter. All three that differ are the same page clamp, recorded below. The write routes produced **identical** persistent state across 16 scenarios — status both ways, a repeated transition, a missing id, single and bulk delete, a repeated delete, bulk with no type, the moderation body save and four wrong-token refusals — same row states, same bodies, same target counter (6 → 3), same points (6 → 1), same row count; 15 of the 16 answered the same redirect, the sixteenth being the `delete()` deviation below. `php -l`, full `phpunit` (323 tests, 4 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_site.log` grew only by the `Mail:` entries of the suite runs; `error_php.log` and `error_sql.log` grew by the same entries in both code versions, except the one SQL syntax error the migration removed |
 
+| 2026-07-28 | Stage 1, batch 5 — activity feed, profile hub and the eight target-delete handlers | done. `deleteTarget()` and `getUserCount()` added to `core/classes/comment.php`; the eight module delete handlers, the profile feed (`core/user.php:722`) and the profile hub (`modules/account/index.php:327`) hold no `_comment` statement any more, and `productops()` in `modules/shop/admin/index.php` binds its whole id list instead of pasting it into six `IN (...)` clauses. **One runtime consumer is left and is not this batch's to take**: the waiting-content chip of the admin sidebar, `core/admin.php:319`, which counts pending comments through `getAdminCountRow()` — see the deviations. Parity was measured three ways. The **feed renders byte for byte**: `tests/Support/contract_probe.php` holds a verbatim copy of the pre-move function and puts it beside the migrated one on the live rows — 10 accounts, six with comments, one without, plus a missing, a zero and a negative id, all identical once the per-render instance counter of the tabs widget is normalised, and the hub triple (count, rating, favourites) matched for all seven accounts. `deleteTarget()` was driven **inside a rolled-back transaction**: each of the eight modules removed exactly the rows its target held and no others, a bulk selection removed both its targets, a target id shared by five modules was deleted for one and left the other four untouched, an empty module, an empty list and a list of non-positive ids each removed nothing, and a crafted list and a crafted module name removed exactly the id they decode to and no row at all. The eight handlers were then exercised **over real HTTP with a signed-in administrator**: a fixture of 2 comments per module against a target id that belongs to no row, a wrong token first (fixture untouched), then the eight routes one at a time — each removed **only its own module's** two rows, the `files` route also removed its fixture target row, a repeated delete was a no-op, and every per-module total returned to the value it started from. `php -l`, full `phpunit` (334 tests, 12 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_sql.log` grew by one entry the migration does not own, and `error_php.log` grew by the same two entries in both code versions — both recorded below |
+
 ### Decisions made during execution
 
 - The stored-XSS fix landed in the parser rather than in the comment render
@@ -186,6 +188,37 @@ knows nothing of previous ones; this is the only place decisions survive.
   page size now has one reader, the class, and the module renders whatever the
   class actually paginated with. `$anump` stays in the module, because the
   number of pager links is a rendering setting the class does not own.
+- **`deleteTarget()` binds one placeholder per id and takes no counter with it.** A deleted
+  target has no row left to hold a `comments` value and no page left to render, so the
+  method removes the comments and stops there — `numcom()` is not called, exactly as the
+  eight handlers behaved before the move. The id list is bound value by value rather than
+  joined into the statement, which is what closes the `shop` interpolation the stage lists
+  as an acceptance criterion, and it makes the bulk and the single case one method instead
+  of two.
+- **`deleteTarget()` does not re-validate the module against the eight-entry map.** Every
+  caller passes a literal, never a request value, and a name outside the map simply matches
+  no row — measured: `deleteTarget('gallery', [1])` removes nothing. Reproducing the map
+  here would be a second copy of the one `getCommentMode()` owns, and batch 6 is the batch
+  that absorbs that resolver.
+- **The whole shop id list was bound, not just the comment statement.** The plan names the
+  parameterisation of `modules/shop/admin/index.php:707` as an acceptance criterion, and
+  that line disappears into the class anyway; leaving the neighbouring `_favorites` and
+  `_products` deletes pasting the same list would have satisfied the letter of it and none
+  of the point. `productops()` now builds `$keys`/`$pars` exactly the way the `news` and
+  `pages` handlers already did — the divergence the facts list flags is gone, and all six
+  `IN (...)` clauses in that function bind. The list was integers before and after
+  (`array_filter(array_map('intval', ...))`), so this is robustness, not a live hole.
+- **The feed keeps one round trip per module and adds one for comments.** The UNION now
+  carries the seven content modules and `getUserList()` answers the comment tab on its own;
+  the profile hub is the same shape with `getUserCount()`. That is two statements more per
+  profile page than before, and it is the price of the comment table having one reader —
+  the alternative is a UNION branch built from a module map, which is exactly the
+  construction that made `_comment` reachable from two files that own no comments.
+- **The unreachable "no parts" guard of the feed moved to the query.** `if (!$parts) return '';`
+  could never fire while the comment branch was added unconditionally, and after the move it
+  would suppress a feed that has comments on an installation with every content module
+  disabled. The guard now wraps the UNION itself, so a comment-only feed still renders and
+  the empty case renders exactly what it rendered before.
 - **The rewritten list loop lost its snake_case names.** `$com_modul`,
   `$com_text`, `$com_status`, `$uname` and `$get_id` broke
   `.rules/global.md:102-103` and are now `$cmod`, `$val['body']`, `$stat`,
@@ -292,6 +325,62 @@ knows nothing of previous ones; this is the only place decisions survive.
   on the stand, or in the plan, before stage 2 assumes either window is
   observable.
 
+- Batch 5 found a **ninth direct `_comment` consumer the facts list did not name** and
+  migrated it: `modules/account/index.php:336` built the profile hub from the same
+  `getProfileModules()` map as the feed, so `PREFIX_DB.'_'.$inf['table']` resolved to the
+  comment table there too. It never appeared in a `_comment` grep because the name is
+  assembled. Leaving it would have made the stage criterion unreachable, since batch 6 owns
+  deletions rather than migrations and no later batch owns a read. `getUserCount()` is the
+  method it needed; like `getComment()` and `getModuleList()` in batch 1, it is a read that
+  landed in the batch that owns reads rather than being invented later.
+- Batch 5 also found a **tenth** consumer and deliberately left it: the waiting
+  chip of the admin sidebar, `core/admin.php:319`, counts pending comments by
+  handing the string `comment` to `getAdminCountRow()`. It is left because the
+  fix is not in the comment path: that helper is shared by fifteen sidebar rows
+  across nine modules and does the counting itself, so the comment row can only
+  leave it by taking a precomputed number — a change to admin chrome, in the
+  surface batch 4 already shipped. It is one `SELECT COUNT(id)`, it is
+  parameterless, and nothing about it is unsafe; what it blocks is the stage
+  claim, not the stage. Whoever takes it needs a `getStatusCount(CommentStatus)`
+  on the class and one optional argument on the helper.
+- **The comment entry of `getProfileModules()` now carries three dead keys.**
+  `table`, `where` and `rate` are read by nobody once the feed and the hub go
+  through the class — measured against all four callers of that map. They are
+  left because the map is uniform and the other eight entries need them, but a
+  `'table' => 'comment'` sitting in a module map is exactly the disguise that hid
+  two consumers from every `_comment` sweep, and it will hide the next one.
+- Batch 5 closes the **moderator** gap for the delete path alone. The eight target-delete
+  routes were driven over real HTTP with a signed-in administrator, so the handlers, their
+  token check and their persistence are measured. The moderator halves that batches 1-3
+  flagged for the **list and the edit** are untouched by this batch and stay open.
+- **The `_comment` counts in the facts list were stale and are re-measured here**, on
+  2026-07-28 after batch 4: 7353 rows, not 7357, and 3 pending rather than 4. The drift is
+  not this batch's: the figure was already 7353 before any file was touched, the fixture
+  round returned every per-module total to the value it started from, and the two batches
+  that ran HTTP write scenarios against live rows sit between the two measurements. The
+  distribution moved with it — `news` 1088 to 1083 and `voting` 1083 to 1084. The column
+  still holds 0 and 1 only, so the `status = 1` rule the reads follow is unaffected.
+- **`comment-baseline verify` reported CHANGED for `news`, `pages` and `shop`, and the
+  cause was the verification itself.** The three captures differ in one number, at equal
+  byte length: the points of account 7885, the administrator the HTTP round signs in as,
+  which the comment author card renders. `updatePoints(1)` (`core/system.php:2141`) awards
+  one point per rendered page and `users.point` is enabled here, so nine admin renders moved
+  it from 40150 to 40159. No markup changed. The value was restored to 40150 under a
+  `points = 40159` guard and `verify` answers OK on all eight modules again — the baseline
+  was **not** re-captured, because `capture` is a once-per-stage operation. Worth knowing
+  before the next admin HTTP round: any signed-in admin traffic moves a value the markup
+  baseline compares.
+- Two log entries were **found and left alone**, neither owned by this batch:
+  - `modules/shop/admin/index.php:447` selects `p.status` and joins `_categories`, which
+    also has `status`, then filters on the bare column — `23000/1052: Column 'status' in
+    WHERE is ambiguous`, logged when the products list is reached with a status filter. The
+    diff of that file is confined to `productops()`; the list query is byte-identical to the
+    committed version;
+  - `core/user.php:18` reads `$userinfo['access']` after `getUserInfo()` answered null for a
+    guest, on the two modules whose target has `acomm != 1` and therefore does not
+    short-circuit the test. It appeared twice per `comment-baseline verify` run, before and
+    after the batch alike.
+
 ### Open blockers
 
 - Stage 1 cannot be called complete until the frontend page-cache helper is
@@ -328,15 +417,18 @@ knows nothing of previous ones; this is the only place decisions survive.
 - `EXPLAIN` on the live list query: `type=ref key=cid rows=20`,
   `Extra=Using where; Using filesort` — no composite index backs the sort.
 - The flood check runs `WHERE ip = ?` (`getLastTime()`,
-  `core/classes/comment.php:254` since batch 3) with **no index on
+  `core/classes/comment.php:274` since batch 3) with **no index on
   `ip`**; `_comment` carries only `cid`, `uid`, `modul_status` and `time`
   (`setup/sql/table.sql:141-144`).
-- Table `_comment` (re-checked 2026-07-28, after the stage 1 baseline fixtures):
-  **7357 rows**. `body` is `TEXT`, the IP is stored in clear text. Distribution:
-  files 4821, news 1088, voting 1083, faq 141, pages 116, links 104, shop 2,
-  media 2. Status: 7353 published, 4 pending. The two `media` rows are the
-  markup-baseline fixture, re-created before the stage 1 `capture`; every other
-  count is unchanged from the 2026-07-27 measurement.
+- Table `_comment` (re-checked 2026-07-28, after batch 4): **7353 rows**. `body`
+  is `TEXT`, the IP is stored in clear text. Distribution: files 4821,
+  voting 1084, news 1083, faq 141, pages 116, links 104, media 2, shop 2.
+  Status: 7350 published, 3 pending. The two `media` rows are the
+  markup-baseline fixture, re-created before the stage 1 `capture`. The earlier
+  figure in this list — 7357 rows, news 1088, voting 1083, 4 pending — was taken
+  before the batches that drive HTTP write scenarios against live rows; the body
+  migration of stage 2 quotes it and must be re-measured against the table it
+  actually runs on rather than against either number here.
 - Confirmed InnoDB on this installation: `_comment`, `_users`, `_news`, `_files`,
   `_voting`, `_newsletter`.
 - Confirmed index list on `_comment`: `PRIMARY(id)`, `cid`, `uid`,
@@ -344,7 +436,7 @@ knows nothing of previous ones; this is the only place decisions survive.
 - Validation is duplicated in `addComment()` and `updateComment()`. The word
   length defect fixed in the first copy still lives in the second — both copies
   moved into the class in batch 3 and the defect with them
-  (`checkEditRules()`, `core/classes/comment.php:238`): the loop keeps only the
+  (`checkEditRules()`, `core/classes/comment.php:258`): the loop keeps only the
   last word it saw, so only that one is measured, and it measures bytes with
   `strlen()` rather than characters.
 - Replying inserts `[b]name[/b],` into the editor: there is no thread structure.
@@ -356,24 +448,41 @@ knows nothing of previous ones; this is the only place decisions survive.
   (`core/system.php:3849`, called from `filterHtml()`,
   `core/security.php:976-983`). It is a **site-wide** setting and `_comment`
   carries no per-row record of which format a row was written in.
-- Direct `_comment` consumers outside the render path. The first two entries are
-  **closed**: the frontend write handlers moved into `Comment` in batch 3 and the
-  admin module in batch 4, and neither file holds a `_comment` statement any
-  more:
+- Direct `_comment` consumers outside the render path. **Two entries in this list
+  were found by reading, not by grepping, and both assemble the table name from a
+  variable** — `PREFIX_DB.'_'.$table` with `'comment'` arriving as data. A sweep
+  for the literal `_comment` misses them, which is why the list was wrong twice.
+  The stage guard batch 6 owns has to look for the assembled form as well:
+  `getProfileModules()` and `getAdminCountRow()` are the two shapes seen so far.
+  Everything below is closed except the sidebar chip:
   - ~~frontend write handlers — `core/user.php` (flood check, insert, last id),
     `core/system.php` (`updateComment()`, `updateCommentStatus()`)~~
   - ~~admin module — `admin/modules/comments.php` (module list, search list, edit
     save, bulk actions, approve, delete, pager table binding)~~
-  - user activity feed — `core/user.php:732` UNION branch
+  - ~~user activity feed — `core/user.php:732` UNION branch~~
+  - ~~profile hub counter — `modules/account/index.php:336` UNION branch, which
+    reached the table through the `getProfileModules()` map rather than by name
+    and was therefore missing from this list until batch 5 measured it~~
+  - ~~module deletion handlers — `faq`, `files`, `links`, `media`, `news`,
+    `pages`, `shop`, `voting` admin modules~~
+  - **open** — admin sidebar waiting chip, `core/admin.php:319`: it calls
+    `getAdminCountRow(..., 'comment', "status = '0'")`, and that helper
+    (`core/admin.php:275`) builds `SELECT COUNT(id) FROM {prefix}_comment WHERE
+    status = '0'` from the name it is handed. The helper is shared by fifteen
+    rows across nine modules, so routing comments around it is a change to admin
+    chrome rather than to the comment path, and it is left for a batch that owns
+    that surface
   - installer schema — `setup/sql/table.sql`, `setup/sql/table_update*.sql`
-  - module deletion handlers — `faq`, `files`, `links`, `media`, `news`,
-    `pages`, `shop`, `voting` admin modules
   - one dead consumer — `modules/account/admin/index.php:921` holds a
     **commented-out** `DELETE FROM _comment WHERE uid = :id`, so deleting a user
-    currently orphans their comments
-  All of them must be migrated before direct table access is removed.
-- `modules/shop/admin/index.php:707` interpolates its id list straight into
-  `IN (...)` with no parameters, unlike the `news` and `pages` handlers.
+    currently orphans their comments. It is the last `_comment` text outside the
+    class, `tools/` and `tests/`, and `deleteUser()` is what replaces it
+  Only the installer schema and that dead line are left before direct table
+  access is removed.
+- ~~`modules/shop/admin/index.php:707` interpolates its id list straight into
+  `IN (...)` with no parameters, unlike the `news` and `pages` handlers~~ —
+  **closed by batch 5**: `productops()` builds `$keys`/`$pars` like those two
+  handlers and all six of its `IN (...)` clauses bind.
 
 ## Problems this causes
 
@@ -386,8 +495,8 @@ knows nothing of previous ones; this is the only place decisions survive.
    request `mod` drove the permission check **and** was passed to `numcom()`,
    moving the counter of the wrong target row. Today the mode comes from
    `getCommentMode()` (`core/system.php:5705`, called at
-   `core/classes/comment.php:113` since batch 3) and both update paths read
-   `modul` from the comment row (`core/classes/comment.php:139`, `:158`, `:171`, and
+   `core/classes/comment.php:119` since batch 3) and both update paths read
+   `modul` from the comment row (`core/classes/comment.php:145`, `:164`, `:177`, and
    before batch 3 in the two handlers themselves). The description stays here
    because the rest
    of the plan is written against it.
@@ -479,7 +588,7 @@ Indexes added in stage 2:
 ```
 
 `status_deleted_time` exists because the admin list is **not** scoped by module.
-`getAdminScope()` (`core/classes/comment.php:197`, and
+`getAdminScope()` (`core/classes/comment.php:217`, and
 `admin/modules/comments.php:95-128` before batch 4 moved it) builds
 `WHERE s.status ... ORDER BY s.time`
 with `modul` only when a filter is selected, so every `modul`-leading index is
@@ -698,11 +807,13 @@ point of the work is to remove the HTML monolith, not to move it into a class.
 Public methods: `getList()`, `getAdminList()`, `getUserList()`, `getCount()`,
 `addComment()`, `updateComment()`, `updateBody()`, `setStatus()`,
 `deleteComment()`, `deleteTarget()`, `deleteUser()`, `checkRules()`. Stage 5 adds
-`getBranch()`. `getComment()`, `getModuleList()` and `updateBody()` were added
-during stage 1 rather than designed here: the moderation module reads one comment
-for its edit form, asks for the module names of its selector, and saves a body
-without the author's edit rules, and the stage cannot claim "no direct `_comment`
-SQL outside `Comment`" while any of the three has nowhere to go.
+`getBranch()`. `getComment()`, `getModuleList()`, `updateBody()` and
+`getUserCount()` were added during stage 1 rather than designed here: the
+moderation module reads one comment for its edit form, asks for the module names
+of its selector, and saves a body without the author's edit rules, and the
+profile hub counts an account's comments beside its other module counters — and
+the stage cannot claim "no direct `_comment` SQL outside `Comment`" while any of
+the four has nowhere to go.
 
 The verbs are spelled out rather than left as `add()`, `update()` and `delete()`
 because `.rules/global.md` requires 6-24 characters and a verb-plus-noun shape.
@@ -738,7 +849,7 @@ Each has its table `UPDATE` already
 commented out and does nothing but award points, and none of them is reachable:
 
 - `numcom()` is called from the `Comment` class alone since batch 4 —
-  `core/classes/comment.php:131`, `:165` and `:176`, and nowhere else in the
+  `core/classes/comment.php:137`, `:171` and `:182`, and nowhere else in the
   project;
 - `modules/` contains no `gallery`, `multimedia` or `members`, and `account`
   does not render comments, so `_comment.modul` can only hold one of the eight
@@ -830,7 +941,7 @@ therefore checks explicitly:
 - `getSqlLastId()` is read only after an `INSERT` that returned success.
 
 The new row id comes from `$db->getSqlLastId()`. The current re-`SELECT` of the
-last inserted comment (`getLastId()`, `core/classes/comment.php:260` since batch
+last inserted comment (`getLastId()`, `core/classes/comment.php:280` since batch
 3) is removed: it is redundant, racy,
 and matches on `cid` plus `uid`, so for an anonymous author (`uid = 0`) it can
 return a different guest's comment and build the wrong anchor link.
@@ -859,8 +970,8 @@ Where a value has to be read before it can be decided — the target id, the
 author — the read is `SELECT ... FOR UPDATE` inside the same transaction.
 
 `setStatus()` and `deleteComment()` today compare the status they read before
-deciding whether to write and to count (`core/classes/comment.php:158-165` and
-`:171-177`, the guard batch 4 gave them). That closes the *repeated click*, which
+deciding whether to write and to count (`core/classes/comment.php:164-171` and
+`:177-182`, the guard batch 4 gave them). That closes the *repeated click*, which
 is what the moderation module always did, but not the *concurrent* one: the read
 and the write are still two statements, so two parallel requests can both pass
 the comparison. Turning the comparison into the `WHERE` clause above is what
@@ -1029,7 +1140,7 @@ unconditionally, so `[url=javascript:alert(1)]` produced a working
 viewer needed any privilege: an anonymous comment lands pending and fires in the
 **moderator's** browser during review (`core/system.php:5497-5502` shows the
 moderator branch has no status filter), while an ordinary registered user
-publishes immediately (`core/classes/comment.php:122` since batch 3).
+publishes immediately (`core/classes/comment.php:128` since batch 3).
 
 `filterUrl()` (`core/classes/parser.php:228`) now refuses `data:`, `javascript:`
 and `vbscript:` in **every** mode, comparing against a copy with whitespace and
@@ -1116,7 +1227,10 @@ last. Reversing any of it means deleting something still in use.
   installation to get `shop` and `media` rendering, and how to revert it.
 - Delete `ashowcom()` once its callers are migrated.
 - Verify no direct `_comment` SQL remains outside `Comment`, setup and migration
-  files. `tools/` and `tests/` are excluded from that sweep by name:
+  files. **A sweep for the literal name is not enough** — two consumers assembled
+  it from a variable and were missed twice by exactly that sweep, so the guard
+  has to cover `PREFIX_DB.'_'.$var` reached with `'comment'` as data. `tools/`
+  and `tests/` are excluded from it by name:
   `tools/comment-baseline.php:37` queries the table directly on purpose, because
   a parity tool that went through the class under test would prove nothing.
 
@@ -1125,7 +1239,7 @@ last. Reversing any of it means deleting something still in use.
 - Merge add and edit validation into `checkRules()`.
 - Fix the maximum word length check: measure the longest word, not the last one,
   and measure characters rather than bytes (`checkEditRules()`,
-  `core/classes/comment.php:238`).
+  `core/classes/comment.php:258`).
 - Apply `CommentMode` to every remaining bare `acomm` comparison; the enum itself
   arrives in stage 1 with the class.
 - Make add/edit/status/delete transactional, with the explicit result checks and
