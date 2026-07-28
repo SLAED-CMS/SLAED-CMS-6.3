@@ -15,6 +15,7 @@ knows nothing of previous ones; this is the only place decisions survive.
 | 2026-07-27 | stage 0, URL schemes | **done, ahead of the stage.** `filterUrl()` (`core/classes/parser.php:228`) refuses `data:`, `javascript:` and `vbscript:` in every mode; 8 fixture cases added, verified to fail against the unpatched file |
 | 2026-07-28 | stage 0, client-chosen moderation and module | **done.** `getCommentMode()` (`core/system.php:5794`) resolves the target through the fixed eight-entry map; `addComment()` no longer reads `cid`, `updateComment()` and `updateCommentStatus()` read `modul` from the comment row. `tests/Unit/CommentTrustBoundaryTest.php` (6 cases) fails against the unpatched files; baseline `verify` unchanged |
 | 2026-07-28 | Stage 1, batch 1 — `Comment`, `CommentStatus`, `CommentMode`, read methods | done. `core/classes/comment.php` added and wired into `core/system.php:143`; six public reads (`getCount()`, `getList()`, `getAdminList()`, `getComment()`, `getUserList()`, `getModuleList()`) and six private helpers, called by nothing yet. The stage baseline was re-prepared and captured first: **all eight modules**, not the six stage 0 ran against. 8 parity tests in `tests/Unit/CommentReadTest.php` drive a new `commentread` probe mode that puts every legacy statement beside the method replacing it against the live rows; the list case was proven to fail by flipping the sort direction. `php -l`, full `phpunit` (314 tests, 3 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` all green; the front page, `admin.php` and the `news` and `media` comment pages answer 200. `error_php.log` and `error_sql.log` did not grow; `error_site.log` grew only by the `Mail:` entries the transport tests produce, which are the paths those tests own |
+| 2026-07-28 | Stage 1, batch 2 — frontend reads move to the class | done. `ashowcom()` (`core/system.php:5483`) lost its count query, its list query and its author join to one `$com->getList()` call and shrank by 67 lines; the render half is untouched. Parity was measured rather than asserted: `comment-baseline verify` stayed OK on all eight modules, and a 17-URL probe over `voting/17`, `news/53`, `files/604`, `links/1` and the two targets carrying pending rows — first, middle and last page, an out-of-range page and page 0 — produced byte-identical regions against the pre-move file, run twice, once per sort direction, the two directions differing from each other so both were really exercised. A second probe added the cases the first could not reach — a target with no comments at all, one that spills a single row onto a second page, one holding exactly the page size, and `com=abc`, `com=-3`, `com=0` and a missing target id — and every comment region matched the pre-move file there too. The four pending comments stayed invisible to a guest. `php -l`, full `phpunit` (314 tests, 3 skipped), `phpstan`, `php-cs-fixer check` all green. `error_php.log` and `error_sql.log` did not grow; `error_site.log` grew by the `Mail:` entries of the suite runs and by four `404` entries, one per probe run, produced by the missing-id case the probe requests on purpose — both code versions logged them alike |
 
 ### Decisions made during execution
 
@@ -73,6 +74,35 @@ knows nothing of previous ones; this is the only place decisions survive.
   kept, but a reader of `core/user.php` will meet both — worth knowing before
   batch 5 migrates the activity feed.
 
+- **The unreachable admin read branch left with the read it belonged to.** The
+  `defined('ADMIN_FILE')` half that built `WHERE status != 0 AND modul = ...`,
+  `anum` and `anump` is exactly the code `getList()` replaces, and the facts above
+  (`:115-118`) already record that no admin file calls `ashowcom()`. Keeping it
+  would have meant forking the function around a branch nothing can reach. The
+  admin **render** branches — the checkbox column, the moderation links, the
+  `form-wrap` — are untouched; they are the HTML monolith batch 6 removes with the
+  function itself.
+- **A broken `comments.num` no longer divides by zero.** The old arithmetic
+  computed `ceil($total / $conf['comments']['num'])` directly; `getPager()` falls
+  back to 15 when the setting is missing or zero. The value is `15` here, so the
+  rendered output is identical, and the difference is only reachable through a
+  configuration that used to be fatal.
+- **`$a` and `$b` became `$numb` and `$mark`.** Both are assigned in the lines
+  the move rewrites — `$numb` now comes from `getPager()` — and both broke the
+  single-letter rule of `.rules/global.md:106`. Pure renames, no output change.
+- **Two readers of one setting, and they agree only by an invariant.** `Comment`
+  snapshots `$conf['comments']` in its constructor (`core/system.php:146`) while
+  `ashowcom()` still reads `sort` and `nump` live for the pager. Checked before
+  relying on it: nothing in `core/`, `modules/` or `admin/` writes that section at
+  runtime, so the snapshot cannot drift inside a request. A later batch that
+  introduces a per-request override would break the pager silently and has to move
+  those two reads into the class instead.
+- **No new test in this batch.** The stage criterion this batch works toward is
+  "no direct `_comment` SQL outside `Comment`", which cannot be asserted while
+  five call sites still hold it; that guard belongs to batch 6, once, for the
+  whole stage. What is checkable now is byte parity, and that is what the
+  baseline tool and the page probe measure.
+
 ### Deviations from the plan
 
 - The plan's `_comment` facts were re-measured on 2026-07-28 and updated in
@@ -95,6 +125,12 @@ knows nothing of previous ones; this is the only place decisions survive.
   not by a comparison against live rows. `isAdmin()` needs a session and the probe
   is a CLI process; that path belongs to the browser checks, together with the
   moderator view the baseline tool deliberately does not capture.
+- Batch 2 inherits that gap unchanged. The read it migrates is measured for a
+  **guest** across both sort directions and five page positions; the "user" and
+  "moderator" rows of the **Verification / Read** list stay open, because both
+  need a signed-in session and no credentials for this stand are available to the
+  batch. The predicate itself did not change in this batch — `getScope()` landed
+  in batch 1 — so what is unmeasured is the same branch batch 1 already flagged.
 
 ### Open blockers
 
@@ -108,8 +144,10 @@ knows nothing of previous ones; this is the only place decisions survive.
 
 ## Facts (measured 2026-07-27)
 
-- `ashowcom()` (`core/system.php:5477-5729`) is **253 lines** carrying SQL,
-  permissions, pagination, module links and HTML assembly at once.
+- `ashowcom()` was **253 lines** (`core/system.php:5477-5729`) carrying SQL,
+  permissions, pagination, module links and HTML assembly at once. Re-measured
+  after batch 2 moved its reads: **186 lines**, `core/system.php:5484-5669`, and
+  no SQL left in it. The remainder is the HTML assembly and the module links.
 - Eight modules render comments through `setComShow($id, $acomm)`: `faq`,
   `files`, `links`, `media`, `news`, `pages`, `shop`, `voting`.
 - The admin panel does **not** call `ashowcom()` — `admin/modules/comments.php`
