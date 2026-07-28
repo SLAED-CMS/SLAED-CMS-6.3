@@ -736,7 +736,7 @@ function pmoder(int|string $status, int $subh): string {
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop, $tpl;
+    global $db, $user, $conf, $stop, $tpl, $mailer;
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
@@ -829,7 +829,7 @@ function send(): void {
                                     $link = $tpl->getHtmlFrag('link', ['href' => $finurl, 'title' => $finurl, 'label' => $finurl]);
                                     $subject = $conf['sitename'].' - '._FORUM;
                                     $message = str_replace('[text]', sprintf(_ADDMAILF, $postname, $link), $conf['mtemp']);
-                                    addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
+                                    $mailer->addQueue(['kind' => 'forum', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                                 }
                             }
                         }

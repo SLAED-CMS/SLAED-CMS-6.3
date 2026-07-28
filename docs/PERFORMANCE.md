@@ -215,13 +215,16 @@ Recommended direction:
 
 ### Outgoing Mail
 
-Every outgoing message is sent synchronously inside the request that triggers
-it. There is exactly one send point, `mail()` inside `addMail()`
-(`core/security.php:1047`), reached from 26 call sites in 16 files. The return
-value is discarded and warnings are suppressed by a local handler
-(`core/security.php:1044-1048`), so a failed delivery leaves no trace.
+Every outgoing message is still sent synchronously inside the request that
+triggers it. Since stage 1 of `docs/MAIL-2026.md` there is exactly one entry
+point, `$mailer->addQueue()` (`core/classes/mail.php:44`), reached from 26 call
+sites in 16 files and dispatching to the transport `mail.transport` selects. The
+delivery result is now read and every failure is recorded through
+`Logger::addSite()`, so a failed delivery no longer leaves the request silently.
+Stage 2 is what moves the wait out of the request.
 
-Measured and re-verified against the database on 2026-07-27:
+Measured against the pre-stage-1 code and re-verified against the database on
+2026-07-27:
 
 - adding a comment took **26.7 s**, of which `addAdminMail()` was **26.6 s** and
   rendering **0.02 s**;
@@ -244,7 +247,7 @@ Implication:
 Newsletter throughput, same date:
 
 - `{prefix}_newsletter.mails` is a comma-separated `MEDIUMTEXT`;
-  `updateNewsletter()` (`core/system.php:3747`) slices `newsletter.count = 4`
+  `updateNewsletter()` (`core/system.php:3751`) slices `newsletter.count = 4`
   addresses per run and rewrites the remainder;
 - the `newsletter` job is scheduled `1 * * * *` but ships `active = '0'`;
 - 164 subscribers carry `users.newslet = 1`, so a full mailing at that rate would

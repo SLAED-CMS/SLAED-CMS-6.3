@@ -317,7 +317,7 @@ function view(): void {
 }
 
 function kasse(): void {
-	global $db, $conf, $stop, $tpl, $prs;
+	global $db, $conf, $stop, $tpl, $prs, $mailer;
 	if (is_user()) {
 		$userinfo = getUserInfo();
 		$sid = $userinfo['id'];
@@ -440,7 +440,7 @@ function kasse(): void {
 						['label' => _C_MESSAGE, 'value' => $smsg],
 					],
 				]);
-				addMail($amail, $smail, $subject, $msg, 1, 1);
+				$mailer->addQueue(['kind' => 'shop', 'email' => $amail, 'title' => $subject, 'body' => $msg, 'sender' => $smail, 'prio' => 1, 'client' => true]);
 			}
 			if ($conf['shop']['mailuser']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
@@ -460,7 +460,7 @@ function kasse(): void {
 						['label' => _C_MESSAGE, 'value' => $smsg],
 					],
 				]);
-				addMail($smail, $amail, $subject, $msg, 0, 3);
+				$mailer->addQueue(['kind' => 'shop', 'email' => $smail, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
 			}
 			$massiv = explode(',', $cookies);
 			foreach ($massiv as $val) {

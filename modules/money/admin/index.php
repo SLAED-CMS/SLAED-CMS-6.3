@@ -331,7 +331,7 @@ function invoice(): void {
 }
 
 function activate(): void {
-    global $db, $afile, $conf, $prs;
+    global $db, $afile, $conf, $prs, $mailer;
     $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
@@ -343,7 +343,7 @@ function activate(): void {
             $subject = ($conf['sitename'] ?? '').' - '._MONEY;
             $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
             $msg .= $prs->filterContent($conf['money']['sendinfo'] ?? '', false, 'all');
-            addMail($email, $amail, $subject, $msg, 0, 3);
+            $mailer->addQueue(['kind' => 'money', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
         }
     }
     $tail = (!$iswarn && $act) ? '&send=1' : '';

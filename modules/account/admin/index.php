@@ -456,7 +456,7 @@ function add(): void {
 }
 
 function addsave(): void {
-    global $db, $afile, $conf, $stop, $prs;
+    global $db, $afile, $conf, $stop, $prs, $mailer;
     $stop = [];
     $iswarn = !checkSiteToken();
     if (!$iswarn) {
@@ -528,7 +528,7 @@ function addsave(): void {
                 $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
                 $mailtext = getVar('post', 'mailtext', 'text');
                 $msg = nl2br($prs->filterContent(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), false, 'account'), false);
-                addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
+                $mailer->addQueue(['kind' => 'account', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $text = _MAIL_SEND;
             }
             setRedirect($afile.'.php?name=account', false, 302, $text);

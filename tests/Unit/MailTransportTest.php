@@ -111,7 +111,7 @@ final class MailTransportTest extends TestCase
         $this->assertSame(str_repeat("\u{00FC}", 255), $mailer->getError());
     }
 
-    # Without a template the client block keeps the exact plain-text form addMail() produced, so the six call sites that ask for it read the same
+    # Without a template the client block keeps the exact plain-text form the removed global mail helper produced, so the six call sites that ask for it read the same
     #[Test]
     public function theClientBlockKeepsItsPlainTextForm(): void
     {

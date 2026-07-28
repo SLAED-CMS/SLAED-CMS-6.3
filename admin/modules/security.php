@@ -349,7 +349,7 @@ function banlist(): void {
 }
 
 function bansave(): void {
-    global $db, $conf, $afile, $tpl, $prs;
+    global $db, $conf, $afile, $tpl, $prs, $mailer;
     $warn = !checkSiteToken();
     $send = '';
     if (!$warn) {
@@ -390,7 +390,7 @@ function bansave(): void {
                 [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
                 $subject = $conf['sitename'].' - '._SECURITY;
                 $msg = nl2br($prs->filterContent(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), false, 'all'), false);
-                addMail($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
+                $mailer->addQueue(['kind' => 'security', 'email' => $mail_addr, 'title' => $subject, 'body' => $msg, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $send = '&send=1';
             }
         }

@@ -59,7 +59,7 @@ function recommend(): void {
 }
 
 function send(): void {
-    global $conf, $stop, $tpl;
+    global $conf, $stop, $tpl, $mailer;
     $unkey = substr(getSecret('field'), 0, 32);
     $sname = getVar('post', $unkey, 'name');
     $semail = getVar('post', 'semail', 'text');
@@ -82,7 +82,7 @@ function send(): void {
                 ['label' => _SITEURL, 'value_html' => $siteLink],
             ],
         ]);
-        addMail($femail, $semail, $subject, $message, 0, 3);
+        $mailer->addQueue(['kind' => 'recommend', 'email' => $femail, 'title' => $subject, 'body' => $message, 'sender' => $semail, 'prio' => 3]);
         updatePoints(38);
         setHead(['title' => _RECOMMTITLE]);
         $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 10]);

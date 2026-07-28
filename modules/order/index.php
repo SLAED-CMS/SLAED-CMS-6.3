@@ -57,7 +57,7 @@ function order(): void {
 }
 
 function send(): void {
-    global $db, $conf, $stop, $tpl, $prs;
+    global $db, $conf, $stop, $tpl, $prs, $mailer;
     if ($conf['order']['an']) {
         $mail = getVar('post', 'mail', 'text');
         $field = getVar('post', 'field', 'field');
@@ -85,7 +85,7 @@ function send(): void {
                     'note_label' => _OR_3,
                     'note_html' => $note,
                 ]);
-                addMail($amail, $mail, $subject, $msg, 1, 1);
+                $mailer->addQueue(['kind' => 'order', 'email' => $amail, 'title' => $subject, 'body' => $msg, 'sender' => $mail, 'prio' => 1, 'client' => true]);
             }
             if (!$conf['order']['pr']) {
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
@@ -94,7 +94,7 @@ function send(): void {
                     'title' => $subject,
                     'content_html' => $prs->filterContent($conf['order']['sendinfo'], false, 'all'),
                 ]);
-                addMail($mail, $amail, $subject, $msg, 0, 3);
+                $mailer->addQueue(['kind' => 'order', 'email' => $mail, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
             }
             updatePoints(34);
             setHead(['title' => _ORDER]);

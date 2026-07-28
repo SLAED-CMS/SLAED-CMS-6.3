@@ -115,7 +115,7 @@ Project functions use `verbNoun` naming with the approved verb set:
 ```php
 function getTheme(): string {}
 function setHead(array $seo = []): void {}
-function addMail(string $email, string $smail, string $subject, string $message, int $id = 0, int $pr = 0): void {}
+function addHackReport(string $msg): void {}
 function isAdmin(bool $super = false): bool {}
 function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {}
 function filterText(string|array $message, int $type = 0): string {}

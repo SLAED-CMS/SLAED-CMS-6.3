@@ -225,7 +225,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $admin, $conf, $stop, $tpl;
+    global $db, $afile, $admin, $conf, $stop, $tpl, $mailer;
     $id = getVar('post', 'id', 'num', 0);
     $pid = getVar('post', 'pid', 'num', 0);
     $uid = getVar('post', 'uid', 'num', 0);
@@ -259,7 +259,7 @@ function save(): void {
                         $finishlink = ($conf['homeurl'] ?? '').'/index.php?name=help&op=view&id='.$pid;
                         $subject = ($conf['sitename'] ?? '').' - '._HELP;
                         $message = str_replace('[text]', sprintf(_ADDMAILU, substr($admin[1] ?? '', 0, 25), _HELP, $finishlink), $conf['mtemp'] ?? '');
-                        addMail($mail, $conf['adminmail'] ?? '', $subject, $message, 0, 3);
+                        $mailer->addQueue(['kind' => 'help', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'] ?? '', 'prio' => 3]);
                     }
                 }
             }

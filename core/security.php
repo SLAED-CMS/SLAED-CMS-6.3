@@ -50,6 +50,9 @@ require_once BASE_DIR.'/core/classes/pdo.php';
 $db = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
 define('PREFIX_DB', $conf['db']['prefix']);
 
+# Outgoing mail service, created here because the request scan below reports through it and runs long before the rest of the bootstrap
+$mailer = new Mail($db, $conf);
+
 # Security and routing aliases
 $afile = $conf['security']['afile'];
 
@@ -1010,47 +1013,9 @@ function getTimeLeft(int $time): string {
     return ($now < $time) ? getDuration($expire).' ('.$days.') - '.$end : $end.' - '._END;
 }
 
-# Add an outgoing HTML email (base64-encoded); appends IP/browser info when $id is truthy
-function addMail(string $email, string $smail, string $subject, string $message, int $id = 0, int $pr = 0): void {
-    global $conf;
-    $email = filterText($email);
-    $smail = filterText($smail);
-    $subject = '=?'._CHARSET.'?b?'.base64_encode(filterText($subject)).'?=';
-    $pr = $pr ?: 3;
-    $agent = getAgent();
-    if ($id) {
-        global $tpl;
-        if ($tpl instanceof Template) {
-            $message .= $tpl->getHtmlPart('message-block', [
-                'title' => '',
-                'lines' => [
-                    ['label' => _IP, 'value' => getIp()],
-                    ['label' => _BROWSER, 'value' => $agent],
-                    ['label' => _HASH, 'value' => md5($agent)],
-                ],
-            ]);
-        } else {
-            $message .= PHP_EOL._IP.': '.getIp().PHP_EOL._BROWSER.': '.$agent.PHP_EOL._HASH.': '.md5($agent);
-        }
-    }
-    $mheader = "MIME-Version: 1.0\n"
-    .'Content-Type: text/html; charset='._CHARSET."\n"
-    ."Content-Transfer-Encoding: base64\n"
-    .'From: "=?'._CHARSET.'?b?'.base64_encode($conf['sitename']).'?=" <'.$smail.">\n"
-    .'Reply-To: "'.$smail.'" <'.$smail.">\n"
-    .'Return-Path: <'.$smail.">\n"
-    .'X-Priority: '.$pr."\n"
-    ."X-Mailer: SLAED CMS\n";
-    set_error_handler(static function (): bool {
-        return true;
-    }, E_WARNING);
-    mail($email, $subject, base64_encode($message), $mheader);
-    restore_error_handler();
-}
-
 # Add a hack report with optional block and email
 function addHackReport(string $msg): void {
-    global $user, $conf, $tpl;
+    global $user, $conf, $tpl, $mailer;
     $msg = filterText(substr($msg, 0, 500));
     $url = filterText(getenv('REQUEST_URI'));
     $refer = getReferer();
@@ -1083,7 +1048,7 @@ function addHackReport(string $msg): void {
         } else {
             $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
         }
-        addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
+        $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subject, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }
     if ($conf['security']['write_h']) {
         Logger::addHack('warning', $msg, ['user' => $luser, 'hash' => md5($agent), 'blocked' => (bool)$conf['security']['block']]);
@@ -1093,7 +1058,7 @@ function addHackReport(string $msg): void {
 
 # Add a warning report with optional email
 function addWarnReport(string $msg): void {
-    global $user, $conf, $tpl;
+    global $user, $conf, $tpl, $mailer;
     $msg = filterText(substr($msg, 0, 500));
     $url = filterText(getenv('REQUEST_URI'));
     $refer = getReferer();
@@ -1117,7 +1082,7 @@ function addWarnReport(string $msg): void {
         } else {
             $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
         }
-        addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
+        $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subject, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }
     if ($conf['security']['write_w']) {
         Logger::addWarn('warning', $msg, ['user' => $luser]);

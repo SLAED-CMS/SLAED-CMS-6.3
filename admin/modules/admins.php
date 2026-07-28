@@ -317,7 +317,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $conf, $stop, $admin, $prs;
+    global $db, $afile, $conf, $stop, $admin, $prs, $mailer;
     $aid = getVar('post', 'aid', 'num', 0);
     $warn = !checkSiteToken();
     $name = getVar('post', 'aname', 'name', '');
@@ -384,7 +384,7 @@ function save(): void {
             $text = getVar('post', 'mailtext', 'text', '');
             $text = str_replace('[pass]', $pwd, str_replace('[login]', $name, $text));
             $text = $prs->filterContent($text, false, 'account');
-            addMail($email, $conf['adminmail'], $subj, nl2br($text, false), 0, 3);
+            $mailer->addQueue(['kind' => 'admins', 'email' => $email, 'title' => $subj, 'body' => nl2br($text, false), 'sender' => $conf['adminmail'], 'prio' => 3]);
         }
         setRedirect($afile.'.php?name=admins', false, 302, $mail ? _MAIL_SEND : _SUCCSAVE);
     }

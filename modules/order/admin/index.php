@@ -164,7 +164,7 @@ function delete(int $did = 0): void {
 }
 
 function activate(): void {
-    global $db, $afile, $conf, $prs;
+    global $db, $afile, $conf, $prs, $mailer;
     $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $iswarn = !checkSiteToken();
@@ -176,7 +176,7 @@ function activate(): void {
             $subject = ($conf['sitename'] ?? '').' - '._ORDER;
             $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
             $msg .= $prs->filterContent($conf['order']['sendinfo'] ?? '', false, 'all');
-            addMail($email, $amail, $subject, $msg, 0, 3);
+            $mailer->addQueue(['kind' => 'order', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
         }
     }
     $succ = $act ? _OR_8 : _SUCCSTATUS;

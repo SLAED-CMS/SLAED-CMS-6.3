@@ -127,7 +127,7 @@ function newuser(): void {
 }
 
 function finnewuser(): void {
-    global $db, $conf, $stop, $tpl;
+    global $db, $conf, $stop, $tpl, $mailer;
     if (!$conf['users']['reg']) {
         setHead(['title' => _NOREG]);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
@@ -180,7 +180,7 @@ function finnewuser(): void {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => $finishlink, 'is_blank' => true]);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
-                addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
+                $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                 $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php', 'secs' => 30]);
                 $brbr = '<br><br>';
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED, 'is_level_one' => true]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.$brbr._FINISHUSERCONF.$brbr._THANKSUSER, 'meta' => $meta]);
@@ -640,7 +640,7 @@ function passlost(): void {
 }
 
 function passmail(): void {
-    global $db, $conf, $stop, $tpl;
+    global $db, $conf, $stop, $tpl, $mailer;
     $email = getVar('post', 'email', 'text');
     $code = getVar('post', 'code', 'text');
     $code = ($code) ? substr($code, 0, 10) : false;
@@ -663,7 +663,7 @@ function passmail(): void {
             $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
-            addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
+            $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
@@ -674,7 +674,7 @@ function passmail(): void {
             $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email, 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&op=passlost&code='.$subpass.'&email='.$email]);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
-            addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
+            $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
             setRedirect('index.php?name='.$conf['name'].'&op=passlost&email='.$email);
         }
     } else {
@@ -1063,7 +1063,7 @@ function saveavatar(): void {
 }
 
 function savepass(): void {
-    global $user, $db, $conf, $stop, $tpl;
+    global $user, $db, $conf, $stop, $tpl, $mailer;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     $newpass = getVar('post', 'newpass', 'text', false);
     $newpass2 = getVar('post', 'newpass2', 'text', false);
@@ -1080,7 +1080,7 @@ function savepass(): void {
                     $link = $tpl->getHtmlFrag('link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label_html' => $conf['homeurl'].'/index.php?name='.$conf['name']]);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
-                    addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
+                    $mailer->addQueue(['kind' => 'account', 'email' => $mail, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
                     $newpass = getPassHash($newpass);
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $newpass, 'id' => $uid]);
                     setRedirect('index.php?name='.$conf['name']);

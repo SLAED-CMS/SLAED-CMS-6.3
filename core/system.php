@@ -126,13 +126,11 @@ require_once BASE_DIR.'/core/classes/logger.php';
 $conf = getConfig();
 if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
 
-# Outgoing mail service; the class needs the config and is instantiated once the database connection exists
+# Outgoing mail service; the class loads here and is instantiated inside core/security.php, where the database connection is created
 require_once BASE_DIR.'/core/classes/mail.php';
 
 # System file include
 require_once BASE_DIR.'/core/security.php';
-
-$mailer = new Mail($db, $conf);
 
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
@@ -3703,9 +3701,10 @@ function getTimedHtml(string $html): string {
 
 # Notify subscribed admins by email on new content or comment submission
 function addAdminMail(bool $enab, string $mod, string $username = '', string $title = '', bool $iscmt = false, string $text = ''): void {
-    global $db, $conf, $locale;
+    global $db, $conf, $locale, $mailer;
     $mod = filterVar($mod);
     if ($enab && $mod) {
+        $kind = $iscmt ? 'comment' : 'content';
         $subject = $iscmt ? $conf['sitename'].' - '.$title.' - '._COMMENT : $conf['sitename'].' - '.$title;
         $puname  = $username ? filterText(substr($username, 0, 25)) : _ANONYM;
         $message = $iscmt
@@ -3721,7 +3720,7 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
         while ($row = $db->getSqlRow($result)) {
             [$id, $email, $super, $modules] = $row;
             if ($super) {
-                addMail($email, $conf['adminmail'], $subject, $message, 1, 1);
+                $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 1, 'client' => true]);
             } else {
                 $amid = getAdminModuleNames($modules);
                 $nmods = implode(',', $amid);
@@ -3730,7 +3729,7 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
                 }
                 foreach ($amid as $val) {
                     if ($val !== '' && $val === $mod) {
-                        addMail($email, $conf['adminmail'], $subject, $message, 1, 1);
+                        $mailer->addQueue(['kind' => $kind, 'email' => $email, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 1, 'client' => true]);
                         break;
                     }
                 }
@@ -3750,7 +3749,7 @@ function filterSize(mixed $size): string {
 
 # Newsletter send
 function updateNewsletter(bool $force = false): array {
- global $db, $conf, $prs;
+ global $db, $conf, $prs, $mailer;
     if ($force || $conf['newsletter']['active']) {
         $result = $db->getSqlQuery('SELECT id, title, body, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
         if ($db->getSqlRowCount($result) > 0) {
@@ -3761,7 +3760,8 @@ function updateNewsletter(bool $force = false): array {
             $outmail = array_values(array_filter(array_slice($mails, 0, $ncount), 'strlen'));
             $inmail = implode(',', array_slice($mails, $ncount));
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
-            foreach ($outmail as $val) addMail($val, $conf['adminmail'], $title, $prs->filterContent($body, false, 'all'), 0, 3);
+            $text = $prs->filterContent($body, false, 'all');
+            foreach ($outmail as $val) $mailer->addQueue(['kind' => 'newsletter', 'email' => $val, 'title' => $title, 'body' => $text, 'sender' => $conf['adminmail'], 'prio' => 3]);
             if (!$inmail) {
                 $cont = ['active' => '0'];
                 setConfigFile('newsletter.php', $cont, $conf['newsletter']);
@@ -4920,7 +4920,7 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
 
 # Executes a file scan task and returns scheduler metadata
 function addFilescanTask(): array {
- global $conf, $tpl;
+ global $conf, $tpl, $mailer;
     if (empty($conf['security']['log_d'])) return ['status' => 'failed', 'message' => 'File scan is disabled'];
     $sess_f = LOGS_DIR.'/dump_map.json';
     $state = [];
@@ -4983,7 +4983,7 @@ function addFilescanTask(): array {
                 ['label' => _DATE, 'value' => date(_TIMESTRING)],
             ],
         ]);
-        addMail($conf['adminmail'], $conf['adminmail'], $subj, $mmsg, 0, 1);
+        $mailer->addQueue(['kind' => 'security', 'email' => $conf['adminmail'], 'title' => $subj, 'body' => $mmsg, 'sender' => $conf['adminmail'], 'prio' => 1]);
     }
     return [
         'status' => 'success',

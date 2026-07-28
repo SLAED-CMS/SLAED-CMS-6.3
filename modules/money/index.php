@@ -104,7 +104,7 @@ function money(): void {
 }
 
 function send(): void {
-    global $db, $conf, $stop, $tpl, $prs;
+    global $db, $conf, $stop, $tpl, $prs, $mailer;
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $email = getVar('post', 'email', 'text');
@@ -160,7 +160,7 @@ function send(): void {
                     'note_label' => _MO_9,
                     'note_html' => $note,
                 ]);
-                addMail($amail, $email, $subject, $msg, 1, 1);
+                $mailer->addQueue(['kind' => 'money', 'email' => $amail, 'title' => $subject, 'body' => $msg, 'sender' => $email, 'prio' => 1, 'client' => true]);
             }
             if (!$conf['money']['pr']) {
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
@@ -169,7 +169,7 @@ function send(): void {
                     'title' => $subject,
                     'content_html' => $prs->filterContent($conf['money']['sendinfo'], false, 'all'),
                 ]);
-                addMail($email, $amail, $subject, $msg, 0, 3);
+                $mailer->addQueue(['kind' => 'money', 'email' => $email, 'title' => $subject, 'body' => $msg, 'sender' => $amail, 'prio' => 3]);
             }
             setHead(['title' => _MONEY]);
             $meta = $tpl->getHtmlFrag('meta-refresh', ['url' => 'index.php?name='.$conf['name'], 'secs' => 30]);

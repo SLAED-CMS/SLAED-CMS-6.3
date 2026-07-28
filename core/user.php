@@ -643,7 +643,7 @@ function getPrivateMessageView(int $obj = 0, string|array $stop = '', string $in
 
 # Validate and send a new private message; returns the updated inbox view
 function addPrivateMessage() {
-    global $db, $user, $conf, $tpl;
+    global $db, $user, $conf, $tpl, $mailer;
     $postname = filterText(substr(getVar('post', 'name',  'raw', ''), 0, 25));
     $title    = trim(getVar('post', 'title', 'raw', ''));
     $text     = trim(getVar('post', 'text',  'raw', ''));
@@ -689,7 +689,7 @@ function addPrivateMessage() {
                 $link = $tpl->getHtmlFrag('link', ['href' => $finishlink, 'title' => '', 'label_html' => $finishlink]);
                 $subject = $conf['sitename'].' - '._PRIVAT;
                 $message = str_replace('[text]', sprintf(_PRNEWMAIL, $uname, $link), $conf['mtemp']);
-                addMail($user_email, $conf['adminmail'], $subject, $message, 0, 3);
+                $mailer->addQueue(['kind' => 'privat', 'email' => $user_email, 'title' => $subject, 'body' => $message, 'sender' => $conf['adminmail'], 'prio' => 3]);
             }
         }
         $info = sprintf(_PRSENDED, $postname);
