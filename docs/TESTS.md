@@ -134,11 +134,11 @@ the list never compares equal even to itself. On a difference the fresh capture
 is written next to the baseline as `<module>.actual.html` for diffing.
 
 All eight modules are meant to be covered: `faq`, `files`, `links`, `media`,
-`news`, `pages`, `shop`, `voting`. On 2026-07-28 a `capture` produced **six**:
-the `media` fixture rows are gone again and `shop` product 24 is back to
-`acomm = 0`, so neither renders a comment region. Both fixtures have to be
-re-prepared as described below **before** the next `capture`, or the parity claim
-silently excludes two modules.
+`news`, `pages`, `shop`, `voting`. The stage 1 baseline of
+`docs/COMMENTS-REDESIGN-2026.md` was captured on 2026-07-28 with all eight
+present, after re-preparing the two fixtures below. A `capture` that reports
+fewer than eight has lost one of them again — re-prepare it and capture once
+more, or the parity claim silently excludes a module.
 
 Coverage assumes **every module is enabled**, and `config/modules.php` now has
 all 50 active. An inactive module is a gap in the test stand, not a reason to
@@ -149,11 +149,31 @@ Two needed the stand prepared, and both causes are worth knowing because they
 look identical from the outside:
 
 - `shop` — product 24 carried two comments while its `acomm` mode was `0`, so the
-  region was never rendered. Revert with
+  region was never rendered. Prepare with
+  `UPDATE {prefix}_products SET acomm = 1 WHERE id = 24;`, revert with
   `UPDATE {prefix}_products SET acomm = 0 WHERE id = 24;`
 - `media` — the module was **inactive**, so the view page answered 404 before
-  comments were ever reached, *and* the table was empty. It is now active with one
-  category, one item and two comments. Revert the fixture rows with
+  comments were ever reached, *and* the table was empty. It is enabled in
+  `config/modules.php` and stays enabled; the content is a fixture. Prepare it with
+  one category, one item and two comments:
+
+```sql
+INSERT INTO {prefix}_categories (id, modul, title, intro, img, parent, status, ordern, pview, pread, ppost, preply, pedit, pdelete, pmod)
+  VALUES (110, 'media', 'Демонстрация', 'Категория для проверки комментариев', 'image', 0, 1, 1, '0|0', '0|0', '0|0', '0|0', '3|0', '3|0', '3|0');
+INSERT INTO {prefix}_media (id, cid, uid, name, title, intro, note, links, time, acomm, comments, ip, status)
+  VALUES (1, 110, 7885, 'SLAED CMS', 'Демонстрационный материал', 'Материал существует ради проверки разметки комментариев.', '', '', '2026-01-01 12:00:00', 1, 2, '127.0.0.1', 1);
+INSERT INTO {prefix}_comment (cid, modul, time, uid, name, ip, body, status) VALUES
+  (1, 'media', '2026-01-02 10:00:00', 7885, 'SLAED CMS', '127.0.0.1', 'Первый комментарий к демонстрационному материалу.', 1),
+  (1, 'media', '2026-01-02 11:00:00', 0, 'Гость', '127.0.0.1', 'Второй комментарий, оставленный гостем.', 1);
+```
+
+  Every other column takes its schema default. `note` and `links` are named even
+  though they are empty, because both are `TEXT NOT NULL` **without** a default
+  (`setup/sql/table.sql`) and this server runs `STRICT_TRANS_TABLES`, which
+  refuses the row rather than inventing one. The permission values are the ones
+  the existing categories of the other modules carry, because `catmids()` filters
+  the view by them and the schema default is an empty string, not an open state.
+  Revert the fixture rows with
   `DELETE FROM {prefix}_comment WHERE cid = 1 AND modul = 'media';`,
   `DELETE FROM {prefix}_media WHERE id = 1;`,
   `DELETE FROM {prefix}_categories WHERE id = 110;`. The module stays enabled.
@@ -187,6 +207,7 @@ Current unit test files include:
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
+- `CommentReadTest.php`
 - `CommentTrustBoundaryTest.php`
 - `DatabaseTest.php`
 - `EditorFormatTest.php`
@@ -194,6 +215,10 @@ Current unit test files include:
 - `GeoipReaderTest.php`
 - `InputFilterTest.php`
 - `InputVarContractTest.php`
+- `MailConfigTest.php`
+- `MailHeaderTest.php`
+- `MailSmtpTest.php`
+- `MailTransportTest.php`
 - `OauthLinkTest.php`
 - `OauthTest.php`
 - `PageCacheContractTest.php`
@@ -203,7 +228,7 @@ Current unit test files include:
 - `StructureTest.php`
 - `ViewBridgeSmokeTest.php`
 
-Contract tests (`CommentTrustBoundaryTest`, `GeoipReaderTest`, `InputFilterTest`,
+Contract tests (`CommentReadTest`, `CommentTrustBoundaryTest`, `GeoipReaderTest`, `InputFilterTest`,
 `InputVarContractTest`, `PageCacheContractTest`, `StatsContractTest`) drive
 production code through `tests/Support/contract_probe.php`, which boots the real
 core in an isolated CLI process per scenario. Prefer that route over copying an algorithm into a test:

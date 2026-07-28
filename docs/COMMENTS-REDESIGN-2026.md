@@ -1,6 +1,6 @@
 # Comments Subsystem Redesign
 
-Status date: 2026-07-28. Approved; stage 0 delivered, stage 1 next. The comment
+Status date: 2026-07-28. Approved; stage 0 delivered, stage 1 running. The comment
 engine is shared by eight frontend modules, the admin panel, the user activity
 feed and every module delete handler, so each stage below has to keep all of them
 working while the internals move into one place.
@@ -14,6 +14,7 @@ knows nothing of previous ones; this is the only place decisions survive.
 |---|---|---|
 | 2026-07-27 | stage 0, URL schemes | **done, ahead of the stage.** `filterUrl()` (`core/classes/parser.php:228`) refuses `data:`, `javascript:` and `vbscript:` in every mode; 8 fixture cases added, verified to fail against the unpatched file |
 | 2026-07-28 | stage 0, client-chosen moderation and module | **done.** `getCommentMode()` (`core/system.php:5794`) resolves the target through the fixed eight-entry map; `addComment()` no longer reads `cid`, `updateComment()` and `updateCommentStatus()` read `modul` from the comment row. `tests/Unit/CommentTrustBoundaryTest.php` (6 cases) fails against the unpatched files; baseline `verify` unchanged |
+| 2026-07-28 | Stage 1, batch 1 — `Comment`, `CommentStatus`, `CommentMode`, read methods | done. `core/classes/comment.php` added and wired into `core/system.php:143`; six public reads (`getCount()`, `getList()`, `getAdminList()`, `getComment()`, `getUserList()`, `getModuleList()`) and six private helpers, called by nothing yet. The stage baseline was re-prepared and captured first: **all eight modules**, not the six stage 0 ran against. 8 parity tests in `tests/Unit/CommentReadTest.php` drive a new `commentread` probe mode that puts every legacy statement beside the method replacing it against the live rows; the list case was proven to fail by flipping the sort direction. `php -l`, full `phpunit` (314 tests, 3 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` all green; the front page, `admin.php` and the `news` and `media` comment pages answer 200. `error_php.log` and `error_sql.log` did not grow; `error_site.log` grew only by the `Mail:` entries the transport tests produce, which are the paths those tests own |
 
 ### Decisions made during execution
 
@@ -33,6 +34,44 @@ knows nothing of previous ones; this is the only place decisions survive.
 - The request keeps carrying `mod`; it is a lookup key into the map and never a
   table name. The moderator links inside `ashowcom()` still append `&mod=`, which
   the server now ignores — removing it is markup churn and belongs to stage 4.
+- **The constructor takes `$conf` as a third argument**, so the wiring line is
+  `new Comment($db, $prs, $conf)` rather than the plan's two-argument sketch. No
+  class in `core/classes/` reaches for a global — `Mail` takes `($db, $conf)` for
+  the same reason — and the reads need `comments.num`, `comments.anum` and
+  `comments.sort` for their own pagination. Only the `comments` section is kept.
+- **`$prs` is stored and unused until a later batch**, exactly as `Mail` kept
+  `$db` through stage 1: the parser belongs to the read helpers that render a
+  body, and taking it now means the wiring line never has to change again.
+- **The pager arithmetic is a method, not a copy.** `getPager()` resolves total,
+  pages, offset and the running number of the first row from one place, because
+  the frontend list and the moderation list both need it and the current code
+  spells it out twice with different variable names.
+- **The visibility scope is resolved once per read.** `getScope()` answers the
+  count query and the page query with the same predicate, which is what the
+  stage 2 acceptance criterion asks of the admin list and what the frontend list
+  already needs today; `getAdminScope()` does the same against the account join,
+  so the count can no longer drift from the result the way the two hand-built
+  `$where`/`$wcnt` strings in `admin/modules/comments.php:95-126` can.
+- **Public reads ask for `status = 1`, not `status != 0`**, per the query rule in
+  the design. The column holds 0 and 1 only — measured, all 7357 rows — so the
+  result is identical and the parity probe proves it row by row.
+- **The author search keeps two placeholders for one term.** `:fnam` and `:fusr`
+  look redundant, but `PDO::ATTR_EMULATE_PREPARES` is off (`core/classes/pdo.php:26`)
+  and a native prepared statement refuses a named placeholder used twice.
+- **A list resolves its scope once and counts against it.** `getList()` first
+  built the scope for its count and again for its page, which called
+  `is_moder()` twice and left two places able to describe the same list. One
+  `getTotal($from, $pars)` now counts whatever source the list itself reads,
+  frontend and moderation list alike. Cheap either way — `is_moder()` reaches the
+  database only for a signed-in administrator and memoizes it statically
+  (`core/system.php:4767`) — but two descriptions of one list is the defect the
+  admin `$where`/`$wcnt` pair already demonstrates.
+- **`getUserList()` collides in name with a global function that stays.**
+  `core/system.php:4792` defines `getUserList()` for the user-name autocomplete;
+  it has nothing to do with comments and no stage deletes it. A method and a
+  function of one name coexist without ambiguity in PHP, so the plan's name is
+  kept, but a reader of `core/user.php` will meet both — worth knowing before
+  batch 5 migrates the activity feed.
 
 ### Deviations from the plan
 
@@ -44,16 +83,28 @@ knows nothing of previous ones; this is the only place decisions survive.
   baseline is captured from. The refusal path was exercised over real HTTP
   (four crafted POSTs, `_comment` count unchanged); the accept path is verified
   by code and by the resolver probe, and belongs to the browser checks.
+- Batch 1 adds **six** public read methods where the plan names four. `getComment()`
+  and `getModuleList()` are not API growth for its own sake: `admin/modules/comments.php`
+  reads one comment by id for its edit form (`:265`) and asks for the distinct module
+  names of the selector (`:21`), and the stage cannot claim "no direct `_comment` SQL
+  outside `Comment`" while batch 4 has nowhere to send either query. Reads belong to
+  the batch that owns reads, so they land here rather than being invented in batch 4.
+- The parity probe runs as a guest, so the **moderator branch of `getScope()` is
+  written but not measured**: the pending comments a moderator of the module also
+  sees are asserted by reading the predicate against `core/system.php:5502-5508`,
+  not by a comparison against live rows. `isAdmin()` needs a session and the probe
+  is a CLI process; that path belongs to the browser checks, together with the
+  moderator view the baseline tool deliberately does not capture.
 
 ### Open blockers
 
 - Stage 1 cannot be called complete until the frontend page-cache helper is
   identified — see **Open decisions**.
-- The markup baseline covers **six** of the eight modules on this stand, not
-  eight: `media` has no comments at all any more and `shop` product 24 is back to
-  `acomm = 0`, so neither renders a comment region. Stage 1 has to re-prepare
-  both fixtures per `docs/TESTS.md` **before** its `capture`, or its parity claim
-  silently excludes two modules.
+- ~~The markup baseline covers six of the eight modules on this stand~~ —
+  **closed 2026-07-28, before batch 1 touched any code.** Both fixtures were
+  re-prepared per `docs/TESTS.md`, which now records the preparation as well as
+  the revert, and `capture` recorded all **eight** modules: `faq`, `files`,
+  `links`, `media`, `news`, `pages`, `shop`, `voting`.
 
 ## Facts (measured 2026-07-27)
 
@@ -81,11 +132,12 @@ knows nothing of previous ones; this is the only place decisions survive.
 - The flood check runs `WHERE ip = ?` (`core/user.php:274`) with **no index on
   `ip`**; `_comment` carries only `cid`, `uid`, `modul_status` and `time`
   (`setup/sql/table.sql:141-144`).
-- Table `_comment` (re-checked 2026-07-28): **7355 rows**. `body` is `TEXT`, the
-  IP is stored in clear text. Distribution: files 4821, news 1088, voting 1083,
-  faq 141, pages 116, links 104, shop 2. Status: 7351 published, 4 pending. The
-  two `media` fixture rows created for the markup baseline are gone again, so
-  `media` holds no comments and no longer appears in the distribution at all.
+- Table `_comment` (re-checked 2026-07-28, after the stage 1 baseline fixtures):
+  **7357 rows**. `body` is `TEXT`, the IP is stored in clear text. Distribution:
+  files 4821, news 1088, voting 1083, faq 141, pages 116, links 104, shop 2,
+  media 2. Status: 7353 published, 4 pending. The two `media` rows are the
+  markup-baseline fixture, re-created before the stage 1 `capture`; every other
+  count is unchanged from the 2026-07-27 measurement.
 - Confirmed InnoDB on this installation: `_comment`, `_users`, `_news`, `_files`,
   `_voting`, `_newsletter`.
 - Confirmed index list on `_comment`: `PRIMARY(id)`, `cid`, `uid`,
