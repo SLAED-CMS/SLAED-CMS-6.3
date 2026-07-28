@@ -57,7 +57,7 @@ function getProbeCounter(): array {
 
 # Report how the comment trust boundary resolves a target while the request carries hostile cid and mod values
 function getProbeComment(): array {
-    global $db;
+    global $db, $com;
     $_GET = ['id' => '1', 'cid' => '2', 'mod' => 'gallery'];
     $_POST = ['cid' => '2', 'mod' => 'account'];
     $_REQUEST = $_GET + $_POST;
@@ -70,16 +70,16 @@ function getProbeComment(): array {
     $hide = $pick('news', 'acomm != 0 AND (status = \'0\' OR time > NOW())');
     $vote = $pick('voting', 'acomm != 0 AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')');
     $out = [
-        'open' => $open ? [$open['acomm'], getCommentMode('news', $open['id'])] : [],
-        'off' => $off ? [0, getCommentMode('news', $off['id'])] : [],
-        'hide' => $hide ? [0, getCommentMode('news', $hide['id'])] : [],
-        'vote' => $vote ? [$vote['acomm'], getCommentMode('voting', $vote['id'])] : [],
-        'missing' => getCommentMode('news', 999999999),
-        'zero' => $open ? getCommentMode('news', 0) : 0,
+        'open' => $open ? [$open['acomm'], $com->getTargetMode('news', $open['id'])] : [],
+        'off' => $off ? [0, $com->getTargetMode('news', $off['id'])] : [],
+        'hide' => $hide ? [0, $com->getTargetMode('news', $hide['id'])] : [],
+        'vote' => $vote ? [$vote['acomm'], $com->getTargetMode('voting', $vote['id'])] : [],
+        'missing' => $com->getTargetMode('news', 999999999),
+        'zero' => $open ? $com->getTargetMode('news', 0) : 0,
     ];
     $out['unknown'] = [];
     foreach (['gallery', 'account', 'members', 'multimedia', 'forum', '', 'news_', 'news; DROP'] as $mod) {
-        $out['unknown'][$mod] = $open ? getCommentMode($mod, $open['id']) : -1;
+        $out['unknown'][$mod] = $open ? $com->getTargetMode($mod, $open['id']) : -1;
     }
     return $out;
 }
@@ -202,7 +202,7 @@ function getProbeCommentWrite(bool $guest): array {
         $tid = 0;
         foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.$tab.' ORDER BY id DESC LIMIT 25')) ?: [] as $one) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET acomm = 2 WHERE id = :id', ['id' => intval($one['id'])]);
-            if (getCommentMode($mod, intval($one['id'])) === 2) {
+            if ($com->getTargetMode($mod, intval($one['id'])) === 2) {
                 $tid = intval($one['id']);
                 break;
             }
@@ -275,7 +275,7 @@ function getProbeFeedLegacy(int $uid): string {
     foreach (getProfileModules() as $mod => $inf) {
         if ($mod != 'comm' && !is_active($mod)) continue;
         if ($mod == 'comm') {
-            $from = PREFIX_DB.'_comment WHERE '.str_replace(':uid', ':ucomm', $inf['where']);
+            $from = PREFIX_DB.'_comment WHERE uid = :ucomm AND status != \'0\'';
             $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
         } else {
             $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);

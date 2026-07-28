@@ -9,9 +9,10 @@ use PHPUnit\Framework\TestCase;
  * Stage 0 of docs/COMMENTS-REDESIGN-2026.md: the moderation mode and the target module of a comment
  * must come from the server, never from the request. The behaviour half runs through
  * tests/Support/contract_probe.php, which boots the real core in an isolated CLI process and calls
- * getCommentMode() against live rows; the contract half reads the write path and asserts that it no longer
- * takes cid or mod from the client. Stage 1, batch 3 moved that path into the Comment class and batch 4 added
- * the moderation delete to it, so the contract half reads the class and its request handlers together. filter_input() cannot be driven from CLI, so
+ * Comment::getTargetMode() against live rows; the contract half reads the write path and asserts that it no longer
+ * takes cid or mod from the client. Stage 1, batch 3 moved that path into the Comment class, batch 4 added
+ * the moderation delete to it and batch 6 absorbed the resolver and the counter, so the contract half reads
+ * the class and its request handlers together. filter_input() cannot be driven from CLI, so
  * a full addComment() round trip belongs to the browser checks in docs/TESTS.md.
  */
 final class CommentTrustBoundaryTest extends TestCase
@@ -82,7 +83,7 @@ final class CommentTrustBoundaryTest extends TestCase
     public function addCommentTakesModeFromServer(): void
     {
         $code = $this->getSource('core/classes/comment.php', 'addComment', '    ');
-        $this->assertStringContainsString('getCommentMode($mod, $id)', $code);
+        $this->assertStringContainsString('$this->getTargetMode($mod, $id)', $code);
         $this->assertStringNotContainsString('getVar(', $code);
         $this->assertStringNotContainsString('$cid', $code);
         $this->assertMatchesRegularExpression('#\$acomm == 1 \|\| \$info\[\'access\'\]#', $code);
@@ -116,7 +117,7 @@ final class CommentTrustBoundaryTest extends TestCase
         foreach (['setStatus', 'deleteComment'] as $name) {
             $code = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('$cid = $row ? intval($row[\'cid\']) : 0;', $code);
-            $this->assertStringContainsString('numcom($cid, $mod,', $code);
+            $this->assertStringContainsString('$this->updateTargetCount($cid, $mod,', $code);
         }
         foreach (['updateComment', 'updateCommentStatus'] as $name) {
             $route = $this->getSource('core/system.php', $name);

@@ -270,9 +270,10 @@ function getAdminLayoutVars(): array {
 }
 
 # Render one sidebar pending-count row: active-content link plus a live COUNT chip; title and label are constant names resolved here for the active module
-function getAdminCountRow(string $href, string $titlec, string $labelc, string $icon, string $table, string $where): string {
+# A caller whose table is owned by a subsystem class hands the number over in $num and leaves the table empty, so the row can be built without this helper reaching that table
+function getAdminCountRow(string $href, string $titlec, string $labelc, string $icon, string $table = '', string $where = '', ?int $num = null): string {
     global $db, $afile, $tpl;
-    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_'.$table.($where !== '' ? ' WHERE '.$where : '')));
+    if ($num === null) [$num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_'.$table.($where !== '' ? ' WHERE '.$where : '')));
     return $tpl->getHtmlFrag('block-sidebar-count-row', [
         'label_html' => $tpl->getHtmlFrag('link', ['href' => $afile.'.php?'.$href, 'title' => constant($titlec), 'label' => constant($labelc), 'icon_name' => $icon]),
         'value_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => (int)$num >= 1 ? 'warn' : 'success', 'label' => (string)$num]),
@@ -281,7 +282,7 @@ function getAdminCountRow(string $href, string $titlec, string $labelc, string $
 
 # Build the admin sidebar info blocks: pending-content counters, waiting content, and the editor selector
 function getAdminInfo() {
- global $admin, $afile, $conf, $panel, $tpl;
+ global $admin, $afile, $com, $conf, $panel, $tpl;
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
@@ -316,7 +317,7 @@ function getAdminInfo() {
                 foreach ($defs as $d) $newRows[] = getAdminCountRow(...$d);
             }
             $ablocks = $tpl->getHtmlPart('block-sidebar', ['title' => _NEW, 'icon_name' => 'stars', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $newRows)]), 'id' => '3', 'close' => _OPCL]);
-            $waitingRows = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', 'comment', "status = '0'")];
+            $waitingRows = [getAdminCountRow('name=comments&status=1', '_COMMENTS', '_COMMENTS', 'chat-dots', '', '', $com->getStatusCount(CommentStatus::Pending))];
             $ablocks .= $tpl->getHtmlPart('block-sidebar', ['title' => _WAITINGCONT, 'icon_name' => 'hourglass-split', 'content_html' => $tpl->getHtmlFrag('block-content', ['is_sidebar_count_list' => true, 'content' => implode('', $waitingRows)]), 'id' => '4', 'close' => _OPCL]);
         }
         $key = (string)($admin[3] ?? $conf['editor']['admin'] ?? 'plain');

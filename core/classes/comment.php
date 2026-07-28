@@ -20,8 +20,21 @@ enum CommentMode: int {
 }
 
 # Comment subsystem: every read and write of the comment table with its permissions, pagination and target bookkeeping in one place
-# The reads, the frontend write path, the moderation module, the profile feed and the target deletions live here; the counter helper follows in the last batch
+# Nothing outside this class reaches the comment table any more; the resolver that authorizes a target and the counter that follows a write live here as well
 class Comment {
+
+    # The eight modules that render comments, each with the table its target rows live in and the points slot its author is credited from
+    # One map answers both questions, because the modules a comment may be written against and the modules whose counter moves are the same eight by construction
+    private const MODULES = [
+        'faq' => ['_faq', 7],
+        'files' => ['_files', 10],
+        'links' => ['_links', 22],
+        'media' => ['_media', 26],
+        'news' => ['_news', 32],
+        'pages' => ['_pages', 36],
+        'shop' => ['_products', 40],
+        'voting' => ['_voting', 43],
+    ];
 
     private Database $db;
     private Parser $prs;
@@ -103,6 +116,25 @@ class Comment {
         return $this->getTotal(PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat', ['uid' => $uid, 'stat' => CommentStatus::Published->value]);
     }
 
+    # Count the comments in one moderation state across every module, the number the waiting-content chip of the admin sidebar shows
+    public function getStatusCount(CommentStatus $stat): int {
+        return $this->getTotal(PREFIX_DB.'_comment WHERE status = :stat', ['stat' => $stat->value]);
+    }
+
+    # Resolve a comment target through the fixed module map and return its moderation mode; 0 when the module is unknown, the row is missing or invisible, or comments are disabled
+    # Visibility is the module's own view predicate, so an unpublished, hidden or out-of-category target refuses a write exactly as its own page refuses a read
+    public function getTargetMode(string $mod, int $id): int {
+        if (!$id || !isset(self::MODULES[$mod])) return 0;
+        $tab = PREFIX_DB.self::MODULES[$mod][0];
+        if ($mod == 'voting') {
+            $sql = 'SELECT acomm FROM '.$tab.' WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')';
+        } else {
+            $sql = 'SELECT acomm FROM '.$tab.' AS t WHERE t.id = :id AND t.time <= NOW() AND t.status != \'0\' '.catmids($mod, 't.cid');
+        }
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
+        return $row ? intval($row['acomm']) : 0;
+    }
+
     # Return the module names the stored comments actually use, for the module selector of the moderation list
     public function getModuleList(): array {
         $out = [];
@@ -116,7 +148,7 @@ class Comment {
     # Mode, author, address and moderation state are resolved from the server context; the request supplies only the module key, the target id, the body and the guest name
     public function addComment(string $mod, int $id, string $body, string $name): array {
         global $user;
-        $acomm = getCommentMode($mod, $id);
+        $acomm = $this->getTargetMode($mod, $id);
         $ip = getIp();
         $stop = $this->checkAddRules($mod, $body, $name, $ip);
         if ($stop !== '' || !$acomm) return ['id' => 0, 'name' => $name, 'error' => $stop ?: _ERROR];
@@ -134,7 +166,7 @@ class Comment {
             'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :ip, :comment, :status)',
             ['cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip, 'comment' => $body, 'status' => $stat->value]
         );
-        if ($stat === CommentStatus::Published) numcom($id, $mod, false, $uid);
+        if ($stat === CommentStatus::Published) $this->updateTargetCount($id, $mod, false, $uid);
         return ['id' => $this->getLastId($id, $uid), 'name' => $name, 'error' => ''];
     }
 
@@ -168,7 +200,7 @@ class Comment {
         $stat = $open ? CommentStatus::Published : CommentStatus::Pending;
         if (intval($row['status']) === $stat->value) return true;
         $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $stat->value, 'id' => $id]);
-        numcom($cid, $mod, !$open, intval($row['uid']));
+        $this->updateTargetCount($cid, $mod, !$open, intval($row['uid']));
         return true;
     }
 
@@ -179,7 +211,7 @@ class Comment {
         $cid = $row ? intval($row['cid']) : 0;
         if ($id < 1 || !$cid || $mod === '' || !is_moder($mod)) return false;
         $this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
-        if (intval($row['status']) === CommentStatus::Published->value) numcom($cid, $mod, true, intval($row['uid']));
+        if (intval($row['status']) === CommentStatus::Published->value) $this->updateTargetCount($cid, $mod, true, intval($row['uid']));
         return true;
     }
 
@@ -201,6 +233,15 @@ class Comment {
     public function updateBody(int $id, string $body): bool {
         if ($id < 1) return false;
         return (bool)$this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $body, 'id' => $id]);
+    }
+
+    # Move the comment counter of one target and the points of its author in the direction the write that calls this took
+    # A module outside the map moves nothing, which is what the three retired branches of the old helper did for names no comment can carry any more
+    private function updateTargetCount(int $id, string $mod, bool $del, int $uid): void {
+        if (!$id || !isset(self::MODULES[$mod])) return;
+        [$tab, $slot] = self::MODULES[$mod];
+        $this->db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET comments = comments + :delta WHERE id = :id', ['delta' => $del ? -1 : 1, 'id' => $id]);
+        updatePoints($slot, $uid, $del ? 1 : 0);
     }
 
     # Build the visibility scope of one target once, so a count and the page it belongs to can never disagree about what is visible

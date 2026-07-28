@@ -6,11 +6,149 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
+# Render the comment list of one target: the rows, the pagination and the author records come from the comment subsystem, this function only assembles the markup
+function getCommentList(int $cid = 0, string $mod = ''): string {
+ global $conf, $user, $tpl, $prs, $com;
+    $mod = filterVar($mod);
+    $data = $com->getList($mod, $cid, getVar('get', 'com', 'num', '1'));
+    $total = $data['total'];
+    if ($total < 1) return $tpl->getHtmlFrag('alert', ['text' => _NOCOMMENTS, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
+    $size = $data['limit'];
+    $links = $conf['comments']['nump'];
+    $numpages = $data['pages'];
+    $numb = $data['first'];
+    $cont = '';
+    foreach ($data['rows'] as $val) {
+        $cmid = $val['id'];
+        $cmod = $val['modul'];
+        $when = $val['time'];
+        $cuid = $val['uid'];
+        $cnam = $val['name'];
+        $host = $val['ip'];
+        $body = $val['body'];
+        $stat = $val['status'];
+        unset($auid, $anam, $arnk, $aweb, $aava, $areg, $afrm, $asig, $apts, $awrn, $agen, $avot, $atot, $agnam, $agrnk);
+        if ($val['user']) {
+            $usr = $val['user'];
+            $auid = $usr['id'];
+            $anam = $usr['name'];
+            $arnk = $usr['rank'];
+            $aweb = $usr['website'];
+            $aava = $usr['avatar'];
+            $areg = $usr['regdate'];
+            $afrm = $usr['origin'];
+            $asig = $usr['sig'];
+            $apts = $usr['points'];
+            $awrn = $usr['warnings'];
+            $agen = $usr['gender'];
+            $avot = $usr['votes'];
+            $atot = $usr['tvotes'];
+            $agnam = $usr['gname'];
+            $agrnk = $usr['grank'];
+        }
+        $avname = (!empty($anam)) ? $anam : ($cnam ?: (string)_ANONYM);
+        $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($when, _TIMESTRING), 'is_comment_date' => true]);
+        $ip = (is_moder($cmod)) ? Geoip::getIpHtml($host, true) : '';
+        $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$cmid, 'title' => (string)_COMMENT.': '.(string)$numb, 'label' => (string)$numb, 'is_card_id' => true]);
+        $gone = ((int)$cuid > 0 && empty($cnam));
+        $avatar = (!empty($anam)) ? getUserAvatarUrl(['avatar' => $aava]) : getUserAvatarUrl([], $gone);
+        $rank = (!empty($arnk)) ? $arnk : '';
+        $trank = (!empty($agnam)) ? _GROUP.': '.$agnam : _RANK;
+        $rimg = (!empty($agrnk)) ? getThemeImagePath('ranks/'.$agrnk) : '';
+        $rlink = ($rimg && file_exists($rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
+        $rate = (!empty($auid)) ? getRatingAsync(0, $auid, 'account', $avot, $atot, $cmid, 1) : '';
+        $utip = getUserTip((string)($agnam ?? ''), $apts ?? 0, (string)($areg ?? ''), (int)($agen ?? 0), (string)($afrm ?? ''), (string)($awrn ?? ''), empty($anam), $gone);
+        $unam = (!empty($anam)) ? user_info($anam, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $sig = (!empty($asig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $asig]) : '';
+        $uitems = [];
+        if (is_moder($cmod) || is_user() || $conf['comments']['anonpost'] != 0) {
+            $uitems[] = ['href' => '#', 'title' => _PERSONAL, 'icon_name' => 'reply', 'link_attr' => getTplEditorInsertAttr('name', $avname)];
+        }
+        if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($anam)) {
+            $uitems[] = ['href' => 'index.php?name=account&op=privat&uname='.urlencode($anam), 'title' => _SENDMES, 'icon_name' => 'envelope'];
+        }
+        if ($conf['comments']['profil'] && !empty($anam)) {
+            $uitems[] = ['href' => 'index.php?name=account&op=view&uname='.urlencode($anam), 'title' => _PERSONALINFO, 'icon_name' => 'person'];
+        }
+        if ($conf['comments']['web'] && !empty($aweb)) {
+            $uitems[] = ['href' => $aweb, 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
+        }
+        $usermenu = getActionMenu($uitems, true);
+        $warn = '';
+        $thank = '';
+        if (is_moder($cmod)) {
+            $items = [
+                [
+                    'href' => 'index.php?go=1&op=updateComment&id='.$cmid.'&typ=1&mod='.$cmod.'&token='.getSiteToken(),
+                    'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
+                ],
+                [
+                    'href' => 'index.php?go=1&op=updateCommentStatus&id='.$cmid.'&typ=0&mod='.$cmod.'&token='.getSiteToken(),
+                    'title' => _FMODC, 'icon_name' => 'eye-slash', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
+                ],
+                [
+                    'href' => 'index.php?go=1&op=updateCommentStatus&id='.$cmid.'&typ=1&mod='.$cmod.'&token='.getSiteToken(),
+                    'title' => _ACTIVATE, 'icon_name' => 'eye', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
+                ],
+            ];
+            $edit = getActionMenu($items);
+        } else {
+            $stime = strtotime($when) + $conf['comments']['edit'];
+            if (is_user() && isset($auid) == intval($user[0]) && time() < $stime) {
+                $items = [
+                    [
+                        'href' => 'index.php?go=1&op=updateComment&id='.$cmid.'&typ=1&mod='.$cmod.'&token='.getSiteToken(),
+                        'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
+                    ],
+                ];
+                $edit = getActionMenu($items);
+            } else {
+                $edit = '';
+            }
+        }
+        $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($body, false, $cmod, 2)]);
+        $cont .= $tpl->getHtmlFrag('comment', [
+            'id' => $cmid,
+            'username' => $avname,
+            'username_html' => $unam,
+            'report' => $utip,
+            'date' => $date,
+            'ip' => $ip,
+            'meta_tip' => '',
+            'post_count' => $amess,
+            'avatar' => $avatar,
+            'avatar_html' => $tpl->getHtmlFrag('image', [
+                'src' => $avatar,
+                'alt' => $avname,
+                'title' => $avname,
+                'is_avatar' => true,
+            ]),
+            'rank' => $rank,
+            'rank_link' => $rlink,
+            'user_rate' => $rate,
+            'text' => $text,
+            'sig' => $sig,
+            'btn_user' => $usermenu,
+            'btn_warn' => $warn,
+            'btn_thank' => $thank,
+            'btn_edit' => $edit,
+            'is_closed' => !$stat,
+            'closed_title' => _PCLOSED,
+            'checkb' => '',
+            'share_url' => '#'.$cmid,
+        ]);
+        if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
+    }
+    $num = getVar('get', 'num', 'num');
+    $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
+    return $cont.getPageNumbers($mod, $total, $numpages, $size, $pag.'&', $links, 0, '#comm', 'com');
+}
+
 # Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $acomm = 0): string {
     global $conf, $user, $tpl;
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => ashowcom($id, $conf['name'])]);
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'])]);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
@@ -277,7 +415,7 @@ function addComment(): void {
     $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$new['id'];
     $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
     addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
-    echo ashowcom($id, $mod);
+    echo getCommentList($id, $mod);
 }
 
 # Validate and update an existing forum post in-place
@@ -704,9 +842,10 @@ function deletePrivateMessage() {
 }
 
 # Per-module map for profile contribution views: label constant, icon name, table, where clause and rating column pair (count, total); fav marks the favorites modul key
+# The comment entry carries no table, where or rate: its rows are read through the comment subsystem, and a table name left here would be a second way into a table with one owner
 function getProfileModules(): array {
     return [
-        'comm' => ['title' => _COMMENTS, 'icon' => 'chat-text', 'table' => 'comment', 'where' => "uid = :uid AND status != '0'", 'rate' => [], 'fav' => ''],
+        'comm' => ['title' => _COMMENTS, 'icon' => 'chat-text', 'fav' => ''],
         'faq' => ['title' => _FAQ, 'icon' => 'question-circle', 'table' => 'faq', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['ratings', 'score'], 'fav' => 'faq'],
         'files' => ['title' => _FILES, 'icon' => 'file-earmark-arrow-down', 'table' => 'files', 'where' => "uid = :uid AND time <= NOW() AND status != '0'", 'rate' => ['votes', 'tvotes'], 'fav' => 'files'],
         'forum' => ['title' => _FORUM, 'icon' => 'window-stack', 'table' => 'forum', 'where' => "uid = :uid AND pid = '0' AND time <= NOW() AND status > '1'", 'rate' => ['ratings', 'score'], 'fav' => 'forum'],
