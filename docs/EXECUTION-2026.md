@@ -85,7 +85,7 @@ Do them top to bottom. Only one row depends on the other plan.
 | 1 | ~~Comments stage 0~~ | **done** |
 | 2 | ~~Mail stage 1, batches 1-6~~ | **done** |
 | 3 | ~~Comments stage 1, batches 1-6~~ | **done** |
-| 4 | Mail stage 2 | template |
+| 4 | ~~Mail stage 2~~ | **done** |
 | 5 | Comments stage 2 | template |
 | 6 | Comments stage 3 | template — **needs mail stage 2 done** |
 | 7 | Mail stages 3, 4 | template |
