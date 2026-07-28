@@ -19,6 +19,7 @@ Written at the end of every implementation batch before its report.
 |---|---|---|
 | 2026-07-28 | Analysis and implementation plan | complete; no PHP source changed |
 | 2026-07-28 | Final-contract correction | complete; owner context, quota locking, DNS-pinned remote transfer, stale-partial recovery, and supported-flow criteria settled without fallback implementations |
+| 2026-07-28 | Security self-review correction | complete; proxy bypass is disabled and CNAME resolution has a bounded fail-closed contract |
 
 ## Goal
 
@@ -369,31 +370,41 @@ It is not a general class capability exposed by `go=4` or module handlers.
    non-default ports; allow only ports 80 and 443.
 3. Require an allowed extension in the final URL path. MIME never invents an
    extension.
-4. Resolve every A and AAAA answer and reject the host if any answer belongs to
+4. Resolve DNS with one bounded algorithm: normalize the hostname, follow a
+   maximum of eight CNAME records, reject loops or malformed/empty answers, and
+   collect every A and AAAA address from the terminal name. Reject the complete
+   host if any CNAME step cannot be validated or any address belongs to
    loopback, link-local, private, reserved, multicast, or unspecified space.
+   A host without a validated public terminal A/AAAA answer is rejected.
 5. Disable automatic redirects. Process at most three `Location` hops manually,
-   resolving and validating each new URL before its request.
-6. Pin each request to one validated address with `CURLOPT_RESOLVE`, keep TLS
+   repeating the complete URL, CNAME, A/AAAA, and address validation for every
+   new request.
+6. Disable environment and configured HTTP proxies for every hop with
+   `CURLOPT_PROXY = ''` and `CURLOPT_NOPROXY = '*'`; proxy support is outside
+   this feature contract because it would move DNS and connection enforcement
+   outside the application.
+7. Pin each request to one validated address with `CURLOPT_RESOLVE`, keep TLS
    hostname and peer verification enabled, and compare
    `CURLINFO_PRIMARY_IP` with the pinned address through normalized
    `inet_pton()` bytes after connection. A mismatch fails the transfer, closing
    the DNS-rebinding gap.
-7. Use 5-second connection and 30-second total limits. Reject a declared
+8. Use 5-second connection and 30-second total limits. Reject a declared
    `Content-Length` over `maxbytes`.
-8. Stream the body through `CURLOPT_WRITEFUNCTION` into a destination `.part`
+9. Stream the body through `CURLOPT_WRITEFUNCTION` into a destination `.part`
    file and abort the callback as soon as received bytes exceed `maxbytes`.
-9. Accept only a final 2xx response and reject authentication/proxy challenges.
-10. Run the same extension, detected MIME, image, quota, and destination checks
-    as a local upload.
-11. Rename the complete validated file atomically while holding the destination
-    lock and delete every partial file in `finally`.
-12. Before a new transfer under the same destination lock, delete only class
-    partials matching `.upload-<hex>.part` that are older than one hour. This
-    recovers files left by process termination where `finally` could not run.
+10. Accept only a final 2xx response and reject authentication/proxy challenges.
+11. Run the same extension, detected MIME, image, quota, and destination checks
+     as a local upload.
+12. Rename the complete validated file atomically while holding the destination
+     lock and delete every partial file in `finally`.
+13. Before a new transfer under the same destination lock, delete only class
+     partials matching `.upload-<hex>.part` that are older than one hour. This
+     recovers files left by process termination where `finally` could not run.
 
-Integration coverage for IPv4, IPv6, mixed public/private DNS answers, redirect
-to private space, DNS pinning, timeout, oversized chunked response, and TLS
-failure is mandatory. The remote feature is retained; only its unsafe
+Integration coverage for IPv4, IPv6, mixed public/private DNS answers, valid and
+looped/over-depth CNAME chains, redirect to private space, DNS pinning, proxy
+environment variables, timeout, oversized chunked response, and TLS failure is
+mandatory. The remote feature is retained; only its unsafe
 `fopen()`/`file_get_contents()` implementation is removed.
 
 Mode 4 and the default `go=4` branch are deleted. Neither has a place in the
@@ -467,12 +478,14 @@ Work:
 9. Remove mode 4 and then remove `upload()`, `check_file()`, and `check_size()`.
 10. Add structured `Logger::addFile()` context for storage failures without
     logging file contents, tokens, or sensitive remote URLs.
-11. Verify `.part` cleanup for every remote failure and interrupted transfer.
-12. Implement the destination lock and constant-memory quota scan, then measure
+11. Implement bounded CNAME traversal, all-answer address validation, explicit
+    proxy disabling, per-hop address pinning, and primary-IP comparison.
+12. Verify `.part` cleanup for every remote failure and interrupted transfer.
+13. Implement the destination lock and constant-memory quota scan, then measure
     it with 100, 1,000, and 10,000 files.
-13. Document PHP, web-server, and application byte limits so each rejection
+14. Document PHP, web-server, and application byte limits so each rejection
     layer is distinguishable.
-14. Search the whole repository for obsolete names and duplicated extension,
+15. Search the whole repository for obsolete names and duplicated extension,
     MIME, image-size, and transfer logic.
 
 The change is merged only as the complete final state. The class, all supported
@@ -561,7 +574,7 @@ uploaded content fail the batch.
   validation.
 - Every final and partial destination stays inside the canonical upload root.
 - Remote access is privileged, bounded, and protected against local-network
-  targets and redirects.
+  targets, CNAME indirection, redirects, DNS rebinding, and proxy bypass.
 - No uploaded bytes or sensitive URL fields are written to logs.
 - No SQL is added to `Upload`; callers keep prepared database statements.
 - The class renders no HTML and emits no headers, so output escaping remains at
@@ -573,7 +586,7 @@ uploaded content fail the batch.
 |---|---|
 | MIME tightening rejects files previously accepted by suffix alone | build fixtures from every configured type, support verified MIME aliases, and document the security change |
 | Existing custom configuration points outside `uploads/` | reject it and require an explicit move into the canonical upload root before migration |
-| Remote URL protection differs across cURL/DNS environments | pin every manually followed hop, verify the primary IP, and fail closed on unsupported cURL behavior |
+| Remote URL protection differs across cURL/DNS environments | disable proxies, validate bounded CNAME and all A/AAAA answers for every hop, pin the chosen address, verify the primary IP, and fail closed on unsupported behavior |
 | Multiple-upload result is ambiguous | define one result per item and route-test mixed valid/invalid editor batches |
 | Error text changes | keep stable class codes and map them to existing language constants in adapters |
 | A moved file is stored but the later database write fails | route adapters delete the just-created file when their persistence step fails; cover this compensation path |

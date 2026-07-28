@@ -24,6 +24,7 @@ Written at the end of every implementation batch before its report.
 |---|---|---|
 | 2026-07-28 | Analysis and implementation plan | complete; no PHP source changed |
 | 2026-07-28 | Final-contract correction | complete; existing scheduler settings, POST-only mutations, one consistent unbuffered algorithm, fail-closed object scope, deterministic restore order, and verified compression settled |
+| 2026-07-28 | Security and recoverability self-review correction | complete; CSRF access matrix, process-held scheduler lock, deterministic SQL session, and template-owned POST actions settled |
 
 ## Goal
 
@@ -145,6 +146,10 @@ fails before creating an artifact if an unsupported object or engine appears.
 | Medium | Table selection and structure-only engine rules are hardcoded local variables | `core/system.php:739-756` | Operators cannot see or test the effective backup scope from scheduler configuration |
 | Medium | Compression returns only a boolean and the backup scans for a guessed extension | `core/system.php:972-982`; `addCompress()` contract at `core/system.php:2351-2385` | Artifact identity is inferred instead of returned and verified |
 | High | Scheduler run, unlock, delete, and direct execution mutate state through GET requests | `admin/modules/scheduler.php:72-90`, `admin/modules/scheduler.php:292-341`, `index.php:139-153` | State-changing routes conflict with the project POST/CSRF boundary and can be triggered by navigation or prefetch |
+| Critical | Direct scheduler access grants every authenticated administrator access before token validation | `core/system.php:415-421` | Changing GET to POST alone would leave a CSRF bypass for direct scheduler execution |
+| High | Scheduler ownership expires from JSON time even while the original process still runs | `core/system.php:331-336`, `core/system.php:358-369`, `core/system.php:538-550`; heartbeat is global only at `core/system.php:393-400` | A backup exceeding `lock_timeout` can overlap a second run |
+| High | Export/restore does not define deterministic session time zone or SQL mode | session changes and dump header at `core/system.php:788-909` | `TIMESTAMP` and zero-valued auto-increment data can restore differently under another server/session default |
+| Medium | The shared admin dial renders actions only as anchors | `templates/admin/fragments/dial.html:1-5`; scheduler action data at `admin/modules/scheduler.php:67-100` | POST-only scheduler mutations need a template-owned button/form contract, not PHP-built markup |
 | Medium | The function raises process-wide memory/time settings and never restores the memory limit | `core/system.php:724-735` | One job mutates request runtime state and hides the algorithm's actual memory behavior |
 | Medium | Views and other schema objects do not have an explicit support contract | table discovery uses `SHOW TABLES` at `core/system.php:798`, while schema uses `SHOW CREATE TABLE` at `core/system.php:912` | A “database backup” may not recreate views, triggers, routines, or events |
 | Low | `$backup_start` is assigned but unused | `core/system.php:724` | It is dead state inside an already oversized function |
@@ -221,9 +226,9 @@ filesystem mutation.
 The scheduler owns:
 
 - HTTP and admin access;
-- CSRF token validation;
+- trigger-specific access and CSRF token validation;
 - job due calculation;
-- locking and heartbeat;
+- the process-held job lock and informational heartbeat;
 - duration and failure count;
 - persistence in `storage/logs/scheduler/dbbackup.json`;
 - rendering success/failure to the caller.
@@ -237,6 +242,41 @@ SHA-256 to equal the source hash. Only then does `Backup` delete the SQL source.
 This compensates for the helper's boolean-only contract and prevents its
 internal source-deletion timing from controlling backup correctness. There is
 no wrapper or second compression implementation.
+
+### Scheduler access and lock contract
+
+The final access matrix is explicit; `isAdmin(true)` is never a token bypass:
+
+| Entry | Required authorization | Required token |
+|---|---|---|
+| `admin.php?name=scheduler` run, unlock, delete | authenticated administrator | `getSiteToken('scheduler')` submitted by POST and validated with `checkSiteToken($stok, 'scheduler')` |
+| `index.php?go=3&op=scheduler&trigger=pseudo` | enabled server-generated pseudo-cron request | session-bound `getSiteToken('scheduler')` submitted by POST |
+| `index.php?go=3&op=scheduler&trigger=cron` | enabled configured cron | non-empty `$conf['scheduler']['token']` submitted by POST and compared with `hash_equals()` |
+
+The direct endpoint rejects `manual`, unknown trigger values, GET, and an admin
+session without the matching token. `checkSchedulerAccess()` becomes a closed
+`pseudo`/`cron` decision and removes the unconditional administrator return.
+The admin module remains the only manual-run entry and validates its own
+session-bound token before calling `addSchedulerRun()`.
+
+Scheduler JSON is status, not mutual exclusion. `addSchedulerRun()` opens
+`LOGS_DIR.'/scheduler/'.$name.'.lock'`, creates the scheduler directory and
+lock file with restrictive permissions, and acquires non-blocking
+`flock(LOCK_EX | LOCK_NB)` before reading or mutating run state. The open
+resource is retained through handler execution and final state persistence and
+is released in the outermost `finally`. If the process terminates, the operating
+system releases the lock; the next holder may replace stale `running` state.
+Failure to open/acquire the lock or persist initial `running` state prevents
+handler dispatch; failure to persist final state is reported as scheduler
+failure before the resource is released.
+
+`lock_timeout` remains an execution budget and stale-state diagnostic, not lock
+ownership. `checkSchedulerLock()` and the unlock action must consult the OS
+lock: unlock may clear stale JSON only after it acquires the lock itself and
+must return `locked` while a live process holds it. The global
+`heartbeat.json` remains an informational cron-liveness marker and is not used
+as a lease. No long backup can become concurrently runnable merely because its
+recorded start time exceeds `lock_timeout`.
 
 ### Public API and result
 
@@ -381,9 +421,16 @@ The target guarantee has no best-effort branch:
 - schema-changing DDL is detected by comparing ordered schema fingerprints
   before and after export; a difference invalidates and deletes the run.
 
-After discovery and the first schema fingerprint, the class executes:
+Before discovery, the class reads and retains
+`@@SESSION.time_zone`, `@@SESSION.sql_mode`, the active session transaction
+isolation value, the connection charset, and the PDO buffering mode. The
+capability check selects the server-supported isolation variable for MySQL or
+MariaDB rather than guessing it. The class then establishes the one
+deterministic export session:
 
 ```sql
+SET SESSION time_zone = '+00:00';
+SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ;
 START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY;
 ```
@@ -396,21 +443,33 @@ forward-only `SELECT` with an explicit ordered column list and `ORDER BY` the
 primary-key columns. The statement is exhausted and closed before the next
 query. There is no OFFSET, keyset alternative, or table-size-dependent
 algorithm. In `finally`, the class rolls back the read-only transaction and
-restores the original PDO buffering and session settings.
+restores the original PDO buffering, time zone, SQL mode, charset, and
+transaction isolation state. Failure to establish or later restore the
+deterministic session is a failed run and cannot publish an artifact. Normal
+execution closes the cursor, rolls back, and verifies state restoration before
+compression or atomic publication; `finally` is the failure-path guarantee.
 
 The plan does not use `SHOW TABLE STATUS.Rows` to decide whether data exists.
 The row cursor itself determines emptiness.
 
 ### SQL serialization
 
-The dump prologue stores and disables restore-time dependency checks:
+The dump prologue stores restore-session state, establishes the same
+deterministic SQL interpretation used by export, and disables dependency
+checks:
 
 ```sql
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_TIME_ZONE=@@TIME_ZONE, TIME_ZONE='+00:00';
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO';
 ```
 
-The epilogue restores both values. Tables are emitted in stable name order.
+The existing validated `SET NAMES` follows this prologue. The epilogue restores
+foreign-key checks, unique checks, time zone, and SQL mode in reverse order.
+This preserves zero-valued auto-increment fields and prevents `TIMESTAMP`
+conversion when restore-server defaults differ. Tables are emitted in stable
+name order.
 
 For every table:
 
@@ -485,11 +544,12 @@ No new admin settings fields are added. The checked-in scheduler settings are
 the explicit operator contract; an admin editor would require separate product
 requirements and language constants.
 
-The class does not raise its memory limit. Before dispatch, the scheduler sets
-the execution limit to the selected job's validated `lock_timeout`; the default
-database-backup value is 1,800 seconds at `config/scheduler.php:31`. Failure to
-set the limit is logged, and the run proceeds under the stricter server limit
-without changing the class algorithm.
+The class does not raise its memory limit. Before dispatch, the scheduler uses
+the selected job's validated `lock_timeout` as its execution-time budget; the
+default database-backup value is 1,800 seconds at `config/scheduler.php:31`.
+This value never expires the process-held lock. Failure to set the execution
+limit is logged, and the run proceeds under the stricter server limit without
+changing the class algorithm.
 
 ## Implementation steps
 
@@ -536,6 +596,8 @@ Files:
 - update class loading and scheduler dispatch in `core/system.php`;
 - update scheduler HTTP handling in `index.php`;
 - update the manual-run form and handler in `admin/modules/scheduler.php`;
+- extend `templates/admin/fragments/dial.html` with a template-owned POST mode
+  while preserving its existing link-only mode;
 - add `tests/Unit/BackupTest.php`;
 - update `config/scheduler.php` with the final `dbbackup.settings`;
 - add or extend the integration test from the preflight;
@@ -549,28 +611,49 @@ Work:
 3. Pass the complete job array through `addSchedulerSystemJob()`.
 4. Replace globals inside the implementation with constructor properties.
 5. Add a fail-fast boundary for every required SQL operation.
-6. Reject unsupported engines/objects, fingerprint schema, start the explicit
-   snapshot, and use one unbuffered forward cursor per table.
-7. Implement `.sql.part`, checked writes, successful close, explicit
-   compression mode, temporary compressed output, atomic publication, exact
-   artifact path, format validation, decompressed checksum verification, and
-   stale-partial recovery.
-8. Emit the restore prologue/epilogue, explicit column lists, generated-column
-   exclusion, and correct typed/binary value serialization.
-9. Restore PDO buffering, transaction, and session state in `finally`.
-10. Fail the whole run on any unsupported object, changed schema, missing
-   schema, failed cursor, short write,
-   compression error, or artifact mismatch.
-11. Record actual table, row, SQL-byte, artifact-byte, engine, and checksum
-   metadata.
-12. Change the scheduler dispatcher to lazy `Backup` construction.
-13. Remove `addBackupTask()`; do not leave a wrapper or alternate path.
-14. Replace scheduler run, unlock, and delete links with existing-template POST
-    forms; their handlers read POST only and reject GET before mutation.
-15. Make the scheduler HTTP endpoint reject non-POST requests.
-16. Change the pseudo-cron `fetch()` to POST its trigger and token; external cron
+6. Save the source session state, establish UTC plus
+   `NO_AUTO_VALUE_ON_ZERO`, reject any failed session mutation, and guarantee
+   restoration from `finally`.
+7. Reject unsupported engines/objects, fingerprint schema, start the explicit
+    snapshot, and use one unbuffered forward cursor per table.
+8. Implement `.sql.part`, checked writes, successful close, explicit
+    compression mode, temporary compressed output, atomic publication, exact
+    artifact path, format validation, decompressed checksum verification, and
+    stale-partial recovery.
+9. Emit the restore prologue/epilogue, deterministic time-zone/SQL-mode
+   settings, explicit column lists, generated-column exclusion, and correct
+   typed/binary value serialization.
+10. Restore PDO buffering, transaction, time zone, SQL mode, charset, and
+    isolation state in `finally`.
+11. Fail the whole run on any unsupported object, changed schema, missing
+    schema, failed cursor, short write,
+    compression error, or artifact mismatch.
+12. Record actual table, row, SQL-byte, artifact-byte, engine, and checksum
+    metadata.
+13. Change the scheduler dispatcher to lazy `Backup` construction.
+14. Remove `addBackupTask()`; do not leave a wrapper or alternate path.
+15. Add the process-held scheduler lock and make state timeout/heartbeat
+    informational rather than ownership mechanisms.
+16. Extend the existing admin `dial` fragment with an optional form mode. In
+    that mode the root is one compact POST `<form>`, common hidden fields are
+    rendered once, link items remain anchors, and mutation items are submit
+    buttons carrying the requested operation. This avoids nested per-action
+    forms and keeps the existing link-only `<span>` output byte-for-byte for all
+    other callers. PHP supplies action URL, common hidden data, confirmation
+    text, icon, and operation values; it does not concatenate form HTML. Do not
+    add a second fragment. The fragment escapes URL and attribute values in
+    their native contexts; no raw `*_html` field carries request-derived data
+    and CSS classes remain template-owned.
+17. Render scheduler run, unlock, and delete as that POST action variant. Their
+    handlers read POST only, require `checkSiteToken($stok, 'scheduler')`, and
+    reject GET before mutation; edit remains a link.
+18. Make `checkSchedulerAccess()` reject the current unconditional admin bypass
+    and accept only the closed pseudo/cron matrix above.
+19. Make the scheduler HTTP endpoint reject non-POST and unknown/manual
+    triggers before access checks or locking.
+20. Change the pseudo-cron `fetch()` to POST its trigger and token; external cron
     clients must also POST.
-17. Run a full disposable restore and compare the source snapshot with the
+21. Run a full disposable restore and compare the source snapshot with the
     restored database.
 
 The change is merged only as this complete state. There is no commit or
@@ -588,7 +671,12 @@ writes, offset paging, guessed archive names, or an untested restore.
 - `rg -n "\baddBackupTask\s*\("` returns no production definition or call;
 - unit tests for filters, identifier rejection, SQL header/schema/data output,
   nulls, numeric values, text escaping, binary data, checked writes, cleanup,
-  result metadata, and compression failure;
+  result metadata, `TIMESTAMP`/zero auto-increment round trips, source-session
+  restoration, and compression failure;
+- unit/route tests for the closed trigger/token matrix, admin-without-token
+  rejection, stale state recovery, and a held OS lock beyond `lock_timeout`;
+- render validation for link-only and mixed link/POST `dial` modes, including
+  delete confirmation and submitted operation values;
 - integration tests run against both supported MySQL and MariaDB versions where
   project CI provides them.
 
@@ -598,34 +686,55 @@ Admin route:
 
 ```text
 POST admin.php
-name=scheduler&op=run&job=dbbackup&token=<valid token>
+name=scheduler&op=run&job=dbbackup&token=<valid scheduler site token>
 ```
 
-Direct scheduler route:
+Pseudo-cron route:
 
 ```text
 POST index.php?go=3&op=scheduler
-job=dbbackup&trigger=manual&token=<valid token>
+job=dbbackup&trigger=pseudo&token=<valid scheduler site token>
+```
+
+External cron route:
+
+```text
+POST index.php?go=3&op=scheduler
+job=dbbackup&trigger=cron&token=<configured scheduler token>
 ```
 
 At least one route is executed through a real authenticated HTTP session. The
 test verifies the redirect or JSON result and does not call
 `addDatabaseBackup()` directly as a substitute.
 
-The admin scheduler row keeps edit as a link and renders run, unlock, and delete
-as existing-template POST forms with hidden `name`, `op`, `job`, and `token`
-values. The handlers read these through `getVar('post', ...)`. The `go=3`
-endpoint accepts POST only and returns 405 without acquiring a lock when called
-through GET. Pseudo-cron uses the same POST endpoint through `fetch()`;
-configured external cron clients send the scheduler token in the POST body.
+The admin path is also browser-checked: authenticate, open the scheduler dial,
+confirm edit is an anchor and mutations are buttons inside one non-nested form,
+submit run, verify the rendered result and persisted scheduler/artifact state,
+then review the three runtime error logs. Delete confirmation is exercised on a
+disposable custom-job fixture, never on a system job.
+
+The admin scheduler row invokes the form mode of the existing `dial` fragment:
+one POST form contains shared hidden `name=scheduler`, `job`, and `token`
+fields, edit remains an anchor, and run, unlock, and delete are submit buttons
+whose name/value supplies `op`. The template owns the markup and PHP passes
+semantic action data. Handlers read fields through `getVar('post', ...)` and
+validate `checkSiteToken($stok, 'scheduler')`. The `go=3` endpoint accepts POST
+only and returns 405 without acquiring a lock when called through GET.
+Pseudo-cron uses the same POST endpoint through `fetch()`; configured external
+cron clients send only the configured scheduler token in the POST body.
 
 Negative route cases:
 
 - invalid token;
+- authenticated administrator without a valid scheduler site token;
+- `trigger=manual` or an unknown trigger on the direct endpoint;
+- pseudo site token supplied as a cron token and the inverse;
 - inactive scheduler job;
 - GET request to either write route;
 - GET requests to admin run, unlock, and delete;
 - active scheduler lock;
+- stale `running` JSON with a free OS lock;
+- elapsed `lock_timeout` while the first process still owns the OS lock;
 - controlled unwritable test destination;
 - forced SQL failure;
 - forced compression failure.
@@ -663,7 +772,8 @@ For a failed run verify:
 - the prior successful artifact and pointer remain intact;
 - no new final artifact is published;
 - all temporary files are removed;
-- connection transaction and charset state are restored.
+- connection transaction, buffering, time zone, SQL mode, charset, and
+  isolation state are restored.
 
 ### Performance
 
@@ -674,7 +784,7 @@ Measure with representative small, medium, and largest supported databases:
 - rows per second;
 - SQL bytes and archive ratio;
 - database load and lock duration;
-- scheduler heartbeat behavior;
+- process-held lock duration and informational scheduler heartbeat behavior;
 - free disk required during `.part` plus archive overlap.
 
 Acceptance targets are derived from the measured baseline and deployment
@@ -696,9 +806,12 @@ database row values, credentials, connection DSNs, or full SQL payloads.
 
 ## Security notes
 
-- Scheduler run, unlock, delete, pseudo-cron, and direct execution retain their
-  access/token checks but accept only POST for mutation; GET returns 405 before
-  locking or persistence.
+- Admin run, unlock, and delete require both administrator authorization and a
+  purpose-bound scheduler site token. Pseudo-cron accepts only that site-token
+  branch; cron accepts only the configured static-token branch. No
+  `isAdmin(true)` shortcut bypasses token validation.
+- Every mutation accepts POST only; GET and unknown/direct manual triggers are
+  rejected before locking or persistence.
 - No request value is used as a table name, path, compression mode, or SQL
   fragment.
 - SQL values use the database quoting boundary; identifiers are validated and
@@ -729,7 +842,10 @@ database row values, credentials, connection DSNs, or full SQL payloads.
 | Disk fills while both SQL and archive exist | preflight free space from measured source size and fail before writing when margin is insufficient |
 | Compression succeeds but produces the wrong or unreadable artifact | choose explicit mode, calculate exact path, open/read it, and checksum before success |
 | Cleanup deletes a previous good backup | operate only on the unique current run basename and never glob during failure cleanup |
-| Scheduler lock expires during a long run | update heartbeat and measure worst-case duration against `lock_timeout` |
+| A backup exceeds `lock_timeout` | retain one non-blocking OS `flock` for the complete run; treat timeout and heartbeat as diagnostics, never as authority to start a second process |
+| Scheduler state says `running` after process termination | acquire the now-free OS lock, replace stale state, and cover crash recovery without deleting the lock file |
+| Restore defaults use another time zone or SQL mode | export and restore in UTC with `NO_AUTO_VALUE_ON_ZERO`, restore prior session values, and verify `TIMESTAMP` plus zero-valued auto-increment fixtures |
+| The shared action fragment regresses link callers | preserve link-only output, activate form mode only through explicit semantic data, and render-test both branches |
 | A restore test damages live data | require a uniquely named disposable database and hard-stop on any non-test target |
 | Current dirty worktree overlaps `core/system.php` | re-read current source before implementation and preserve all unrelated user changes |
 
@@ -739,7 +855,8 @@ The migration is complete only when:
 
 - `Backup` is the sole database backup implementation;
 - `addBackupTask()` and all references are gone;
-- the scheduler state contract and new POST-only execution routes work;
+- the scheduler state contract, process-held lock, closed access matrix, and new
+  POST-only execution routes work;
 - a failed query, write, close, compression, or verification cannot publish
   success;
 - artifacts are atomic and partial files are cleaned;
