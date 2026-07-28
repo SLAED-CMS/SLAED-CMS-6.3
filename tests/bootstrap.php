@@ -35,3 +35,10 @@ if (!function_exists('getIp')) {
         return '127.0.0.1';
     }
 }
+
+if (!function_exists('getAgent')) {
+    function getAgent(): string
+    {
+        return 'PHPUnit';
+    }
+}

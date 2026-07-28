@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Outgoing mail service: sender identity resolution, MIME header assembly, subject and body encoding, address validation and the shared error channel
+# Outgoing mail service: sender identity resolution, MIME header assembly, subject and body encoding, address validation, delivery and the shared error channel
 class Mail {
 
     public const CHARSET = 'UTF-8';
@@ -16,12 +16,27 @@ class Mail {
     private array $conf;
     private string $site;
     private string $error = '';
+    private bool $fback = false;
+    private bool $ftry = false;
 
     # Build the service from the site config; the database handle is kept for the queue and is unused while mail still leaves inside the request
     public function __construct(?Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
         $this->site = $conf['sitename'] ?? '';
+    }
+
+    # Accept one message from a call site and deliver it; from stage 2 the same call stores a queue row instead, which is why no caller learns more than accepted or rejected
+    # The client block is appended here, inside the request that owns the visitor data, and never at send time where only the scheduler's own address would be available
+    public function addQueue(array $mesg): bool {
+        $kind = $mesg['kind'] ?? '';
+        $rcpt = $this->filterAddress($mesg['email'] ?? '');
+        if ($rcpt === '') return $this->setError('rejected recipient address', ['kind' => $kind]);
+        $smail = $mesg['sender'] ?? '';
+        if ($this->getSender($smail) === '') return $this->setError('rejected sender address', ['kind' => $kind]);
+        $body = $mesg['body'] ?? '';
+        if (!empty($mesg['client'])) $body .= $this->getClientBlock();
+        return $this->setDelivery($rcpt, $smail, $mesg['title'] ?? '', $body, ($mesg['prio'] ?? 0) ?: 3);
     }
 
     # Return the description of the last failure
@@ -34,6 +49,14 @@ class Mail {
         $this->error = $mesg;
         Logger::addSite('error', 'Mail: '.$mesg, $ctx);
         return false;
+    }
+
+    # Mask an address for the log, because a log is read by more people than a queue row and must not accumulate readable address lists
+    # A value that does not validate is logged as a mask alone: masking its local part would still copy whatever an injection appended behind the address into the log
+    private function getMaskedMail(string $mail): string {
+        $mail = $this->filterAddress($mail);
+        if ($mail === '') return '***';
+        return substr($mail, 0, 1).'***'.substr($mail, strpos($mail, '@'));
     }
 
     # Validate one address for header and envelope use; control characters are refused before whitespace is trimmed, so a trailing CRLF cannot be trimmed into a valid address
@@ -73,6 +96,23 @@ class Mail {
         return chunk_split(base64_encode($text), 76, self::CRLF);
     }
 
+    # Build the originating IP, browser and agent hash block a caller asks for with client, keeping the template form when a template is available and the plain form when it is not
+    private function getClientBlock(): string {
+        global $tpl;
+        $agent = getAgent();
+        if ($tpl instanceof Template) {
+            return $tpl->getHtmlPart('message-block', [
+                'title' => '',
+                'lines' => [
+                    ['label' => _IP, 'value' => getIp()],
+                    ['label' => _BROWSER, 'value' => $agent],
+                    ['label' => _HASH, 'value' => md5($agent)],
+                ],
+            ]);
+        }
+        return PHP_EOL._IP.': '.getIp().PHP_EOL._BROWSER.': '.$agent.PHP_EOL._HASH.': '.md5($agent);
+    }
+
     # Assemble the MIME header block for one already validated sender; no Return-Path is written because the receiving MTA owns that header
     # An empty recipient means the transport writes its own To, which is what PHP mail() does and what a second To header would duplicate
     private function getHeaders(string $rcpt, string $smail, int $prio): string {
@@ -91,5 +131,41 @@ class Mail {
         $head[] = 'X-Priority: '.$prio;
         $head[] = 'X-Mailer: SLAED CMS';
         return implode(self::CRLF, $head);
+    }
+
+    # Encode the transport-independent parts of one message and hand it to the configured transport, which is the only path from stage 2 the drain uses
+    private function setDelivery(string $rcpt, string $smail, string $text, string $body, int $prio): bool {
+        return $this->addPhpMail($rcpt, $smail, $this->getSubject($text), $this->getBody($body), $prio);
+    }
+
+    # Deliver through PHP mail(), the default transport, with the envelope sender following the resolved From so the receiving side authenticates the address the message claims
+    # A host refusing the fifth parameter is expected rather than fatal: the message goes out without it and the parameter is dropped for the rest of the run
+    # The fallback is attempted and logged once per run, so a transport failing for its own reasons costs one attempt per message rather than two
+    # The warning handler captures the text instead of discarding it, because an unhandled warning inside a pseudo-cron request would leak into the response body
+    private function addPhpMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
+        $head = $this->getHeaders('', $smail, $prio);
+        $from = $this->getSender($smail);
+        $args = ($from !== '' && !$this->fback) ? '-f'.$from : '';
+        $warn = '';
+        $back = false;
+        set_error_handler(static function (int $code, string $text) use (&$warn): bool {
+            $warn = $text;
+            return true;
+        }, E_WARNING);
+        $sent = ($args !== '') ? mail($rcpt, $subj, $body, $head, $args) : mail($rcpt, $subj, $body, $head);
+        if (!$sent && $args !== '' && !$this->ftry) {
+            $this->ftry = true;
+            $warn = '';
+            $sent = mail($rcpt, $subj, $body, $head);
+            $back = $sent;
+        }
+        restore_error_handler();
+        if ($back) {
+            $this->fback = true;
+            Logger::addSite('warning', 'Mail: the host refused the envelope sender, delivered without it', ['transport' => 'php']);
+        }
+        if ($sent) return true;
+        $mesg = 'php mail() refused the message'.(($warn !== '') ? ': '.$this->filterHeader($warn) : '');
+        return $this->setError($mesg, ['transport' => 'php', 'mail' => $this->getMaskedMail($rcpt)]);
     }
 }
