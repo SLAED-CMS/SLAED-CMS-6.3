@@ -11,6 +11,7 @@ class Mail {
 
     public const CHARSET = 'UTF-8';
     public const CRLF = "\r\n";
+    private const ERRLEN = 255;
 
     private ?Database $db;
     private array $conf;
@@ -45,8 +46,9 @@ class Mail {
     }
 
     # Record the last failure in the site log and return false so a caller can return it directly
+    # The text is bounded in characters rather than bytes, because a transport answers with a response of its own length and a multibyte one must not be cut mid-character
     private function setError(string $mesg, array $ctx = []): bool {
-        $this->error = $mesg;
+        $this->error = mb_substr($mesg, 0, self::ERRLEN);
         Logger::addSite('error', 'Mail: '.$mesg, $ctx);
         return false;
     }
@@ -115,7 +117,8 @@ class Mail {
 
     # Assemble the MIME header block for one already validated sender; no Return-Path is written because the receiving MTA owns that header
     # An empty recipient means the transport writes its own To, which is what PHP mail() does and what a second To header would duplicate
-    private function getHeaders(string $rcpt, string $smail, int $prio): string {
+    # An empty subject means the same for Subject, which PHP mail() takes as its own parameter while a piped or dialogued message has to carry it inside the block
+    private function getHeaders(string $rcpt, string $smail, string $subj, int $prio): string {
         $rcpt = $this->filterAddress($rcpt);
         $from = $this->getSender($smail);
         $name = ($this->conf['fromname'] ?? '') !== '' ? $this->conf['fromname'] : $this->site;
@@ -128,14 +131,21 @@ class Mail {
         $head[] = 'From: '.(($name !== '') ? $name.' ' : '').'<'.$from.'>';
         if ($rcpt !== '') $head[] = 'To: <'.$rcpt.'>';
         if ($reply !== '') $head[] = 'Reply-To: <'.$reply.'>';
+        if ($subj !== '') $head[] = 'Subject: '.$subj;
         $head[] = 'X-Priority: '.$prio;
         $head[] = 'X-Mailer: SLAED CMS';
         return implode(self::CRLF, $head);
     }
 
     # Encode the transport-independent parts of one message and hand it to the configured transport, which is the only path from stage 2 the drain uses
+    # An unset or unknown transport delivers through PHP mail(), so an installation that upgrades and configures nothing keeps sending the way it did before
     private function setDelivery(string $rcpt, string $smail, string $text, string $body, int $prio): bool {
-        return $this->addPhpMail($rcpt, $smail, $this->getSubject($text), $this->getBody($body), $prio);
+        $subj = $this->getSubject($text);
+        $body = $this->getBody($body);
+        return match ($this->conf['transport'] ?? '') {
+            'sendmail' => $this->addSendMail($rcpt, $smail, $subj, $body, $prio),
+            default => $this->addPhpMail($rcpt, $smail, $subj, $body, $prio),
+        };
     }
 
     # Deliver through PHP mail(), the default transport, with the envelope sender following the resolved From so the receiving side authenticates the address the message claims
@@ -143,7 +153,7 @@ class Mail {
     # The fallback is attempted and logged once per run, so a transport failing for its own reasons costs one attempt per message rather than two
     # The warning handler captures the text instead of discarding it, because an unhandled warning inside a pseudo-cron request would leak into the response body
     private function addPhpMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
-        $head = $this->getHeaders('', $smail, $prio);
+        $head = $this->getHeaders('', $smail, '', $prio);
         $from = $this->getSender($smail);
         $args = ($from !== '' && !$this->fback) ? '-f'.$from : '';
         $warn = '';
@@ -167,5 +177,43 @@ class Mail {
         if ($sent) return true;
         $mesg = 'php mail() refused the message'.(($warn !== '') ? ': '.$this->filterHeader($warn) : '');
         return $this->setError($mesg, ['transport' => 'php', 'mail' => $this->getMaskedMail($rcpt)]);
+    }
+
+    # Deliver by piping the message into the configured Sendmail binary through proc_open(), which reports an exit status where popen() would hide it
+    # The command is an argument array and never a string, so no shell is involved: mail.sendmail holds a path and every argument is supplied here
+    # The binary is started with -t so it takes its recipient from the To header, -i so a lone dot cannot end the message, and -f for the envelope sender
+    # proc_open() is probed rather than assumed because shared hosting lists it in disable_functions, and the path must be an existing executable file
+    # Both output pipes are drained before the exit status is read, because a binary writing to stdout would otherwise block on a full pipe while we wait for it to finish
+    # A short write is a failure of its own: a binary that died before reading the message can still exit zero, and an unchecked fwrite() would report that as an accepted delivery
+    # The write uses the same warning handler as PHP mail(), because a closed pipe raises one and an unhandled warning would leak into the response body
+    private function addSendMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
+        $ctx = ['transport' => 'sendmail', 'mail' => $this->getMaskedMail($rcpt)];
+        if (!function_exists('proc_open')) return $this->setError('sendmail is unavailable, proc_open is disabled on this host', $ctx);
+        $path = $this->filterHeader($this->conf['sendmail'] ?? '');
+        if ($path === '' || !is_file($path) || !is_executable($path)) return $this->setError('the configured sendmail path is not an executable file', $ctx);
+        $from = $this->getSender($smail);
+        $args = [$path, '-t', '-i'];
+        if ($from !== '') $args[] = '-f'.$from;
+        $proc = proc_open($args, [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
+        if (!is_resource($proc)) return $this->setError('the sendmail binary could not be started', $ctx);
+        $mesg = $this->getHeaders($rcpt, $smail, $subj, $prio).self::CRLF.self::CRLF.$body;
+        $warn = '';
+        set_error_handler(static function (int $code, string $text) use (&$warn): bool {
+            $warn = $text;
+            return true;
+        }, E_WARNING);
+        $done = fwrite($pipe[0], $mesg) ?: 0;
+        fclose($pipe[0]);
+        restore_error_handler();
+        stream_get_contents($pipe[1]);
+        $note = stream_get_contents($pipe[2]);
+        fclose($pipe[1]);
+        fclose($pipe[2]);
+        $stat = proc_close($proc);
+        $note = ($note === false) ? '' : $this->filterHeader($note);
+        if ($stat !== 0) return $this->setError('sendmail exited with status '.$stat.(($note !== '') ? ': '.$note : ''), $ctx);
+        if ($done === strlen($mesg)) return true;
+        $text = 'sendmail closed its input after '.$done.' of '.strlen($mesg).' octets';
+        return $this->setError($text.(($warn !== '') ? ': '.$this->filterHeader($warn) : ''), $ctx);
     }
 }

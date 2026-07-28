@@ -81,6 +81,36 @@ final class MailTransportTest extends TestCase
         $this->assertSame('***', $this->getCall($mailer, 'getMaskedMail', ["user@slaed.net\r\nBcc: victim@example.com"]));
     }
 
+    # A sendmail path that is not an executable file is refused before a process is started, so a mistyped setting fails with a stated reason instead of a broken pipe
+    # The refusal also shows the transport was chosen by config: the PHP Mail arm would have answered with its own message
+    #[Test]
+    public function anUnusableSendmailPathIsRefusedBeforeAnyProcessStarts(): void
+    {
+        if (!function_exists('proc_open')) $this->markTestSkipped('proc_open is disabled on this host');
+        $mailer = $this->getMail(['transport' => 'sendmail', 'sendmail' => '/no/such/binary/sendmail']);
+        $this->assertFalse($mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']));
+        $this->assertSame('the configured sendmail path is not an executable file', $mailer->getError());
+    }
+
+    # mail.sendmail holds a path and never a command line, so a value carrying arguments resolves to no file at all and cannot reach a process
+    #[Test]
+    public function aSendmailValueCarryingArgumentsIsRefused(): void
+    {
+        if (!function_exists('proc_open')) $this->markTestSkipped('proc_open is disabled on this host');
+        $mailer = $this->getMail(['transport' => 'sendmail', 'sendmail' => '/usr/sbin/sendmail -OQueueDirectory=/tmp -X/tmp/trace']);
+        $this->assertFalse($mailer->addQueue(['kind' => 'account', 'email' => 'user@slaed.net', 'title' => 'Test', 'body' => 'Hello', 'sender' => 'info@slaed.net']));
+        $this->assertSame('the configured sendmail path is not an executable file', $mailer->getError());
+    }
+
+    # A transport answers with a response of its own length, and the recorded failure is bounded in characters so a verbose one cannot fill the log or be cut mid-character
+    #[Test]
+    public function aRecordedFailureIsBounded(): void
+    {
+        $mailer = $this->getMail();
+        $this->getCall($mailer, 'setError', [str_repeat("\u{00FC}", 300)]);
+        $this->assertSame(str_repeat("\u{00FC}", 255), $mailer->getError());
+    }
+
     # Without a template the client block keeps the exact plain-text form addMail() produced, so the six call sites that ask for it read the same
     #[Test]
     public function theClientBlockKeepsItsPlainTextForm(): void

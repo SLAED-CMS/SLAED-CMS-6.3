@@ -37,7 +37,7 @@ final class MailHeaderTest extends TestCase
     #[Test]
     public function headersFallBackToTheCallerAddress(): void
     {
-        $head = $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertStringContainsString('From: "SLAED CMS" <info@slaed.net>', $head);
         $this->assertStringContainsString('Reply-To: <info@slaed.net>', $head);
         $this->assertStringContainsString('X-Priority: 3', $head);
@@ -51,7 +51,7 @@ final class MailHeaderTest extends TestCase
     public function headersPreferTheConfiguredIdentity(): void
     {
         $conf = ['fromname' => 'Support', 'frommail' => 'no-reply@slaed.net', 'replyto' => 'help@slaed.net'];
-        $head = $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', 1]);
+        $head = $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', '', 1]);
         $this->assertStringContainsString('From: "Support" <no-reply@slaed.net>', $head);
         $this->assertStringContainsString('Reply-To: <help@slaed.net>', $head);
         $this->assertStringNotContainsString('info@slaed.net', $head);
@@ -61,7 +61,7 @@ final class MailHeaderTest extends TestCase
     #[Test]
     public function headersIgnoreAnInvalidConfiguredSender(): void
     {
-        $head = $this->getCall($this->getMail(['frommail' => 'not-an-address']), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(['frommail' => 'not-an-address']), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertStringContainsString('From: "SLAED CMS" <info@slaed.net>', $head);
     }
 
@@ -70,14 +70,14 @@ final class MailHeaderTest extends TestCase
     public function headersNeverCarryReturnPath(): void
     {
         $conf = ['fromname' => 'Support', 'frommail' => 'no-reply@slaed.net', 'replyto' => 'help@slaed.net'];
-        $this->assertStringNotContainsString('Return-Path', $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', 3]));
+        $this->assertStringNotContainsString('Return-Path', $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', '', 3]));
     }
 
     # Every header line ends with CRLF, which is what the SMTP transport requires and what a bare LF is not
     #[Test]
     public function headerLinesEndWithCrlf(): void
     {
-        $head = $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertSame(0, preg_match('/(?<!\r)\n/', $head), 'A header line ended with a bare LF');
         $this->assertSame(7, substr_count($head, "\r\n") + 1);
     }
@@ -86,7 +86,7 @@ final class MailHeaderTest extends TestCase
     #[Test]
     public function theRecipientBecomesAToHeader(): void
     {
-        $head = $this->getCall($this->getMail(), 'getHeaders', ['user@slaed.net', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(), 'getHeaders', ['user@slaed.net', 'info@slaed.net', '', 3]);
         $this->assertStringContainsString("\r\nTo: <user@slaed.net>\r\n", $head);
     }
 
@@ -94,15 +94,30 @@ final class MailHeaderTest extends TestCase
     #[Test]
     public function noToHeaderIsWrittenWhenTheTransportSuppliesIt(): void
     {
-        $head = $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertStringNotContainsString("\r\nTo:", $head);
+    }
+
+    # A transport that pipes the whole message, as Sendmail does, carries its subject inside the block rather than beside it
+    #[Test]
+    public function theSubjectBecomesAHeaderWhenTheTransportNeedsIt(): void
+    {
+        $head = $this->getCall($this->getMail(), 'getHeaders', ['user@slaed.net', 'info@slaed.net', 'Password reset', 3]);
+        $this->assertStringContainsString("\r\nSubject: Password reset\r\n", $head);
+    }
+
+    # PHP mail() takes the subject as its own parameter, so passing none must leave the block without a Subject line
+    #[Test]
+    public function noSubjectHeaderIsWrittenWhenTheTransportSuppliesIt(): void
+    {
+        $this->assertStringNotContainsString("\r\nSubject:", $this->getCall($this->getMail(), 'getHeaders', ['', 'info@slaed.net', '', 3]));
     }
 
     # A recipient carrying a line break is dropped by the same sanitiser instead of splitting the block
     #[Test]
     public function anInjectedRecipientNeverReachesTheHeaders(): void
     {
-        $head = $this->getCall($this->getMail(), 'getHeaders', ["user@slaed.net\r\nBcc: victim@example.com", 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(), 'getHeaders', ["user@slaed.net\r\nBcc: victim@example.com", 'info@slaed.net', '', 3]);
         $this->assertStringNotContainsString("\r\nTo:", $head);
         $this->assertStringNotContainsString('victim@example.com', $head);
     }
@@ -184,7 +199,7 @@ final class MailHeaderTest extends TestCase
     #[Test]
     public function aDisplayNameWithBrokenEncodingSurvives(): void
     {
-        $head = $this->getCall($this->getMail(['fromname' => 'M'.chr(0xFC).'ller Shop']), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail(['fromname' => 'M'.chr(0xFC).'ller Shop']), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertStringContainsString('Shop', mb_decode_mimeheader($head));
         $this->assertStringContainsString('<info@slaed.net>', $head);
     }
@@ -239,7 +254,7 @@ final class MailHeaderTest extends TestCase
     public function anInjectedReplyToNeverReachesTheHeaders(): void
     {
         $conf = ['replyto' => "help@slaed.net\r\nBcc: victim@example.com"];
-        $head = $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertStringNotContainsString('Bcc', $head);
         $this->assertStringNotContainsString('victim@example.com', $head);
     }
@@ -249,7 +264,7 @@ final class MailHeaderTest extends TestCase
     public function anInjectedSenderNameNeverReachesTheHeaders(): void
     {
         $conf = ['fromname' => "Support\r\nBcc: victim@example.com"];
-        $head = $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', 3]);
+        $head = $this->getCall($this->getMail($conf), 'getHeaders', ['', 'info@slaed.net', '', 3]);
         $this->assertStringContainsString('From: "Support Bcc: victim@example.com" <info@slaed.net>', $head);
         $this->assertSame(0, preg_match('/(?<!\r)\n/', $head), 'A header line ended with a bare LF');
     }
