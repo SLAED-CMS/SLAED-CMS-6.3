@@ -307,11 +307,11 @@ function save(): void {
 }
 
 function delete(int $did = 0): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $id = $did ?: getVar('req', 'id', 'num', 0);
     $iswarn = !$did && !checkSiteToken();
     if (!$iswarn && $id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'media\'', ['id' => $id]);
+        $com->deleteTarget('media', [$id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'media\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_media WHERE id = :id', ['id' => $id]);
     }

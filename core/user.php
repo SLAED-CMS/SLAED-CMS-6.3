@@ -720,43 +720,48 @@ function getProfileModules(): array {
 
 # Build the "last activity" feed with per-module tabs for a public profile as one UNION ALL round-trip; shared by the profile view page and the own-profile page
 function getProfileLastView(int $uid): string {
-    global $db, $conf, $tpl, $prs;
+    global $db, $conf, $tpl, $prs, $com;
     if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
     $limit = intval(getUserNews(25));
     $parts = [];
     $params = [];
-    $lists = [];
+    $lists = ['comm' => []];
     foreach (getProfileModules() as $mod => $inf) {
-        if ($mod != 'comm' && !is_active($mod)) continue;
-        if ($mod == 'comm') {
-            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".PREFIX_DB.'_comment WHERE '.str_replace(':uid', ':ucomm', $inf['where']).' ORDER BY id DESC LIMIT 0,'.$limit.')';
-        } else {
-            $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
-            $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
-            $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']).' ORDER BY id DESC LIMIT 0,'.$limit.')';
-        }
+        if ($mod == 'comm' || !is_active($mod)) continue;
+        $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+        $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
+        $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
+        $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
         $params['u'.$mod] = $uid;
         $lists[$mod] = [];
     }
-    if (!$parts) return '';
-    $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
-    while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
-        if ($key == 'comm') {
-            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, false, $conf['name']))), 70);
-            $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid]).'#'.$id;
-        } elseif ($key == 'jokes') {
-            $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
-        } elseif ($key == 'forum') {
-            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
-        } else {
-            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
-        }
-        $lists[$key][] = [
-            'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),
-            'href' => $href,
-            'label' => $label,
-            'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',
+    foreach ($com->getUserList($uid, $limit) as $row) {
+        $when = $row['time'];
+        $text = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($row['body'], false, $conf['name']))), 70);
+        $lists['comm'][] = [
+            'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($when)), 'title' => format_time($when, _TIMESTRING), 'text' => format_time($when)]),
+            'href' => getSeoUrl(['name' => $row['modul'], 'op' => 'view', 'id' => $row['cid']]).'#'.$row['id'],
+            'label' => $text,
+            'rating' => '',
         ];
+    }
+    if ($parts) {
+        $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
+        while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
+            if ($key == 'jokes') {
+                $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
+            } elseif ($key == 'forum') {
+                $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
+            } else {
+                $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
+            }
+            $lists[$key][] = [
+                'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),
+                'href' => $href,
+                'label' => $label,
+                'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',
+            ];
+        }
     }
     $tabs = [];
     $texts = [];

@@ -676,7 +676,7 @@ function productsave(): void {
 }
 
 function productops(int|array $id = 0, string $vtyp = ''): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $iswarn = !checkSiteToken();
     $id = getVar('req', 'id[]', '', []);
     $arg = $id;
@@ -687,28 +687,35 @@ function productops(int|array $id = 0, string $vtyp = ''): void {
     }
     if (!is_array($id)) $id = ($id > 0) ? [$id] : [];
     $ids = array_unique(array_filter(array_map('intval', array_merge($arg, $id)), static fn($v): bool => $v > 0));
-    $id = (is_array($ids) && $ids !== []) ? implode(',', $ids) : 0;
     $typ = getVar('post', 'typ', 'text');
     if (!$typ) $typ = getVar('get', 'typ', 'text');
     $vtyp = ($typ) ? filterVar($typ) : $vtyp;
     $typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
-    if (!$iswarn && $id) {
+    if (!$iswarn && $ids) {
+        $keys = [];
+        $pars = [];
+        foreach (array_values($ids) as $pos => $val) {
+            $key = 'id'.$pos;
+            $keys[] = ':'.$key;
+            $pars[$key] = $val;
+        }
+        $in = implode(', ', $keys);
         if ($vtyp[0] == 'a') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET status = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET status = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 'f') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET fix = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET fix = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 'h') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET ihome = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET ihome = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 't') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET time = now() WHERE id IN ('.$id.')');
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET time = now() WHERE id IN ('.$in.')', $pars);
         } elseif ($vtyp[0] == 'c') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET acomm = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         } elseif ($vtyp[0] == 'd') {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$id.') AND modul = \'shop\'');
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$id.') AND modul = \'shop\'');
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_products WHERE id IN ('.$id.')');
+            $com->deleteTarget('shop', $ids);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'shop\'', $pars);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_products WHERE id IN ('.$in.')', $pars);
         } elseif (is_numeric($vtyp[0])) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :typ WHERE id IN ('.$in.')', ['typ' => $typ] + $pars);
         }
     }
     setRedirect($afile.'.php?name=shop&op=products', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);

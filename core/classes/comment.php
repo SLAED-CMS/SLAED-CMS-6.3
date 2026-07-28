@@ -20,7 +20,7 @@ enum CommentMode: int {
 }
 
 # Comment subsystem: every read and write of the comment table with its permissions, pagination and target bookkeeping in one place
-# The reads, the frontend write path and the moderation module live here; the activity feed and the target deletions follow in the batches after it
+# The reads, the frontend write path, the moderation module, the profile feed and the target deletions live here; the counter helper follows in the last batch
 class Comment {
 
     private Database $db;
@@ -95,6 +95,12 @@ class Comment {
             $out[] = $this->getRowData($row);
         }
         return $out;
+    }
+
+    # Count the published comments of one account, the number the profile hub shows beside the counters of the other modules
+    public function getUserCount(int $uid): int {
+        if ($uid < 1) return 0;
+        return $this->getTotal(PREFIX_DB.'_comment WHERE uid = :uid AND status = :stat', ['uid' => $uid, 'stat' => CommentStatus::Published->value]);
     }
 
     # Return the module names the stored comments actually use, for the module selector of the moderation list
@@ -175,6 +181,20 @@ class Comment {
         $this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
         if (intval($row['status']) === CommentStatus::Published->value) numcom($cid, $mod, true, intval($row['uid']));
         return true;
+    }
+
+    # Remove the comments of target rows the module admin has just deleted, because a target that is gone leaves nothing to reference and no counter to move
+    # The id list is bound one placeholder per value, so a caller can hand over a bulk selection without any of it reaching the statement as text
+    public function deleteTarget(string $mod, array $ids): bool {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn($v) => $v > 0)));
+        if ($mod === '' || !$ids) return false;
+        $keys = [];
+        $pars = ['mod' => $mod];
+        foreach ($ids as $key => $val) {
+            $keys[] = ':c'.$key;
+            $pars['c'.$key] = $val;
+        }
+        return (bool)$this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.implode(', ', $keys).') AND modul = :mod', $pars);
     }
 
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window

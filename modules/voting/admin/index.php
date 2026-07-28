@@ -279,11 +279,11 @@ function save(): void {
 }
 
 function delete(int $id = 0): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $iswarn = !checkSiteToken();
     if (!$id) $id = getVar('req', 'id', 'num', 0);
     if (!$iswarn && $id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'voting\'', ['id' => $id]);
+        $com->deleteTarget('voting', [$id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
     }
     setRedirect($afile.'.php?name=voting', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);

@@ -263,6 +263,157 @@ function getProbeCommentWrite(bool $guest): array {
     return $out;
 }
 
+# Render the profile feed the way it was rendered before batch 5, from the single UNION that still carried the comment branch
+# It is a verbatim copy of the pre-move function and exists only so the migrated one can be compared against it byte for byte on the live rows
+function getProbeFeedLegacy(int $uid): string {
+    global $db, $conf, $tpl, $prs;
+    if ($uid < 1 || ($conf['users']['prof'] == 1 && !is_user() && !isAdmin())) return '';
+    $limit = intval(getUserNews(25));
+    $parts = [];
+    $params = [];
+    $lists = [];
+    foreach (getProfileModules() as $mod => $inf) {
+        if ($mod != 'comm' && !is_active($mod)) continue;
+        if ($mod == 'comm') {
+            $from = PREFIX_DB.'_comment WHERE '.str_replace(':uid', ':ucomm', $inf['where']);
+            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
+        } else {
+            $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+            $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
+            $from = PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
+            $parts[] = "(SELECT '".$mod."' AS mkey, id, 0 AS ref, '' AS sub, title, time, ".$rsel.' FROM '.$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
+        }
+        $params['u'.$mod] = $uid;
+        $lists[$mod] = [];
+    }
+    if (!$parts) return '';
+    $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
+    while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
+        if ($key == 'comm') {
+            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, false, $conf['name']))), 70);
+            $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid]).'#'.$id;
+        } elseif ($key == 'jokes') {
+            $href = getSeoUrl(['name' => 'jokes']).'#'.$id;
+        } elseif ($key == 'forum') {
+            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]);
+        } else {
+            $href = getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $id, 'title' => $label]).'#'.$id;
+        }
+        $lists[$key][] = [
+            'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => format_time($time, _TIMESTRING), 'text' => format_time($time)]),
+            'href' => $href,
+            'label' => $label,
+            'rating' => ($cnt > 0) ? number_format($tot / $cnt, 2) : '',
+        ];
+    }
+    $tabs = [];
+    $texts = [];
+    foreach (getProfileModules() as $mod => $inf) {
+        if (!isset($lists[$mod])) continue;
+        $tabs[] = $inf['title'];
+        $texts[] = $tpl->getHtmlPart('account-profile-feed-list', ['entries' => $lists[$mod], 'icon_name' => $inf['icon'], 'empty_text' => _NO_INFO]);
+    }
+    return $tpl->getHtmlPart('account-profile-feed', ['title' => _LASTACTIVITY, 'tabs_html' => getNaviTabs(0, 'profeed', $tabs, $texts)]);
+}
+
+# Report whether the migrated profile feed renders the same markup as the UNION it replaces, and whether the hub writes the three fields the comment branch of its own UNION wrote
+function getProbeCommentFeed(): array {
+    global $db, $com;
+    $GLOBALS['conf']['name'] = 'account';
+    $out = ['feed' => [], 'hub' => []];
+    $sql = 'SELECT uid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY num DESC LIMIT 6';
+    $uids = array_map(static fn(array $one): int => intval($one['uid']), $db->getSqlRows($db->getSqlQuery($sql)) ?: []);
+    $free = 'SELECT id FROM '.PREFIX_DB.'_users WHERE id NOT IN (SELECT DISTINCT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0) ORDER BY id ASC LIMIT 1';
+    $row = $db->getSqlRow($db->getSqlQuery($free));
+    if ($row) $uids[] = intval($row['id']);
+    foreach (array_merge($uids, [999999999, 0, -4]) as $uid) {
+        $was = preg_replace('#profeed0-\d+#', 'profeed0-N', getProbeFeedLegacy($uid));
+        $now = preg_replace('#profeed0-\d+#', 'profeed0-N', getProfileLastView($uid));
+        $at = 0;
+        while ($at < strlen($was) && $at < strlen($now) && $was[$at] === $now[$at]) $at++;
+        $out['feed'][$uid] = [strlen($was), strlen($now), ($was === $now), ($was === $now) ? '' : substr($was, $at, 90), ($was === $now) ? '' : substr($now, $at, 90)];
+    }
+    foreach ($uids as $uid) {
+        $one = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) AS num FROM '.PREFIX_DB.'_comment WHERE uid = :uid AND status != \'0\'', ['uid' => $uid]));
+        $was = [(string)intval($one['num']), '', '0'];
+        $out['hub'][$uid] = [$was, [(string)$com->getUserCount($uid), '', '0']];
+    }
+    return $out;
+}
+
+# Count the comment rows a probe scenario left behind, so a delete is measured as a difference between two reads instead of being claimed by its return value
+function getProbeCommentCount(string $where = '', array $pars = []): int {
+    global $db;
+    $sql = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment'.(($where !== '') ? ' WHERE '.$where : '');
+    $row = $db->getSqlRow($db->getSqlQuery($sql, $pars));
+    return $row ? intval($row['num']) : 0;
+}
+
+# Report whether deleteTarget() removes exactly the rows the eight module delete handlers removed before the move, inside a transaction that is always rolled back
+# The crafted arguments matter because the target id list is the one place a delete handler used to interpolate, so both the list and the module name are driven with hostile values
+function getProbeCommentTarget(): array {
+    global $db, $com;
+    $mods = ['faq', 'files', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
+    $out = ['rows' => [], 'bulk' => [], 'cross' => [], 'refuse' => [], 'craft' => [], 'count' => [], 'clean' => false];
+    $urow = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY COUNT(*) DESC LIMIT 1'));
+    $uid = $urow ? intval($urow['uid']) : 0;
+    $was = getProbeCommentCount('uid = :uid AND status != \'0\'', ['uid' => $uid]);
+    $out['count'] = [$was, $com->getUserCount($uid), $com->getUserCount(0), $com->getUserCount(-5)];
+    $all = getProbeCommentCount();
+    $db->setSqlBegin();
+    foreach ($mods as $mod) {
+        $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = :mod GROUP BY cid ORDER BY num DESC LIMIT 1';
+        $pick = $db->getSqlRow($db->getSqlQuery($sql, ['mod' => $mod]));
+        if (!$pick) {
+            $out['rows'][$mod] = [];
+            continue;
+        }
+        $cid = intval($pick['cid']);
+        $tot = getProbeCommentCount();
+        $done = $com->deleteTarget($mod, [$cid]);
+        $left = getProbeCommentCount('modul = :mod AND cid = :cid', ['mod' => $mod, 'cid' => $cid]);
+        $out['rows'][$mod] = [$done, intval($pick['num']), $left, $tot - getProbeCommentCount()];
+    }
+    $two = [];
+    $sql = 'SELECT cid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'news\' GROUP BY cid ORDER BY num DESC LIMIT 2';
+    foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $row) $two[intval($row['cid'])] = intval($row['num']);
+    if (count($two) === 2) {
+        $tot = getProbeCommentCount();
+        $done = $com->deleteTarget('news', array_keys($two));
+        $left = getProbeCommentCount('modul = \'news\' AND cid IN ('.implode(', ', array_keys($two)).')');
+        $out['bulk'] = [$done, array_sum($two), $left, $tot - getProbeCommentCount()];
+    }
+    $sql = 'SELECT cid FROM '.PREFIX_DB.'_comment GROUP BY cid HAVING COUNT(DISTINCT modul) > 1 ORDER BY COUNT(DISTINCT modul) DESC, cid ASC LIMIT 1';
+    $row = $db->getSqlRow($db->getSqlQuery($sql));
+    if ($row) {
+        $cid = intval($row['cid']);
+        $one = $db->getSqlRow($db->getSqlQuery('SELECT modul FROM '.PREFIX_DB.'_comment WHERE cid = :cid ORDER BY modul ASC LIMIT 1', ['cid' => $cid]));
+        $mod = (string)$one['modul'];
+        $pars = ['cid' => $cid, 'mod' => $mod];
+        $mine = getProbeCommentCount('cid = :cid AND modul = :mod', $pars);
+        $rest = getProbeCommentCount('cid = :cid AND modul != :mod', $pars);
+        $done = $com->deleteTarget($mod, [$cid]);
+        $out['cross'] = [$done, $mine, $rest, getProbeCommentCount('cid = :cid AND modul = :mod', $pars), getProbeCommentCount('cid = :cid AND modul != :mod', $pars)];
+    }
+    $tot = getProbeCommentCount();
+    $out['refuse'] = [
+        'nomod' => $com->deleteTarget('', [1]),
+        'noids' => $com->deleteTarget('news', []),
+        'zero' => $com->deleteTarget('news', [0, -3, 'abc']),
+        'unknown' => $com->deleteTarget('gallery', [1]),
+        'kept' => ($tot === getProbeCommentCount()),
+    ];
+    $mine = getProbeCommentCount('modul = \'news\' AND cid = 1');
+    $tot = getProbeCommentCount();
+    $done = $com->deleteTarget('news', ['1) OR 1=1 -- ', '1; DROP TABLE x']);
+    $out['craft'] = [$done, $mine, $tot - getProbeCommentCount(), getProbeCommentCount() > 0];
+    $tot = getProbeCommentCount();
+    $out['craftmod'] = [$com->deleteTarget('news\' OR modul != \'', [1]), $tot - getProbeCommentCount()];
+    $db->setSqlRollback();
+    $out['clean'] = ($all === getProbeCommentCount());
+    return $out;
+}
+
 $mode = $argv[1] ?? 'core';
 $conf = $GLOBALS['conf'];
 $chost = strtolower((string)parse_url((string)$conf['homeurl'], PHP_URL_HOST));
@@ -377,6 +528,10 @@ if ($mode === 'core') {
     $out = getProbeCommentWrite(false);
 } elseif ($mode === 'commentguest') {
     $out = getProbeCommentWrite(true);
+} elseif ($mode === 'commenttarget') {
+    $out = getProbeCommentTarget();
+} elseif ($mode === 'commentfeed') {
+    $out = getProbeCommentFeed();
 } elseif ($mode === 'geoip') {
     $peak = memory_get_peak_usage(true);
     $out['country'] = Geoip::getCountry((string)($conf['geoip_test'] ?? '217.50.80.228'));

@@ -228,11 +228,11 @@ function approve(): void {
 }
 
 function delete(int $dfid = 0): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $id = $dfid ?: getVar('req', 'id', 'num', 0);
     $iswarn = !$dfid && !checkSiteToken();
     if (!$iswarn && $id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'links\'', ['id' => $id]);
+        $com->deleteTarget('links', [$id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'links\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_links WHERE id = :id', ['id' => $id]);
     }

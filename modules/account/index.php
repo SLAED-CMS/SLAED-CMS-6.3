@@ -224,7 +224,7 @@ function activate(): void {
 }
 
 function view(): void {
-    global $db, $conf, $afile, $tpl, $prs;
+    global $db, $conf, $afile, $tpl, $prs, $com;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
@@ -326,15 +326,19 @@ function view(): void {
             $params = [];
             foreach (getProfileModules() as $mod => $inf) {
                 if ($mod != 'comm' && !is_active($mod)) continue;
-                $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
-                $rsel = ($ron && $inf['rate']) ? 'SUM('.$inf['rate'][0].') AS rc, SUM('.$inf['rate'][1].') AS rt' : '0 AS rc, 0 AS rt';
-                $fsel = '0';
-                if ($inf['fav'] !== '') {
-                    $fsel = '(SELECT COUNT(f.id) FROM '.PREFIX_DB.'_favorites AS f INNER JOIN '.PREFIX_DB.'_'.$inf['table']." AS n ON (f.fid = n.id) WHERE f.modul = '".$inf['fav']."' AND n.uid = :f".$mod.')';
-                    $params['f'.$mod] = $uid;
+                if ($mod != 'comm') {
+                    $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
+                    $rsel = ($ron && $inf['rate']) ? 'SUM('.$inf['rate'][0].') AS rc, SUM('.$inf['rate'][1].') AS rt' : '0 AS rc, 0 AS rt';
+                    $ftab = PREFIX_DB.'_'.$inf['table'];
+                    $fsel = '0';
+                    if ($inf['fav'] !== '') {
+                        $fjoin = " AS n ON (f.fid = n.id) WHERE f.modul = '".$inf['fav']."' AND n.uid = :f".$mod.')';
+                        $fsel = '(SELECT COUNT(f.id) FROM '.PREFIX_DB.'_favorites AS f INNER JOIN '.$ftab.$fjoin;
+                        $params['f'.$mod] = $uid;
+                    }
+                    $parts[] = "SELECT '".$mod."' AS mkey, COUNT(id) AS num, ".$rsel.', '.$fsel.' AS fav FROM '.$ftab.' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
+                    $params['u'.$mod] = $uid;
                 }
-                $parts[] = "SELECT '".$mod."' AS mkey, COUNT(id) AS num, ".$rsel.', '.$fsel.' AS fav FROM '.PREFIX_DB.'_'.$inf['table'].' WHERE '.str_replace(':uid', ':u'.$mod, $inf['where']);
-                $params['u'.$mod] = $uid;
                 $hub[$mod] = [
                     'icon' => $inf['icon'],
                     'title' => $inf['title'],
@@ -344,19 +348,24 @@ function view(): void {
                     'href' => ($mod != 'comm') ? getSeoUrl(['name' => $mod]) : '',
                 ];
             }
-            $sumn = 0;
+            $ccnt = $com->getUserCount($uid);
+            $hub['comm']['count'] = (string)$ccnt;
+            $hub['comm']['favs'] = '0';
+            $sumn = $ccnt;
             $sumc = 0;
             $sumt = 0;
             $sumf = 0;
-            $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
-            while ([$key, $num, $rc, $rt, $fav] = $db->getSqlRow($result)) {
-                $hub[$key]['count'] = (string)$num;
-                $hub[$key]['rating'] = ($rc > 0) ? number_format($rt / $rc, 2) : '';
-                $hub[$key]['favs'] = (string)$fav;
-                $sumn += (int)$num;
-                $sumc += (int)$rc;
-                $sumt += (int)$rt;
-                $sumf += (int)$fav;
+            if ($parts) {
+                $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
+                while ([$key, $num, $rc, $rt, $fav] = $db->getSqlRow($result)) {
+                    $hub[$key]['count'] = (string)$num;
+                    $hub[$key]['rating'] = ($rc > 0) ? number_format($rt / $rc, 2) : '';
+                    $hub[$key]['favs'] = (string)$fav;
+                    $sumn += (int)$num;
+                    $sumc += (int)$rc;
+                    $sumt += (int)$rt;
+                    $sumf += (int)$fav;
+                }
             }
             $hub = array_values($hub);
             $acts = $adm ? getActionMenu([

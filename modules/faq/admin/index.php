@@ -203,11 +203,11 @@ function save(): void {
 }
 
 function delete(int $fid = 0): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     $iswarn = !$fid && !checkSiteToken();
     if (!$iswarn && $id) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'faq\'', ['id' => $id]);
+        $com->deleteTarget('faq', [$id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'faq\'', ['id' => $id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_faq WHERE id = :id', ['id' => $id]);
     }

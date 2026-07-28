@@ -302,7 +302,7 @@ function save(): void {
 
 # Apply selected page list action
 function updatePagesAction(int|array $ids = 0, string $vtyp = ''): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $id = getVar('req', 'id[]', '', []);
     $req = $id;
     if (!is_array($req) || $req === []) {
@@ -338,7 +338,7 @@ function updatePagesAction(int|array $ids = 0, string $vtyp = ''): void {
         } elseif ($typ[0] === 'c') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET acomm = :typ WHERE id IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
         } elseif ($typ[0] === 'd') {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$in.') AND modul = \'pages\'', $pars);
+            $com->deleteTarget('pages', $all);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'pages\'', $pars);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_pages WHERE id IN ('.$in.')', $pars);
         } elseif (is_numeric($typ)) {

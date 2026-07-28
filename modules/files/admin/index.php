@@ -277,13 +277,13 @@ function save(): void {
 }
 
 function delete(int $fid = 0): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $id = $fid ?: getVar('req', 'id', 'num', 0);
     $iswarn = !$fid && !checkSiteToken();
     if (!$iswarn && $id) {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]));
         if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) unlink(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'));
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
+        $com->deleteTarget('files', [$id]);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]);
     }
