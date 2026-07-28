@@ -82,9 +82,9 @@ Do them top to bottom. Only one row depends on the other plan.
 
 | # | Chat | Prompt |
 |---|---|---|
-| 1 | Comments stage 0 | ready below |
-| 2 | Mail stage 1, batches 1-6 | template, one chat per batch |
-| 3 | Comments stage 1, batches 1-6 | template, one chat per batch |
+| 1 | ~~Comments stage 0~~ | **done** |
+| 2 | ~~Mail stage 1, batches 1-6~~ | **done** |
+| 3 | ~~Comments stage 1, batches 1-6~~ | **done** |
 | 4 | Mail stage 2 | template |
 | 5 | Comments stage 2 | template |
 | 6 | Comments stage 3 | template — **needs mail stage 2 done** |
