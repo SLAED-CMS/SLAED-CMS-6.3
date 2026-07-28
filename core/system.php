@@ -126,8 +126,13 @@ require_once BASE_DIR.'/core/classes/logger.php';
 $conf = getConfig();
 if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
 
+# Outgoing mail service; the class needs the config and is instantiated once the database connection exists
+require_once BASE_DIR.'/core/classes/mail.php';
+
 # System file include
 require_once BASE_DIR.'/core/security.php';
+
+$mailer = new Mail($db, $conf);
 
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
