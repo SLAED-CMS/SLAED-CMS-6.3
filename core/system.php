@@ -5480,119 +5480,52 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
     return null;
 }
 
-# Show comments
+# Render the comment list of one target; the page, its pagination and the author record of every commenter are answered by the comment subsystem, this function only assembles the markup
 function ashowcom(int $cid = 0, string $mod = ''): string {
- global $db, $conf, $afile, $user, $tpl, $prs;
+ global $conf, $afile, $user, $tpl, $prs, $com;
     $mod = filterVar($mod);
-    $params = [];
-    if (defined('ADMIN_FILE')) {
-        $amod = getVar('get', 'modul', 'var');
-        if (getVar('get', 'status', 'num', 0) == 1) {
-            $ordern = 'WHERE status = :status';
-            $params = ['status' => 0];
-        } else {
-            $ordern = 'WHERE status != :status';
-            $params = ['status' => 0];
-        }
-        if ($amod) {
-            $ordern .= ' AND modul = :modul';
-            $params['modul'] = $amod;
-        }
-        $ccnum = $conf['comments']['anum'];
-        $plnum = $conf['comments']['anump'];
-    } else {
-        if (is_moder($mod)) {
-            $ordern = 'WHERE cid = :cid AND modul = :mod';
-            $params = ['cid' => $cid, 'mod' => $mod];
-        } else {
-            $ordern = 'WHERE cid = :cid AND modul = :mod AND status != :status';
-            $params = ['cid' => $cid, 'mod' => $mod, 'status' => 0];
-        }
-        $ccnum = $conf['comments']['num'];
-        $plnum = $conf['comments']['nump'];
-    }
-    list($numstories) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(cid) FROM '.PREFIX_DB.'_comment '.$ordern, $params));
+    $data = $com->getList($mod, $cid, getVar('get', 'com', 'num', '1'));
+    $numstories = $data['total'];
     if ($numstories > 0) {
-        $com = getVar('get', 'com', 'num', '1');
-        $numpages = (int) ceil($numstories / $ccnum);
-        if ($com < 1) $com = 1;
-        if ($com > $numpages) $com = $numpages;
-        $offset = ($com - 1) * $ccnum;
-        if ($conf['comments']['sort']) {
-            $sort = 'ASC';
-            $a = ($com) ? $offset+1 : 1;
-        } else {
-            $sort = 'DESC';
-            $a = $numstories;
-            if ($numstories > $offset) $a -= $offset;
-        }
-        $where = [];
-        $cmassiv = [];
-        $result = $db->getSqlQuery('SELECT id, cid, modul, time, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment '.$ordern.' ORDER BY time '.$sort.' LIMIT '.intval($offset).', '.intval($ccnum), $params);
-        while (list($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status) = $db->getSqlRow($result)) {
-            $cmassiv[] = [$com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status];
-            if ($com_uid) $where[] = $com_uid;
-            unset($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status);
-        }
-        if ($where) {
-            $uids = array_values(array_unique(array_map('intval', $where)));
-            $uids = array_values(array_filter($uids, static fn($v) => $v > 0));
-            if ($uids) {
-                $up = [];
-                $um = [];
-                foreach ($uids as $k => $v) {
-                    $ph = 'u'.$k;
-                    $up[] = ':'.$ph;
-                    $um[$ph] = $v;
-                }
-                $result2 = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points)) WHERE u.id IN ('.implode(', ', $up).') ORDER BY g.extra ASC, g.points ASC', $um);
-                while (list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor) = $db->getSqlRow($result2)) {
-                    $umassiv[] = [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor];
-                    unset($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
-                }
-            }
-        }
+        $ccnum = $data['limit'];
+        $plnum = $conf['comments']['nump'];
+        $numpages = $data['pages'];
+        $numb = $data['first'];
         $cont = '';
-        $b = 0;
-        foreach ($cmassiv as $val) {
-            $com_id = $val[0];
-            $com_cid = $val[1];
-            $com_modul = $val[2];
-            $com_date = $val[3];
-            $com_uid = $val[4];
-            $com_name = $val[5];
-            $com_host = $val[6];
-            $com_text = $val[7];
-            $com_status = $val[8];
-            unset($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
-            if (isset($umassiv)) {
-                foreach ($umassiv as $val2) {
-                    if (strtolower($com_uid) == strtolower($val2[0])) {
-                        $user_id = $val2[0];
-                        $user_name = $val2[1];
-                        $user_rank = $val2[2];
-                        $user_email = $val2[3];
-                        $user_website = $val2[4];
-                        $user_avatar = $val2[5];
-                        $user_regdate = $val2[6];
-                        $user_from = $val2[7];
-                        $user_sig = $val2[8];
-                        $user_viewemail = $val2[9];
-                        $user_points = $val2[10];
-                        $user_warnings = $val2[11];
-                        $user_gender = $val2[12];
-                        $user_votes = $val2[13];
-                        $user_totalvotes = $val2[14];
-                        $user_gname = $val2[15];
-                        $user_grank = $val2[16];
-                        $user_gcolor = $val2[17];
-                    }
-                }
+        $mark = 0;
+        foreach ($data['rows'] as $val) {
+            $com_id = $val['id'];
+            $com_cid = $val['cid'];
+            $com_modul = $val['modul'];
+            $com_date = $val['time'];
+            $com_uid = $val['uid'];
+            $com_name = $val['name'];
+            $com_host = $val['ip'];
+            $com_text = $val['body'];
+            $com_status = $val['status'];
+            unset($user_id, $user_name, $user_rank, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank);
+            if ($val['user']) {
+                $usr = $val['user'];
+                $user_id = $usr['id'];
+                $user_name = $usr['name'];
+                $user_rank = $usr['rank'];
+                $user_website = $usr['website'];
+                $user_avatar = $usr['avatar'];
+                $user_regdate = $usr['regdate'];
+                $user_from = $usr['origin'];
+                $user_sig = $usr['sig'];
+                $user_points = $usr['points'];
+                $user_warnings = $usr['warnings'];
+                $user_gender = $usr['gender'];
+                $user_votes = $usr['votes'];
+                $user_totalvotes = $usr['tvotes'];
+                $user_gname = $usr['gname'];
+                $user_grank = $usr['grank'];
             }
             $avname = (!empty($user_name)) ? $user_name : ($com_name ?: (string)_ANONYM);
             $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($com_date, _TIMESTRING), 'is_comment_date' => true]);
             $ip = (is_moder($com_modul)) ? Geoip::getIpHtml($com_host, true) : '';
-            $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$a, 'label' => (string)$a, 'is_card_id' => true]);
+            $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$com_id, 'title' => (string)_COMMENT.': '.(string)$numb, 'label' => (string)$numb, 'is_card_id' => true]);
             $avatar = (!empty($user_name)) ? getUserAvatarUrl(['avatar' => $user_avatar]) : getUserAvatarUrl([], (int)$com_uid > 0 && empty($com_name));
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
@@ -5677,8 +5610,8 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     'is_check' => true,
                     'value_attr' => (string)$com_id,
                 ]);
-                $checkb = (!$b) ? ' '._CHECKALL.' '.$markAll.' | '.$itemCheck : ' '.$itemCheck;
-                $b++;
+                $checkb = (!$mark) ? ' '._CHECKALL.' '.$markAll.' | '.$itemCheck : ' '.$itemCheck;
+                $mark++;
             } else {
                 $checkb = '';
             }
@@ -5718,7 +5651,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 'checkb' => $checkb,
                 'share_url' => defined('ADMIN_FILE') ? '' : '#'.$com_id,
             ]);
-            if ($conf['comments']['sort']) { $a++; } else { $a--; }
+            if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
         }
         if (defined('ADMIN_FILE')) {
             $out = $tpl->getHtmlPart('form-wrap', ['form_name' => 'comm', 'action' => $afile.'.php', 'content_html' => $cont]);
