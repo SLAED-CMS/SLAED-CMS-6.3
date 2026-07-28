@@ -10,8 +10,8 @@ use PHPUnit\Framework\TestCase;
  * must come from the server, never from the request. The behaviour half runs through
  * tests/Support/contract_probe.php, which boots the real core in an isolated CLI process and calls
  * getCommentMode() against live rows; the contract half reads the write path and asserts that it no longer
- * takes cid or mod from the client. Stage 1, batch 3 moved that path into the Comment class, so the contract
- * half reads the class and its three request handlers together. filter_input() cannot be driven from CLI, so
+ * takes cid or mod from the client. Stage 1, batch 3 moved that path into the Comment class and batch 4 added
+ * the moderation delete to it, so the contract half reads the class and its request handlers together. filter_input() cannot be driven from CLI, so
  * a full addComment() round trip belongs to the browser checks in docs/TESTS.md.
  */
 final class CommentTrustBoundaryTest extends TestCase
@@ -106,15 +106,18 @@ final class CommentTrustBoundaryTest extends TestCase
     #[Test]
     public function updatePathsTakeModuleFromStoredRow(): void
     {
-        foreach (['updateComment', 'setStatus'] as $name) {
+        foreach (['updateComment', 'setStatus', 'deleteComment'] as $name) {
             $code = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('modul FROM \'.PREFIX_DB.\'_comment WHERE id = :id', $code);
             $this->assertStringContainsString('$mod = (string)($row[\'modul\'] ?? \'\');', $code);
             $this->assertStringContainsString('is_moder($mod)', $code);
             $this->assertStringNotContainsString('getVar(', $code);
         }
-        $code = $this->getSource('core/classes/comment.php', 'setStatus', '    ');
-        $this->assertStringContainsString('numcom(intval($row[\'cid\']), $mod,', $code);
+        foreach (['setStatus', 'deleteComment'] as $name) {
+            $code = $this->getSource('core/classes/comment.php', $name, '    ');
+            $this->assertStringContainsString('$cid = $row ? intval($row[\'cid\']) : 0;', $code);
+            $this->assertStringContainsString('numcom($cid, $mod,', $code);
+        }
         foreach (['updateComment', 'updateCommentStatus'] as $name) {
             $route = $this->getSource('core/system.php', $name);
             $this->assertStringNotContainsString('getVar(\'post\', \'mod\'', $route);

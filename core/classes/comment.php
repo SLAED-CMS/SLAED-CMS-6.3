@@ -20,7 +20,7 @@ enum CommentMode: int {
 }
 
 # Comment subsystem: every read and write of the comment table with its permissions, pagination and target bookkeeping in one place
-# The reads and the frontend write path live here; the moderation module, the activity feed and the target deletions follow in the batches after it
+# The reads, the frontend write path and the moderation module live here; the activity feed and the target deletions follow in the batches after it
 class Comment {
 
     private Database $db;
@@ -153,14 +153,34 @@ class Comment {
     }
 
     # Publish or hide one comment as a moderator of the module the stored row names, and move the counter and the points of its target with it
+    # A comment that already carries the wanted state is answered as done without writing, so a repeated moderation click cannot count its target twice
     public function setStatus(int $id, bool $open): bool {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
-        if ($id < 1 || $mod === '' || !is_moder($mod)) return false;
+        $cid = $row ? intval($row['cid']) : 0;
+        if ($id < 1 || !$cid || $mod === '' || !is_moder($mod)) return false;
         $stat = $open ? CommentStatus::Published : CommentStatus::Pending;
+        if (intval($row['status']) === $stat->value) return true;
         $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $stat->value, 'id' => $id]);
-        numcom(intval($row['cid']), $mod, !$open, intval($row['uid']));
+        numcom($cid, $mod, !$open, intval($row['uid']));
         return true;
+    }
+
+    # Remove one comment as a moderator of the module the stored row names, and take the counter and the points of its target back when the removed row was published
+    public function deleteComment(int $id): bool {
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT cid, uid, status, modul FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        $mod = (string)($row['modul'] ?? '');
+        $cid = $row ? intval($row['cid']) : 0;
+        if ($id < 1 || !$cid || $mod === '' || !is_moder($mod)) return false;
+        $this->db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
+        if (intval($row['status']) === CommentStatus::Published->value) numcom($cid, $mod, true, intval($row['uid']));
+        return true;
+    }
+
+    # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
+    public function updateBody(int $id, string $body): bool {
+        if ($id < 1) return false;
+        return (bool)$this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $body, 'id' => $id]);
     }
 
     # Build the visibility scope of one target once, so a count and the page it belongs to can never disagree about what is visible

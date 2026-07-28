@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getCommentsSearch(): string {
-    global $db, $afile, $tpl;
+    global $afile, $tpl, $com;
     $status = getVar('req', 'status', 'num') ? 1 : 0;
     $modul = getVar('req', 'modul', 'var');
     $search = getVar('req', 'search', 'num', 2);
@@ -18,13 +18,11 @@ function getCommentsSearch(): string {
         'label_text' => _ALL,
         'is_selected' => $modul === '',
     ]);
-    $result = $db->getSqlQuery('SELECT DISTINCT modul FROM '.PREFIX_DB.'_comment ORDER BY modul ASC');
-    while ([$m] = $db->getSqlRow($result)) {
-        if (!$m) continue;
+    foreach ($com->getModuleList() as $one) {
         $modopts .= $tpl->getHtmlFrag('select-option', [
-            'value_attr' => $m,
-            'label_text' => getModuleName($m).' - '.$m,
-            'is_selected' => $modul === $m,
+            'value_attr' => $one,
+            'label_text' => getModuleName($one).' - '.$one,
+            'is_selected' => $modul === $one,
         ]);
     }
     $searchopts =
@@ -64,7 +62,7 @@ function getCommentsSearch(): string {
 }
 
 function comments(): void {
-    global $conf, $db, $afile, $tpl, $prs;
+    global $conf, $afile, $tpl, $prs, $com;
     setHead();
     $status = getVar('get', 'status', 'num') ? 1 : 0;
     $modul = getVar('get', 'modul', 'var');
@@ -88,60 +86,33 @@ function comments(): void {
         'tab' => $status,
         'subtitle_html' => $subtitle,
     ]);
-    $anum = (int)($conf['comments']['anum'] ?? 25);
     $anump = (int)($conf['comments']['anump'] ?? 8);
-    $offset = (int)(($num = getVar('get', 'num', 'num', 1)) - 1) * $anum;
-    $order = ($conf['comments']['sort'] ?? 1) ? 'ASC' : 'DESC';
-    $where = $status ? 'status = :status' : 'status != :status';
-    $wcnt = $where;
-    $pars = ['status' => 0];
-    if ($modul !== '') {
-        $where .= ' AND s.modul = :modul';
-        $wcnt .= ' AND modul = :modul';
-        $pars['modul'] = $modul;
-    }
-    if ($chng !== '') {
-        if ($search === 1) {
-            $pars['find'] = '%'.$chng.'%';
-            $where .= ' AND s.id LIKE :find';
-            $wcnt .= ' AND id LIKE :find';
-        } elseif ($search === 2) {
-            $pars['find'] = '%'.$chng.'%';
-            $where .= ' AND s.body LIKE :find';
-            $wcnt .= ' AND body LIKE :find';
-        } elseif ($search === 3) {
-            $pars['fnam'] = '%'.$chng.'%';
-            $pars['fusr'] = '%'.$chng.'%';
-            $where .= ' AND (s.name LIKE :fnam OR u.name LIKE :fusr)';
-            $wcnt .= ' AND (name LIKE :fnam OR uid IN (SELECT id FROM '.PREFIX_DB.'_users WHERE name LIKE :fusr))';
-        } elseif ($search === 4) {
-            $pars['find'] = '%'.$chng.'%';
-            $where .= ' AND s.modul LIKE :find';
-            $wcnt .= ' AND modul LIKE :find';
-            } elseif ($search === 5) {
-                $pars['find'] = '%'.$chng.'%';
-                $where .= ' AND s.ip LIKE :find';
-                $wcnt .= ' AND ip LIKE :find';
-            }
-        }
+    $num = getVar('get', 'num', 'num', 1);
     $field = $curq.'&';
-    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name FROM '.PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE '.$where.' ORDER BY s.time '.$order.' LIMIT '.$offset.', '.$anum, $pars);
-    if ($db->getSqlRowCount($result) > 0) {
+    $data = $com->getAdminList($status ? CommentStatus::Pending : CommentStatus::Published, $modul, $search, $chng, $num);
+    if ($data['rows']) {
         $rows = '';
-        while ([$id, $cid, $com_modul, $time, $uid, $uname, $ip, $com_text, $com_status, $nick] = $db->getSqlRow($result)) {
-            $modname = trim((string)getModuleName($com_modul));
-            $modlabel = ($modname !== '') ? $modname.' - '.$com_modul : $com_modul;
-            $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($uname ?: _ANONYM, $chng);
-            $comment = trim(strip_tags((string)$prs->filterContent($com_text, false, $com_modul)));
+        foreach ($data['rows'] as $val) {
+            $id = $val['id'];
+            $cid = $val['cid'];
+            $cmod = $val['modul'];
+            $time = $val['time'];
+            $ip = $val['ip'];
+            $stat = $val['status'];
+            $nick = $val['nick'];
+            $modname = trim((string)getModuleName($cmod));
+            $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
+            $post = $nick ? filterTextHighlight(user_info($nick), $chng) : filterTextHighlight($val['name'] ?: _ANONYM, $chng);
+            $comment = trim(strip_tags((string)$prs->filterContent($val['body'], false, $cmod)));
             $comment = cutstr($comment, 120);
             $comment = filterTextHighlight($comment, $chng);
             $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
-            $act = ((int)$com_status) ? 0 : 1;
+            $act = $stat ? 0 : 1;
             $items = [
-                ['href' => 'index.php?name='.$com_modul.'&op=view&id='.$cid.'#'.$id, 'icon_name' => 'eye', 'title' => _MVIEW],
+                ['href' => 'index.php?name='.$cmod.'&op=view&id='.$cid.'#'.$id, 'icon_name' => 'eye', 'title' => _MVIEW],
                 ['href' => $afile.'.php?'.$curq.'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
             ];
-            $acttxt = ((int)$com_status) ? _DEACTIVATE : _ACTIVATE;
+            $acttxt = $stat ? _DEACTIVATE : _ACTIVATE;
             $items[] = [
                 'href' => $afile.'.php?'.$curq.'&op=approve&id='.$id.'&typ='.$act.'&token='.getSiteToken(),
                 'icon_name' => 'power',
@@ -168,7 +139,7 @@ function comments(): void {
                     ['class_name' => 'sl-col-module', 'is_truncate' => true, 'title_text' => $modlabel, 'content_html' => filterTextHighlight($modlabel, $chng)],
                     ['is_col_author' => true, 'content_html' => $post],
                     ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
-                    ['is_col_status' => true, 'content_html' => ad_status('', $com_status)],
+                    ['is_col_status' => true, 'content_html' => ad_status('', $stat)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
                     ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
                 ],
@@ -189,14 +160,10 @@ function comments(): void {
                 'submit_label' => _OK,
                 'button_type' => 'submit',
             ]);
-        $pager = getTplPager([
-            'limit' => $anum,
-            'maxpg' => $anump,
-            'url' => $field,
-            'table' => '_comment',
-            'field' => 'id',
-            'where' => $wcnt,
-            'where_params' => $pars,
+        $pager = getTplPagerView($data['page'], $data['pages'], $anump, static fn(int $i): array => ['href' => $afile.'.php?'.$field.'num='.$i], [
+            'count' => $data['total'],
+            'limit' => $data['limit'],
+            'page' => $data['limit'],
         ]);
         $body = $tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=comments&op=actions',
@@ -229,8 +196,7 @@ function comments(): void {
             ]),
         ]);
         $cont .= $tpl->getHtmlPart('box', ['content_html' => $body]);
-    }
-    if (!isset($body)) {
+    } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
@@ -238,7 +204,7 @@ function comments(): void {
 }
 
 function edit(): void {
-    global $db, $afile, $tpl, $prs;
+    global $afile, $tpl, $com;
     $id = getVar('get', 'id', 'num');
     $status = getVar('get', 'status', 'num', 0);
     $modul = getVar('get', 'modul', 'var');
@@ -262,25 +228,27 @@ function edit(): void {
         'tab' => $status,
         'subtitle_html' => getCommentsSearch(),
     ]);
-    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.modul, s.time, s.uid, s.name, s.ip, s.body, s.status, u.name FROM '.PREFIX_DB.'_comment AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.id = :id', ['id' => $id]);
-    [$id, $cid, $com_modul, $time, $uid, $uname, $ip, $com_text, $com_status, $nick] = $db->getSqlRow($result);
-    $modname = trim((string)getModuleName((string)$com_modul));
-    $modlabel = ($modname !== '') ? $modname.' - '.$com_modul : $com_modul;
-    $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
+    $row = $com->getComment($id);
+    $cmod = (string)($row['modul'] ?? '');
+    $nick = (string)($row['nick'] ?? '');
+    $ip = (string)($row['ip'] ?? '');
+    $modname = trim((string)getModuleName($cmod));
+    $modlabel = ($modname !== '') ? $modname.' - '.$cmod : $cmod;
+    $post = $nick ? user_info($nick) : (($row['name'] ?? '') ?: _ANONYM);
     $iptext = $ip ? Geoip::getIpHtml($ip) : _NO;
     $rows = [
-        ['label_html' => _MODUL, 'field_html' => htmlspecialchars((string)$modlabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-        ['label_html' => _ID, 'field_html' => (string)$cid],
+        ['label_html' => _MODUL, 'field_html' => htmlspecialchars($modlabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+        ['label_html' => _ID, 'field_html' => (string)($row['cid'] ?? '')],
         ['label_html' => _POSTEDBY, 'field_html' => htmlspecialchars((string)$post, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-        ['label_html' => _DATE, 'field_html' => format_time((string)$time, _TIMESTRING)],
+        ['label_html' => _DATE, 'field_html' => format_time((string)($row['time'] ?? ''), _TIMESTRING)],
         ['label_html' => _IP, 'field_html' => htmlspecialchars((string)$iptext, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')],
-        ['label_html' => _STATUS, 'field_html' => ad_status('', $com_status)],
+        ['label_html' => _STATUS, 'field_html' => ad_status('', $row['status'] ?? null)],
         [
             'label_html' => _COMMENT,
             'field_html' => $tpl->getHtmlFrag('textarea', [
                 'name_attr' => 'comment',
                 'rows_num' => 12,
-                'value_text' => (string)$com_text,
+                'value_text' => (string)($row['body'] ?? ''),
             ]),
             'is_full' => true,
         ],
@@ -288,7 +256,7 @@ function edit(): void {
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?'.$curq.'&op=editsave',
         'hidden' => array_filter([
-            ['nameattr' => 'id', 'valueattr' => (string)$id],
+            ['nameattr' => 'id', 'valueattr' => (string)($row['id'] ?? '')],
             ['nameattr' => 'name', 'valueattr' => 'comments'],
             ['nameattr' => 'op', 'valueattr' => 'editsave'],
             ['nameattr' => 'token', 'valueattr' => getSiteToken()],
@@ -305,18 +273,16 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $afile;
+    global $afile, $com;
     $warn = !checkSiteToken();
     $id = getVar('post', 'id', 'num');
-    $com_text = getVar('post', 'comment', 'text', '');
+    $text = getVar('post', 'comment', 'text', '');
     $status = getVar('post', 'status', 'num', 0);
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)getVar('post', 'chng', 'raw', '');
-    if (!$warn) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
-    }
+    if (!$warn) $com->updateBody($id, $text);
     $back = 'name=comments';
     if ($status) $back .= '&status=1';
     if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
@@ -326,7 +292,7 @@ function editsave(): void {
 }
 
 function actions(): void {
-    global $db, $afile;
+    global $afile, $com;
     $warn = !checkSiteToken();
     $status = getVar('post', 'status', 'num', 0);
     $modul = getVar('post', 'modul', 'var');
@@ -334,33 +300,21 @@ function actions(): void {
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)getVar('post', 'chng', 'raw', '');
     $typ = getVar('post', 'typ', 'text', '');
-    $get_id = getVar('get', 'id', 'num');
+    $gid = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num');
-    if (!$id && $get_id) $id = [$get_id];
+    if (!$id && $gid) $id = [$gid];
     if (!$warn && is_array($id) && $typ !== '') {
         foreach ($id as $val) {
-            if (intval($val)) {
-                [$cid, $mod, $uid, $curstatus] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
-                if ($cid && $mod) {
-                    if ($typ[0] === 'a') {
-                        $next = (int)substr($typ, 1);
-                        if ((int)$curstatus !== $next) {
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $next, 'id' => $val]);
-                            numcom($cid, $mod, $next ? false : true, $uid);
-                        }
-                    } elseif ($typ[0] === 'd') {
-                        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]);
-                        if ($curstatus) numcom($cid, $mod, 1, $uid);
-                    }
-                }
-            }
+            if (!intval($val)) continue;
+            if ($typ[0] === 'a') $com->setStatus(intval($val), (bool)(int)substr($typ, 1));
+            elseif ($typ[0] === 'd') $com->deleteComment(intval($val));
         }
     }
-    $backStatus = $status;
-    if ($typ === 'a1') $backStatus = 0;
-    if ($typ === 'a0') $backStatus = 1;
+    $tab = $status;
+    if ($typ === 'a1') $tab = 0;
+    if ($typ === 'a0') $tab = 1;
     $back = 'name=comments';
-    if ($backStatus) $back .= '&status=1';
+    if ($tab) $back .= '&status=1';
     if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
     $back .= '&search='.$search;
     if ($chng !== '') $back .= '&chng='.rawurlencode($chng);
@@ -446,29 +400,19 @@ function save(): void {
 }
 
 function approve(): void {
-    global $db, $afile;
+    global $afile, $com;
     $warn = !checkSiteToken();
     $typ = getVar('post', 'typ', 'num') ?: getVar('get', 'typ', 'num');
-    $status = getVar('post', 'status', 'num', getVar('get', 'status', 'num', 0));
     $modul = getVar('post', 'modul', 'var', getVar('get', 'modul', 'var'));
     $search = getVar('post', 'search', 'num', getVar('get', 'search', 'num', 2));
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
-    $get_id = getVar('get', 'id', 'num');
+    $gid = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num');
-    if (!$id && $get_id) $id = [$get_id];
+    if (!$id && $gid) $id = [$gid];
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
-            if (intval($val)) {
-                [$cid, $mod, $uid, $status] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
-                if ($cid && $mod) {
-                    $next = $typ ? 1 : 0;
-                    if ((int)$status !== (int)$next) {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $next, 'id' => $val]);
-                        numcom($cid, $mod, $typ ? 0 : 1, $uid);
-                    }
-                }
-            }
+            if (intval($val)) $com->setStatus(intval($val), (bool)$typ);
         }
     }
     $back = 'name=comments';
@@ -480,25 +424,19 @@ function approve(): void {
 }
 
 function delete(): void {
-    global $db, $afile;
+    global $afile, $com;
     $warn = !checkSiteToken();
     $status = getVar('post', 'status', 'num', getVar('get', 'status', 'num', 0));
     $modul = getVar('post', 'modul', 'var', getVar('get', 'modul', 'var'));
     $search = getVar('post', 'search', 'num', getVar('get', 'search', 'num', 2));
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
-    $get_id = getVar('get', 'id', 'num');
+    $gid = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num');
-    if (!$id && $get_id) $id = [$get_id];
+    if (!$id && $gid) $id = [$gid];
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
-            if (intval($val)) {
-                [$cid, $mod, $uid, $status] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
-                if ($cid && $mod) {
-                    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]);
-                    if ($status) numcom($cid, $mod, 1, $uid);
-                }
-            }
+            if (intval($val)) $com->deleteComment(intval($val));
         }
     }
     $back = 'name=comments';
