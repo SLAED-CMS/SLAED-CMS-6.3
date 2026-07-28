@@ -12,6 +12,7 @@ class Mail {
     public const CHARSET = 'UTF-8';
     public const CRLF = "\r\n";
     private const ERRLEN = 255;
+    private const MAXLINE = 100;
 
     private ?Database $db;
     private array $conf;
@@ -19,12 +20,23 @@ class Mail {
     private string $error = '';
     private bool $fback = false;
     private bool $ftry = false;
+    private mixed $sock = null;
+    private string $warn = '';
+    private string $phase = '';
+    private string $code = '';
+    private string $repl = '';
+    private string $mask = '';
 
     # Build the service from the site config; the database handle is kept for the queue and is unused while mail still leaves inside the request
     public function __construct(?Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['mail'] ?? null) ? $conf['mail'] : [];
         $this->site = $conf['sitename'] ?? '';
+    }
+
+    # Close an open relay session when the service goes away, because a request or a drain run may end while the last message still holds the connection
+    public function __destruct() {
+        $this->deleteSmtpLink();
     }
 
     # Accept one message from a call site and deliver it; from stage 2 the same call stores a queue row instead, which is why no caller learns more than accepted or rejected
@@ -51,6 +63,21 @@ class Mail {
         $this->error = mb_substr($mesg, 0, self::ERRLEN);
         Logger::addSite('error', 'Mail: '.$mesg, $ctx);
         return false;
+    }
+
+    # Capture warnings instead of letting them print, because an unhandled warning inside a pseudo-cron request leaks into the response body a visitor receives
+    private function setWarnCatch(): void {
+        $this->warn = '';
+        set_error_handler(function (int $code, string $text): bool {
+            $this->warn = $text;
+            return true;
+        }, E_WARNING);
+    }
+
+    # Stop capturing and return the text of the last warning, stripped of control characters so nothing it carries can reshape a log line
+    private function getWarnText(): string {
+        restore_error_handler();
+        return $this->filterHeader($this->warn);
     }
 
     # Mask an address for the log, because a log is read by more people than a queue row and must not accumulate readable address lists
@@ -144,6 +171,7 @@ class Mail {
         $body = $this->getBody($body);
         return match ($this->conf['transport'] ?? '') {
             'sendmail' => $this->addSendMail($rcpt, $smail, $subj, $body, $prio),
+            'smtp' => $this->addSmtpMail($rcpt, $smail, $subj, $body, $prio),
             default => $this->addPhpMail($rcpt, $smail, $subj, $body, $prio),
         };
     }
@@ -156,26 +184,22 @@ class Mail {
         $head = $this->getHeaders('', $smail, '', $prio);
         $from = $this->getSender($smail);
         $args = ($from !== '' && !$this->fback) ? '-f'.$from : '';
-        $warn = '';
         $back = false;
-        set_error_handler(static function (int $code, string $text) use (&$warn): bool {
-            $warn = $text;
-            return true;
-        }, E_WARNING);
+        $this->setWarnCatch();
         $sent = ($args !== '') ? mail($rcpt, $subj, $body, $head, $args) : mail($rcpt, $subj, $body, $head);
         if (!$sent && $args !== '' && !$this->ftry) {
             $this->ftry = true;
-            $warn = '';
+            $this->warn = '';
             $sent = mail($rcpt, $subj, $body, $head);
             $back = $sent;
         }
-        restore_error_handler();
+        $warn = $this->getWarnText();
         if ($back) {
             $this->fback = true;
             Logger::addSite('warning', 'Mail: the host refused the envelope sender, delivered without it', ['transport' => 'php']);
         }
         if ($sent) return true;
-        $mesg = 'php mail() refused the message'.(($warn !== '') ? ': '.$this->filterHeader($warn) : '');
+        $mesg = 'php mail() refused the message'.(($warn !== '') ? ': '.$warn : '');
         return $this->setError($mesg, ['transport' => 'php', 'mail' => $this->getMaskedMail($rcpt)]);
     }
 
@@ -197,14 +221,10 @@ class Mail {
         $proc = proc_open($args, [['pipe', 'r'], ['pipe', 'w'], ['pipe', 'w']], $pipe);
         if (!is_resource($proc)) return $this->setError('the sendmail binary could not be started', $ctx);
         $mesg = $this->getHeaders($rcpt, $smail, $subj, $prio).self::CRLF.self::CRLF.$body;
-        $warn = '';
-        set_error_handler(static function (int $code, string $text) use (&$warn): bool {
-            $warn = $text;
-            return true;
-        }, E_WARNING);
+        $this->setWarnCatch();
         $done = fwrite($pipe[0], $mesg) ?: 0;
         fclose($pipe[0]);
-        restore_error_handler();
+        $warn = $this->getWarnText();
         stream_get_contents($pipe[1]);
         $note = stream_get_contents($pipe[2]);
         fclose($pipe[1]);
@@ -214,6 +234,183 @@ class Mail {
         if ($stat !== 0) return $this->setError('sendmail exited with status '.$stat.(($note !== '') ? ': '.$note : ''), $ctx);
         if ($done === strlen($mesg)) return true;
         $text = 'sendmail closed its input after '.$done.' of '.strlen($mesg).' octets';
-        return $this->setError($text.(($warn !== '') ? ': '.$this->filterHeader($warn) : ''), $ctx);
+        return $this->setError($text.(($warn !== '') ? ': '.$warn : ''), $ctx);
+    }
+
+    # Deliver over a raw SMTP dialogue, the only transport that reaches a relay this installation chooses rather than the one the host happens to provide
+    # The connection is opened once and kept, so a drain run spends one handshake on a whole batch instead of one per message
+    # The recipient and the resolved sender have both passed the address sanitiser, so neither the envelope nor the header block can carry an injected line
+    private function addSmtpMail(string $rcpt, string $smail, string $subj, string $body, int $prio): bool {
+        $this->mask = $this->getMaskedMail($rcpt);
+        if (!$this->checkSmtpLink()) return false;
+        if (!$this->checkSmtpStep('MAIL FROM:<'.$this->getSender($smail).'>', '2', 'from')) return false;
+        if (!$this->checkSmtpStep('RCPT TO:<'.$rcpt.'>', '2', 'rcpt')) return false;
+        if (!$this->checkSmtpStep('DATA', '354', 'data')) return false;
+        $mesg = $this->getHeaders($rcpt, $smail, $subj, $prio).self::CRLF.self::CRLF.$body;
+        if (!$this->setSmtpText($this->getSmtpData($mesg))) return $this->setSmtpFail('the connection was closed while the message was being written');
+        return $this->checkSmtpStep('', '2', 'data');
+    }
+
+    # Keep the connection this object already holds and open a new one only when there is none or the relay dropped the one there was
+    # Encryption is refused rather than silently skipped when openssl is missing, because a transport that quietly sends in clear is worse than one that says it cannot
+    private function checkSmtpLink(): bool {
+        if (is_resource($this->sock) && !feof($this->sock)) return true;
+        $this->deleteSmtpLink();
+        $this->phase = 'connect';
+        $this->code = '';
+        $host = $this->filterHeader($this->conf['host'] ?? '');
+        if ($host === '') return $this->setSmtpFail('no smtp host is configured');
+        $encr = $this->conf['secure'] ?? 'none';
+        if ($encr !== 'none' && !function_exists('stream_socket_enable_crypto')) return $this->setSmtpFail('smtp encryption is unavailable, openssl is missing on this host');
+        $port = (int)($this->conf['port'] ?? 0) ?: 25;
+        $tout = (int)($this->conf['timeout'] ?? 0) ?: 10;
+        $opts = stream_context_create(['ssl' => ['verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => $host, 'SNI_enabled' => true]]);
+        $this->setWarnCatch();
+        $sock = stream_socket_client((($encr === 'ssl') ? 'ssl://' : 'tcp://').$host.':'.$port, $ecod, $etxt, $tout, STREAM_CLIENT_CONNECT, $opts);
+        $warn = $this->getWarnText();
+        if (!is_resource($sock)) return $this->setSmtpFail('the relay could not be reached: '.($this->filterHeader($etxt ?? '') ?: $warn));
+        $this->sock = $sock;
+        stream_set_timeout($sock, $tout);
+        return $this->checkSmtpGreet();
+    }
+
+    # Run the opening dialogue on a fresh connection: the greeting, then EHLO with a HELO fallback for a relay that speaks no ESMTP
+    # STARTTLS follows when it is configured, and authentication runs last so it is offered only over the encryption the installation asked for
+    # The second EHLO is not optional: the capability list before STARTTLS is not the one that counts, and the mechanisms AUTH may use are read from the encrypted one
+    private function checkSmtpGreet(): bool {
+        if (!$this->checkSmtpStep('', '2', 'connect')) return false;
+        $name = $this->getSmtpName();
+        if (!$this->isSmtpAnswer('EHLO '.$name, '2', 'ehlo') && !$this->checkSmtpStep('HELO '.$name, '2', 'ehlo')) return false;
+        if (($this->conf['secure'] ?? 'none') === 'tls') {
+            if (!$this->checkSmtpStep('STARTTLS', '2', 'tls')) return false;
+            if (!$this->setSmtpCrypto()) return false;
+            if (!$this->isSmtpAnswer('EHLO '.$name, '2', 'ehlo') && !$this->checkSmtpStep('HELO '.$name, '2', 'ehlo')) return false;
+        }
+        return empty($this->conf['auth']) || $this->checkSmtpAuth();
+    }
+
+    # Raise TLS on the open socket with peer and peer-name verification left on, because the option to disable it exists mainly to make a broken configuration look like it works
+    private function setSmtpCrypto(): bool {
+        $this->phase = 'tls';
+        $this->setWarnCatch();
+        $done = stream_socket_enable_crypto($this->sock, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        $warn = $this->getWarnText();
+        if ($done === true) return true;
+        return $this->setSmtpFail('the tls handshake failed'.(($warn !== '') ? ': '.$warn : ''));
+    }
+
+    # Authenticate with a mechanism the relay actually advertised; both credentials travel base64 encoded, so nothing about them can reach the wire as protocol text
+    # Neither the password nor the encoded payload is ever passed to a failure message, which is what keeps them out of the log at every level
+    private function checkSmtpAuth(): bool {
+        $this->phase = 'auth';
+        $user = $this->filterHeader($this->conf['user'] ?? '');
+        $pass = $this->filterHeader($this->conf['pass'] ?? '');
+        if ($user === '' || $pass === '') return $this->setSmtpFail('smtp authentication is configured without a user or a password');
+        $mech = $this->getSmtpMech();
+        if ($mech === 'PLAIN') return $this->checkSmtpStep('AUTH PLAIN '.base64_encode("\0".$user."\0".$pass), '2', 'auth');
+        if ($mech !== 'LOGIN') return $this->setSmtpFail('the relay advertises no supported authentication mechanism');
+        if (!$this->checkSmtpStep('AUTH LOGIN', '334', 'auth')) return false;
+        if (!$this->checkSmtpStep(base64_encode($user), '334', 'auth')) return false;
+        return $this->checkSmtpStep(base64_encode($pass), '2', 'auth');
+    }
+
+    # Pick an authentication mechanism out of the capability list the last EHLO returned, preferring the single-command form; a relay that advertises neither gets no guess
+    # The match stops at the next reply code, because the lines of a multi-line answer are read into one string and the capability after AUTH is not part of its argument list
+    private function getSmtpMech(): string {
+        if (!preg_match('/AUTH[ =]([A-Za-z0-9 \-]+?)(?= \d\d\d[ -]|$)/i', $this->repl, $mtch)) return '';
+        $list = array_map('strtoupper', explode(' ', $mtch[1]));
+        if (in_array('PLAIN', $list, true)) return 'PLAIN';
+        return in_array('LOGIN', $list, true) ? 'LOGIN' : '';
+    }
+
+    # Name this host in EHLO, taking the system name when it looks like one, because a relay may refuse a greeting carrying anything else
+    private function getSmtpName(): string {
+        $name = gethostname() ?: '';
+        return preg_match('/^[A-Za-z0-9.\-]+$/', $name) ? $name : 'localhost';
+    }
+
+    # Send one command when there is one, read the answer and report whether it carries the expected reply code, without deciding what a mismatch means
+    private function isSmtpAnswer(string $cmnd, string $want, string $step): bool {
+        $this->phase = $step;
+        if ($cmnd !== '' && !$this->setSmtpLine($cmnd)) {
+            $this->code = '';
+            $this->repl = 'the connection was closed before the command was written';
+            return false;
+        }
+        $this->getSmtpReply();
+        return str_starts_with($this->code, $want);
+    }
+
+    # Require the expected reply code and abort with the relay's own text when it answers anything else, so no unexpected code is ever read as an acceptance
+    private function checkSmtpStep(string $cmnd, string $want, string $step): bool {
+        if ($this->isSmtpAnswer($cmnd, $want, $step)) return true;
+        return $this->setSmtpFail(($this->code === '') ? $this->repl.' at '.$step : 'the relay refused at '.$step.': '.$this->repl);
+    }
+
+    # Read one reply, following continuation lines until the final one, because a reply read a line at a time desynchronises the whole dialogue
+    # Continuation is bounded: a relay that never sends its final line would otherwise hold the run for as many reads as it cares to answer
+    private function getSmtpReply(): string {
+        $this->repl = '';
+        $this->code = '';
+        if (!is_resource($this->sock)) {
+            $this->repl = 'the connection was closed';
+            return $this->repl;
+        }
+        for ($i = 0; $i < self::MAXLINE; $i++) {
+            $line = fgets($this->sock, 1024);
+            if ($line === false) {
+                $meta = stream_get_meta_data($this->sock);
+                $this->repl = empty($meta['timed_out']) ? 'the relay closed the connection' : 'the relay did not answer within the timeout';
+                return $this->repl;
+            }
+            $line = $this->filterHeader($line);
+            $this->code = substr($line, 0, 3);
+            $this->repl = ($this->repl !== '') ? $this->repl.' '.$line : $line;
+            if (strlen($line) < 4 || $line[3] !== '-') return $this->repl;
+        }
+        $this->code = '';
+        $this->repl = 'the relay sent more continuation lines than one reply may carry';
+        return $this->repl;
+    }
+
+    # Prepare the message for the DATA phase: every line ends with CRLF on the wire, whatever the stored body happens to use
+    # A leading dot is doubled so no line of the message can end it early, which leaves the terminating sequence as the only bare dot on the wire
+    private function getSmtpData(string $mesg): string {
+        $mesg = str_replace("\n", self::CRLF, str_replace(["\r\n", "\r"], "\n", $mesg));
+        if (str_starts_with($mesg, '.')) $mesg = '.'.$mesg;
+        $mesg = str_replace(self::CRLF.'.', self::CRLF.'..', $mesg);
+        if (!str_ends_with($mesg, self::CRLF)) $mesg .= self::CRLF;
+        return $mesg.'.'.self::CRLF;
+    }
+
+    # Write one command line, which is the only form a command may take: a line that lost its terminator would be read as part of the next one
+    private function setSmtpLine(string $line): bool {
+        return $this->setSmtpText($line.self::CRLF);
+    }
+
+    # Write one block and confirm every octet left, because a half-written command desynchronises the dialogue and a closed socket must never be read as a delivery
+    private function setSmtpText(string $text): bool {
+        if (!is_resource($this->sock)) return false;
+        $this->setWarnCatch();
+        $done = fwrite($this->sock, $text) ?: 0;
+        $this->getWarnText();
+        return $done === strlen($text);
+    }
+
+    # Record one failure with the phase and the reply code that produced it, because a bare code cannot be interpreted later and the phase is what says whose fault it was
+    # The connection is dropped with it: a dialogue that failed mid-step cannot be trusted to be in a known state, and this is the one path every failure passes through
+    private function setSmtpFail(string $mesg): bool {
+        $ctx = ['transport' => 'smtp', 'phase' => $this->phase, 'code' => $this->code, 'mail' => $this->mask];
+        $this->deleteSmtpLink();
+        return $this->setError($mesg, $ctx);
+    }
+
+    # Close the session, saying QUIT while the socket is still usable, so a relay is not left holding a connection on any exit path
+    private function deleteSmtpLink(): void {
+        if (is_resource($this->sock)) {
+            $this->setSmtpLine('QUIT');
+            fclose($this->sock);
+        }
+        $this->sock = null;
     }
 }
