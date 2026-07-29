@@ -1037,9 +1037,10 @@ ALTER TABLE `{prefix}_whois`
 # _users: normalize legacy zero-dates before changing column defaults
 UPDATE `{prefix}_users` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
 UPDATE `{prefix}_users` SET `lastvis` = '1970-01-01 00:00:01' WHERE `lastvis` = '0000-00-00 00:00:00';
-UPDATE `{prefix}_users` SET `network` = '' WHERE `network` IS NULL;
 
 # _users: widen critical columns and fix types / defaults
+# network is deliberately absent here: the OAuth block at the end of this file archives it and drops it,
+# so touching it would make this statement - and with it the thirteen columns below - fail on every re-run
 ALTER TABLE `{prefix}_users`
   MODIFY `id`        INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `password`  VARCHAR(255) NOT NULL,
@@ -1054,8 +1055,7 @@ ALTER TABLE `{prefix}_users`
   MODIFY `tvotes`    INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `storynum`  TINYINT UNSIGNED NOT NULL DEFAULT 10,
   MODIFY `grp`       INT NOT NULL DEFAULT 0,
-  MODIFY `rank`      VARCHAR(25) NOT NULL DEFAULT '',
-  MODIFY `network`   VARCHAR(255) NOT NULL DEFAULT '';
+  MODIFY `rank`      VARCHAR(25) NOT NULL DEFAULT '';
 
 # =============================================================================
 # Batch O: field naming unification — step 1
@@ -1209,6 +1209,12 @@ CALL addidx('{prefix}_money', 'time',   '`time`',       0);
 # Final type alignment to setup/sql/table.sql
 # =============================================================================
 
+# _admins.editor names the editor plugin an administrator writes with and has done since the editor
+# rework; it is not a flag. A legacy installation still carries the boolean it was, so the value is
+# normalized before the column is widened - a NULL would refuse the NOT NULL under strict mode, and
+# the 0 or 1 of the old shape names no plugin, which getEditorKey() resolves back to plain anyway.
+UPDATE `{prefix}_admins` SET `editor` = 'plain' WHERE `editor` IS NULL OR `editor` IN ('', '0', '1');
+
 ALTER TABLE `{prefix}_admins`
   MODIFY `id`       INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name`     VARCHAR(25) NOT NULL,
@@ -1217,7 +1223,7 @@ ALTER TABLE `{prefix}_admins`
   MODIFY `email`    VARCHAR(255) NOT NULL,
   MODIFY `password` VARCHAR(255) DEFAULT NULL,
   MODIFY `super`    BOOLEAN DEFAULT NULL,
-  MODIFY `editor`   BOOLEAN DEFAULT NULL,
+  MODIFY `editor`   VARCHAR(32) NOT NULL DEFAULT 'plain',
   MODIFY `smail`    BOOLEAN DEFAULT NULL,
   MODIFY `modules`  VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `lang`     VARCHAR(30) NOT NULL DEFAULT '',
@@ -1528,8 +1534,7 @@ ALTER TABLE `{prefix}_users`
   MODIFY `gender`   BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `warnings` TEXT NOT NULL,
   MODIFY `field`    TEXT NOT NULL,
-  MODIFY `agent`    VARCHAR(255) NOT NULL DEFAULT '',
-  MODIFY `points`   INT UNSIGNED DEFAULT 0;
+  MODIFY `agent`    VARCHAR(255) NOT NULL DEFAULT '';
 
 UPDATE `{prefix}_users_temp` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
 
@@ -1623,6 +1628,31 @@ CALL addidx('{prefix}_comment', 'status_deleted_time',      '`status`, `deleted`
 CALL addidx('{prefix}_comment', 'iphash_time',              '`iphash`, `time`, `id`',                                0);
 CALL delidx('{prefix}_comment', 'cid');
 CALL delidx('{prefix}_comment', 'modul_status');
+
+# =============================================================================
+# Batch Y2 — _comment, the reply tree
+# =============================================================================
+#
+# Every existing comment becomes a root of its own: pid stays 0 and path becomes
+# the id padded to ten digits, which is the one segment a root carries. Nothing
+# is ever re-parented from the old "[b]name[/b]," reply convention - that text is
+# a naming habit and not a structure, and guessing at it would invent threads
+# that nobody wrote.
+#
+# path is ascii with a binary collation on purpose: it is a sort key, and a
+# collated column would order it by collation rules rather than by bytes. The
+# fixed ten-digit padding is what keeps 10 after 9 instead of before it.
+#
+# The backfill runs before the index is created, so the index is built once over
+# final values instead of being maintained through a full table update.
+
+CALL addcol('{prefix}_comment', 'pid',  'INT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_comment', 'path', 'VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT \'\'');
+
+UPDATE `{prefix}_comment` SET `path` = LPAD(`id`, 10, '0') WHERE `path` = '';
+
+CALL addidx('{prefix}_comment', 'modul_cid_pid_time',       '`modul`, `cid`, `pid`, `time`, `id`',                    0);
+CALL addidx('{prefix}_comment', 'modul_cid_path',           '`modul`, `cid`, `path`',                                 0);
 
 # =============================================================================
 # Batch Z — _maildead and the newsletter campaign state

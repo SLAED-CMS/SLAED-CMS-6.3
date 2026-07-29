@@ -107,6 +107,9 @@ if (empty($go)) {
     }
     if ($go == 1) {
         Cache::setHeaders(false);
+        if (in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            die($tpl->getHtmlFrag('alert', ['text' => _ERROR, 'is_warn' => true]));
+        }
         switch($op) {
             case 'getRatingView': getRatingView(); break;
             case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
@@ -116,6 +119,8 @@ if (empty($go)) {
             case 'updateComment': updateComment(); break;
             case 'addComment': addComment(); break;
             case 'updateCommentStatus': updateCommentStatus(); break;
+            case 'deleteComment': deleteComment(); break;
+            case 'getCommentPage': getCommentPage(); break;
             case 'updatePost': updatePost(); break;
             case 'getPrivateMessageView': getPrivateMessageView(); break;
             case 'addPrivateMessage': addPrivateMessage(); break;
@@ -127,7 +132,7 @@ if (empty($go)) {
             case 'getVotingView': echo getVotingView(); break;
             case 'updateVotingResult': updateVotingResult(); break;
         }
-        if (in_array($op, ['addComment', 'updateComment', 'updateCommentStatus', 'updatePost', 'updateVotingResult'], true)) Cache::addEpoch();
+        if (in_array($op, ['updatePost', 'updateVotingResult'], true)) Cache::addEpoch();
     } elseif ($go == 2) {
         getLang('shop');
         Cache::setHeaders(false);

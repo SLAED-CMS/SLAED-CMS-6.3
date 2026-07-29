@@ -1247,6 +1247,11 @@
                 }
                 return;
             }
+            var reply = node.closest('[data-sl-reply]');
+            if (reply) {
+                setCommentTarget(reply.getAttribute('data-sl-reply') || '');
+                return;
+            }
             var toggle = node.closest('[data-sl-live-toggle]');
             if (toggle) {
                 var live = getLiveBox(toggle);
@@ -1325,6 +1330,53 @@
         window.setInterval(setLiveTick, 1000);
     }
 
+    // Comment submits carry a per-attempt idempotency key: the server stores it once, so a retried POST answers the first comment instead of writing a second one
+    // The key is minted here rather than rendered by PHP, because a cached page would hand every visitor the same value and the unique index would refuse all but the first
+    function setCommentKeys(root) {
+        var list = (root && root.querySelectorAll) ? root.querySelectorAll('[data-sl-reqkey]') : [];
+        for (var i = 0; i < list.length; i++) {
+            if (list[i].value) continue;
+            var raw = new Uint8Array(16);
+            if (window.crypto && window.crypto.getRandomValues) {
+                window.crypto.getRandomValues(raw);
+            } else {
+                for (var r = 0; r < raw.length; r++) raw[r] = Math.floor(Math.random() * 256);
+            }
+            var key = '';
+            for (var j = 0; j < raw.length; j++) key += ('0' + raw[j].toString(16)).slice(-2);
+            list[i].value = key;
+        }
+    }
+
+    // Replying points the submit form at one comment: the same action taken twice takes the reply back to the top level, so a reader can always undo the choice
+    function setCommentTarget(id) {
+        var form = document.getElementById('formcsave');
+        var field = form ? form.querySelector('[data-sl-reply-to]') : null;
+        if (!field) return;
+        var same = field.value === id;
+        field.value = same ? '' : id;
+        var marked = document.querySelectorAll('.sl-com-reply-at');
+        for (var i = 0; i < marked.length; i++) marked[i].classList.remove('sl-com-reply-at');
+        if (!same) {
+            var host = document.querySelector('[id="' + id + '"]');
+            if (host) host.classList.add('sl-com-reply-at');
+        }
+        var text = form.querySelector('[name="text"]');
+        if (text && text.focus) text.focus();
+    }
+
+    // Only a stored comment clears the form: a refused submit keeps the text the visitor typed, the reply target it named and the key it was refused with
+    document.addEventListener('sl-comment-add', function () {
+        var form = document.getElementById('formcsave');
+        if (!form) return;
+        form.reset();
+        var key = form.querySelector('[data-sl-reqkey]');
+        if (key) key.value = '';
+        var marked = document.querySelectorAll('.sl-com-reply-at');
+        for (var i = 0; i < marked.length; i++) marked[i].classList.remove('sl-com-reply-at');
+        setCommentKeys(form);
+    });
+
     function setSlaedUi() {
         setTableSort(document);
         setLightbox();
@@ -1342,6 +1394,7 @@
         setUiActions();
         setLiveChips(document);
         setProfileScrolls(document);
+        setCommentKeys(document);
     }
 
     // Feed lists inside inactive tabs have zero height: re-measure pending ones right after any tab switch
@@ -1362,6 +1415,7 @@
         if (live) live.setAttribute('data-sl-live-stamp', Date.now());
         setLiveChips(event.target);
         setProfileScrolls(document);
+        setCommentKeys(event.target);
         if (live === event.target && window.htmx) {
             var detail = live.querySelector('[data-sl-toggle-control][aria-expanded="true"]');
             var rows = live.querySelector('.sl-session-list [id$="-rows"]');

@@ -142,6 +142,8 @@ CREATE TABLE `{prefix}_comment` (
   `deleted` DATETIME DEFAULT NULL,
   `reqkey` CHAR(32) NOT NULL DEFAULT '',
   `iphash` CHAR(64) NOT NULL DEFAULT '',
+  `pid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `path` VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `reqkey` (`reqkey`),
   KEY `uid` (`uid`),
@@ -149,7 +151,9 @@ CREATE TABLE `{prefix}_comment` (
   KEY `modul_cid_status_deleted` (`modul`, `cid`, `status`, `deleted`, `time`, `id`),
   KEY `modul_cid_deleted` (`modul`, `cid`, `deleted`, `time`, `id`),
   KEY `status_deleted_time` (`status`, `deleted`, `time`, `id`),
-  KEY `iphash_time` (`iphash`, `time`, `id`)
+  KEY `iphash_time` (`iphash`, `time`, `id`),
+  KEY `modul_cid_pid_time` (`modul`, `cid`, `pid`, `time`, `id`),
+  KEY `modul_cid_path` (`modul`, `cid`, `path`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_content` (
@@ -707,7 +711,7 @@ CREATE TABLE `{prefix}_users` (
   `psmail` BOOLEAN NOT NULL DEFAULT 1,
   `lastvis` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `lang` VARCHAR(255) NOT NULL DEFAULT 'russian',
-  `points` INT UNSIGNED DEFAULT 0,
+  `points` INT UNSIGNED NOT NULL DEFAULT 0,
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
   `warnings` TEXT NOT NULL,
   `access` BOOLEAN NOT NULL DEFAULT 0,

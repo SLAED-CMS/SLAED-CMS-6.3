@@ -55,11 +55,12 @@
   {% if link_attr %}{{{ link_attr }}}{% endif %}
 
   {% if is_htmx or is_post %}
-    {% if is_post %}hx-post="{{ href }}"{% else %}hx-get="{{ href }}"{% endif %}
+    {% if is_post %}hx-post="{{ href }}"{% else %}hx-get="{% if hx_url %}{{ hx_url }}{% else %}{{ href }}{% endif %}"{% endif %}
     hx-target="{{ hx_target }}"
     hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}"
     hx-push-url="false"
     {% if hx_include %}hx-include="{{ hx_include }}"{% endif %}
+    {% if hx_headers %}hx-headers='{"X-CSRF-TOKEN": "{{ hx_headers }}"}'{% endif %}
   {% endif %}
 
   {% if is_blank %}

@@ -586,7 +586,8 @@ function getTplAjaxTextarea(array $data = []): string {
     $formId  = 'form'.$obj;
     $fieldId = $formId.'_text';
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-    $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod).'&token='.getSiteToken();
+    $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod);
+    $head    = ' hx-headers=\'{"X-CSRF-TOKEN": "'.getPageToken().'"}\'';
     $cerror  = addslashes((string)_CERROR1);
     $content = $tpl->getHtmlFrag('textarea', [
             'name_attr'   => 'text',
@@ -599,12 +600,12 @@ function getTplAjaxTextarea(array $data = []): string {
             'button_type'  => 'submit',
             'submit_label' => _SAVE,
             'is_legacy_green' => true,
-            'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''.$cerror.'\'); event.preventDefault(); }"',
+            'button_attr'  => 'hx-post="'.$query.'" hx-include="#'.$formId.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head.' hx-on:click="if (!document.getElementById(\''.$formId.'\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''.$cerror.'\'); event.preventDefault(); }"',
         ])
         .$tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
             'submit_label' => _BACK,
-            'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"',
+            'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head,
         ]);
     return $tpl->getHtmlPart('form-wrap', ['form_name' => 'textareae', 'form_id' => $formId, 'content_html' => $content]);
 }

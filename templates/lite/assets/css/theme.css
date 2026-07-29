@@ -5001,6 +5001,27 @@ ol.sl-sublist-two li:hover:before {
   margin-bottom: 25px;
 }
 
+/* Comments: a reply is indented by its depth, which the row carries as a custom property rather than as one class per level */
+[style*="--sl-com-depth"] {
+  margin-left: min(calc(var(--sl-com-depth, 0) * 24px), 50%);
+}
+
+/* Comments: a removed comment that still carries replies keeps its place as a tombstone */
+.sl-com-gone .sl-com-cont {
+  background-color: transparent;
+  padding: 0;
+}
+
+.sl-com-gone .sl-com-cont:before {
+  display: none;
+}
+
+/* Comments: the comment the submit form is currently replying to */
+.sl-com-reply-at .sl-com-cont {
+  outline: 2px solid var(--sl-color-primary);
+  outline-offset: 2px;
+}
+
 .sl-com-ava {
   border-radius: 50%;
   border: 2px solid var(--sl-login-link-color);

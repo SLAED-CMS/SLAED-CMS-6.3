@@ -5582,37 +5582,62 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
     return null;
 }
 
-# Save edit comments
-function updateComment(): string {
- global $conf, $tpl, $prs, $com;
-    $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
-    $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
-    $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
+# Answer the body region of one comment: the editor when the form is fetched, the rendered body when a save arrives, and the refusal that stopped either
+# The editor is loaded with GET and the save arrives as POST, so a body is only ever read from a request that carries one and a refusal is written rather than returned
+function updateComment(): void {
+    global $conf, $tpl, $prs, $com;
+    $id = getVar('req', 'id', 'num', 0);
+    $typ = getVar('req', 'typ', 'num', 0);
+    $text = trim(getVar('post', 'text', 'raw', ''));
     $edit = $com->updateComment($id, $text);
     if (!$edit['allow']) {
-        $info = sprintf(_PEDEND, intval($conf['comments']['edit'] / 60));
-        return $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        echo $tpl->getHtmlFrag('alert', ['text' => sprintf(_PEDEND, intval($conf['comments']['edit'] / 60)), 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        return;
     }
-    if ($edit['error']) return $tpl->getHtmlFrag('alert', ['text' => $edit['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-    if (!$id || $edit['mod'] === '') return '';
+    if ($edit['error']) {
+        echo $tpl->getHtmlFrag('alert', ['text' => $edit['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        return;
+    }
+    if (!$id || $edit['mod'] === '') return;
     if (!$text && $typ) {
         echo getTplAjaxTextarea([
             'obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id,
             'cid' => '0', 'typ' => '0', 'mod' => $edit['mod'], 'text' => $edit['body'], 'rows' => 10,
         ]);
-        return '';
+        return;
     }
     echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, $edit['format']);
-    return '';
 }
 
-# Close comments
+# Publish or hide one comment as a moderator and answer the comment itself, so the reader keeps the slice and the scroll position the action was taken from
+# The swap is named by the response rather than by the link, so a refused transition leaves the element the request named exactly as it was
 function updateCommentStatus(): void {
- global $tpl, $com;
-    $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
-    $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
-    if (!$com->setStatus($id, (bool)$typ)) return;
-    echo $tpl->getHtmlFrag('alert', ['text' => $typ ? _PCOPEN : _PCLOSED, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+    global $tpl, $com;
+    $id = getVar('req', 'id', 'num', 0);
+    $typ = getVar('req', 'typ', 'num', 0);
+    $numb = getVar('req', 'numb', 'num', 0);
+    $row = $com->setStatus($id, (bool)$typ) ? $com->getComment($id) : [];
+    if (!$row) {
+        header('HX-Retarget: #repcstat');
+        header('HX-Reswap: innerHTML');
+        echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        return;
+    }
+    header('HX-Reswap: outerHTML');
+    echo getCommentView($row, $numb, getPageToken());
+}
+
+# Remove one comment as a moderator and answer nothing, because the reader's slice loses exactly the element the request named
+# The removal is named by the response, so a refused delete reports the refusal in the status zone and takes no element out of the page
+function deleteComment(): void {
+    global $tpl, $com;
+    if (!$com->deleteComment(getVar('req', 'id', 'num', 0))) {
+        header('HX-Retarget: #repcstat');
+        header('HX-Reswap: innerHTML');
+        echo $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        return;
+    }
+    header('HX-Reswap: delete');
 }
 
 # Voting result save

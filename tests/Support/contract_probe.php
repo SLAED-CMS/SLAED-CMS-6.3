@@ -21,7 +21,7 @@ $_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) probe';
 $_SERVER['HTTPS'] = 'on';
 # The moderator half of the comment class needs a signed-in administrator, and isAdmin() memoizes its verdict on the first call the boot itself makes
 # So the session is opened and filled here, before core/security.php reads it: the boot then skips its own session_start() and finds the administrator already there
-if (($argv[1] ?? '') === 'commentstage') {
+if (in_array($argv[1] ?? '', ['commentstage', 'commentthread'], true)) {
     $acon = (require BASE_DIR.'/config/db.php')['db'];
     $akey = (string)((require BASE_DIR.'/config/global.php')['admin_c'] ?? 'panel');
     $apdo = new PDO('mysql:host='.$acon['host'].';dbname='.$acon['name'].';charset=utf8mb4', $acon['uname'], $acon['pass']);
@@ -408,11 +408,92 @@ function getProbeCommentFormat(): array {
     ];
 }
 
+# Report what stage 5 promises: replies carry a parent and a sortable path, a crafted parent is refused, the page counts roots, and a removed parent with a live reply stays as a tombstone
+# Every write runs inside one transaction that is rolled back at the end, so the tree is measured against the live table without a row of it surviving the run
+function getProbeCommentThread(): array {
+    global $db, $com, $conf;
+    $out = ['admin' => isAdmin(true), 'moder' => (bool)is_moder('news'), 'clean' => false];
+    if (!$out['admin']) return $out;
+    $all = getProbeCommentCount();
+    $db->setSqlBegin();
+    $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
+    $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE iphash = :hash', ['hash' => $hash]);
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1'));
+    $tid = $row ? intval($row['id']) : 0;
+    $out['target'] = $tid;
+    if (!$tid) {
+        $db->setSqlRollback();
+        return $out;
+    }
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => $tid]);
+    $out['legacy'] = [
+        intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE path = \'\''))['num']),
+        intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE pid != 0 AND path NOT LIKE \'%/%\''))['num']),
+    ];
+    $free();
+    $root = $com->addComment('news', $tid, 'thread probe root', 'Probe');
+    $free();
+    $kid = $com->addComment('news', $tid, 'thread probe reply', 'Probe', '', intval($root['id']));
+    $free();
+    $sub = $com->addComment('news', $tid, 'thread probe sub reply', 'Probe', '', intval($kid['id']));
+    $rows = [];
+    foreach ([$root, $kid, $sub] as $one) {
+        $got = $com->getComment(intval($one['id']));
+        $rows[] = [intval($one['id']), $one['error'], intval($got['pid'] ?? -1), (string)($got['path'] ?? ''), intval($got['depth'] ?? -1)];
+    }
+    $out['chain'] = $rows;
+    $out['nested'] = ($rows[2][3] === $rows[0][3].'/'.str_pad((string)$rows[1][0], 10, '0', STR_PAD_LEFT).'/'.str_pad((string)$rows[2][0], 10, '0', STR_PAD_LEFT));
+    $free();
+    $other = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE id != :id AND time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1', ['id' => $tid]));
+    $out['refuse'] = ['wrong' => '', 'zero' => '', 'foreign' => ''];
+    $out['refuse']['wrong'] = $com->addComment('news', $tid, 'thread probe crafted', 'Probe', '', 999999999)['error'];
+    $free();
+    if ($other) $out['refuse']['foreign'] = $com->addComment('news', intval($other['id']), 'thread probe foreign parent', 'Probe', '', intval($root['id']))['error'];
+    $free();
+    $out['refuse']['zero'] = $com->addComment('news', $tid, 'thread probe root two', 'Probe', '', 0)['error'];
+    $deep = intval($sub['id']);
+    $made = [intval($root['id']), intval($kid['id']), $deep];
+    for ($i = 4; $i <= 21; $i++) {
+        $free();
+        $one = $com->addComment('news', $tid, 'thread probe depth '.$i, 'Probe', '', $deep);
+        $out['depth'][$i] = [$one['error'], intval($com->getComment(intval($one['id']))['depth'] ?? -1)];
+        if ($one['error'] !== '') break;
+        $deep = intval($one['id']);
+        $made[] = $deep;
+    }
+    $page = $com->getList('news', $tid, 1);
+    $out['page'] = [
+        'total' => $page['total'],
+        'roots' => intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE modul = \'news\' AND cid = :cid AND pid = 0 AND status = 1 AND deleted IS NULL', ['cid' => $tid]))['num']),
+        'rows' => count($page['rows']),
+        'order' => array_slice(array_column($page['rows'], 'id'), 0, 4),
+        'depths' => array_slice(array_column($page['rows'], 'depth'), 0, 4),
+    ];
+    $branch = $com->getBranch(intval($root['id']), 3);
+    $out['branch'] = [count($branch), array_column($branch, 'id'), count($com->getBranch(intval($root['id']), 1))];
+    $com->deleteComment(intval($kid['id']));
+    $tomb = $com->getList('news', $tid, 1);
+    $ids = array_column($tomb['rows'], 'id');
+    $out['tomb'] = [
+        'kept' => in_array(intval($kid['id']), $ids, true),
+        'child' => in_array($deep, $ids, true),
+        'marked' => (string)($db->getSqlRow($db->getSqlQuery('SELECT deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => intval($kid['id'])]))['deleted'] ?? ''),
+        'reply' => $com->addComment('news', $tid, 'thread probe under a tombstone', 'Probe', '', intval($kid['id']))['error'],
+    ];
+    foreach (array_reverse(array_slice($made, 2)) as $one) $com->deleteComment($one);
+    $bare = $com->getList('news', $tid, 1);
+    $out['tomb']['gone'] = !in_array(intval($kid['id']), array_column($bare['rows'], 'id'), true);
+    $db->setSqlRollback();
+    $out['clean'] = (getProbeCommentCount() === $all);
+    $out['count'] = [$all, getProbeCommentCount()];
+    return $out;
+}
+
 # Report what stage 3 promises: the queue row is written inside the transaction the comment is written in, once per stored comment, and nothing is delivered inside the request
 # The two writes of the handler run in its order inside one rolled back transaction; the handler itself cannot run here, because getVar() reads a scalar through filter_input()
 # Every scenario is measured as a difference between two counts of both tables, so a job without a comment or a comment without its job is a number rather than an argument
 function getProbeCommentNotify(): array {
-    global $db, $conf, $com, $tpl, $mailer;
+    global $db, $conf, $com, $tpl, $mailer, $locale;
     $out = ['addmail' => (string)($conf['comments']['addmail'] ?? ''), 'subs' => 0, 'target' => 0, 'clean' => false];
     $mails = static function (string $where = '', array $pars = []) use ($db): int {
         $sql = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_mail'.(($where !== '') ? ' WHERE '.$where : '');
@@ -428,7 +509,9 @@ function getProbeCommentNotify(): array {
         }
         return $new;
     };
-    foreach ($db->getSqlRows($db->getSqlQuery('SELECT super, modules FROM '.PREFIX_DB.'_admins WHERE smail = \'1\'')) ?: [] as $one) {
+    $scope = $conf['multilingual'] ? ' AND (lang = :lang OR lang = \'\')' : '';
+    $langs = $conf['multilingual'] ? ['lang' => $locale] : [];
+    foreach ($db->getSqlRows($db->getSqlQuery('SELECT super, modules FROM '.PREFIX_DB.'_admins WHERE smail = \'1\''.$scope, $langs)) ?: [] as $one) {
         if ($one['super'] || in_array('news', getAdminModuleNames((string)$one['modules']), true)) $out['subs']++;
     }
     $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
@@ -754,6 +837,8 @@ if ($mode === 'core') {
     $out = getProbeCommentTarget();
 } elseif ($mode === 'commentstage') {
     $out = getProbeCommentStage2();
+} elseif ($mode === 'commentthread') {
+    $out = getProbeCommentThread();
 } elseif ($mode === 'commentnotify') {
     $out = getProbeCommentNotify();
 } elseif ($mode === 'commentformat') {

@@ -1,5 +1,6 @@
-<div id="{{ id }}"{% if is_closed %} title="{{ closed_title }}" class="sl-hidden"{% endif %}>
+<div id="{{ id }}"{% if token %} hx-headers='{"X-CSRF-TOKEN": "{{ token }}"}'{% endif %}{% if depth %} style="--sl-com-depth:{{ depth }}"{% endif %}{% if is_gone %} title="{{ closed_title }}" class="sl-com-gone"{% elseif is_closed %} title="{{ closed_title }}" class="sl-hidden"{% endif %}>
   <div class="sl-comment">
+{% if not is_gone %}
     <div class="sl-com-left">
       <div class="sl-com-ava">{% if avatar_html %}{{{ avatar_html }}}{% else %}<img src="{{ avatar }}" alt="{{ username }}" title="{{ username }}" class="sl-avatar">{% endif %}</div>
       <div class="sl-min-rate">
@@ -10,6 +11,7 @@
         <li>{{{ rank_link }}}</li>
       </ul>
     </div>
+{% endif %}
     <div class="sl-com-right">
       <div class="sl-com-top">
         <div class="sl-carg">{% if report %}{{{ report }}}{% endif %}<b>{{{ username_html }}}</b></div>

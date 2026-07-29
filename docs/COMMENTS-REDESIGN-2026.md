@@ -1,6 +1,6 @@
 # Comments Subsystem Redesign
 
-Status date: 2026-07-28. Approved; stages 0, 1, 2 and 3 delivered. The comment
+Status date: 2026-07-29. Approved; every stage delivered. The comment
 engine is shared by eight frontend modules, the admin panel, the user activity
 feed and every module delete handler, so each stage below has to keep all of them
 working while the internals move into one place.
@@ -24,6 +24,12 @@ knows nothing of previous ones; this is the only place decisions survive.
 | 2026-07-28 | Stage 2 — validation, storage and write consistency | done, **stage 2 closed**. The schema carries the five columns and the five indexes, `KEY cid` and `KEY modul_status` are gone and `KEY time` stayed; a scratch database proved that a fresh `table.sql` install and the upgrade batch produce a **byte-identical** table definition, that the upgrade is idempotent on a second run and that it repairs a table missing three of its indexes to the same definition. `reqkey` was backfilled in SQL before its unique index existed — 7353 rows, 7353 distinct 32-character keys, none empty. `tools/comment-migrate.php` classified and rewrote every body: 101 legacy, 1709 plain, 1 review, 4 multi-line, 5538 single-line, then backfilled `iphash` for all 7353. Parity was measured as **meaning rather than bytes**, as the plan asks: the pre-migration body rendered the old way and the migrated body rendered the new way were compared for all 7353 rows, **7232 identical**; of the 121 that differ, 68 are the plain format no longer applying Markdown, 9 are legacy tags becoming Markdown inside code-like text, 1 is the review row and the rest are constructs the old unsafe render swallowed and the new one shows. Both classes round-trip: the moderation save and the author edit both store back exactly what the editor was handed. `checkRules()` is one rule set for both paths and measures the longest word in characters; `CommentMode` replaced the bare `acomm` comparisons; add, edit, status and delete are transactional with checked results, conditional updates and a soft delete; `reqkey` answers a replay from the failed insert; the flood window reads `iphash`; listings sort on `time, id`. All four render sites moved to `safe = true` — the three the plan names and the profile feed label, which renders a comment body too. `tests/Unit/CommentStateTest.php` is the stage guard, 14 cases through a probe that **signs in as an administrator before the core boots**, which closes the moderator gap batches 1-3 left open for status and delete. `php -l`, full `phpunit` (398 tests, 12 skipped), `phpstan` and `php-cs-fixer check` all green; the eight module pages answer 200 and both routes refuse a wrong token without writing a row. The markup baseline was re-captured at the end, as this stage changes rendered output by design, and `verify` is green on all eight modules against it. `error_sql.log` did not grow at all; `error_php.log` grew only by the `core/user.php` guest defect batch 5 recorded; `error_site.log` grew only by the `Mail:` entries of the suite |
 
 | 2026-07-28 | Stage 3 — move comment mail off the request | done, **stage 3 closed**. The submit handler (`core/user.php:406`) owns one transaction now: it opens it, `Comment::addComment()` joins it instead of committing its own, `addAdminMail()` writes the queue rows inside it, and the handler's commit closes the comment and its notification together. `addComment()` answers a fourth key, `new`, so the notification is written **once per stored comment**: a replayed `reqkey` answers the first comment and queues nothing. Measured through the new `commentnotify` probe against live rows inside a transaction it rolls back: one add stored 1 comment and queued 1 row — exactly one administrator of this installation is subscribed and reaches the `news` audience — the row carries `kind = comment`, `status = 0`, `tries = 0`, `prio = 1`, `ref = 0` and a body linking to `#<new id>`, and the rollback took the comment and the job away together (both deltas 0). A refused add wrote neither; the replay wrote neither and answered the first id; a refused `addQueue()` (a rejected address) answered `false`, left the transaction open and left the stored comment in place, which is what "a delivery failure never rolls back the comment" means at the write boundary. Latency: the comment write and its notification cost **5.8 ms** together and the notification alone **0.8 ms**, against **77 ms** for one HTTP render of the target page — the 26.6 s of the old synchronous `mail()` left with stage 2 of `docs/MAIL-2026.md` and cannot recur, because `addAdminMail()` ends in `addQueue()` and holds no send of its own. `tests/Unit/CommentNotifyTest.php` is the stage guard, 10 cases, and **6 of them fail against the stashed pre-batch tree**. `php -l`, full `phpunit` (410 tests, 12 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green. `error_sql.log` did not grow at all; `error_php.log` grew by 6 entries of the known `core/user.php:158` guest defect, exactly two per `verify` run and nothing else; `error_site.log` grew only by the `Mail:` entries of the suite |
+
+| 2026-07-29 | Stage 4 — fragment responses | done, **stage 4 closed**. Adding a comment answers **one comment fragment** instead of the whole list: the response names its own placement through `HX-Reswap`/`HX-Retarget`, so a cacheable page carries no swap decision. The per-comment render left `getCommentList()` as `getCommentView()` (`core/user.php:13`), which the list, the add response and the status response all call. `addComment`, `updateCommentStatus` and the new `deleteComment` are **POST only**, refused in one place before any handler runs (`index.php:110`); the edit form is the only comment route a GET still reaches, and `updateComment()` reads a body from POST alone. **No token rides in a comment URL any more**: the form carries a hidden `token` from `getPageToken()`, the moderation actions inherit an `X-CSRF-TOKEN` header the comment element declares once, and `getTplAjaxTextarea()` was moved to the same shape, which takes the forum editor with it. A comment that offers no action declares no token at all, which is why the guest markup is **byte-identical** to the pre-stage capture on all eight modules. The form clears only on a stored comment: the response answers `HX-Trigger: sl-comment-add` and the shared script resets the form and mints the next `reqkey` there, so a refused submit keeps the text and retries under the same key. The **key is minted in the browser** as the design asks, `Cache::addEpoch()` moved from the route into the class and fires only after a write that succeeded, and `hx_on_after` left both button fragments with its last user. Measured over real HTTP with a signed-in administrator against the `media` fixture: a GET mutation refused, a wrong token refused and storing nothing, an empty body refused without a reset trigger, a valid add answering `afterbegin` with one fragment and moving the counter by one, a replay storing no second row and answering the first comment, status both ways answering `outerHTML` with the comment itself, the edit form and its save, a **plain POST without HTMX answering `303` to the target anchor** and storing the comment, delete answering `HX-Reswap: delete` and taking the counter back, a repeated delete moving nothing. On the busiest `voting` target the two branches the fixture cannot reach were measured as well: a full first page **sheds its far-end row out of band** — the id was predicted and matched — and a reader on page three gets the announcement with a link rather than a row in the wrong slice. Every probe row was removed again and both tables returned to the values they started from. `tests/Unit/CommentTransportTest.php` is the stage guard, 12 cases, and **all 12 fail against the stashed pre-batch tree**. `php -l`, full `phpunit` (448 tests, 5 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green |
+
+| 2026-07-29 | Stage 5 — threads | done, **stage 5 closed**. `_comment` carries `pid` and an ascii-binary `path` of ten-digit segments, with `modul_cid_pid_time` and `modul_cid_path` beside them; the upgrade adds the columns, makes **every stored comment a root of its own** and only then builds the indexes, so they are built once over final values. Measured on this installation: 7357 rows, **0 without a path and 0 carrying a parent without one**. Nothing was re-parented from the old `[b]name[/b],` convention. `addComment()` takes a parent id and resolves it through `getParentPath()`: a parent of another target, a removed one, one the writer cannot see and one already at the depth limit are refused alike, so a crafted `pid` can only fail. The page **counts and paginates roots** and every root arrives with its whole branch in path order; `getBranch()` answers one branch on its own with an explicit limit. A removed comment that still carries a live reply **stays as a tombstone** and leaves the page once its last reply is gone — the rule is a predicate rather than a stored flag, so it can never drift. Measured against live rows inside a rolled-back transaction: the three-comment chain stored `pid` and path exactly, a crafted and a foreign parent were refused, the **twentieth segment stored and the twenty-first refused**, the page total equalled the root count while the page carried 27 rows for 8 roots in `[0,0,1,2]` depth order, `getBranch()` honoured a limit of 3 and of 1, the tombstone kept its place and its child and then disappeared with it, and the table came back to 7357 rows. Over real HTTP: the form carries the reply field, a new root answers `afterbegin` with `pid = 0`, a reply answers `HX-Reswap: afterend` retargeted at the branch it joins and is stored as `0000020693/0000021547`, a crafted parent is refused without a reset trigger and stores nothing, and the tombstone renders with no author column while its reply stays visible. `EXPLAIN` on the four new statements: root count and root page on `modul_cid_status_deleted`/`modul_cid_pid_time`, the branch load and `getBranch()` on `modul_cid_path`, the tombstone test an `index_subquery` — all sub-millisecond on the 131-comment target. `tests/Unit/CommentThreadTest.php` is the stage guard, 10 cases, and **all 10 fail against the stashed pre-batch tree**. `php -l`, full `phpunit` (458 tests, 5 skipped), `phpstan` and `php-cs-fixer check` all green; the markup baseline was **re-captured at the end**, as this stage changes rendered output by design, and `verify` is green on all eight modules against it. `error_php.log` did not grow at all, `error_sql.log` grew by the single duplicate-key entry the replay probe produces by design, and `error_site.log` grew only by the `Mail:` entries of the suite runs |
+
+| 2026-07-29 | Stage 4 — the `page` row of the transport table | done, **the transport table is complete**. The rows of the list moved into `#repcrows` and the numbered pager renders after it, so a slice can be appended without landing behind the pager. `getCommentRows()` renders the rows of one page and, while the discussion continues, one control at the end of them: an ordinary link to `&com=N+1#comm` carrying `hx-get` to the new `getCommentPage` route, `hx-target="this"` and `hx-swap="outerHTML"`, so it **replaces itself** with the answer and always stands at the end of what is loaded. The route answers rows plus the control for the page after them and nothing else — no container, no pager — and **refuses** a page past the last rather than letting the pager clamp and answer the last page a second time. A cursor was considered and rejected: `filterCanonicalParams()` already drops `com` from the canonical, so paginated comment URLs consolidate onto the target page, and cursor addresses would only add an unbounded crawl space for no indexing gain. The dead anchor of the notification was fixed with it: the mail link and the "on another page" notice now carry `&at=<comment id>`, which `setComShow()` resolves through the new `Comment::getRootPage()` — a range count over roots on `modul_cid_pid_time`. Measured over real HTTP on `news/53`, 81 comments across 6 pages: the first page carries the container, exactly one control whose plain href is `&com=2#comm`, and the pager after it; page two answers **15 rows with no overlap** against page one, no container, no pager and the control for page three; the last page answers its 6 rows and **no** control; page 99 answers nothing; the route without a token is refused; and `&at=1489` — a comment that is not on page one — renders that comment with the pager marking its page. `tests/Unit/CommentTransportTest.php` grew to 15 cases and all 15 fail against the stashed pre-batch tree. `php -l`, full `phpunit` (463 tests, 5 skipped), `phpstan` and `php-cs-fixer check` all green; the markup baseline was re-captured, because the row container and the control are new markup by design |
 
 ### Decisions made during execution
 
@@ -403,6 +409,95 @@ knows nothing of previous ones; this is the only place decisions survive.
   them and the `new` gate — is asserted against its source, the way the stage 0
   guard already reads the write path.
 
+- **The response names the swap, the markup does not.** `hx-swap` on a moderation
+  action is `none` and the answer sends `HX-Reswap`, so a refused status change or
+  a refused delete leaves the element the request named exactly as it was. The
+  first version put `outerHTML` and `delete` in the link, which meant an empty
+  refusal removed the comment from the page.
+- **A comment element is addressed as `[id='123']`, not as `#123`.** The wrapper
+  keeps the bare numeric id every anchor in the project already links to, and a
+  selector may not start with a digit — the attribute form is the same element
+  without renaming it and without a second attribute to keep in step.
+- **The token is declared once per comment and only when there is something to
+  post.** `hx-headers` on the comment element is inherited by every action inside
+  it, which is one attribute instead of one per link; a comment that offers no
+  action is rendered without it, so a reader who may change nothing is served no
+  credential — and the guest markup stays byte-identical to the pre-stage capture.
+- **The add form carries its token in a hidden field rather than as a header.**
+  That is what makes the plain POST path work at all: `hx-include` sends the field
+  with the HTMX request and the browser sends it with a plain submit, so one
+  mechanism serves both transports. `index.php:104` already accepted either.
+- **`beforeend` was never used, because the pager lives inside the list region.**
+  `#repcsave` holds the comments *and* `getPageNumbers()`, so appending to it would
+  put a comment after the pager. Every insertion except the very first row is
+  therefore `afterend` of the row before it, which is also what a reply needs.
+- **The form reset moved out of the markup and into the shared script.** The
+  submit button reset the form on **every** answer, refusals included;
+  `HX-Trigger: sl-comment-add` now fires only for a stored comment and
+  `plugins/system/slaed.js` listens for it, resets the form and mints the next
+  `reqkey`. `hx_on_after` had exactly one user and left both button fragments.
+- **The class invalidates on a write that changed something, not on every call.**
+  `setStatus()` and `deleteComment()` answer `true` for a repeated action that
+  moved nothing, so they bump the epoch only when the conditional update really
+  affected a row. `addComment()` does not bump for a replayed `reqkey` either,
+  because that request stored nothing.
+- **A frontend delete route was added, because "edit, status and delete operate on
+  a single comment" has no other reading.** `Comment::deleteComment()` has existed
+  since stage 1 batch 4 and enforces the moderator check itself; the route is the
+  fourth action of the same speed dial and shares its token and its refusal path.
+- **The old reply action was a naming habit and is now a structure.** The dial
+  entry inserted `[b]name[/b],` into the editor; it now points the form at one
+  comment through a hidden `pid`. Clicking it twice takes the reply back to the
+  top level, and the comment being answered is marked while the form holds it.
+- **The tombstone rule is a predicate, not a stored flag.** A removed comment is
+  kept in the page exactly while some visible reply still descends from it, which
+  is asked of the query rather than written at delete time — a flag would have to
+  be cleared again when the last reply goes, and every path that removes a reply
+  would have to remember to do it.
+- **The tree scope binds the wanted state twice under two names.** The visibility
+  test appears in the outer predicate and again inside the tombstone subquery, and
+  a native prepared statement rejects one named placeholder used twice — the same
+  rule the author search of the moderation list already documents.
+- **A branch is loaded per page, not per root.** The page reads its roots first
+  and then fetches every reply under any of them in one statement keyed by path
+  prefix, so a page of fifteen roots costs one extra round trip rather than
+  fifteen. `getBranch()` exists for the caller that wants one branch on its own.
+- **The running number follows the roots.** A reply carries no number and no
+  anchor chip, because "comment 12 of 131" is a statement about the discussion and
+  not about a position inside a branch. The number the status response echoes back
+  travels in the action URL, since a re-rendered single comment cannot know where
+  the reader is in the page without counting the whole list again.
+- **The append is an addition to the numbered pager, and a cursor was rejected on
+  SEO grounds.** A seek cursor is the better primitive for a stream that is being
+  written to — it does not drift, and `modul_cid_pid_time` already backs it — but
+  `filterCanonicalParams()` (`core/system.php:1485`) drops `com` from the
+  canonical, so every comment page already consolidates onto the target page while
+  staying `index, follow`. Cursor URLs would therefore add an **unbounded** set of
+  crawled addresses for no indexing gain at all, where `com=N` is finite. The
+  numbered page stays the coordinate system; the append is what a reader gets on
+  top of it.
+- **The rows moved into a container of their own.** `#repcsave` held the comments
+  **and** the pager, so appending to it would have put the next slice behind the
+  pager — the trap the add response already avoids by inserting `afterend` of a
+  row. `#repcrows` now holds the rows alone, the pager renders after it, and the
+  submit form targets the rows rather than the region around them.
+- **The first comment of a target replaces the empty notice instead of standing
+  above it.** With the row container empty the "no comments" alert is its only
+  child, so an `afterbegin` would have left the alert under the new comment. The
+  add answers `innerHTML` when the stored comment is the only root there is.
+- **A link to one comment names the comment, not the page it happened to be on.**
+  The notification built `...&op=view&id=<target>#<id>` with no page at all: under
+  the descending default that anchor dies as soon as fifteen newer comments
+  arrive, and under an ascending one it never resolved. Both the notification and
+  the "on another page" notice now carry `&at=<comment id>`, and `setComShow()`
+  resolves it through `Comment::getRootPage()` — one range count over roots on the
+  index the list already reads. A page number in the link would have rotted the
+  same way; the comment id does not.
+- **Depth is a custom property, not one class per level.** The comment element
+  carries `--sl-com-depth` and the stylesheet turns it into an indent that is
+  capped at half the width, so twenty levels need one rule instead of twenty
+  classes and no PHP hands a class name to a template.
+
 ### Deviations from the plan
 
 - The plan's `_comment` facts were re-measured on 2026-07-28 and updated in
@@ -709,6 +804,118 @@ knows nothing of previous ones; this is the only place decisions survive.
   `CommentWriteTest` and now `CommentNotifyTest`. It is left alone: repairing it
   means adding five files owed by three different stages, and this batch owns one
   of them.
+
+- **The stand these two stages ran on had to be repaired before either could
+  start, and the repair is not theirs.** The database had been rolled back to a
+  dump predating stage 1 — `_comment` carried none of the five stage 2 columns,
+  `_mail` and `_maildead` did not exist, and `_users` and `_admins` were still on
+  the 6.2 shapes. `phpunit` answered 45 failures and 2 errors and
+  `comment-baseline verify` reported CHANGED on all eight modules with a 244-byte
+  "no comments" region, so nothing later could have been attributed. It was
+  repaired with the shipped path — `setup/sql/table_update6_3.sql` followed by
+  `tools/comment-migrate.php classify`, `convert` and `iphash` — after a dump of
+  the whole database was taken. The stage baseline was then captured fresh, which
+  is the once-per-stage operation `docs/EXECUTION-2026.md` prescribes.
+- **The upgrade and a fresh install agree, and the live stand's column order does
+  not.** A scratch database seeded with the pre-6.3 `_comment` definition and run
+  through `table_update6_3.sql` produces a table definition **identical** to the
+  one `setup/sql/table.sql` creates, `pid`, `path` and both new indexes included.
+  The live table differs from it in one position — `format` sits after `iphash`
+  instead of before `edited` — because the repair applied that one `addcol` on a
+  second pass; nothing about a type, a default or an index differs, and column
+  order carries no meaning here.
+- **The markup baseline was re-captured a second time, and not because of code.**
+  A signed-in visit to the site while this batch was running moved the points of
+  account 7885 from 50503 to 50513, and the comment author card renders that
+  number, so `verify` reported CHANGED for `media`, `news`, `pages` and `shop`
+  **at identical byte length** — the drift batches 5 and 6 already recorded. The
+  code had not changed since the capture, so re-capturing hides nothing; it is
+  stable across two consecutive `verify` runs afterwards. Worth knowing before
+  reading any future CHANGED as a regression: check the byte length first.
+- **Three defects were found in `table_update6_3.sql` while repairing the stand,
+  and all three were fixed rather than only reported.** They are not comment
+  defects, but they are what an upgrade of this release does to every
+  installation, and each one silently discards work rather than failing loudly:
+  - **`_users` was not idempotent.** `UPDATE ... SET network = ''` and the
+    `MODIFY network` that closed the `_users` `ALTER` both refuse once the OAuth
+    block at the end of the same file has dropped that column, and because an
+    `ALTER` is all-or-nothing the failure took the normalisation of thirteen
+    other columns — `id`, `password`, `ip`, `regdate`, `lastvis`, `points` and
+    the rest — with it. Both statements are gone; the column has an owner at the
+    end of the file and needed none in the middle;
+  - **`_admins.editor` disagreed with the fresh schema.** The upgrade declared
+    `BOOLEAN DEFAULT NULL` while `table.sql` defines
+    `VARCHAR(32) NOT NULL DEFAULT 'plain'`. The column names the editor plugin an
+    administrator writes with — `getEditorKey()` (`core/system.php:3937`) reads it
+    through `Editor::isValidEditor()` — so on any installation whose
+    administrators carry a name the statement failed outright and took the other
+    thirteen `_admins` columns with it, and had it ever succeeded it would have
+    **destroyed those names**. It now declares the type `table.sql` declares, with
+    a normalisation of the legacy `NULL`, `''`, `'0'` and `'1'` in front of it,
+    because a `NULL` would refuse the `NOT NULL` under strict mode;
+  - **`_users.points` was declared twice, and the second declaration undid the
+    first.** Line 1053 set it `NOT NULL DEFAULT 0` and line 1538 set it back to
+    nullable, so the last writer won and the upgraded column disagreed with what
+    the same file had just asked for. The duplicate is gone, and `table.sql` —
+    which was the nullable one — now matches at `NOT NULL DEFAULT 0`.
+  Rehearsed rather than argued: a scratch database seeded with the pre-6.3
+  `_users`, `_admins`, `_users_temp` and `_comment` definitions from the dump,
+  carrying an administrator whose editor is `toastui` and a user whose points are
+  `NULL`, was run through the whole file **twice**. Both passes reported **zero
+  failures** against those tables, `toastui` survived, `points` ended `NOT NULL`,
+  `network` was dropped, and all four tables ended **identical to what
+  `setup/sql/table.sql` creates**.
+- **`SchemaUpdateValidationTest` grew the two cases that would have caught all
+  three.** It compared table *names* only. It now also compares every column
+  definition the upgrade declares — through `MODIFY` and through `addcol` alike —
+  against `table.sql`, treating `BOOLEAN` and `TINYINT(1)` as the one type the
+  server stores either way, and it fails when one column is declared twice with
+  two different definitions. Against the unfixed file the two cases name all
+  three defects with their line numbers; 261 of the 264 declarations already
+  agreed, so the drift was three columns rather than a pattern.
+- **One preflight failure was a defect in a test rather than in the code.**
+  `CommentNotifyTest` expected one queue row per administrator with `smail = '1'`
+  while `addAdminMail()` also scopes the audience by language when the site is
+  multilingual (`core/system.php:3719-3722`). The verified stand had three
+  administrators and never showed the difference; the restored dump has 86, and
+  22 subscribed against 13 written. The probe's expectation now applies the same
+  language scope. Nothing in the mail path changed.
+- ~~**The `page` row of the transport table was not taken.**~~ — **delivered
+  after the rest of stage 4**, as an addition to the numbered pager rather than a
+  replacement for it, because the numbered page is what a link, a crawler and a
+  reader without HTMX can all name. The control is an ordinary link to
+  `&com=N+1#comm` that HTMX upgrades into an append; it stands last inside the row
+  container and replaces **itself** with the answer, so nothing has to be kept in
+  step with it and the last page simply renders no control at all.
+- **The moderation actions do not degrade without JavaScript.** They are `POST`
+  routes reached through `hx-post`, and the `href` the speed dial also renders is
+  a GET the router now refuses, so a click without HTMX answers a refusal rather
+  than acting. Only the submit form has a plain path, which is what the stage
+  asks for; moderating without JavaScript was never supported and is not made
+  worse, but it is now an explicit refusal instead of a working GET.
+- **The debug panel is appended to every ajax answer on this stand, so a "delete
+  answers nothing" check reads a body that is not empty.** It is
+  `$conf['variables']` output, it is added to all five frontend ajax routes alike
+  and it predates this work; the header contract and the persistent state were
+  measured instead, and the fragment responses were matched from their first
+  byte.
+- **A replayed submit writes one entry to `error_sql.log` by design.** Stage 2
+  detects a duplicate `reqkey` from the failed insert rather than from a prior
+  lookup, and `Pdo::getSqlQuery()` logs every statement that fails. The single
+  entry this batch added to that log is exactly that, produced by the replay
+  probe.
+- **Two more tokens still ride in a URL, and neither belongs to comments.** The
+  private-message routes (`core/user.php:536`-`682`) and the favourites routes
+  (`:955`, `:1060`) build `&token=` into their hrefs. They were left untouched:
+  the stage owns the comment render path, and `getTplAjaxTextarea()` was taken
+  with it only because the comment editor is one of its two callers.
+- **`_PCOPEN` was removed from all six locales.** The status action answers the
+  re-rendered comment now instead of an alert, which left that constant with no
+  reader at all; `_PCLOSED` stays, because the comment fragment still uses it as
+  the title of a hidden comment.
+- **`docs/TESTS.md` was repaired rather than left drifting again.** Stage 3
+  recorded that its unit list named two of seven comment files; it now names all
+  nine, and the four mail files that were missing with them.
 
 ### Open blockers
 
@@ -1493,7 +1700,7 @@ Order across both 2026 plans, since they interlock at one point:
 | 5 | **this plan, stage 2 — schema** | stage 1 |
 | 6 | **this plan, stage 3 — mail off request** | **`docs/MAIL-2026.md` stage 2** |
 | 7 | `docs/MAIL-2026.md` stages 3 and 4 | its stage 2 |
-| 8 | **this plan, stages 4 and 5** | stage 2 |
+| 8 | ~~**this plan, stages 4 and 5**~~ — **done** | stage 2 |
 
 Only row 6 crosses between the plans. Everything else within a plan is strictly
 sequential, and the two plans are otherwise independent.
@@ -1812,6 +2019,10 @@ drain would deliver, and nothing here could take either back.
 
 ### Stage 4 — fragment responses
 
+**Delivered 2026-07-29, one release.** Every bullet below shipped, and the `page`
+row of the transport table followed in the same release;
+`tests/Unit/CommentTransportTest.php` guards all of it.
+
 - Change transport and template targets only.
 - Add returns one fragment or the pending confirmation.
 - Edit, status and delete operate on a single comment.
@@ -1821,6 +2032,9 @@ drain would deliver, and nothing here could take either back.
 - Verify both the HTMX path and the plain POST fallback.
 
 ### Stage 5 — threads
+
+**Delivered 2026-07-29, one release.** Every item of the list below shipped and
+`tests/Unit/CommentThreadTest.php` guards it.
 
 `path` is a sort key, so it is stored as ASCII with a binary collation — a
 collated `VARCHAR` would order it by collation rules, and unpadded numbers would
@@ -2005,10 +2219,11 @@ starts with.
   `getPageHash()` (`core/system.php:1811`) mixes the epoch into every cached page
   key, so one bump invalidates every pagination and sort variant at once — the
   "purge every variant" half of the contract is already met. Admin mutations keep
-  their own path (`core/classes/pdo.php:149`). Two halves of the contract in
-  **Page cache** are still open and belong to stage 4: the bump is decided by
-  route rather than by `Comment` itself, and it fires whether the write succeeded
-  or was refused, so a failed operation invalidates too.
+  their own path (`core/classes/pdo.php:149`). ~~Two halves of the contract in
+  **Page cache** are still open and belong to stage 4~~ — **closed by stage 4**:
+  the five writes of `Comment` call `Cache::addEpoch()` themselves, after their own
+  writes succeeded and never for a refusal, a no-op transition or a replayed
+  `reqkey`, and `index.php:133` keeps only `updatePost` and `updateVotingResult`.
 - **Migration cost on a large comment table.** Stage 2 adds five columns and five
   indexes, drops two and rewrites every body. Instant against the 7355 rows here;
   the upgrade notes

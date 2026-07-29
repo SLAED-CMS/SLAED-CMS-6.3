@@ -6,150 +6,177 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Render the comment list of one target: the rows, the pagination and the author records come from the comment subsystem, this function only assembles the markup
-function getCommentList(int $cid = 0, string $mod = ''): string {
- global $conf, $user, $tpl, $prs, $com;
-    $mod = filterVar($mod);
-    $data = $com->getList($mod, $cid, getVar('get', 'com', 'num', '1'));
-    $total = $data['total'];
-    if ($total < 1) return $tpl->getHtmlFrag('alert', ['text' => _NOCOMMENTS, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
-    $size = $data['limit'];
-    $links = $conf['comments']['nump'];
-    $numpages = $data['pages'];
+# Render one stored comment from the row the comment subsystem answered with: the author card, the moderation actions and the body
+# The running number belongs to the page the row is shown on and the token to the actions inside it, so both are passed in rather than resolved here
+# Every action posts to its own route and carries no token in its URL; the token travels as a request header the comment element declares once for all of them
+# A comment that offers no action declares no token either, so a reader who may change nothing is served no credential at all
+function getCommentView(array $val, int $numb, string $token): string {
+    global $conf, $user, $tpl, $prs;
+    $cmid = $val['id'];
+    $cmod = $val['modul'];
+    $when = $val['time'];
+    $cnam = $val['name'];
+    $stat = $val['status'];
+    $deep = intval($val['depth'] ?? 0);
+    if (($val['deleted'] ?? '') !== '') {
+        return $tpl->getHtmlFrag('comment', [
+            'id' => $cmid,
+            'depth' => $deep,
+            'is_gone' => true,
+            'username' => _ANONYM,
+            'username_html' => htmlspecialchars((string)_ANONYM, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            'date' => $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($when, _TIMESTRING), 'is_comment_date' => true]),
+            'text' => $tpl->getHtmlFrag('alert', ['text' => _COMMENTS_GONE, 'meta' => '', 'type' => 'info', 'is_warn' => false]),
+            'closed_title' => _COMMENTS_GONE,
+            'share_url' => '#'.$cmid,
+        ]);
+    }
+    $usr = $val['user'] ?? [];
+    $auid = intval($usr['id'] ?? 0);
+    $anam = (string)($usr['name'] ?? '');
+    $mods = is_moder($cmod);
+    $avname = (!empty($anam)) ? $anam : ($cnam ?: (string)_ANONYM);
+    $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($when, _TIMESTRING), 'is_comment_date' => true]);
+    $ip = $mods ? Geoip::getIpHtml((string)$val['ip'], true) : '';
+    $amess = $numb ? $tpl->getHtmlFrag('link', ['href' => '#'.$cmid, 'title' => (string)_COMMENT.': '.(string)$numb, 'label' => (string)$numb, 'is_card_id' => true]) : '';
+    $gone = (intval($val['uid']) > 0 && empty($cnam));
+    $avatar = (!empty($anam)) ? getUserAvatarUrl(['avatar' => (string)($usr['avatar'] ?? '')]) : getUserAvatarUrl([], $gone);
+    $agnam = (string)($usr['gname'] ?? '');
+    $trank = (!empty($agnam)) ? _GROUP.': '.$agnam : _RANK;
+    $rimg = (!empty($usr['grank'])) ? getThemeImagePath('ranks/'.$usr['grank']) : '';
+    $rlink = ($rimg && file_exists($rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
+    $rate = $auid ? getRatingAsync(0, $auid, 'account', $usr['votes'] ?? 0, $usr['tvotes'] ?? 0, $cmid, 1) : '';
+    $utip = getUserTip($agnam, $usr['points'] ?? 0, (string)($usr['regdate'] ?? ''), (int)($usr['gender'] ?? 0), (string)($usr['origin'] ?? ''), (string)($usr['warnings'] ?? ''), empty($anam), $gone);
+    $unam = (!empty($anam)) ? user_info($anam, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $sig = (!empty($usr['sig'])) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $usr['sig']]) : '';
+    $aweb = (string)($usr['website'] ?? '');
+    $uitems = [];
+    if (($mods || is_user() || $conf['comments']['anonpost'] != 0) && $deep + 2 <= 20) {
+        $uitems[] = ['href' => '#formcsave', 'title' => _COMMENTS_REPLY, 'icon_name' => 'reply', 'link_attr' => 'data-sl-reply="'.$cmid.'"'];
+    }
+    if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($anam)) {
+        $uitems[] = ['href' => 'index.php?name=account&op=privat&uname='.urlencode($anam), 'title' => _SENDMES, 'icon_name' => 'envelope'];
+    }
+    if ($conf['comments']['profil'] && !empty($anam)) {
+        $uitems[] = ['href' => 'index.php?name=account&op=view&uname='.urlencode($anam), 'title' => _PERSONALINFO, 'icon_name' => 'person'];
+    }
+    if ($conf['comments']['web'] && !empty($aweb)) {
+        $uitems[] = ['href' => $aweb, 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
+    }
+    $act = 'index.php?go=1&op=';
+    $one = '[id=\''.$cmid.'\']';
+    $form = ['href' => $act.'updateComment&id='.$cmid.'&typ=1', 'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid];
+    $items = [];
+    if ($mods) {
+        $items[] = $form;
+        $items[] = ['href' => $act.'updateCommentStatus&id='.$cmid.'&typ=0&numb='.$numb, 'title' => _FMODC, 'icon_name' => 'eye-slash',
+            'is_htmx' => true, 'is_post' => true, 'hx_target' => $one, 'hx_swap' => 'none'];
+        $items[] = ['href' => $act.'updateCommentStatus&id='.$cmid.'&typ=1&numb='.$numb, 'title' => _ACTIVATE, 'icon_name' => 'eye',
+            'is_htmx' => true, 'is_post' => true, 'hx_target' => $one, 'hx_swap' => 'none'];
+        $items[] = ['href' => $act.'deleteComment&id='.$cmid, 'title' => _ONDELETE, 'icon_name' => 'trash', 'confirm_text' => (string)_ONDELETE.'?',
+            'is_htmx' => true, 'is_post' => true, 'hx_target' => $one, 'hx_swap' => 'none'];
+    } elseif (is_user() && $auid > 0 && $auid === intval($user[0]) && time() < strtotime($when) + $conf['comments']['edit']) {
+        $items[] = $form;
+    }
+    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, $val['format'])]);
+    return $tpl->getHtmlFrag('comment', [
+        'id' => $cmid,
+        'depth' => $deep,
+        'token' => $items ? $token : '',
+        'username' => $avname,
+        'username_html' => $unam,
+        'report' => $utip,
+        'date' => $date,
+        'ip' => $ip,
+        'meta_tip' => '',
+        'post_count' => $amess,
+        'avatar' => $avatar,
+        'avatar_html' => $tpl->getHtmlFrag('image', [
+            'src' => $avatar,
+            'alt' => $avname,
+            'title' => $avname,
+            'is_avatar' => true,
+        ]),
+        'rank' => (string)($usr['rank'] ?? ''),
+        'rank_link' => $rlink,
+        'user_rate' => $rate,
+        'text' => $text,
+        'sig' => $sig,
+        'btn_user' => getActionMenu($uitems, true),
+        'btn_warn' => '',
+        'btn_thank' => '',
+        'btn_edit' => getActionMenu($items),
+        'is_closed' => !$stat,
+        'closed_title' => _PCLOSED,
+        'checkb' => '',
+        'share_url' => '#'.$cmid,
+    ]);
+}
+
+# Render the comment rows of one page and, while the discussion continues, the control that appends the next page to the list the reader is on
+# The control replaces itself with the answer, so it always stands at the end of what is loaded and no second element has to be kept in step with it
+# Its href is the ordinary page URL the numbered pager also links to, so a reader without HTMX follows it as a plain link and lands on that page
+function getCommentRows(array $data, string $mod, int $cid, string $token, string $pag): string {
+    global $conf, $tpl;
     $numb = $data['first'];
     $cont = '';
     foreach ($data['rows'] as $val) {
-        $cmid = $val['id'];
-        $cmod = $val['modul'];
-        $when = $val['time'];
-        $cuid = $val['uid'];
-        $cnam = $val['name'];
-        $host = $val['ip'];
-        $body = $val['body'];
-        $fmt = $val['format'];
-        $stat = $val['status'];
-        unset($auid, $anam, $arnk, $aweb, $aava, $areg, $afrm, $asig, $apts, $awrn, $agen, $avot, $atot, $agnam, $agrnk);
-        if ($val['user']) {
-            $usr = $val['user'];
-            $auid = $usr['id'];
-            $anam = $usr['name'];
-            $arnk = $usr['rank'];
-            $aweb = $usr['website'];
-            $aava = $usr['avatar'];
-            $areg = $usr['regdate'];
-            $afrm = $usr['origin'];
-            $asig = $usr['sig'];
-            $apts = $usr['points'];
-            $awrn = $usr['warnings'];
-            $agen = $usr['gender'];
-            $avot = $usr['votes'];
-            $atot = $usr['tvotes'];
-            $agnam = $usr['gname'];
-            $agrnk = $usr['grank'];
-        }
-        $avname = (!empty($anam)) ? $anam : ($cnam ?: (string)_ANONYM);
-        $date = $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_PADD, 'label' => format_time($when, _TIMESTRING), 'is_comment_date' => true]);
-        $ip = (is_moder($cmod)) ? Geoip::getIpHtml($host, true) : '';
-        $amess = $tpl->getHtmlFrag('link', ['href' => '#'.$cmid, 'title' => (string)_COMMENT.': '.(string)$numb, 'label' => (string)$numb, 'is_card_id' => true]);
-        $gone = ((int)$cuid > 0 && empty($cnam));
-        $avatar = (!empty($anam)) ? getUserAvatarUrl(['avatar' => $aava]) : getUserAvatarUrl([], $gone);
-        $rank = (!empty($arnk)) ? $arnk : '';
-        $trank = (!empty($agnam)) ? _GROUP.': '.$agnam : _RANK;
-        $rimg = (!empty($agrnk)) ? getThemeImagePath('ranks/'.$agrnk) : '';
-        $rlink = ($rimg && file_exists($rimg)) ? $tpl->getHtmlFrag('image', ['src' => $rimg, 'alt' => $trank, 'title' => $trank]) : '';
-        $rate = (!empty($auid)) ? getRatingAsync(0, $auid, 'account', $avot, $atot, $cmid, 1) : '';
-        $utip = getUserTip((string)($agnam ?? ''), $apts ?? 0, (string)($areg ?? ''), (int)($agen ?? 0), (string)($afrm ?? ''), (string)($awrn ?? ''), empty($anam), $gone);
-        $unam = (!empty($anam)) ? user_info($anam, false) : htmlspecialchars($avname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $sig = (!empty($asig)) ? $tpl->getHtmlFrag('block-content', ['is_signature' => true, 'content' => $asig]) : '';
-        $uitems = [];
-        if (is_moder($cmod) || is_user() || $conf['comments']['anonpost'] != 0) {
-            $uitems[] = ['href' => '#', 'title' => _PERSONAL, 'icon_name' => 'reply', 'link_attr' => getTplEditorInsertAttr('name', $avname)];
-        }
-        if ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($anam)) {
-            $uitems[] = ['href' => 'index.php?name=account&op=privat&uname='.urlencode($anam), 'title' => _SENDMES, 'icon_name' => 'envelope'];
-        }
-        if ($conf['comments']['profil'] && !empty($anam)) {
-            $uitems[] = ['href' => 'index.php?name=account&op=view&uname='.urlencode($anam), 'title' => _PERSONALINFO, 'icon_name' => 'person'];
-        }
-        if ($conf['comments']['web'] && !empty($aweb)) {
-            $uitems[] = ['href' => $aweb, 'title' => _DOWNLLINK, 'icon_name' => 'globe', 'is_blank' => true];
-        }
-        $usermenu = getActionMenu($uitems, true);
-        $warn = '';
-        $thank = '';
-        if (is_moder($cmod)) {
-            $items = [
-                [
-                    'href' => 'index.php?go=1&op=updateComment&id='.$cmid.'&typ=1&mod='.$cmod.'&token='.getSiteToken(),
-                    'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
-                ],
-                [
-                    'href' => 'index.php?go=1&op=updateCommentStatus&id='.$cmid.'&typ=0&mod='.$cmod.'&token='.getSiteToken(),
-                    'title' => _FMODC, 'icon_name' => 'eye-slash', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
-                ],
-                [
-                    'href' => 'index.php?go=1&op=updateCommentStatus&id='.$cmid.'&typ=1&mod='.$cmod.'&token='.getSiteToken(),
-                    'title' => _ACTIVATE, 'icon_name' => 'eye', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
-                ],
-            ];
-            $edit = getActionMenu($items);
-        } else {
-            $stime = strtotime($when) + $conf['comments']['edit'];
-            if (is_user() && isset($auid) == intval($user[0]) && time() < $stime) {
-                $items = [
-                    [
-                        'href' => 'index.php?go=1&op=updateComment&id='.$cmid.'&typ=1&mod='.$cmod.'&token='.getSiteToken(),
-                        'title' => _ONEDIT, 'icon_name' => 'pencil-square', 'is_htmx' => true, 'hx_target' => '#repcom'.$cmid,
-                    ],
-                ];
-                $edit = getActionMenu($items);
-            } else {
-                $edit = '';
-            }
-        }
-        $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($body, true, $cmod, 2, $fmt)]);
-        $cont .= $tpl->getHtmlFrag('comment', [
-            'id' => $cmid,
-            'username' => $avname,
-            'username_html' => $unam,
-            'report' => $utip,
-            'date' => $date,
-            'ip' => $ip,
-            'meta_tip' => '',
-            'post_count' => $amess,
-            'avatar' => $avatar,
-            'avatar_html' => $tpl->getHtmlFrag('image', [
-                'src' => $avatar,
-                'alt' => $avname,
-                'title' => $avname,
-                'is_avatar' => true,
-            ]),
-            'rank' => $rank,
-            'rank_link' => $rlink,
-            'user_rate' => $rate,
-            'text' => $text,
-            'sig' => $sig,
-            'btn_user' => $usermenu,
-            'btn_warn' => $warn,
-            'btn_thank' => $thank,
-            'btn_edit' => $edit,
-            'is_closed' => !$stat,
-            'closed_title' => _PCLOSED,
-            'checkb' => '',
-            'share_url' => '#'.$cmid,
-        ]);
+        $cont .= getCommentView($val, $val['depth'] ? 0 : $numb, $token);
+        if ($val['depth']) continue;
         if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
     }
+    if ($data['page'] >= $data['pages']) return $cont;
+    $next = $data['page'] + 1;
+    return $cont.$tpl->getHtmlFrag('link', [
+        'href' => getSeoUrl(['name' => $mod, $pag.'&com' => $next]).'#comm',
+        'hx_url' => 'index.php?go=1&op=getCommentPage&id='.$cid.'&mod='.$mod.'&com='.$next,
+        'hx_headers' => $token,
+        'title' => (string)_COMMENTS_MORE,
+        'label' => (string)_COMMENTS_MORE,
+        'is_htmx' => true,
+        'hx_target' => 'this',
+        'hx_swap' => 'outerHTML',
+        'is_button_blue' => true,
+    ]);
+}
+
+# Render the comment list of one target: the rows, the pagination and the author records come from the comment subsystem, this function only assembles the markup
+# The page counts root comments and every root arrives with its branch behind it, so the running number follows the roots and a reply carries none
+# The rows have a container of their own, because a fragment response appends to them and the pager below them is not a comment
+function getCommentList(int $cid = 0, string $mod = '', int $page = 0): string {
+    global $conf, $tpl, $com;
+    $mod = filterVar($mod);
+    $data = $com->getList($mod, $cid, $page ?: 1);
     $num = getVar('get', 'num', 'num');
     $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
-    return $cont.getPageNumbers($mod, $total, $numpages, $size, $pag.'&', $links, 0, '#comm', 'com');
+    $rows = ($data['total'] < 1)
+        ? $tpl->getHtmlFrag('alert', ['text' => _NOCOMMENTS, 'meta' => '', 'type' => 'info', 'is_warn' => false])
+        : getCommentRows($data, $mod, $cid, getPageToken(), $pag);
+    $out = $tpl->getHtmlFrag('block-content', ['id' => 'repcrows', 'content' => $rows]);
+    if ($data['total'] < 1) return $out;
+    return $out.getPageNumbers($mod, $data['total'], $data['pages'], $data['limit'], $pag.'&', $conf['comments']['nump'], $data['page'], '#comm', 'com');
+}
+
+# Answer one page of the comment list as the sequence of fragments the reader appends to the list already on the page
+# A page beyond the last is refused rather than clamped, because the clamp would answer the last page a second time and duplicate every row of it
+function getCommentPage(): void {
+    global $com;
+    $id = getVar('req', 'id', 'num', 0);
+    $mod = filterVar(getVar('req', 'mod', 'text', ''));
+    $page = getVar('req', 'com', 'num', 1);
+    $data = $com->getList($mod, $id, $page);
+    if ($data['total'] < 1 || $data['page'] !== $page) return;
+    echo getCommentRows($data, $mod, $id, getPageToken(), 'op=view&id='.$id);
 }
 
 # Render the comment list and submission form for an item
+# The list, the status zone and the form are three regions a fragment response addresses on its own, so an add never replaces the region it was submitted from
 function setComShow(int $id = 0, int $acomm = 0): string {
-    global $conf, $user, $tpl;
+    global $conf, $user, $tpl, $com;
+    $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage(getVar('get', 'at', 'num', 0));
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'])]);
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page)]);
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => '']);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
@@ -179,18 +206,22 @@ function setComShow(int $id = 0, int $acomm = 0): string {
                     'rows' => '5',
                     'placeholder' => _COMMENT,
                 ]),
-            ]);
+            ])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'reqkey', 'value_attr' => '', 'input_attr' => 'data-sl-reqkey'])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => '', 'input_attr' => 'data-sl-reply-to'])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken()]);
+        $post = 'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&com='.$page;
         $submit = $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit',
             'label' => _COMMENTREPLY,
             'title' => _COMMENTREPLY,
-            'hx_post' => 'index.php?go=1&op=addComment&id='.$id.'&mod='.$conf['name'].'&token='.getPageToken(),
+            'hx_post' => $post,
             'hx_include' => '#formcsave',
-            'hx_target' => '#repcsave',
+            'hx_target' => '#repcrows',
+            'hx_swap' => 'afterbegin',
             'hx_on_click' => 'if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }',
-            'hx_on_after' => 'document.getElementById(\'formcsave\').reset()',
         ]);
         $cont .= $tpl->getHtmlPart('form-add', [
-            'no_action' => true,
+            'action' => $post,
             'form_id' => 'formcsave',
             'form_name' => 'post',
             'no_enctype' => true,
@@ -403,7 +434,7 @@ function getUserBlock(): string {
     return '';
 }
 
-# Validate and save a new comment together with the notification of the admins subscribed to its module; echoes the updated comment list on success
+# Validate and save a new comment together with the notification of the admins subscribed to its module; answers the one comment that was stored instead of the whole list
 # The handler owns the transaction the comment and its queue row share: a comment that never commits leaves no mail behind, and a job is written once per stored comment
 # The queue row is a stored job and nothing more, so no message is delivered inside the request and no delivery outcome can reach this path or take the comment with it
 function addComment(): void {
@@ -413,19 +444,68 @@ function addComment(): void {
     $name = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $body = trim(getVar('post', 'text', 'raw', ''));
     $key = (string)getVar('req', 'reqkey', 'var', '');
+    $page = getVar('req', 'com', 'num', 1);
+    $pid = getVar('req', 'pid', 'num', 0);
+    $back = 'index.php?name='.$mod.'&op=view&id='.$id;
+    $live = !empty($_SERVER['HTTP_HX_REQUEST']);
     $own = $db->setSqlBegin();
-    $new = $com->addComment($mod, $id, $body, $name, $key);
+    $new = $com->addComment($mod, $id, $body, $name, $key, $pid);
     if ($new['error'] === '' && $new['new']) {
-        $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'#'.$new['id'];
+        $link = $conf['homeurl'].'/index.php?name='.$mod.'&op=view&id='.$id.'&at='.$new['id'].'#'.$new['id'];
         $clink = $tpl->getHtmlFrag('link', ['href' => $link, 'title' => '', 'label_html' => $link]);
         addAdminMail($conf['comments']['addmail'], $mod, $new['name'], getModuleName($mod), 1, $clink);
     }
     if ($new['error'] !== '' || ($own && !$db->setSqlCommit())) {
         if ($own) $db->setSqlRollback();
+        if (!$live) setRedirect($back.'#comm', false, 303, $new['error'] ?: (string)_ERROR, true);
         echo $tpl->getHtmlFrag('alert', ['text' => $new['error'] ?: _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         return;
     }
-    echo getCommentList($id, $mod);
+    $row = $new['id'] ? $com->getComment(intval($new['id'])) : [];
+    $open = $row && $row['status'] === CommentStatus::Published->value;
+    if (!$live) setRedirect($back.($open ? '#'.$row['id'] : '#comm'), false, 303, $open ? '' : (string)_POSTNOTE, false);
+    header('HX-Trigger: sl-comment-add');
+    $note = static function (string $text, string $meta) use ($tpl): void {
+        header('HX-Retarget: #repcstat');
+        header('HX-Reswap: innerHTML');
+        echo $tpl->getHtmlFrag('alert', ['text' => $text, 'meta' => $meta, 'type' => 'info', 'is_warn' => false]);
+    };
+    if (!$open) {
+        $note((string)_POSTNOTE, '');
+        return;
+    }
+    $data = $com->getList($mod, $id, $page);
+    $numb = $data['first'];
+    $at = -1;
+    foreach ($data['rows'] as $pos => $one) {
+        if ($one['id'] === $row['id']) {
+            $at = $pos;
+            break;
+        }
+        if ($one['depth']) continue;
+        if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
+    }
+    if ($at < 0) {
+        $seen = $back.'&at='.$row['id'].'#'.$row['id'];
+        $note((string)_COMMENTS_ADDED, $tpl->getHtmlFrag('link', ['href' => $seen, 'title' => (string)_COMMENT, 'label' => (string)_COMMENT.': '.$row['id'], 'is_card_id' => true]));
+        return;
+    }
+    $size = $data['limit'];
+    $total = $data['total'];
+    $drop = 0;
+    if (!$row['pid']) {
+        if ($data['isasc']) {
+            if ($total > 1 && ($total - 1) % $size === 0) $drop = intdiv($total - 1, $size);
+        } elseif ($total > $size) {
+            $drop = 2;
+        }
+    }
+    $off = $drop ? intval($com->getList($mod, $id, $drop)['rows'][0]['id'] ?? 0) : 0;
+    $oob = $off ? $tpl->getHtmlFrag('swap-oob', ['id' => $off]) : '';
+    foreach ($off ? $com->getBranch($off, 200) : [] as $kid) $oob .= $tpl->getHtmlFrag('swap-oob', ['id' => $kid['id']]);
+    if ($at > 0) header('HX-Retarget: [id=\''.$data['rows'][$at - 1]['id'].'\']');
+    header('HX-Reswap: '.($at > 0 ? 'afterend' : ($total === 1 ? 'innerHTML' : 'afterbegin')));
+    echo getCommentView($row, $row['pid'] ? 0 : $numb, getPageToken()).$oob;
 }
 
 # Validate and update an existing forum post in-place

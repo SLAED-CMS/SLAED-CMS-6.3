@@ -1,6 +1,9 @@
 <?php
 /**
- * Validates that update SQL references only tables present in table.sql.
+ * Validates that update SQL references only tables present in table.sql, and that every column the
+ * update declares carries the definition the fresh schema gives it. A fresh install and an upgraded
+ * one must end on the same table: where the two files disagree, one of the two installations is
+ * wrong and nothing at runtime can tell which.
  */
 
 use PHPUnit\Framework\TestCase;
@@ -9,6 +12,7 @@ class SchemaUpdateValidationTest extends TestCase
 {
     private static string $basePath;
     private static array $tables = [];
+    private static array $columns = [];
 
     public static function setUpBeforeClass(): void
     {
@@ -30,7 +34,59 @@ class SchemaUpdateValidationTest extends TestCase
             self::$tables[strtolower($table)] = true;
         }
 
+        preg_match_all('/CREATE\s+TABLE\s+`\{prefix\}_([a-z0-9_]+)`\s*\((.*?)\n\)\s*ENGINE/is', $content, $blocks, PREG_SET_ORDER);
+
+        foreach ($blocks as $block) {
+            foreach (explode("\n", $block[2]) as $line) {
+                $line = rtrim(trim($line), ',');
+                if (!preg_match('/^`([a-z0-9_]+)`\s+(.+)$/i', $line, $column)) {
+                    continue;
+                }
+                self::$columns[strtolower($block[1])][strtolower($column[1])] = self::normalizeType($column[2]);
+            }
+        }
+
         // 'modules' table is deprecated and not part of schema anymore.
+    }
+
+    /**
+     * Reduce one column definition to the form two files can be compared in: collapsed whitespace,
+     * one case, and BOOLEAN spelled as the TINYINT(1) the server stores it as either way.
+     */
+    private static function normalizeType(string $type): string
+    {
+        $type = strtoupper(trim(preg_replace('/\s+/', ' ', $type)));
+        return preg_replace('/\bBOOLEAN\b/', 'TINYINT(1)', $type);
+    }
+
+    /**
+     * Every column definition the update file declares, as [table, column, definition, line].
+     * Both shapes count: the MODIFY of an ALTER and the definition handed to the addcol procedure.
+     */
+    private static function getUpdateColumns(string $content): array
+    {
+        $out = [];
+        preg_match_all('/ALTER\s+TABLE\s+`\{prefix\}_([a-z0-9_]+)`(.*?);/is', $content, $blocks, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+
+        foreach ($blocks as $block) {
+            $at = substr_count($content, "\n", 0, $block[0][1]) + 1;
+            foreach (explode("\n", $block[2][0]) as $step => $line) {
+                $line = rtrim(trim($line), ',');
+                if (!preg_match('/^MODIFY\s+`([a-z0-9_]+)`\s+(.+)$/i', $line, $column)) {
+                    continue;
+                }
+                $out[] = [strtolower($block[1][0]), strtolower($column[1]), self::normalizeType($column[2]), $at + $step];
+            }
+        }
+
+        preg_match_all("/CALL\s+addcol\('\{prefix\}_([a-z0-9_]+)',\s*'([a-z0-9_]+)',\s*'(.*?)'\);/i", $content, $calls, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+
+        foreach ($calls as $call) {
+            $at = substr_count($content, "\n", 0, $call[0][1]) + 1;
+            $out[] = [strtolower($call[1][0]), strtolower($call[2][0]), self::normalizeType(str_replace("\\'", "'", $call[3][0])), $at];
+        }
+
+        return $out;
     }
 
     public function testUpdateSqlTablesExistInSchema(): void
@@ -75,6 +131,78 @@ class SchemaUpdateValidationTest extends TestCase
         $this->assertEmpty(
             $errors,
             "Update SQL references missing tables:\n".implode("\n", $errors)
+        );
+    }
+
+    public function testUpdateSqlColumnsMatchSchema(): void
+    {
+        $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
+        if (!file_exists($updateFile) || empty(self::$columns)) {
+            $this->markTestSkipped('table.sql or table_update6_3.sql not available');
+            return;
+        }
+
+        $errors = [];
+        foreach (self::getUpdateColumns(file_get_contents($updateFile)) as [$table, $column, $type, $line]) {
+            $want = self::$columns[$table][$column] ?? null;
+
+            if ($want === null) {
+                $errors[] = sprintf(
+                    'setup/sql/table_update6_3.sql:%d - %s.%s is declared here but not by table.sql',
+                    $line,
+                    $table,
+                    $column
+                );
+                continue;
+            }
+
+            if ($want !== $type) {
+                $errors[] = sprintf(
+                    "setup/sql/table_update6_3.sql:%d - %s.%s disagrees with table.sql\n    fresh: %s\n    upgrade: %s",
+                    $line,
+                    $table,
+                    $column,
+                    $want,
+                    $type
+                );
+            }
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "A fresh install and an upgrade would not produce the same table:\n".implode("\n", $errors)
+        );
+    }
+
+    public function testUpdateSqlDeclaresEachColumnOnce(): void
+    {
+        $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
+        if (!file_exists($updateFile)) {
+            $this->markTestSkipped('table_update6_3.sql not found');
+            return;
+        }
+
+        $seen = [];
+        foreach (self::getUpdateColumns(file_get_contents($updateFile)) as [$table, $column, $type, $line]) {
+            $seen[$table.'.'.$column][] = [$type, $line];
+        }
+
+        $errors = [];
+        foreach ($seen as $name => $list) {
+            if (count($list) < 2 || count(array_unique(array_column($list, 0))) < 2) {
+                continue;
+            }
+            $errors[] = sprintf(
+                '%s is declared %d times and the definitions differ (lines %s) - the last one silently wins',
+                $name,
+                count($list),
+                implode(', ', array_column($list, 1))
+            );
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "The update file contradicts itself:\n".implode("\n", $errors)
         );
     }
 }

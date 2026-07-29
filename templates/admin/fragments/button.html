@@ -17,7 +17,7 @@
   {% if title_text %}title="{{ title_text }}"{% elseif title %}title="{{ title }}"{% endif %}
   {% if is_disabled %}disabled{% endif %}
   {% if button_attr %}{{{ button_attr }}}{% elseif input_attr %}{{{ input_attr }}}{% endif %}
-  {% if hx_post %}hx-post="{{ hx_post }}" {% if hx_include %}hx-include="{{ hx_include }}" {% endif %}hx-target="{{ hx_target }}" hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% if hx_on_click %} hx-on:click="{{{ hx_on_click }}}"{% endif %}{% if hx_on_after %} hx-on:htmx:after-request="{{{ hx_on_after }}}"{% endif %}{% endif %}
+  {% if hx_post %}hx-post="{{ hx_post }}" {% if hx_include %}hx-include="{{ hx_include }}" {% endif %}hx-target="{{ hx_target }}" hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% if hx_on_click %} hx-on:click="{{{ hx_on_click }}}"{% endif %}{% endif %}
 >
   {% if submit_label %}{{ submit_label }}{% else %}{{ label }}{% endif %}
 </button>
@@ -41,6 +41,6 @@
   {% if is_disabled %}disabled{% endif %}
   {% if reset_url %}onclick="window.location.href='{{{ reset_url }}}'"{% endif %}
   {% if button_attr %}{{{ button_attr }}}{% elseif input_attr %}{{{ input_attr }}}{% endif %}
-  {% if hx_post %}hx-post="{{ hx_post }}" {% if hx_include %}hx-include="{{ hx_include }}" {% endif %}hx-target="{{ hx_target }}" hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% if hx_on_click %} hx-on:click="{{{ hx_on_click }}}"{% endif %}{% if hx_on_after %} hx-on:htmx:after-request="{{{ hx_on_after }}}"{% endif %}{% endif %}
+  {% if hx_post %}hx-post="{{ hx_post }}" {% if hx_include %}hx-include="{{ hx_include }}" {% endif %}hx-target="{{ hx_target }}" hx-swap="{% if hx_swap %}{{ hx_swap }}{% else %}innerHTML{% endif %}" hx-push-url="false"{% if hx_on_click %} hx-on:click="{{{ hx_on_click }}}"{% endif %}{% endif %}
 >
 {% endif %}

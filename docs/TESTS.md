@@ -207,16 +207,26 @@ Current unit test files include:
 - `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
+- `CommentIsolationTest.php`
+- `CommentNotifyTest.php`
 - `CommentReadTest.php`
+- `CommentStateTest.php`
+- `CommentTargetTest.php`
+- `CommentThreadTest.php`
+- `CommentTransportTest.php`
 - `CommentTrustBoundaryTest.php`
+- `CommentWriteTest.php`
 - `DatabaseTest.php`
 - `EditorFormatTest.php`
 - `ExampleTest.php`
 - `GeoipReaderTest.php`
 - `InputFilterTest.php`
 - `InputVarContractTest.php`
+- `MailCampaignTest.php`
 - `MailConfigTest.php`
+- `MailDrainTest.php`
 - `MailHeaderTest.php`
+- `MailQueueTest.php`
 - `MailSmtpTest.php`
 - `MailTransportTest.php`
 - `OauthLinkTest.php`
@@ -228,7 +238,8 @@ Current unit test files include:
 - `StructureTest.php`
 - `ViewBridgeSmokeTest.php`
 
-Contract tests (`CommentReadTest`, `CommentTrustBoundaryTest`, `GeoipReaderTest`, `InputFilterTest`,
+Contract tests (`CommentNotifyTest`, `CommentReadTest`, `CommentStateTest`, `CommentTargetTest`,
+`CommentThreadTest`, `CommentTrustBoundaryTest`, `CommentWriteTest`, `GeoipReaderTest`, `InputFilterTest`,
 `InputVarContractTest`, `PageCacheContractTest`, `StatsContractTest`) drive
 production code through `tests/Support/contract_probe.php`, which boots the real
 core in an isolated CLI process per scenario. Prefer that route over copying an algorithm into a test:
