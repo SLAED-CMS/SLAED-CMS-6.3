@@ -18,6 +18,7 @@ return [
         'nump' => '8',
         'privat' => '1',
         'profil' => '1',
+        'reps' => '5',
         'send' => '30',
         'sort' => '0',
         'web' => '0',

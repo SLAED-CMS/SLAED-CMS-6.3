@@ -624,6 +624,20 @@ function save(): void {
                 ];
                 $sdone = true;
             }
+            if (is_array($sched) && !isset($sched['jobs']['commentsync'])) {
+                $sched['jobs']['commentsync'] = [
+                    'title' => 'Comment counter sync',
+                    'type' => 'system',
+                    'active' => '1',
+                    'system' => 'commentsync',
+                    'schedule' => '30 4 * * *',
+                    'priority' => '5',
+                    'lock_timeout' => '900',
+                    'manual' => '1',
+                    'settings' => [],
+                ];
+                $sdone = true;
+            }
             if (is_array($sched) && isset($sched['jobs']['newsletter']) && is_array($sched['jobs']['newsletter'])) {
                 $sched['jobs']['newsletter']['active'] = '1';
                 $sched['jobs']['newsletter']['schedule'] = '*/5 * * * *';

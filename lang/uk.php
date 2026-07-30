@@ -89,6 +89,8 @@ define('_COMMENT','Коментар');
 define('_COMMENTREPLY','Розмістити коментар');
 define('_COMMENTS','Коментарі');
 define('_COMMENTS_ADDED','Ваш коментар опубліковано. Він знаходиться на іншій сторінці обговорення.');
+define('_COMMENTS_REPLIES','Показати відповіді');
+define('_COMMENTS_REPS','Відповідей під одним коментарем');
 define('_COMMENTS_MORE','Показати ще коментарі');
 define('_COMMENTS_GONE','Цей коментар видалено. Відповіді під ним збережено.');
 define('_COMMENTS_PARENT','Цю відповідь неможливо додати до вказаного коментаря.');

@@ -64,16 +64,50 @@ class Comment {
         ];
     }
 
-    # Count the live comments of one target that the current viewer may see, replies included and tombstones left out
-    public function getCount(string $mod, int $id): int {
-        [$where, $pars] = $this->getScope($mod, $id, false);
-        return $this->getTotal(PREFIX_DB.'_comment '.$where, $pars);
+    # Report the target rows whose stored comment counter disagrees with the comments actually published under them
+    # That counter is denormalised on purpose - eight modules read it without ever touching this table - so nothing notices when it drifts, and this is what notices
+    # The count is the public one and never the viewer's: it is bookkeeping about a column every visitor reads, so a moderator running the sweep must not count what only they can see
+    public function getCountDrift(string $mod = ''): array {
+        $out = [];
+        foreach (self::MODULES as $name => $one) {
+            if ($mod !== '' && $mod !== $name) continue;
+            $tab = PREFIX_DB.$one[0];
+            $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = x.id AND c.status = :stat AND c.deleted IS NULL';
+            $held = 'SELECT 1 FROM '.PREFIX_DB.'_comment AS d WHERE d.modul = :dmod AND d.cid = x.id';
+            $sql = 'SELECT t.cid, t.col, t.live FROM (SELECT x.id AS cid, x.comments AS col, ('.$live.') AS live FROM '.$tab.' AS x'
+                .' WHERE x.comments <> 0 OR EXISTS ('.$held.')) AS t WHERE t.col <> t.live ORDER BY t.cid ASC';
+            $pars = ['mod' => $name, 'dmod' => $name, 'stat' => CommentStatus::Published->value];
+            foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
+                $out[] = ['modul' => $name, 'cid' => intval($row['cid']), 'col' => intval($row['col']), 'live' => intval($row['live'])];
+            }
+        }
+        return $out;
+    }
+
+    # Write the live comment count back into the target rows a drift report named, and answer how many rows were actually corrected
+    # The number is recomputed inside the statement rather than carried over from the report, so a comment written between the two cannot be overwritten by a stale figure
+    public function updateCountDrift(array $rows): int {
+        $done = 0;
+        foreach ($rows as $one) {
+            $mod = (string)($one['modul'] ?? '');
+            $cid = intval($one['cid'] ?? 0);
+            if ($cid < 1 || !isset(self::MODULES[$mod])) continue;
+            $tab = PREFIX_DB.self::MODULES[$mod][0];
+            $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = :cid AND c.status = :stat AND c.deleted IS NULL';
+            $sql = 'UPDATE '.$tab.' SET comments = ('.$live.') WHERE id = :tid';
+            $pars = ['mod' => $mod, 'cid' => $cid, 'stat' => CommentStatus::Published->value, 'tid' => $cid];
+            if ($this->db->getSqlQuery($sql, $pars) === false) continue;
+            if (intval($this->db->getSqlAffected()) > 0) $done++;
+        }
+        if ($done > 0) Cache::addEpoch();
+        return $done;
     }
 
     # Return one page of the discussion of a target: the page counts and paginates root comments, and every root on it arrives with its whole branch
     # The scope is resolved once and every query runs against it, so the count, the roots and their replies can never answer to different permissions
     # Replies follow their root in path order, which is the order they were written in, so the rows come back ready to render top to bottom
-    public function getList(string $mod, int $id, int $page): array {
+    # One root may be named through full, and then its branch is answered whole rather than capped, which is what a reader without HTMX follows the reply control to
+    public function getList(string $mod, int $id, int $page, int $full = 0): array {
         [$where, $pars] = $this->getScope($mod, $id, true);
         $root = $where.' AND pid = 0';
         $out = $this->getPager($this->getTotal(PREFIX_DB.'_comment '.$root, $pars), $page, intval($this->conf['num'] ?? 15));
@@ -86,24 +120,30 @@ class Comment {
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $tree[] = $this->getRowData($row);
         }
-        $out['rows'] = $this->getAuthorRows($this->getTreeRows($tree, $where, $pars));
+        $out['rows'] = $this->getAuthorRows($this->getTreeRows($tree, $where, $pars, $full));
         return $out;
     }
 
-    # Return the replies stored under one comment, oldest first and never more than the caller asked for, so a branch can be fetched on its own
+    # Return the replies stored under one comment, oldest first, skipping what the caller already has and never more than it asked for
     # The scope of the comment's own target decides what is visible here as well, which is what keeps a branch request from answering more than its page would
-    public function getBranch(int $id, int $limit): array {
-        if ($id < 1 || $limit < 1) return [];
+    # The answer carries the branch total beside the rows, so the caller knows whether a further request has anything left to fetch
+    public function getBranch(int $id, int $limit, int $skip = 0): array {
+        $out = ['rows' => [], 'total' => 0, 'skip' => max(0, $skip), 'left' => 0];
+        if ($id < 1 || $limit < 1) return $out;
         $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT modul, cid, path FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-        if (!$row || (string)$row['path'] === '') return [];
+        if (!$row || (string)$row['path'] === '') return $out;
         [$where, $pars] = $this->getScope((string)$row['modul'], intval($row['cid']), true);
         $pars['base'] = (string)$row['path'].'/%';
-        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment '.$where.' AND path LIKE :base ORDER BY path ASC LIMIT 0, '.intval($limit);
-        $out = [];
+        $out['total'] = $this->getTotal(PREFIX_DB.'_comment '.$where.' AND path LIKE :base', $pars);
+        if ($out['total'] < 1) return $out;
+        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment '.$where.' AND path LIKE :base ORDER BY path ASC LIMIT '.$out['skip'].', '.intval($limit);
+        $rows = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $one) {
-            $out[] = $this->getRowData($one);
+            $rows[] = $this->getRowData($one);
         }
-        return $this->getAuthorRows($out);
+        $out['rows'] = $this->getAuthorRows($rows);
+        $out['left'] = max(0, $out['total'] - $out['skip'] - count($out['rows']));
+        return $out;
     }
 
     # Return one page of the moderation list, narrowed by state, by module and by one of the five search fields
@@ -205,7 +245,7 @@ class Comment {
     }
 
     # Resolve the syntax a new comment body is stored under; an html editor grants trust rather than naming a format, so it is refused here and the body is kept as markdown source
-    public function getBodyFormat(): string {
+    private function getBodyFormat(): string {
         $fmt = getEditorMode();
         return in_array($fmt, self::FORMATS, true) ? $fmt : 'markdown';
     }
@@ -383,6 +423,17 @@ class Comment {
         return true;
     }
 
+    # Anonymise the comments of an account that is being removed: the rows stay, so discussions stay readable and every reply keeps the parent it was written under
+    # Removing the rows instead would shrink the target counters of eight modules and break every branch below them, which is why the reference goes and the comment does not
+    # Counters and points are deliberately left alone: the comments are still published, and there is no account left to recalculate a point score for
+    public function deleteUser(int $uid): bool {
+        if ($uid < 1) return false;
+        $done = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET uid = 0, name = \'\' WHERE uid = :uid', ['uid' => $uid]);
+        if ($done === false) return false;
+        if (intval($this->db->getSqlAffected()) > 0) Cache::addEpoch();
+        return true;
+    }
+
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
     public function updateBody(int $id, string $body): bool {
         if ($id < 1) return false;
@@ -442,24 +493,41 @@ class Comment {
     }
 
     # Load the replies of the root comments of one page and put every branch behind the root it belongs to, in the order it was written
-    # A root without replies costs nothing here, and the whole page is answered by one round trip rather than by one per root
-    private function getTreeRows(array $roots, string $where, array $pars): array {
+    # A root shows at most the configured number of replies and reports how many it has, so one long discussion cannot put an unbounded page in front of a reader
+    # Two round trips answer the whole page rather than one per root: the counts decide what is left to fetch, and the rows are capped before they are read
+    # The cap is a plain LIMIT rather than a window function, because no window function is used anywhere in this project and the distribution targets servers without them
+    private function getTreeRows(array $roots, string $where, array $pars, int $full = 0): array {
         if (!$roots) return [];
+        $reps = max(1, intval($this->conf['reps'] ?? 5));
         $keys = [];
         foreach ($roots as $key => $one) {
             $keys[] = 'path LIKE :b'.$key;
             $pars['b'.$key] = $one['path'].'/%';
         }
-        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment '.$where.' AND pid != 0 AND ('.implode(' OR ', $keys).') ORDER BY path ASC';
-        $kids = [];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
-            $one = $this->getRowData($row);
-            $kids[substr($one['path'], 0, 10)][] = $one;
+        $from = PREFIX_DB.'_comment '.$where.' AND pid != 0 AND ('.implode(' OR ', $keys).')';
+        $seen = [];
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery('SELECT SUBSTRING(path, 1, 10) AS base, COUNT(*) AS num FROM '.$from.' GROUP BY base', $pars)) ?: [] as $row) {
+            $seen[(string)$row['base']] = intval($row['num']);
         }
+        $kids = [];
+        if ($seen) {
+            $sql = 'SELECT '.self::FIELDS.' FROM '.$from.' ORDER BY path ASC LIMIT 0, '.(count($roots) * $reps);
+            foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
+                $one = $this->getRowData($row);
+                $base = substr($one['path'], 0, 10);
+                if (count($kids[$base] ?? []) >= $reps) continue;
+                $kids[$base][] = $one;
+            }
+        }
+        $wide = ($full > 0) ? str_pad((string)$full, 10, '0', STR_PAD_LEFT) : '';
+        if ($wide !== '' && ($seen[$wide] ?? 0) > $reps) $kids[$wide] = $this->getBranch($full, $seen[$wide])['rows'];
         $out = [];
         foreach ($roots as $one) {
+            $branch = $kids[$one['path']] ?? [];
+            $one['kids'] = $seen[$one['path']] ?? 0;
+            $one['shown'] = count($branch);
             $out[] = $one;
-            foreach ($kids[$one['path']] ?? [] as $kid) $out[] = $kid;
+            foreach ($branch as $kid) $out[] = $kid;
         }
         return $out;
     }

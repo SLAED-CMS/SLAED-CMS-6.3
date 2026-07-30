@@ -275,7 +275,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 # Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
-    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc'];
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc', 'commentsync' => 'commentsync'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -531,6 +531,7 @@ function addSchedulerSystemJob(string $name): array {
         'maildrain' => addMailTask(),
         'newsletter' => updateNewsletter(),
         'cachegc' => addCacheGcTask(),
+        'commentsync' => addCommentTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }
@@ -3766,6 +3767,27 @@ function addMailTask(): array {
             'last_mail_pruned' => $data['kept'],
             'last_mail_stop' => $data['stop'],
         ],
+    ];
+}
+
+# Bring the comment counter of every target back in line with the comments actually published under it, as a scheduler job
+# The counter is denormalised and eight modules read it without touching the comment table, so nothing notices when it drifts; this is what notices and repairs it
+# A run that finds nothing is a success and never idle, because this job exists to report that the two agree just as much as to fix it when they do not
+function addCommentTask(): array {
+    global $com;
+    if (!$com instanceof Comment) return ['status' => 'failed', 'message' => 'Comment service is unavailable'];
+    $drift = $com->getCountDrift();
+    if (!$drift) return ['status' => 'success', 'message' => 'Every comment counter agrees with its target', 'extra' => ['last_comment_drift' => 0, 'last_comment_fixed' => 0]];
+    $done = $com->updateCountDrift($drift);
+    $mods = [];
+    foreach ($drift as $one) $mods[$one['modul']] = ($mods[$one['modul']] ?? 0) + 1;
+    ksort($mods);
+    $list = [];
+    foreach ($mods as $name => $num) $list[] = $name.' '.$num;
+    return [
+        'status' => ($done === count($drift)) ? 'success' : 'failed',
+        'message' => 'Repaired '.$done.' of '.count($drift).' drifted counters ('.implode(', ', $list).')',
+        'extra' => ['last_comment_drift' => count($drift), 'last_comment_fixed' => $done],
     ];
 }
 

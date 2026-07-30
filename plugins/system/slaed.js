@@ -1370,6 +1370,10 @@
         var form = document.getElementById('formcsave');
         if (!form) return;
         form.reset();
+        var area = form.querySelector('textarea[name="text"]');
+        var api = window.SlaedToastUi;
+        var edit = (area && api && typeof api.getEditor === 'function') ? api.getEditor(area.id) : null;
+        if (edit && typeof edit.setMarkdown === 'function') edit.setMarkdown('');
         var key = form.querySelector('[data-sl-reqkey]');
         if (key) key.value = '';
         var marked = document.querySelectorAll('.sl-com-reply-at');

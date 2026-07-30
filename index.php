@@ -121,6 +121,7 @@ if (empty($go)) {
             case 'updateCommentStatus': updateCommentStatus(); break;
             case 'deleteComment': deleteComment(); break;
             case 'getCommentPage': getCommentPage(); break;
+            case 'getCommentBranch': getCommentBranch(); break;
             case 'updatePost': updatePost(); break;
             case 'getPrivateMessageView': getPrivateMessageView(); break;
             case 'addPrivateMessage': addPrivateMessage(); break;

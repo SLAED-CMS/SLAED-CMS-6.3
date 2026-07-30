@@ -150,6 +150,70 @@ final class CommentThreadTest extends TestCase
         $this->assertSame($copy, $sorted, 'A branch does not come back in the order it was written');
     }
 
+    # A branch is walked in slices: the answer says how many replies it holds and how many are left behind the offset
+    #[Test]
+    public function aBranchReportsWhatIsLeftBehindTheOffset(): void
+    {
+        $data = $this->getProbe();
+        $this->assertSame(19, $data['slice']['total'], 'The branch did not report the replies it holds');
+        $this->assertSame(16, $data['slice']['left'], 'The branch did not report what is left after the first slice');
+        $this->assertSame(3, $data['slice']['skip'], 'A second slice did not answer the rows behind the offset');
+        $this->assertSame(0, $data['slice']['past'], 'An offset past the branch answered rows anyway');
+    }
+
+    # A page shows at most the configured number of replies under one root and says how many that root really holds
+    #[Test]
+    public function aPageCapsTheRepliesOfOneRoot(): void
+    {
+        $data = $this->getProbe();
+        $reps = $data['cap']['reps'];
+        $this->assertGreaterThan(0, $reps);
+        $deep = 0;
+        foreach ($data['cap']['roots'] as [$kids, $shown]) {
+            $this->assertLessThanOrEqual($reps, $shown, 'A root put more replies on the page than the setting allows');
+            $this->assertSame(min($kids, $reps), $shown, 'A root does not show what it is allowed to show');
+            if ($kids > $reps) $deep++;
+        }
+        $this->assertGreaterThan(0, $deep, 'No root on the page held more replies than the cap, so the cap was not exercised');
+        $code = $this->getSource('core/classes/comment.php', 'getTreeRows', '    ');
+        $this->assertStringContainsString("intval(\$this->conf['reps'] ?? 5)", $code);
+        $this->assertStringContainsString('LIMIT 0, ', $code, 'The reply query is not capped at all');
+        $this->assertStringNotContainsString('ROW_NUMBER', $code, 'The cap uses a window function this distribution cannot rely on');
+    }
+
+    # The counter every module reads is swept against the comments that are really published, and only the drifted rows are written
+    #[Test]
+    public function theTargetCounterIsSweptAndRepaired(): void
+    {
+        $data = $this->getProbe();
+        if ($data['drift']['seeded'] < 1) $this->markTestSkipped('No commented news target on this installation');
+        $this->assertSame($data['drift']['seeded'], $data['drift']['found'], 'The sweep did not find the drift the probe created');
+        $this->assertSame($data['drift']['seeded'], $data['drift']['fixed'], 'The repair did not write the rows it was handed');
+        $this->assertSame(0, $data['drift']['left'], 'The repair left drift it had just been told about');
+        $this->assertSame(0, $data['drift']['bad'], 'An unknown module or a zero target was written anyway');
+        $this->assertTrue($data['drift']['clean'], 'Repairing an already correct counter wrote to it again');
+        $this->assertTrue($data['drift']['whole'], 'The whole sweep answered less than the one-module sweep');
+        $code = $this->getSource('core/classes/comment.php', 'updateCountDrift', '    ');
+        $this->assertStringContainsString('SELECT COUNT(*) FROM', $code, 'The repair trusts the figure from the report instead of recomputing it');
+        $this->assertStringNotContainsString('getCount(', $code, 'The repair counts through the viewer scope rather than the public one');
+    }
+
+    # The sweep runs unattended as a scheduler job and by hand through a tool, and neither of them owns a second copy of the module map
+    #[Test]
+    public function theSweepIsReachableWithoutAnyone(): void
+    {
+        $task = $this->getSource('core/system.php', 'addCommentTask');
+        $this->assertStringContainsString('$com->getCountDrift()', $task);
+        $this->assertStringContainsString('$com->updateCountDrift($drift)', $task);
+        $core = $this->getFile('core/system.php');
+        $this->assertStringContainsString("'commentsync' => addCommentTask()", $core, 'The job is not dispatched');
+        $this->assertStringContainsString("'commentsync' => 'commentsync'", $core, 'The job is not a known system job');
+        $tool = $this->getFile('tools/comment-recount.php');
+        $this->assertStringContainsString('$com->getCountDrift($only)', $tool);
+        $this->assertStringContainsString('$com->updateCountDrift($drift)', $tool);
+        $this->assertDoesNotMatchRegularExpression('#_faq|_products|_voting#', $tool, 'The tool carries its own copy of the module map');
+    }
+
     # A removed comment that still carries a live reply stays in the page as a tombstone, and leaves it once the last reply is gone
     #[Test]
     public function aRemovedParentWithRepliesStaysAsATombstone(): void
@@ -161,6 +225,34 @@ final class CommentThreadTest extends TestCase
         $this->assertTrue($data['tomb']['gone'], 'The tombstone stayed after its last reply was removed');
         $this->assertStringContainsString('is_gone', $this->getFile('templates/lite/fragments/comment.html'));
         $this->assertStringContainsString('_COMMENTS_GONE', $this->getSource('core/user.php', 'getCommentView'));
+    }
+
+    # Removing an account keeps its comments and drops only the reference to it, so no discussion loses a row and no branch loses a parent
+    #[Test]
+    public function removingAnAccountKeepsItsCommentsAndTheirBranches(): void
+    {
+        $data = $this->getProbe();
+        if (empty($data['user']['uid'])) $this->markTestSkipped('No account with stored comments on this installation');
+        $this->assertTrue($data['user']['done'], 'The anonymisation was refused');
+        $this->assertSame(0, $data['user']['left'], 'A comment still points at the removed account');
+        $this->assertTrue($data['user']['rows'], 'A comment was removed together with its author');
+        $this->assertTrue($data['user']['kids'], 'A reply lost its parent when its author was removed');
+        $this->assertSame($data['user']['mine'], $data['user']['anon'], 'The comments of the account were not all anonymised');
+        $this->assertFalse($data['user']['zero'], 'An account id of zero was accepted');
+    }
+
+    # The user delete handler reaches the comment subsystem instead of holding a statement of its own, which is what the dead line it replaces used to be
+    #[Test]
+    public function theUserDeleteHandlerReachesTheClass(): void
+    {
+        $call = $this->getSource('modules/account/admin/index.php', 'delete');
+        $this->assertStringContainsString('$com->deleteUser($id)', $call, 'Deleting a user does not reach the comment subsystem');
+        $this->assertStringNotContainsString('_comment', $call, 'The user delete handler holds comment SQL again');
+        $code = $this->getSource('core/classes/comment.php', 'deleteUser', '    ');
+        $this->assertStringContainsString('SET uid = 0, name =', $code, 'The comments of a removed account keep a reference to it');
+        $this->assertStringContainsString('WHERE uid = :uid', $code, 'The anonymisation is not scoped to the account being removed');
+        $this->assertStringNotContainsString('DELETE', $code, 'The comments of a removed account are erased rather than anonymised');
+        $this->assertStringNotContainsString('updateTargetCount', $code, 'Removing an account moves a target counter');
     }
 
     # The probe leaves the table exactly as it found it, so everything above was measured against live rows rather than against a fixture

@@ -89,6 +89,8 @@ define('_COMMENT','Comment');
 define('_COMMENTREPLY','Comment Post');
 define('_COMMENTS','Comments');
 define('_COMMENTS_ADDED','Your comment has been posted. It is on another page of the discussion.');
+define('_COMMENTS_REPLIES','Show replies');
+define('_COMMENTS_REPS','Replies shown under one comment');
 define('_COMMENTS_MORE','Show more comments');
 define('_COMMENTS_GONE','This comment was removed. The replies below it are kept.');
 define('_COMMENTS_PARENT','This reply cannot be attached to the comment it names.');

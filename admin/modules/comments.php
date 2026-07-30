@@ -329,6 +329,7 @@ function config(): void {
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $rows = [
         ['label_html' => _C_33, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num', 'value_attr' => (string)$conf['comments']['num']])],
+        ['label_html' => _COMMENTS_REPS, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'reps', 'value_attr' => (string)($conf['comments']['reps'] ?? 5)])],
         ['label_html' => _C_34, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anum', 'value_attr' => (string)$conf['comments']['anum']])],
         ['label_html' => _C_35, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'nump', 'value_attr' => (string)$conf['comments']['nump']])],
         ['label_html' => _C_36, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'anump', 'value_attr' => (string)$conf['comments']['anump']])],
@@ -379,6 +380,7 @@ function save(): void {
     if (!$warn) {
         $cont = [
             'num' => getVar('post', 'num', 'num', 15),
+            'reps' => getVar('post', 'reps', 'num', 5),
             'anum' => getVar('post', 'anum', 'num', 15),
             'nump' => getVar('post', 'nump', 'num', 5),
             'anump' => getVar('post', 'anump', 'num', 5),

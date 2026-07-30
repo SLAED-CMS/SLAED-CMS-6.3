@@ -89,6 +89,8 @@ define('_COMMENT','Kommentar');
 define('_COMMENTREPLY','Kommentieren');
 define('_COMMENTS','Kommentare');
 define('_COMMENTS_ADDED','Ihr Kommentar wurde veröffentlicht. Er steht auf einer anderen Seite der Diskussion.');
+define('_COMMENTS_REPLIES','Antworten anzeigen');
+define('_COMMENTS_REPS','Antworten unter einem Kommentar');
 define('_COMMENTS_MORE','Weitere Kommentare anzeigen');
 define('_COMMENTS_GONE','Dieser Kommentar wurde entfernt. Die Antworten darunter bleiben erhalten.');
 define('_COMMENTS_PARENT','Diese Antwort kann dem genannten Kommentar nicht zugeordnet werden.');

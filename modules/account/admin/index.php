@@ -910,7 +910,7 @@ function newdrop(): void {
 }
 
 function delete(): void {
-    global $db, $afile;
+    global $db, $afile, $com;
     $iswarn = !checkSiteToken();
     if (!$iswarn) {
         $id = getVar('get', 'id', 'num');
@@ -918,7 +918,7 @@ function delete(): void {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]);
-            # $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
+            $com->deleteUser($id);
         }
     }
     setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);

@@ -89,6 +89,8 @@ define('_COMMENT','Комментарий');
 define('_COMMENTREPLY','Разместить комментарий');
 define('_COMMENTS','Комментарии');
 define('_COMMENTS_ADDED','Ваш комментарий опубликован. Он находится на другой странице обсуждения.');
+define('_COMMENTS_REPLIES','Показать ответы');
+define('_COMMENTS_REPS','Ответов под одним комментарием');
 define('_COMMENTS_MORE','Показать ещё комментарии');
 define('_COMMENTS_GONE','Этот комментарий удален. Ответы под ним сохранены.');
 define('_COMMENTS_PARENT','Этот ответ невозможно привязать к указанному комментарию.');

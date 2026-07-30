@@ -88,7 +88,6 @@ function getCommentView(array $val, int $numb, string $token): string {
         'report' => $utip,
         'date' => $date,
         'ip' => $ip,
-        'meta_tip' => '',
         'post_count' => $amess,
         'avatar' => $avatar,
         'avatar_html' => $tpl->getHtmlFrag('image', [
@@ -108,7 +107,6 @@ function getCommentView(array $val, int $numb, string $token): string {
         'btn_edit' => getActionMenu($items),
         'is_closed' => !$stat,
         'closed_title' => _PCLOSED,
-        'checkb' => '',
         'share_url' => '#'.$cmid,
     ]);
 }
@@ -120,11 +118,31 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, strin
     global $conf, $tpl;
     $numb = $data['first'];
     $cont = '';
+    $open = [];
+    $more = static function (array $val) use ($tpl, $mod, $cid, $token, $pag): string {
+        return $tpl->getHtmlFrag('link', [
+            'href' => getSeoUrl(['name' => $mod, $pag.'&all' => $val['id']]).'#'.$val['id'],
+            'hx_url' => 'index.php?go=1&op=getCommentBranch&id='.$val['id'].'&skip='.$val['shown'],
+            'hx_headers' => $token,
+            'title' => (string)_COMMENTS_REPLIES,
+            'label' => (string)_COMMENTS_REPLIES.' ('.($val['kids'] - $val['shown']).')',
+            'is_htmx' => true,
+            'hx_target' => 'this',
+            'hx_swap' => 'outerHTML',
+            'is_card_id' => true,
+        ]);
+    };
     foreach ($data['rows'] as $val) {
-        $cont .= getCommentView($val, $val['depth'] ? 0 : $numb, $token);
-        if ($val['depth']) continue;
+        if ($val['depth']) {
+            $cont .= getCommentView($val, 0, $token);
+            continue;
+        }
+        if ($open) $cont .= $more($open);
+        $open = (intval($val['kids'] ?? 0) > intval($val['shown'] ?? 0)) ? $val : [];
+        $cont .= getCommentView($val, $numb, $token);
         if ($conf['comments']['sort']) { $numb++; } else { $numb--; }
     }
+    if ($open) $cont .= $more($open);
     if ($data['page'] >= $data['pages']) return $cont;
     $next = $data['page'] + 1;
     return $cont.$tpl->getHtmlFrag('link', [
@@ -143,10 +161,10 @@ function getCommentRows(array $data, string $mod, int $cid, string $token, strin
 # Render the comment list of one target: the rows, the pagination and the author records come from the comment subsystem, this function only assembles the markup
 # The page counts root comments and every root arrives with its branch behind it, so the running number follows the roots and a reply carries none
 # The rows have a container of their own, because a fragment response appends to them and the pager below them is not a comment
-function getCommentList(int $cid = 0, string $mod = '', int $page = 0): string {
+function getCommentList(int $cid = 0, string $mod = '', int $page = 0, int $full = 0): string {
     global $conf, $tpl, $com;
     $mod = filterVar($mod);
-    $data = $com->getList($mod, $cid, $page ?: 1);
+    $data = $com->getList($mod, $cid, $page ?: 1, $full);
     $num = getVar('get', 'num', 'num');
     $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
     $rows = ($data['total'] < 1)
@@ -169,13 +187,44 @@ function getCommentPage(): void {
     echo getCommentRows($data, $mod, $id, getPageToken(), 'op=view&id='.$id);
 }
 
+# Answer the replies of one comment the reader has not been shown yet, as the sequence of fragments appended in place of the control that asked for them
+# The control the answer ends with carries the new offset, so a branch can be walked in slices without the page ever loading a whole discussion at once
+function getCommentBranch(): void {
+    global $conf, $tpl, $com;
+    $id = getVar('req', 'id', 'num', 0);
+    $skip = getVar('req', 'skip', 'num', 0);
+    $reps = max(1, intval($conf['comments']['reps'] ?? 5));
+    $data = $com->getBranch($id, $reps, $skip);
+    if (!$data['rows']) return;
+    $token = getPageToken();
+    $cont = '';
+    foreach ($data['rows'] as $val) $cont .= getCommentView($val, 0, $token);
+    if ($data['left'] > 0) {
+        $seen = $skip + count($data['rows']);
+        $cont .= $tpl->getHtmlFrag('link', [
+            'href' => '#'.$id,
+            'hx_url' => 'index.php?go=1&op=getCommentBranch&id='.$id.'&skip='.$seen,
+            'hx_headers' => $token,
+            'title' => (string)_COMMENTS_REPLIES,
+            'label' => (string)_COMMENTS_REPLIES.' ('.$data['left'].')',
+            'is_htmx' => true,
+            'hx_target' => 'this',
+            'hx_swap' => 'outerHTML',
+            'is_card_id' => true,
+        ]);
+    }
+    echo $cont;
+}
+
 # Render the comment list and submission form for an item
 # The list, the status zone and the form are three regions a fragment response addresses on its own, so an add never replaces the region it was submitted from
+# The editor field is named rather than numbered, because a view page already carries the target id and every comment id as element ids and a numeric one collides with them
 function setComShow(int $id = 0, int $acomm = 0): string {
     global $conf, $user, $tpl, $com;
-    $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage(getVar('get', 'at', 'num', 0));
+    $full = getVar('get', 'all', 'num', 0);
+    $page = getVar('get', 'com', 'num', 0) ?: $com->getRootPage($full ?: getVar('get', 'at', 'num', 0));
     $cont = $tpl->getHtmlFrag('title', ['title' => _COMMENTS, 'is_level_two' => true]);
-    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page)]);
+    $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcsave', 'content' => getCommentList($id, $conf['name'], $page, $full)]);
     $cont .= $tpl->getHtmlFrag('block-content', ['id' => 'repcstat', 'content' => '']);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -199,7 +248,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
                 'label' => _COMMENT,
                 'hide_label' => true,
                 'field_html' => getTplTextarea([
-                    'id' => 1,
+                    'id' => 'ctext',
                     'name' => 'text',
                     'value' => '',
                     'mod' => $conf['name'],
@@ -502,7 +551,7 @@ function addComment(): void {
     }
     $off = $drop ? intval($com->getList($mod, $id, $drop)['rows'][0]['id'] ?? 0) : 0;
     $oob = $off ? $tpl->getHtmlFrag('swap-oob', ['id' => $off]) : '';
-    foreach ($off ? $com->getBranch($off, 200) : [] as $kid) $oob .= $tpl->getHtmlFrag('swap-oob', ['id' => $kid['id']]);
+    foreach ($off ? $com->getBranch($off, 500)['rows'] : [] as $kid) $oob .= $tpl->getHtmlFrag('swap-oob', ['id' => $kid['id']]);
     if ($at > 0) header('HX-Retarget: [id=\''.$data['rows'][$at - 1]['id'].'\']');
     header('HX-Reswap: '.($at > 0 ? 'afterend' : ($total === 1 ? 'innerHTML' : 'afterbegin')));
     echo getCommentView($row, $row['pid'] ? 0 : $numb, getPageToken()).$oob;

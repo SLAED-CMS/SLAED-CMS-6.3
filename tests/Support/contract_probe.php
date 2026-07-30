@@ -113,7 +113,7 @@ function getProbeCommentRead(): array {
     $pars = ['cid' => $cid, 'mod' => $mod, 'status' => 0];
     $cnt = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(cid) AS num FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status != :status', $pars));
     $tot = intval($cnt['num']);
-    $out['count'] = [$tot, $com->getCount($mod, $cid)];
+    $out['count'] = [$tot, intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND modul = :mod AND status = 1 AND deleted IS NULL', ['cid' => $cid, 'mod' => $mod]))['num'])];
     $pgs = (int)ceil($tot / $lnum);
     $out['list'] = [];
     foreach (array_unique([1, $pgs]) as $page) {
@@ -470,19 +470,71 @@ function getProbeCommentThread(): array {
         'depths' => array_slice(array_column($page['rows'], 'depth'), 0, 4),
     ];
     $branch = $com->getBranch(intval($root['id']), 3);
-    $out['branch'] = [count($branch), array_column($branch, 'id'), count($com->getBranch(intval($root['id']), 1))];
+    $out['branch'] = [count($branch['rows']), array_column($branch['rows'], 'id'), count($com->getBranch(intval($root['id']), 1)['rows'])];
+    $out['slice'] = [
+        'total' => $branch['total'],
+        'left' => $branch['left'],
+        'skip' => count($com->getBranch(intval($root['id']), 3, 3)['rows']),
+        'past' => count($com->getBranch(intval($root['id']), 3, 9999)['rows']),
+    ];
+    $cap = $com->getList('news', $tid, 1);
+    $wide = [];
+    foreach ($cap['rows'] as $one) {
+        if (!$one['depth']) $wide[] = [$one['kids'], $one['shown']];
+    }
+    $out['cap'] = ['reps' => max(1, intval($conf['comments']['reps'] ?? 5)), 'roots' => $wide];
     $com->deleteComment(intval($kid['id']));
     $tomb = $com->getList('news', $tid, 1);
     $ids = array_column($tomb['rows'], 'id');
     $out['tomb'] = [
         'kept' => in_array(intval($kid['id']), $ids, true),
-        'child' => in_array($deep, $ids, true),
+        'child' => in_array(intval($sub['id']), $ids, true),
         'marked' => (string)($db->getSqlRow($db->getSqlQuery('SELECT deleted FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => intval($kid['id'])]))['deleted'] ?? ''),
         'reply' => $com->addComment('news', $tid, 'thread probe under a tombstone', 'Probe', '', intval($kid['id']))['error'],
     ];
     foreach (array_reverse(array_slice($made, 2)) as $one) $com->deleteComment($one);
     $bare = $com->getList('news', $tid, 1);
     $out['tomb']['gone'] = !in_array(intval($kid['id']), array_column($bare['rows'], 'id'), true);
+    $count = static function (string $where, array $pars = []) use ($db): int {
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE '.$where, $pars));
+        return $row ? intval($row['num']) : 0;
+    };
+    $auth = $db->getSqlRow($db->getSqlQuery('SELECT uid, COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE uid > 0 GROUP BY uid ORDER BY num DESC LIMIT 1'));
+    $auid = $auth ? intval($auth['uid']) : 0;
+    $out['user'] = ['uid' => $auid, 'mine' => intval($auth['num'] ?? 0)];
+    if ($auid) {
+        $seen = [getProbeCommentCount(), $count('pid != 0'), $count('uid = 0 AND name = \'\'')];
+        $out['user']['done'] = $com->deleteUser($auid);
+        $out['user']['left'] = $count('uid = :uid', ['uid' => $auid]);
+        $out['user']['rows'] = (getProbeCommentCount() === $seen[0]);
+        $out['user']['kids'] = ($count('pid != 0') === $seen[1]);
+        $out['user']['anon'] = ($count('uid = 0 AND name = \'\'') - $seen[2]);
+        $out['user']['zero'] = $com->deleteUser(0);
+    }
+    # The sweep is measured against drift this probe creates rather than against whatever the installation happens
+    # to carry, so the case proves the mechanism instead of the history of one stand
+    $out['drift'] = ['seeded' => 0, 'found' => 0, 'fixed' => 0, 'left' => 0, 'bad' => 0, 'clean' => false];
+    $pick = $db->getSqlRows($db->getSqlQuery(
+        'SELECT cid FROM '.PREFIX_DB.'_comment WHERE modul = \'news\' AND status = 1 AND deleted IS NULL GROUP BY cid ORDER BY COUNT(*) DESC LIMIT 2'
+    )) ?: [];
+    $seed = [];
+    foreach ($pick as $key => $one) {
+        $tid = intval($one['cid']);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET comments = comments + :delta WHERE id = :id', ['delta' => ($key === 0) ? 7 : -1, 'id' => $tid]);
+        $seed[] = ['modul' => 'news', 'cid' => $tid];
+    }
+    $out['drift']['seeded'] = count($seed);
+    if ($seed) {
+        $found = $com->getCountDrift('news');
+        $mine = array_values(array_filter($found, static fn(array $one): bool => in_array(['modul' => $one['modul'], 'cid' => $one['cid']], $seed, true)));
+        $out['drift']['found'] = count($mine);
+        $out['drift']['whole'] = count($com->getCountDrift()) >= count($found);
+        $out['drift']['fixed'] = $com->updateCountDrift($mine);
+        $rest = $com->getCountDrift('news');
+        $out['drift']['left'] = count(array_filter($rest, static fn(array $one): bool => in_array(['modul' => $one['modul'], 'cid' => $one['cid']], $seed, true)));
+        $out['drift']['bad'] = $com->updateCountDrift([['modul' => 'gallery', 'cid' => 1], ['modul' => 'news', 'cid' => 0], []]);
+        $out['drift']['clean'] = ($com->updateCountDrift($mine) === 0);
+    }
     $db->setSqlRollback();
     $out['clean'] = (getProbeCommentCount() === $all);
     $out['count'] = [$all, getProbeCommentCount()];

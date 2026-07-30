@@ -31,6 +31,8 @@ knows nothing of previous ones; this is the only place decisions survive.
 
 | 2026-07-29 | Stage 4 — the `page` row of the transport table | done, **the transport table is complete**. The rows of the list moved into `#repcrows` and the numbered pager renders after it, so a slice can be appended without landing behind the pager. `getCommentRows()` renders the rows of one page and, while the discussion continues, one control at the end of them: an ordinary link to `&com=N+1#comm` carrying `hx-get` to the new `getCommentPage` route, `hx-target="this"` and `hx-swap="outerHTML"`, so it **replaces itself** with the answer and always stands at the end of what is loaded. The route answers rows plus the control for the page after them and nothing else — no container, no pager — and **refuses** a page past the last rather than letting the pager clamp and answer the last page a second time. A cursor was considered and rejected: `filterCanonicalParams()` already drops `com` from the canonical, so paginated comment URLs consolidate onto the target page, and cursor addresses would only add an unbounded crawl space for no indexing gain. The dead anchor of the notification was fixed with it: the mail link and the "on another page" notice now carry `&at=<comment id>`, which `setComShow()` resolves through the new `Comment::getRootPage()` — a range count over roots on `modul_cid_pid_time`. Measured over real HTTP on `news/53`, 81 comments across 6 pages: the first page carries the container, exactly one control whose plain href is `&com=2#comm`, and the pager after it; page two answers **15 rows with no overlap** against page one, no container, no pager and the control for page three; the last page answers its 6 rows and **no** control; page 99 answers nothing; the route without a token is refused; and `&at=1489` — a comment that is not on page one — renders that comment with the pager marking its page. `tests/Unit/CommentTransportTest.php` grew to 15 cases and all 15 fail against the stashed pre-batch tree. `php -l`, full `phpunit` (463 tests, 5 skipped), `phpstan` and `php-cs-fixer check` all green; the markup baseline was re-captured, because the row container and the control are new markup by design |
 
+| 2026-07-30 | After stage 5 — the two halves that had no consumer | done. Two pieces of the design sat unused **because their consumer was never written**, which a sweep for dead code reads as dead and a sweep for unfinished work reads correctly. **The target counter now has a sweep.** `getCountDrift()` reports every target whose `comments` column disagrees with the comments actually published under it and `updateCountDrift()` writes the live number back, recomputed inside the `UPDATE` rather than carried from the report. It runs unattended as the `commentsync` scheduler job (`addCommentTask()`, daily) and by hand through `tools/comment-recount.php report|fix`, and neither holds a second copy of the module map: the tool boots the core instead. A third way in exists for an installation that already runs 6.3 and is updated by hand rather than from a checkout - `setup/sql/update6_3_patch.sql`, pasted into **Database -> Inquiry**, which substitutes `{prefix}` itself so one file serves any prefix and carries the thread columns, the two type repairs and the counter sweep in one paste. That file is the one place the eight-entry map is written out a second time, because SQL cannot ask the class; it was rehearsed against a copy of the live tables rolled back to a pre-patch 6.3 rather than argued: the real `getSqlbatch()` parser accepts it as **22 statements with no error**, both passes report **no failure**, the drift goes **23 to 0**, a second pass writes **nothing**, all eleven touched tables come out **identical to what table.sql creates**, and the 7358 comments come out unchanged with every one of them a root carrying a padded path. Measured on this installation: **23 of 885 targets drift**, in both directions — files 7, news 5, pages 2, voting 9 — which is the residue of the request-supplied `mod` that stage 0 closed; the probe fixes three inside a rolled-back transaction and finds exactly twenty left. `getCount()` was **removed**, not wired: it counts through the *viewer's* scope, so a moderator running the repair would have written pending comments into a public counter. **A branch is bounded now.** `getTreeRows()` capped every root at the new `comments.reps` setting (default 5) and reports how many replies the root really holds, `getBranch()` grew an offset and answers its total and what is left, and the reader gets a control that appends the next slice in place. It stays a real link without HTMX: `&all=<root>` renders that one branch whole on the server. The cap is a plain `LIMIT` and not a window function, because this project uses none anywhere and the distribution targets servers without them. Measured over HTTP against a real nine-comment thread: 5 of 8 replies shown, the control naming the remaining 3, the ajax route returning exactly those 3 with no further control, a wrong token refused, `&all=` rendering all 8 server-side, and the fixture restored. `php -l`, full `phpunit` (471 tests, 5 skipped), `phpstan`, `php-cs-fixer check` and `comment-baseline verify` on all eight modules all green |
+
 ### Decisions made during execution
 
 - The stored-XSS fix landed in the parser rather than in the comment render
@@ -768,11 +770,14 @@ knows nothing of previous ones; this is the only place decisions survive.
   five ajax writes whether they succeeded or were refused, and `Comment` does not
   own the decision. Stage 4 owns that half of the **Page cache** contract; nothing
   in this stage changed it.
-- **`deleteUser()` is still not delivered.** It was stage 1's one missing item and
-  stage 2 does not list it; the commented-out statement at
-  `modules/account/admin/index.php:921` is still the last `_comment` text outside
-  the class, and the behaviour question the **Verification / Write** list asks is
-  still unanswered.
+- ~~**`deleteUser()` is still not delivered.**~~ — **delivered 2026-07-29**, after
+  stage 5, because no stage owned it: stage 1 recorded it as its one missing item
+  and stages 2 to 5 do not list it. `deleteUser()` sets `uid = 0` and clears
+  `name`, so the rows stay and only the reference goes, and
+  `modules/account/admin/index.php:912` calls it where the commented-out statement
+  used to be — deleting a user no longer orphans their comments. The
+  **Verification / Write** question is answered by the **Soft delete** section
+  itself, which had already decided the behaviour.
 
 - **Stage 3 did not drive the submit handler over HTTP.** Batches 4 and 5 signed
   an administrator in over real HTTP; a guest submit needs no credentials but
@@ -887,6 +892,31 @@ knows nothing of previous ones; this is the only place decisions survive.
   `&com=N+1#comm` that HTMX upgrades into an append; it stands last inside the row
   container and replaces **itself** with the answer, so nothing has to be kept in
   step with it and the last page simply renders no control at all.
+- **The browser run found two defects in the form and fixed both, and left a third
+  alone.** All of it belongs to the surface stage 4 rewrote, and none of it was
+  reachable from an HTTP probe:
+  - **the comment editor never reached the field it submits.** `getTplTextarea()`
+    was given the DOM id `1`, and a view page already carries `<article id="1">`
+    for the target and `<div id="1">` for the comment of that id, so the editor
+    driver's `document.getElementById('1')` (`plugins/editors/toastui/driver.php:172`)
+    resolved to the article and wrote the typed text onto it. The field stayed
+    empty, the submit guard read it as empty and refused, so **commenting through
+    the editor was impossible in a browser on any page carrying an element with
+    that id**. The field is now named `ctext`; measured before and after by typing
+    into the editor and reading the field;
+  - **a stored comment cleared the field but not what the visitor sees.**
+    `form.reset()` empties the textarea, and the rich editor is a separate DOM that
+    kept the text, so the next submit reused it. The `sl-comment-add` handler now
+    clears the editor through the registry the insert helper already uses;
+  - **without JavaScript there is no input at all**, and that is left alone. The
+    shared editor driver hides the raw textarea with an inline
+    `style="display:none"` rendered by PHP (`driver.php:61`), so a visitor without
+    scripting sees an empty editor container. The transport around it is intact —
+    the form posts to a real action, carries its token and the server answers
+    `303` — and the gap predates stage 4 by every editor surface in the project,
+    admin forms included. Making the driver hide the field only once the editor is
+    live is the fix, and it is a change to every textarea in the CMS rather than to
+    comments.
 - **The moderation actions do not degrade without JavaScript.** They are `POST`
   routes reached through `hx-post`, and the `href` the speed dial also renders is
   a GET the router now refuses, so a click without HTMX answers a refusal rather
@@ -1374,8 +1404,8 @@ of its selector, and saves a body without the author's edit rules, the
 profile hub counts an account's comments beside its other module counters, the
 admin sidebar shows how many are waiting, and the resolver of stage 0 came home
 in batch 6 — and the stage cannot claim "no direct `_comment` SQL outside
-`Comment`" while any of them has nowhere to go. `deleteUser()` is the one method
-of this list stage 1 did not deliver; see the **Deviations**.
+`Comment`" while any of them has nowhere to go. `deleteUser()` is the one method of
+this list stage 1 did not deliver; it landed after stage 5 — see the **Deviations**.
 
 The verbs are spelled out rather than left as `add()`, `update()` and `delete()`
 because `.rules/global.md` requires 6-24 characters and a verb-plus-noun shape.
@@ -1480,15 +1510,18 @@ see the facts above.
 - deleting a pending comment does not decrement the public counter;
 - `deleteTarget()` removes the comments of a deleted target row physically —
   there is nothing left to reference them;
-- `deleteUser()` **keeps the comments and anonymises them**: `uid` goes to `0`
-  and `name` is replaced with the deleted-user label the avatar helper already
-  recognises (`getUserAvatarUrl(..., $deleted)`). Discussions stay readable,
-  replies keep their parents, target counters do not move and points are not
-  recalculated for an account that no longer exists. Deleting the rows instead
-  would silently shrink counters and, from stage 5, break every branch below
-  them. This replaces the dead commented-out statement at
-  `modules/account/admin/index.php:921`, which currently leaves the comments
-  pointing at a `uid` that no longer resolves;
+- `deleteUser()` **keeps the comments and anonymises them**: `uid` goes to `0` and
+  `name` is cleared, so the row keeps its place and its branch while nothing points
+  at the account any more. Discussions stay readable, replies keep their parents,
+  target counters do not move and points are not recalculated for an account that
+  no longer exists. Deleting the rows instead would silently shrink counters and,
+  from stage 5, break every branch below them. This replaces the dead
+  commented-out statement at `modules/account/admin/index.php:921`, which left the
+  comments pointing at a `uid` that no longer resolves. An earlier revision of this
+  section said `name` takes "the deleted-user label the avatar helper already
+  recognises" — that helper recognises an **absent** account rather than a label,
+  and storing a translated word would freeze one locale into a data row, so the
+  name is cleared and the render shows the anonymous author it now is;
 - from stage 5, a deleted comment that still has replies stays as a tombstone
   so the branch does not break.
 
@@ -1772,9 +1805,9 @@ asserting something the stage deliberately does not deliver.
 
 **Delivered 2026-07-28, all six batches.** The comment table has one owner, the
 three globals are gone and `tests/Unit/CommentIsolationTest.php` guards it. One
-item of this list was not delivered and is recorded in the **Deviations**:
-`deleteUser()`, because the commented-out statement it replaces asks a question
-about behaviour that nothing has answered.
+item of this list was not delivered here and is recorded in the **Deviations**:
+`deleteUser()`, because the commented-out statement it replaces asked a question
+about behaviour that nothing had answered — it landed on 2026-07-29, after stage 5.
 
 **One release, six review units.** Around twenty call sites across thirteen files
 move here, and a single diff of that size gets approved rather than read. Unlike
@@ -1835,7 +1868,7 @@ the markup baseline was re-captured afterwards because this stage changes
 rendered output on purpose, and `tests/Unit/CommentStateTest.php` guards the
 behaviour. What the stage did **not** do is recorded in the **Deviations**: the
 admin routes were measured through the class rather than over HTTP, and
-`deleteUser()` is still outstanding from stage 1.
+`deleteUser()` stayed outstanding from stage 1 until 2026-07-29.
 
 - Merge add and edit validation into `checkRules()`.
 - Fix the maximum word length check: measure the longest word, not the last one,
@@ -2143,6 +2176,21 @@ flood query; response size; submit latency; mail queue drain time.
 
 ### Browser
 
+**Run 2026-07-30 with Playwright 1.60 and Chromium 148**, every item below covered
+except the plain submit, which is recorded in the **Deviations** because the shared
+editor leaves a visitor without scripting no field to type in. All eight modules
+answered 200 with the comment section, the form and **zero console errors**; the
+append control grew `files`, `news` and `voting` from 15 to 30 rows with no
+duplicate and no navigation; a guest submit answered the moderation notice, left
+the list untouched, kept the scroll position and cleared both the field and the
+editor; a double click stored **one** row under one key; two contexts on the same
+page submitted two distinct keys and both were accepted; a moderator replied,
+hid, published, edited and removed a comment in place, the reply stored
+`pid`/`path` and rendered at `--sl-com-depth:1`; the moderation list answered 200
+with its rows, tabs, search and bulk form. Five rows were written and all five
+removed again, with the target counter and the queue back to what they were. The
+artefact is `browser-report.json` with seven screenshots.
+
 - smoke run of all eight modules;
 - load scenarios on `files`, `news` and `voting`;
 - scroll and focus preserved after add and edit;
@@ -2224,14 +2272,22 @@ starts with.
   the five writes of `Comment` call `Cache::addEpoch()` themselves, after their own
   writes succeeded and never for a refusal, a no-op transition or a replayed
   `reqkey`, and `index.php:133` keeps only `updatePost` and `updateVotingResult`.
-- **Migration cost on a large comment table.** Stage 2 adds five columns and five
-  indexes, drops two and rewrites every body. Instant against the 7355 rows here;
-  the upgrade notes
-  must state what it costs on an installation with orders of magnitude more,
-  rather than letting an administrator find out during a lock.
+- ~~**Migration cost on a large comment table.**~~ — **written down 2026-07-29** in
+  `docs/VERSIONS.md`. Stage 2 adds five columns and five indexes, drops two and
+  rewrites every body; stage 5 adds two more columns and two more indexes and
+  backfills `path`. All of it is instant against the 7357 rows here and is a
+  maintenance window on an installation with orders of magnitude more, which the
+  upgrade notes now say — together with the fact that
+  `tools/comment-migrate.php` is mandatory rather than optional, because a body
+  that has not been converted is displayed with the escaping of the old writer.
 
 ## Risks
 
+- ~~Comment counters drifting apart from `_comment`.~~ — **mitigated 2026-07-30**: the
+  `commentsync` scheduler job and `tools/comment-recount.php` sweep every target and
+  write the live count back. The write path has kept the counter in step since
+  stage 0 closed the request-supplied module; what the sweep repairs is the residue
+  left behind before that, measured here at 23 of 885 targets.
 - A direct `_comment` SQL statement missed during centralization.
 - A surviving `numcom()` branch dropped by accident, or a `users.points` CSV
   position removed along with the three retired slots, renumbering every event

@@ -208,8 +208,41 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("'&op=view&id='.\$id.'&at='.\$new['id'].'#'.\$new['id']", $code, 'The notification still links a bare anchor');
         $this->assertStringContainsString("\$seen = \$back.'&at='.\$row['id'].'#'.\$row['id']", $code, 'The other-page notice still links a bare anchor');
         $show = $this->getSource('core/user.php', 'setComShow');
-        $this->assertStringContainsString("\$com->getRootPage(getVar('get', 'at', 'num', 0))", $show, 'The page of a named comment is not resolved');
+        $this->assertStringContainsString("\$com->getRootPage(\$full ?: getVar('get', 'at', 'num', 0))", $show, 'The page of a named comment is not resolved');
         $this->assertStringContainsString('AND pid = 0 AND (time, id) ', $this->getSource('core/classes/comment.php', 'getRootPage', '    '));
+    }
+
+    # The rest of a capped branch is appended by its own control, which also stays an ordinary link that expands the branch on the server
+    #[Test]
+    public function theRestOfABranchIsAppendedByItsOwnControl(): void
+    {
+        $code = $this->getSource('core/user.php', 'getCommentRows');
+        $this->assertSame(2, substr_count($code, "'hx_target' => 'this'"), 'A control does not replace itself with its own answer');
+        $this->assertStringContainsString('op=getCommentBranch', $code);
+        $this->assertStringContainsString("getSeoUrl(['name' => \$mod, \$pag.'&all' => \$val['id']])", $code, 'The reply control has no plain link');
+        $this->assertStringContainsString("intval(\$val['kids'] ?? 0) > intval(\$val['shown'] ?? 0)", $code, 'The control shows even when the branch is complete');
+        $branch = $this->getSource('core/user.php', 'getCommentBranch');
+        $this->assertStringContainsString('$com->getBranch($id, $reps, $skip)', $branch);
+        $this->assertStringContainsString("\$data['left'] > 0", $branch, 'The answer offers a further control even when nothing is left');
+        $this->assertStringContainsString("case 'getCommentBranch': getCommentBranch(); break;", $this->getFile('index.php'));
+        $show = $this->getSource('core/user.php', 'setComShow');
+        $this->assertStringContainsString("getVar('get', 'all', 'num', 0)", $show, 'The plain reply link is not resolved on the server');
+        $this->assertStringContainsString('$full', $this->getSource('core/classes/comment.php', 'getList', '    '), 'The class cannot answer one branch whole');
+    }
+
+    # The number of replies a page shows under one comment is a setting, read by the class and written by the moderation form
+    #[Test]
+    public function theReplyCapIsASetting(): void
+    {
+        $this->assertStringContainsString("'reps' => '5'", $this->getFile('config/comments.php'));
+        $admin = $this->getFile('admin/modules/comments.php');
+        $this->assertStringContainsString("'name_attr' => 'reps'", $admin, 'The setting has no field in the moderation preferences');
+        $this->assertStringContainsString("'reps' => getVar('post', 'reps', 'num', 5)", $admin, 'The setting is rendered but never saved');
+        $this->assertStringContainsString('_COMMENTS_REPS', $admin);
+        foreach (['de', 'en', 'fr', 'pl', 'ru', 'uk'] as $one) {
+            $this->assertStringContainsString("define('_COMMENTS_REPS'", $this->getFile('lang/'.$one.'.php'), $one.' is missing the label');
+            $this->assertStringContainsString("define('_COMMENTS_REPLIES'", $this->getFile('lang/'.$one.'.php'), $one.' is missing the control label');
+        }
     }
 
     # The page cache is invalidated by the class after a successful write, not by the route that happened to be called
@@ -220,8 +253,8 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("in_array(\$op, ['updatePost', 'updateVotingResult'], true)) Cache::addEpoch()", $code);
         $this->assertDoesNotMatchRegularExpression("#in_array\(\\\$op, \[[^]]*Comment[^]]*\], true\)\) Cache::addEpoch\(\)#", $code);
         $class = $this->getFile('core/classes/comment.php');
-        $this->assertSame(5, substr_count($class, 'Cache::addEpoch();'), 'The five writes of the class do not all invalidate');
-        foreach (['addComment', 'updateComment', 'setStatus', 'deleteComment', 'deleteTarget'] as $name) {
+        $this->assertSame(7, substr_count($class, 'Cache::addEpoch();'), 'The seven writes of the class do not all invalidate');
+        foreach (['addComment', 'updateComment', 'setStatus', 'deleteComment', 'deleteTarget', 'deleteUser', 'updateCountDrift'] as $name) {
             $this->assertStringContainsString('Cache::addEpoch();', $this->getSource('core/classes/comment.php', $name, '    '), $name.'() stores without invalidating');
         }
     }
