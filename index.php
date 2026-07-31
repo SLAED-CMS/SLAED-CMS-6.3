@@ -98,7 +98,9 @@ if (empty($go)) {
         }
     }
 } elseif (is_numeric($go)) {
-    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows'], true));
+    # Reads that guard themselves: each answers nothing to a visitor who may not see it, so a token would only add one to an address
+    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows'], true))
+        || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
     if ($go != 3 && !$public) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);
         $tok = getVar('req', 'token', 'raw', '')

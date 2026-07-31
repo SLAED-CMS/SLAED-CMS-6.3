@@ -129,7 +129,7 @@ function add(): void {
     $mtitle = $subtitle ? $title.' '.urldecode($conf['media']['mdefis'] ?? '%7C').' '.$subtitle : $title;
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=media', 'name=media&op=add', 'name=media&status=1', 'name=media&status=2', 'name=media&op=config', 'name=media&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $mtitle, 'texta' => $description, 'mod' => 'media']);
     $yearopts = '';
     $xyear = $date['year'] - 100;

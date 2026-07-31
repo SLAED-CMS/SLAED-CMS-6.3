@@ -209,7 +209,7 @@ function forum(): void {
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'move', 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
                                 .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'label' => _OK])]);
-                            $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $topicList]);
+                            $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$topicList]);
                         } else {
                             $cont .= $topicList;
                         }
@@ -445,17 +445,25 @@ function view(): void {
                 $eitems = [];
                 if ($ismod || ($isedit && $val[3] == (int)$user[0] && $tstatus)) {
                     $eitems[] = [
-                        'href' => 'index.php?go=1&op=updatePost&id='.$fid.'&cid='.$fcat.'&typ=1&mod='.$conf['name'].'&token='.getSiteToken(),
+                        'href' => 'index.php?go=1&op=updatePost&id='.$fid.'&cid='.$fcat.'&typ=1&mod='.$conf['name'],
                         'title' => _ONEDIT,
                         'icon_name' => 'pencil-square',
                         'is_htmx' => true,
                         'hx_target' => '#repfor'.$fid,
+                        # the token travels in a header rather than in the address, which keeps it out of history, logs and referrers
+                        'hx_headers' => getPageToken(),
                     ];
                     $eitems[] = ['href' => 'index.php?name='.$conf['name'].'&op=add&cat='.$fcat.'&id='.$fid.'&pid='.$topic, 'title' => _FULLEDIT, 'icon_name' => 'pencil'];
                 }
                 if ($ismod || ($isdelete && $val[3] == (int)$user[0])) {
                     $eitems[] = [
-                        'href' => 'index.php?name='.$conf['name'].'&op=delete&cat='.$fcat.'&id='.$fid,
+                        # A removal is a write, so it is submitted rather than followed: a link would delete on a prefetch and carry its token through history and logs
+                        'href' => 'index.php?name='.$conf['name'],
+                        'form_id' => 'fdel'.$fid,
+                        'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete', 'input_attr' => ''])
+                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$fcat, 'input_attr' => ''])
+                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$fid, 'input_attr' => ''])
+                            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']),
                         'title' => _ONDELETE,
                         'icon_name' => 'trash',
                         'confirm_text' => _DELETE.' "'.$val[5].'"?',
@@ -495,7 +503,7 @@ function view(): void {
             if ($ismod) {
                 $selmm = tmoder(1)
                     .$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'move', 'extra' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$rows[0][2], 'input_attr' => '']).$tpl->getHtmlFrag('hidden', ['name_attr' => 'id[]', 'value_attr' => (string)$topic, 'input_attr' => '']), 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK]);
-                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => $selmm])]);
+                $cont .= $tpl->getHtmlPart('form-wrap', ['action' => 'index.php?name='.$conf['name'], 'content_html' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']).$tpl->getHtmlPart('fieldset-panel', ['legend' => _OPMOD, 'is_moder_mass' => true, 'is_action_label' => true, 'content' => $selmm])]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         }
@@ -533,6 +541,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'subject', 'value_attr' => $subject, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'posttype', 'value_attr' => 'save', 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => $hide, 'name' => '', 'val' => '', 'select' => false, 'show_preview' => false, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _SEND])]);
         $cont = $tpl->getHtmlPart('form-add', [
@@ -549,6 +558,11 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
 
 function move(): void {
     global $db, $conf;
+    # Mass moderation moves, hides and deletes topics, so it is a write and answers to the same rule as the rest
+    if (!checkSiteToken()) {
+        setRedirect('index.php?name='.$conf['name']);
+        return;
+    }
     $cat = getVar('post', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
@@ -562,6 +576,8 @@ function move(): void {
                 if ((int)$val) {
                     if ($tmove[0] == 's') {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET status = :tmove WHERE id = :val', ['tmove' => $move, 'val' => $val]);
+                        # A hidden topic stops being visible activity, so whoever advertised it has to be asked again
+                        setForumLast((int)$catid, (int)$val);
                     } elseif ($tmove[0] == 'd') {
                         delete($catid, $val);
                     } elseif (is_numeric($tmove[0])) {
@@ -569,18 +585,14 @@ function move(): void {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET cid = :tmove WHERE id = :id_val OR pid = :pid_val', ['tmove' => $move, 'id_val' => $val, 'pid_val' => $val]);
                         [$rnpost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
                         $wrnpost = ($rnpost) ? ', posts=posts+'.$rnpost : '';
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.', lpost = :val WHERE id IN ('.$rcatids.')', ['val' => $val]);
-
+                        # Only the totals here as well: both branches are asked what they really hold once the topic has changed hands
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.' WHERE id IN ('.$rcatids.')');
                         $catids = catids($conf['name'], $catid);
-                        [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
                         [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
                         $wnpost = ($npost) ? ', posts=posts-'.$npost : '';
-                        if ($lid == $val) {
-                            [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND ((pid != \'0\' && status = \'1\') || (pid = \'0\' && status > \'1\')) ORDER BY id DESC LIMIT 1', ['catid' => $catid]));
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.', lpost = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
-                        } else {
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
-                        }
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
+                        setForumLast((int)$move, 0);
+                        setForumLast((int)$catid, (int)$val);
                     }
                 }
             }
@@ -693,7 +705,8 @@ function add(): void {
         $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'fid', 'value_attr' => (string)$fid, 'input_attr' => ''])
             .$tpl->getHtmlFrag('hidden', ['name_attr' => 'pid', 'value_attr' => (string)$pid, 'input_attr' => ''])
-            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => '']);
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'cat', 'value_attr' => (string)$catid, 'input_attr' => ''])
+            .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getPageToken(), 'input_attr' => '']);
         $rows .= $tpl->getHtmlFrag('form-field-row', ['label' => '', 'field_html' => $hide.$tpl->getHtmlFrag('form-submit', ['button_type' => 'submit', 'op' => 'send', 'extra' => '', 'name' => '', 'val' => '', 'select' => true, 'show_preview' => true, 'show_delete' => false, 'label_preview' => _PREVIEW, 'label_save' => _SEND, 'label_delete' => _DELETE, 'label' => _OK])]);
         $cont .= $tpl->getHtmlPart('form-add', [
             'action' => 'index.php?name='.$conf['name'],
@@ -737,6 +750,13 @@ function pmoder(int|string $status, int $subh): string {
 
 function send(): void {
     global $db, $user, $conf, $stop, $tpl, $mailer;
+    # Both forms that reach this handler carry the token of the page they were rendered on, and neither may write without it
+    if (!checkSiteToken()) {
+        setHead(['title' => _FORUM, 'kind' => 'utility', 'robots' => 'noindex, follow']);
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
@@ -818,7 +838,8 @@ function send(): void {
                     [$lpid, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
                     if ($pid) {
                         $lname = (isset($uname) && $uname) ? $uname : $postname;
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments+1, luid = :postid, lname = :lname, lpost = :lpost, ltime = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost' => $lpid, 'time' => $time, 'pid' => $pid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET luid = :postid, lname = :lname, lpost = :lpost, ltime = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost' => $lpid, 'time' => $time, 'pid' => $pid]);
+                        addForumCount($pid);
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts+1, lpost = :pid WHERE id IN ('.$catids.')', ['pid' => $pid]);
                         if ($conf['forum']['addmail']) {
                             [$muid] = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
@@ -858,6 +879,11 @@ function send(): void {
 function delete(int|string|null $catid = null, int|string|null $id = null): void {
     global $db, $user, $conf;
     $hasargs = ($catid !== null || $id !== null);
+    # A request that names its own target must carry the token; a call from move() was already checked by the handler that owns the request
+    if (!$hasargs && !checkSiteToken()) {
+        setRedirect('index.php?name='.$conf['name']);
+        return;
+    }
     $catid = ($catid !== null && $catid !== '') ? $catid : getVar('req', 'cat', 'num');
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
     $lid = 0;
@@ -889,22 +915,16 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
                 if ($lid == $id) {
                     [$lid, $luid, $lname, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, uid, name, time FROM '.PREFIX_DB.'_forum WHERE pid = :pid1 OR id = :pid2 ORDER BY id DESC LIMIT 1', ['pid1' => $pid, 'pid2' => $pid]));
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments-1, luid = :luid, lname = :lname, lpost = :lid, ltime = :ltime WHERE id = :pid', ['luid' => $luid, 'lname' => $lname, 'lid' => $lid, 'ltime' => $ltime, 'pid' => $pid]);
-                } else {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments-1 WHERE id = :pid', ['pid' => $pid]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET luid = :luid, lname = :lname, lpost = :lid, ltime = :ltime WHERE id = :pid', ['luid' => $luid, 'lname' => $lname, 'lid' => $lid, 'ltime' => $ltime, 'pid' => $pid]);
                 }
+                addForumCount($pid);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts-1 WHERE id IN ('.$catids.')');
 
             } else {
-                [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+                # Only the totals here: which topic each category advertises is settled by setForumLast() once the rows have really left
                 [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
                 $wnpost = ($npost) ? ', posts=posts-'.$npost : '';
-                if ($lid == $id) {
-                    [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_forum WHERE cid = :catid AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1", ['catid' => $catid]));
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.', lpost = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
-                } else {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
-                }
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
             }
 
             if (!$recycle || $recycle == $catid) {
@@ -923,6 +943,9 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
             }
 
+            # Run once the rows have gone or moved, otherwise the branch would still answer with what was just removed
+            # A removed topic also invalidates every category that pointed at it, which a walk from this one would never reach
+            setForumLast((int)$catid, $pid ? 0 : (int)$id);
         }
 
         $lid = ($pid) ? $pid.'&last=1#'.$lid : '';

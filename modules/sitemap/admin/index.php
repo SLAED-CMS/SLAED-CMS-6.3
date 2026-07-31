@@ -74,7 +74,7 @@ function sitemap(): void {
     }
     $lines[] = _FILE_M.': '.$f;
     $lines[] = _FILE_S.': '.filterSize($asize);
-    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'lines' => $lines])]);
+    $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => $lines])]);
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php',
         'hidden' => [

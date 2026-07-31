@@ -2100,6 +2100,20 @@ tr.sl-row-collapsed {
   box-shadow: var(--sl-hover-shadow-card);
 }
 
+/* The form of a dial action lives outside the fan, because .sl-dial-item is placed by its child index */
+/* Inline edit: the editor widget carries no outer margin of its own, so its action row would sit on the tab bar */
+.sl-inline-edit > .sl-but,
+.sl-inline-edit > .sl-but-green,
+.sl-inline-edit > .sl-but-blue,
+.sl-inline-edit > input[type="submit"],
+.sl-inline-edit > button {
+  margin-top: 10px;
+}
+
+.sl-dial-post {
+  display: none;
+}
+
 .sl-dial-toggle,
 .sl-dial-item {
   border: 0;
@@ -2828,6 +2842,17 @@ dialog.sl-modal::backdrop {
 
 .sl-alert-body > div + div {
   margin-top: var(--sl-space-sm);
+}
+
+.sl-alert-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc outside;
+}
+
+.sl-alert-list li {
+  margin: 2px 0;
+  line-height: 1.5;
 }
 
 .sl-alert-info {

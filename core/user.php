@@ -572,7 +572,8 @@ function updatePost() {
         $ismod = is_acess($pmod);
         [$pid, $uid, $hometext, $fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
         if ($pid) {
-            if (is_moder(isset($conf['name']))) {
+            # The authority is the moderator flag of the category this message belongs to, not a module name taken from the request
+            if ($ismod) {
                 [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
             } else {
                 [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid AND status != 0', ['pid' => $pid]));
@@ -583,19 +584,22 @@ function updatePost() {
                 $content = $typ
                     ? getTplAjaxTextarea([
                         'obj' => 'for'.$id, 'go' => '1', 'op' => 'updatePost', 'id' => $id,
-                        'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'text' => $hometext, 'rows' => 15,
+                        'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'text' => $hometext, 'rows' => 10,
                     ])
                     : $prs->filterContent($hometext, false, $mod, 2);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : 0;
                 $ip = getip();
-                $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
-                $e = explode(' ', $checks);
-                for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
-                $stop = '';
+                # The longest word decides, measured in characters: the previous loop kept only the last one and counted bytes,
+                # which halved the allowance for every alphabet that does not fit in one byte
+                $long = 0;
+                foreach (preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
+                    $long = max($long, mb_strlen($word));
+                }
+                $stop = [];
                 if ($text == '') $stop[] = _CERROR1;
-                if ($o > $conf['forum']['letter']) $stop[] = _CERROR2;
+                if ($long > intval($conf['forum']['letter'])) $stop[] = _CERROR2;
                 if (!$stop) {
                     $htext = filterHtml($text);
                     $db->getSqlQuery(
@@ -604,7 +608,8 @@ function updatePost() {
                     );
                     echo $prs->filterContent($htext, false, $mod, 2);
                 } else {
-                    return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+                    # Echoed rather than returned: the route calls this for its output and discards whatever it hands back
+                    echo $tpl->getHtmlFrag('alert', ['messages' => $stop, 'type' => 'warn', 'is_warn' => true]);
                 }
             }
         } else {

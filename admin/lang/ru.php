@@ -117,6 +117,9 @@ define('_CLICABLEINFO','Применяется при обработке тек�
 define('_CLIENTSM','Клиенты модуля');
 define('_COLOR','Цвет');
 define('_COMLETTER','Максимально допустимое количество знаков в слове');
+define('_COMMENTS_DRIFT','Счётчики комментариев разошлись с обсуждениями. Материалов: %d.');
+define('_COMMENTS_SYNC','Исправить счётчики');
+define('_COMMENTS_FIXED','Исправлено счётчиков: %d.');
 define('_CONFINES','Укажите значение «0» для снятия всех ограничений.');
 define('_CONST','Языковая константа');
 define('_CREATEBLOCK','Создать блок');

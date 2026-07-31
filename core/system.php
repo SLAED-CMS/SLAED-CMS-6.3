@@ -275,7 +275,7 @@ function getSchedulerPlannedTime(array $job, array $state = []): int {
 # Reads a job by key from config when $job is null, otherwise normalizes the given array; enforces canonical type/system for built-in jobs and drops legacy keys so stale configs self-heal
 function getSchedulerJob(string $name, ?array $job = null): array {
     global $conf;
-    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc', 'commentsync' => 'commentsync'];
+    static $map = ['dbbackup' => 'backup', 'filescan' => 'filescan', 'maildrain' => 'maildrain', 'newsletter' => 'newsletter', 'sitemap' => 'sitemap', 'cachegc' => 'cachegc'];
     $read = $job === null;
     if ($read) $job = $conf['scheduler']['jobs'][$name] ?? [];
     if (!is_array($job)) $job = [];
@@ -531,7 +531,6 @@ function addSchedulerSystemJob(string $name): array {
         'maildrain' => addMailTask(),
         'newsletter' => updateNewsletter(),
         'cachegc' => addCacheGcTask(),
-        'commentsync' => addCommentTask(),
         default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
     };
 }
@@ -3770,27 +3769,6 @@ function addMailTask(): array {
     ];
 }
 
-# Bring the comment counter of every target back in line with the comments actually published under it, as a scheduler job
-# The counter is denormalised and eight modules read it without touching the comment table, so nothing notices when it drifts; this is what notices and repairs it
-# A run that finds nothing is a success and never idle, because this job exists to report that the two agree just as much as to fix it when they do not
-function addCommentTask(): array {
-    global $com;
-    if (!$com instanceof Comment) return ['status' => 'failed', 'message' => 'Comment service is unavailable'];
-    $drift = $com->getCountDrift();
-    if (!$drift) return ['status' => 'success', 'message' => 'Every comment counter agrees with its target', 'extra' => ['last_comment_drift' => 0, 'last_comment_fixed' => 0]];
-    $done = $com->updateCountDrift($drift);
-    $mods = [];
-    foreach ($drift as $one) $mods[$one['modul']] = ($mods[$one['modul']] ?? 0) + 1;
-    ksort($mods);
-    $list = [];
-    foreach ($mods as $name => $num) $list[] = $name.' '.$num;
-    return [
-        'status' => ($done === count($drift)) ? 'success' : 'failed',
-        'message' => 'Repaired '.$done.' of '.count($drift).' drifted counters ('.implode(', ', $list).')',
-        'extra' => ['last_comment_drift' => count($drift), 'last_comment_fixed' => $done],
-    ];
-}
-
 # Resolve one audience criterion into the paged query its rows are expanded by and the count query the selector shows beside it
 # The client sets are grouped by address, because one person may hold several orders and the mailing is addressed to the person
 # Every source is ordered by its own primary key, which is what makes a cursor over it resumable after a run is killed
@@ -4147,7 +4125,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'update_target' => 'sainfo',
-            'update_query' => 'go=5&op=getUserSessionAdminInfo&token='.getSiteToken(),
+            'update_query' => 'go=5&op=getUserSessionAdminInfo',
         ]);
         if ($id) { return $content_who; } else { echo $content_who; }
     }
@@ -4192,6 +4170,89 @@ function user_info(string $name, bool $icon = true): string {
         ]);
     }
     return $name;
+}
+
+# Write the live reply count into one forum topic, which is the one statement every forum counter path goes through
+# The number is counted inside the statement rather than moved by a delta, so a topic that had drifted comes back correct instead of drifting further
+function setForumCount(int $tid): bool {
+    global $db;
+    if ($tid < 1) return false;
+    $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_forum AS r WHERE r.pid = :pid';
+    return $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = ('.$live.') WHERE id = :tid', ['pid' => $tid, 'tid' => $tid]) !== false;
+}
+
+# Queue the reply count of one topic to be rewritten once the request is over
+# The count runs after the response because the subquery it needs is a locking read of the topic table, and two people answering one topic at once would wait on each other
+function addForumCount(int $tid): void {
+    if ($tid < 1) return;
+    addDeferredTask(static function() use ($tid): void {
+        setForumCount($tid);
+    });
+}
+
+# Answer the forum topics whose stored reply count disagrees with the replies actually under them
+# A topic with no counter and no reply is never examined, so the scan costs the topics that carry a discussion rather than every row
+function getForumDrift(): array {
+    global $db;
+    $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_forum AS r WHERE r.pid = t.id';
+    $sql = 'SELECT x.tid, x.live FROM (SELECT t.id AS tid, t.comments AS col, ('.$live.') AS live FROM '.PREFIX_DB.'_forum AS t'
+        .' WHERE t.pid = 0 AND (t.comments <> 0 OR EXISTS (SELECT 1 FROM '.PREFIX_DB.'_forum AS d WHERE d.pid = t.id))) AS x'
+        .' WHERE x.col <> x.live ORDER BY x.tid ASC';
+    $out = [];
+    foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $row) $out[] = intval($row['tid']);
+    return $out;
+}
+
+# Answer the topic carrying the newest visible activity across the given categories, or 0 when they hold none
+# A reply answers as the topic it belongs to, because a category advertises a topic rather than a message
+# This is the one definition of "last message" in the forum: the repair below and the synchronisation tab both ask it
+function getForumLast(array $cats): int {
+    global $db;
+    $ids = array_values(array_unique(array_filter(array_map('intval', $cats), static fn(int $one): bool => $one > 0)));
+    if (!$ids) return 0;
+    $keys = [];
+    $pars = [];
+    foreach ($ids as $num => $one) {
+        $keys[] = ':c'.$num;
+        $pars['c'.$num] = $one;
+    }
+    $sql = 'SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE cid IN ('.implode(', ', $keys).')'
+        .' AND ((pid != 0 AND status = 1) OR (pid = 0 AND status > 1)) ORDER BY id DESC LIMIT 1';
+    [$mid, $pid] = $db->getSqlRow($db->getSqlQuery($sql, $pars));
+    return intval($pid) ?: intval($mid);
+}
+
+# Repair the last message the forum categories advertise, after a removal took one out of a branch
+# Two sets are repaired: whoever pointed at the removed topic, wherever it sat, and the chain above the category it was removed from
+# Matching on the stored value rather than walking from the category the request named is what keeps a parent from being decided by one child
+function setForumLast(int $cat, int $gone = 0): void {
+    global $db;
+    $rows = $db->getSqlRows($db->getSqlQuery('SELECT id, parent, lpost FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\'')) ?: [];
+    $up = [];
+    $kids = [];
+    $had = [];
+    $hit = [];
+    foreach ($rows as $one) {
+        $id = intval($one['id']);
+        $up[$id] = intval($one['parent']);
+        $had[$id] = intval($one['lpost']);
+        $kids[intval($one['parent'])][] = $id;
+        if ($gone > 0 && $had[$id] === $gone) $hit[$id] = $id;
+    }
+    $walk = $cat;
+    while ($walk > 0 && isset($up[$walk])) {
+        $hit[$walk] = $walk;
+        $walk = $up[$walk];
+    }
+    foreach ($hit as $id) {
+        $sub = [$id];
+        for ($num = 0; $num < count($sub); $num++) {
+            foreach ($kids[$sub[$num]] ?? [] as $one) $sub[] = $one;
+        }
+        $want = getForumLast($sub);
+        if ($want === $had[$id]) continue;
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET lpost = :lid WHERE id = :id AND modul = \'forum\'', ['lid' => $want, 'id' => $id]);
+    }
 }
 
 # Resolve the topic status badge flag shared by the forum list and the home forum block
@@ -5151,7 +5212,9 @@ function is_acess(string $ids): bool {
  global $db, $user, $conf;
     if ($ids) {
         $id = explode('|', $ids);
-        if (is_moder(isset($conf['name']))) {
+        # The module name itself, not whether it is set: isset() answered a boolean, which asked about a module literally named "1"
+        # and left an administrator of this module falling through to the group check that is meant for visitors
+        if (is_moder((string)($conf['name'] ?? ''))) {
             $isa = true;
         } elseif (is_user() && $id[1]) {
             $uid = intval($user[0]);

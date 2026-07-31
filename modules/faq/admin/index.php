@@ -108,7 +108,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=faq', 'name=faq&op=add', 'name=faq&status=1', 'name=faq&op=config', 'name=faq&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $hometext, 'mod' => 'faq']);
     $catopts = $tpl->getHtmlFrag('select-option', [

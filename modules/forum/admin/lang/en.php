@@ -13,5 +13,6 @@ define('_FO_7','Allow the publication, editing and deleting of messages and topi
 define('_FO_8','Activate the quick reply form?');
 define('_FO_9','Show the date of the last edit for messages?');
 define('_SYNCH','Synchronization');
-define('_SYNCHIN','The results of the synchronization of the themes and messages of the forum.');
+define('_SYNCHOK','Forum totals agree with its topics and messages.');
+define('_SYNCHFIX','Repaired. Forums: %d, topics: %d.');
 define('_SYNCHINF','Synchronization is necessary to carry out after the delete, move, or the message Board. When switching to the tab, the system is counting the number of topics/posts in all the forums, determining last message.');

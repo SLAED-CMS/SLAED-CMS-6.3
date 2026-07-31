@@ -119,7 +119,7 @@ final class CommentTrustBoundaryTest extends TestCase
         foreach (['setStatus', 'deleteComment'] as $name) {
             $code = $this->getSource('core/classes/comment.php', $name, '    ');
             $this->assertStringContainsString('$cid = $row ? intval($row[\'cid\']) : 0;', $code);
-            $this->assertStringContainsString('$this->updateTargetCount($cid, $mod,', $code);
+            $this->assertStringContainsString('$this->addTargetCount($cid, $mod);', $code);
         }
         foreach (['updateComment', 'updateCommentStatus'] as $name) {
             $route = $this->getSource('core/system.php', $name);

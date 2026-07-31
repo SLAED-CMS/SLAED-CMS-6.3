@@ -1242,7 +1242,8 @@
                 if (box) box.close();
                 if (ask && ask.href) { window.location.href = ask.href; return; }
                 if (ask) {
-                    var askform = ask.closest('form');
+                    // A submit button may own its form through the form attribute, which puts the form outside its ancestors
+                    var askform = ask.form || ask.closest('form');
                     if (askform) askform.submit();
                 }
                 return;

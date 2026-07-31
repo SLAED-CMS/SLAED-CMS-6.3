@@ -624,18 +624,9 @@ function save(): void {
                 ];
                 $sdone = true;
             }
-            if (is_array($sched) && !isset($sched['jobs']['commentsync'])) {
-                $sched['jobs']['commentsync'] = [
-                    'title' => 'Comment counter sync',
-                    'type' => 'system',
-                    'active' => '1',
-                    'system' => 'commentsync',
-                    'schedule' => '30 4 * * *',
-                    'priority' => '5',
-                    'lock_timeout' => '900',
-                    'manual' => '1',
-                    'settings' => [],
-                ];
+            # A site upgraded while the nightly counter sweep still existed carries the job in its own config, and the sweep now happens on every write
+            if (is_array($sched) && isset($sched['jobs']['commentsync'])) {
+                unset($sched['jobs']['commentsync']);
                 $sdone = true;
             }
             if (is_array($sched) && isset($sched['jobs']['newsletter']) && is_array($sched['jobs']['newsletter'])) {

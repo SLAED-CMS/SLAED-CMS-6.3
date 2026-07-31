@@ -44,7 +44,7 @@ function uploads(): void {
     $cont .= checkPerms(UPLOADS_DIR);
     $tabone = $tpl->getHtmlFrag('alert', [
         'is_warn' => false,
-        'lines' => [
+        'messages' => [
             _MODUL.': '.getModuleName($dir),
             _DIR.': uploads/'.$dir,
         ],
@@ -91,7 +91,7 @@ function uploads(): void {
                 $affilesize += $filesize;
             }
         }
-        $tabtwo .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'lines' => [
+        $tabtwo .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [
             _MODUL.': '.getModuleName($dir),
             _DIR.': '.$fdir,
             _FILE_M.': '.$f,
@@ -113,7 +113,7 @@ function uploads(): void {
                 $atfilesize += $filesize;
             }
         }
-        $tabthr .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'lines' => [
+        $tabthr .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'messages' => [
             _MODUL.': '.getModuleName($dir),
             _DIR.': '.$tdir,
             _FILE_M.': '.$t,

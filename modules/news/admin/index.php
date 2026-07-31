@@ -223,7 +223,7 @@ function add(): void {
     $ops = ['name=news', 'name=news&op=add', 'name=news&status=1', 'name=news&op=config', 'name=news&op=info'];
     $tabs = [_HOME, _ADD, _NEW, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     $homepre = ($vote) ? $tpl->getHtmlFrag('block-content', ['id' => 'repnews', 'is_section' => true, 'content' => getVotingView($vote, 'news'), 'has_hr' => true]).$hometext : $hometext;
     if ($homepre) $cont .= getTplPreviewContent(['title' => $subject, 'texta' => $homepre, 'textb' => $bodytext, 'field' => $field, 'mod' => 'news']);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);

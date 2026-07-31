@@ -26,10 +26,11 @@ It drops nothing, deletes no row, touches no comment and recalculates no user po
 Columns and indexes are added only when absent and every counter statement writes only
 the rows that disagree, so a second run changes nothing.
 
-Afterwards check that the scheduler lists the system job `commentsync`, daily. A fresh
-checkout carries it in `config/scheduler.php`; an installation whose config is its own
-needs it added once in the panel, and it then keeps section 4 in line by itself.
-`tools/comment-recount.php report|fix` does the same from the shell, and
+Nothing has to be scheduled afterwards: every comment write recomputes the counter of
+its own target, so section 4 is a one-off repair of what drifted before. What it cannot
+reach is a target nobody has commented on since — the comments section of the panel
+reports those on its first tab and repairs them on a click, and
+`tools/comment-recount.php report|fix` does the same from the shell.
 `php tools/comment-migrate.php` is still required if the body migration has never run
 here — see the comment subsystem notes below.
 
@@ -64,7 +65,7 @@ What the SQL file alone does **not** do:
 4. **The mail queue is never drained.** 6.3 stores outgoing mail instead of sending it
    inside the request, and the `maildrain` scheduler job is what delivers it. The
    installer seeds that job into `config/scheduler.php`; without it **all outgoing
-   mail stops**. The same applies to the new `commentsync` job.
+   mail stops**.
 5. **`config/newsletter.php` is not created**, so the campaign limits fall back to
    nothing.
 
@@ -108,10 +109,12 @@ restore.**
   - `setup/sql/update6_3_patch.sql` through **Administrator panel → Database →
     Inquiry**, for an installation that already runs 6.3 and is updated by hand. Its
     fourth section is this sweep;
-  - the new `commentsync` scheduler job, unattended, once a day.
+  - the first tab of the comments section, which reports what is left and repairs it
+    on a click.
   All three are safe to repeat: only rows that disagree are written, so a second
   run reports zero affected rows. None of them touches the comment table, and no
-  user points are recalculated.
+  user points are recalculated. Beyond them the counter maintains itself: every
+  comment write recomputes the target it touched instead of nudging it by one.
 - New setting `comments.reps` (default 5): how many replies a page shows under one
   comment before it offers to load the rest. It bounds what one long discussion can
   put in front of a reader; the remaining replies stay reachable both through the

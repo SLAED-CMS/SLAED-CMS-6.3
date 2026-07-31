@@ -282,7 +282,7 @@ function clientadd(): void {
         $nick = ($nick) ? user_info($nick) : _ANONYM;
         $cont .= $tpl->getHtmlFrag('alert', [
             'is_warn' => false,
-            'lines' => [
+            'messages' => [
                 _PARTNER_ID.': '.$partner,
                 _PARTNER_NAME.': '.strip_tags((string)$nick),
                 _PERCENT.': '.$proz.' %',

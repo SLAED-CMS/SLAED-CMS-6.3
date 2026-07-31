@@ -116,7 +116,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=links', 'name=links&op=add', 'name=links&status=1', 'name=links&status=2', 'name=links&op=config', 'name=links&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _DOCS], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'links']);
     $link = ($site && $site !== 'http://') ? $tpl->getHtmlFrag('link', ['href' => $site, 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
     $catopts = $tpl->getHtmlFrag('select-option', ['value_attr' => '', 'label_text' => _HOMECAT, 'is_selected' => !$cid]);

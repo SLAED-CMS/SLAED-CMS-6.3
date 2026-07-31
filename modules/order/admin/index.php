@@ -95,7 +95,7 @@ function add(): void {
     $ops = ['name=order', 'name=order&op=add', 'name=order&op=config', 'name=order&op=info'];
     $tabs = [_HOME, _ADD, _PREFERENCES, _DOCS];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($field) $cont .= getTplPreviewContent(['title' => $email, 'texta' => $field, 'textb' => _COMMENT.': '.$note, 'mod' => 'all']);
     $rows = [
         ['label_html' => _OR_9, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'email', 'value_attr' => $email, 'is_required' => true])],

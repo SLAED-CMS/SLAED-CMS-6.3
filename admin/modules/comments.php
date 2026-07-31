@@ -86,6 +86,23 @@ function comments(): void {
         'tab' => $status,
         'subtitle_html' => $subtitle,
     ]);
+    # Every write recomputes the counter of its own target, so what is left here is a target nobody has commented on since it drifted
+    # It is shown rather than repaired on sight, because a number that disagrees with its comments is a symptom and the moderator should see it before it disappears
+    $drift = $com->getCountDrift();
+    if ($drift) {
+        $cont .= $tpl->getHtmlFrag('alert', [
+            'is_warn' => true,
+            'text' => sprintf(_COMMENTS_DRIFT, count($drift)).' '.$tpl->getHtmlFrag('post-button', [
+                'action' => $afile.'.php',
+                'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'comments'])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'recount'])
+                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]),
+                'icon_name' => 'arrow-repeat',
+                'title' => _COMMENTS_SYNC,
+                'label' => _COMMENTS_SYNC,
+            ]),
+        ]);
+    }
     $anump = (int)($conf['comments']['anump'] ?? 8);
     $num = getVar('get', 'num', 'num', 1);
     $field = $curq.'&';
@@ -449,6 +466,13 @@ function delete(): void {
     setRedirect($afile.'.php?'.$back, true, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
 
+function recount(): void {
+    global $afile, $com;
+    $warn = !checkSiteToken();
+    $done = $warn ? 0 : $com->updateCountDrift($com->getCountDrift());
+    setRedirect($afile.'.php?name=comments', true, 302, $warn ? _TOKENMISS : sprintf(_COMMENTS_FIXED, $done), $warn);
+}
+
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=comments', 'name=comments&status=1', 'name=comments&op=config', 'name=comments&op=info'],
@@ -465,5 +489,6 @@ switch ($op) {
     case 'save': save(); break;
     case 'approve': approve(); break;
     case 'delete': delete(); break;
+    case 'recount': recount(); break;
     case 'info': info(); break;
 }

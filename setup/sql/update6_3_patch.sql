@@ -37,11 +37,12 @@
 #   statement writes only the rows that disagree, so running this file twice changes
 #   nothing the second time.
 #
-# ONE THING LEFT AFTER IT
-#   Check that the scheduler lists the system job commentsync, daily. A fresh checkout
-#   carries it in config/scheduler.php; an installation whose config is its own needs
-#   it added once in the panel. It then keeps the counters of section 4 in line by
-#   itself, and tools/comment-recount.php report|fix does the same from the shell.
+# NOTHING LEFT AFTER IT
+#   No job has to be scheduled. Every comment write recomputes the counter of its own
+#   target, so section 4 repairs what drifted before and the code keeps it in line
+#   afterwards. A target nobody comments on again is reported by the first tab of the
+#   comments section, and tools/comment-recount.php report|fix does the same from the
+#   shell.
 
 DELIMITER $$
 

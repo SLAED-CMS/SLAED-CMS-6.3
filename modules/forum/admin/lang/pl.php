@@ -13,5 +13,6 @@ define('_FO_7','Zezwalaj na publikowanie, edytowanie i usuwanie post&#243;w i te
 define('_FO_8','Aktywacja formularza szybkiego reagowania?');
 define('_FO_9','Wy&#347;wietla dat&#281; ostatniej edycji do wiadomo&#347;ci?');
 define('_SYNCH','Synchronizacja');
-define('_SYNCHIN','Wyniki synchronizacji temat&#243;w i post&#243;w.');
+define('_SYNCHOK','Sumy forum zgadzają się z jego tematami i wiadomościami.');
+define('_SYNCHFIX','Naprawiono. Fora: %d, tematy: %d.');
 define('_SYNCHINF','Synchronizacj&#281; nale&#380;y szuka&#263; po usuwania, przenoszenia temat&#243;w lub post&#243;w na forum. Po przej&#347;ciu na kart&#281;, systemem odbywa si&#281; wyznaczanie liczby temat&#243;w/post&#243;w na wszystkich forach, wykrywanie najnowszych wiadomo&#347;ci.');

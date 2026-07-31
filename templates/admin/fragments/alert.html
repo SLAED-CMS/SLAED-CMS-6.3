@@ -1,4 +1,4 @@
-{% if text or lines %}
+{% if text or messages %}
   <div
     class="sl-alert {% if type %}sl-alert-{{ type }}{% elseif is_warn %}sl-alert-warn{% else %}sl-alert-info{% endif %}{% if is_flash %} sl-alert-flash{% endif %}"
     {% if alert_attr %}{{{ alert_attr }}}{% endif %}
@@ -6,7 +6,7 @@
     {% if is_flash %}<div class="sl-alert-flash-bar"></div>{% endif %}
     <div class="sl-alert-body">
       {% if text %}{{{ text }}}{% endif %}
-      {% if lines %}{% for line in lines %}<div>{{ line }}</div>{% endfor %}{% endif %}
+      {% if messages %}<ul class="sl-alert-list">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
     </div>
   </div>
 {% endif %}

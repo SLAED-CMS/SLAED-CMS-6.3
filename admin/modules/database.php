@@ -212,7 +212,7 @@ function getSqlsum(array $items, string $mode, string $name): string {
     if ($stop) {
         $lines[] = _DB_STOP.': '.$stop;
     }
-    return $tpl->getHtmlFrag('alert', ['lines' => $lines]);
+    return $tpl->getHtmlFrag('alert', ['messages' => $lines]);
 }
 
 
@@ -386,7 +386,7 @@ function database(): void {
         $db->getSqlQuery('FLUSH TABLES');
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
 
-        $cont .= $tpl->getHtmlFrag('alert', ['lines' => [
+        $cont .= $tpl->getHtmlFrag('alert', ['messages' => [
             _OPTIMIZE.': '.$conf['db']['name'],
             _TOTALSPACE.': '.filterSize($total),
             _TOTALFREE.': '.filterSize($sumfree),
@@ -395,7 +395,7 @@ function database(): void {
     } elseif ($type === 'repair') {
         $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
 
-        $cont .= $tpl->getHtmlFrag('alert', ['lines' => [
+        $cont .= $tpl->getHtmlFrag('alert', ['messages' => [
             _REPAIR.': '.$conf['db']['name'],
             _TOTALSPACE.': '.filterSize($total),
             _TOTALFREE.': '.filterSize($sumfree),

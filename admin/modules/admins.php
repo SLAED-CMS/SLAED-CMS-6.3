@@ -146,7 +146,7 @@ function add(): void {
     $check = getVar('post', 'mail', 'bool', 0) ? '1' : '';
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=admins', 'name=admins&op=add', 'name=admins&op=info'], 'tabs' => [_HOME, _ADD, _DOCS], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     $items = '';
     $mods = getAdminModuleNames((string)$mods);
     $allow = [];

@@ -117,6 +117,9 @@ define('_CLICABLEINFO','Die Option ist wirksam bei der Verarbeitung von Textinha
 define('_CLIENTSM','Klienten des Moduls');
 define('_COLOR','Farbe');
 define('_COMLETTER','Die maximal zulässige Menge der Zeichen im Wort');
+define('_COMMENTS_DRIFT','Kommentarzähler stimmen nicht mit den darunter liegenden Diskussionen überein. Inhalte: %d.');
+define('_COMMENTS_SYNC','Zähler reparieren');
+define('_COMMENTS_FIXED','Reparierte Zähler: %d.');
 define('_CONFINES','Geben Sie den Wert «0» für die Aufhebung aller Beschränkungen.');
 define('_CONST','Sprach Konstante');
 define('_CREATEBLOCK','Block erstellen');

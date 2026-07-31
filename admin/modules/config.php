@@ -739,7 +739,7 @@ function config(): void {
     foreach ($dirs as $dk => $dv) $lines[] = $dk.': '.$dv;
     $lines[] = _FILE_M.': '.$cnt;
     $lines[] = _FILE_S.': '.filterSize($size);
-    $html = $tpl->getHtmlFrag('alert', ['lines' => $lines]);
+    $html = $tpl->getHtmlFrag('alert', ['messages' => $lines]);
     $tabf = $html.$tpl->getHtmlPart('div', ['rows' => $rows]);
 
     $tabg = getMailPanel();

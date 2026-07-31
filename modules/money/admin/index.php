@@ -154,7 +154,7 @@ function add(): void {
     ]);
     if ($stop) {
         $cont .= is_array($stop)
-            ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values($stop)])
+            ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values($stop)])
             : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => (string)$stop]);
     }
     if ($intro) {

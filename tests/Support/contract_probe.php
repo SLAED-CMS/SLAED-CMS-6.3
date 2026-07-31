@@ -229,6 +229,7 @@ function getProbeCommentWrite(bool $guest): array {
         $cnt = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
         $pnt = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];
         $new = $com->addComment($mod, $tid, 'probe body for '.$mod, 'Probe');
+        setDeferredTasks();
         $row = $new['id'] ? $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $new['id']])) : [];
         $cnn = $db->getSqlRow($db->getSqlQuery('SELECT comments FROM '.PREFIX_DB.$tab.' WHERE id = :id', ['id' => $tid]));
         $pnn = $uid ? $db->getSqlRow($db->getSqlQuery('SELECT points FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid])) : [];

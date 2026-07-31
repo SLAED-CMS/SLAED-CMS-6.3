@@ -582,19 +582,22 @@ function getTplAjaxTextarea(array $data = []): string {
     $mod  = (string)($data['mod']  ?? '');
     $text = (string)($data['text'] ?? '');
     $rows = (int)   ($data['rows'] ?? 5);
-    $desc    = !checkHtmlEditor() ? getDecodedText(replace_break($text)) : $text;
     $formId  = 'form'.$obj;
     $fieldId = $formId.'_text';
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod);
     $head    = ' hx-headers=\'{"X-CSRF-TOKEN": "'.getPageToken().'"}\'';
     $cerror  = addslashes((string)_CERROR1);
-    $content = $tpl->getHtmlFrag('textarea', [
-            'name_attr'   => 'text',
-            'rows_num'    => $rows,
-            'value_text'  => $desc,
-            'is_editor_area' => true,
-            'input_attr'  => 'id="'.$fieldId.'"',
+    # The same editor the text was written in, so an author is not handed the source of what a toolbar produced for them
+    # The id carries the record, because this box arrives beside a page that already holds an editor of its own
+    # The stored value is passed raw: getTplTextarea() decodes it for the format the editor works in, and decoding twice would eat the markup
+    $content = getTplTextarea([
+            'id'          => $fieldId,
+            'name'        => 'text',
+            'value'       => $text,
+            'mod'         => $mod,
+            'rows'        => $rows,
+            'placeholder' => _TEXT,
         ])
         .$tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',
@@ -607,7 +610,7 @@ function getTplAjaxTextarea(array $data = []): string {
             'submit_label' => _BACK,
             'button_attr'  => 'hx-get="'.$query.'" hx-target="#rep'.$obj.'" hx-swap="innerHTML" hx-push-url="false"'.$head,
         ]);
-    return $tpl->getHtmlPart('form-wrap', ['form_name' => 'textareae', 'form_id' => $formId, 'content_html' => $content]);
+    return $tpl->getHtmlPart('form-wrap', ['form_name' => 'textareae', 'form_id' => $formId, 'form_class' => 'sl-inline-edit', 'content_html' => $content]);
 }
 
 # Render the shared "new" badge for fresh content
@@ -625,13 +628,27 @@ function getTplNewGraphic(string $time): string {
 }
 
 # Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs
+# The edit half stays a link, the delete half becomes a submitted form: a removal must not travel as an address a browser may prefetch,
+# and the token that authorises it must not sit in history, logs or a referrer. The caller keeps passing the address it always passed;
+# it is taken apart here, its own token dropped and a fresh one added, so all twenty-five call sites are corrected in one place.
 function getTplEditMenu(string $edithref, string $delhref, string $title): array {
+    global $tpl;
+    static $seq = 0;
+    $parts = explode('?', $delhref, 2);
+    $pars = [];
+    parse_str($parts[1] ?? '', $pars);
+    unset($pars['token']);
+    $pars['token'] = getPageToken();
+    $hide = '';
+    foreach ($pars as $key => $val) {
+        $hide .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
+    }
     return [
         'is_moder' => true,
         'dial_title' => _EDITOR,
         'dial' => [
             ['href' => $edithref, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-            ['href' => $delhref, 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?'],
+            ['href' => $parts[0], 'form_id' => 'sldel'.(++$seq), 'hidden' => $hide, 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?'],
         ],
     ];
 }

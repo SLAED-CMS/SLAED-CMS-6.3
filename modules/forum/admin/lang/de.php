@@ -13,5 +13,6 @@ define('_FO_7','Zulassen, zu ver&#246;ffentlichen, zu Bearbeiten und l&#246;sche
 define('_FO_8','Aktivieren Sie das Formular schnellere Antwort?');
 define('_FO_9','Zeigen das Datum der letzten Bearbeitung f&#252;r Nachrichten?');
 define('_SYNCH','Synchronisieren');
-define('_SYNCHIN','Ergebnisse der Synchronisierung Themen und Beitr&#228;ge des Forums.');
+define('_SYNCHOK','Die Forumssummen stimmen mit den Themen und Beiträgen überein.');
+define('_SYNCHFIX','Repariert. Foren: %d, Themen: %d.');
 define('_SYNCHINF','Die Synchronisierung erfolgt nach l&#246;schen, verschieben Sie Themen oder Beitr&#228;ge Forum. Beim &#252;bergang in die Registerkarte System erfolgt die Umrechnung der Anzahl der Themen/Beitr&#228;ge in allen Foren, die Bestimmung der letzten Beitr&#228;ge.');

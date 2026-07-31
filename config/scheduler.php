@@ -45,17 +45,6 @@ return [
                 'settings' => [
                 ],
             ],
-            'commentsync' => [
-            'title' => 'Comment counter sync',
-            'type' => 'system',
-            'active' => '1',
-            'system' => 'commentsync',
-            'schedule' => '30 4 * * *',
-            'priority' => '5',
-            'lock_timeout' => '900',
-            'manual' => '1',
-            'settings' => [],
-        ],
         'maildrain' => [
                 'title' => 'Mail delivery',
                 'type' => 'system',

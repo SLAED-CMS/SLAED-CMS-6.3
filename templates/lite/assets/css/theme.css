@@ -1366,6 +1366,20 @@ button.sl-but-mini:hover,
   pointer-events: auto;
 }
 
+/* The form of a dial action lives outside the fan, because .sl-dial-item is placed by its child index */
+/* Inline edit: the editor widget carries no outer margin of its own, so its action row would sit on the tab bar */
+.sl-inline-edit > .sl-but,
+.sl-inline-edit > .sl-but-green,
+.sl-inline-edit > .sl-but-blue,
+.sl-inline-edit > input[type="submit"],
+.sl-inline-edit > button {
+  margin-top: 10px;
+}
+
+.sl-dial-post {
+  display: none;
+}
+
 .sl-dial-toggle,
 .sl-dial-item {
   border: 0;

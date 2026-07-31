@@ -117,6 +117,9 @@ define('_CLICABLEINFO','Застосовується під час обробк�
 define('_CLIENTSM','Клієнти модуля');
 define('_COLOR','Колір');
 define('_COMLETTER','Максимально допустима кількість знаків у слові');
+define('_COMMENTS_DRIFT','Лічильники коментарів розійшлися з обговореннями. Матеріалів: %d.');
+define('_COMMENTS_SYNC','Виправити лічильники');
+define('_COMMENTS_FIXED','Виправлено лічильників: %d.');
 define('_CONFINES','Вкажіть значення «0» для зняття всіх обмежень.');
 define('_CONST','Мовна константа');
 define('_CREATEBLOCK','Створити блок');

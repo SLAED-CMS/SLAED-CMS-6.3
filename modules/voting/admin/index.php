@@ -108,7 +108,13 @@ function voting(): void {
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
             $items = array_merge($view, [
                 ['href' => $afile.'.php?name=voting&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
-                ['href' => $afile.'.php?name=voting&op=delete&id='.$id.'&refer=1&token='.getSiteToken(), 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?'],
+                # Submitted rather than followed, so the removal cannot happen on a prefetch and its token stays out of the address
+                ['href' => $afile.'.php', 'form_id' => 'vdel'.$id, 'icon_name' => 'trash', 'title' => _ONDELETE, 'confirm_text' => _DELETE.' "'.$title.'"?',
+                    'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'voting', 'input_attr' => ''])
+                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'delete', 'input_attr' => ''])
+                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id, 'input_attr' => ''])
+                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'refer', 'value_attr' => '1', 'input_attr' => ''])
+                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken(), 'input_attr' => ''])],
             ]);
             $cells = [
                 ['is_col_id' => true, 'content_html' => (string)$id],

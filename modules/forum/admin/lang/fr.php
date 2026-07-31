@@ -13,5 +13,6 @@ define('_FO_7','Permettre de publier, de modifier et de supprimer des messages e
 define('_FO_8',"Activer la forme d'une r&#233;ponse rapide?");
 define('_FO_9','Afficher la derni&#232;re date de modification pour les messages?');
 define('_SYNCH','Synchronisation');
-define('_SYNCHIN','Les r&#233;sultats de la synchronisation de sujets et de messages de forum.');
+define('_SYNCHOK','Les totaux du forum correspondent à ses sujets et messages.');
+define('_SYNCHFIX','Réparé. Forums : %d, sujets : %d.');
 define('_SYNCHINF',"La synchronisation doit se produire apr&#232;s la suppression, le d&#233;placement de sujets ou de messages du forum. Lors du passage dans l'onglet, un syst&#232;me de calibrage est effectu&#233; nombre de sujets et de messages de tous les forums, la d&#233;finition des derniers messages.");

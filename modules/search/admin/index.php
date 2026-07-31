@@ -261,7 +261,7 @@ function getSearchsum(string $where, array $pars): string {
     )) ?? ['', 0];
     $mlab = $mod ? getModuleName($mod) : _ALL;
     return $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('alert', [
-        'lines' => [
+        'messages' => [
             _SEARCHTOTAL.': '.intval($hits),
             _SEARCHUNIQUE.': '.intval($uniq),
             _SEARCHLAST.': '.($last ? format_time((string)$last, _TIMESTRING) : _NO_INFO),

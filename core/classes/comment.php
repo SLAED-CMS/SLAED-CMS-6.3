@@ -84,19 +84,22 @@ class Comment {
         return $out;
     }
 
+    # Write the live comment count into one target row, which is the one statement every counter path of this class goes through
+    # The number is counted inside the statement rather than moved by a delta, so a row that had drifted comes back correct instead of drifting further
+    # This also means a comment written between a drift report and its repair cannot be overwritten by the stale figure that report carried
+    private function setTargetCount(int $id, string $mod): bool {
+        if ($id < 1 || !isset(self::MODULES[$mod])) return false;
+        $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = :cid AND c.status = :stat AND c.deleted IS NULL';
+        $sql = 'UPDATE '.PREFIX_DB.self::MODULES[$mod][0].' SET comments = ('.$live.') WHERE id = :tid';
+        $pars = ['mod' => $mod, 'cid' => $id, 'stat' => CommentStatus::Published->value, 'tid' => $id];
+        return $this->db->getSqlQuery($sql, $pars) !== false;
+    }
+
     # Write the live comment count back into the target rows a drift report named, and answer how many rows were actually corrected
-    # The number is recomputed inside the statement rather than carried over from the report, so a comment written between the two cannot be overwritten by a stale figure
     public function updateCountDrift(array $rows): int {
         $done = 0;
         foreach ($rows as $one) {
-            $mod = (string)($one['modul'] ?? '');
-            $cid = intval($one['cid'] ?? 0);
-            if ($cid < 1 || !isset(self::MODULES[$mod])) continue;
-            $tab = PREFIX_DB.self::MODULES[$mod][0];
-            $live = 'SELECT COUNT(*) FROM '.PREFIX_DB.'_comment AS c WHERE c.modul = :mod AND c.cid = :cid AND c.status = :stat AND c.deleted IS NULL';
-            $sql = 'UPDATE '.$tab.' SET comments = ('.$live.') WHERE id = :tid';
-            $pars = ['mod' => $mod, 'cid' => $cid, 'stat' => CommentStatus::Published->value, 'tid' => $cid];
-            if ($this->db->getSqlQuery($sql, $pars) === false) continue;
+            if (!$this->setTargetCount(intval($one['cid'] ?? 0), (string)($one['modul'] ?? ''))) continue;
             if (intval($this->db->getSqlAffected()) > 0) $done++;
         }
         if ($done > 0) Cache::addEpoch();
@@ -294,14 +297,12 @@ class Comment {
             if ($own) $this->db->setSqlRollback();
             return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
-        if ($stat === CommentStatus::Published && !$this->updateTargetCount($id, $mod, false, $uid)) {
-            if ($own) $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
-        }
+        if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid);
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
+        if ($stat === CommentStatus::Published) $this->addTargetCount($id, $mod);
         Cache::addEpoch();
         return ['id' => $new, 'name' => $name, 'new' => true, 'error' => ''];
     }
@@ -362,15 +363,15 @@ class Comment {
             return false;
         }
         $moved = intval($this->db->getSqlAffected()) > 0;
-        if ($moved && !$this->updateTargetCount($cid, $mod, !$open, intval($row['uid']))) {
-            if ($own) $this->db->setSqlRollback();
-            return false;
-        }
+        if ($moved) $this->updateTargetPoints($mod, !$open, intval($row['uid']));
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return false;
         }
-        if ($moved) Cache::addEpoch();
+        if ($moved) {
+            $this->addTargetCount($cid, $mod);
+            Cache::addEpoch();
+        }
         return true;
     }
 
@@ -394,14 +395,12 @@ class Comment {
         }
         $hid = intval($this->db->getSqlAffected()) > 0;
         $gone = $hid && intval($row['status']) === CommentStatus::Published->value;
-        if ($gone && !$this->updateTargetCount($cid, $mod, true, intval($row['uid']))) {
-            if ($own) $this->db->setSqlRollback();
-            return false;
-        }
+        if ($gone) $this->updateTargetPoints($mod, true, intval($row['uid']));
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
             return false;
         }
+        if ($gone) $this->addTargetCount($cid, $mod);
         if ($hid) Cache::addEpoch();
         return true;
     }
@@ -458,15 +457,22 @@ class Comment {
         return $stop;
     }
 
-    # Move the comment counter of one target and the points of its author in the direction the write that calls this took
-    # The result of the counter statement is answered rather than swallowed, because the write that calls this is inside a transaction and has to roll back when the counter fails
-    private function updateTargetCount(int $id, string $mod, bool $del, int $uid): bool {
-        if (!$id || !isset(self::MODULES[$mod])) return true;
-        [$tab, $slot] = self::MODULES[$mod];
-        $done = $this->db->getSqlQuery('UPDATE '.PREFIX_DB.$tab.' SET comments = comments + :delta WHERE id = :id', ['delta' => $del ? -1 : 1, 'id' => $id]);
-        if ($done === false) return false;
-        updatePoints($slot, $uid, $del ? 1 : 0);
-        return true;
+    # Award or take back the points of one comment author in the direction the write that calls this took
+    # This half belongs to the transaction of that write and rolls back with it, which is why it stayed where the counter left
+    private function updateTargetPoints(string $mod, bool $del, int $uid): void {
+        if (!isset(self::MODULES[$mod])) return;
+        updatePoints(self::MODULES[$mod][1], $uid, $del ? 1 : 0);
+    }
+
+    # Queue the counter of one target to be rewritten once the request is over
+    # The count runs after the response rather than inside the write, because the subquery it needs is a locking read of the comment table
+    # Two visitors commenting on one target at the same moment would otherwise wait on each other, and the loser of that wait would lose the comment
+    # A deferred task rather than a call after the commit, because the class may run inside a transaction it did not open and whose commit it never sees
+    private function addTargetCount(int $id, string $mod): void {
+        if ($id < 1 || !isset(self::MODULES[$mod])) return;
+        addDeferredTask(function() use ($id, $mod): void {
+            $this->setTargetCount($id, $mod);
+        });
     }
 
     # Build the visibility scope of one target once, so a count and the page it belongs to can never disagree about what is visible

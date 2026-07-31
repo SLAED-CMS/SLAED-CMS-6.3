@@ -91,7 +91,7 @@ function add(): void {
     setHead();
     $ops = ['name=content', 'name=content&op=add', 'name=content&op=config', 'name=content&op=info'];
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => [_HOME, _ADD, _PREFERENCES, _DOCS], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     $prev = [
         'title' => $title,
         'texta' => $body,

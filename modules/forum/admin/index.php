@@ -6,29 +6,60 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('forum')) die('Illegal file access');
 
-function forum(): void {
-    global $db, $tpl;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost = \'0\' WHERE modul = \'forum\'');
-    $query = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+# Bring the denormalised forum totals back in line with the rows they describe, and answer how much had to be repaired
+# The wanted values are computed in full before anything is written, so a forum that is already in order costs no write at all rather than a rewrite of every category
+# The reply count of a topic is repaired here too: nothing else ever recounted it, which is why topics could carry a wrong number for years
+function updateForumSync(): array {
+    global $db;
+    $query = $db->getSqlQuery('SELECT id, parent, topics, posts, lpost FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     $cats = [];
-    while ([$id, $parent] = $db->getSqlRow($query)) {
-        $cats[$id] = [$parent];
+    $kids = [];
+    while ([$id, $parent, $topics, $posts, $lpost] = $db->getSqlRow($query)) {
+        $cats[$id] = ['up' => (int)$parent, 'had' => [(int)$topics, (int)$posts, (int)$lpost], 'want' => [0, 0, 0]];
+        $kids[(int)$parent][] = (int)$id;
     }
     foreach ($cats as $catid => $row) {
         [$topics] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND cid = :catid', ['catid' => $catid]));
         [$posts] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND cid = :catid', ['catid' => $catid]));
-        [$id, $pid] = $db->getSqlRow($db->getSqlQuery('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND ((pid != \'0\' AND status = \'1\') OR (pid = \'0\' AND status > \'1\')) ORDER BY id DESC LIMIT 1', ['catid' => $catid]));
-        $lid = $pid ? $pid : ($id ?? 0);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost = :lid WHERE id = :catid AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'catid' => $catid]);
-        $upcat = $row[0];
-        while ($upcat != 0) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost = :lid WHERE id = :upcat AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'upcat' => $upcat]);
-            $upcat = (int)($cats[$upcat][0] ?? 0);
+        # Added rather than assigned, so a category listed before its own children still ends up with their totals
+        $cats[$catid]['want'][0] += (int)$topics;
+        $cats[$catid]['want'][1] += (int)$posts;
+        $upcat = $row['up'];
+        while ($upcat != 0 && isset($cats[$upcat])) {
+            $cats[$upcat]['want'][0] += (int)$topics;
+            $cats[$upcat]['want'][1] += (int)$posts;
+            $upcat = $cats[$upcat]['up'];
         }
     }
+    # The last message is asked of the branch through the same function the delete path uses, so both answer alike
+    foreach ($cats as $catid => $row) {
+        $sub = [$catid];
+        for ($num = 0; $num < count($sub); $num++) {
+            foreach ($kids[$sub[$num]] ?? [] as $one) $sub[] = $one;
+        }
+        $cats[$catid]['want'][2] = getForumLast($sub);
+    }
+    $done = 0;
+    foreach ($cats as $catid => $row) {
+        if ($row['had'] === $row['want']) continue;
+        $sql = 'UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost = :lid WHERE id = :catid AND modul = \'forum\'';
+        if ($db->getSqlQuery($sql, ['topics' => $row['want'][0], 'posts' => $row['want'][1], 'lid' => $row['want'][2], 'catid' => $catid]) !== false) $done++;
+    }
+    $bent = getForumDrift();
+    $fixt = 0;
+    foreach ($bent as $tid) {
+        if (setForumCount($tid)) $fixt++;
+    }
+    return ['cats' => $done, 'topics' => $fixt];
+}
+
+function forum(): void {
+    global $db, $tpl;
+    $sync = updateForumSync();
     setHead();
-    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _DOCS]]);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHIN]);
+    $cont = getTplAdminTabs(['ops' => ['name=forum', 'name=forum&op=config', 'name=forum&op=info'], 'tabs' => [_HOME, _PREFERENCES, _DOCS]]);
+    $note = ($sync['cats'] || $sync['topics']) ? sprintf(_SYNCHFIX, $sync['cats'], $sync['topics']) : _SYNCHOK;
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => (bool)($sync['cats'] || $sync['topics']), 'text' => $note]);
     $rows = '';
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {

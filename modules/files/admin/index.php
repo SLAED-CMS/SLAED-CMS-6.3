@@ -121,7 +121,7 @@ function add(): void {
     }
     setHead();
     $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'lines' => array_values((array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => array_values((array)$stop)]);
     if ($description) $cont .= getTplPreviewContent(['title' => $title, 'texta' => $description, 'textb' => $bodytext, 'mod' => 'files']);
     $link = $url ? $tpl->getHtmlFrag('link', ['href' => $url, 'title' => _DOWNLLINK, 'label' => _URL, 'is_blank' => true]) : _URL;
     $path = (string)($conf['files']['path'] ?? 'uploads/files');
