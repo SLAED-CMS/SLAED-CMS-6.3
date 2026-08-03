@@ -913,12 +913,16 @@ function edithome(): void {
         $aset = [];
         $arows = [];
         $adir = 'templates/'.getTheme().'/images/avatars/presets';
+        $tokn = getSiteToken('account');
         $list = scandir($adir);
         foreach ($list ?: [] as $file) {
             if (preg_match("#\.(gif|png|jpe?g|svg)$#is", $file)) {
                 $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
                 $aset[] = [
-                    'href' => 'index.php?name='.$conf['name'].'&op=saveavatar&avatar='.$file,
+                    'action' => 'index.php?name='.$conf['name'],
+                    'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'saveavatar'])
+                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'avatar', 'value_attr' => $file])
+                        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => $tokn]),
                     'title' => _AVATARSAVE.' '._ID.' '.$filename,
                     'is_avatar_link' => true,
                     'img_src' => $adir.'/'.$file,
@@ -1047,28 +1051,61 @@ function savehome(): void {
 
 function saveavatar(): void {
     global $user, $db, $conf, $stop;
-    $avatar = getVar('post', 'avatar', 'text');
-    if (!$avatar) $avatar = getVar('get', 'avatar', 'text');
-    if (getVar('post', 'op', 'word') == 'saveavatar' && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
-    if (is_user()) {
-        $uid = (int)$user[0];
-        if (!$avatar && $conf['users']['aupload']) {
-            $uavatar = upload(1, $conf['users']['adirectory'], $conf['users']['atypefile'], $conf['users']['amaxsize'], $conf['name'], $conf['users']['awidth'], $conf['users']['aheight'], $uid);
-            $avatar = (!$uavatar) ? $avatar : $uavatar;
-        } elseif ($avatar) {
-            $avatar = basename($avatar);
-            $avatar = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avatar) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avatar)) ? 'presets/'.$avatar : '';
-        }
-        if (!$stop && $avatar) {
-            $avatar = filterText($avatar);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => $avatar, 'id' => $uid]);
-            setRedirect('index.php?name='.$conf['name'].'&op=edithome');
-        } else {
-            edithome();
-        }
-    } else {
+    if (!is_user()) {
         edithome();
+        return;
     }
+    if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST' || !checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) {
+        $stop[] = _ERROR;
+        edithome();
+        return;
+    }
+    $uid = (int)$user[0];
+    $avatar = getVar('post', 'avatar', 'text');
+    $path = '';
+    if ($avatar) {
+        $avatar = basename($avatar);
+        $avatar = (preg_match("#\.(gif|png|jpe?g|svg)$#is", $avatar) && file_exists('templates/'.getTheme().'/images/avatars/presets/'.$avatar)) ? 'presets/'.$avatar : '';
+        if (!$avatar) $stop[] = _ERROR_FILE;
+    } elseif ($conf['users']['aupload']) {
+        $adir = trim(str_replace('\\', '/', $conf['users']['adirectory']), '/');
+        $adir = str_starts_with($adir, 'uploads/') ? substr($adir, 8) : (($adir === 'uploads') ? '' : $adir);
+        $rule = [
+            'extensions' => $conf['users']['atypefile'],
+            'maxbytes' => (int)$conf['users']['amaxsize'],
+            'maxwidth' => (int)$conf['users']['awidth'],
+            'maxheight' => (int)$conf['users']['aheight'],
+            'maxfiles' => 1,
+            'maxquota' => 0,
+        ];
+        $res = getUploadService()->addUploadedFile($_FILES['userfile'] ?? [], $rule, $adir, $conf['name'], $uid);
+        $avatar = ($res['ok']) ? (string)$res['file'] : '';
+        $path = ($res['ok']) ? (string)$res['path'] : '';
+        if (!$res['ok']) {
+            $stop[] = match ((string)$res['error']) {
+                'size' => _ERROR_BIG,
+                'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+                'dimensions' => _ERROR_SIZE,
+                'exists' => _ERROR_EXIST,
+                'destination', 'write' => _ERROR_UP,
+                default => _ERROR_DOWN,
+            };
+        }
+    }
+    if ($stop || !$avatar) {
+        edithome();
+        return;
+    }
+    if (!$db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => filterText($avatar), 'id' => $uid])) {
+        $stop[] = _ERROR;
+        if ($path !== '' && !getUploadService()->deleteStoredFile($path)) {
+            $stop[] = _ERROR_UP;
+            Logger::addFile('error', 'Avatar upload could not be removed after a failed profile write', ['path' => $path]);
+        }
+        edithome();
+        return;
+    }
+    setRedirect('index.php?name='.$conf['name'].'&op=edithome');
 }
 
 function savepass(): void {

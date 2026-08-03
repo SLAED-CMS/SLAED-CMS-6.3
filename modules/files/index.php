@@ -522,6 +522,7 @@ function send(): void {
         $url         = getVar('post', 'url', 'url');
         $fversion    = getVar('post', 'fversion', 'text');
         $fsize       = getVar('post', 'fsize', 'num');
+        $posttype    = getVar('post', 'posttype', 'var');
         $stop = [];
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'files')) $stop[] = _ERROR;
         if (!$title) $stop[] = _CERROR;
@@ -530,19 +531,52 @@ function send(): void {
         checkemail($mail);
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
-        $userid = isset($user[0]) ? (int)$user[0] : 0;
-        $filename = upload(1, $conf['files']['temp'], $conf['files']['typefile'], $conf['files']['max_size'], 'files', '1600', '1600', $userid);
-        $url = ($filename) ? $conf['files']['temp'].'/'.$filename : $url;
-        $fsize = ($filename) ? filesize($url) : $fsize;
-        if (!$stop && !$url && getVar('post', 'posttype', 'var') == 'save') $stop[] = _UPLOADEROR2;
-        if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
+        $sent = $conf['files']['upload'] == 1 && (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        $rpath = '';
+        if (!$stop && $posttype == 'save' && $sent) {
+            $fdir = trim(str_replace('\\', '/', $conf['files']['temp']), '/');
+            $fdir = str_starts_with($fdir, 'uploads/') ? substr($fdir, 8) : (($fdir === 'uploads') ? '' : $fdir);
+            $rule = [
+                'extensions' => $conf['files']['typefile'],
+                'maxbytes' => (int)$conf['files']['max_size'],
+                'maxwidth' => 1600,
+                'maxheight' => 1600,
+                'maxfiles' => 1,
+                'maxquota' => 0,
+            ];
+            $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $fdir, 'files', isset($user[0]) ? (int)$user[0] : 0);
+            if ($res['ok']) {
+                $url = 'uploads/'.$res['path'];
+                $fsize = $res['size'];
+                $rpath = (string)$res['path'];
+            } else {
+                $stop[] = match ((string)$res['error']) {
+                    'size' => _ERROR_BIG,
+                    'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+                    'dimensions' => _ERROR_SIZE,
+                    'exists' => _ERROR_EXIST,
+                    'destination', 'write' => _ERROR_UP,
+                    default => _ERROR_DOWN,
+                };
+            }
+        }
+        if (!$stop && !$url && $posttype == 'save') $stop[] = _UPLOADEROR2;
+        if (!$stop && $posttype == 'save') {
             $postid = (is_user()) ? (int)$user[0] : '';
             $uname  = (!is_user()) ? $postname : '';
-            $db->getSqlQuery(
+            if (!$db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_files (id, cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, status)'
                 ." VALUES (NULL, :cid, :postid, :uname, :title, :intro, :body, :url, NOW(), :fsize, :fversion, :mail, :home, :ip, '0')",
                 ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'mail' => $mail, 'home' => $home, 'ip' => getIp()]
-            );
+            )) {
+                $stop[] = _ERROR;
+                if ($rpath !== '' && !getUploadService()->deleteStoredFile($rpath)) {
+                    $stop[] = _ERROR_UP;
+                    Logger::addFile('error', 'File upload could not be removed after a failed database write', ['path' => $rpath]);
+                }
+                add();
+                return;
+            }
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);

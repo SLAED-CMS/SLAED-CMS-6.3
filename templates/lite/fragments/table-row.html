@@ -28,11 +28,18 @@
       "
       {% if cell.colspan %}colspan="{{ cell.colspan }}"{% endif %}
     >
-      {% if cell.href %}
+      {% if cell.is_avatar_link and cell.action %}
+        <form action="{{ cell.action }}" method="post" class="sl-avatar-link">
+          {{{ cell.hidden }}}
+          <button type="submit" title="{{ cell.title }}">
+            <img src="{{ cell.img_src }}" alt="{{ cell.img_alt }}" title="{{ cell.img_title }}"{% if cell.is_avatar %} class="sl-avatar"{% endif %}>
+          </button>
+        </form>
+      {% elseif cell.href %}
         <a
           href="{{ cell.href }}"
           title="{{ cell.title }}"
-          class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_avatar_link %}sl-avatar-link{% elseif cell.is_cart_id %}sl-but-mini sl-is-soft{% elseif cell.is_faq_link %}sl-chip sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}"
+          class="{% if cell.link_class %}{{ cell.link_class }}{% elseif cell.is_cart_id %}sl-but-mini sl-is-soft{% elseif cell.is_faq_link %}sl-chip sl-faq{% elseif cell.is_num %}sl-but-mini{% else %}sl-table-num-link{% endif %}"
         >
           {% if cell.is_faq_link %}<i class="bi bi-question-circle" aria-hidden="true"></i> {% endif %}
           {% if cell.link_label_html %}

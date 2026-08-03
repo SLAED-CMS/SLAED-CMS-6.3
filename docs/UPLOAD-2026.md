@@ -7,15 +7,135 @@ the working tree contradicts it.
 Work through `Execution batches`, one batch per session, each ending with the
 self-check defined there.
 
-Last completed batch: 5 — the editor adapter. `addEditorUpload()` is a thin
-adapter now: it resolves the rule, checks access and the token, hands the whole
+Last completed batch: 7 — the file modules. `modules/files/index.php` `send()`
+and `modules/files/admin/index.php` `save()` publish through `addUploadedFile()`
+after every check has passed, store the project-relative `uploads/<dir>/<file>`
+they stored before, take `size` from the result instead of probing the path, and
+delete the returned path when the row write fails. The admin handler publishes
+into the selected `path` directly, so the publish-then-rename branch no longer
+runs for a new upload.
+
+Decisions of batch 7, all visible in the code:
+
+- the `Upload` call moved inside `posttype == 'save'` and behind `!$stop`. Both
+  handlers called `upload()` unconditionally before, so a preview, a failed
+  captcha, a missing token and even a delete published a file that no row ever
+  referenced. This is the orphan the plan exists to prevent, and it is closed by
+  ordering rather than by cleanup.
+- "a file was submitted" is `$_FILES[...]['error'] !== UPLOAD_ERR_NO_FILE`, not
+  a non-empty `size`. The distinction matters for the precedence rule: a
+  rejected local file must not fall back to the typed URL, so the adapter has to
+  know that a file arrived even when it arrived broken.
+- the frontend gate also reads `$conf['files']['upload']`. The form renders the
+  file field only when that flag is 1 (`modules/files/index.php:398`), but
+  `upload()` never looked at it, so a hand-made POST could publish into the temp
+  directory with uploads switched off. The flag is the module's own
+  authorization for this flow and `Adapter write ordering and compensation`
+  requires authorization before the class is reached.
+- `maxwidth`/`maxheight` stay at the hardcoded 1600 both handlers passed to
+  `upload()`. `config/files.php` has no dimension keys, `Acceptance` forbids
+  adding one, and passing 0 would drop the dimension check that runs today.
+  Admin upload is the flow that stops hardcoding limits, in batch 8, because the
+  `all` record has the fields for it.
+- the admin destination is `$path ?: $conf['files']['path']`, and the
+  publish-then-rename branch is now guarded by `!$sent` rather than deleted
+  outright: relocation of an already stored file with no new upload is explicitly
+  kept by `Scope`, and that is the only case the branch can still serve.
+- `getVar('post', 'path', 'name')` truncates to 25 characters, so a selected
+  directory whose project-relative path is longer resolves to nothing and the
+  class answers `destination`. This predates the migration — the old rename
+  target was cut the same way — and is recorded here because a route test hit it
+  with a 26-character directory and the failure looks like a class defect.
+- the route tests ran against the stand with a fixture user and the real admin
+  session. Frontend: a preview with a file published nothing; an empty title
+  with a file attached answered `_CERROR` and published nothing; a `txt` was
+  refused with `_ERROR_FILE` and did not fall back to the typed URL; an 11 MB
+  file answered `_ERROR_BIG`; a tampered token published nothing; a valid zip
+  stored `uploads/files/temp/files-<salt>-<uid>.zip` with the real byte size; a
+  typed URL with no file still stored the URL; and neither of the two answered
+  `_UPLOADEROR2`. Admin: a preview and a delete with a file attached published
+  nothing, a tampered token answered `_TOKENMISS`, a valid zip published into
+  `uploads/files/public` with no owner suffix, a new record with a typed URL and
+  no file stored the URL and wrote no file anywhere, a new upload with a selected
+  subdirectory landed in that subdirectory in one step with nothing written to
+  the default one, and a relocation without an upload still moved the stored
+  file. Compensation was forced on **both** routes with a trigger that signals
+  `45000`: the successful path left no file and no log line, and the failing one
+  — the same trigger with `SLEEP(3)` plus a watcher removing the published file
+  mid-request — reported `_ERROR` and `_ERROR_UP` and logged the stranded
+  root-relative path to `error_file.log`. Every fixture, trigger, row and file
+  was removed afterwards; `error_php.log` stayed empty and `storage/logs/uploads`
+  holds nothing but lock files.
+- one negative of the route matrix is unproven: a failed captcha on the frontend
+  write. `config/security.php` has `captcha.active` at `0` on this stand, so
+  `Captcha::check()` returns false before it reaches a provider, and raising the
+  flag needs `config/local.php` removed for the config cache to rebuild — an
+  operation this session was not permitted to perform. The gate is the same
+  `!$stop` guard the token and the empty-title tests both prove, so the risk is
+  the flag being read rather than the ordering; run it once the cache can be
+  rebuilt.
+- two things this batch deliberately left alone, both older than the migration
+  and outside its bullets: `setContentActive('_files', [$fid], 9)` still runs
+  before the admin `UPDATE`, so a failed row write leaves the status change
+  behind while compensation removes only the file; and the frontend no longer
+  has the `isAdmin() && !is_user()` branch that gave an operator browsing the
+  site a name with no owner suffix — the route matrix specifies "current user ID
+  or `0`" for that flow, so an operator now publishes as `-0`.
+- `config/files.php` still lists `gzip`, which the type map does not know, so a
+  `.gzip` upload answers `unsupported` until batch 9 corrects the spelling to
+  `gz`. `zip`, `rar`, `7z` and `tar` work now.
+
+Decisions of batch 6, still true. `saveavatar()` refuses anything that is not a
+POST carrying the `account` token before it reads a preset name or looks at
+`$_FILES`, publishes through `addUploadedFile()`, stores the returned filename,
+and deletes the returned path when the profile write fails. The preset grid
+submits by POST now, so no avatar path changes state without a token.
+
+- the gate is one early return, not a `$stop` entry checked later. The old line
+  only validated the token `if (getVar('post', 'op', ...) == 'saveavatar')`, so
+  a GET with `?op=saveavatar&avatar=<preset>` wrote `users.avatar` with no token
+  at all. Method and token are now checked together, above every read, and the
+  preset branch sits inside that gate — the branch itself still calls no upload.
+- the preset cells became POST forms. `templates/lite/fragments/table-row.html`
+  gained one branch keyed on `is_avatar_link and action`, and `sl-avatar-link`
+  moved from the `<a>` onto the `<form>`, so the dead arm of the link class
+  chain came out with it. The class carried no CSS rule at all before; the two
+  rules added to `templates/lite/assets/css/theme.css` only strip the button
+  chrome. `line-height: 0` is not cosmetic: without it the button's own line box
+  adds 6 px to every grid row. Measured against the old markup rebuilt in the
+  same live page, the grid is identical — table 742×2096, cell 208×209, image
+  192×192.
+- the rule is built from the `$conf['users']` avatar keys with `maxfiles` 1 and
+  `maxquota` 0. The avatar flow enforces no quota today and introducing one
+  would be a behavior change this plan did not ask for.
+- `adirectory` loses exactly one leading `uploads/`, and a value of `uploads`
+  alone resolves to the empty string, which the class refuses with `destination`
+  rather than writing into the upload root itself.
+- the old avatar file is not removed when a new one replaces it. Deletion is out
+  of scope; `deleteStoredFile()` is called only for the file this very request
+  published, and only after the profile write failed.
+- the route tests ran against the stand with a fixture user: the preset grid
+  renders 56 POST forms and no `op=saveavatar` link; a GET preset, a POST preset
+  without a token and a guest POST all changed nothing; a preset click stored
+  `presets/<file>`; a `txt`, an oversized file and a 200×200 image were refused
+  with `_ERROR_FILE`, `_ERROR_BIG` and `_ERROR_SIZE` and left the directory
+  untouched; and a real upload through the form stored the filename only and
+  rendered from `uploads/avatars/`. The two failure paths were forced rather
+  than argued: a `BEFORE UPDATE` trigger that signals `45000` proved the
+  compensation, and the same trigger with a `SLEEP(3)` plus a watcher that
+  removes the published file mid-request proved the compensation-failure branch,
+  which reported `_ERROR` and `_ERROR_UP` and logged the stranded root-relative
+  path to `error_file.log`. Both fixtures, the trigger, the sessions and the
+  published files were removed afterwards; `error_php.log` stayed empty and
+  `storage/logs/uploads` holds nothing but lock files.
+
+Decisions of batch 5, still true. `addEditorUpload()` is a thin adapter: it
+resolves the rule, checks access and the token, hands the whole
 `$_FILES['file']` shape to `addUploadedFiles()` and maps the returned codes onto
 the constants of `Error codes and messages`. The duplicated validation, quota,
 naming and storage block is gone, the generic `go=4` default answers 400 with
 `{"ok":false,"error":"<_ERROR>"}` instead of calling `upload()`, and
 `getEditorFileJson()` answers a guest with an empty list.
-
-Decisions of batch 5, all visible in the code:
 
 - the code-to-constant mapping is a `match` inside the adapter, not a helper.
   `Acceptance` allows exactly two new functions and both already exist, so each
@@ -137,8 +257,10 @@ suites fail on this stand, and the cause is the database rather than the code �
 `sport_comment` has no `pid` column, so every comment insert fails with
 `42S22/1054`. The schema update of the comment threads commit was never applied
 here. It has nothing to do with uploads and is stated only so the next session
-does not spend its time on it. Batches 1 to 5 are all uncommitted in the
-working tree.
+does not spend its time on it. Batches 1 to 5 are committed as `0e007cfd`;
+batches 6 and 7 are both uncommitted in the working tree, and their files do not
+overlap — batch 6 touches `modules/account` and the lite template, batch 7 only
+`modules/files`.
 Update this line as the final act of every batch —
 it is how the next session knows where to start. Do not rely on a commit
 message: `.rules/git.md` allows committing only on explicit instruction, so a

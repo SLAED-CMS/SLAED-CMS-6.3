@@ -235,9 +235,35 @@ function save(): void {
         if (!$description) $stop[] = _CERROR1;
         if (!$postname) $stop[] = _CERROR3;
         if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
-        $filename = upload(1, $conf['files']['path'] ?? 'uploads/files', $conf['files']['typefile'] ?? 'zip,rar', $conf['files']['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
-        $url = $filename ? ($conf['files']['path'] ?? 'uploads/files').'/'.$filename : $url;
-        $filesize = $filename ? filesize(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/')) : $filesize;
+        $sent = (int)($_FILES['filesite']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        $rpath = '';
+        if (!$stop && $posttype === 'save' && $sent) {
+            $fdir = trim(str_replace('\\', '/', $path ?: ($conf['files']['path'] ?? 'uploads/files')), '/');
+            $fdir = str_starts_with($fdir, 'uploads/') ? substr($fdir, 8) : (($fdir === 'uploads') ? '' : $fdir);
+            $rule = [
+                'extensions' => $conf['files']['typefile'] ?? 'zip,rar',
+                'maxbytes' => (int)($conf['files']['max_size'] ?? 1048576),
+                'maxwidth' => 1600,
+                'maxheight' => 1600,
+                'maxfiles' => 1,
+                'maxquota' => 0,
+            ];
+            $res = getUploadService()->addUploadedFile($_FILES['filesite'], $rule, $fdir, 'files', null);
+            if ($res['ok']) {
+                $url = 'uploads/'.$res['path'];
+                $filesize = $res['size'];
+                $rpath = (string)$res['path'];
+            } else {
+                $stop[] = match ((string)$res['error']) {
+                    'size' => _ERROR_BIG,
+                    'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+                    'dimensions' => _ERROR_SIZE,
+                    'exists' => _ERROR_EXIST,
+                    'destination', 'write' => _ERROR_UP,
+                    default => _ERROR_DOWN,
+                };
+            }
+        }
         if (!$stop && !$url && $posttype === 'save') {
             $stop[] = _UPLOADEROR2;
         }
@@ -245,7 +271,7 @@ function save(): void {
             $postid = is_user_id($postname) ?: 0;
             $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
             if ($fid) {
-                if ($path) {
+                if (!$sent && $path) {
                     $filel = array_reverse(explode('/', $url));
                     if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) {
                         $newfile = $path.'/'.$filel[0];
@@ -254,10 +280,33 @@ function save(): void {
                     }
                 }
                 setContentActive('_files', [$fid], 9);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ihome' => $ihome, 'acomm' => $acomm, 'id' => $fid]);
+                $done = $db->getSqlQuery(
+                    'UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url,'
+                    .' time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm WHERE id = :id',
+                    [
+                        'cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext,
+                        'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website,
+                        'ihome' => $ihome, 'acomm' => $acomm, 'id' => $fid,
+                    ]
+                );
             } else {
                 $ip = getip();
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :filesize, :version, :email, :website, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
+                $done = $db->getSqlQuery(
+                    'INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, ihome, acomm, status)'
+                    .' VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :filesize, :version, :email, :website, :ip, :ihome, :acomm, :status)',
+                    [
+                        'cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext,
+                        'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website,
+                        'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1',
+                    ]
+                );
+            }
+            if (!$done) {
+                $stop[] = _ERROR;
+                if ($rpath !== '' && !getUploadService()->deleteStoredFile($rpath)) {
+                    $stop[] = _ERROR_UP;
+                    Logger::addFile('error', 'File upload could not be removed after a failed database write', ['path' => $rpath]);
+                }
             }
         }
     }
