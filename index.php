@@ -169,7 +169,6 @@ if (empty($go)) {
         Cache::setHeaders(false);
         $mod = (getVar('get', 'mod', 'var')) ? strtolower(getVar('get', 'mod', 'var')) : '';
         if ($mod) {
-            $userid = (getVar('get', 'userid', 'num')) ? getVar('get', 'userid', 'num') : '0';
             switch($op) {
                 case 'editorUpload':
                 addEditorUpload();
@@ -178,9 +177,8 @@ if (empty($go)) {
                 getEditorFileJson();
                 break;
                 default:
-                $con = explode('|', $conf['uploads'][$mod]);
-                upload(2, 'uploads/'.$mod, $con[0], $con[2], $mod, $con[3], $con[4], $userid);
-                break;
+                http_response_code(400);
+                getEditorJson(['ok' => false, 'error' => _ERROR]);
             }
         } else {
             die('Illegal file access');

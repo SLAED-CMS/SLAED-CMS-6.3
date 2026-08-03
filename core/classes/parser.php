@@ -173,7 +173,7 @@ class Parser {
         if ($raw === '' || str_starts_with($raw, '#')) return $raw;
         if (stripos($raw, 'data:') === 0) {
             if (strlen($raw) > intdiv(self::EMBEDMAX + 2, 3) * 4 + 32) return null;
-            if (!preg_match('#^data:image/(?:png|jpe?g|gif|webp);base64,([A-Za-z0-9+/]+={0,2})$#i', $raw, $dm)) return null;
+            if (!preg_match('#^data:image/(?:png|jpe?g|gif|webp|avif);base64,([A-Za-z0-9+/]+={0,2})$#i', $raw, $dm)) return null;
             $bin = base64_decode($dm[1], true);
             return ($bin !== false && strlen($bin) <= self::EMBEDMAX) ? $raw : null;
         }
@@ -476,9 +476,8 @@ class Parser {
         if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
         static $fex = [];
         static $isz = [];
-        $con = explode('|', (string)($conf['uploads'][$mod] ?? ''));
-        $twd = $con[6] ?? ($conf['uploads']['width'] ?? '250');
-        $img = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
+        $twd = getUploadRuleData($mod)['thumbwidth'] ?: ($conf['uploads']['width'] ?? '250');
+        $img = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif'];
         foreach ($mm as $m) {
             $fn  = (string)$m[1];
             $al  = (string)$m[2];
@@ -498,7 +497,7 @@ class Parser {
                 if ($mod !== '' && ($fex[$path] ??= file_exists($path)) && !($fex[$tpath] ??= file_exists($tpath))) {
                     if (!file_exists($tdir)) mkdir($tdir, 0777, true);
                     $tmp = $tpath.'.'.getmypid().'.tmp';
-                    if (create_img_gd($path, $tmp, $twd) === $tmp && is_file($tmp) && rename($tmp, $tpath)) $fex[$tpath] = true;
+                    if (getImageThumb($path, $tmp, $twd) === $tmp && is_file($tmp) && rename($tmp, $tpath)) $fex[$tpath] = true;
                     elseif (is_file($tmp)) unlink($tmp);
                 }
                 $timg = $tfile;

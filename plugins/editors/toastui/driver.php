@@ -62,8 +62,8 @@ class EditorToastUi implements ContentDriver {
         ]);
         $ta .= '<div id="'.$eid.'_toast"></div>';
         $mod = strtolower((string)($data['mod'] ?? ''));
-        $con = (array)($data['con'] ?? []);
-        $upl = $mod !== '' && (is_moder($mod) || (is_user() && (int)($con[10] ?? 0) === 1) || (!is_user() && (int)($con[11] ?? 0) === 1));
+        $rul = (array)($data['rule'] ?? []);
+        $upl = $mod !== '' && checkEditorUploadAccess($mod, $rul);
         $panel = '';
         $opt = [
             'admin' => isAdmin(),
@@ -127,7 +127,7 @@ class EditorToastUi implements ContentDriver {
                 'msg' => $mid,
                 'list' => $lid,
                 'object' => $oid,
-                'maxfiles' => (int)($con[5] ?? 0),
+                'maxfiles' => (int)($rul['maxfiles'] ?? 0),
                 'upload' => 'index.php?go=4&op=editorUpload&mod='.rawurlencode($mod),
                 'files' => 'index.php?go=4&op=editorFiles&mod='.rawurlencode($mod).'&token='.rawurlencode($atk),
             ];
@@ -154,17 +154,17 @@ class EditorToastUi implements ContentDriver {
                 'nofile_label' => _ENOFILE,
                 'drop_label' => _EDROPFILES,
                 'type_label' => _FTYPE,
-                'types_text' => str_replace(',', ', ', (string)($con[0] ?? '')),
+                'types_text' => str_replace(',', ', ', (string)($rul['extensions'] ?? '')),
                 'allsize_label' => _FSIZEALL,
-                'allsize_text' => filterSize((int)($con[1] ?? 0)),
+                'allsize_text' => filterSize((int)($rul['maxquota'] ?? 0)),
                 'filesize_label' => _FSIZE,
-                'filesize_text' => filterSize((int)($con[2] ?? 0)),
+                'filesize_text' => filterSize((int)($rul['maxbytes'] ?? 0)),
                 'width_label' => _AWIDTH,
-                'width_text' => (int)($con[3] ?? 0).' px',
+                'width_text' => (int)($rul['maxwidth'] ?? 0).' px',
                 'height_label' => _AHEIGHT,
-                'height_text' => (int)($con[4] ?? 0).' px',
+                'height_text' => (int)($rul['maxheight'] ?? 0).' px',
                 'count_label' => _FILEUP,
-                'count_text' => (int)($con[5] ?? 0),
+                'count_text' => (int)($rul['maxfiles'] ?? 0),
                 'refresh_label' => _UPDATE,
             ]);
         }

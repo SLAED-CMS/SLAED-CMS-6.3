@@ -411,3 +411,30 @@ blockquote:after {
 blockquote > p:first-child {
   display: inline;
 }
+
+/* Attachments: parser [attach] thumbnails, framing and alignment modifiers */
+.sl-attach {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0 var(--sl-space-sm) var(--sl-space-sm) 0;
+}
+
+.sl-attach img {
+  display: block;
+  height: auto;
+}
+
+.sl-attach-left {
+  float: left;
+}
+
+.sl-attach-right {
+  float: right;
+  margin: 0 0 var(--sl-space-sm) var(--sl-space-sm);
+}
+
+.sl-attach-center {
+  display: block;
+  float: none;
+  margin: 0 auto var(--sl-space-sm);
+}

@@ -534,7 +534,6 @@ function getTplFieldsIn(array $data = []): string {
 
 # Render a rich-text editor textarea with upload config and locale for the given module
 function getTplTextarea(array $data = []): string {
-    global $conf;
     $id = (string)($data['id'] ?? '1');
     $name = (string)($data['name'] ?? '');
     $value = (string)($data['value'] ?? '');
@@ -547,7 +546,7 @@ function getTplTextarea(array $data = []): string {
     $fmt = getEditorMode($key);
     $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
     if ($fmt !== 'html') $desc = getDecodedText(replace_break($desc));
-    $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
+    $rul = getUploadRuleData(strtolower($mod));
     return Editor::getContent([
         'editor' => $key,
         'format' => $fmt,
@@ -560,7 +559,7 @@ function getTplTextarea(array $data = []): string {
         'autofocus' => !empty($data['autofocus']),
         'stloc' => $stloc,
         'mod' => $mod,
-        'con' => $con,
+        'rule' => $rul,
     ]);
 }
 

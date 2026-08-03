@@ -2970,7 +2970,7 @@ function getImageBox(string $file): array {
         }
         return [0, 0];
     }
-    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'], true)) return [0, 0];
+    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp'], true)) return [0, 0];
     $info = getimagesize($file);
     return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
 }
@@ -4220,27 +4220,61 @@ function getEditorJson(array $dat): void {
     exit;
 }
 
-# Return upload configuration for a module editor endpoint
-function getEditorUploadData(string $mod): array {
+# Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
+function getUploadRuleData(string $mod): array {
     global $conf;
-    if ($mod === '' || !isset($conf['uploads'][$mod])) return ['ok' => false, 'error' => 'Upload configuration is missing'];
-    $con = explode('|', (string)$conf['uploads'][$mod]);
-    $dir = 'uploads/'.$mod;
+    $con = isset($conf['uploads'][$mod]) ? explode('|', (string)$conf['uploads'][$mod]) : [];
+    $err = '';
     $path = UPLOADS_DIR.'/'.$mod;
-    if (!is_dir($path)) return ['ok' => false, 'error' => 'Upload directory is missing'];
-    return ['ok' => true, 'con' => $con, 'dir' => $dir, 'path' => $path];
+    if ($mod === '' || $con === []) $err = 'Upload configuration is missing';
+    elseif (!is_dir($path)) $err = 'Upload directory is missing';
+    return [
+        'ok' => $err === '',
+        'error' => $err,
+        'dir' => 'uploads/'.$mod,
+        'path' => $path,
+        'extensions' => (string)($con[0] ?? ''),
+        'maxquota' => (int)($con[1] ?? 0),
+        'maxbytes' => (int)($con[2] ?? 0),
+        'maxwidth' => (int)($con[3] ?? 0),
+        'maxheight' => (int)($con[4] ?? 0),
+        'maxfiles' => (int)($con[5] ?? 0),
+        'thumbwidth' => (int)($con[6] ?? 0),
+        'adminlist' => (int)($con[7] ?? 0),
+        'moderfiles' => (int)($con[8] ?? 0),
+        'userfiles' => (int)($con[9] ?? 0),
+        'userupload' => (int)($con[10] ?? 0),
+        'guestupload' => (int)($con[11] ?? 0),
+    ];
+}
+
+# Assemble the pipe-separated upload configuration of one directory from named rule keys, in the field order getUploadRuleData() reads
+function setUploadRuleData(array $rule): string {
+    $keys = ['extensions', 'maxquota', 'maxbytes', 'maxwidth', 'maxheight', 'maxfiles', 'thumbwidth', 'adminlist', 'moderfiles', 'userfiles', 'userupload', 'guestupload'];
+    return implode('|', array_map(static fn($v) => (string)($rule[$v] ?? ''), $keys));
+}
+
+# Return the single upload service; core/classes has no runtime autoload, so the class file is required on first use instead of on every request
+# The upload root and the lock directory are named here and nowhere else, which is why no adapter ever calls new Upload()
+function getUploadService(): Upload {
+    static $upl = null;
+    if ($upl === null) {
+        require_once BASE_DIR.'/core/classes/upload.php';
+        $upl = new Upload(UPLOADS_DIR, LOGS_DIR.'/uploads');
+    }
+    return $upl;
 }
 
 # Check whether the current visitor may use the module editor upload
-function checkEditorUploadAccess(string $mod, array $con): bool {
+function checkEditorUploadAccess(string $mod, array $rule): bool {
     if (is_moder($mod)) return true;
-    if (is_user() && (int)($con[10] ?? 0) === 1) return true;
-    return !is_user() && (int)($con[11] ?? 0) === 1;
+    if (is_user() && (int)($rule['userupload'] ?? 0) === 1) return true;
+    return !is_user() && (int)($rule['guestupload'] ?? 0) === 1;
 }
 
 # Return image metadata for an uploaded or stored editor file
 function getEditorImageData(string $file, string $ext, int $wid, int $hei): array {
-    $img = in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'], true);
+    $img = in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif'], true);
     if (!$img) return ['ok' => true, 'image' => false, 'width' => 0, 'height' => 0, 'error' => ''];
     $inf = @getimagesize($file);
     if (!is_array($inf)) return ['ok' => false, 'image' => true, 'width' => 0, 'height' => 0, 'error' => _ERROR_FILE];
@@ -4272,91 +4306,52 @@ function getEditorFileData(string $dir, string $file): array {
     ];
 }
 
-# Upload files for the Toast UI editor and return JSON
+# Publish one editor submission through the upload service and answer with the editor JSON; rules, naming and quota belong to the service, the adapter only maps its codes
+# The owner is the site user id for a logged in visitor, null for a privileged moderator without one, and the shared guest value otherwise
 function addEditorUpload(): void {
     global $user;
     $mod = strtolower(getVar('get', 'mod', 'var', ''));
-    $dat = getEditorUploadData($mod);
-    if (!$dat['ok']) getEditorJson(['ok' => false, 'error' => $dat['error']]);
-    $con = (array)$dat['con'];
-    $dir = (string)($dat['path'] ?? (BASE_DIR.'/'.ltrim(str_replace('\\', '/', (string)$dat['dir']), '/')));
-    if (!checkEditorUploadAccess($mod, $con)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
+    $rul = getUploadRuleData($mod);
+    if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
+    $dir = $rul['path'];
+    if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
-    $upl = $_FILES['file'] ?? [];
-    if (!$upl || empty($upl['name'])) getEditorJson(['ok' => false, 'error' => _ERROR_DOWN]);
-    $nam = is_array($upl['name']) ? $upl['name'] : [$upl['name']];
-    $tmp = is_array($upl['tmp_name']) ? $upl['tmp_name'] : [$upl['tmp_name']];
-    $siz = is_array($upl['size']) ? $upl['size'] : [$upl['size']];
-    $err = is_array($upl['error']) ? $upl['error'] : [$upl['error']];
-    $typ = (string)($con[0] ?? '');
-    $all = (int)($con[1] ?? 0);
-    $max = (int)($con[2] ?? 0);
-    $wid = (int)($con[3] ?? 0);
-    $hei = (int)($con[4] ?? 0);
-    $num = (int)($con[5] ?? 0);
-    if ($num > 0 && count($nam) > $num) {
-        $msg = _FILEUP.': '.$num;
-        getEditorJson(['ok' => false, 'files' => [], 'errors' => [$msg], 'error' => $msg]);
-    }
-    $used = 0;
-    if ($all > 0) {
-        foreach (scandir($dir) ?: [] as $file) {
-            if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
-            $used += max(0, (int)filesize($dir.'/'.$file));
-        }
-    }
-    $uid = is_user() ? (int)($user[0] ?? 0) : (int)getVar('get', 'userid', 'num', 0);
+    $uid = is_user() ? (int)($user[0] ?? 0) : (is_moder($mod) ? null : 0);
     $out = [];
     $bad = [];
-    foreach ($nam as $key => $old) {
-        if (($err[$key] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string)($tmp[$key] ?? ''))) {
-            $bad[] = _ERROR_DOWN;
+    foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, $mod, $mod, $uid) as $res) {
+        if ($res['ok']) {
+            $out[] = getEditorFileData($dir, (string)$res['file']);
             continue;
         }
-        if ($max > 0 && (int)($siz[$key] ?? 0) > $max) {
-            $bad[] = _ERROR_BIG;
-            continue;
-        }
-        $ext = strtolower(pathinfo((string)$old, PATHINFO_EXTENSION));
-        $msg = check_file($ext, $typ);
-        if ($msg !== '') {
-            $bad[] = $msg;
-            continue;
-        }
-        $img = getEditorImageData((string)$tmp[$key], $ext, $wid, $hei);
-        if (!$img['ok']) {
-            $bad[] = (string)$img['error'];
-            continue;
-        }
-        if ($all > 0 && $used + (int)($siz[$key] ?? 0) > $all) {
-            $bad[] = _FSIZEALL.': '.filterSize($all);
-            continue;
-        }
-        $new = $mod.'-'.getRandomString(10).'-'.$uid.'.'.$ext;
-        while (is_file($dir.'/'.$new)) $new = $mod.'-'.getRandomString(10).'-'.$uid.'.'.$ext;
-        if (!move_uploaded_file((string)$tmp[$key], $dir.'/'.$new)) {
-            $bad[] = _ERROR_UP;
-            continue;
-        }
-        $out[] = getEditorFileData($dir, $new);
-        $used += (int)($siz[$key] ?? 0);
+        $bad[] = match ((string)$res['error']) {
+            'size' => _ERROR_BIG,
+            'count' => _FILEUP.': '.$rul['maxfiles'],
+            'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+            'dimensions' => _ERROR_SIZE,
+            'quota' => _FSIZEALL.': '.filterSize($rul['maxquota']),
+            'exists' => _ERROR_EXIST,
+            'destination', 'write' => _ERROR_UP,
+            default => _ERROR_DOWN,
+        };
     }
     getEditorJson(['ok' => $out !== [], 'files' => $out, 'errors' => $bad, 'error' => $out ? '' : ($bad[0] ?? _ERROR_DOWN)]);
 }
 
-# Return stored files for the Toast UI editor file panel
+# Return stored files for the Toast UI editor file panel; a moderator lists the whole directory and an authenticated visitor only the files carrying the own owner suffix
+# A guest receives no historical files at all, because the shared guest suffix would otherwise expose every other guest upload of the same directory
 function getEditorFileJson(): void {
     global $user;
     $mod = strtolower(getVar('get', 'mod', 'var', ''));
-    $dat = getEditorUploadData($mod);
-    if (!$dat['ok']) getEditorJson(['ok' => false, 'error' => $dat['error']]);
-    $con = (array)$dat['con'];
-    $dir = (string)($dat['path'] ?? (BASE_DIR.'/'.ltrim(str_replace('\\', '/', (string)$dat['dir']), '/')));
-    if (!checkEditorUploadAccess($mod, $con)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
+    $rul = getUploadRuleData($mod);
+    if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
+    $dir = $rul['path'];
+    if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
     if (!checkSiteToken(getVar('req', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
     $uid = is_user() ? (int)($user[0] ?? 0) : 0;
     $all = is_moder($mod);
-    $lim = (int)($all ? ($con[8] ?? 0) : ($con[9] ?? 0));
+    if (!$all && $uid < 1) getEditorJson(['ok' => true, 'files' => []]);
+    $lim = $all ? $rul['moderfiles'] : $rul['userfiles'];
     $row = [];
     foreach (scandir($dir) ?: [] as $file) {
         if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
@@ -5644,69 +5639,36 @@ function setContentActive(string $tab, array $ids, int $pts): void {
     $db->getSqlQuery('UPDATE '.PREFIX_DB.$tab." SET status = '1' WHERE id IN (".$in.')', $pars);
 }
 
-# Format image preview PHP GD
-function create_img_gd(string $imgfile, string $imgthumb, int $newwidth): string {
-    if (function_exists('imagecreate')) {
-        $imginfo = getimagesize($imgfile);
-        switch($imginfo[2]) {
-            default: return $imgfile; break;
-            case 1: $type = IMG_GIF; break;
-            case 2: $type = IMG_JPG; break;
-            case 3: $type = IMG_PNG; break;
-            case 4: $type = IMG_WBMP; break;
-        }
-        switch($type) {
-            case IMG_GIF:
-            if (!function_exists('imagecreatefromgif')) return $imgfile;
-            $srcImage = imagecreatefromgif($imgfile);
-            break;
-            case IMG_JPG:
-            if (!function_exists('imagecreatefromjpeg')) return $imgfile;
-            $srcImage = imagecreatefromjpeg($imgfile);
-            break;
-            case IMG_PNG:
-            if(!function_exists('imagecreatefrompng')) return $imgfile;
-            $srcImage = imagecreatefrompng($imgfile);
-            break;
-            case IMG_WBMP:
-            if (!function_exists('imagecreatefromwbmp')) return $imgfile;
-            $srcImage = imagecreatefromwbmp($imgfile);
-            break;
-            default:
-            return $imgfile;
-        }
-        if ($srcImage) {
-            $srcWidth = $imginfo[0];
-            $srcHeight = $imginfo[1];
-            $ratioWidth = $srcWidth / $newwidth;
-            $destWidth = $newwidth;
-            $destHeight = $srcHeight / $ratioWidth;
-            $destImage = imagecreatetruecolor($destWidth, $destHeight);
-
-            imagesavealpha($destImage, true);
-            $iccalpha = imagecolorallocatealpha($destImage, 255, 255, 255, 127);
-            imagefill($destImage, 0, 0, $iccalpha);
-            imagecopyresampled($destImage, $srcImage, 0, 0, 0, 0, $destWidth, $destHeight, $srcWidth, $srcHeight);
-
-            switch($type) {
-                case IMG_GIF:
-                imagegif($destImage, $imgthumb);
-                break;
-                case IMG_JPG:
-                imagejpeg($destImage, $imgthumb);
-                break;
-                case IMG_PNG:
-                imagepng($destImage, $imgthumb);
-                break;
-                case IMG_WBMP:
-                imagewbmp($destImage, $imgthumb);
-                break;
-            }
-            return $imgthumb;
-        } else {
-            return $imgfile;
-        }
-    } else {
-        return $imgfile;
-    }
+# Resample an image down to the requested width through GD and write it to the thumb path; returns the source path unchanged when GD, the format or the write is unavailable
+function getImageThumb(string $file, string $dest, int $width): string {
+    if (!function_exists('imagecreatetruecolor') || $width < 1) return $file;
+    $info = getimagesize($file);
+    if (!is_array($info) || $info[0] < 1 || $info[1] < 1) return $file;
+    $type = $info[2];
+    $simg = match ($type) {
+        IMAGETYPE_GIF => function_exists('imagecreatefromgif') ? imagecreatefromgif($file) : false,
+        IMAGETYPE_JPEG => function_exists('imagecreatefromjpeg') ? imagecreatefromjpeg($file) : false,
+        IMAGETYPE_PNG => function_exists('imagecreatefrompng') ? imagecreatefrompng($file) : false,
+        IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? imagecreatefromwebp($file) : false,
+        IMAGETYPE_AVIF => function_exists('imagecreatefromavif') ? imagecreatefromavif($file) : false,
+        default => false,
+    };
+    if (!$simg) return $file;
+    $swid = $info[0];
+    $shei = $info[1];
+    $dhei = max(1, (int)round($shei * $width / $swid));
+    $dimg = imagecreatetruecolor($width, $dhei);
+    imagesavealpha($dimg, true);
+    $back = imagecolorallocatealpha($dimg, 255, 255, 255, 127);
+    imagefill($dimg, 0, 0, $back);
+    imagecopyresampled($dimg, $simg, 0, 0, 0, 0, $width, $dhei, $swid, $shei);
+    $done = match ($type) {
+        IMAGETYPE_GIF => imagegif($dimg, $dest),
+        IMAGETYPE_JPEG => imagejpeg($dimg, $dest),
+        IMAGETYPE_PNG => imagepng($dimg, $dest),
+        IMAGETYPE_WEBP => function_exists('imagewebp') ? imagewebp($dimg, $dest) : false,
+        IMAGETYPE_AVIF => function_exists('imageavif') ? imageavif($dimg, $dest) : false,
+        default => false,
+    };
+    return $done ? $dest : $file;
 }

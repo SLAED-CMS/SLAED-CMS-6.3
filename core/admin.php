@@ -874,13 +874,12 @@ function deleteAdminPrivate(): void {
 
 # Show uploads files for admin
 function getAdminUploadFiles(): void {
- global $user, $conf, $tpl;
-    $conf['uploads'] = $conf['uploads'] ?? [];
+ global $user, $tpl;
     $id   = filterVar(getVar('get', 'id',   'text', ''));
     $dir  = strtolower(getVar('get', 'dir',  'text', ''));
     $cid  = getVar('get', 'cid',  'num',  0);
-    $con  = explode('|', (string)($conf['uploads'][$dir] ?? ''));
-    $connum = (!empty($con[7]) && intval($con[7])) ? $con[7] : '50';
+    $rul = getUploadRuleData($dir);
+    $connum = $rul['adminlist'] ?: 50;
     $file = filterText(getVar('get', 'file', 'text', ''));
     $num  = ($cid) ? $cid : '1';
     $path = ($id == 1) ? UPLOADS_DIR.'/'.$dir.'/' : UPLOADS_DIR.'/'.$dir.'/thumb/';

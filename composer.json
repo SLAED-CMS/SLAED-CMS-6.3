@@ -12,6 +12,8 @@
     ],
     "require": {
         "php": ">=8.4",
+        "ext-curl": "*",
+        "ext-fileinfo": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-json": "*"

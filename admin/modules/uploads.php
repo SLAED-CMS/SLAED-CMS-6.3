@@ -6,6 +6,14 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
+function getUploadModuleList(): array {
+    global $conf;
+    $mods = array_keys(array_filter($conf['uploads'], static fn($v) => is_string($v) && str_contains($v, '|')));
+    sort($mods);
+    $rest = array_values(array_diff($mods, ['all']));
+    return in_array('all', $mods, true) ? array_merge(['all'], $rest) : $rest;
+}
+
 function getUploadsSearch(): string {
     global $afile, $conf, $tpl;
     $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
@@ -251,25 +259,25 @@ function config(): void {
     ];
     $tabone = $tpl->getHtmlPart('div', ['rows' => $rows]);
     $blocks = '';
-    $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
+    $mods = getUploadModuleList();
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
-            $con = explode('|', $conf['uploads'][$val]);
+            $rul = getUploadRuleData($val);
             $mrows = [
                 ['label_html' => _MODUL, 'field_html' => getModuleName($val)],
-                ['label_html' => _FTYPE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[0]])],
-                ['label_html' => _FSIZEALL._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'allsize[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[1]])],
-                ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'size[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[2]])],
-                ['label_html' => _AWIDTH._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'width[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[3]])],
-                ['label_html' => _AHEIGHT._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'height[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[4]])],
-                ['label_html' => _FILEUP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'up[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[5]])],
-                ['label_html' => _GDWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gdwidth[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[6]])],
-                ['label_html' => _F_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[7]])],
-                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEA, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[8]])],
-                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEU, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $con[9]])],
-                ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => $i.'upload', 'value' => $con[10], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-                ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => $i.'upguest', 'value' => $con[11], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+                ['label_html' => _FTYPE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['extensions']])],
+                ['label_html' => _FSIZEALL._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'allsize[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxquota']])],
+                ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'size[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxbytes']])],
+                ['label_html' => _AWIDTH._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'width[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxwidth']])],
+                ['label_html' => _AHEIGHT._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'height[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxheight']])],
+                ['label_html' => _FILEUP, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'up[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxfiles']])],
+                ['label_html' => _GDWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gdwidth[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['thumbwidth']])],
+                ['label_html' => _F_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['adminlist']])],
+                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEA, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['moderfiles']])],
+                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEU, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['userfiles']])],
+                ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => $i.'upload', 'value' => $rul['userupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
+                ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => $i.'upguest', 'value' => $rul['guestupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ];
             $blocks .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('div', ['rows' => $mrows])]);
             $i++;
@@ -326,33 +334,46 @@ function configsave(): void {
     $cont['typ'] = $xttyp;
     $cont['width'] = $xtwidth;
     $cont['height'] = $xtheight;
-    $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
-    $type = getVar('post', 'type', 'raw');
-    $allsize = getVar('post', 'allsize', 'raw');
-    $size = getVar('post', 'size', 'raw');
-    $width = getVar('post', 'width', 'raw');
-    $height = getVar('post', 'height', 'raw');
-    $up = getVar('post', 'up', 'raw');
-    $gdwidth = getVar('post', 'gdwidth', 'raw');
-    $num = getVar('post', 'num', 'raw');
-    $asum = getVar('post', 'asum', 'raw');
-    $usum = getVar('post', 'usum', 'raw');
+    $mods = getUploadModuleList();
+    $type = getVar('post', 'type[]');
+    $allsize = getVar('post', 'allsize[]');
+    $size = getVar('post', 'size[]');
+    $width = getVar('post', 'width[]');
+    $height = getVar('post', 'height[]');
+    $up = getVar('post', 'up[]');
+    $gdwidth = getVar('post', 'gdwidth[]');
+    $num = getVar('post', 'num[]');
+    $asum = getVar('post', 'asum[]');
+    $usum = getVar('post', 'usum[]');
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
-            $xtype = (!$type[$i]) ? 'gif,jpg,jpeg,png,zip,rar' : strtolower(strtr($type[$i], $protect));
-            $xallsize = (!intval($allsize[$i])) ? 104857600 : $allsize[$i];
-            $xsize = (!intval($size[$i])) ? 1048576 : $size[$i];
-            $xwidth = (!intval($width[$i])) ? 500 : $width[$i];
-            $xheight = (!intval($height[$i])) ? 500 : $height[$i];
-            $xup = (!intval($up[$i])) ? 10 : $up[$i];
-            $xgdwidth = (!intval($gdwidth[$i])) ? 150 : $gdwidth[$i];
-            $xnum = (!intval($num[$i])) ? 10 : $num[$i];
-            $xasum = (!intval($asum[$i])) ? 250 : $asum[$i];
-            $xusum = (!intval($usum[$i])) ? 100 : $usum[$i];
+            $xtype = (empty($type[$i]) || !is_string($type[$i])) ? 'gif,jpg,jpeg,png,zip,rar' : strtolower(strtr($type[$i], $protect));
+            $xallsize = (!intval($allsize[$i] ?? 0)) ? 104857600 : intval($allsize[$i]);
+            $xsize = (!intval($size[$i] ?? 0)) ? 1048576 : intval($size[$i]);
+            $xwidth = (!intval($width[$i] ?? 0)) ? 500 : intval($width[$i]);
+            $xheight = (!intval($height[$i] ?? 0)) ? 500 : intval($height[$i]);
+            $xup = (!intval($up[$i] ?? 0)) ? 10 : intval($up[$i]);
+            $xgdwidth = (!intval($gdwidth[$i] ?? 0)) ? 150 : intval($gdwidth[$i]);
+            $xnum = (!intval($num[$i] ?? 0)) ? 10 : intval($num[$i]);
+            $xasum = (!intval($asum[$i] ?? 0)) ? 250 : intval($asum[$i]);
+            $xusum = (!intval($usum[$i] ?? 0)) ? 100 : intval($usum[$i]);
             $upload = getVar('post', $i.'upload', 'num');
             $upguest = getVar('post', $i.'upguest', 'num');
-            $cont[$val] = $xtype.'|'.$xallsize.'|'.$xsize.'|'.$xwidth.'|'.$xheight.'|'.$xup.'|'.$xgdwidth.'|'.$xnum.'|'.$xasum.'|'.$xusum.'|'.$upload.'|'.$upguest;
+            $cont[$val] = setUploadRuleData([
+                'extensions' => $xtype,
+                'maxquota' => $xallsize,
+                'maxbytes' => $xsize,
+                'maxwidth' => $xwidth,
+                'maxheight' => $xheight,
+                'maxfiles' => $xup,
+                'thumbwidth' => $xgdwidth,
+                'adminlist' => $xnum,
+                'moderfiles' => $xasum,
+                'userfiles' => $xusum,
+                'userupload' => $upload,
+                'guestupload' => $upguest,
+            ]);
             $i++;
         }
     }
