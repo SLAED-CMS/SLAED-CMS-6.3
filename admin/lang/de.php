@@ -688,6 +688,8 @@ define('_SCHEDULER_UNLOCKD','Scheduler-Lock geloescht');
 define('_SCHEDULER_RUNNING','Laeuft');
 define('_SCHEDULER_RESULT','Ausfuehrung');
 define('_SCHEDULER_IDLE','Wartend');
+define('_SCHEDULER_CRASH','Abgestürzt');
+define('_SCHEDULER_OFF','Deaktiviert');
 define('_SCHEDULER_URLINFO','Relative URLs werden gegen die Home-URL der Seite aufgeloest');
 define('_SCHEDULER_SYSINFO','Systemjobs koennen hier angepasst und spaeter von Legacy-Triggern getrennt werden');
 define('_SCHEDULER_MANUAL','Manuellen Start erlauben');

@@ -82,7 +82,7 @@ function getCampActions(array $camp, int $left): string {
     $stat = intval($camp['status']);
     $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'newsletter'])
         .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$id])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]);
+        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('newsletter')]);
     $cont = '';
     if (in_array($stat, [4, 7], true)) {
         $cont .= $tpl->getHtmlFrag('post-button', [
@@ -216,7 +216,7 @@ function add(): void {
             ['nameattr' => 'name', 'valueattr' => 'newsletter'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'posttype', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('newsletter')],
         ],
         'rows' => [
             ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', [
@@ -259,7 +259,7 @@ function save(): void {
     $part = explode('-', $pick, 2);
     $audit = $part[0] ?? '';
     $apar = ($audit === 'active') ? (string)$days : ($part[1] ?? '');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
     if (!getMailAudience($audit, $apar)) $stop[] = _NLNOAUDIT;
@@ -285,7 +285,7 @@ function save(): void {
 function delete(): void {
     global $db, $afile, $mailer;
     $id = getVar('post', 'id', 'num');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     $text = _TOKENMISS;
     if (!$warn && $id) {
         $warn = $mailer->getCampLeft($id) > 0;
@@ -299,7 +299,7 @@ function delete(): void {
 function release(): void {
     global $afile, $mailer;
     $id = getVar('post', 'id', 'num');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     if (!$warn && $id) $mailer->setCampFree($id);
     setRedirect($afile.'.php?name=newsletter', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
@@ -308,7 +308,7 @@ function release(): void {
 function stop(): void {
     global $afile, $mailer;
     $id = getVar('post', 'id', 'num');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     if (!$warn && $id) $mailer->setCampAbort($id, _NLSTOPPED);
     setRedirect($afile.'.php?name=newsletter', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
@@ -367,7 +367,7 @@ function getQueueActions(array $row, string $back): string {
     $hide = $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'newsletter'])
         .$tpl->getHtmlFrag('hidden', ['name_attr' => 'id', 'value_attr' => (string)$row['id']])
         .$tpl->getHtmlFrag('hidden', ['name_attr' => 'back', 'value_attr' => $back])
-        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]);
+        .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken('newsletter')]);
     $cont = '';
     if (intval($row['status']) === 2) {
         $cont .= $tpl->getHtmlFrag('post-button', [
@@ -462,7 +462,7 @@ function requeue(): void {
     global $afile, $mailer;
     $id = getVar('post', 'id', 'num');
     $back = getVar('post', 'back', 'raw');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     if (!$warn && $id) $mailer->setQueueRetry([$id]);
     setRedirect($afile.'.php?name=newsletter&op=queue&'.getQueueQuery($back), false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
 }
@@ -472,7 +472,7 @@ function drop(): void {
     global $afile, $mailer;
     $id = getVar('post', 'id', 'num');
     $back = getVar('post', 'back', 'raw');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     if (!$warn && $id) $mailer->deleteQueueRows([$id]);
     setRedirect($afile.'.php?name=newsletter&op=queue&'.getQueueQuery($back), false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }
@@ -506,7 +506,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'newsletter'],
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('newsletter')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -518,7 +518,7 @@ function config(): void {
 # Store campaign policy, validating each field rather than trusting it: a window of zero divides by zero and a bounce cap of zero suppresses every address on its first result
 function configsave(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('newsletter');
     if (!$warn) {
         $content = [
             'abort' => max(1, min(100, getVar('post', 'abort', 'num', 10))),

@@ -402,22 +402,17 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
                 'label_text' => $cat['title'],
                 'title_text' => $cat['title'],
             ]);
-            $dial = [[
-                'href' => $afile.'.php?name=categories&op=change&id='.$cid.'&act='.$cat['status'].$modlink.'&token='.getSiteToken(),
-                'icon_name' => 'power',
-                'title' => $cat['status'] ? _DEACTIVATE : _ACTIVATE,
-            ], [
-                'href' => $afile.'.php?name=categories&op=edit&cid='.$cid.$modlink,
-                'icon_name' => 'pencil',
-                'title' => _FULLEDIT,
-            ]];
+            $keep = ['name' => 'categories', 'id' => $cid] + ($cmod !== '' ? ['modul' => $cmod] : []);
+            $dial = [
+                getTplPostAction(['op' => 'change', 'act' => $cat['status']] + $keep, 'power', $cat['status'] ? _DEACTIVATE : _ACTIVATE),
+                [
+                    'href' => $afile.'.php?name=categories&op=edit&cid='.$cid.$modlink,
+                    'icon_name' => 'pencil',
+                    'title' => _FULLEDIT,
+                ],
+            ];
             if (!$pnum && !$subs) {
-                $dial[] = [
-                    'href' => $afile.'.php?name=categories&op=delete&id='.$cid.$modlink.'&token='.getSiteToken(),
-                    'icon_name' => 'trash',
-                    'title' => _ONDELETE,
-                    'confirm_text' => _DELETE.' "'.$cat['title'].'"?',
-                ];
+                $dial[] = getTplPostAction(['op' => 'delete'] + $keep, 'trash', _ONDELETE, _DELETE.' "'.$cat['title'].'"?');
             }
             $rows[] = $tpl->getHtmlFrag('table-row', ['attr' => 'data-sl-drag-id="'.$cid.'" data-sl-drag-group="'.$cmod.'-'.$cat['parent'].'" data-sl-drag-scope="'.$cmod.'" data-sl-drag-parent="'.$cat['parent'].'"', 'cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
@@ -433,7 +428,8 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
         }
     }
     $cont = $tpl->getHtmlFrag('table', [
-        'attr' => 'data-sl-admin-table="categories" data-sl-drag-url="index.php?go=5&op=updateAdminCategoryOrder&mod='.$modul.'&token='.getSiteToken().'" data-sl-drag-target="repajax_cat"',
+        'attr' => 'data-sl-admin-table="categories" data-sl-drag-url="index.php?go=5&op=updateAdminCategoryOrder&mod='.$modul.'"'
+            .' data-sl-drag-token="'.getSiteToken().'" data-sl-drag-target="repajax_cat"',
         'disable_sort' => true,
         'head' => [
             ['content' => _ID],
@@ -605,20 +601,15 @@ function getAdminBlockList(): string {
                 ['content_html' => ad_status('', $active), 'is_col_status' => true],
                 ['content_html' => $tpl->getHtmlFrag('dial', [
                     'dial_title' => _EDITOR,
-                    'dial' => [[
-                        'href' => $afile.'.php?name=blocks&op=change&id='.$bid.'&act='.$active.'&token='.getSiteToken(),
-                        'icon_name' => 'power',
-                        'title' => $active ? _DEACTIVATE : _ACTIVATE,
-                    ], [
-                        'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
-                        'icon_name' => 'pencil',
-                        'title' => _FULLEDIT,
-                    ], [
-                        'href' => $afile.'.php?name=blocks&op=delete&id='.$bid.'&token='.getSiteToken(),
-                        'icon_name' => 'trash',
-                        'title' => _ONDELETE,
-                        'confirm_text' => _DELETE.' "'.$title.'"?',
-                    ]],
+                    'dial' => [
+                        getTplPostAction(['name' => 'blocks', 'op' => 'change', 'id' => $bid, 'act' => $active], 'power', $active ? _DEACTIVATE : _ACTIVATE),
+                        [
+                            'href' => $afile.'.php?name=blocks&op=edit&id='.$bid,
+                            'icon_name' => 'pencil',
+                            'title' => _FULLEDIT,
+                        ],
+                        getTplPostAction(['name' => 'blocks', 'op' => 'delete', 'id' => $bid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
+                    ],
                 ]), 'is_col_actions' => true],
             ],
         ])]);
@@ -638,7 +629,8 @@ function getAdminBlockList(): string {
         $rows = array_merge($rows, $free);
     }
     return $tpl->getHtmlFrag('table', [
-        'attr' => 'data-sl-admin-table="blocks" data-sl-drag-url="index.php?go=5&op=updateAdminBlockOrder&token='.getSiteToken().'" data-sl-drag-target="repajax_block"',
+        'attr' => 'data-sl-admin-table="blocks" data-sl-drag-url="index.php?go=5&op=updateAdminBlockOrder"'
+            .' data-sl-drag-token="'.getSiteToken().'" data-sl-drag-target="repajax_block"',
         'disable_sort' => true,
         'head' => [
             ['content' => _ID],
@@ -746,7 +738,7 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $modul = $val[2];
                 $title = getDecodedText((string)$val[3]);
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
-                $delhref = 'admin.php?name=favorites&op=delete&id='.$id.'&num='.$cid.'&token='.getSiteToken();
+                $delattr = getTplPostVals(['name' => 'favorites', 'op' => 'delete', 'id' => $id, 'num' => $cid], '#repadminFavoriteList');
                 $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
                         ['content_html' => (string) $id],
@@ -760,10 +752,10 @@ function getAdminFavoriteList(int $obj = 0): string {
                                 'icon_name' => 'eye',
                                 'title' => _MVIEW,
                             ], [
-                                'href' => $delhref,
+                                'href' => '#',
                                 'icon_name' => 'trash',
                                 'title' => _ONDELETE,
-                                'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminFavoriteList" hx-swap="innerHTML" hx-push-url="false"',
+                                'link_attr' => $delattr,
                                 'confirm_text' => _DELETE.' "'.$title.'"?',
                             ]],
                         ]), 'is_col_actions' => true],
@@ -819,7 +811,7 @@ function getAdminPrivateList(int $obj = 0): string {
             $date = format_time($date, _TIMESTRING);
             $info = $prs->filterContent($body, false, 'privat');
             $title = getDecodedText($title);
-            $delhref = 'admin.php?name=privat&op=delete&id='.$id.'&num='.$cid.'&token='.getSiteToken();
+            $delattr = getTplPostVals(['name' => 'privat', 'op' => 'delete', 'id' => $id, 'num' => $cid], '#repadminPrivateList');
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['content_html' => (string) $id],
@@ -831,10 +823,10 @@ function getAdminPrivateList(int $obj = 0): string {
                     ['content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _FUNCTIONS,
                         'dial' => [[
-                            'href' => $delhref,
+                            'href' => '#',
                             'icon_name' => 'trash',
                             'title' => _ONDELETE,
-                            'link_attr' => 'hx-get="'.$delhref.'" hx-target="#repadminPrivateList" hx-swap="innerHTML" hx-push-url="false"',
+                            'link_attr' => $delattr,
                             'confirm_text' => _DELETE.' "'.$title.'"?',
                         ]],
                     ]), 'is_col_actions' => true],

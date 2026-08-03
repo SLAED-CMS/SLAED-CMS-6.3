@@ -688,6 +688,8 @@ define('_SCHEDULER_UNLOCKD','Scheduler lock cleared');
 define('_SCHEDULER_RUNNING','Running');
 define('_SCHEDULER_RESULT','Execution');
 define('_SCHEDULER_IDLE','Idle');
+define('_SCHEDULER_CRASH','Crashed');
+define('_SCHEDULER_OFF','Disabled');
 define('_SCHEDULER_URLINFO','Relative URLs are resolved against the site home URL');
 define('_SCHEDULER_SYSINFO','System jobs can be tuned here and later migrated away from legacy triggers');
 define('_SCHEDULER_MANUAL','Allow manual start');

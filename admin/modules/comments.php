@@ -92,15 +92,7 @@ function comments(): void {
     if ($drift) {
         $cont .= $tpl->getHtmlFrag('alert', [
             'is_warn' => true,
-            'text' => sprintf(_COMMENTS_DRIFT, count($drift)).' '.$tpl->getHtmlFrag('post-button', [
-                'action' => $afile.'.php',
-                'hidden' => $tpl->getHtmlFrag('hidden', ['name_attr' => 'name', 'value_attr' => 'comments'])
-                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'op', 'value_attr' => 'recount'])
-                    .$tpl->getHtmlFrag('hidden', ['name_attr' => 'token', 'value_attr' => getSiteToken()]),
-                'icon_name' => 'arrow-repeat',
-                'title' => _COMMENTS_SYNC,
-                'label' => _COMMENTS_SYNC,
-            ]),
+            'text' => sprintf(_COMMENTS_DRIFT, count($drift)).' '.getTplPostButton(['name' => 'comments', 'op' => 'recount'], 'arrow-repeat', _COMMENTS_SYNC),
         ]);
     }
     $anump = (int)($conf['comments']['anump'] ?? 8);
@@ -130,17 +122,9 @@ function comments(): void {
                 ['href' => $afile.'.php?'.$curq.'&op=edit&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT],
             ];
             $acttxt = $stat ? _DEACTIVATE : _ACTIVATE;
-            $items[] = [
-                'href' => $afile.'.php?'.$curq.'&op=approve&id='.$id.'&typ='.$act.'&token='.getSiteToken(),
-                'icon_name' => 'power',
-                'title' => $acttxt,
-            ];
-            $items[] = [
-                'href' => $afile.'.php?'.$curq.'&op=delete&id='.$id.'&token='.getSiteToken(),
-                'icon_name' => 'trash',
-                'title' => _ONDELETE,
-                'confirm_text' => _DELETE.' "'.$comment.'"?',
-            ];
+            parse_str($curq, $keep);
+            $items[] = getTplPostAction($keep + ['op' => 'approve', 'id[]' => $id, 'typ' => $act], 'power', $acttxt);
+            $items[] = getTplPostAction($keep + ['op' => 'delete', 'id[]' => $id], 'trash', _ONDELETE, _DELETE.' "'.$comment.'"?');
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => filterTextHighlight((string)$id, $chng)],
@@ -158,7 +142,8 @@ function comments(): void {
                     ['is_col_date' => true, 'content_html' => format_time($time, _TIMESTRING)],
                     ['is_col_status' => true, 'content_html' => ad_status('', $stat)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', ['dial_title' => _FUNCTIONS, 'dial' => $items])],
-                    ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true])],
+                    ['is_col_check' => true, 'content_html' => $tpl->getHtmlFrag('checkbox',
+                        ['name_attr' => 'id[]', 'value_attr' => (string)$id, 'is_check' => true, 'input_attr' => 'form="combulk"'])],
                 ],
             ])]);
         }
@@ -182,29 +167,34 @@ function comments(): void {
             'limit' => $data['limit'],
             'page' => $data['limit'],
         ]);
-        $body = $tpl->getHtmlPart('form', [
+        # The row actions are POST forms of their own, so the table must not sit inside the bulk form
+        # A browser drops a nested form, and its fields would then travel with the bulk submit
+        # The checkboxes stay bound to the bulk form through the form attribute, which is what HTML provides for exactly this case
+        $table = $tpl->getHtmlFrag('table', [
+            'is_wrapless' => true,
+            'is_fixed' => true,
+            'head' => [
+                ['content' => _ID, 'is_col_id' => true],
+                ['content' => _COMMENT, 'is_truncate' => true],
+                ['content' => _MODUL, 'is_truncate' => true],
+                ['content' => _POSTEDBY, 'is_col_author' => true],
+                ['content' => _DATE, 'is_col_date' => true],
+                ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
+                ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
+                ['is_col_check' => true, 'nosort' => true, 'content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck',
+                    'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'" form="combulk"'])],
+            ],
+            'rows_html' => $rows,
+        ]);
+        $body = $table.$tpl->getHtmlPart('form', [
             'action_url' => $afile.'.php?name=comments&op=actions',
+            'form_attr' => 'id="combulk"',
             'hidden' => array_filter([
-                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
                 ['nameattr' => 'status', 'valueattr' => (string)$status],
                 $modul !== '' ? ['nameattr' => 'modul', 'valueattr' => $modul] : null,
                 ['nameattr' => 'search', 'valueattr' => (string)$search],
                 $chng !== '' ? ['nameattr' => 'chng', 'valueattr' => $chng] : null,
-            ]),
-            'content_html' => $tpl->getHtmlFrag('table', [
-                'is_wrapless' => true,
-                'is_fixed' => true,
-                'head' => [
-                    ['content' => _ID, 'is_col_id' => true],
-                    ['content' => _COMMENT, 'is_truncate' => true],
-                    ['content' => _MODUL, 'is_truncate' => true],
-                    ['content' => _POSTEDBY, 'is_col_author' => true],
-                    ['content' => _DATE, 'is_col_date' => true],
-                    ['content' => _STATUS, 'is_col_status' => true, 'nosort' => true],
-                    ['content' => _FUNCTIONS, 'is_col_actions' => true, 'nosort' => true],
-                    ['content' => $tpl->getHtmlFrag('checkbox', ['name_attr' => 'markcheck', 'input_id' => 'markcheck', 'is_check' => true, 'input_attr' => 'title="'._CHECKALL.'"']), 'is_col_check' => true, 'nosort' => true],
-                ],
-                'rows_html' => $rows,
             ]),
             'actions_html' => $tpl->getHtmlFrag('module-foot', [
                 'is_list' => true,
@@ -276,7 +266,7 @@ function edit(): void {
             ['nameattr' => 'id', 'valueattr' => (string)($row['id'] ?? '')],
             ['nameattr' => 'name', 'valueattr' => 'comments'],
             ['nameattr' => 'op', 'valueattr' => 'editsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
             $status ? ['nameattr' => 'status', 'valueattr' => '1'] : null,
             $modul !== '' ? ['nameattr' => 'modul', 'valueattr' => $modul] : null,
             ['nameattr' => 'search', 'valueattr' => (string)$search],
@@ -291,7 +281,7 @@ function edit(): void {
 
 function editsave(): void {
     global $afile, $com;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('comments');
     $id = getVar('post', 'id', 'num');
     $text = trim((string)getVar('post', 'comment', 'raw', ''));
     $status = getVar('post', 'status', 'num', 0);
@@ -310,16 +300,14 @@ function editsave(): void {
 
 function actions(): void {
     global $afile, $com;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('comments');
     $status = getVar('post', 'status', 'num', 0);
     $modul = getVar('post', 'modul', 'var');
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)getVar('post', 'chng', 'raw', '');
     $typ = getVar('post', 'typ', 'text', '');
-    $gid = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num');
-    if (!$id && $gid) $id = [$gid];
     if (!$warn && is_array($id) && $typ !== '') {
         foreach ($id as $val) {
             if (!intval($val)) continue;
@@ -383,7 +371,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'comments'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('comments')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -393,7 +381,7 @@ function config(): void {
 
 function save(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('comments');
     if (!$warn) {
         $cont = [
             'num' => getVar('post', 'num', 'num', 15),
@@ -420,15 +408,13 @@ function save(): void {
 
 function approve(): void {
     global $afile, $com;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('comments');
     $typ = getVar('post', 'typ', 'num') ?: getVar('get', 'typ', 'num');
     $modul = getVar('post', 'modul', 'var', getVar('get', 'modul', 'var'));
     $search = getVar('post', 'search', 'num', getVar('get', 'search', 'num', 2));
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
-    $gid = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num');
-    if (!$id && $gid) $id = [$gid];
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) $com->setStatus(intval($val), (bool)$typ);
@@ -444,15 +430,13 @@ function approve(): void {
 
 function delete(): void {
     global $afile, $com;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('comments');
     $status = getVar('post', 'status', 'num', getVar('get', 'status', 'num', 0));
     $modul = getVar('post', 'modul', 'var', getVar('get', 'modul', 'var'));
     $search = getVar('post', 'search', 'num', getVar('get', 'search', 'num', 2));
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
-    $gid = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num');
-    if (!$id && $gid) $id = [$gid];
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) $com->deleteComment(intval($val));
@@ -468,7 +452,7 @@ function delete(): void {
 
 function recount(): void {
     global $afile, $com;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('comments');
     $done = $warn ? 0 : $com->updateCountDrift($com->getCountDrift());
     setRedirect($afile.'.php?name=comments', true, 302, $warn ? _TOKENMISS : sprintf(_COMMENTS_FIXED, $done), $warn);
 }

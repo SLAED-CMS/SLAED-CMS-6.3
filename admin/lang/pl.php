@@ -688,6 +688,8 @@ define('_SCHEDULER_UNLOCKD','Blokada schedulera usunieta');
 define('_SCHEDULER_RUNNING','Dziala');
 define('_SCHEDULER_RESULT','Wykonanie');
 define('_SCHEDULER_IDLE','Oczekuje');
+define('_SCHEDULER_CRASH','Awaria');
+define('_SCHEDULER_OFF','Wyłączone');
 define('_SCHEDULER_URLINFO','Wzgledne URL sa rozwiazywane wzgledem adresu glownego strony');
 define('_SCHEDULER_SYSINFO','Zadania systemowe mozna tutaj stroic przed usunieciem starych triggerow');
 define('_SCHEDULER_MANUAL','Zezwol na reczny start');

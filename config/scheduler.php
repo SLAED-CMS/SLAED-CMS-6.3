@@ -31,6 +31,12 @@ return [
                 'lock_timeout' => '1800',
                 'manual' => '1',
                 'settings' => [
+                    'include' => '*',
+                    'exclude' => 'ipb_*',
+                    'schemaonly' => 'MRG_MyISAM,MERGE,HEAP,MEMORY',
+                    'compress' => 'auto',
+                    'keep' => '0',
+                    'allow_incomplete' => '0',
                 ],
             ],
             'filescan' => [

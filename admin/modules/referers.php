@@ -69,10 +69,11 @@ function referers(): void {
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=delete&token='.getSiteToken(), 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
+        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'subtitle_html' => getRefererSearch(),
     ]);
+    $cont .= $tpl->getHtmlFrag('alert', ['text' => getTplPostButton(['name' => 'referers', 'op' => 'delete'], 'trash', _DELETE)]);
     if ($db->getSqlRowCount($result) > 0) {
         $a = 0;
         $massiv = [];
@@ -125,8 +126,8 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=delete&token='.getSiteToken(), 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
+        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _DOCS],
         'tab' => 1,
         'subtitle_html' => getRefererSearch(),
     ]);
@@ -143,7 +144,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'referers'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('referers')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -154,7 +155,7 @@ function config(): void {
 
 function save(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('referers');
     if (!$warn) {
         $content = [
             'anum' => getVar('post', 'anum', 'num', 50),
@@ -170,7 +171,7 @@ function save(): void {
 
 function delete(): void {
     global $db, $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('referers');
     if (!$warn) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
     }
@@ -179,8 +180,8 @@ function delete(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=delete&token='.getSiteToken(), 'name=referers&op=info'],
-        'tabs' => [_HOME, _PREFERENCES, _DELETE, _DOCS],
+        'ops' => ['name=referers', 'name=referers&op=config', 'name=referers&op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _DOCS],
     ]);
 }
 

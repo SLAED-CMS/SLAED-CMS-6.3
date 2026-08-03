@@ -46,12 +46,7 @@ function groups(): void {
                         'icon_name' => 'pencil',
                         'title' => _FULLEDIT,
                     ],
-                    [
-                        'href' => $afile.'.php?name=groups&op=delete&id='.$grid.'&token='.getSiteToken(),
-                        'icon_name' => 'trash',
-                        'title' => _ONDELETE,
-                        'confirm_text' => _DELETE.' "'.$grname.'"?',
-                    ],
+                    getTplPostAction(['name' => 'groups', 'op' => 'delete', 'id' => $grid], 'trash', _ONDELETE, _DELETE.' "'.$grname.'"?'),
                 ],
             ]);
             $rows .= $tpl->getHtmlFrag('table-row', [
@@ -175,7 +170,7 @@ function add(): void {
             ['nameattr' => 'gid', 'valueattr' => (string)$gid],
             ['nameattr' => 'name', 'valueattr' => 'groups'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('groups')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVE,
@@ -189,7 +184,7 @@ function save(): void {
     global $db, $afile, $conf, $stop;
     $gid = getVar('post', 'gid', 'num');
     $stop = [];
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('groups');
     if (!$warn) {
         $grname = getVar('post', 'grname', 'title');
         $description = getVar('post', 'description', 'text');
@@ -253,7 +248,7 @@ function points(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'groups'],
             ['nameattr' => 'op', 'valueattr' => 'pointssave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('groups')],
         ],
         'content_html' => $tpl->getHtmlFrag('table', [
         'is_fixed' => true,
@@ -269,7 +264,7 @@ function points(): void {
 
 function pointssave(): void {
     global $afile, $conf;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('groups');
     if (!$warn) {
         $spoints = getVar('post', 'spoints[]', 'num');
         if ($spoints) {
@@ -283,8 +278,8 @@ function pointssave(): void {
 
 function delete(): void {
     global $db, $afile, $conf;
-    $warn = !checkSiteToken();
-    $id = getVar('req', 'id', 'num');
+    $warn = !checkAdminPost('groups');
+    $id = getVar('post', 'id', 'num');
     if (!$warn && $id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
         $changed = false;

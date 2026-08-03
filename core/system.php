@@ -39,7 +39,8 @@ function getConfig(): array {
     $local_file = CONFIG_DIR.'/local.php';
     if (is_file($local_file) && is_readable($local_file)) {
         $cache = require $local_file;
-        if (is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']) && (($cache['_meta']['cache_version'] ?? 0) === 2)) {
+        $valid = is_array($cache) && isset($cache['_meta'], $cache['_config']) && is_array($cache['_meta']) && is_array($cache['_config']);
+        if ($valid && (($cache['_meta']['cache_version'] ?? 0) === 3)) {
             return $cache['_config'];
         }
     }
@@ -94,7 +95,7 @@ function getConfig(): array {
     $data = [
         '_meta' => [
             'base_fingerprint' => sha1($hash),
-            'cache_version' => 2,
+            'cache_version' => 3,
             'generated_at' => time(),
         ],
         '_config' => $conf,
@@ -305,10 +306,16 @@ function getSchedulerJobs(): array {
     return $arr;
 }
 
+# Returns the fields every job state carries; anything else in a state file belongs to the last run of that job and is replaced by it
+function getSchedulerFields(): array {
+    return ['running' => 0, 'started_at' => 0, 'last_run' => 0, 'last_success' => 0, 'last_status' => 'idle', 'last_message' => '', 'last_error' => '',
+        'last_duration' => 0, 'last_trigger' => '', 'fail_count' => 0, 'next_run' => 0, 'next_schedule' => '', 'next_last_run' => 0];
+}
+
 # Returns the runtime state for a scheduler job merged with defaults
 function getSchedulerState(string $name): array {
     $file = LOGS_DIR.'/scheduler/'.$name.'.json';
-    $state = ['running' => 0, 'started_at' => 0, 'last_run' => 0, 'last_success' => 0, 'last_status' => 'idle', 'last_message' => '', 'last_error' => '', 'last_duration' => 0, 'last_trigger' => '', 'fail_count' => 0, 'next_run' => 0, 'next_schedule' => '', 'next_last_run' => 0];
+    $state = getSchedulerFields();
     if (!is_file($file) || filesize($file) === 0) return $state;
     $json = file_get_contents($file);
     if ($json === false || $json === '') return $state;
@@ -327,38 +334,81 @@ function setSchedulerState(string $name, array $state): bool {
     return file_put_contents($file, $json, LOCK_EX) !== false;
 }
 
-# Returns whether the scheduler job lock is still valid
-function checkSchedulerLock(string $name, array $job = [], array $state = []): bool {
-    if ($job === []) $job = getSchedulerJob($name);
-    if ($state === []) $state = getSchedulerState($name);
-    if (empty($state['running']) || empty($state['started_at'])) return false;
-    $time = max(60, (int)($job['lock_timeout'] ?? 0));
-    return (time() - (int)$state['started_at']) < $time;
+# Returns the path of the operating system lock file of one job; the file is created once and never deleted, because deleting it would break the lock for a process still holding it
+function getSchedulerLockPath(string $name): string {
+    return LOGS_DIR.'/scheduler/'.$name.'.lock';
 }
 
-# Returns whether the scheduler job is due; the planned time is cached in job state and recomputed only when the schedule or last_run changes
+# Takes the operating system lock of one job without waiting and returns the open handle, which the caller must hold for as long as it owns the job
+function getSchedulerLockHandle(string $name): mixed {
+    $file = getSchedulerLockPath($name);
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return false;
+    $lock = fopen($file, 'cb');
+    if ($lock === false) return false;
+    if (!flock($lock, LOCK_EX | LOCK_NB)) {
+        fclose($lock);
+        return false;
+    }
+    return $lock;
+}
+
+# Releases the operating system lock of one job
+function deleteSchedulerHandle(mixed $lock): void {
+    if (!is_resource($lock)) return;
+    flock($lock, LOCK_UN);
+    fclose($lock);
+}
+
+# Returns whether a process currently owns the job; the operating system lock is the only authority on this, because a crashed process releases it while its JSON still says running
+function checkSchedulerLock(string $name): bool {
+    $lock = getSchedulerLockHandle($name);
+    if ($lock === false) return true;
+    deleteSchedulerHandle($lock);
+    return false;
+}
+
+# Reconciles the state a crashed run left behind, idempotently; last_run keeps its value on purpose, so the job resumes at its next planned slot instead of retrying in a loop
+function updateSchedulerCrash(string $name, array $state): array {
+    $state['running'] = 0;
+    $state['started_at'] = 0;
+    $state['last_status'] = 'crashed';
+    $state['fail_count'] = (int)($state['fail_count'] ?? 0) + 1;
+    $state['last_error'] = 'Run ended without releasing the job';
+    setSchedulerState($name, $state);
+    return $state;
+}
+
+# Returns whether the scheduler job is due; a crashed run leaves no lock behind, so the job becomes due again on its own and is reconciled by the next call that takes the lock
+# The planned time is cached in job state, and that cache is only ever written while holding the lock, because job state must never be mutated from a read path
 function checkSchedulerDue(string $name, array $job = [], array $state = []): bool {
     if ($job === []) $job = getSchedulerJob($name);
     if ($state === []) $state = getSchedulerState($name);
+    if (checkSchedulerLock($name)) return false;
+    return checkSchedulerSlot($name, $job, $state);
+}
+
+# Returns whether the schedule alone puts this job in the past, without consulting the lock
+# A caller that already holds the lock asks this one: the answer it got before locking may have been acted on by another process in the meantime
+function checkSchedulerSlot(string $name, array $job, array $state): bool {
     if ((int)($job['active'] ?? 0) !== 1) return false;
-    if (checkSchedulerLock($name, $job, $state)) return false;
     $schedule = getSchedulerSchedule($job);
     if ($schedule === '') return false;
     $last = (int)($state['last_run'] ?? 0);
-    if (($state['next_schedule'] ?? '') === $schedule && (int)($state['next_last_run'] ?? 0) === $last) {
-        $next = (int)($state['next_run'] ?? 0);
-    } else {
-        $next = getSchedulerPlannedTime($job, $state);
-        setSchedulerState($name, array_replace($state, ['next_run' => $next, 'next_schedule' => $schedule, 'next_last_run' => $last]));
+    $cached = ($state['next_schedule'] ?? '') === $schedule && (int)($state['next_last_run'] ?? 0) === $last;
+    if ($cached) return ((int)($state['next_run'] ?? 0)) > 0 && (int)$state['next_run'] <= time();
+    $next = getSchedulerPlannedTime($job, $state);
+    $lock = getSchedulerLockHandle($name);
+    if ($lock !== false) {
+        $live = getSchedulerState($name);
+        if (empty($live['running'])) setSchedulerState($name, array_replace($live, ['next_run' => $next, 'next_schedule' => $schedule, 'next_last_run' => $last]));
+        deleteSchedulerHandle($lock);
     }
     return $next > 0 && $next <= time();
 }
 
-# Acquires the scheduler lock for a named job and persists trigger metadata
-function addSchedulerLock(string $name, string $type): bool {
-    $job = getSchedulerJob($name);
-    $state = getSchedulerState($name);
-    if (checkSchedulerLock($name, $job, $state)) return false;
+# Records the start of a run; the caller must already hold the operating system lock of the job, which is what makes this write safe
+function setSchedulerStart(string $name, string $type, array $state): bool {
     $state['running'] = 1;
     $state['started_at'] = time();
     $state['last_run'] = time();
@@ -369,9 +419,10 @@ function addSchedulerLock(string $name, string $type): bool {
     return setSchedulerState($name, $state);
 }
 
-# Releases the scheduler lock and persists final status plus any extra runtime data
-function deleteSchedulerLock(string $name, string $stat, string $mess = '', array $extra = []): bool {
-    $state = array_replace(getSchedulerState($name), $extra);
+# Records the end of a run and its final status; like the start, this is written while the caller still holds the operating system lock
+# Only the fields of the state contract and the metrics of this very run survive, so numbers a previous run reported cannot linger as if they described the current one
+function setSchedulerDone(string $name, string $stat, string $mess = '', array $extra = []): bool {
+    $state = array_replace(array_intersect_key(getSchedulerState($name), getSchedulerFields()), $extra);
     $done = time();
     $start = (int)($state['started_at'] ?? 0);
     $state['running'] = 0;
@@ -383,9 +434,11 @@ function deleteSchedulerLock(string $name, string $stat, string $mess = '', arra
         $state['last_success'] = $done;
         $state['fail_count'] = 0;
         $state['last_error'] = '';
-    } else {
+    } elseif ($stat === 'failed' || $stat === 'crashed') {
         $state['fail_count'] = (int)($state['fail_count'] ?? 0) + 1;
         if ($mess !== '') $state['last_error'] = $mess;
+    } else {
+        $state['last_error'] = $mess;
     }
     return setSchedulerState($name, $state);
 }
@@ -412,20 +465,22 @@ function checkSchedulerCronAlive(): bool {
 }
 
 # Returns whether the current request may execute the scheduler runner
+# Each trigger carries its own credential, and an administrator session is not one of them: the admin path runs through the admin module
 function checkSchedulerAccess(string $type, string $stok): bool {
     global $conf;
-    if (isAdmin(true)) return true;
+    if ($stok === '') return false;
+    if ($type === 'pseudo') return checkSiteToken($stok, 'scheduler');
+    if ($type !== 'cron') return false;
     $stkn = (string)($conf['scheduler']['token'] ?? '');
-    $psok = ($type === 'pseudo' && checkSiteToken($stok, 'scheduler'));
-    $tkok = ($stkn !== '' && hash_equals($stkn, $stok));
-    return $psok || $tkok;
+    return $stkn !== '' && hash_equals($stkn, $stok);
 }
 
-# Returns a signed pseudo-trigger URL when the next due job should be started asynchronously
-function addSchedulerTrigger(): string {
+# Returns the endpoint and the credential for the asynchronous pseudo trigger when the next due job should be started, or an empty array when it should not
+# The credential is returned separately because the trigger is a POST: a token in a query string would travel through history, logs and referrers
+function addSchedulerTrigger(): array {
     global $conf;
-    if ((int)($conf['scheduler']['active'] ?? 0) !== 1 || (int)($conf['scheduler']['pseudo'] ?? 0) !== 1) return '';
-    if (checkSchedulerCronAlive()) return '';
+    if ((int)($conf['scheduler']['active'] ?? 0) !== 1 || (int)($conf['scheduler']['pseudo'] ?? 0) !== 1) return [];
+    if (checkSchedulerCronAlive()) return [];
     $file = LOGS_DIR.'/scheduler/trigger.json';
     $last = 0;
     if (is_file($file) && filesize($file) !== 0) {
@@ -434,14 +489,14 @@ function addSchedulerTrigger(): string {
         if (is_array($data)) $last = (int)($data['time'] ?? 0);
     }
     $cool = max(15, (int)($conf['scheduler']['trigger_cooldown'] ?? 15));
-    if ($last > 0 && (time() - $last) < $cool) return '';
+    if ($last > 0 && (time() - $last) < $cool) return [];
     $job = getSchedulerNextJob();
-    if (!$job) return '';
+    if (!$job) return [];
     $dir = dirname($file);
-    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return '';
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return [];
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
-    return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.(checkPageCache() ? getDynamicMark('token', 'scheduler') : rawurlencode(getSiteToken('scheduler')));
+    return ['url' => 'index.php?go=3&op=scheduler', 'token' => checkPageCache() ? getDynamicMark('token', 'scheduler') : rawurlencode(getSiteToken('scheduler'))];
 }
 
 # Fetches a remote scheduler target through a safe GET request and captures transport errors
@@ -522,10 +577,19 @@ function getSchedulerNextJob(?string $name = null): ?array {
     return null;
 }
 
+# Runs the database backup through the Backup class; the class is required here rather than globally, because there is no autoloader for core/classes and this job runs once a day
+function addBackupJob(): array {
+    global $db, $conf;
+    if (empty($conf['security']['log_b'])) return ['status' => 'disabled', 'message' => 'Database backup is disabled in the security settings'];
+    require_once BASE_DIR.'/core/classes/backup.php';
+    $sett = $conf['scheduler']['jobs']['dbbackup']['settings'] ?? [];
+    return (new Backup($db, ['name' => (string)($conf['db']['name'] ?? '')], is_array($sett) ? $sett : [], BACKUP_DIR))->addDatabaseBackup();
+}
+
 # Dispatches a named system scheduler job by key and returns runtime metadata
 function addSchedulerSystemJob(string $name): array {
     return match ($name) {
-        'backup' => addBackupTask(),
+        'backup' => addBackupJob(),
         'filescan' => addFilescanTask(),
         'sitemap' => addSitemapTask(),
         'maildrain' => addMailTask(),
@@ -547,22 +611,38 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     }
     if (!$job) return ['status' => 'idle', 'message' => 'No due jobs'];
     $name = (string)$job['name'];
-    if (!addSchedulerLock($name, $type)) return ['status' => 'locked', 'message' => 'Job is already running', 'job' => $name];
-    addSchedulerHeartbeat($type);
+    $lock = getSchedulerLockHandle($name);
+    if ($lock === false) return ['status' => 'locked', 'message' => 'Job is already running', 'job' => $name];
     try {
-        if (($job['type'] ?? '') === 'custom') {
-            $data = addSchedulerCustom($job);
-        } else {
-            $data = addSchedulerSystemJob($job['system'] ?? '');
+        $state = getSchedulerState($name);
+        if (!empty($state['running'])) $state = updateSchedulerCrash($name, $state);
+        # The due check that selected this job ran before the lock existed, so a second process can arrive with a verdict the first one has already acted on
+        # Scheduled runs therefore ask again while holding the lock; a manual run is an operator decision and is not subject to the schedule
+        if ($type !== 'manual' && !checkSchedulerSlot($name, $job, $state)) return ['status' => 'idle', 'message' => 'Another run already covered this slot', 'job' => $name];
+        # A start that cannot be recorded must not run: the job would finish, report success and still look due, so the next pass would run it again
+        if (!setSchedulerStart($name, $type, $state)) return ['status' => 'failed', 'message' => 'Job state cannot be written, the run was not started', 'job' => $name];
+        addSchedulerHeartbeat($type);
+        try {
+            if (($job['type'] ?? '') === 'custom') {
+                $data = addSchedulerCustom($job);
+            } else {
+                $data = addSchedulerSystemJob($job['system'] ?? '');
+            }
+            if (!is_array($data)) $data = ['status' => 'failed', 'message' => 'Invalid handler result'];
+        } catch (Throwable $error) {
+            $data = ['status' => 'failed', 'message' => $error->getMessage()];
         }
-        if (!is_array($data)) $data = ['status' => 'failed', 'message' => 'Invalid handler result'];
-    } catch (Throwable $error) {
-        $data = ['status' => 'failed', 'message' => $error->getMessage()];
+        $stat = (string)($data['status'] ?? 'failed');
+        $mess = (string)($data['message'] ?? '');
+        $extra = (isset($data['extra']) && is_array($data['extra'])) ? $data['extra'] : [];
+        # The work is done either way, but a result nobody could store is not a result: saying so is what keeps the report and the state file describing the same run
+        if (!setSchedulerDone($name, $stat, $mess, $extra)) {
+            $data['status'] = 'failed';
+            $data['message'] = trim($mess.' | job state could not be written after the run');
+        }
+    } finally {
+        deleteSchedulerHandle($lock);
     }
-    $stat = (string)($data['status'] ?? 'failed');
-    $mess = (string)($data['message'] ?? '');
-    $extra = (isset($data['extra']) && is_array($data['extra'])) ? $data['extra'] : [];
-    deleteSchedulerLock($name, $stat, $mess, $extra);
     $data['job'] = $name;
     return $data;
 }
@@ -716,281 +796,6 @@ function getBlocks(string $side, string $fly = ''): void {
             }
         }
     }
-}
-
-# Executes a database backup task and returns scheduler metadata
-function addBackupTask(): array {
-    global $db, $conf;
-    if (empty($conf['security']['log_b'])) return ['status' => 'failed', 'message' => 'Database backup is disabled'];
-    $backup_start = microtime(true);
-
-    // FIX: Memory-Management
-    ini_set('memory_limit', '512M');
-
-    // safe_mode ist entfernt; defensiv behandeln
-    $safe = 0;
-    if (function_exists('ini_get')) {
-        $sm = ini_get('safe_mode');
-        $safe = ($sm && $sm != '0') ? 1 : 0;
-    }
-    if (!$safe && function_exists('set_time_limit')) set_time_limit(600);
-
-    # MySQL connection charset
-    # auto - automatic (uses table charset), latin1, cp1251, utf8, etc.
-    $ccharset = 'auto';
-    $charset = preg_replace('#[^a-zA-Z0-9_\\-]#', '', (string)$ccharset);
-
-    # Table types where only structure is saved (no data), comma-separated
-    $conlycreate = 'MRG_MyISAM,MERGE,HEAP,MEMORY';
-
-    # Table filter uses wildcard patterns. Supported special characters:
-    # * - any number of characters;
-    # ? - one arbitrary character;
-    # ^ - excludes table(s) from the list.
-
-    # Examples:
-    # slaed_*           - all tables starting with "slaed_" (all Invision Board forum tables)
-    # slaed_*, ^slaed_session  - all tables starting with "slaed_", except "slaed_session"
-    # slaed_s*s, ^slaed_session - all tables starting with "slaed_s" and ending with "s", except "slaed_session"
-    # ^*s               - all tables except those ending with "s"
-    # ^slaed_????       - all tables except those starting with "slaed_" with 4 chars after the underscore
-    $ctables = '^ipb_*';
-
-    $bsize = 0;
-
-    // Server-Version via PDO
-    try {
-        $vres = $db->getSqlQuery('SELECT VERSION() AS v');
-        $vrow = $vres ? $vres->fetch(PDO::FETCH_ASSOC) : null;
-        $ver = $vrow && isset($vrow['v']) ? $vrow['v'] : '0.0.0';
-        preg_match("#^(\d+)\.(\d+)\.(\d+)#", $ver, $m);
-        $bmysql_ver = isset($m[1]) ? sprintf('%d%02d%02d', $m[1], $m[2], $m[3]) : 0;
-    } catch (Exception $e) {
-        if (class_exists('Logger')) Logger::addSql('error', 'Backup failed: Cannot get MySQL version', ['error' => $e->getMessage()]);
-        return ['status' => 'failed', 'message' => 'Cannot get MySQL version'];
-    }
-
-    $bonly_create = explode(',', $conlycreate);
-
-    $btables_exclude = !empty($ctables) && $ctables[0] == '^' ? 1 : 0;
-    $btables = (!empty($ctables)) ? $ctables : '';
-    $btables = explode(',', $btables);
-    $tbls = [];
-
-    if (!empty($ctables)) {
-        foreach($btables as $table) {
-            $table = preg_replace("/[^\w*?^]/", '', $table);
-            $pattern = ["/\?/", "/\*/"];
-            $replace = ['.', '.*?'];
-            $tbls[] = preg_replace($pattern, $replace, $table);
-        }
-    }
-
-    // Zeichenkodierung setzen, wenn nicht auto
-    if ($bmysql_ver > 40101 && $charset !== '' && $charset != 'auto') {
-        $db->getSqlQuery("SET NAMES '".$charset."'");
-        $last_charset = $charset;
-    } else {
-        $last_charset = '';
-    }
-
-    // FIX: Korrigierte Filter-Logik
-    $tables = [];
-    $res = $db->getSqlQuery('SHOW TABLES');
-
-    while ($row = $res->fetch(PDO::FETCH_NUM)) {
-        $status = 0;
-
-        if (!empty($tbls)) {
-            foreach ($tbls as $table) {
-                $exclude = preg_match("#^\^#", $table) ? true : false;
-
-                if (!$exclude) {
-                    if (preg_match("#^{$table}$#i", $row[0])) {
-                        $status = 1; // Include
-                    }
-                }
-
-                if ($exclude && preg_match("#{$table}$#i", $row[0])) {
-                    $status = -1; // Exclude
-                    break; // Sofort abbrechen wenn excluded
-                }
-            }
-
-            // FIX: Korrekte Include/Exclude Logik
-            if ($btables_exclude) {
-                // Exclude mode: Take everything except status == -1
-                if ($status != -1) {
-                    $tables[] = $row[0];
-                }
-            } else {
-                // Include-Modus: Nimm nur status == 1
-                if ($status == 1) {
-                    $tables[] = $row[0];
-                }
-            }
-        } else {
-            // Keine Filter = alle Tabellen
-            $tables[] = $row[0];
-        }
-    }
-
-    if (empty($tables)) {
-        if (class_exists('Logger')) Logger::addSql('error', 'Backup failed: No tables found to backup');
-        return ['status' => 'failed', 'message' => 'No tables found to backup'];
-    }
-
-    $tabs = count($tables);
-    $res = $db->getSqlQuery('SHOW TABLE STATUS');
-    $tabinfo = [];
-    $tab_charset = [];
-    $tab_type = [];
-    $tabsize = [];
-    $tabinfo[0] = 0;
-
-    while ($item = $res->fetch(PDO::FETCH_ASSOC)) {
-        if (in_array($item['Name'], $tables)) {
-            $item['Rows'] = empty($item['Rows']) ? 0 : $item['Rows'];
-            $tabinfo[0] += $item['Rows'];
-            $tabinfo[$item['Name']] = $item['Rows'];
-            $bsize += $item['Data_length'];
-            $tabsize[$item['Name']] = 1 + round(1048576 / ($item['Avg_row_length'] + 1));
-
-            if (!empty($item['Collation']) && preg_match('#^([a-z0-9]+)_#i', $item['Collation'], $m)) {
-                $tab_charset[$item['Name']] = $m[1];
-            }
-
-            $tab_type[$item['Name']] = isset($item['Engine']) ? $item['Engine'] : $item['Type'];
-        }
-    }
-
-    // FIX: Path Traversal security vulnerability
-    $safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $conf['db']['name']);
-    $name = $safe_dbname.'_'.date('Y-m-d_H-i-s');
-
-    // FIX: Verzeichnis-Check
-    $backup_dir = BACKUP_DIR.'/';
-    if (!is_dir($backup_dir)) {
-        if (!mkdir($backup_dir, 0750, true)) {
-            if (class_exists('Logger')) Logger::addFile('error', 'Backup failed: Cannot create backup directory', ['path' => $backup_dir]);
-            return ['status' => 'failed', 'message' => 'Cannot create backup directory'];
-        }
-    }
-
-    $filepath = $backup_dir.$name.'.sql';
-
-    // FIX: Error handling for fopen
-    $fp = fopen($filepath, 'wb');
-    if (!$fp) {
-        if (class_exists('Logger')) Logger::addFile('error', 'Backup failed: Cannot create file', ['path' => $filepath]);
-        return ['status' => 'failed', 'message' => 'Cannot create backup file'];
-    }
-
-    // Header schreiben
-    fwrite($fp, '# DB: '.$conf['db']['name']."\n");
-    fwrite($fp, '# Tables: '.$tabs."\n");
-    fwrite($fp, '# Size: '.round($bsize / 1048576, 2)." MB\n");
-    fwrite($fp, '# Lines: '.number_format($tabinfo[0], 0, ',', ' ')."\n");
-    fwrite($fp, '# Date: '.date('Y.m.d H:i:s')."\n\n");
-
-    $db->getSqlQuery('SET SQL_QUOTE_SHOW_CREATE = 1');
-
-    foreach ($tables as $table) {
-        if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$table)) {
-            continue;
-        }
-        // Add a comma before each next VALUES row (except first row and after split markers) Check
-        if ($bmysql_ver > 40101 && isset($tab_charset[$table]) && $tab_charset[$table] != $last_charset) {
-            if ($ccharset == 'auto' && !empty($tab_charset[$table])) {
-                $tcharset = preg_replace('#[^a-zA-Z0-9_\\-]#', '', (string)$tab_charset[$table]);
-                if ($tcharset !== '') {
-                    $db->getSqlQuery("SET NAMES '".$tcharset."'");
-                    $last_charset = $tcharset;
-                }
-            }
-        }
-
-        $res = $db->getSqlQuery("SHOW CREATE TABLE `{$table}`");
-        $tab = $res->fetch(PDO::FETCH_NUM);
-
-        // For MariaDB 10+ do NOT use conditional comments
-        if (isset($tab[1])) {
-            fwrite($fp, "DROP TABLE IF EXISTS `{$table}`;\n{$tab[1]};\n\n");
-        }
-
-        if (in_array($tab_type[$table], $bonly_create)) continue;
-
-        $NumericColumn = [];
-        $res = $db->getSqlQuery("SHOW COLUMNS FROM `{$table}`");
-        $field = 0;
-        while ($col = $res->fetch(PDO::FETCH_NUM)) {
-            $NumericColumn[$field++] = preg_match("#^(\w*int|year)#", $col[1]) ? 1 : 0;
-        }
-        $fields = $field;
-
-        $from = 0;
-        $limit = $tabsize[$table];
-
-        if ($tabinfo[$table] > 0) {
-            $i = 0;
-            fwrite($fp, "INSERT INTO `{$table}` VALUES");
-
-            while ($res = $db->getSqlQuery("SELECT * FROM `{$table}` LIMIT ".intval($from).', '.intval($limit))) {
-                $batch = 0;
-
-                while ($row = $res->fetch(PDO::FETCH_NUM)) {
-                    $batch++;
-                    $i++;
-
-                    // CRITICAL LIMIT: flush INSERT every 10000 rows to avoid memory pressure
-                    if ($i > 1 && ($i - 1) % 10000 == 0) {
-                        // Close previous INSERT and start a new one
-                        fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
-                    }
-
-                    for ($k = 0; $k < $fields; $k++) {
-                        if ($NumericColumn[$k]) {
-                            $row[$k] = isset($row[$k]) ? $row[$k] : 'NULL';
-                        } else {
-                            $row[$k] = isset($row[$k]) ? $db->getSqlValue($row[$k]) : 'NULL';
-                        }
-                    }
-
-                    // Add a comma before each next VALUES row (except first row and after split markers)
-                    $is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
-                    fwrite($fp, ($is_first_in_block ? "\n" : ",\n").'('.implode(',', $row).')');
-                }
-
-                if ($batch < $limit) break;
-                $from += $limit;
-            }
-
-            fwrite($fp, ";\n\n");
-        }
-    }
-
-    fclose($fp);
-    if (!addCompress($backup_dir, $filepath, $name, 'auto', true)) {
-        return ['status' => 'failed', 'message' => 'Cannot compress backup file'];
-    }
-
-    # addCompress('auto') picks zip > gz > bz2; resolve the file actually produced
-    $archive = $filepath;
-    foreach (['.zip', '.gz', '.bz2'] as $ext) {
-        if (is_file($backup_dir.$name.$ext)) {
-            $archive = $backup_dir.$name.$ext;
-            break;
-        }
-    }
-    return [
-        'status' => 'success',
-        'message' => 'Database backup completed',
-        'extra' => [
-            'last_backup_file' => basename($archive),
-            'last_backup_size' => is_file($archive) ? (int)filesize($archive) : 0,
-            'last_table_count' => $tabs,
-        ],
-    ];
 }
 
 # Get admin module names (stored as names)
@@ -2044,9 +1849,12 @@ function setHead(array $seo = []): void {
         ob_start();
         return;
     }
-    $surl = addSchedulerTrigger();
-    if ($surl !== '') {
-        $script .= $tpl->getHtmlFrag('head-script-inline', ['js' => 'window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});']);
+    $strig = addSchedulerTrigger();
+    if ($strig) {
+        $body = 'body:"trigger=pseudo&token='.$strig['token'].'"';
+        $init = '{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/x-www-form-urlencoded"},'.$body.'}';
+        $call = 'window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$strig['url'].'",'.$init.');},1);});';
+        $script .= $tpl->getHtmlFrag('head-script-inline', ['js' => $call]);
     }
     $login = '';
     if (is_user()) {
@@ -2487,7 +2295,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         fclose($srcf);
     }
     elseif ($algo === 'bz2') {
-        $zipf = bzopen($file, 'wb');
+        $zipf = bzopen($file, 'w');
         if (!$zipf) {
             fclose($srcf);
             addErrorFile(_ERR_BZIP.': '.$file);
@@ -2882,7 +2690,8 @@ function addSitemapTask(bool $force = false): array {
             $date = date('Y-m-d');
             $info = $htm = $cd = [];
             $modules_raw = (string)($conf['sitemap']['mod'] ?? '');
-            $mod = ($modules_raw === '') ? ['0'] : explode(',', $modules_raw);
+            $mod = array_values(array_filter(array_map('trim', explode(',', $modules_raw)), static fn(string $one): bool => $one !== '' && $one !== '0'));
+            if (!$mod) return ['status' => 'disabled', 'message' => 'Sitemap has no modules selected, the existing map was left untouched'];
             for ($i = 0; $i < count($mod); $i++) {
                 if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
                     $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
@@ -5106,6 +4915,8 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
 }
 
 # Executes a file scan task and returns scheduler metadata
+# storage and node_modules are excluded by default: the first is runtime the site rewrites by itself, the second a development dependency absent from a delivered site
+# Both only produce noise an integrity report cannot act on
 function addFilescanTask(): array {
  global $conf, $tpl, $mailer;
     if (empty($conf['security']['log_d'])) return ['status' => 'failed', 'message' => 'File scan is disabled'];
@@ -5125,10 +4936,10 @@ function addFilescanTask(): array {
     if (!$safe && function_exists('set_time_limit')) set_time_limit(600);
 
     $dump = [];
-    $skip = [
-        ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump.log')), '/'),
-        ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump_log.log')), '/')
-    ];
+    $skip = ['storage', 'node_modules'];
+    foreach ([LOGS_DIR.'/dump.log', LOGS_DIR.'/dump_log.log'] as $path) {
+        $skip[] = ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', $path)), '/');
+    }
     $rawskip = str_replace(["\r\n", "\r"], "\n", (string)($conf['security']['dump_skip'] ?? ''));
     foreach (explode("\n", $rawskip) as $line) {
         $line = trim(str_replace('\\', '/', (string)$line));

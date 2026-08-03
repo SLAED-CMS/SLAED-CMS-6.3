@@ -33,6 +33,7 @@ function uploads(): void {
     global $afile, $conf, $stop, $tpl;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
+    # The file panels are read through the shared go=5 endpoint, which validates the global ajax scope, so this one keeps that scope while the module forms use their own
     $token = '&token='.getSiteToken();
     setHead();
     $cont = getTplAdminTabs([
@@ -56,7 +57,7 @@ function uploads(): void {
             ['nameattr' => 'name', 'valueattr' => 'uploads'],
             ['nameattr' => 'op', 'valueattr' => 'uploadsave'],
             ['nameattr' => 'dir', 'valueattr' => $dir],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
         ],
         'rows' => [
             [
@@ -156,7 +157,7 @@ function uploads(): void {
 function uploadsave(): void {
     global $afile, $stop;
     $dir = getVar('post', 'dir', 'var');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('uploads');
     if (!$warn) upload(3, UPLOADS_DIR.'/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
     if (!$warn && $stop) {
         uploads();
@@ -201,7 +202,7 @@ function tplconfig(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'uploads'],
             ['nameattr' => 'op', 'valueattr' => 'tplsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
         ],
         'content_html' => $blocks,
         'submit_label' => _SAVECHANGES,
@@ -212,7 +213,7 @@ function tplconfig(): void {
 
 function tplsave(): void {
     global $afile, $conf;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('uploads');
     if (!$warn) {
         $cont = [];
         $typm = explode(',', $conf['uploads']['typ']);
@@ -299,7 +300,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'uploads'],
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('uploads')],
         ],
         'content_html' => $conts,
         'submit_label' => _SAVECHANGES,
@@ -310,7 +311,7 @@ function config(): void {
 
 function configsave(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('uploads');
     if (!$warn) {
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $ttyp = getVar('post', 'ttyp', 'text');

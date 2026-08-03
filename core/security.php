@@ -712,6 +712,14 @@ function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
     return false;
 }
 
+# Authorizes one state-changing admin request: the method must be POST and the token must come from the body, scoped to the module that renders the form
+# A credential in a query string ends up in browser history, server logs and the Referer header
+# A link carrying one is also followed by prefetchers, scanners and link previews without anyone clicking it
+function checkAdminPost(string $scope): bool {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') return false;
+    return checkSiteToken(getVar('post', 'token', 'text'), $scope);
+}
+
 # Return external HTTP referer URL, or empty string if internal/invalid/unknown
 function getReferer(): string {
     $referer = filterText(getenv('HTTP_REFERER'));

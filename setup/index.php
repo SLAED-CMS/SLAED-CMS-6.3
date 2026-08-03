@@ -634,6 +634,23 @@ function save(): void {
                 $sched['jobs']['newsletter']['schedule'] = '*/5 * * * *';
                 $sdone = true;
             }
+            # The database backup job gained explicit scope, compression, and retention settings; only missing keys are filled so a configured value is never overwritten
+            if (is_array($sched) && isset($sched['jobs']['dbbackup']) && is_array($sched['jobs']['dbbackup'])) {
+                $bset = [
+                    'include' => '*',
+                    'exclude' => 'ipb_*',
+                    'schemaonly' => 'MRG_MyISAM,MERGE,HEAP,MEMORY',
+                    'compress' => 'auto',
+                    'keep' => '0',
+                    'allow_incomplete' => '0',
+                ];
+                if (!isset($sched['jobs']['dbbackup']['settings']) || !is_array($sched['jobs']['dbbackup']['settings'])) $sched['jobs']['dbbackup']['settings'] = [];
+                foreach ($bset as $key => $val) {
+                    if (isset($sched['jobs']['dbbackup']['settings'][$key])) continue;
+                    $sched['jobs']['dbbackup']['settings'][$key] = $val;
+                    $sdone = true;
+                }
+            }
             if ($sdone) setConfigFile('scheduler.php', $sched);
         }
         setConfigFile('newsletter.php', ['abort' => '10', 'bouncemax' => '2', 'breakwin' => '100', 'canary' => '100', 'canarymin' => '500']);

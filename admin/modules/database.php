@@ -295,17 +295,10 @@ function database(): void {
             // Default view with actions
             $stattag = $tpl->getHtmlFrag('dial', [
                 'dial_title' => _EDITOR,
-                'dial' => [[
-                    'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=1&token='.getSiteToken(),
-                    'icon_name' => 'eraser',
-                    'title' => _CLEAN,
-                    'confirm_text' => _CLEAN.' "'.$name.'"?',
-                ], [
-                    'href' => $afile.'.php?name=database&op=delete&tb='.$name.'&id=2&token='.getSiteToken(),
-                    'icon_name' => 'trash',
-                    'title' => _ONDELETE,
-                    'confirm_text' => _DELETE.' "'.$name.'"?',
-                ]],
+                'dial' => [
+                    getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 1], 'eraser', _CLEAN, _CLEAN.' "'.$name.'"?'),
+                    getTplPostAction(['name' => 'database', 'op' => 'delete', 'tb' => $name, 'id' => 2], 'trash', _ONDELETE, _DELETE.' "'.$name.'"?'),
+                ],
             ]);
         }
 
@@ -419,7 +412,7 @@ function dump(): void {
     setHead();
     $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'exec')) {
-        if (!checkSiteToken()) {
+        if (!checkAdminPost('database')) {
             echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             setFoot();
             return;
@@ -480,7 +473,7 @@ function dump(): void {
         'action_url' => $afile.'.php?name=database&op=dump',
         'hidden' => [
             ['nameattr' => 'type', 'valueattr' => 'dump'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('database')],
         ],
         'rows' => [[
             'is_full' => true,
@@ -508,9 +501,9 @@ function info(): void {
 
 function delete(): void {
     global $db, $afile;
-    $tb = getVar('get', 'tb', 'var');
-    $id = getVar('get', 'id', 'num');
-    $warn = !checkSiteToken();
+    $tb = getVar('post', 'tb', 'var');
+    $id = getVar('post', 'id', 'num');
+    $warn = !checkAdminPost('database');
     $tb = preg_match('#^[a-zA-Z0-9_]+$#', (string)$tb) ? $tb : '';
     if (!$warn && $tb && $id == 1) {
         $db->getSqlQuery('TRUNCATE TABLE `'.$tb.'`');

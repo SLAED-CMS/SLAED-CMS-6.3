@@ -5,20 +5,8 @@
 # Website: slaed.net
 
 # CLI probe for the page-cache, statistics, and GeoIP contract tests: boots the real core like index.php, one scenario per process, with LOGS_DIR and COUNTER_DIR redirected to scratch
-error_reporting(0);
-ini_set('display_errors', '0');
-ini_set('log_errors', '0');
-define('MODULE_FILE', true);
-define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
-$scratch = str_replace('\\', '/', (string)($argv[2] ?? ''));
-define('COUNTER_DIR', ($scratch !== '') ? $scratch : str_replace('\\', '/', sys_get_temp_dir()).'/slaed_probe_counter');
-define('LOGS_DIR', ($scratch !== '') ? $scratch.'/logs' : str_replace('\\', '/', sys_get_temp_dir()).'/slaed_probe_logs');
-if (!is_dir(LOGS_DIR)) mkdir(LOGS_DIR, 0777, true);
-if ($scratch === '' && is_file(LOGS_DIR.'/error_file.log')) unlink(LOGS_DIR.'/error_file.log');
-$_SERVER['REQUEST_METHOD'] = 'GET';
-$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
-$_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) probe';
-$_SERVER['HTTPS'] = 'on';
+$probework = (string)($argv[2] ?? '');
+require_once __DIR__.'/probe_boot.php';
 # The moderator half of the comment class needs a signed-in administrator, and isAdmin() memoizes its verdict on the first call the boot itself makes
 # So the session is opened and filled here, before core/security.php reads it: the boot then skips its own session_start() and finds the administrator already there
 if (in_array($argv[1] ?? '', ['commentstage', 'commentthread'], true)) {

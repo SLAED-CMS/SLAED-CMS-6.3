@@ -688,6 +688,8 @@ define('_SCHEDULER_UNLOCKD','Блокування планувальника з�
 define('_SCHEDULER_RUNNING','Виконується');
 define('_SCHEDULER_RESULT','Виконання');
 define('_SCHEDULER_IDLE','Очікує');
+define('_SCHEDULER_CRASH','Аварійно');
+define('_SCHEDULER_OFF','Вимкнено');
 define('_SCHEDULER_URLINFO','Відносні URL буде розв язано від домашнього URL сайту');
 define('_SCHEDULER_SYSINFO','Системні завдання можна налаштовувати тут до видалення старих тригерів');
 define('_SCHEDULER_MANUAL','Дозволити ручний запуск');

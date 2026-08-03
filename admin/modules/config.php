@@ -758,17 +758,16 @@ function config(): void {
             ['nameattr' => 'name', 'valueattr' => 'config'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'tab', 'valueattr' => (string)$ctab],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('config')],
         ],
-        'actions_html' => $tpl->getHtmlFrag('button', [
-            'label' => _CACHECLEAR,
-            'is_green' => true,
-            'reset_url' => $afile.'.php?name=config&op=clearcache&tab='.$ctab.'&token='.getSiteToken(),
-            'input_attr' => ' data-sl-tab-show="5" data-sl-tab-group="config-main" style="display:none"',
-        ]),
         'submit_label' => _SAVECHANGES,
     ]);
-    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
+    # The cache action is its own POST form and cannot live inside the settings form: a browser drops a nested form
+    # Its own fields would then be submitted with the settings, so it is rendered after the form and carries the tab attributes itself
+    $hide = ['name' => 'config', 'op' => 'clearcache', 'tab' => $ctab];
+    $show = 'data-sl-tab-show="5" data-sl-tab-group="config-main" style="display:none"';
+    $clear = getTplPostButton($hide, 'trash', _CACHECLEAR, $show);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form.$clear]);
     setFoot();
 }
 
@@ -776,7 +775,7 @@ function save(): void {
     global $afile, $conf;
     $ctab = getVar('post', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab > 6) $ctab = 0;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('config');
     if (!$warn) {
         $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
         $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
@@ -969,7 +968,7 @@ function mailtest(): void {
     unset($_POST['mailpass']);
     $ctab = getVar('post', 'tab', 'num', 6);
     if ($ctab < 0 || $ctab > 6) $ctab = 6;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('config');
     $text = _TOKENMISS;
     if (!$warn) {
         $mail = trim(getVar('post', 'mailto', 'raw')) ?: (string)$conf['adminmail'];
@@ -989,9 +988,9 @@ function mailtest(): void {
 
 function clearcache(): void {
     global $afile;
-    $ctab = getVar('req', 'tab', 'num', 0);
+    $ctab = getVar('post', 'tab', 'num', 0);
     if ($ctab < 0 || $ctab > 6) $ctab = 0;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('config');
     if (!$warn) Cache::deleteAll();
     setRedirect($afile.'.php?name=config&tab='.$ctab, false, 302, $warn ? _TOKENMISS : _SUCCCLEAR, $warn);
 }

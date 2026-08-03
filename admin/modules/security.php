@@ -53,12 +53,7 @@ function security(): void {
                         'icon_name' => 'download',
                         'title' => _DOWN,
                     ],
-                    [
-                        'href' => $afile.'.php?name=security&op=delete&file='.urlencode($name).'&token='.getSiteToken(),
-                        'icon_name' => 'trash',
-                        'title' => _ONDELETE,
-                        'confirm_text' => _DELETE.' "'.$title.'"?',
-                    ],
+                    getTplPostAction(['name' => 'security', 'op' => 'delete', 'file' => $name], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?'),
                 ],
             ]);
             $titleHtml = $tpl->getHtmlFrag('popover', [
@@ -146,12 +141,8 @@ function banlist(): void {
                 ]).Geoip::getIpHtml($tip);
                 $acts = $tpl->getHtmlFrag('dial', [
                     'dial_title' => _EDITOR,
-                    'dial' => [[
-                        'href' => $afile.'.php?name=security&op=bansave&cidr='.urlencode($tcidr).'&hash='.urlencode($binfo[1]).'&time='.(int)$binfo[2].'&id=1&token='.getSiteToken(),
-                        'icon_name' => 'trash',
-                        'title' => _ONDELETE,
-                        'confirm_text' => _DELETE.' "'.$tcidr.'"?',
-                    ]],
+                    'dial' => [getTplPostAction(['name' => 'security', 'op' => 'bansave', 'cidr' => $tcidr, 'hash' => $binfo[1],
+                        'time' => (int)$binfo[2], 'id' => 1], 'trash', _ONDELETE, _DELETE.' "'.$tcidr.'"?')],
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
@@ -207,7 +198,7 @@ function banlist(): void {
         'action_url' => $afile.'.php?name=security&op=bansave',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => '2'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
         'rows' => $iprows,
         'submit_label' => _ADD,
@@ -227,12 +218,8 @@ function banlist(): void {
                 $binfo = explode('|', $val);
                 $acts = $tpl->getHtmlFrag('dial', [
                     'dial_title' => _EDITOR,
-                    'dial' => [[
-                        'href' => $afile.'.php?name=security&op=bansave&name='.urlencode((string)$binfo[0]).'&time='.(int)($binfo[1] ?? 0).'&id=3&token='.getSiteToken(),
-                        'icon_name' => 'trash',
-                        'title' => _ONDELETE,
-                        'confirm_text' => _DELETE.' "'.(string)$binfo[0].'"?',
-                    ]],
+                    'dial' => [getTplPostAction(['name' => 'security', 'op' => 'bansave', 'uname' => (string)$binfo[0],
+                        'time' => (int)($binfo[1] ?? 0), 'id' => 3], 'trash', _ONDELETE, _DELETE.' "'.(string)$binfo[0].'"?')],
                 ]);
                 $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                     'cells' => [
@@ -311,7 +298,7 @@ function banlist(): void {
         'action_url' => $afile.'.php?name=security&op=bansave',
         'hidden' => [
             ['nameattr' => 'id', 'valueattr' => '4'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
         'rows' => $userrows,
         'submit_label' => _ADD,
@@ -350,18 +337,18 @@ function banlist(): void {
 
 function bansave(): void {
     global $db, $conf, $afile, $tpl, $prs, $mailer;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('security');
     $send = '';
     if (!$warn) {
-        $id = getVar('req', 'id', 'num');
-        $cidr = getVar('req', 'cidr', 'text');
-        $name = getVar('post', 'uname', 'name', getVar('req', 'name', 'name'));
+        $id = getVar('post', 'id', 'num');
+        $cidr = getVar('post', 'cidr', 'text');
+        $name = getVar('post', 'uname', 'name');
         $mail = getVar('post', 'mail', 'bool');
         $info = trim(getVar('post', 'info', 'text'));
         $info = ($info) ? $info : _BANN_INFO;
         $mailtext = trim(getVar('post', 'mailtext', 'text'));
-        $hash = getVar('req', 'hash', 'text', '0');
-        $time = getVar('req', 'time', 'num');
+        $hash = getVar('post', 'hash', 'text', '0');
+        $time = getVar('post', 'time', 'num');
         $cidr = $cidr ? getIpCidr($cidr) : '';
         $cont = $conf['security'];
         if ($id == 1 && $cidr) {
@@ -433,12 +420,12 @@ function passwd(): void {
         ];
         $hidden = [
             ['nameattr' => 'op', 'valueattr' => 'passsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ];
     } else {
         $hidden = [
             ['nameattr' => 'op', 'valueattr' => 'passsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
             ['nameattr' => 'login', 'valueattr' => ''],
             ['nameattr' => 'password', 'valueattr' => ''],
         ];
@@ -455,7 +442,7 @@ function passwd(): void {
 
 function passsave(): void {
     global $conf, $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('security');
     if (!$warn) {
         $protect = [PHP_EOL => '', ' ' => ''];
         $admin_ip = getVar('post', 'admin_ip', 'text');
@@ -557,7 +544,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'security'],
             ['nameattr' => 'op', 'valueattr' => 'configsave'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('security')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -568,7 +555,7 @@ function config(): void {
 
 function configsave(): void {
     global $conf, $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('security');
     if (!$warn) {
         $flood_t = getVar('post', 'flood_t', 'num', '1');
         $afile = getVar('post', 'afile', 'text');
@@ -666,9 +653,9 @@ function download(): void {
 
 function delete(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('security');
     if (!$warn) {
-        $file = getVar('get', 'file', 'var');
+        $file = getVar('post', 'file', 'var');
         if ($file) {
             $path = LOGS_DIR.'/'.$file.'.log';
             if (is_file($path)) unlink($path);

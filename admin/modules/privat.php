@@ -47,7 +47,7 @@ function config(): void {
         'hidden' => [
             ['nameattr' => 'name', 'valueattr' => 'privat'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('privat')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -58,7 +58,7 @@ function config(): void {
 
 function save(): void {
     global $afile;
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('privat');
     if (!$warn) {
         $cont = [
             'num' => getVar('post', 'num', 'num', 50),
@@ -82,10 +82,10 @@ function save(): void {
 
 function delete(): void {
     global $afile, $db, $tpl;
-    $id = getVar('req', 'id', 'num', 0);
-    $num = getVar('req', 'num', 'num', 1);
+    $id = getVar('post', 'id', 'num', 0);
+    $num = getVar('post', 'num', 'num', 1);
     $ishtmx = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
-    if (!checkSiteToken()) {
+    if (!checkAdminPost('privat')) {
         if ($ishtmx) {
             echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _TOKENMISS]);
             return;

@@ -627,6 +627,47 @@ function getTplNewGraphic(string $time): string {
     return $tpl->getHtmlFrag('fresh', ['tier' => $tier, 'is_'.$tier => true, 'title' => (string)$label, 'date_text' => format_time($time), 'date_iso' => date('c', $mark)]);
 }
 
+# Build one admin speed-dial action that submits a POST form instead of following a link, with the CSRF token scoped to the module named in the hidden fields
+# A state-changing address is followed by prefetchers, scanners and link previews, and its token ends up in history, logs and the Referer header; a form body has none of that
+function getTplPostAction(array $hide, string $icon, string $title, string $confirm = ''): array {
+    global $afile, $tpl;
+    static $seq = 0;
+    $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
+    $html = '';
+    foreach ($hide as $key => $val) {
+        $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
+    }
+    $out = ['href' => $afile.'.php', 'form_id' => 'slpost'.(++$seq), 'hidden' => $html, 'icon_name' => $icon, 'title' => $title];
+    if ($confirm !== '') $out['confirm_text'] = $confirm;
+    return $out;
+}
+
+# Build the htmx attributes of one in-place admin action: the values travel in a POST body, so the credential never becomes part of an address the browser may prefetch or store
+function getTplPostVals(array $hide, string $target): string {
+    $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
+    $vals = htmlspecialchars((string)json_encode($hide, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+    return 'hx-post="admin.php" hx-vals="'.$vals.'" hx-target="'.$target.'" hx-swap="innerHTML" hx-push-url="false"';
+}
+
+# Build one standalone admin button that submits a POST form, for actions that are not part of a speed dial
+# $attr carries behaviour attributes for the form itself, so a caller never has to wrap the button in markup of its own
+function getTplPostButton(array $hide, string $icon, string $label, string $attr = ''): string {
+    global $afile, $tpl;
+    $hide['token'] = getSiteToken((string)($hide['name'] ?? 'ajax'));
+    $html = '';
+    foreach ($hide as $key => $val) {
+        $html .= $tpl->getHtmlFrag('hidden', ['name_attr' => (string)$key, 'value_attr' => (string)$val, 'input_attr' => '']);
+    }
+    return $tpl->getHtmlFrag('post-button', [
+        'action' => $afile.'.php',
+        'hidden' => $html,
+        'icon_name' => $icon,
+        'title' => $label,
+        'label' => $label,
+        'form_attr' => $attr,
+    ]);
+}
+
 # Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs
 # The edit half stays a link, the delete half becomes a submitted form: a removal must not travel as an address a browser may prefetch,
 # and the token that authorises it must not sit in history, logs or a referrer. The caller keeps passing the address it always passed;

@@ -40,20 +40,13 @@ function messages(): void {
                     ['is_col_status' => true, 'content_html' => ad_status('', $active)],
                     ['is_col_actions' => true, 'content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _FUNCTIONS,
-                        'dial' => [[
-                            'href' => $afile.'.php?name=messages&op=status&id='.$mid.'&act='.($active ? '0' : '1').'&token='.getSiteToken(),
-                            'icon_name' => 'power',
-                            'title' => $active ? _DEACTIVATE : _ACTIVATE,
-                        ], [
+                        'dial' => [getTplPostAction(['name' => 'messages', 'op' => 'status', 'id' => $mid, 'act' => $active ? '0' : '1'],
+                            'power', $active ? _DEACTIVATE : _ACTIVATE),
+                            [
                             'href' => $afile.'.php?name=messages&op=add&id='.$mid,
                             'icon_name' => 'pencil',
                             'title' => _FULLEDIT,
-                        ], [
-                            'href' => $afile.'.php?name=messages&op=delete&id='.$mid.'&token='.getSiteToken(),
-                            'icon_name' => 'trash',
-                            'title' => _ONDELETE,
-                            'confirm_text' => _DELETE.' "'.$title.'"?',
-                        ]],
+                        ], getTplPostAction(['name' => 'messages', 'op' => 'delete', 'id' => $mid], 'trash', _ONDELETE, _DELETE.' "'.$title.'"?')],
                     ])],
                 ],
             ])]);
@@ -145,7 +138,7 @@ function add(): void {
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'posttype', 'valueattr' => 'save'],
             ['nameattr' => 'newexpire', 'valueattr' => (string)$newexpire],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('messages')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVE,
@@ -166,7 +159,7 @@ function save(): void {
     $view = getVar('post', 'view', 'num');
     $lang = getVar('post', 'lang', 'var');
     $posttype = getVar('post', 'posttype', 'var');
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('messages');
     $expire = ($newexpire == 1 && $expire) ? time() + ($expire * 86400) : $expire;
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
@@ -188,17 +181,17 @@ function save(): void {
 
 function status(): void {
     global $db, $afile;
-    $id = getVar('get', 'id', 'num');
-    $act = getVar('get', 'act', 'num');
-    $warn = !checkSiteToken();
+    $id = getVar('post', 'id', 'num');
+    $act = getVar('post', 'act', 'num');
+    $warn = !checkAdminPost('messages');
     if (!$warn && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active WHERE id = :mid', ['active' => $act, 'mid' => $id]);
     setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : _SUCCSTATUS, $warn);
 }
 
 function delete(int $mid = 0): void {
     global $db, $afile;
-    $id = $mid ?: getVar('get', 'id', 'num');
-    $warn = !checkSiteToken();
+    $id = $mid ?: getVar('post', 'id', 'num');
+    $warn = !checkAdminPost('messages');
     if (!$warn && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]);
     setRedirect($afile.'.php?name=messages', false, 302, $warn ? _TOKENMISS : _SUCCDELETE, $warn);
 }

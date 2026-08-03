@@ -688,6 +688,8 @@ define('_SCHEDULER_UNLOCKD','Блокировка планировщика сн�
 define('_SCHEDULER_RUNNING','Выполняется');
 define('_SCHEDULER_RESULT','Выполнение');
 define('_SCHEDULER_IDLE','Ожидает');
+define('_SCHEDULER_CRASH','Аварийно');
+define('_SCHEDULER_OFF','Отключено');
 define('_SCHEDULER_URLINFO','Относительные URL будут разрешены относительно домашнего URL сайта');
 define('_SCHEDULER_SYSINFO','Системные задания можно настраивать здесь до удаления старых триггеров');
 define('_SCHEDULER_MANUAL','Разрешить ручной запуск');

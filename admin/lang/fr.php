@@ -688,6 +688,8 @@ define('_SCHEDULER_UNLOCKD','Verrou du scheduler supprime');
 define('_SCHEDULER_RUNNING','En cours');
 define('_SCHEDULER_RESULT','Exécution');
 define('_SCHEDULER_IDLE','En attente');
+define('_SCHEDULER_CRASH','Interrompu');
+define('_SCHEDULER_OFF','Désactivé');
 define('_SCHEDULER_URLINFO','Les URL relatives sont resolues contre l URL de base du site');
 define('_SCHEDULER_SYSINFO','Les taches systeme peuvent etre reglees ici avant la suppression des anciens triggers');
 define('_SCHEDULER_MANUAL','Autoriser le demarrage manuel');

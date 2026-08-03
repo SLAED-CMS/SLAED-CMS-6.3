@@ -32,11 +32,17 @@ function scheduler(): void {
         $state = getSchedulerState($name);
         $next = getSchedulerPlannedTime($job, $state);
         $type = (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM;
-        $stat = match ($state['last_status'] ?? 'idle') {
-            'success' => _YES,
-            'failed' => _NO,
-            'running' => _SCHEDULER_RUNNING,
-            default => _SCHEDULER_IDLE,
+        $held = checkSchedulerLock($name);
+        $stat = match (true) {
+            $held => _SCHEDULER_RUNNING,
+            !empty($state['running']) => _SCHEDULER_CRASH,
+            default => match ($state['last_status'] ?? 'idle') {
+                'success' => _YES,
+                'failed' => _NO,
+                'crashed' => _SCHEDULER_CRASH,
+                'disabled' => _SCHEDULER_OFF,
+                default => _SCHEDULER_IDLE,
+            },
         };
         $run = (int)($state['last_run'] ?? 0);
         $ok = (int)($state['last_success'] ?? 0);
@@ -44,7 +50,8 @@ function scheduler(): void {
         $lastok = $ok > 0 ? date(_TIMESTRING, $ok) : _NO;
         $nextr = ($next > 0) ? date(_TIMESTRING, $next) : _NO;
         $trig = $state['last_trigger'] ?? _NO;
-        $time = $state['last_duration'] ?? 0;
+        $start = (int)($state['started_at'] ?? 0);
+        $time = ($held && $start > 0) ? (time() - $start) : ($state['last_duration'] ?? 0);
         $fail = $state['fail_count'] ?? 0;
         $note = trim($state['last_message'] ?? '');
         if ($note === '') $note = trim($state['last_error'] ?? '');
@@ -69,29 +76,14 @@ function scheduler(): void {
             'icon_name' => 'pencil',
             'title' => _EDIT,
         ]];
-        if ((int)($job['manual'] ?? 0) === 1) {
-            $acts[] = [
-                'href' => $afile.'.php?name=scheduler&op=run&job='.$name.'&token='.getSiteToken(),
-                'icon_name' => 'play-fill',
-                'title' => _SCHEDULER_RUN,
-            ];
-        }
-        $acts[] = [
-            'href' => $afile.'.php?name=scheduler&op=unlock&job='.$name.'&token='.getSiteToken(),
-            'icon_name' => 'unlock',
-            'title' => _SCHEDULER_UNLOCK,
-        ];
-        if (($job['type'] ?? '') === 'custom') {
-            $acts[] = [
-                'href' => $afile.'.php?name=scheduler&op=delete&job='.$name.'&token='.getSiteToken(),
-                'icon_name' => 'trash',
-                'title' => _DELETE,
-                'confirm_text' => _DELETE.' "'.(string)$title.'"?',
-            ];
-        }
+        $keys = ['name' => 'scheduler', 'job' => $name];
+        if ((int)($job['manual'] ?? 0) === 1) $acts[] = getTplPostAction(['op' => 'run'] + $keys, 'play-fill', _SCHEDULER_RUN);
+        $acts[] = getTplPostAction(['op' => 'unlock'] + $keys, 'unlock', _SCHEDULER_UNLOCK);
+        if (($job['type'] ?? '') === 'custom') $acts[] = getTplPostAction(['op' => 'delete'] + $keys, 'trash', _DELETE, _DELETE.' "'.(string)$title.'"?');
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
-                ['is_truncate' => true, 'title_text' => (string)$title, 'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips]), 'has_content_text' => true, 'content_text' => (string)$title],
+                ['is_truncate' => true, 'title_text' => (string)$title, 'has_content_text' => true, 'content_text' => (string)$title,
+                    'prefix_html' => $tpl->getHtmlFrag('popover', ['items' => $tips])],
                 ['is_col_date' => true, 'has_content_text' => true, 'content_text' => (string)$nextr],
                 ['is_col_status' => true, 'has_content_text' => true, 'content_text' => (string)$stat],
                 ['is_col_count' => true, 'has_content_text' => true, 'content_text' => (string)($job['priority'] ?? '100')],
@@ -225,7 +217,7 @@ function add(string $name = ''): void {
             ['nameattr' => 'name', 'valueattr' => 'scheduler'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'type', 'valueattr' => (string)$job['type']],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('scheduler')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVE,
@@ -239,7 +231,7 @@ function save(): void {
     global $conf, $afile;
     $rawname = getVar('post', 'job', 'var', '');
     $name = preg_replace('#[^a-z]#', '', strtolower($rawname));
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('scheduler');
     if (!$warn) {
         $type = getVar('post', 'type', 'var', 'custom');
         $title = trim(getVar('post', 'title', 'text', ''));
@@ -291,8 +283,8 @@ function save(): void {
 
 function run(): void {
     global $afile;
-    $warn = !checkSiteToken();
-    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('req', 'job', 'var', '')));
+    $warn = !checkAdminPost('scheduler');
+    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
     $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn) {
         $jobs = getSchedulerJobs();
@@ -312,21 +304,28 @@ function run(): void {
 
 function unlock(): void {
     global $afile;
-    $warn = !checkSiteToken();
-    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('req', 'job', 'var', '')));
+    $warn = !checkAdminPost('scheduler');
+    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
+    $text = $warn ? _TOKENMISS : _SUCCSAVE;
     if (!$warn && $name !== '') {
-        $state = getSchedulerState($name);
-        $state['running'] = 0; $state['started_at'] = 0;
-        $state['last_status'] = 'idle'; $state['last_message'] = _SCHEDULER_UNLOCKD;
-        setSchedulerState($name, $state);
+        $lock = getSchedulerLockHandle($name);
+        if ($lock === false) {
+            $warn = true;
+            $text = _SCHEDULER_RUNNING;
+        } else {
+            $state = getSchedulerState($name);
+            if (!empty($state['running'])) updateSchedulerCrash($name, $state);
+            deleteSchedulerHandle($lock);
+            $text = _SCHEDULER_UNLOCKD;
+        }
     }
-    setRedirect($afile.'.php?name=scheduler', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?name=scheduler', false, 302, $text, $warn);
 }
 
 function delete(): void {
     global $conf, $afile;
-    $warn = !checkSiteToken();
-    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('req', 'job', 'var', '')));
+    $warn = !checkAdminPost('scheduler');
+    $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
     if (!$warn) {
         $cfg = is_readable(CONFIG_DIR.'/scheduler.php') ? (require CONFIG_DIR.'/scheduler.php') : [];
         $schedcfg = is_array($cfg) && isset($cfg['scheduler']) && is_array($cfg['scheduler']) ? $cfg['scheduler'] : ($conf['scheduler'] ?? []);

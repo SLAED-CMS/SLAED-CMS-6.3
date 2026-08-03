@@ -144,11 +144,8 @@ function modules(): void {
         } else {
             $group_name = _NONE;
         }
-        $items = [[
-            'href' => $afile.'.php?name=modules&op=status&mod='.$title.'&act='.($active ? '0' : '1').'&type='.$mtype.'&token='.getSiteToken(),
-            'icon_name' => 'power',
-            'title' => $active ? _DEACTIVATE : _ACTIVATE,
-        ], [
+        $items = [getTplPostAction(['name' => 'modules', 'op' => 'status', 'mod' => $title, 'act' => $active ? '0' : '1', 'type' => $mtype], 'power',
+            $active ? _DEACTIVATE : _ACTIVATE), [
             'href' => $afile.'.php?name=modules&op=edit&mod='.$title.'&type='.$mtype,
             'icon_name' => 'pencil',
             'title' => _FULLEDIT,
@@ -164,20 +161,13 @@ function modules(): void {
                     $install = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.$table[1]));
                 }
             }
-            $items[] = [
-                'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id='.($install ? '1' : '2').'&type='.$mtype.'&token='.getSiteToken(),
-                'icon_name' => $install ? 'database-dash' : 'database-add',
-                'title' => $install ? _DB_DELETE : _DB_INSTALL,
-                'confirm_text' => ($install ? _DB_DELETE : _DB_INSTALL).' "'.$title.'"?',
-            ];
+            $keys = ['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => $install ? '1' : '2', 'type' => $mtype];
+            $what = $install ? _DB_DELETE : _DB_INSTALL;
+            $items[] = getTplPostAction($keys, $install ? 'database-dash' : 'database-add', $what, $what.' "'.$title.'"?');
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
-            $items[] = [
-                'href' => $afile.'.php?name=modules&op=add&mod='.$title.'&id=3&type='.$mtype.'&token='.getSiteToken(),
-                'icon_name' => 'database-up',
-                'title' => _DB_UPDATE,
-                'confirm_text' => _DB_UPDATE.' "'.$title.'"?',
-            ];
+            $items[] = getTplPostAction(['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => '3', 'type' => $mtype], 'database-up', _DB_UPDATE,
+                _DB_UPDATE.' "'.$title.'"?');
         }
         $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
             'cells' => [
@@ -293,7 +283,7 @@ function edit(): void {
             ['nameattr' => 'name', 'valueattr' => 'modules'],
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'type', 'valueattr' => (string)$mtype],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('modules')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
@@ -304,10 +294,10 @@ function edit(): void {
 
 function status(): void {
     global $conf, $afile;
-    $mod = getVar('get', 'mod', 'var');
-    $act = getVar('get', 'act', 'num');
-    $type = getVar('get', 'type', 'num', 2);
-    $warn = !checkSiteToken();
+    $mod = getVar('post', 'mod', 'var');
+    $act = getVar('post', 'act', 'num');
+    $type = getVar('post', 'type', 'num', 2);
+    $warn = !checkAdminPost('modules');
     if (!$warn && isset($conf['modules'][$mod])) {
         $conf['modules'][$mod]['active'] = $act;
         setConfigFile('modules.php', $conf['modules']);
@@ -319,7 +309,7 @@ function save(): void {
     global $conf, $afile;
     $mod = getVar('post', 'mod', 'var');
     $typef = getVar('post', 'type', 'num', 2);
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('modules');
     if (!$warn && isset($conf['modules'][$mod])) {
         $view = getVar('post', 'view', 'num');
         $icon = strtolower(getVar('post', 'icon', 'var'));
@@ -343,10 +333,10 @@ function save(): void {
 
 function add(): void {
     global $db, $infos, $afile;
-    $mod = getVar('get', 'mod', 'var');
-    $id = getVar('get', 'id', 'num');
-    $type = getVar('get', 'type', 'num', 2);
-    $warn = !checkSiteToken();
+    $mod = getVar('post', 'mod', 'var');
+    $id = getVar('post', 'id', 'num');
+    $type = getVar('post', 'type', 'num', 2);
+    $warn = !checkAdminPost('modules');
     if ($warn) {
         setRedirect($afile.'.php?name=modules'.($type !== 2 ? '&type='.$type : ''), false, 302, _TOKENMISS, true);
         return;

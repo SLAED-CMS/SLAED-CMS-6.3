@@ -915,9 +915,31 @@ function getDirectorySizeBytes(string $path): int|null {
     return max($size, 0);
 }
 
-# Returns size metrics for key storage folders and null when folders are unavailable
+# Returns the published backup artifacts of the current database with their size and timestamp, ignoring staging directories, foreign files and artifacts of another database
+function getBackupArtifacts(): array {
+    global $conf;
+    require_once BASE_DIR.'/core/classes/backup.php';
+    $dir = defined('BACKUP_DIR') ? (string)BACKUP_DIR : BASE_DIR.'/storage/backup';
+    if (!is_dir($dir) || !is_readable($dir)) return [];
+    $stem = Backup::getArtifactStem((string)($conf['db']['name'] ?? ''));
+    $out = [];
+    foreach (scandir($dir) ?: [] as $file) {
+        $path = $dir.'/'.$file;
+        if (!is_file($path) || is_link($path)) continue;
+        $mark = Backup::getArtifactMark($file, $stem);
+        if ($mark === '') continue;
+        $out[$file] = ['size' => (int)filesize($path), 'mark' => $mark, 'mtime' => (int)filemtime($path)];
+    }
+    return $out;
+}
+
+# Returns size metrics for key storage folders and null when folders are unavailable; the backup figure counts published artifacts only, so staging never inflates it
 function getStorageDirectorySizes(): array {
-    $baksize = defined('BACKUP_DIR') ? getDirectorySizeBytes((string)BACKUP_DIR) : null;
+    $baksize = null;
+    if (defined('BACKUP_DIR') && is_dir((string)BACKUP_DIR) && is_readable((string)BACKUP_DIR)) {
+        $baksize = 0;
+        foreach (getBackupArtifacts() as $one) $baksize += $one['size'];
+    }
     $cachesz = defined('CACHE_DIR') ? getDirectorySizeBytes((string)CACHE_DIR) : null;
     $logsize = defined('LOGS_DIR') ? getDirectorySizeBytes((string)LOGS_DIR) : null;
     return [
@@ -927,35 +949,16 @@ function getStorageDirectorySizes(): array {
     ];
 }
 
-# Finds newest file modification timestamp inside a directory tree excluding symlinks
-function getLatestFileMTime(string $dir): int|null {
-    if (!is_dir($dir) || !is_readable($dir)) return null;
-    $latest = 0;
-    try {
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
-        );
-        foreach ($iterator as $item) {
-            if (!$item instanceof SplFileInfo) continue;
-            if (!$item->isFile() || $item->isLink()) continue;
-            $mtime = $item->getMTime();
-            if ($mtime > $latest) $latest = $mtime;
-        }
-    } catch (Throwable) {
-        return null;
-    }
-    return ($latest > 0) ? $latest : null;
-}
-
-# Returns formatted timestamp of latest backup file or N/A when no backups are found
+# Returns the timestamp of the last backup, taken from the last successful run and otherwise from the newest published artifact rather than from any file in the directory tree
 function getLastBackupRunLabel(): string {
     $state = getSchedulerState('dbbackup');
     $ts = (int)($state['last_success'] ?? 0);
     if ($ts > 0) return date('Y-m-d H:i:s', $ts);
-    $bakdir = defined('BACKUP_DIR') ? (string)BACKUP_DIR : BASE_DIR.'/storage/backup';
-    $mtime = getLatestFileMTime($bakdir);
-    if ($mtime !== null) return date('Y-m-d H:i:s', $mtime);
-    return 'N/A';
+    $marks = array_column(getBackupArtifacts(), 'mark');
+    if (!$marks) return 'N/A';
+    rsort($marks);
+    $when = date_create_from_format('Y-m-d_H-i-s', (string)$marks[0]);
+    return ($when !== false) ? $when->format('Y-m-d H:i:s') : 'N/A';
 }
 
 # Counts recent error log entries within a time window using bounded tail parsing

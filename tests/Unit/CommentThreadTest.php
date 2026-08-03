@@ -234,7 +234,7 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('$com->getCountDrift()', $page, 'The section does not look for drift at all');
         $this->assertStringContainsString('_COMMENTS_DRIFT', $page, 'The drift is repaired silently instead of being shown');
         $fix = $this->getSource('admin/modules/comments.php', 'recount');
-        $this->assertStringContainsString('checkSiteToken()', $fix, 'The repair route takes no token');
+        $this->assertStringContainsString("checkAdminPost('comments')", $fix, 'The repair route takes no scoped POST credential');
         $this->assertStringContainsString('$com->updateCountDrift($com->getCountDrift())', $fix);
         $tool = $this->getFile('tools/comment-recount.php');
         $this->assertStringContainsString('$com->getCountDrift($only)', $tool);
@@ -262,7 +262,7 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('cid IN (', $kernel, 'The last message is looked for in one category rather than in the whole branch');
         $this->assertStringContainsString('intval($pid) ?: intval($mid)', $kernel, 'A reply is answered as itself rather than as the topic it belongs to');
         $repair = $this->getSource('core/system.php', 'setForumLast');
-        $this->assertStringContainsString("\$had[\$id] === \$gone", $repair, 'The repair walks from the named category instead of matching whoever pointed at the removed topic');
+        $this->assertStringContainsString('$had[$id] === $gone', $repair, 'The repair walks from the named category instead of matching whoever pointed at the removed topic');
         $this->assertStringContainsString('getForumLast($sub)', $repair, 'The repair owns a second copy of the answer');
         $del = $this->getSource('modules/forum/index.php', 'delete');
         $this->assertStringContainsString('setForumLast((int)$catid, $pid ? 0 : (int)$id);', $del, 'Removing a message leaves the advertised topic to chance');

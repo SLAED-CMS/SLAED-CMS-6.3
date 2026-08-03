@@ -148,10 +148,14 @@ if (empty($go)) {
         Cache::setHeaders(false);
         switch($op) {
             case 'scheduler':
-            $name = getVar('req', 'job', 'var');
-            $type = getVar('req', 'trigger', 'var', 'manual');
-            $stok = getVar('req', 'token', 'text');
             header('Content-Type: application/json; charset=UTF-8');
+            $type = getVar('post', 'trigger', 'var', '');
+            if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || ($type !== 'pseudo' && $type !== 'cron')) {
+                echo json_encode(['status' => 'denied', 'message' => 'Access denied'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                exit;
+            }
+            $name = getVar('post', 'job', 'var');
+            $stok = getVar('post', 'token', 'text');
             if (!checkSchedulerAccess($type, $stok)) {
                 echo json_encode(['status' => 'denied', 'message' => 'Access denied'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                 exit;

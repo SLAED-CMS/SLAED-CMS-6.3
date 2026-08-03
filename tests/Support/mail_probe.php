@@ -6,20 +6,32 @@
 
 # CLI probe for the mail queue and drain tests: boots the real core like index.php, one scenario per process, with LOGS_DIR in scratch so nothing writes into the site logs
 # Everything it stores is marked with its own kind and removed again, and the report says whether the table was left as it was found
-error_reporting(0);
-ini_set('display_errors', '0');
-ini_set('log_errors', '0');
-define('MODULE_FILE', true);
-define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__, 2)));
-$scratch = str_replace('\\', '/', (string)($argv[2] ?? '')) ?: str_replace('\\', '/', sys_get_temp_dir()).'/slaed_mail_probe';
-define('COUNTER_DIR', $scratch);
-define('LOGS_DIR', $scratch.'/logs');
-if (!is_dir(LOGS_DIR)) mkdir(LOGS_DIR, 0777, true);
-$_SERVER['REQUEST_METHOD'] = 'GET';
-$_SERVER['REMOTE_ADDR'] = '127.0.0.1';
-$_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) probe';
-$_SERVER['HTTPS'] = 'on';
+$probework = (string)($argv[2] ?? '');
+require_once __DIR__.'/probe_boot.php';
 require_once BASE_DIR.'/core/system.php';
+
+# Every scenario runs against a disposable schema, because claiming a batch takes whatever is pending in the queue
+# On the live database that would mark mail the site is waiting to send, so the tables the mail path reads are copied here and dropped again at the end
+# users and groups are copied with their rows, since a campaign selects its audience from them and the expected counts come from real data
+$GLOBALS['mailschema'] = 'slaed_mailp_'.bin2hex(random_bytes(4));
+$site = (string)$conf['db']['name'];
+$seed = new PDO('mysql:host='.$conf['db']['host'].';charset=utf8mb4', $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$seed->exec('CREATE DATABASE `'.$GLOBALS['mailschema'].'` DEFAULT CHARACTER SET utf8mb4');
+foreach (['mail' => false, 'maildead' => false, 'newsletter' => false, 'users' => true, 'groups' => true] as $one => $withrows) {
+    $from = '`'.$site.'`.`'.PREFIX_DB.'_'.$one.'`';
+    $to = '`'.$GLOBALS['mailschema'].'`.`'.PREFIX_DB.'_'.$one.'`';
+    $seed->exec('CREATE TABLE '.$to.' LIKE '.$from);
+    if ($withrows) $seed->exec('INSERT INTO '.$to.' SELECT * FROM '.$from);
+}
+$db = $GLOBALS['db'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['mailschema']);
+register_shutdown_function(static function (): void {
+    global $conf;
+    try {
+        $gone = new PDO('mysql:host='.$conf['db']['host'].';charset=utf8mb4', $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $gone->exec('DROP DATABASE IF EXISTS `'.$GLOBALS['mailschema'].'`');
+    } catch (Throwable) {
+    }
+});
 
 # The kind every row this probe stores carries, so its own rows can be found and removed without touching anything the installation queued
 const PROBEKIND = 'probe';

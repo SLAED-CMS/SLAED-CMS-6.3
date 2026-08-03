@@ -81,12 +81,7 @@ function admins(): void {
                     'icon_name' => 'pencil',
                     'title' => _FULLEDIT,
                 ],
-                [
-                    'href' => $afile.'.php?name=admins&op=delete&aid='.$aid.'&token='.getSiteToken(),
-                    'icon_name' => 'trash',
-                    'title' => _ONDELETE,
-                    'confirm_text' => _DELETE.' "'.(string)$name.'"?',
-                ],
+                getTplPostAction(['name' => 'admins', 'op' => 'delete', 'aid' => $aid], 'trash', _ONDELETE, _DELETE.' "'.(string)$name.'"?'),
             ],
         ]);
         $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
@@ -307,7 +302,7 @@ function add(): void {
         'hidden' => [
             ['nameattr' => 'op', 'valueattr' => 'save'],
             ['nameattr' => 'aid', 'valueattr' => (string)$aid],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('admins')],
         ],
         'rows' => $rows,
         'submit_label' => _SAVE,
@@ -319,7 +314,7 @@ function add(): void {
 function save(): void {
     global $db, $afile, $conf, $stop, $admin, $prs, $mailer;
     $aid = getVar('post', 'aid', 'num', 0);
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('admins');
     $name = getVar('post', 'aname', 'name', '');
     $title = getVar('post', 'title', 'title', '');
     $url = getVar('post', 'url', 'url', 'https://');
@@ -393,11 +388,11 @@ function save(): void {
 
 function delete(): void {
     global $db, $afile, $admin;
-    $aid = getVar('req', 'aid', 'num', 0);
+    $aid = getVar('post', 'aid', 'num', 0);
     if (!$aid) {
         setRedirect($afile.'.php?name=admins');
     }
-    $warn = !checkSiteToken();
+    $warn = !checkAdminPost('admins');
     $text = _SUCCDELETE;
     if (!$warn && $aid) {
         if ($aid === (empty($admin[0]) ? 0 : intval(substr((string)$admin[0], 0, 11)))) {

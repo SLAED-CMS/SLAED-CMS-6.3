@@ -197,7 +197,7 @@
         fetch(table.getAttribute('data-sl-drag-url'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'ids=' + ids.join('-')
+            body: 'ids=' + ids.join('-') + '&token=' + encodeURIComponent(table.getAttribute('data-sl-drag-token') || '')
         }).then(function (reply) { return reply.text(); }).then(function (html) {
             var box = document.getElementById(target);
             if (!box) return;
