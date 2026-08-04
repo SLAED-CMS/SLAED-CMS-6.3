@@ -477,7 +477,7 @@ class Parser {
         static $fex = [];
         static $isz = [];
         $twd = getUploadRuleData($mod)['thumbwidth'] ?: ($conf['uploads']['width'] ?? '250');
-        $img = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif'];
+        $img = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
         foreach ($mm as $m) {
             $fn  = (string)$m[1];
             $al  = (string)$m[2];

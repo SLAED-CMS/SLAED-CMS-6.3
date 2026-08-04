@@ -9,8 +9,9 @@ use PHPUnit\Framework\TestCase;
  * Batch 2 of docs/UPLOAD-2026.md: the image pipeline behind uploads.
  * tests/Support/image_probe.php boots the real core with its writable directories in scratch, writes
  * every fixture with GD itself and calls getImageThumb() directly, because the admin panel cannot reach
- * the helper until batch 8 migrates local upload. The removed WBMP branch and the four runtime image
- * lists are asserted at source level, which is stated in each test that does so.
+ * the helper until batch 8 migrates local upload. The removed WBMP branch is asserted at source level,
+ * which is stated in the test that does so; the runtime image lists moved to UploadFormatTest with batch 9,
+ * where they are compared against the canonical set instead of against the intermediate state of batch 2.
  */
 final class ImageThumbTest extends TestCase
 {
@@ -117,19 +118,6 @@ final class ImageThumbTest extends TestCase
         foreach (['imagecreatefromwebp', 'imagecreatefromavif', 'imagewebp', 'imageavif'] as $call) {
             $this->assertStringContainsString("function_exists('".$call."')", $code, $call.' is called without a function_exists() guard');
         }
-    }
-
-    # Source level: the runtime lists that decide whether a file is decoded and dimension-checked at all now know the two new formats
-    #[Test]
-    public function theRuntimeImageListsAcceptWebpAndAvif(): void
-    {
-        $core = $this->getFile('core/system.php');
-        $pars = $this->getFile('core/classes/parser.php');
-        $this->assertStringContainsString("['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp']", $core, 'getImageBox() does not accept avif');
-        $this->assertStringContainsString("['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif']", $core, 'getEditorImageData() does not accept avif');
-        $this->assertStringContainsString("\$img = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif'];", $pars, 'filterAttach() does not thumbnail webp or avif');
-        $this->assertSame(1, preg_match('#data:image/\(\?:([a-z?|]+)\);base64#', $pars, $mark), 'The data-URI allowlist is no longer readable as one alternation');
-        $this->assertSame('png|jpe?g|gif|webp|avif', $mark[1], 'The data-URI allowlist must gain avif and must never gain bmp, which it has never held');
     }
 
     # The styling hook the batch 9 render templates depend on has to exist in both themes before those templates ship

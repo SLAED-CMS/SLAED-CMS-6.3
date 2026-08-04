@@ -412,7 +412,7 @@ function configsave(): void {
             'temp' => getVar('post', 'temp', 'text', ''),
             'path' => getVar('post', 'path', 'text', ''),
             'max_size' => getVar('post', 'maxsize', 'num', 1048576),
-            'typefile' => $typefile ? strtolower(strtr($typefile, $protect)) : 'zip,gzip,7z,rar,tar',
+            'typefile' => $typefile ? strtolower(strtr($typefile, $protect)) : 'zip,gz,7z,rar,tar',
             'linknum' => getVar('post', 'linknum', 'num', 10),
             'listnum' => getVar('post', 'listnum', 'num', 10),
             'num' => getVar('post', 'num', 'num', 25),

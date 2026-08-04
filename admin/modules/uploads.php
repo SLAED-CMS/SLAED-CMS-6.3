@@ -165,8 +165,24 @@ function uploads(): void {
 function uploadsave(): void {
     global $afile, $stop;
     $dir = getVar('post', 'dir', 'var');
+    $site = getVar('post', 'sitefile', 'raw', '');
+    $site = is_string($site) ? trim($site) : '';
     $warn = !checkAdminPost('uploads');
-    if (!$warn) upload(3, UPLOADS_DIR.'/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
+    if (!$warn) {
+        $rule = array_merge(getUploadRuleData('all'), ['maxquota' => 0]);
+        $sent = (int)($_FILES['userfile']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+        $res = ['ok' => false, 'error' => 'missing'];
+        if ($sent) $res = getUploadService()->addUploadedFile($_FILES['userfile'], $rule, $dir, $dir, null);
+        elseif ($site !== '') $res = getUploadService()->addRemoteFile($site, $rule, $dir, $dir, null);
+        if (!$res['ok']) $stop = match ((string)$res['error']) {
+            'size' => _ERROR_BIG,
+            'extension', 'mime', 'image', 'unsupported' => _ERROR_FILE,
+            'dimensions' => _ERROR_SIZE,
+            'exists' => _ERROR_EXIST,
+            'destination', 'write' => _ERROR_UP,
+            default => _ERROR_DOWN,
+        };
+    }
     if (!$warn && $stop) {
         uploads();
     } else {
@@ -225,8 +241,8 @@ function tplsave(): void {
     if (!$warn) {
         $cont = [];
         $typm = explode(',', $conf['uploads']['typ']);
-        $tmp = getVar('post', 'tmp', 'raw');
-        for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
+        $tmp = getVar('post', 'tmp[]');
+        for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i] ?? '';
         setConfigFile('filetype.php', $cont);
     }
     setRedirect($afile.'.php?name=uploads&op=tplconfig', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
@@ -242,6 +258,9 @@ function config(): void {
         'subtitle_html' => getUploadsSearch(),
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
+    $serv = getUploadService();
+    $typs = implode(', ', $serv::getSupportedTypes());
+    $flab = $tpl->getHtmlFrag('label-hint', ['label' => _FTYPE, 'hint' => $typs]);
     $directory = '';
     foreach (scandir(UPLOADS_DIR) as $file) {
         if (preg_match('/\./', $file)) continue;
@@ -251,9 +270,11 @@ function config(): void {
             'is_selected' => $conf['uploads']['dir'] == $file,
         ]);
     }
+    $tlab = $tpl->getHtmlFrag('label-hint', ['label' => _TPFORM, 'hint' => _TPFORMIN.' '.$typs]);
+    $tarea = $tpl->getHtmlFrag('textarea', ['name_attr' => 'ttyp', 'is_config' => true, 'is_required' => true, 'value_text' => $conf['uploads']['typ']]);
     $rows = [
         ['label_html' => _DIRDEF, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'dir', 'is_config' => true, 'options_html' => $directory])],
-        ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _TPFORM, 'hint' => _TPFORMIN]), 'field_html' => $tpl->getHtmlFrag('textarea', ['name_attr' => 'ttyp', 'is_config' => true, 'is_required' => true, 'value_text' => $conf['uploads']['typ']])],
+        ['label_html' => $tlab, 'field_html' => $tarea],
         ['label_html' => _TPWIDTH, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'twidth', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['width']])],
         ['label_html' => _TPHEIGHT, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'theight', 'is_config' => true, 'is_required' => true, 'value_attr' => (string)$conf['uploads']['height']])],
     ];
@@ -264,9 +285,10 @@ function config(): void {
     foreach ($mods as $val) {
         if ($val != '') {
             $rul = getUploadRuleData($val);
+            $tfld = $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['extensions']]);
             $mrows = [
                 ['label_html' => _MODUL, 'field_html' => getModuleName($val)],
-                ['label_html' => _FTYPE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'type[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['extensions']])],
+                ['label_html' => $flab, 'field_html' => $tfld],
                 ['label_html' => _FSIZEALL._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'allsize[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxquota']])],
                 ['label_html' => _FSIZE._FIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'size[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxbytes']])],
                 ['label_html' => _AWIDTH._AIN, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'width[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['maxwidth']])],
@@ -320,10 +342,22 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $warn = !checkAdminPost('uploads');
+    $drop = [];
     if (!$warn) {
+    $serv = getUploadService();
+    $known = $serv::getSupportedTypes();
+    $filter = static function (string $list, string $back) use ($known, &$drop): string {
+        $keep = [];
+        foreach (explode(',', $list) as $ext) {
+            if ($ext === '') continue;
+            if (in_array($ext, $known, true)) $keep[] = $ext;
+            elseif (!in_array($ext, $drop, true)) $drop[] = $ext;
+        }
+        return $keep ? implode(',', $keep) : $back;
+    };
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $ttyp = getVar('post', 'ttyp', 'text');
-    $xttyp = (!$ttyp) ? 'gif,jpg,jpeg,png,bmp' : strtolower(strtr($ttyp, $protect));
+    $xttyp = $filter($ttyp ? strtolower(strtr($ttyp, $protect)) : '', 'gif,jpg,jpeg,png');
     $twidth = getVar('post', 'twidth', 'num', 500);
     $xtwidth = (!$twidth) ? 500 : $twidth;
     $theight = getVar('post', 'theight', 'num', 500);
@@ -348,7 +382,7 @@ function configsave(): void {
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
-            $xtype = (empty($type[$i]) || !is_string($type[$i])) ? 'gif,jpg,jpeg,png,zip,rar' : strtolower(strtr($type[$i], $protect));
+            $xtype = $filter((empty($type[$i]) || !is_string($type[$i])) ? '' : strtolower(strtr($type[$i], $protect)), 'gif,jpg,jpeg,png,zip,rar');
             $xallsize = (!intval($allsize[$i] ?? 0)) ? 104857600 : intval($allsize[$i]);
             $xsize = (!intval($size[$i] ?? 0)) ? 1048576 : intval($size[$i]);
             $xwidth = (!intval($width[$i] ?? 0)) ? 500 : intval($width[$i]);
@@ -379,7 +413,8 @@ function configsave(): void {
     }
     setConfigFile('uploads.php', $cont);
     }
-    setRedirect($afile.'.php?name=uploads&op=config', false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    $done = $drop ? _SUCCSAVE.' '._ERROR_FILE.': '.implode(', ', $drop) : _SUCCSAVE;
+    setRedirect($afile.'.php?name=uploads&op=config', false, 302, $warn ? _TOKENMISS : $done, $warn);
 }
 
 function info(): void {

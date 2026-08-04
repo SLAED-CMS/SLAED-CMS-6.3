@@ -904,7 +904,7 @@ function getAdminUploadFiles(): void {
                 $filesize = filesize($path.$entry[1]);
                 list($imgwidth, $imgheight) = getimagesize($path.$entry[1]);
                 $type = strtolower(substr(strrchr($entry[1], '.'), 1));
-                $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
+                $ftype = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
                 $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type))
                     ? $tpl->getHtmlFrag('inline-badge', ['is_danger' => true, 'label' => $entry[1]])
                     : $entry[1];

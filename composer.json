@@ -14,6 +14,7 @@
         "php": ">=8.4",
         "ext-curl": "*",
         "ext-fileinfo": "*",
+        "ext-gd": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-json": "*"

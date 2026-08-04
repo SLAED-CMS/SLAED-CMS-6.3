@@ -22,10 +22,10 @@
         }
 
         document.addEventListener('click', function (event) {
-            var trigger = event.target.closest('a.screens, a.site-link');
+            var trigger = event.target.closest('a.sl-attach, a.site-link');
             if (!trigger) return;
             var href = trigger.getAttribute('href') || '';
-            if (!/\.(?:bmp|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
+            if (!/\.(?:avif|gif|jpe?g|png|webp|svg)(?:[?#].*)?$/i.test(href)) return;
             event.preventDefault();
             getLightbox();
             image.src = href;

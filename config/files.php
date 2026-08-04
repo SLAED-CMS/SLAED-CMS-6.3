@@ -32,7 +32,7 @@ return [
         'stream' => '0',
         'subcat' => '1',
         'temp' => 'uploads/files/temp',
-        'typefile' => 'zip,gzip,7z,rar,tar',
+        'typefile' => 'zip,gz,7z,rar,tar',
         'upload' => '1',
         'viewcat' => '0',
     ],

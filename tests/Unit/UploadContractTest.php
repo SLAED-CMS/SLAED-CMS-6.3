@@ -91,6 +91,8 @@ final class UploadContractTest extends TestCase
         foreach ($want as $key => $code) {
             $this->checkFailShape($data[$key], $code, 'The '.$key.' case');
         }
+        $this->assertTrue($data['brokenhdr']['header'], 'The broken image fixture no longer passes a header read, so it cannot prove the decode runs');
+        $this->assertFalse($data['brokenhdr']['decode'], 'The broken image fixture still decodes, so it is not broken at all');
         $this->assertSame([], $data['extension']['left'], 'A refused extension published a file');
         $this->assertSame(['stored.png'], $data['quota']['left'], 'The quota rejection changed the destination');
         $this->assertSame(['files-aaaaaaaaaa.png'], $data['exists']['left'], 'The retry exhaustion published a file');
@@ -330,6 +332,8 @@ final class UploadContractTest extends TestCase
         $this->assertSame('', $data['sixlit']['bind'], $note);
         $keys = ['private', 'loop', 'link', 'cgnat', 'zero', 'cast', 'docnet', 'mixed', 'ula', 'sixloop', 'mapped', 'gone', 'aliasbad'];
         $keys = array_merge($keys, ['aliasloop', 'aliasdeep', 'literalbad', 'sixliteral']);
+        # Every IPv6 range the IANA registry marks as not globally reachable, each one a prefix an earlier revision of the block list let through
+        $keys = array_merge($keys, ['sixbench', 'sixdoc', 'sixsid', 'sixorchid', 'sixdummy', 'sixdiscard']);
         foreach ($keys as $key) {
             $this->checkFailShape($data[$key], 'remote', 'The '.$key.' host');
             $this->assertSame(0, $data[$key]['hits'], 'The '.$key.' host was connected to');

@@ -217,11 +217,26 @@ function addProbeFile(string $ext, string $name = '', int $wid = 40, int $hei = 
     return ['name' => $file, 'tmp_name' => $path, 'size' => (int)filesize($path), 'error' => UPLOAD_ERR_OK];
 }
 
-# A real PNG cut off inside its header: libmagic still reports image/png, so the file passes the type policy and has to be refused by the decoder instead
+# A real PNG whose IHDR is complete and whose pixel data is gone: the cut sits at byte 33, the first byte after the header chunk, so it holds for any image size
+# libmagic still reports image/png and getimagesize() still answers the full size, so only a real decode refuses it; a shorter cut is caught by the header read and proves nothing
 function addProbeBroken(): array {
     $file = addProbeFile('png');
     if ($file === []) return [];
-    return addProbeRaw('broken.png', substr((string)file_get_contents($file['tmp_name']), 0, 24));
+    return addProbeRaw('broken.png', substr((string)file_get_contents($file['tmp_name']), 0, 33));
+}
+
+# Reports whether the broken fixture still passes a header-only read, which is the property that makes it a regression guard rather than a duplicate of the missing-file case
+function getProbeBrokenHeader(): array {
+    $file = addProbeBroken();
+    if ($file === []) return ['header' => false, 'decode' => false];
+    set_error_handler(static fn(): bool => true);
+    try {
+        $info = getimagesize($file['tmp_name']);
+        $img = imagecreatefrompng($file['tmp_name']);
+    } finally {
+        restore_error_handler();
+    }
+    return ['header' => is_array($info) && (int)($info[0] ?? 0) > 0, 'decode' => $img !== false];
 }
 
 # Write one source file with the given raw body, for the cases where the content must not match the name
@@ -312,6 +327,7 @@ function getProbeCodes(): array {
     $out['unsupported'] = addProbeRun($upl, addProbeFile('bmp'), getProbeRule(['extensions' => 'bmp,png']));
     $out['mime'] = addProbeRun($upl, addProbeRaw('claim.png', (string)file_get_contents(addProbeFile('gz')['tmp_name'])), getProbeRule());
     $out['image'] = addProbeRun($upl, addProbeBroken(), getProbeRule());
+    $out['brokenhdr'] = getProbeBrokenHeader();
     $out['dimensions'] = addProbeRun($upl, addProbeFile('png', '', 200, 100), getProbeRule(['maxwidth' => 100, 'maxheight' => 100]));
     $out['quota'] = getProbeQuotaRun();
     $out['destination'] = addProbeRun($upl, addProbeFile('png'), getProbeRule(), 'nosuchdir');
@@ -664,6 +680,12 @@ function getProbeRemoteDns(): array {
         'sixloop' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '::1']]], $site],
         'mapped' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '::ffff:127.0.0.1']]], $site],
         'sixpub' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '2606:4700::1111']]], $site],
+        'sixbench' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '2001:2::1']]], $site],
+        'sixdoc' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '3fff::1']]], $site],
+        'sixsid' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '5f00::1']]], $site],
+        'sixorchid' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '2001:20::1']]], $site],
+        'sixdummy' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '100:0:0:1::1']]], $site],
+        'sixdiscard' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '100::1']]], $site],
         'gone' => [['other.example.net' => [['type' => 'A', 'ip' => '93.184.216.34']]], $site],
         'pair' => [['files.example.net' => [['type' => 'A', 'ip' => '93.184.216.34'], ['type' => 'A', 'ip' => '104.18.32.7']]], $site],
         'alias' => [$alias + ['edge.example.org' => [['type' => 'A', 'ip' => '104.18.32.7']]], $site],
@@ -750,7 +772,7 @@ function getProbeRemoteType(): array {
         'unsupported' => [['reply' => $good], 'https://files.example.net/photo.bmp', getProbeRule(['extensions' => 'bmp,png'])],
         'notlisted' => [['reply' => $good], $site, getProbeRule(['extensions' => 'gif'])],
         'mime' => [['reply' => $arch], $site, getProbeRule()],
-        'broken' => [['reply' => [['code' => 200, 'body' => substr($png, 0, 24)]]], $site, getProbeRule()],
+        'broken' => [['reply' => [['code' => 200, 'body' => substr($png, 0, 33)]]], $site, getProbeRule()],
         'dimensions' => [['reply' => $wide], $site, getProbeRule(['maxwidth' => 100, 'maxheight' => 100])],
         'archive' => [['reply' => $arch], 'https://files.example.net/backup.gz', getProbeRule()],
         'destination' => [['reply' => $good, 'dir' => 'nosuchdir'], $site, getProbeRule()],
@@ -773,10 +795,66 @@ function getProbeRemoteOpts(): array {
     return ['ok' => (bool)$res['ok'], 'error' => $res['error'], 'hits' => $res['hits']];
 }
 
+# The twelve named fields of one upload configuration string, in the order the resolver reads them and the serializer writes them back
+function getProbeRuleKeys(): array {
+    return ['extensions', 'maxquota', 'maxbytes', 'maxwidth', 'maxheight', 'maxfiles', 'thumbwidth', 'adminlist', 'moderfiles', 'userfiles', 'userupload', 'guestupload'];
+}
+
+# The resolver and the serializer against the shipped configuration: no double can answer this, because the whole point is that the real records survive the round trip
+# config/uploads.php also holds the scalars typ, dir, width and height, which are not module records and are excluded by the pipe that every record carries
+function getProbeResolver(): array {
+    global $conf;
+    $out = ['records' => [], 'keys' => getProbeRuleKeys()];
+    foreach ($conf['uploads'] as $mod => $val) {
+        if (!is_string($val) || !str_contains($val, '|')) continue;
+        $rule = getUploadRuleData((string)$mod);
+        $out['records'][$mod] = [
+            'ok' => (bool)$rule['ok'],
+            'same' => setUploadRuleData($rule) === $val,
+            'missing' => array_values(array_diff(getProbeRuleKeys(), array_keys($rule))),
+            'fields' => count(explode('|', $val)),
+        ];
+    }
+    $none = getUploadRuleData('nosuchmodule');
+    $out['unknown'] = ['ok' => (bool)$none['ok'], 'ext' => (string)$none['extensions'], 'keys' => count(array_intersect(getProbeRuleKeys(), array_keys($none)))];
+    $out['allext'] = (string)getUploadRuleData('all')['extensions'];
+    $conf['uploads']['probeshort'] = 'gif';
+    $short = getUploadRuleData('probeshort');
+    $out['short'] = ['ok' => (bool)$short['ok'], 'ext' => (string)$short['extensions'], 'quota' => (int)$short['maxquota'], 'guest' => (int)$short['guestupload']];
+    $conf['uploads']['probeempty'] = '';
+    $out['empty'] = ['ok' => (bool)getUploadRuleData('probeempty')['ok']];
+    return $out;
+}
+
+# The accessor is the only place that names the upload root and the lock directory, so both are read back off the instance it builds
+# The decoder list travels with it, because the fail closed branch of getDecodeError() is only unreachable while this build has every one of them
+function getProbeService(): array {
+    $one = getUploadService();
+    $two = getUploadService();
+    $ref = new ReflectionClass(Upload::class);
+    $root = $ref->getProperty('root');
+    $lock = $ref->getProperty('lockdir');
+    $gone = [];
+    foreach (['imagecreatefromgif', 'imagecreatefromjpeg', 'imagecreatefrompng', 'imagecreatefromwebp', 'imagecreatefromavif'] as $call) {
+        if (!function_exists($call)) $gone[] = $call;
+    }
+    return [
+        'nodecoder' => $gone,
+        'same' => $one === $two,
+        'root' => (string)$root->getValue($one),
+        'lockdir' => (string)$lock->getValue($one),
+        'wantroot' => rtrim(str_replace('\\', '/', UPLOADS_DIR), '/'),
+        'wantlock' => rtrim(str_replace('\\', '/', LOGS_DIR.'/uploads'), '/'),
+        'types' => Upload::getSupportedTypes(),
+    ];
+}
+
 $mode = (string)($argv[1] ?? '');
 $out = [];
 try {
     $out = match ($mode) {
+        'resolver' => getProbeResolver(),
+        'service' => getProbeService(),
         'child' => getProbeChild((int)($argv[3] ?? 0)),
         'race' => getProbeRace(),
         'types' => getProbeTypes(),

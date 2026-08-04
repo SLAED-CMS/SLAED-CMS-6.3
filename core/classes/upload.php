@@ -21,10 +21,13 @@ class Upload {
     private const KEEP = ['index.html', '.htaccess'];
     private const BLOCK = ['phtml', 'js', 'htm', 'html', 'cgi', 'pl', 'perl', 'asp', 'swf'];
     private const IMAGES = ['avif', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
+    # Every network the IANA special-purpose registries mark as not globally reachable, plus the ranges that are reachable but never a legitimate fetch target
+    # 2001::/23 is the whole IETF Protocol Assignments block rather than Teredo alone, because benchmarking, AMT, ORCHIDv2 and the drone block all sit inside it
     private const BLOCKNET = [
         '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.0.0.0/24', '192.0.2.0/24',
         '192.88.99.0/24', '192.168.0.0/16', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24', '224.0.0.0/4', '240.0.0.0/4',
-        '::/128', '::1/128', '64:ff9b::/96', '100::/64', '2001::/32', '2001:db8::/32', '2002::/16', 'fc00::/7', 'fe80::/10', 'ff00::/8',
+        '::/128', '::1/128', '64:ff9b::/96', '64:ff9b:1::/48', '100::/64', '100:0:0:1::/64', '2001::/23', '2001:db8::/32',
+        '2002::/16', '3fff::/20', '5f00::/16', 'fc00::/7', 'fe80::/10', 'ff00::/8',
     ];
     private const TYPES = [
         'gif' => ['image/gif'],
@@ -129,7 +132,7 @@ class Upload {
         $path = str_replace('\\', '/', $path);
         $file = basename($path);
         $rel = $this->getSafeDir(dirname($path));
-        if ($rel === '' || !preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]+(?:-[0-9]+)?\.[a-zA-Z0-9]+$#', $file)) return false;
+        if ($rel === '' || !preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{'.self::SALTLEN.'}(?:-[0-9]+)?\.[a-zA-Z0-9]+$#', $file)) return false;
         $canon = $this->getDestPath($rel);
         if ($canon === '') return false;
         $full = $canon.'/'.$file;
@@ -247,6 +250,7 @@ class Upload {
     }
 
     # Decodes an image and checks it against the configured bounds; a non-image carries no dimensions at all, which is what keeps a successful result honest about what it published
+    # The dimension check runs before the decode on purpose: it is read from the header, so the configured bounds cap what the decoder is ever asked to allocate
     private function getImageBounds(string $path, string $ext, array $rule): array {
         if (!in_array($ext, self::IMAGES, true)) return ['error' => '', 'width' => null, 'height' => null];
         $info = $this->getImageInfo($path);
@@ -254,10 +258,36 @@ class Upload {
         $wid = (int)($rule['maxwidth'] ?? 0);
         $hei = (int)($rule['maxheight'] ?? 0);
         $over = ($wid > 0 && $info[0] > $wid) || ($hei > 0 && $info[1] > $hei);
-        return ['error' => $over ? 'dimensions' : '', 'width' => $info[0], 'height' => $info[1]];
+        if ($over) return ['error' => 'dimensions', 'width' => $info[0], 'height' => $info[1]];
+        $code = $this->getDecodeError($path, $info[2]);
+        if ($code !== '') return ['error' => $code, 'width' => $info[0], 'height' => $info[1]];
+        return ['error' => '', 'width' => $info[0], 'height' => $info[1]];
     }
 
-    # Reads the pixel size of one file; a file that is not a decodable image is a routine rejection rather than a defect, so its warning is swallowed instead of suppressed with @
+    # Proves the pixel data really decodes, because getimagesize() reads the header only and answers a full size for a file whose image data is truncated or corrupt
+    # Without a decoder the invariant cannot be satisfied, so the answer is unsupported rather than a silent pass; ext-gd is a composer require for that reason
+    private function getDecodeError(string $path, int $type): string {
+        $call = match ($type) {
+            IMAGETYPE_GIF => 'imagecreatefromgif',
+            IMAGETYPE_JPEG => 'imagecreatefromjpeg',
+            IMAGETYPE_PNG => 'imagecreatefrompng',
+            IMAGETYPE_WEBP => 'imagecreatefromwebp',
+            IMAGETYPE_AVIF => 'imagecreatefromavif',
+            default => '',
+        };
+        if ($call === '' || !function_exists($call)) return 'unsupported';
+        set_error_handler(static fn(): bool => true);
+        try {
+            $img = $call($path);
+        } finally {
+            restore_error_handler();
+        }
+        if ($img === false) return 'image';
+        unset($img);
+        return '';
+    }
+
+    # Reads the pixel size and the type marker of one file; a decode failure is a routine rejection, so the warning is swallowed instead of suppressed with @
     private function getImageInfo(string $path): array {
         set_error_handler(static fn(): bool => true);
         try {
@@ -266,7 +296,7 @@ class Upload {
             restore_error_handler();
         }
         if (!is_array($info) || (int)($info[0] ?? 0) < 1 || (int)($info[1] ?? 0) < 1) return [];
-        return [(int)$info[0], (int)$info[1]];
+        return [(int)$info[0], (int)$info[1], (int)($info[2] ?? 0)];
     }
 
     # Normalizes one submitted batch into a list of single-file shapes, whatever shape the browser sent; a nested or incomplete entry stays in the list and fails on its own
@@ -352,7 +382,8 @@ class Upload {
                     $over = true;
                     return 0;
                 }
-                if (fwrite($hand, $chunk) === false) {
+                $put = fwrite($hand, $chunk);
+                if ($put === false || $put < $len) {
                     $bad = true;
                     return 0;
                 }

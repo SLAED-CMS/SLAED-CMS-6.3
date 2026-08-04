@@ -1,13 +1,500 @@
 # Upload
 
-Status: approved, not started. Last review: 2026-08-03. Every open decision is
-resolved in this document; implement it as written and raise a question only if
-the working tree contradicts it.
+Status: implemented. Last review: 2026-08-04. All ten batches are done and the
+audit that followed batch 10 is closed. Every open decision is resolved in this
+document; implement it as written and raise a question only if the working tree
+contradicts it.
 
 Work through `Execution batches`, one batch per session, each ending with the
 self-check defined there.
 
-Last completed batch: 7 — the file modules. `modules/files/index.php` `send()`
+Last completed batch: 10 — final sweep, reopened by an audit and closed again.
+The migration is finished. The sweep itself changed no code; the audit that
+followed it did, and `The audit that reopened batch 10` below is the part to read
+first. The route walk that produced the evidence wrote configuration files,
+published files and database rows on the way, and restored every one of them.
+
+What batch 10 actually proved, and where it disagrees with the plan's
+expectations:
+
+- the dependency sweep is clean. No deleted symbol — `upload()`, `check_file()`,
+  `check_size()`, `create_img_gd()`, `getEditorUploadData()` — appears anywhere
+  outside `docs/` and the two tests that assert their absence. `rg "explode\('\|'"`
+  returns 54 hits across 21 files and exactly one of them,
+  `core/system.php:4227`, is the upload resolver; the rest are ratings, fields,
+  warnings and statistics strings. Every
+  one of the nine upload constants is still used outside `lang/`, so
+  `.rules/constants.md` needs nothing.
+- the withdrawn-format sweep over `core/`, `modules/`, `admin/modules/`,
+  `plugins/`, `templates/`, `config/` and `index.php` returns only the
+  references batch 9 named as deliberate: the CSS data-URI list at
+  `core/system.php:2659`, the `gzip` compression alias at `core/system.php:2175`,
+  the `swf` block-list entry and the two MIME strings in
+  `core/classes/upload.php`, the free-text labels of `config/media.php`, the
+  `uploads/screens` directory read in `modules/main/index.php`, a `GZip` capability
+  label in the monitor partial, and the bundled editor and icon vendors. The
+  `screens` class itself is gone from every stylesheet, template and script.
+- the automated gates all pass on this stand: `php -l` on the seventeen files of
+  the migration, PHPStan `No errors`, PHP-CS-Fixer `check` with an empty file
+  list, and PHPUnit at 624 tests, 6454 assertions, 6 skipped.
+  `tests/UnusedCodeAuditTest.php` reports one unused function, `getTranslit`,
+  which predates this plan, and six unused constants, none of them upload
+  related.
+- every row of the route matrix was walked against the running stand through
+  real HTTP, with the real admin session, a real site user and a real guest. The
+  driver lives in the session scratchpad, derives its tokens the way
+  `core/security.php` derives them, and compares the filesystem and the database
+  before and after every request. All thirteen rows behave as specified; the
+  detail worth keeping is below.
+- the two negatives earlier batches left open are now closed. **The failed
+  captcha on the frontend files write** was the one batch 7 could not run:
+  `Captcha::isActive()` returns false for an authenticated visitor
+  (`core/classes/captcha.php:301`), so the negative only exists for a guest
+  submission — a logged-in user with the flag raised publishes normally, which is
+  correct and is why the first attempt looked like a failure. Run as a guest with
+  `captcha.active` briefly at `1`, the save published nothing and wrote no row.
+  `config/security.php` was restored byte for byte and `config/local.php` deleted
+  and rebuilt on both sides of that test.
+- **compensation was forced on all three adapters**, not argued: a
+  `BEFORE UPDATE` trigger on the users table and a `BEFORE INSERT` trigger on the
+  files table, each signalling `45000`, left no file and no row on the avatar,
+  frontend and admin routes; the same triggers with `DO SLEEP(3)` plus a watcher
+  process removing the published file mid-request drove the
+  compensation-failure branch on all three, and `error_file.log` grew by exactly
+  three lines carrying the root-relative stranded path and no file content. The
+  triggers were dropped afterwards and none survives.
+- the editor rows: a moderator published with no owner suffix and listed all
+  three files of the directory, a site user published with `-7885` and listed
+  only its own two, a batch of eleven was refused with
+  `Количество одновременно загружаемых файлов: 10` and transferred nothing, a
+  mixed batch published the image and reported the text file, a tampered token
+  published nothing, and a guest was refused while `guestupload` was `0`. With
+  that flag briefly raised on the `news` record the guest published as `-0` and
+  still received an empty list with its own file sitting in the directory — the
+  documented disclosure fix, proven from both sides. `config/uploads.php` came
+  back byte for byte.
+- the `go=4` entry demands the **global** token in the query
+  (`index.php:104-109`), so the read and unknown-operation rows are driven with
+  the `ajax` token rather than the `upload` one; the scoped token is refused
+  there before the dispatcher is reached. Both unknown-operation cases, with a
+  configured and an unconfigured `mod`, answered HTTP 400 and
+  `{"ok":false,"error":"Ошибка"}` with no PHP warning, and an editor write to
+  `screens` answered `Upload configuration is missing` and wrote nothing — the
+  `all` record was not consulted.
+- the avatar rows: a GET preset, a POST preset without a token and a guest POST
+  all changed nothing, the grid renders zero `op=saveavatar` links, a preset
+  click stored `presets/01.svg`, a `txt` and a 200×200 image were refused, and a
+  481 KB image was refused as well. That last one needs a note: the avatar limit
+  is 51200 bytes at 100×100 px, and an uncompressed PNG of exactly 100×100 tops
+  out near 30 KB, so the byte limit cannot be exercised with an in-bounds image
+  at all — the oversized fixture is necessarily over both limits.
+- which of two limits a doubly-oversized file trips is a real question, and the
+  page-rendering routes cannot answer it: `uploadsave()` and `saveavatar()` fall
+  back to their own tab, whose first alert is unrelated help text. The editor
+  route answers in JSON, so it was used to name the codes: a 1.47 MB 700×700 PNG
+  against the `news` record — over `maxbytes` 1048576 **and** over 500×500 —
+  answered `_ERROR_BIG`, a 900×900 PNG well under the byte limit answered
+  `_ERROR_SIZE`, and a `txt` answered `_ERROR_FILE`. The byte check therefore
+  runs before the image decode, matching the order in
+  `core/classes/upload.php:211` against `:253`. The two over-limit refusals on
+  the admin route below were observed as refusals — nothing published — not read
+  as messages.
+- the file rows: preview, empty title, tampered token and a rejected `txt`
+  published nothing and wrote no row on both routes, a rejected local file did
+  not fall back to the typed URL, a typed URL with no file stored the URL and
+  wrote no file, an admin upload with `uploads/files/temp` selected landed there
+  in one step with nothing written to the default directory, a delete with a file
+  attached published nothing, and a relocation with no new upload still moved the
+  stored file.
+- the admin upload rows: a png published into `screens`, a directory with no
+  record of its own; a `txt`, a file whose bytes are not an image under a `.png`
+  name, a 2000×1800 image, a tampered token and an empty submission all published
+  nothing; a good file plus a good URL published exactly one file, the local one;
+  and a rejected local file plus a good URL published nothing. Remote:
+  `127.0.0.1`, `169.254.169.254`, `10.0.0.5`, `[::1]`, an `ftp://` URL and a
+  `.txt` URL were all refused, a public PNG published at its exact byte size
+  through real DNS and a real pinned connection, and the same file published
+  again through a real `http` to `https` redirect — `raw.githubusercontent.com`
+  answers the `http` URL with a 301, verified separately, so a hop really was
+  followed. Lowering the `all` record's field 2 to `1024` through the
+  Preferences tab made both the local and the remote transfer publish nothing,
+  and restoring the record byte for byte brought both back.
+- two negatives could **not** be re-run on the route and are named rather than
+  glossed over: a redirect to a private target needs a public redirector, and
+  `httpbin.org`, `httpbingo.org` and `httpbin.io` all answer 503 or 403 today; and
+  a connect timeout needs a public host that stalls. Both are covered by the
+  batch 4 contract tests through the scripted seams, and the address policy
+  itself is proven on the route by the six refusals above. Remote MIME mismatch
+  was proven on the local admin route instead, which is the same check: the plan
+  specifies that from the moment a remote body has arrived, the extension, MIME,
+  image, quota, naming and rename steps are literally the local ones.
+- both settings tabs round-trip byte for byte, an unsupported extension
+  (`docx`, `exe`) is dropped on save and reported on the page while the stored
+  `typ` stays canonical, a tampered token changes neither configuration file, the
+  Templates tab holds 21 entries with no `swf` and with `7z` carrying the archive
+  template, and the Docs tab renders with no PHP warning.
+- the logs after the walk: `error_php.log` did not grow — its last entry is still
+  the batch 8 warning run from 08:48 — `error_site.log` did not grow either, every
+  new `error_sql.log` line is one of the eight `45000: batch10` signals the
+  compensation tests raised on purpose, `error_file.log` grew by the three
+  stranded-path lines described above, and `storage/logs/uploads` holds five lock
+  files and nothing else. Every published file, every seeded row and the borrowed
+  avatar value were removed afterwards; `_files` is back at its original maximum
+  id.
+
+### The audit that reopened batch 10
+
+The first pass of batch 10 reported the sweep clean and the matrix walked. A
+review afterwards found real defects that the walk had not been shaped to catch,
+so the batch was reopened and closed again. What follows is what was wrong, what
+was changed, and what was contested and left alone. Read it before trusting the
+paragraph above: three of its claims were true only because nothing tested them.
+
+Fixed here:
+
+- **A truncated image published successfully.** `getImageBounds()` called
+  `getimagesize()` and nothing else, and `getimagesize()` parses the header. A
+  91 byte 10x10 PNG cut to 33 bytes — the first byte after a complete IHDR —
+  still answered `10x10`, still reported `image/png` to libmagic, and was
+  published with `ok=true` through the real editor route, while
+  `imagecreatefrompng()` refused it. That is `Mandatory invariants` broken in
+  its own words: images must **decode** successfully. `checkImageDecode()` now
+  runs a real decoder chosen from the `IMAGETYPE_*` marker. Two properties of
+  its placement matter: it runs **after** the dimension check, so the configured
+  bounds cap what the decoder is ever asked to allocate, and a GD build without a
+  decoder for the type keeps the header verdict rather than refusing a format
+  every other stage accepts. Proven on the route afterwards: the truncated file
+  answers `_ERROR_FILE`, and png, gif, jpg, webp and avif all still publish.
+- **The fixture could not have caught it.** `addProbeBroken()` cut the PNG to 24
+  bytes, where `getimagesize()` already fails on its own — the case proved the
+  header read, not the decode. It cuts at 33 now, and the probe additionally
+  reports whether the fixture still passes a header read and still fails a
+  decode. Both are asserted, so a future cut that silently stops being a
+  regression guard fails the test instead of passing it quietly.
+- **A short write counted as a whole chunk.** The remote write callback tested
+  `fwrite() === false` only. A partial write — a full disk, a quota — returns the
+  byte count, not `false`, and the callback then added the full chunk length to
+  its counter and told cURL everything was accepted, publishing a truncated file
+  with `ok=true`. It compares the written count to the chunk length now.
+- **The IPv6 address policy was not fail closed.** `2001:2::1` (benchmarking),
+  `3fff::1` and `5f00::1` (documentation and SRv6 SIDs, both assigned after the
+  list was written) and `2001:20::1` (ORCHIDv2) matched no blocked CIDR, verified
+  by running each address against every entry of the shipped list. `2001::/32`
+  covered Teredo alone; it is `2001::/23`, the whole IETF Protocol Assignments
+  block, so benchmarking, AMT, ORCHIDv2 and the drone block all fall inside one
+  entry. `64:ff9b:1::/48`, `3fff::/20` and `5f00::/16` were added. `2001:db8::/32`
+  stays: it sits above `2001:01ff::` and is therefore **not** inside the new /23.
+- **The canonical grammar was not enforced as written.** Both the
+  `deleteStoredFile()` guard and the editor ownership parser matched
+  `[a-zA-Z0-9]+` where the grammar says a fixed length, so `legacy-a.png` and
+  even `photo-1.jpg` read as class-owned. Both now require exactly `SALTLEN`
+  characters. The class builds the pattern from its own constant; the editor
+  parser repeats the literal `10` with a comment naming the source, because
+  `getEditorFileJson()` does not load the class and reaching for the service to
+  read one constant would be worse than the repetition.
+- **Half of the automated acceptance did not exist.** `UploadIntegrationTest.php`
+  was named in `Automated checks` and never written, and no test touched
+  `getUploadRuleData()` or `setUploadRuleData()` at all — the resolver round-trip
+  the plan requires was carried entirely by a manual save. It exists now: two new
+  probe scenarios drive the resolver and the service accessor against the real
+  shipped configuration, and the rest of the class holds the five adapters to the
+  ordering rule — token before the class, only a save reaching it, every row write
+  checked, compensated and logged, the relocation branch guarded by `!$sent`, and
+  no generic upload left in the `go=4` entry. All fourteen module records round
+  trip byte for byte through the real resolver.
+- **The route walk lived in a session scratchpad**, so its results could not be
+  reproduced from the repository. It is `tools/upload-route-check.php` now: it
+  takes the base URL and two credential pairs as arguments, keeps no secret of
+  its own, walks the read, publication, settings and compensation rows, compares
+  the upload tree and the database around every scenario, removes what it created
+  and exits non-zero on the first failed row. Its own first run failed two rows
+  and both were the tool's fault, which is worth recording: a guest jar warmed on
+  the home page gets no session cookie at all, because a cached home page is
+  answered before the session starts, and a guest only reaches the editor listing
+  where the record enables guest upload — where it does not, `Access denied` is
+  the correct answer and an empty list is the wrong assertion.
+- **`composer.lock` was stale** after `ext-curl` and `ext-fileinfo` joined
+  `require`; `composer validate --no-check-publish` said so. Refreshed with
+  `composer update --lock`. Note for the next reader: `composer.lock` is
+  gitignored in this project, so the fix is local by construction and will never
+  appear in a diff — run `composer validate` rather than looking for it.
+
+Contested and deliberately left alone:
+
+- **Zero limits not surviving the settings round trip** is not a contract
+  violation. `Admin configuration surface` states it outright: the form replaces
+  an empty numeric input with its default, so a limit cannot be stored as `0`
+  through the panel, while the rule contract still treats `0` as disabled because
+  a record can also reach the resolver from a hand-edited file. Two levels, on
+  purpose. The byte-for-byte round trip is unaffected and was re-proven over 461
+  fields. Raised twice and dismissed twice; making `0` storable would hand an
+  operator a way to switch the per-file size limit off from the panel, which is a
+  product decision and not a defect report.
+- **`setContentActive()` running before the checked `UPDATE`** in the admin files
+  handler is real and is already recorded by batch 7 as older than the migration
+  and outside its bullets. Raised twice as well, and deliberately left outside
+  this batch: the call changes content status and user points through several
+  unchecked queries of its own, so moving it is a change to business logic this
+  plan never touched. It belongs in its own task, with its own verification of
+  the points ledger. The fair half of the criticism was that batch 10 never
+  exercised the `fid != 0` branch — the route driver walks it now, including the
+  relocation and the delete that follow it.
+- **The three 181 character lines in `config/filetype.php`** were accepted in
+  batch 9 and are no longer: see the second audit below.
+- **Brackets around an IPv6 address in `CURLOPT_RESOLVE` are not required.**
+  Tested rather than argued, on the libcurl 8.21.0 build of this stand:
+  `--resolve example.com:443:2001:db8::1` and the bracketed form both exit 7,
+  a connect failure, while a malformed address exits 49. The entry parses either
+  way, so line 315 is unchanged.
+
+### The second audit
+
+A review of those fixes found six more, and they were closed in the same batch.
+Two of them are the first audit's own leftovers, which is worth saying plainly:
+a fix that closes most of a hole is not a closed hole.
+
+- **The address policy was still not complete.** `100::/64` is the Discard-Only
+  prefix; `100:0:0:1::/64`, the Dummy IPv6 Prefix, is the neighbouring block and
+  matched nothing. Added. Six IPv6 scenarios now drive the resolver seam with
+  `2001:2::1`, `3fff::1`, `5f00::1`, `2001:20::1`, `100:0:0:1::1` and `100::1`,
+  so every range the previous revisions let through has a test of its own.
+- **The decode check was fail open.** A GD build without a decoder answered
+  `true`, and `ext-gd` was not a `require` at all, so on such a build no image
+  was ever decoded and the invariant held only by luck. `ext-gd` is a require
+  now, and a missing decoder answers `unsupported` — the plan's own rule for a
+  missing runtime capability. The branch is unreachable on a build that has all
+  five decoders, so the test holds it at the source and additionally asserts that
+  this build really has them; if it ever does not, the assertion says so instead
+  of quietly skipping.
+- **The route driver covered less than it claimed.** It now walks the avatar
+  rows — the preset grid rendering no GET link, a GET preset, a preset without a
+  token, a guest preset, an inadmissible upload, a preset click, a real upload
+  and a failed profile write — plus a positive remote fetch, an update of an
+  existing row, a relocation with no upload, a delete with a file attached, the
+  admin compensation branch and the guest captcha negative. 47 rows, and a row
+  whose prerequisite is missing reports as **not run** rather than as passed.
+- **The route driver handled credentials badly.** Passwords moved from the
+  argument list, which every process on the host can read, into
+  `SLAED_ADMIN_NAME`, `SLAED_ADMIN_PASS`, `SLAED_USER_NAME` and
+  `SLAED_USER_PASS`. TLS verification is on by default and is disabled only by
+  `SLAED_ROUTE_INSECURE=1`, for a stand with a self signed certificate.
+  `SLAED_REMOTE_URL` names the public fixture of the positive remote row.
+- **The editor listing warned on a corrupt stored file.** `getEditorImageData()`
+  lost its `@` and gained nothing in its place, so `getimagesize()` on a file
+  that no longer decodes reached the log. It uses the same `set_error_handler()`
+  guard the class uses.
+- **Twelve lines of this work passed the 180 character limit.** Nine were
+  shortened or hoisted into a variable. The other three are the image templates
+  of `config/filetype.php`, and batch 9's decision to accept a one character
+  overage for the sake of the round trip is withdrawn: `.rules/global.md` is
+  strict and outranks it. `setConfigFile()` — and the installer's own copy in
+  `setup/index.php`, or a fresh install would write files the panel would not —
+  now emits a value whose line would pass the limit as a concatenation across
+  lines, split on raw characters and escaped per chunk. The split is
+  deterministic, so the round trip survives: proven on the route, where an
+  unchanged Templates save reproduces the file byte for byte and no line passes
+  the limit.
+
+Two things about that last one deserve recording, because both cost time.
+
+The first attempt did not wrap at all, and it looked exactly like a stale
+opcache: the panel kept writing the old format while the code plainly said
+otherwise. It was arithmetic. The budget for the first line was
+`180 - head - 2`, which is the true limit for a line that carries no comma — but
+a 181 character line is over by exactly one, so the whole value still fitted in
+one chunk and the wrap reproduced the unwrapped line. The budget is
+`180 - head - 3` on the first line as well: entering the wrap already proves the
+value cannot fit with its comma, so that budget guarantees a second chunk.
+Before blaming the cache, prove it — a file named with a three character salt,
+listed through the editor route, answers which `core/system.php` the web SAPI is
+running, and it answered "the current one".
+
+The second: the writer is shared. Nine other configuration files hold lines past
+the limit today, and each will be rewritten in the wrapped format the first time
+it is saved from its own settings tab. That is a repair rather than a
+regression, but it is a diff nobody asked for, so it happens on save and not in
+this change. The behavioral round trip is proven by
+`tools/upload-route-check.php`, not by a unit test: a unit test may not write
+into the configuration directory of a running site, and an earlier draft of this
+work that did exactly that was deleted rather than shipped.
+
+Precondition note for whoever reads this next: batch 10 ran against a tree that
+still carried batches 8 and 9 uncommitted, against this document's own advice.
+That was tolerable only because the sweep changes no code — the batch's `git diff`
+was compared against a snapshot taken before it started and came back identical,
+so nothing of batch 10 is hiding inside the batch 8 and 9 diff. Get the tree
+committed.
+
+Decisions of batch 9, still true. The 2026 format set is live:
+`config/uploads.php` carries the canonical 21 in `typ` and in the `all` record's
+field 0, every other module record carries exactly
+`gif,jpg,jpeg,png,webp,avif,zip,rar`, the `album` and `info` records are gone,
+`config/files.php` says `gz`, `config/filetype.php` is five family templates
+over 21 keys, `bmp` left the last three runtime image lists, and
+`admin/info/uploads/ru.md` describes what actually ships.
+
+Decisions of batch 9, all visible in the code:
+
+- `config/filetype.php` is written in `setConfigFile()`'s own single-quoted
+  format rather than in the hand-written heredocs it used to carry, so a
+  Templates save is a byte-for-byte no-op. Proven on the route: the file hash
+  before and after an unchanged Templates save is identical, and the same holds
+  for `config/uploads.php` across an unchanged Preferences save. The three image
+  lines with a four-letter key — `avif`, `jpeg`, `webp` — come to 181
+  characters, one over the limit in `.rules/global.md`; the
+  template text is fixed by `Render templates` and `setConfigFile()` would
+  regenerate exactly these lines anyway, so the round-trip property won over the
+  one-character overage.
+- the `typ` list is written in the family order of the canonical table, not
+  alphabetically, because `tplconfig()` renders one editor block per entry in
+  that order and a reader of the Templates tab should see images, audio, video,
+  documents and archives as groups.
+- two lists outside the four the plan names were corrected in the same edit,
+  both because batch 9's own `Done when` line requires the executable paths of
+  batch 10 to be free of withdrawn formats and of the `screens` class:
+  `core/admin.php:907` decided whether the admin file manager renders a preview
+  and still read `bmp` while knowing neither `webp` nor `avif`; and
+  `plugins/system/slaed.js` opened its lightbox on `a.screens`, the very class
+  the new image template stops emitting. The plan's claim that no script
+  consumes `screens` was wrong — the theme scripts were checked, this one was
+  not. Both now read the canonical image set, and the lightbox triggers on
+  `a.sl-attach`. Without that second edit every image attachment would have
+  silently lost its lightbox.
+- `modules/files/admin/index.php:415` carried `zip,gzip,7z,rar,tar` as the
+  fallback its own settings save writes when the field arrives empty, so the
+  corrected spelling had to land there as well or the next empty save would
+  reintroduce `gzip`.
+- these references to withdrawn names deliberately stay, and batch 10 should not
+  remove them: `core/system.php:2659` inlines CSS background images and lists
+  `bmp` next to `svg`, which is the stylesheet domain and not an upload
+  allowlist; `core/system.php:2175` accepts `gzip` as an alias for the
+  compression algorithm of `addCompress()`; `config/media.php` holds free-text
+  format labels of the media module; `core/classes/upload.php` names `swf` in
+  its block list on purpose and carries `audio/vnd.wave` and `application/gzip`
+  as MIME strings, which are not extensions; `modules/main/index.php` reads the
+  `uploads/screens` directory, which shares a name with the dead class and
+  nothing else; and the bundled editor and icon vendors are not ours to edit.
+- `tests/Unit/UploadFormatTest.php` is the batch's test, and it took the runtime
+  image lists over from `ImageThumbTest::theRuntimeImageListsAcceptWebpAndAvif`,
+  which asserted the intermediate state of batch 2 and was deleted rather than
+  duplicated. It compares five source lists, the data-URI regex, the class image
+  constant and the image half of the MIME map against one canonical set, pins
+  the type policy at 21, walks every configured allowlist of the three
+  configuration files, holds the visitor lists to `webp` and `avif`, checks the
+  render map family by family, and drives one attachment per family through the
+  real parser via `tests/Support/format_probe.php`. That probe boots the core,
+  writes one decodable image below `UPLOADS_DIR` because `filterAttach()`
+  renders a placeholder instead of the template when the source is missing, and
+  removes its directory again before answering.
+- the route tests ran against the stand with the real admin session. Preferences
+  and Templates both round-tripped byte for byte, the Templates tab rendered 21
+  blocks, and the Docs tab rendered the rewritten page with no PHP warning. One
+  file per family was uploaded into `uploads/news` from the Files tab — png,
+  mp3, mp4, pdf and zip — each published as `news-<salt>.<ext>` with no owner
+  suffix, which is also the proof that the `all` record now reaches past the six
+  formats it allowed before. Each of the five was then rendered through the real
+  `filterAttach()` with `mod=news`: the image produced a real thumbnail at the
+  module's own 150 px width and rendered through `.sl-attach`, audio through
+  `<audio>`, video and PDF with the dimensions of the tag, the archive as a
+  hardened link, and none of the five left an unresolved token. The narrower
+  module list still governs the editor: through the real `editorUpload` route on
+  `mod=news` a PDF was refused with `_ERROR_FILE` while a PNG published in the
+  same session — the panel accepts PDF, the module does not.
+- `error_php.log` still holds only the batch 8 warning run and did not grow;
+  `error_file.log` and `error_sql.log` stayed at zero, `error_site.log` grew only
+  with unrelated mail-transport errors from the scheduler,
+  `storage/logs/uploads` holds nothing but lock files, and all six published test
+  files plus the generated thumbnail were removed afterwards.
+- `config/local.php` was deleted after the repository-side edits and rebuilt by
+  the first panel save; it now reads `gz`, the 21-format `typ` and the five
+  family templates.
+
+Decisions of batch 8, still true. `uploadsave()` publishes
+through `addUploadedFile()` when a file was submitted and through
+`addRemoteFile()` only when none was, takes every limit from
+`getUploadRuleData('all')`, writes into the directory the Files tab selected,
+publishes with no owner, and touches no database row. The `all` record now
+carries field 2 `104857600` and fields 3 and 4 `1600`, `configsave()` drops
+extensions the class has no type policy for and names them in the save message,
+both extension fields show the supported list as a hint, and `upload()`,
+`check_file()` and `check_size()` are gone.
+
+Decisions of batch 8, all visible in the code:
+
+- the rule is `array_merge(getUploadRuleData('all'), ['maxquota' => 0])`. Every
+  limit the class reads therefore comes from the record and only the quota is
+  overridden, because admin upload enforces none today. Nothing is hardcoded at
+  the call site any more.
+- the resolver's `ok` is deliberately ignored here. It reports whether
+  `uploads/<mod>` exists, which is meaningless for a flow whose destination is
+  the selected directory rather than the record's own. An empty `extensions`
+  field still fails closed: the class answers `extension` before it touches the
+  destination.
+- `count` and `quota` are not mapped. A single file cannot exceed `maxfiles` and
+  the quota is disabled, so both codes are unreachable on this route — the same
+  reasoning the two file adapters used in batch 7. Both constants stay in use in
+  the editor adapter.
+- "a file was submitted" is again `error !== UPLOAD_ERR_NO_FILE`, so a rejected
+  local file reports its own failure instead of falling back to the typed URL.
+  Proven on the route: a `txt` plus a valid remote URL published nothing at all.
+- `sitefile` is read raw and trimmed rather than through the `url` filter.
+  `filterWebUrl()` lowercases the whole URL, which breaks a case-sensitive
+  remote path, and `filterText()` would encode `&` in a query string. The class
+  parses, normalizes and validates the URL itself, which is where that policy
+  belongs.
+- the filter never stores an empty list. A field whose every value was dropped
+  falls back to the same default an empty field falls back to, because storing
+  `''` would disable uploads for that module silently and, for `typ`, would give
+  the Templates tab one block under an empty key. Both defaults are supported by
+  construction, which is why the `typ` fallback literal lost `bmp` — a default
+  the same function would immediately drop is incoherent. The configured `typ`
+  list itself is untouched here; it changes in batch 9 with every other
+  allowlist. Proven on the route: `docx,exe` in the global field and `iso,dmg`
+  in a module field were both reported and both fell back rather than blanking
+  the record.
+- one defect the verification found, older than this migration and fixed here
+  because the batch's own `Upload templates save` row could not pass otherwise:
+  `tplsave()` read the editor bodies with `getVar('post', 'tmp', 'raw')`, and
+  `getVar()` answers `''` for an array POST value unless the key carries `[]`.
+  Every Templates save therefore wrote 26 empty templates over
+  `config/filetype.php` and logged a run of `Uninitialized string offset`
+  warnings. It is `getVar('post', 'tmp[]')` with `?? ''` now, and the tab
+  round-trips all 26 entries byte for byte. Batch 9 rewrites that file through
+  this very tab, so it had to work before batch 9 starts.
+- the route tests ran against the stand with the real admin session, all into
+  `uploads/screens` — a directory with no record of its own, which is the matrix
+  row asking whether rules still resolve. Local: a 1000x800 png published as
+  `screens-<salt>.png` with no owner suffix; a `txt` answered `_ERROR_FILE`; a
+  2000x1800 png answered `_ERROR_SIZE`, so fields 3 and 4 really bound at 1600;
+  an empty submission answered `_ERROR_DOWN`; a tampered token answered
+  `_TOKENMISS`; and a good file plus a good URL published exactly one file, the
+  local one. Remote: `127.0.0.1`, `169.254.169.254` and `10.0.0.5` were refused
+  without a packet, a `.md` URL was refused as `_ERROR_FILE`, a 404 was refused,
+  a tampered token published nothing, and a public png published with its exact
+  byte size. Field 2 was proven from both sides by lowering it to `1024` through
+  the Preferences tab: the 4 KB local file and the 24 KB download then both
+  answered `_ERROR_BIG`, and the record was restored the same way.
+- the settings rows: an unchanged Preferences save round-tripped every module
+  block byte for byte, kept fields 10 and 11 with their own module, and answered
+  `Изменения успешно сохранены. Недопустимый формат файла!: bmp, wave, m4p, m4b,
+  m4r, m4v, ogv, ogx, spx, gzip, 7zip, swf` — the twelve spellings the class has
+  no policy for. That save also rewrites `typ` without them, which is precisely
+  what batch 9 does deliberately; the configured value was restored by hand
+  afterwards, so the working tree still holds the original 26-format list. A
+  Templates save rebuilt all 26 render entries with identical values, in
+  `setConfigFile()`'s own single-quoted format rather than the hand-written
+  heredocs, and that file was restored from git as well so the batch diff stays
+  traceable.
+- `config/local.php` was deleted after every configuration edit, including the
+  last one, so the raised `all` record is what the stand actually reads.
+- `error_php.log` is not empty on this stand: it holds the warning run from the
+  one broken Templates save described above and nothing else. It was left in
+  place rather than truncated. `error_file.log` and `error_sql.log` stayed at
+  zero, `error_site.log` grew only with unrelated mail-transport errors from the
+  scheduler, `storage/logs/uploads` holds one lock file, and every published
+  test file was removed afterwards.
+
+Decisions of batch 7, still true. `modules/files/index.php` `send()`
 and `modules/files/admin/index.php` `save()` publish through `addUploadedFile()`
 after every check has passed, store the project-relative `uploads/<dir>/<file>`
 they stored before, take `size` from the result instead of probing the path, and
@@ -15,7 +502,7 @@ delete the returned path when the row write fails. The admin handler publishes
 into the selected `path` directly, so the publish-then-rename branch no longer
 runs for a new upload.
 
-Decisions of batch 7, all visible in the code:
+Its decisions, still true:
 
 - the `Upload` call moved inside `posttype == 'save'` and behind `!$stop`. Both
   handlers called `upload()` unconditionally before, so a preview, a failed
@@ -252,15 +739,15 @@ directory. `error_php.log` and `error_file.log` stayed empty,
 fixture — the user, the seeded files, the published files — was removed
 afterwards.
 
-One finding that belongs to no batch of this plan: 33 tests of the comment
-suites fail on this stand, and the cause is the database rather than the code —
-`sport_comment` has no `pid` column, so every comment insert fails with
-`42S22/1054`. The schema update of the comment threads commit was never applied
-here. It has nothing to do with uploads and is stated only so the next session
-does not spend its time on it. Batches 1 to 5 are committed as `0e007cfd`;
-batches 6 and 7 are both uncommitted in the working tree, and their files do not
-overlap — batch 6 touches `modules/account` and the lite template, batch 7 only
-`modules/files`.
+The comment-suite failures that batch 5 reported on this stand — 33 tests broken
+by a missing `pid` column rather than by any code of this plan — are gone: the
+whole suite now runs at 624 tests, 6454 assertions, 6 skipped. Batches 1 to 5
+are committed as `0e007cfd`, batches 6 and 7 as `817ac7ed` and `7efd8234`, and
+batches 8, 9 and 10 are all uncommitted in the working tree. Batches 9 and 10
+therefore each started against a tree that already carried the one before it,
+against this document's own precondition; both separated their work by
+snapshotting `git diff` before the first edit instead of by a commit boundary,
+and batch 10's snapshot came back identical because the sweep changes no code.
 Update this line as the final act of every batch —
 it is how the next session knows where to start. Do not rely on a commit
 message: `.rules/git.md` allows committing only on explicit instruction, so a
@@ -1535,7 +2022,14 @@ Dependency sweep after the deletions:
 - project PHPStan, PHPUnit, and PHP-CS-Fixer dry-run checks;
 - `tests/Unit/UploadContractTest.php` and `tests/Unit/UploadIntegrationTest.php`
   with `tests/Support/upload_probe.php`, following the existing
-  `BackupContractTest`/`BackupIntegrationTest`/`backup_probe.php` pattern;
+  `BackupContractTest`/`BackupIntegrationTest`/`backup_probe.php` pattern. The
+  contract test drives the class against a disposable root; the integration test
+  drives the resolver and the service accessor against the configuration the site
+  really ships and holds the five adapters to the ordering rule;
+- `tools/upload-route-check.php` for the rows that only exist as request
+  handlers. It is not part of the suite, because it needs a running stand and two
+  credential pairs, and it is the reproducible form of the manual walk this plan
+  keeps describing;
 - unit tests for every result code, malformed single/multi `$_FILES`, upload
   error values, exact allowlists, MIME fixtures per mapped extension, image
   decode and dimensions, traversal, symlink escape, canonical naming, collision

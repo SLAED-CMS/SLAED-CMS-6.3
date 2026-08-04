@@ -2481,6 +2481,8 @@ function checkFileChmod(string $dir, int $chm): string {
 }
 
 # Saving configurations to a file
+# A value whose line would pass the 180 character limit of .rules/global.md is emitted as a concatenation across lines, split on raw characters and escaped per chunk
+# The split is deterministic, so a save of an unchanged configuration reproduces the file byte for byte and the round trip the settings tabs rely on still holds
 function setConfigFile(string $fp, array $arr, array $act = []): void {
     static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
     if (in_array($fp, $reserved)) return;
@@ -2497,14 +2499,31 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     foreach ($arr as $key => $val) $arr[$key] = $norm($val);
     $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
-    $export = function (array $arr, int $dep = 0) use (&$export): string {
+    $wrap = function (string $val, string $ind, int $head): string {
+        $goal = $ind.'    .';
+        $step = 180 - $head - 3;
+        $rest = 180 - strlen($goal) - 3;
+        $out = '';
+        $from = 0;
+        $size = strlen($val);
+        while ($from < $size) {
+            $take = '';
+            while ($from < $size && strlen(var_export($take.$val[$from], true)) - 2 <= $step) $take .= $val[$from++];
+            if ($take === '') $take = $val[$from++];
+            $out .= ($out === '' ? '' : "\n".$goal).var_export($take, true);
+            $step = $rest;
+        }
+        return $out;
+    };
+    $export = function (array $arr, int $dep = 0) use (&$export, $wrap): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
         $out = '['."\n";
         foreach ($arr as $key => $val) {
-            $out .= $ind.var_export($key, true).' => ';
-            $out .= is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
-            $out .= ','."\n";
+            $head = $ind.var_export($key, true).' => ';
+            $body = is_array($val) ? $export($val, $dep + 1) : var_export($val, true);
+            if (!is_array($val) && strlen($head.$body) + 1 > 180) $body = $wrap($val, $ind, strlen($head));
+            $out .= $head.$body.','."\n";
         }
         return $out.$pad.']';
     };
@@ -2971,7 +2990,7 @@ function getImageBox(string $file): array {
         }
         return [0, 0];
     }
-    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'bmp'], true)) return [0, 0];
+    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'], true)) return [0, 0];
     $info = getimagesize($file);
     return (is_array($info) && $info[0] > 0 && $info[1] > 0) ? [(int)$info[0], (int)$info[1]] : [0, 0];
 }
@@ -4274,10 +4293,16 @@ function checkEditorUploadAccess(string $mod, array $rule): bool {
 }
 
 # Return image metadata for an uploaded or stored editor file
+# A stored file that no longer decodes is a listing entry, not a defect, so its warning is swallowed by a handler rather than suppressed with @ or left to reach the log
 function getEditorImageData(string $file, string $ext, int $wid, int $hei): array {
-    $img = in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif'], true);
+    $img = in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'], true);
     if (!$img) return ['ok' => true, 'image' => false, 'width' => 0, 'height' => 0, 'error' => ''];
-    $inf = @getimagesize($file);
+    set_error_handler(static fn(): bool => true);
+    try {
+        $inf = getimagesize($file);
+    } finally {
+        restore_error_handler();
+    }
     if (!is_array($inf)) return ['ok' => false, 'image' => true, 'width' => 0, 'height' => 0, 'error' => _ERROR_FILE];
     $one = (int)($inf[0] ?? 0);
     $two = (int)($inf[1] ?? 0);
@@ -4341,6 +4366,7 @@ function addEditorUpload(): void {
 
 # Return stored files for the Toast UI editor file panel; a moderator lists the whole directory and an authenticated visitor only the files carrying the own owner suffix
 # A guest receives no historical files at all, because the shared guest suffix would otherwise expose every other guest upload of the same directory
+# The ten character salt in the ownership pattern is Upload::SALTLEN; the class is not loaded on this route, so the length is repeated rather than read
 function getEditorFileJson(): void {
     global $user;
     $mod = strtolower(getVar('get', 'mod', 'var', ''));
@@ -4356,7 +4382,7 @@ function getEditorFileJson(): void {
     $row = [];
     foreach (scandir($dir) ?: [] as $file) {
         if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
-        $own = preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]+-([0-9]+)\\.[a-zA-Z0-9]+$#', $file, $mat) && (int)$mat[1] === $uid;
+        $own = preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{10}-([0-9]+)\\.[a-zA-Z0-9]+$#', $file, $mat) && (int)$mat[1] === $uid;
         if (!$all && !$own) continue;
         $row[] = getEditorFileData($dir, $file);
     }
@@ -5306,171 +5332,6 @@ function getAsyncPager(string $frag, int $count, int $pages, int $page, int $mnu
         'target_id' => $id,
     ];
     return getTplPagerView($num, $pages, $mnum, $target, ['count' => $count, 'limit' => $page]);
-}
-
-# Check type upload file
-function check_file(string $type, string $typefile): string {
-    $strtypefile = str_replace(',', '|', $typefile);
-    if (!preg_match('#'.$strtypefile.'#i', $type) || preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type)) return _ERROR_FILE;
-    return '';
-}
-
-# Check size upload file
-function check_size(string $file, int $width, int $height): string {
-    list($imgwidth, $imgheight) = getimagesize($file);
-    if ($imgwidth > $width || $imgheight > $height) return _ERROR_SIZE;
-    return '';
-}
-
-
-# Upload file
-function upload(int $typ, string $directory, string $typefile, int $maxsize, string $namefile, int $width, int $height, string $userid = '', string $url = ''): mixed {
- global $user, $conf, $stop, $tpl;
-    $directory = str_replace('\\', '/', trim($directory));
-    if ($directory === '') {
-        $directory = BASE_DIR;
-    } elseif (!preg_match('#^(?:[A-Za-z]:/|//|/)#', $directory)) {
-        $directory = BASE_DIR.'/'.ltrim($directory, '/');
-    }
-    if ($typ == 1 && !empty($_FILES['userfile']['size'])) {
-        if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
-            if ($_FILES['userfile']['size'] > $maxsize) {
-                $stop = _ERROR_BIG;
-                return 0;
-            } else {
-                $type = strtolower(substr(strrchr($_FILES['userfile']['name'], '.'), 1));
-                if (!check_file($type, $typefile) && !check_size($_FILES['userfile']['tmp_name'], $width, $height)) {
-                    if (isAdmin() && !is_user()) {
-                        $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
-                    } else {
-                        $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-                        $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
-                    }
-                    if (file_exists($directory.'/'.$newname)) {
-                        $stop = _ERROR_EXIST;
-                        return 0;
-                    } else {
-                        $res = copy($_FILES['userfile']['tmp_name'], $directory.'/'.$newname);
-                        if (!$res) {
-                            $stop = _ERROR_UP;
-                            return 0;
-                        } else {
-                            return $newname;
-                        }
-                    }
-                } else {
-                    $stop = (!check_file($type, $typefile)) ? check_size($_FILES['userfile']['tmp_name'], $width, $height) : check_file($type, $typefile);
-                    return 0;
-                }
-            }
-        } else {
-            $stop = _ERROR_DOWN;
-            return 0;
-        }
-    } elseif ($typ == 2) {
-        if (isset($_FILES['file']) && !empty($_FILES['file']) && checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) {
-            $files = count($_FILES['file']['name']);
-            for ($i = 0; $i < $files; $i++) {
-                if ($_FILES['file']['size'][$i] > $maxsize) {
-                    echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_BIG]);
-                } else {
-                    $type = strtolower(substr(strrchr($_FILES['file']['name'][$i], '.'), 1));
-                    if (!check_file($type, $typefile) && !check_size($_FILES['file']['tmp_name'][$i], $width, $height)) {
-                        if (isAdmin() && !is_user()) {
-                            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
-                        } else {
-                            $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-                            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
-                        }
-                        if (file_exists($directory.'/'.$newname)) {
-                            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_EXIST]);
-                        } else {
-                            $res = copy($_FILES['file']['tmp_name'][$i], $directory.'/'.$newname);
-                            if (!$res) {
-                                echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_UP]);
-                            } else {
-                                echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FILE_RENAMED.': '.$newname]);
-                            }
-                        }
-                    } else {
-                        $info = (!check_file($type, $typefile)) ? check_size($_FILES['file']['tmp_name'][$i], $width, $height) : check_file($type, $typefile);
-                        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info]);
-                    }
-                }
-            }
-        } else {
-            echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR_DOWN]);
-        }
-    } elseif ($typ == 3 && !empty(getVar('post', 'sitefile', 'raw', ''))) {
-        $sitefile = getVar('post', 'sitefile', 'raw', '');
-        $afile = str_replace(['&', '?', '#'], '', $sitefile);
-        $type = strtolower(substr(strrchr($afile, '.'), 1));
-        if (!check_file($type, $typefile) && !check_size($sitefile, $width, $height)) {
-            $fn = $sitefile;
-            $path_sitefile = fopen($fn, 'rb');
-            if (!$path_sitefile) {
-                $stop = _ERROR_DOWN;
-                return 0;
-            } else {
-                if (isAdmin() && !is_user()) {
-                    $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
-                } else {
-                    $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-                    $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
-                }
-                $dir = $directory.'/'.$newname;
-                if (file_exists($dir)) {
-                    $stop = _ERROR_EXIST;
-                    return 0;
-                } else {
-                    while (!feof($path_sitefile)) $data .= fread($path_sitefile, 1024);
-                    fclose($path_sitefile);
-                    $path_sitefile = fopen($directory.'/'.$newname, 'wb');
-                    if (!$path_sitefile) {
-                        $stop = _ERROR_UP;
-                        return 0;
-                    } else {
-                        fwrite($path_sitefile, $data);
-                        fclose($path_sitefile);
-                        if (file_exists($dir)) {
-                            if (filesize($dir) > $maxsize) {
-                                unlink($dir);
-                                $stop = _ERROR_BIG;
-                                return 0;
-                            } else {
-                                return $newname;
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            $stop = (!check_file($type, $typefile)) ? check_size($sitefile, $width, $height) : check_file($type, $typefile);
-            return 0;
-        }
-    } elseif ($typ == 4 && $url) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_NOBODY, 1);
-        curl_setopt($ch, CURLOPT_FAILONERROR, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        $result = curl_exec($ch);
-        if (!$result) return 0;
-        preg_match('#Content-Type: \w+(\/)(?<value>\w+)#', $result, $value);
-        $type = ($value['value'] == 'jpeg') ? 'jpg' : $value['value'];
-        if (isAdmin() && !is_user()) {
-            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'.'.$type : getRandomString(15).'.'.$type;
-        } else {
-            $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
-            $newname = ($namefile) ? $namefile.'-'.getRandomString(10).'-'.$uname.'.'.$type : getRandomString(15).'.'.$type;
-        }
-        $dir = $directory.'/'.$newname;
-        $from = file_get_contents($url);
-        file_put_contents($dir, $from);
-        return $newname;
-    }
-    return null;
 }
 
 # Answer the body region of one comment: the editor when the form is fetched, the rendered body when a save arrives, and the refusal that stopped either
