@@ -9,7 +9,8 @@ use PHPUnit\Framework\TestCase;
  * Stage 2 of docs/MAIL-2026.md, the half no double can answer: an atomic claim, a backoff that a
  * real clock has to expire, a prune that has to remove exactly the rows past its window, and a whole
  * drain run. tests/Support/mail_probe.php boots the real core in an isolated CLI process and drives
- * the class against the live database, cleaning up every row it wrote; the delivery half runs
+ * the class against a disposable schema built from the live one, so the site queue is never read or
+ * written and the schema is dropped even when the run dies mid-setup; the delivery half runs
  * against tests/Support/mail_relay.php, a loopback SMTP sink, so a message is verified as the relay
  * received it rather than as the sender believed it sent it. Nothing leaves this host.
  */

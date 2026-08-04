@@ -17,13 +17,7 @@ $GLOBALS['mailschema'] = 'slaed_mailp_'.bin2hex(random_bytes(4));
 $site = (string)$conf['db']['name'];
 $seed = new PDO('mysql:host='.$conf['db']['host'].';charset=utf8mb4', $conf['db']['uname'], $conf['db']['pass'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $seed->exec('CREATE DATABASE `'.$GLOBALS['mailschema'].'` DEFAULT CHARACTER SET utf8mb4');
-foreach (['mail' => false, 'maildead' => false, 'newsletter' => false, 'users' => true, 'groups' => true] as $one => $withrows) {
-    $from = '`'.$site.'`.`'.PREFIX_DB.'_'.$one.'`';
-    $to = '`'.$GLOBALS['mailschema'].'`.`'.PREFIX_DB.'_'.$one.'`';
-    $seed->exec('CREATE TABLE '.$to.' LIKE '.$from);
-    if ($withrows) $seed->exec('INSERT INTO '.$to.' SELECT * FROM '.$from);
-}
-$db = $GLOBALS['db'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['mailschema']);
+# The drop is registered the moment the schema exists, so a failure while copying tables cannot leave one behind
 register_shutdown_function(static function (): void {
     global $conf;
     try {
@@ -32,6 +26,13 @@ register_shutdown_function(static function (): void {
     } catch (Throwable) {
     }
 });
+foreach (['mail' => false, 'maildead' => false, 'newsletter' => false, 'users' => true, 'groups' => true] as $one => $withrows) {
+    $from = '`'.$site.'`.`'.PREFIX_DB.'_'.$one.'`';
+    $to = '`'.$GLOBALS['mailschema'].'`.`'.PREFIX_DB.'_'.$one.'`';
+    $seed->exec('CREATE TABLE '.$to.' LIKE '.$from);
+    if ($withrows) $seed->exec('INSERT INTO '.$to.' SELECT * FROM '.$from);
+}
+$db = $GLOBALS['db'] = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $GLOBALS['mailschema']);
 
 # The kind every row this probe stores carries, so its own rows can be found and removed without touching anything the installation queued
 const PROBEKIND = 'probe';

@@ -243,6 +243,7 @@ final class CommentThreadTest extends TestCase
     }
 
     # The forum keeps the same kind of counter and now repairs it the same way, instead of nudging it with nothing to notice when it slips
+    # It also covers what advertises a section: one function answers the last message of a subtree, and hiding or moving a topic repairs that pointer instead of fanning it out
     #[Test]
     public function theForumRepairsItsTopicCounters(): void
     {
@@ -256,7 +257,6 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('getForumDrift()', $sync, 'The synchronisation still leaves topic counters alone');
         $this->assertStringContainsString("if (\$row['had'] === \$row['want']) continue;", $sync, 'The synchronisation still rewrites every category blind');
         $this->assertStringNotContainsString('topics = \'0\'', $sync, 'The synchronisation still zeroes every total before counting');
-        # the last message of a section is the newest of its whole subtree, and one function answers that for everyone
         $this->assertStringContainsString('getForumLast($sub)', $sync, 'The tab works out the last message on its own instead of asking the shared answer');
         $kernel = $this->getSource('core/system.php', 'getForumLast');
         $this->assertStringContainsString('cid IN (', $kernel, 'The last message is looked for in one category rather than in the whole branch');
@@ -266,11 +266,9 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('getForumLast($sub)', $repair, 'The repair owns a second copy of the answer');
         $del = $this->getSource('modules/forum/index.php', 'delete');
         $this->assertStringContainsString('setForumLast((int)$catid, $pid ? 0 : (int)$id);', $del, 'Removing a message leaves the advertised topic to chance');
-        # mass moderation invalidates the same pointer by hiding a topic and by handing it to another section
-        $mass = $this->getSource('modules/forum/index.php', 'move');
+        $mass =$this->getSource('modules/forum/index.php', 'move');
         $this->assertSame(3, substr_count($mass, 'setForumLast('), 'Hiding and moving a topic do not both repair what advertised it');
         foreach (['delete' => $del, 'move' => $mass] as $name => $code) {
-            # the topic keeps its own lpost, so only the write that fans one answer out over a chain of categories is forbidden
             $this->assertStringNotContainsString('lpost = :lid WHERE id IN (', $code, 'Path "'.$name.'" still writes one branch answer into every ancestor');
             $this->assertStringNotContainsString("|| (pid = '0' && status > '1')) ORDER BY id DESC", $code, 'Path "'.$name.'" keeps its own copy of the last-message query, which answers a reply as itself');
         }
@@ -315,6 +313,22 @@ final class CommentThreadTest extends TestCase
         $this->assertStringContainsString('WHERE uid = :uid', $code, 'The anonymisation is not scoped to the account being removed');
         $this->assertStringNotContainsString('DELETE', $code, 'The comments of a removed account are erased rather than anonymised');
         $this->assertStringNotContainsString('TargetCount', $code, 'Removing an account moves a target counter');
+    }
+
+    # The moderation handlers are POST-only, so the query string is not an input at all
+    # A fallback would be worse than useless here: typ=0 is the valid "deactivate" value, and read as empty it would let a crafted ?typ=1 activate the comment instead
+    #[Test]
+    public function theModerationHandlersReadOnlyTheBody(): void
+    {
+        foreach (['approve', 'delete', 'actions', 'recount', 'editsave', 'save'] as $name) {
+            $code = $this->getSource('admin/modules/comments.php', $name);
+            $this->assertStringNotContainsString("getVar('get'", $code, $name.'() still reads the query string');
+            $this->assertStringNotContainsString("getVar('req'", $code, $name.'() still accepts request-scope input');
+            $this->assertStringContainsString("checkAdminPost('comments')", $code, $name.'() is not guarded as a POST action');
+        }
+        $approve = $this->getSource('admin/modules/comments.php', 'approve');
+        $this->assertStringContainsString("\$typ = getVar('post', 'typ', 'num');", $approve, 'The activation flag is not read from the body alone');
+        $this->assertStringNotContainsString('?:', $approve, 'A falsy-coalescing fallback would treat the valid value zero as absent');
     }
 
     # The probe leaves the table exactly as it found it, so everything above was measured against live rows rather than against a fixture

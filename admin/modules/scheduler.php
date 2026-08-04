@@ -227,6 +227,7 @@ function add(string $name = ''): void {
     setFoot();
 }
 
+# Stores one job, self-healing every other job on the way, so legacy keys and drifted system handlers cannot survive a save
 function save(): void {
     global $conf, $afile;
     $rawname = getVar('post', 'job', 'var', '');
@@ -271,7 +272,6 @@ function save(): void {
         ];
         $data = $schedcfg;
         $data['jobs'][$name] = $item;
-        # Self-heal every job so legacy keys and drifted system handlers cannot survive a save
         foreach ($data['jobs'] as $jkey => $jval) {
             if (is_array($jval)) $data['jobs'][$jkey] = getSchedulerJob((string)$jkey, $jval);
         }
@@ -302,6 +302,7 @@ function run(): void {
     setRedirect($afile.'.php?name=scheduler', false, 302, $text, $warn);
 }
 
+# Clear a crashed run, but only report success once the repair is stored: a reconciliation nobody could write leaves the job running while the operator is told it was cleared
 function unlock(): void {
     global $afile;
     $warn = !checkAdminPost('scheduler');
@@ -314,9 +315,10 @@ function unlock(): void {
             $text = _SCHEDULER_RUNNING;
         } else {
             $state = getSchedulerState($name);
-            if (!empty($state['running'])) updateSchedulerCrash($name, $state);
+            $done = empty($state['running']) || updateSchedulerCrash($name, $state) !== null;
             deleteSchedulerHandle($lock);
-            $text = _SCHEDULER_UNLOCKD;
+            $warn = !$done;
+            $text = $done ? _SCHEDULER_UNLOCKD : _ERROR.': '.LOGS_DIR.'/scheduler';
         }
     }
     setRedirect($afile.'.php?name=scheduler', false, 302, $text, $warn);

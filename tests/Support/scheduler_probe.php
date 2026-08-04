@@ -142,8 +142,7 @@ function getProbeSlot(): array {
     $out['second'] = $second['status'];
     $out['secondmsg'] = (string)($second['message'] ?? '');
     $out['ranonce'] = getProbeState(PROBEJOB)['lastrun'] !== 1700000000;
-    # The barrier itself: a process that decided the job was due before the lock existed asks again while holding it, and the answer must have flipped
-    $out['slotafter'] = checkSchedulerSlot(PROBEJOB, getSchedulerJob(PROBEJOB), getSchedulerState(PROBEJOB));
+    $out['slotafter'] =checkSchedulerSlot(PROBEJOB, getSchedulerJob(PROBEJOB), getSchedulerState(PROBEJOB));
     $out['slotstale'] = checkSchedulerSlot(PROBEJOB, getSchedulerJob(PROBEJOB),
         array_replace(getSchedulerState(PROBEJOB), ['last_run' => 1700000000, 'next_run' => 0, 'next_schedule' => '', 'next_last_run' => 0]));
     setProbeState(PROBEJOB, ['running' => 0, 'started_at' => 0, 'last_status' => 'idle', 'last_run' => 1700000000, 'next_run' => 0, 'next_schedule' => '', 'next_last_run' => 0]);
@@ -187,6 +186,7 @@ function getProbeAccess(): array {
 }
 
 # The unlock action follows the same protocol: it refuses while the lock is held and reconciles only when it owns the lock, and it never deletes the lock file
+# The run closes with the same repair against a state that cannot be stored, where the reconciliation has to report the failure instead of returning a state nobody wrote
 function getProbeUnlock(): array {
     setProbeState(PROBEJOB, ['running' => 1, 'started_at' => time(), 'last_status' => 'running', 'last_run' => 1700000000]);
     $hold = addProbeHolder(PROBEJOB, 1200);
@@ -201,6 +201,17 @@ function getProbeUnlock(): array {
     }
     $out['after'] = getProbeState(PROBEJOB);
     $out['lockfile'] = is_file(getSchedulerLockPath(PROBEJOB));
+    setProbeState(PROBEJOB, ['running' => 1, 'started_at' => time(), 'last_status' => 'running']);
+    $file = LOGS_DIR.'/scheduler/'.PROBEJOB.'.json';
+    chmod($file, 0444);
+    $lock = getSchedulerLockHandle(PROBEJOB);
+    $out['readonly'] = [
+        'granted' => $lock !== false,
+        'repaired' => updateSchedulerCrash(PROBEJOB, getSchedulerState(PROBEJOB)) !== null,
+    ];
+    if ($lock !== false) deleteSchedulerHandle($lock);
+    chmod($file, 0666);
+    $out['readonly']['state'] = getProbeState(PROBEJOB);
     return $out;
 }
 
@@ -248,6 +259,7 @@ function getProbeHttp(string $url, string $verb, string $body = '', string $cook
 }
 
 # The pseudo trigger must carry its credential in a body rather than in an address
+# A site whose cron is alive must simply get no trigger, and asking for one must not be an error on a page render
 function getProbeTrigger(): array {
     $GLOBALS['conf']['scheduler']['pseudo'] = '1';
     $GLOBALS['conf']['scheduler']['token'] = '';
@@ -256,7 +268,6 @@ function getProbeTrigger(): array {
     if (is_file($file)) unlink($file);
     $data = addSchedulerTrigger();
     $out = ['url' => (string)($data['url'] ?? ''), 'token' => (string)($data['token'] ?? ''), 'query' => str_contains((string)($data['url'] ?? ''), 'token=')];
-    # A site whose cron is alive must simply get no trigger, and asking for one must not be an error on a page render
     file_put_contents(LOGS_DIR.'/scheduler/heartbeat.json', json_encode(['trigger' => 'cron', 'time' => time()]));
     try {
         $out['withcron'] = addSchedulerTrigger();

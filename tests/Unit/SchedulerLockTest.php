@@ -173,6 +173,25 @@ final class SchedulerLockTest extends TestCase
         $this->assertTrue($data['lockfile'], 'The lock file was deleted');
     }
 
+    # A repair that could not be stored must be reported as such: the job stays running, and unlock has to say so instead of showing its success message
+    #[Test]
+    public function unlockReportsARepairItCouldNotStore(): void
+    {
+        $data = $this->getProbe('unlock')['readonly'];
+        $this->assertTrue($data['granted'], 'The lock was not free, so this scenario proves nothing');
+        $this->assertFalse($data['repaired'], 'A reconciliation nobody could write reported success');
+        $this->assertSame(1, $data['state']['running'], 'The job was reported repaired while its state still says running');
+    }
+
+    # The admin action has to act on that answer rather than announce success unconditionally
+    #[Test]
+    public function theUnlockHandlerActsOnTheRepairResult(): void
+    {
+        $code = $this->getSource('unlock');
+        $this->assertStringContainsString('updateSchedulerCrash($name, $state) !== null', $code, 'unlock() ignores whether the repair was stored');
+        $this->assertStringContainsString('$warn = !$done', $code, 'unlock() reports success regardless of the repair result');
+    }
+
     # Each trigger carries its own credential: they are not interchangeable and nothing else opens the endpoint
     #[Test]
     public function eachTriggerAcceptsOnlyItsOwnCredential(): void

@@ -570,6 +570,8 @@ function getTplEditorInsertAttr(string $command, string $value, string $editorId
 }
 
 # Render an inline HTMX edit form with a textarea and save/back buttons
+# It is the same editor the text was written in, so an author never sees the source a toolbar produced, and the id carries the record because the page may hold an editor already
+# The stored value is passed raw: getTplTextarea() decodes it for the format the editor works in, and decoding twice would eat the markup
 function getTplAjaxTextarea(array $data = []): string {
     global $tpl;
     $obj  = (string)($data['obj']  ?? '');
@@ -587,9 +589,6 @@ function getTplAjaxTextarea(array $data = []): string {
     $query   = 'index.php?go='.$esc($go).'&op='.$esc($op).'&id='.$esc($id).'&cid='.$esc($cid).'&typ='.$esc($typ).'&mod='.$esc($mod);
     $head    = ' hx-headers=\'{"X-CSRF-TOKEN": "'.getPageToken().'"}\'';
     $cerror  = addslashes((string)_CERROR1);
-    # The same editor the text was written in, so an author is not handed the source of what a toolbar produced for them
-    # The id carries the record, because this box arrives beside a page that already holds an editor of its own
-    # The stored value is passed raw: getTplTextarea() decodes it for the format the editor works in, and decoding twice would eat the markup
     $content = getTplTextarea([
             'id'          => $fieldId,
             'name'        => 'text',
@@ -668,9 +667,8 @@ function getTplPostButton(array $hide, string $icon, string $label, string $attr
 }
 
 # Build the standard moderator speed-dial keys for any front-end content row or card; callers pass the exact admin hrefs
-# The edit half stays a link, the delete half becomes a submitted form: a removal must not travel as an address a browser may prefetch,
-# and the token that authorises it must not sit in history, logs or a referrer. The caller keeps passing the address it always passed;
-# it is taken apart here, its own token dropped and a fresh one added, so all twenty-five call sites are corrected in one place.
+# The edit half stays a link, the delete half becomes a form: a removal must not travel as an address a browser may prefetch, and its token must not sit in history or logs
+# The caller keeps passing the address it always passed, taken apart here with its own token dropped and a fresh one added, so all twenty-five call sites are corrected in one place
 function getTplEditMenu(string $edithref, string $delhref, string $title): array {
     global $tpl;
     static $seq = 0;
@@ -701,9 +699,9 @@ function getGenderText(int $gender): string {
 }
 
 # Render one title tip block from one or many label-value items
+# A plain string is rendered directly, without the label/definition grid a list of items gets
 function getTplTitleTip(mixed $data): string {
     global $tpl;
-    # Single plain tip: render the text directly, without a label/definition grid
     if (!is_array($data)) return $tpl->getHtmlFrag('popover', ['content_html' => (string)$data]);
     $last = count($data) - 1;
     $items = [];
@@ -718,10 +716,9 @@ function getTplTitleTip(mixed $data): string {
 }
 
 # Build the hover info tip shown before a user name (comments, forum posts, private messages)
+# Without a bound account the tip states the status instead of empty profile fields, where $deleted marks an orphaned post whose uid points to a removed user
 function getUserTip(string $gname, string|int $points, string $regdate, int $gender, string $from, string $warnings, bool $anon = false, bool $deleted = false): string {
     global $conf;
-    # No bound account: the tip states the status instead of empty profile fields.
-    # $deleted marks orphaned posts whose uid points to a removed user.
     if ($anon) return getTplTitleTip([['label' => _STATUS, 'value' => (string)($deleted ? _USERDEL : _ANONYM)]]);
     $items = [];
     if ($gname !== '') $items[] = ['label' => _GROUP, 'value' => htmlspecialchars($gname, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')];

@@ -369,14 +369,14 @@ function checkSchedulerLock(string $name): bool {
 }
 
 # Reconciles the state a crashed run left behind, idempotently; last_run keeps its value on purpose, so the job resumes at its next planned slot instead of retrying in a loop
-function updateSchedulerCrash(string $name, array $state): array {
+# Returns null when the reconciled state could not be stored, because a caller that reports success on an unwritten repair leaves the job exactly as broken as it found it
+function updateSchedulerCrash(string $name, array $state): ?array {
     $state['running'] = 0;
     $state['started_at'] = 0;
     $state['last_status'] = 'crashed';
     $state['fail_count'] = (int)($state['fail_count'] ?? 0) + 1;
     $state['last_error'] = 'Run ended without releasing the job';
-    setSchedulerState($name, $state);
-    return $state;
+    return setSchedulerState($name, $state) ? $state : null;
 }
 
 # Returns whether the scheduler job is due; a crashed run leaves no lock behind, so the job becomes due again on its own and is reconciled by the next call that takes the lock
@@ -600,6 +600,8 @@ function addSchedulerSystemJob(string $name): array {
 }
 
 # Executes the next due scheduler job or a named job and returns a structured result
+# The due check that selected the job ran before the lock existed, so a scheduled run asks again while holding it; a manual run is an operator decision and skips that question
+# A start or a result that cannot be written fails the run: a job that finishes but still looks due would be run again by the next pass, and a lost result hides what happened
 function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     global $conf;
     if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
@@ -615,11 +617,11 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     if ($lock === false) return ['status' => 'locked', 'message' => 'Job is already running', 'job' => $name];
     try {
         $state = getSchedulerState($name);
-        if (!empty($state['running'])) $state = updateSchedulerCrash($name, $state);
-        # The due check that selected this job ran before the lock existed, so a second process can arrive with a verdict the first one has already acted on
-        # Scheduled runs therefore ask again while holding the lock; a manual run is an operator decision and is not subject to the schedule
+        if (!empty($state['running'])) {
+            $state = updateSchedulerCrash($name, $state);
+            if ($state === null) return ['status' => 'failed', 'message' => 'Job state cannot be written, the crashed run was not reconciled', 'job' => $name];
+        }
         if ($type !== 'manual' && !checkSchedulerSlot($name, $job, $state)) return ['status' => 'idle', 'message' => 'Another run already covered this slot', 'job' => $name];
-        # A start that cannot be recorded must not run: the job would finish, report success and still look due, so the next pass would run it again
         if (!setSchedulerStart($name, $type, $state)) return ['status' => 'failed', 'message' => 'Job state cannot be written, the run was not started', 'job' => $name];
         addSchedulerHeartbeat($type);
         try {
@@ -635,7 +637,6 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
         $stat = (string)($data['status'] ?? 'failed');
         $mess = (string)($data['message'] ?? '');
         $extra = (isset($data['extra']) && is_array($data['extra'])) ? $data['extra'] : [];
-        # The work is done either way, but a result nobody could store is not a result: saying so is what keeps the report and the state file describing the same run
         if (!setSchedulerDone($name, $stat, $mess, $extra)) {
             $data['status'] = 'failed';
             $data['message'] = trim($mess.' | job state could not be written after the run');
@@ -3966,6 +3967,7 @@ function adminblock(): string {
 }
 
 # User info link
+# $icon is off wherever the name stands next to an info tip, because the "i" already marks the user block and a second person icon would only repeat it
 function user_info(string $name, bool $icon = true): string {
     global $conf, $tpl;
     if (!$name) return '';
@@ -3973,7 +3975,6 @@ function user_info(string $name, bool $icon = true): string {
         return $tpl->getHtmlFrag('link', [
             'href' => 'index.php?name=account&op=view&uname='.urlencode($name),
             'title' => (string)_PERSONALINFO,
-            # No person icon next to the info tip: the "i" already marks the user block
             'is_author' => $icon,
             'label' => $name,
         ]);
@@ -5014,12 +5015,11 @@ function login_report(mixed $id, mixed $typ, mixed $login, mixed $pass): void {
 }
 
 # Check user acess
+# The moderator check takes the module name itself, not whether it is set: isset() asked about a module literally named "1" and dropped its administrator into the visitor branch
 function is_acess(string $ids): bool {
  global $db, $user, $conf;
     if ($ids) {
         $id = explode('|', $ids);
-        # The module name itself, not whether it is set: isset() answered a boolean, which asked about a module literally named "1"
-        # and left an administrator of this module falling through to the group check that is meant for visitors
         if (is_moder((string)($conf['name'] ?? ''))) {
             $isa = true;
         } elseif (is_user() && $id[1]) {

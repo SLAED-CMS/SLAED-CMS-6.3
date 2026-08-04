@@ -189,6 +189,7 @@ function getProbeCompress(): array {
 }
 
 # Publication: two runs never collide, an existing name is never replaced, and a publication that cannot link fails the whole run instead of producing something
+# The run closes on a candidate that exists but cannot be linked anywhere, where the publisher has to give up after its bounded number of attempts
 function getProbePublish(): array {
     $out = [];
     $one = getProbeBackup(['compress' => 'none'])->addDatabaseBackup();
@@ -210,8 +211,7 @@ function getProbePublish(): array {
     unlink($dst);
     $back = getProbeBackup(['compress' => 'none']);
     getProbeCall($back, 'checkSettingsInput', [['compress' => 'none']]);
-    # A candidate that exists but cannot be linked anywhere: the publisher must give up after its bounded number of attempts
-    $cand = $GLOBALS['proot'].'/candidate.sql';
+    $cand =$GLOBALS['proot'].'/candidate.sql';
     file_put_contents($cand, 'dump');
     (new ReflectionProperty($back, 'dir'))->setValue($back, $GLOBALS['proot'].'/no-such-directory');
     try {

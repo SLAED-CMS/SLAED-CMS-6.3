@@ -61,6 +61,9 @@ function getCommentsSearch(): string {
     return $tpl->getHtmlPart('div', ['is_searchbox' => true, 'content_html' => $form]);
 }
 
+# The moderation overview: the drifted counters, the bulk form and the comment table
+# Every write recomputes the counter of its own target, so a drift left here belongs to a target nobody has commented on since; it is shown rather than repaired, as a symptom
+# The table sits outside the bulk form, since the row actions are POST forms of their own and a browser drops a nested form; the checkboxes stay bound through the form attribute
 function comments(): void {
     global $conf, $afile, $tpl, $prs, $com;
     setHead();
@@ -86,8 +89,6 @@ function comments(): void {
         'tab' => $status,
         'subtitle_html' => $subtitle,
     ]);
-    # Every write recomputes the counter of its own target, so what is left here is a target nobody has commented on since it drifted
-    # It is shown rather than repaired on sight, because a number that disagrees with its comments is a symptom and the moderator should see it before it disappears
     $drift = $com->getCountDrift();
     if ($drift) {
         $cont .= $tpl->getHtmlFrag('alert', [
@@ -167,9 +168,6 @@ function comments(): void {
             'limit' => $data['limit'],
             'page' => $data['limit'],
         ]);
-        # The row actions are POST forms of their own, so the table must not sit inside the bulk form
-        # A browser drops a nested form, and its fields would then travel with the bulk submit
-        # The checkboxes stay bound to the bulk form through the form attribute, which is what HTML provides for exactly this case
         $table = $tpl->getHtmlFrag('table', [
             'is_wrapless' => true,
             'is_fixed' => true,
@@ -409,11 +407,11 @@ function save(): void {
 function approve(): void {
     global $afile, $com;
     $warn = !checkAdminPost('comments');
-    $typ = getVar('post', 'typ', 'num') ?: getVar('get', 'typ', 'num');
-    $modul = getVar('post', 'modul', 'var', getVar('get', 'modul', 'var'));
-    $search = getVar('post', 'search', 'num', getVar('get', 'search', 'num', 2));
+    $typ = getVar('post', 'typ', 'num');
+    $modul = getVar('post', 'modul', 'var');
+    $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
+    $chng = (string)getVar('post', 'chng', 'raw', '');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
@@ -431,11 +429,11 @@ function approve(): void {
 function delete(): void {
     global $afile, $com;
     $warn = !checkAdminPost('comments');
-    $status = getVar('post', 'status', 'num', getVar('get', 'status', 'num', 0));
-    $modul = getVar('post', 'modul', 'var', getVar('get', 'modul', 'var'));
-    $search = getVar('post', 'search', 'num', getVar('get', 'search', 'num', 2));
+    $status = getVar('post', 'status', 'num', 0);
+    $modul = getVar('post', 'modul', 'var');
+    $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
-    $chng = (string)(getVar('post', 'chng', 'raw', '') ?: getVar('get', 'chng', 'raw', ''));
+    $chng = (string)getVar('post', 'chng', 'raw', '');
     $id = getVar('post', 'id[]', 'num');
     if (!$warn && is_array($id)) {
         foreach ($id as $val) {
