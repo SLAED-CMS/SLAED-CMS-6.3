@@ -229,7 +229,7 @@ function getFilePost(string $jar, string $mark, string $type): array {
 # The admin file submission body, which the write, update and relocation rows reuse
 function getAdminPost(string $jar, string $mark, string $path): array {
     return [
-        'op' => 'save', 'posttype' => 'save', 'token' => getScopeToken($jar, 'ajax'), 'fid' => 0, 'cid' => 1,
+        'op' => 'save', 'posttype' => 'save', 'token' => getScopeToken($jar, 'files'), 'fid' => 0, 'cid' => 1,
         'postname' => 'route check', 'title' => $mark, 'description' => 'route check', 'bodytext' => 'route check',
         'url' => '', 'path' => $path, 'filesize' => 0, 'version' => '1', 'email' => '', 'website' => '', 'ihome' => 0, 'acomm' => 0,
     ];
@@ -424,9 +424,27 @@ function checkAdminFileRows(string $ajar, string $zip, string $mark): void {
     $gone = !is_file(ROOTDIR.'/'.$edit['url']);
     checkMatrixRow('a relocation without an upload moves the stored file', count($new) === 1 && $gone, implode(', ', $new));
     checkMatrixRow('the relocated row points at the new path', ($after[0]['url'] ?? '') === ($new[0] ?? ''));
+    checkAdminDeleteGuards($ajar, $fid, $edit, $tmp);
     $was = getDirTree($tmp);
     getHttpReply($ajar, '/admin.php?name=files&op=save', ['posttype' => 'delete', 'fid' => $fid] + $edit, ['filesite' => $zip]);
     checkMatrixRow('a delete with a file attached publishes nothing', getTreeDelta($tmp, $was) === []);
+}
+
+# The two halves of the delete authorization: a refused token must not reach the delete branch of save(), and a delete may not travel as an address at all
+# Both rows run before the delete that really removes the row, because each of them proves that the row and its file are still there afterwards
+function checkAdminDeleteGuards(string $ajar, int $fid, array $edit, string $tmp): void {
+    $was = getDirTree($tmp);
+    $post = ['posttype' => 'delete', 'fid' => $fid] + $edit;
+    $post['token'] = 'tampered';
+    getHttpReply($ajar, '/admin.php?name=files&op=save', $post);
+    $left = getDbRows('SELECT id FROM {p}_files WHERE id = :i', ['i' => $fid]);
+    $done = count($left) === 1 && getDirTree($tmp) === $was;
+    checkMatrixRow('a delete carrying a tampered token removes neither the row nor the file', $done);
+    $url = '/admin.php?name=files&op=delete&id='.$fid.'&token='.getScopeToken($ajar, 'files');
+    getHttpReply($ajar, $url);
+    $left = getDbRows('SELECT id FROM {p}_files WHERE id = :i', ['i' => $fid]);
+    $done = count($left) === 1 && getDirTree($tmp) === $was;
+    checkMatrixRow('a delete sent as a GET address changes nothing even with a valid token', $done);
 }
 
 # The two settings rows plus the documentation tab

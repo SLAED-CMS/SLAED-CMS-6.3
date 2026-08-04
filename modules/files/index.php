@@ -562,7 +562,7 @@ function send(): void {
         }
         if (!$stop && !$url && $posttype == 'save') $stop[] = _UPLOADEROR2;
         if (!$stop && $posttype == 'save') {
-            $postid = (is_user()) ? (int)$user[0] : '';
+            $postid = (is_user()) ? (int)$user[0] : 0;
             $uname  = (!is_user()) ? $postname : '';
             if (!$db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_files (id, cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, status)'

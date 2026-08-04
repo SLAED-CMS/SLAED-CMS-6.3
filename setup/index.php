@@ -11,6 +11,9 @@ define('CONFIG_DIR', BASE_DIR.'/config');
 $conf = require CONFIG_DIR.'/global.php';
 $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
 
+# The SQL splitter of the administration panel; it defines functions only, so the installer can borrow it before the rest of the system exists
+require_once BASE_DIR.'/core/admin.php';
+
 if ($conf['security']['error'] == 2) {
     ini_set('display_errors', 1);
     error_reporting(E_ALL);
@@ -123,67 +126,22 @@ function getCrypt(string $pass): string {
     return $crypt;
 }
 
-function getSqlStatements(string $content): array {
-    $lines = preg_split('/\\r\\n|\\n|\\r/', $content);
-    $delim = ';';
-    $buffer = '';
-    $queries = [];
-
-    foreach ($lines as $line) {
-        $trim = trim($line);
-        if (preg_match('/^DELIMITER\\s+(.+)$/i', $trim, $match)) {
-            if (trim($buffer) !== '') {
-                $queries[] = trim($buffer);
-                $buffer = '';
-            }
-            $delim = $match[1];
-            continue;
-        }
-
-        $buffer .= $line.PHP_EOL;
-
-        if ($trim !== '' && str_ends_with($trim, $delim)) {
-            $query = substr(rtrim($buffer), 0, -strlen($delim));
-            $query = trim($query);
-            if ($query !== '') {
-                $queries[] = $query;
-            }
-            $buffer = '';
-        }
-    }
-
-    $tail = trim($buffer);
-    if ($tail !== '') {
-        $queries[] = $tail;
-    }
-
-    return $queries;
-}
-
 function getSqlFile(string $file, string $prefix, string $engine, string $charset, string $collate, $db): string {
     $file = BASE_DIR.'/'.$file;
     if (!file_exists($file)) return '';
 
-    $content = file_get_contents($file);
-    $queries = getSqlStatements($content);
+    $parsed = getSqlbatch((string)file_get_contents($file));
     $output = '';
 
-    foreach ($queries as $query) {
-        $query = str_replace(
-            ['{prefix}', '{engine}', '{charset}', '{collate}'],
-            [$prefix, $engine, $charset, $collate],
-            trim($query)
-        );
+    if ($parsed['error'] !== '') return getInfo(basename($file), false);
 
-        if (empty($query)) continue;
-
+    foreach ($parsed['statements'] as $query) {
+        $query = str_replace(['{prefix}', '{engine}', '{charset}', '{collate}'], [$prefix, $engine, $charset, $collate], $query);
         $result = $db->getSqlQuery($query);
+        $info = getSqlinfo($query);
 
-        if (preg_match('#CREATE|ALTER|DELETE|DROP|RENAME|UPDATE#i', $query)) {
-            preg_match('#`([^`]+)`#', $query, $match);
-            $table = $match[1] ?? '';
-            $output .= getInfo($table, $result);
-        }
+        if ($info['table'] !== '') $output .= getInfo($info['table'], $result);
+        elseif (!$result) $output .= getInfo($info['type'], $result);
     }
 
     return $output;

@@ -131,7 +131,7 @@ final class UploadIntegrationTest extends TestCase
             'core/system.php' => 'checkSiteToken(',
             'modules/account/index.php' => 'checkSiteToken(',
             'modules/files/index.php' => 'checkSiteToken(',
-            'modules/files/admin/index.php' => 'checkSiteToken(',
+            'modules/files/admin/index.php' => 'checkAdminPost(',
             'admin/modules/uploads.php' => 'checkAdminPost(',
         ];
         foreach (self::ADAPTERS as $path => $name) {
@@ -157,6 +157,22 @@ final class UploadIntegrationTest extends TestCase
         }
     }
 
+    # A refused token stops the whole handler and not only its save branch, and the delete it dispatches validates the request on its own rather than trusting its caller
+    # Every state-changing route of the module authorizes through checkAdminPost(), so the method is proven together with the token and no action of it travels as an address
+    #[Test]
+    public function aRefusedTokenReachesNoDeleteBranch(): void
+    {
+        $body = $this->getBody('modules/files/admin/index.php', 'save');
+        $note = 'save() dispatches a delete without proving its token first, so a request with no token deletes the file and its rows';
+        $this->assertStringContainsString("!\$iswarn && \$posttype === 'delete'", $body, $note);
+        $code = $this->getFile('modules/files/admin/index.php');
+        $this->assertStringNotContainsString('checkSiteToken(', $code, 'A handler of this module still authorizes without proving the request method');
+        foreach (['save', 'delete', 'approve', 'configsave'] as $name) {
+            $body = $this->getBody('modules/files/admin/index.php', $name);
+            $this->assertStringContainsString("!checkAdminPost('files')", $body, $name.'() does not authorize through the scoped POST check');
+        }
+    }
+
     # Every adapter that writes a row checks the result and compensates the exact path it just published, and logs a compensation that itself failed
     #[Test]
     public function everyDatabaseWriteIsCheckedAndCompensated(): void
@@ -167,6 +183,11 @@ final class UploadIntegrationTest extends TestCase
             $this->assertStringContainsString('Logger::addFile(', $body, $name.'() does not log a compensation that failed');
             $this->assertMatchesRegularExpression('#!\$?[a-z]*(->getSqlQuery|done)#', $body, $name.'() does not test the result of its own write');
         }
+        $body = $this->getBody('modules/files/admin/index.php', 'save');
+        $note = 'The update branch does not prove its target row exists: a successful statement over no row would pass as a written row and leave the file behind';
+        $this->assertStringContainsString("SELECT id FROM '.PREFIX_DB.'_files WHERE id = :id", $body, $note);
+        $note = 'The update that follows a publication does not count its rows, so a target removed between the check and the write would still strand the file';
+        $this->assertStringContainsString("\$rpath !== '' && \$db->getSqlRowCount(\$done) < 1", $body, $note);
     }
 
     # The admin files handler must not publish and then move: the relocation branch may only run when no file was submitted

@@ -274,7 +274,13 @@ function getProbeLog(): array {
     $out = [];
     foreach (explode("\n", (string)file_get_contents($path)) as $line) {
         $row = json_decode(trim($line), true);
-        if (is_array($row)) $out[] = ['msg' => (string)($row['msg'] ?? ''), 'path' => (string)($row['path'] ?? '')];
+        if (!is_array($row)) continue;
+        $out[] = [
+            'msg' => (string)($row['msg'] ?? ''),
+            'path' => (string)($row['path'] ?? ''),
+            'host' => (string)($row['host'] ?? ''),
+            'address' => (string)($row['address'] ?? ''),
+        ];
     }
     return $out;
 }
@@ -686,6 +692,10 @@ function getProbeRemoteDns(): array {
         'sixorchid' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '2001:20::1']]], $site],
         'sixdummy' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '100:0:0:1::1']]], $site],
         'sixdiscard' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '100::1']]], $site],
+        'sixsite' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => 'fec0::1']]], $site],
+        'sixfree' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '4000::1']]], $site],
+        'sixbone' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '3ffe::1']]], $site],
+        'sixgap' => [['files.example.net' => [['type' => 'AAAA', 'ipv6' => '2004::1']]], $site],
         'gone' => [['other.example.net' => [['type' => 'A', 'ip' => '93.184.216.34']]], $site],
         'pair' => [['files.example.net' => [['type' => 'A', 'ip' => '93.184.216.34'], ['type' => 'A', 'ip' => '104.18.32.7']]], $site],
         'alias' => [$alias + ['edge.example.org' => [['type' => 'A', 'ip' => '104.18.32.7']]], $site],
@@ -702,6 +712,8 @@ function getProbeRemoteDns(): array {
         addProbeRoot();
         $out[$key] = getProbeShape(addProbeFetch(['dns' => $one[0], 'reply' => $reply], $one[1]));
     }
+    # The scenarios above share one log for the whole process, so what the address policy recorded is read back once at the end
+    $out['policy'] = ['log' => getProbeLog()];
     return $out;
 }
 

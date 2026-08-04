@@ -13,129 +13,6 @@ function addDblog(string $text): void {
     file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
 }
 
-function getSqlbatch(string $sql): array {
-    $sql = str_replace("\r\n", "\n", str_replace("\r", "\n", $sql));
-    $len = strlen($sql);
-    $dlim = ';';
-    $buff = '';
-    $list = [];
-    $quot = '';
-    $lcom = false;
-    $bcom = false;
-    $sol = true;
-
-    for ($num = 0; $num < $len; $num++) {
-        $char = $sql[$num];
-        $next = ($num + 1 < $len) ? $sql[$num + 1] : '';
-
-        if ($sol && !$quot && !$lcom && !$bcom) {
-            $lend = strpos($sql, "\n", $num);
-            $lend = ($lend === false) ? $len : $lend;
-            $line = substr($sql, $num, $lend - $num);
-            if (preg_match('/^\s*DELIMITER\s+(\S+)\s*$/i', $line, $mass)) {
-                $dlim = $mass[1];
-                $num = $lend;
-                $sol = true;
-                continue;
-            }
-        }
-
-        if ($lcom) {
-            $buff .= $char;
-            $sol = ($char === "\n");
-            if ($char === "\n") $lcom = false;
-            continue;
-        }
-
-        if ($bcom) {
-            $buff .= $char;
-            if ($char === '*' && $next === '/') {
-                $buff .= '/';
-                $num++;
-                $bcom = false;
-                $sol = false;
-                continue;
-            }
-            $sol = ($char === "\n");
-            continue;
-        }
-
-        if ($quot !== '') {
-            $buff .= $char;
-            if ($char === '\\' && $quot !== '`' && $next !== '') {
-                $buff .= $next;
-                $num++;
-                $sol = false;
-                continue;
-            }
-            if ($char === $quot) {
-                if ($quot !== '`' && $next === $quot) {
-                    $buff .= $next;
-                    $num++;
-                } else {
-                    $quot = '';
-                }
-            }
-            $sol = ($char === "\n");
-            continue;
-        }
-
-        if ($char === '-' && $next === '-' && (($num + 2 >= $len) || preg_match('/\s/', $sql[$num + 2]))) {
-            $buff .= $char.$next;
-            $num++;
-            $lcom = true;
-            $sol = false;
-            continue;
-        }
-        if ($char === '#') {
-            $buff .= $char;
-            $lcom = true;
-            $sol = false;
-            continue;
-        }
-        if ($char === '/' && $next === '*') {
-            $buff .= $char.$next;
-            $num++;
-            $bcom = true;
-            $sol = false;
-            continue;
-        }
-        if ($char === '\'' || $char === '"' || $char === '`') {
-            $buff .= $char;
-            $quot = $char;
-            $sol = false;
-            continue;
-        }
-
-        if ($dlim !== '' && substr($sql, $num, strlen($dlim)) === $dlim) {
-            $stmt = trim($buff);
-            if ($stmt !== '') $list[] = $stmt;
-            $buff = '';
-            $num += strlen($dlim) - 1;
-            $sol = false;
-            continue;
-        }
-
-        $buff .= $char;
-        $sol = ($char === "\n");
-    }
-
-    if ($quot !== '') return ['statements' => $list, 'error' => 'Unclosed quoted string in SQL input'];
-    if ($bcom) return ['statements' => $list, 'error' => 'Unclosed block comment in SQL input'];
-
-    $stmt = trim($buff);
-    if ($stmt !== '') $list[] = $stmt;
-
-    return ['statements' => $list, 'error' => ''];
-}
-
-function getSqlinfo(string $sql): array {
-    $type = 'SQL';
-    $table = '';
-    if (preg_match('/^\s*([A-Z]+)/i', $sql, $mass)) $type = strtoupper($mass[1]);
-    if (preg_match('/`([^`]+)`/', $sql, $mass)) $table = $mass[1];
-    return ['type' => $type, 'table' => $table];
-}
 
 function checkDblock(): bool {
     global $db;
@@ -417,15 +294,11 @@ function dump(): void {
             setFoot();
             return;
         }
-        $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
-        $parsed = getSqlbatch(stripslashes($string));
+        $parsed = getSqlbatch(getSqlFilled($string));
         if ($parsed['error'] !== '') {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $parsed['error']]);
         } else {
-            $items = [];
-            foreach ($parsed['statements'] as $query) {
-                $items[] = str_replace(array_keys($subst), array_values($subst), $query);
-            }
+            $items = $parsed['statements'];
             $reslist = [];
             $isdump = ($action === 'exec');
             if ($isdump) {
@@ -482,7 +355,7 @@ function dump(): void {
                 'id' => 'code',
                 'name' => 'string',
                 'lang' => 'sql',
-                'text' => stripslashes($string),
+                'text' => $string,
             ]),
         ]],
         'actions_html' => $buttons,

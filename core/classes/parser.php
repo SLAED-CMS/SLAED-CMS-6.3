@@ -500,7 +500,7 @@ class Parser {
                     if (getImageThumb($path, $tmp, $twd) === $tmp && is_file($tmp) && rename($tmp, $tpath)) $fex[$tpath] = true;
                     elseif (is_file($tmp)) unlink($tmp);
                 }
-                $timg = $tfile;
+                if ($fex[$tpath] ?? false) $timg = $tfile;
                 if ($fex[$path] ??= file_exists($path)) {
                     $isz[$path] ??= getimagesize($path);
                     [$wd, $hg] = $isz[$path];

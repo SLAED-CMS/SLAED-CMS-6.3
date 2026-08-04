@@ -151,16 +151,8 @@ function modules(): void {
             'title' => _FULLEDIT,
         ]];
         if (file_exists('modules/'.$title.'/sql/table.sql')) {
-            $filename = file_get_contents('modules/'.$title.'/sql/table.sql');
-            $stringdump = explode(';', $filename);
-            $install = '';
-            for ($i = 0; $i < count($stringdump); $i++) {
-                $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
-                if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
-                    $table = explode('`', $string);
-                    $install = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.$table[1]));
-                }
-            }
+            $made = getSqlFileTables((string)file_get_contents('modules/'.$title.'/sql/table.sql'), 'CREATE');
+            $install = $made !== [] && checkSqlTable($made[0]);
             $keys = ['name' => 'modules', 'op' => 'add', 'mod' => $title, 'id' => $install ? '1' : '2', 'type' => $mtype];
             $what = $install ? _DB_DELETE : _DB_INSTALL;
             $items[] = getTplPostAction($keys, $install ? 'database-dash' : 'database-add', $what, $what.' "'.$title.'"?');
@@ -342,25 +334,27 @@ function add(): void {
         return;
     }
     if ($mod && $id) {
-        $filename = ($id == 3) ? file_get_contents('modules/'.$mod.'/sql/update.sql') : file_get_contents('modules/'.$mod.'/sql/table.sql');
-        if ($id == 1) {
-            $ttitle = _DB_DELETE;
-        } elseif ($id == 2) {
-            $ttitle = _DB_INSTALL;
-        } else {
-            $ttitle = _DB_UPDATE;
-        }
-        $stringdump = explode(';', $filename);
+        $file = 'modules/'.$mod.'/sql/'.(($id == 3) ? 'update.sql' : 'table.sql');
+        $ttitle = ($id == 1) ? _DB_DELETE : (($id == 2) ? _DB_INSTALL : _DB_UPDATE);
         $lines = [];
-        for ($i = 0; $i < count($stringdump); $i++) {
-            $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
-            if ($id != 1) $ident = $db->getSqlQuery(stripslashes($string));
-            if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
-                $table = explode('`', $string);
-                if ($id == 1) $ident = $db->getSqlQuery('DROP TABLE '.$table[1]);
-                $lines[] = _TABLE.': '.$table[1].' - '.((bool)$ident ? _OK : _ERROR);
+        if (!is_file($file)) {
+            $lines[] = _ERROR;
+        } elseif ($id == 1) {
+            foreach (getSqlFileTables((string)file_get_contents($file), 'CREATE') as $name) {
+                $done = $db->getSqlQuery('DROP TABLE IF EXISTS `'.$name.'`');
+                $lines[] = _TABLE.': '.$name.' - '.($done ? _OK : _ERROR);
+            }
+        } else {
+            $parsed = getSqlbatch(getSqlFilled((string)file_get_contents($file)));
+            $queries = ($parsed['error'] === '') ? $parsed['statements'] : [];
+            if ($parsed['error'] !== '') $lines[] = $parsed['error'];
+            foreach ($queries as $one) {
+                $done = $db->getSqlQuery($one);
+                $info = getSqlinfo($one);
+                $lines[] = ($info['table'] !== '' ? _TABLE.': '.$info['table'] : $info['type']).' - '.($done ? _OK : _ERROR);
             }
         }
+        if (!$lines) $lines[] = _NO_INFO;
         $infos = $ttitle.': '.$mod.PHP_EOL.PHP_EOL.implode(PHP_EOL, $lines);
     }
     modules();

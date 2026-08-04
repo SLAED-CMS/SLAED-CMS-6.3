@@ -97,6 +97,18 @@ final class ImageThumbTest extends TestCase
         $this->assertFalse($runs['zero']['written']);
     }
 
+    # The degradation has to reach the markup, not only the return value: a source whose thumbnail could not be produced is rendered against the full size file
+    # Driven through filterAttach() rather than through the helper, because the caller discarding the returned path is exactly the defect this guards against
+    #[Test]
+    public function aRefusedThumbnailRendersTheFullSizeFile(): void
+    {
+        $run = $this->getProbe('attach')['runs'];
+        if (empty($run['ran'])) $this->markTestSkipped('Attach scenario: '.($run['why'] ?? 'not run'));
+        $this->assertStringContainsString('src="'.$run['src'].'"', $run['html'], 'The attach markup does not carry the full size file');
+        $this->assertStringNotContainsString($run['thumb'], $run['html'], 'The attach markup points at a thumbnail that was never written');
+        $this->assertFalse($run['left'], 'The probe left a thumbnail behind in the upload tree');
+    }
+
     # Source level: the renamed helper carries no WBMP path, so IMAGETYPE_SWF is no longer decoded as a wireless bitmap
     #[Test]
     public function theHelperCarriesNoWbmpBranch(): void

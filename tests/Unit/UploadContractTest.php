@@ -330,14 +330,72 @@ final class UploadContractTest extends TestCase
         $note = 'A host that is already an address must carry no resolve entry: libcurl fails the whole transfer over an IPv6 literal in one';
         $this->assertSame('', $data['literal']['bind'], $note);
         $this->assertSame('', $data['sixlit']['bind'], $note);
-        $keys = ['private', 'loop', 'link', 'cgnat', 'zero', 'cast', 'docnet', 'mixed', 'ula', 'sixloop', 'mapped', 'gone', 'aliasbad'];
-        $keys = array_merge($keys, ['aliasloop', 'aliasdeep', 'literalbad', 'sixliteral']);
+        # A host the policy refused answers its own code, so an operator reading the log can tell a private target apart from a prefix this build does not know yet
+        $keys = ['private', 'loop', 'link', 'cgnat', 'zero', 'cast', 'docnet', 'mixed', 'ula', 'sixloop', 'mapped', 'aliasbad'];
+        $keys = array_merge($keys, ['literalbad', 'sixliteral']);
         # Every IPv6 range the IANA registry marks as not globally reachable, each one a prefix an earlier revision of the block list let through
         $keys = array_merge($keys, ['sixbench', 'sixdoc', 'sixsid', 'sixorchid', 'sixdummy', 'sixdiscard']);
-        foreach ($keys as $key) {
-            $this->checkFailShape($data[$key], 'remote', 'The '.$key.' host');
+        # Reserved space refused by absence from the delegated prefixes: site-local, outside 2000::/3, the returned 6bone block and a gap between two registry entries
+        $keys = array_merge($keys, ['sixsite', 'sixfree', 'sixbone', 'sixgap']);
+        # A lookup that found nothing is not a refusal and keeps the generic code: an unknown host, an alias loop and a chain over the limit
+        $miss = ['gone', 'aliasloop', 'aliasdeep'];
+        foreach ([...$keys, ...$miss] as $key) {
+            $this->checkFailShape($data[$key], in_array($key, $miss, true) ? 'remote' : 'address', 'The '.$key.' host');
             $this->assertSame(0, $data[$key]['hits'], 'The '.$key.' host was connected to');
             $this->assertSame([], $data[$key]['left'], 'The '.$key.' host published a file');
+        }
+    }
+
+    # The prefix list is maintained by hand between releases, so every member is held to the shape the policy can match at all
+    # A prefix that is not aligned to its own length silently covers a different block than the operator meant, and one outside 2000::/3 would widen the policy past global unicast
+    #[Test]
+    public function everyShippedPrefixIsAlignedGlobalUnicast(): void
+    {
+        if (!class_exists('Upload', false)) {
+            if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
+            require_once dirname(__DIR__, 2).'/core/classes/upload.php';
+        }
+        $nets = \Upload::getPublicNets();
+        $this->assertNotEmpty($nets, 'The address policy holds no prefix at all, so no remote fetch can succeed');
+        $seen = [];
+        foreach ($nets as $net) {
+            $part = explode('/', $net);
+            $this->assertCount(2, $part, $net.' is not written as a prefix with a length');
+            $bin = inet_pton($part[0]);
+            $bits = (int)$part[1];
+            $this->assertNotFalse($bin, $net.' does not carry a readable address');
+            $this->assertSame(16, strlen((string)$bin), $net.' is not an IPv6 prefix');
+            $this->assertGreaterThan(0, $bits, $net.' has no usable prefix length');
+            $this->assertLessThanOrEqual(128, $bits, $net.' has a prefix length past the address size');
+            $this->assertSame(0x20, ord((string)$bin[0]) & 0xe0, $net.' sits outside the 2000::/3 global unicast block');
+            $this->assertSame($bin, $this->getMaskedAddress((string)$bin, $bits), $net.' is not aligned to its own prefix length');
+            $this->assertArrayNotHasKey($net, $seen, $net.' is listed twice');
+            $seen[$net] = true;
+        }
+    }
+
+    # Zero every bit of one packed address below the given prefix length, which is what an aligned prefix already looks like
+    private function getMaskedAddress(string $bin, int $bits): string
+    {
+        for ($i = 0; $i < 16; $i++) {
+            $keep = min(8, max(0, $bits - $i * 8));
+            $bin[$i] = chr(ord($bin[$i]) & (0xff << (8 - $keep)) & 0xff);
+        }
+        return $bin;
+    }
+
+    # Every refusal by the address policy names the address in error_file.log, which is the only signal an operator has that the prefix list has fallen behind the registry
+    #[Test]
+    public function everyRefusedAddressIsRecordedWithItsAddress(): void
+    {
+        $rows = $this->getProbe('remotedns')['policy']['log'];
+        $this->assertNotEmpty($rows, 'The address policy recorded nothing at all');
+        $seen = [];
+        foreach ($rows as $one) {
+            if ($one['msg'] === 'Remote address refused by the address policy') $seen[] = $one['address'];
+        }
+        foreach (['10.0.0.5', '127.0.0.1', '169.254.169.254', '::1', 'fc00::1', 'fec0::1', '3ffe::1', '2004::1'] as $addr) {
+            $this->assertContains($addr, $seen, 'The refusal of '.$addr.' was not recorded with the address it refused');
         }
     }
 
@@ -351,8 +409,8 @@ final class UploadContractTest extends TestCase
             $this->assertSame($hits, $data[$key]['hits'], 'The '.$key.' redirect took the wrong number of requests');
         }
         $this->assertSame($data['bytes'], $data['discard']['size'], 'The body of the redirect response was published together with the final one');
-        foreach (['four', 'private', 'scheme', 'noloc', 'missing'] as $key) {
-            $this->checkFailShape($data[$key], 'remote', 'The '.$key.' redirect');
+        foreach (['four' => 'remote', 'private' => 'address', 'scheme' => 'remote', 'noloc' => 'remote', 'missing' => 'remote'] as $key => $code) {
+            $this->checkFailShape($data[$key], $code, 'The '.$key.' redirect');
             $this->assertSame([], $data[$key]['left'], 'The '.$key.' redirect published a file');
         }
         $this->assertSame(4, $data['four']['hits'], 'A fourth redirect must not be requested');

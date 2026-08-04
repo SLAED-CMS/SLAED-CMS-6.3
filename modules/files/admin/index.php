@@ -17,17 +17,17 @@ function files(): void {
     if ($status == 1) {
         $st = '0';
         $field = 'name=files&status=1&';
-        $refer = '&refer=1';
+        $refer = 1;
         $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 2]);
     } elseif ($status == 2) {
         $st = '2';
         $field = 'name=files&status=2&';
-        $refer = '';
+        $refer = 0;
         $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS], 'tab' => 3]);
     } else {
         $st = '1';
         $field = 'name=files&';
-        $refer = '';
+        $refer = 0;
         $cont = getTplAdminTabs(['ops' => ['name=files', 'name=files&op=add', 'name=files&status=1', 'name=files&status=2', 'name=files&op=config', 'name=files&op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _DOCS]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
@@ -44,16 +44,10 @@ function files(): void {
             } else {
                 $active = '0';
             }
-            if ($st == '2') {
-                $items[] = ['href' => $afile.'.php?name=files&op=approve&id='.$id.'&token='.getSiteToken(), 'icon_name' => 'check2', 'title' => _IGNORE];
-            }
+            if ($st == '2') $items[] = getTplPostAction(['name' => 'files', 'op' => 'approve', 'id' => $id], 'check2', _IGNORE);
             $items[] = ['href' => $afile.'.php?name=files&op=add&id='.$id, 'icon_name' => 'pencil', 'title' => _FULLEDIT];
-            $items[] = [
-                'href' => $afile.'.php?name=files&op=delete&id='.$id.$refer.'&token='.getSiteToken(),
-                'icon_name' => 'trash',
-                'title' => _ONDELETE,
-                'confirm_text' => _DELETE.' "'.$title.'"?',
-            ];
+            $keys = ['name' => 'files', 'op' => 'delete', 'id' => $id] + ($refer ? ['refer' => 1] : []);
+            $items[] = getTplPostAction($keys, 'trash', _ONDELETE, _DELETE.' "'.$title.'"?');
             $rows .= $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
                     ['is_col_id' => true, 'content_html' => (string)$id],
@@ -200,7 +194,7 @@ function add(): void {
         'form_attr' => 'enctype="multipart/form-data"',
         'hidden' => [
             ['nameattr' => 'fid', 'valueattr' => (string)$fid],
-            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken('files')],
         ],
         'actions_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'posttype', 'options_html' => $posttypeopts, 'is_inline_gap' => true])
             .$tpl->getHtmlFrag('button', ['submit_label' => _OK, 'button_type' => 'submit']),
@@ -228,7 +222,7 @@ function save(): void {
     $email = getVar('post', 'email', 'name', '');
     $website = getVar('post', 'website', 'url', '');
     $posttype = getVar('post', 'posttype', 'text', '');
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('files');
     $stop = [];
     if (!$iswarn) {
         if (!$title) $stop[] = _CERROR;
@@ -270,7 +264,9 @@ function save(): void {
         if (!$stop && $posttype === 'save') {
             $postid = is_user_id($postname) ?: 0;
             $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
-            if ($fid) {
+            if ($fid && !$db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $fid]))) {
+                $done = false;
+            } elseif ($fid) {
                 if (!$sent && $path) {
                     $filel = array_reverse(explode('/', $url));
                     if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) {
@@ -289,6 +285,7 @@ function save(): void {
                         'ihome' => $ihome, 'acomm' => $acomm, 'id' => $fid,
                     ]
                 );
+                if ($done && $rpath !== '' && $db->getSqlRowCount($done) < 1) $done = false;
             } else {
                 $ip = getip();
                 $done = $db->getSqlQuery(
@@ -314,11 +311,11 @@ function save(): void {
         add();
         return;
     }
-    if ($posttype === 'delete') {
+    if (!$iswarn && $posttype === 'delete') {
         delete($fid);
         return;
     }
-    if ($posttype === 'preview') {
+    if (!$iswarn && $posttype === 'preview') {
         add();
         return;
     }
@@ -327,8 +324,8 @@ function save(): void {
 
 function delete(int $fid = 0): void {
     global $db, $afile, $com;
-    $id = $fid ?: getVar('req', 'id', 'num', 0);
-    $iswarn = !$fid && !checkSiteToken();
+    $id = $fid ?: getVar('post', 'id', 'num', 0);
+    $iswarn = !checkAdminPost('files');
     if (!$iswarn && $id) {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]));
         if (file_exists(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'))) unlink(preg_match('#^(?:[A-Za-z]:/|//|/)#', str_replace('\\', '/', $url)) ? str_replace('\\', '/', $url) : BASE_DIR.'/'.ltrim(str_replace('\\', '/', $url), '/'));
@@ -336,14 +333,14 @@ function delete(int $fid = 0): void {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_files WHERE id = :id', ['id' => $id]);
     }
-    $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
+    $refer = getVar('post', 'refer', 'num', 0) ? '&status=1' : '';
     setRedirect($afile.'.php?name=files'.$refer, false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
 }
 
 function approve(): void {
     global $db, $afile;
-    $id = getVar('get', 'id', 'num', 0);
-    $iswarn = !checkSiteToken();
+    $id = getVar('post', 'id', 'num', 0);
+    $iswarn = !checkAdminPost('files');
     if (!$iswarn && $id) {
         setContentActive('_files', [$id], 9);
     }
@@ -393,7 +390,7 @@ function config(): void {
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=files&op=configsave',
-        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken()]],
+        'hidden' => [['nameattr' => 'token', 'valueattr' => getSiteToken('files')]],
         'rows' => $rows,
         'submit_label' => _SAVECHANGES,
     ])]);
@@ -405,7 +402,7 @@ function configsave(): void {
     global $afile;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $typefile = getVar('post', 'typefile', 'text', '');
-    $iswarn = !checkSiteToken();
+    $iswarn = !checkAdminPost('files');
     if (!$iswarn) {
         $cont = [
             'defis' => getVar('post', 'defis', 'defis', '%3E'),

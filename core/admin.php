@@ -4,7 +4,7 @@
 # License: MIT
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE')) die('Illegal file access');
+if (!defined('ADMIN_FILE') && !defined('SETUP_FILE')) die('Illegal file access');
 
 # Format statistic image
 function getStatistic(): void {
@@ -1010,4 +1010,185 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
     }
     $attr = $extraClass ? ' class="'.htmlspecialchars('sl-field '.$extraClass, ENT_QUOTES, 'UTF-8').'"' : '';
     return $tpl->getHtmlFrag('select', ['name_attr' => $selectName, 'options_html' => $opts, 'select_attr' => $attr]);
+}
+
+# Split one SQL script into the statements a driver can take one at a time, honouring quoting, comments and the DELIMITER directive of a stored routine
+# Three callers run scripts written by hand and none of them may split on a bare semicolon: the Inquiry tab, the module installer and setup/index.php
+# A statement is returned exactly as the file wrote it: an escape inside a string literal is part of the statement and is never unwrapped on the way through
+function getSqlbatch(string $sql): array {
+    $sql = str_replace("\r\n", "\n", str_replace("\r", "\n", $sql));
+    $len = strlen($sql);
+    $dlim = ';';
+    $buff = '';
+    $list = [];
+    $quot = '';
+    $lcom = false;
+    $bcom = false;
+    $sol = true;
+    for ($num = 0; $num < $len; $num++) {
+        $char = $sql[$num];
+        $next = ($num + 1 < $len) ? $sql[$num + 1] : '';
+        if ($sol && !$quot && !$lcom && !$bcom) {
+            $lend = strpos($sql, "\n", $num);
+            $lend = ($lend === false) ? $len : $lend;
+            $line = substr($sql, $num, $lend - $num);
+            if (preg_match('/^\s*DELIMITER\s+(\S+)\s*$/i', $line, $mass)) {
+                $dlim = $mass[1];
+                $num = $lend;
+                $sol = true;
+                continue;
+            }
+        }
+        if ($lcom) {
+            $buff .= $char;
+            $sol = ($char === "\n");
+            if ($char === "\n") $lcom = false;
+            continue;
+        }
+        if ($bcom) {
+            $buff .= $char;
+            if ($char === '*' && $next === '/') {
+                $buff .= '/';
+                $num++;
+                $bcom = false;
+                $sol = false;
+                continue;
+            }
+            $sol = ($char === "\n");
+            continue;
+        }
+        if ($quot !== '') {
+            $buff .= $char;
+            if ($char === '\\' && $quot !== '`' && $next !== '') {
+                $buff .= $next;
+                $num++;
+                $sol = false;
+                continue;
+            }
+            if ($char === $quot) {
+                if ($quot !== '`' && $next === $quot) {
+                    $buff .= $next;
+                    $num++;
+                } else {
+                    $quot = '';
+                }
+            }
+            $sol = ($char === "\n");
+            continue;
+        }
+        if ($char === '-' && $next === '-' && (($num + 2 >= $len) || preg_match('/\s/', $sql[$num + 2]))) {
+            $buff .= $char.$next;
+            $num++;
+            $lcom = true;
+            $sol = false;
+            continue;
+        }
+        if ($char === '#') {
+            $buff .= $char;
+            $lcom = true;
+            $sol = false;
+            continue;
+        }
+        if ($char === '/' && $next === '*') {
+            $buff .= $char.$next;
+            $num++;
+            $bcom = true;
+            $sol = false;
+            continue;
+        }
+        if ($char === '\'' || $char === '"' || $char === '`') {
+            $buff .= $char;
+            $quot = $char;
+            $sol = false;
+            continue;
+        }
+        if ($dlim !== '' && substr($sql, $num, strlen($dlim)) === $dlim) {
+            $stmt = getSqlclean($buff);
+            if ($stmt !== '') $list[] = $stmt;
+            $buff = '';
+            $num += strlen($dlim) - 1;
+            $sol = false;
+            continue;
+        }
+        $buff .= $char;
+        $sol = ($char === "\n");
+    }
+    if ($quot !== '') return ['statements' => $list, 'error' => 'Unclosed quoted string in SQL input'];
+    if ($bcom) return ['statements' => $list, 'error' => 'Unclosed block comment in SQL input'];
+    $stmt = getSqlclean($buff);
+    if ($stmt !== '') $list[] = $stmt;
+    return ['statements' => $list, 'error' => ''];
+}
+
+# Drop the comment block a statement carries in front of its first SQL token, which is what a commented migration file puts there
+# The comment is not the statement: leaving it in front makes the preview show the file header instead of the query and makes getSqlinfo() read the wrong type
+# A block that turns out to be nothing but comments is returned empty, so the caller drops it instead of sending a query with no statement in it
+function getSqlclean(string $sql): string {
+    while ($sql !== '') {
+        if (preg_match('/^\s+/', $sql, $mass)) {
+            $sql = substr($sql, strlen($mass[0]));
+            continue;
+        }
+        if (preg_match('/^(?:#|--(?:\s|$))[^\n]*(?:\n|$)/', $sql, $mass)) {
+            $sql = substr($sql, strlen($mass[0]));
+            continue;
+        }
+        if (str_starts_with($sql, '/*')) {
+            $stop = strpos($sql, '*/');
+            if ($stop === false) break;
+            $sql = substr($sql, $stop + 2);
+            continue;
+        }
+        break;
+    }
+    return trim($sql);
+}
+
+# Describe one statement for the report: the leading keyword and the table it addresses, both read from the head of the statement and never from its body
+# The table is anchored to the keyword that introduces it, because the first backtick of a statement is just as often a column of an index list or a fragment of a procedure body
+function getSqlinfo(string $sql): array {
+    $type = 'SQL';
+    $table = '';
+    $lead = '(?:IF\s+(?:NOT\s+)?EXISTS\s+)?';
+    $verb = 'INSERT\s+INTO|REPLACE\s+INTO|UPDATE|DELETE\s+FROM|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE|CREATE\s+(?:TEMPORARY\s+)?TABLE|DROP\s+TABLE|SELECT\b.*?\bFROM';
+    if (preg_match('/^\s*([A-Za-z]+)/', $sql, $mass)) $type = strtoupper($mass[1]);
+    if (preg_match('/^\s*(?:'.$verb.')\s+'.$lead.'`?([A-Za-z0-9_$]+)`?/is', $sql, $mass)) $table = $mass[1];
+    return ['type' => $type, 'table' => $table];
+}
+
+# Fill the installation placeholders one SQL script carries, which is the same set the Inquiry tab and the module installer both feed to the driver
+# A module table.sql declares its storage engine and collation through these, so a script run without them reaches the driver as invalid SQL
+function getSqlFilled(string $sql): string {
+    global $conf;
+    $map = [
+        '{prefix}' => PREFIX_DB,
+        '{engine}' => (string)($conf['db']['engine'] ?? ''),
+        '{charset}' => (string)($conf['db']['charset'] ?? ''),
+        '{collate}' => (string)($conf['db']['collate'] ?? ''),
+    ];
+    return str_replace(array_keys($map), array_values($map), $sql);
+}
+
+# Return the tables one SQL script addresses, in the order it names them and without repeats, optionally only those introduced by one statement type
+# The module list asks for the CREATE set to decide whether a module is installed, and the uninstall asks for the same set, because those are the tables the script owns
+function getSqlFileTables(string $sql, string $verb = ''): array {
+    $out = [];
+    foreach (getSqlbatch(getSqlFilled($sql))['statements'] as $one) {
+        $info = getSqlinfo($one);
+        if ($info['table'] === '' || ($verb !== '' && $info['type'] !== $verb)) continue;
+        if (!in_array($info['table'], $out, true)) $out[] = $info['table'];
+    }
+    return $out;
+}
+
+# Return whether one table exists in the current database, asked of the catalogue rather than of the table itself
+# A module that is not installed would otherwise make the list page run a query against a missing table and write an SQL error for every render
+function checkSqlTable(string $name): bool {
+    global $db;
+    if ($name === '') return false;
+    $row = $db->getSqlRow($db->getSqlQuery(
+        'SELECT COUNT(*) AS num FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = :name',
+        ['name' => $name]
+    ));
+    return (int)($row['num'] ?? 0) > 0;
 }

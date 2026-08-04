@@ -103,6 +103,27 @@ function getProbeSkip(): array {
     return $out;
 }
 
+# The renderer half of the fallback: a source whose thumbnail cannot be produced must be rendered against the full size file and never against a thumbnail that was never written
+# This is the one scenario that writes below the site upload tree, because filterAttach() resolves every path from BASE_DIR and cannot be pointed at the scratch root
+# The fixture is a png cut to 33 bytes: the header still parses, so the markup is reached with real dimensions, while the decoder refuses it and no thumbnail is produced
+function getProbeAttach(): array {
+    if (!function_exists('imagepng') || !function_exists('imagecreatefrompng')) return ['ran' => false, 'why' => 'this build has no png decoder'];
+    $dir = UPLOADS_DIR.'/news';
+    if (!is_dir($dir) || !is_writable($dir)) return ['ran' => false, 'why' => 'uploads/news is not a writable directory on this installation'];
+    $name = 'probeattach'.bin2hex(random_bytes(4)).'.png';
+    $file = $dir.'/'.$name;
+    $img = imagecreatetruecolor(64, 48);
+    imagepng($img, $file);
+    file_put_contents($file, substr((string)file_get_contents($file), 0, 33));
+    $thumb = $dir.'/thumb/'.$name;
+    $pars = new Parser();
+    $html = $pars->filterDoc('[attach='.$name.' align=left title=probe]', false, 'news');
+    $left = is_file($thumb);
+    if (is_file($file)) unlink($file);
+    if ($left) unlink($thumb);
+    return ['ran' => true, 'html' => $html, 'src' => 'uploads/news/'.$name, 'thumb' => 'uploads/news/thumb/'.$name, 'left' => $left];
+}
+
 $mode = (string)($argv[1] ?? '');
 $out = [];
 try {
@@ -110,6 +131,7 @@ try {
     $out = match ($mode) {
         'thumb' => ['caps' => getProbeCaps(), 'runs' => getProbeThumb()],
         'skip' => ['caps' => getProbeCaps(), 'runs' => getProbeSkip()],
+        'attach' => ['caps' => getProbeCaps(), 'runs' => getProbeAttach()],
         default => ['error' => 'unknown scenario '.$mode],
     };
 } catch (Throwable $error) {

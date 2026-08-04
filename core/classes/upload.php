@@ -21,14 +21,22 @@ class Upload {
     private const KEEP = ['index.html', '.htaccess'];
     private const BLOCK = ['phtml', 'js', 'htm', 'html', 'cgi', 'pl', 'perl', 'asp', 'swf'];
     private const IMAGES = ['avif', 'gif', 'jpeg', 'jpg', 'png', 'webp'];
-    # Every network the IANA special-purpose registries mark as not globally reachable, plus the ranges that are reachable but never a legitimate fetch target
-    # 2001::/23 is the whole IETF Protocol Assignments block rather than Teredo alone, because benchmarking, AMT, ORCHIDv2 and the drone block all sit inside it
+    # Every IPv4 network the IANA special-purpose registry marks as not globally reachable, plus the ranges that are reachable but never a legitimate fetch target
     private const BLOCKNET = [
         '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.0.0.0/24', '192.0.2.0/24',
         '192.88.99.0/24', '192.168.0.0/16', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24', '224.0.0.0/4', '240.0.0.0/4',
-        '::/128', '::1/128', '64:ff9b::/96', '64:ff9b:1::/48', '100::/64', '100:0:0:1::/64', '2001::/23', '2001:db8::/32',
-        '2002::/16', '3fff::/20', '5f00::/16', 'fc00::/7', 'fe80::/10', 'ff00::/8',
     ];
+    # IPv6 is judged by an allowlist instead, because 2000::/3 is far from fully delegated: everything IANA still holds is reserved for future allocation and is refused by absence
+    # These are the prefixes of the IANA global unicast registry held by a regional registry, so 2001::/23 (IETF), 2002::/16 (6to4) and every IANA block are simply not here
+    # A newly delegated prefix must be added before this class fetches from it, which is the fail closed half of the bargain and the reason the registry is named above
+    private const ALLOWSIX = [
+        '2001:200::/23', '2001:400::/23', '2001:600::/23', '2001:800::/22', '2001:c00::/23', '2001:e00::/23', '2001:1200::/23', '2001:1400::/22',
+        '2001:1800::/23', '2001:1a00::/23', '2001:1c00::/22', '2001:2000::/19', '2001:4000::/23', '2001:4200::/23', '2001:4400::/23', '2001:4600::/23',
+        '2001:4800::/23', '2001:4a00::/23', '2001:4c00::/23', '2001:5000::/20', '2001:8000::/19', '2001:a000::/20', '2001:b000::/20', '2003::/18',
+        '2400::/12', '2410::/12', '2600::/12', '2610::/23', '2620::/23', '2630::/12', '2800::/12', '2a00::/12', '2a10::/12', '2c00::/12',
+    ];
+    # The one special-purpose registration that leaving it out cannot exclude, because it sits inside a delegated prefix: 2001:db8::/32 lives in the APNIC block 2001:c00::/23
+    private const BLOCKSIX = ['2001:db8::/32'];
     private const TYPES = [
         'gif' => ['image/gif'],
         'jpg' => ['image/jpeg'],
@@ -66,6 +74,11 @@ class Upload {
     # Every extension the type policy knows, which is what the admin settings validate a configured list against, so the policy exists in exactly one place
     public static function getSupportedTypes(): array {
         return array_keys(self::TYPES);
+    }
+
+    # Every IPv6 prefix the address policy will visit, which is what tools/ipv6-registry-check.php compares against the IANA registry, so the list exists in exactly one place
+    public static function getPublicNets(): array {
+        return self::ALLOWSIX;
     }
 
     # Publishes one submitted file; everything that can fail without touching the destination is checked before the transfer, so a rejected upload never reaches the upload tree
@@ -320,8 +333,9 @@ class Upload {
         for ($i = 0; $i <= self::REDIRS; $i++) {
             $norm = $this->getRemoteUrl($url);
             if ($norm['error'] !== '') return ['error' => 'remote', 'path' => ''];
-            $addr = $this->getHostAddress($norm['host']);
-            if ($addr === '') return ['error' => 'remote', 'path' => ''];
+            $host = $this->getHostAddress($norm['host']);
+            if ($host['error'] !== '') return ['error' => $host['error'], 'path' => ''];
+            $addr = $host['addr'];
             $res = $this->addRemoteRun($norm, $addr, $part, $max);
             if ($res['error'] !== '') return ['error' => $res['error'], 'path' => ''];
             if ($res['code'] > 199 && $res['code'] < 300) return ['error' => '', 'path' => $norm['path']];
@@ -435,13 +449,16 @@ class Upload {
     }
 
     # Resolves one host to a single public address, following a bounded alias chain; one non-public address anywhere in the answer refuses the whole host
-    private function getHostAddress(string $host): string {
-        if (filter_var($host, FILTER_VALIDATE_IP) !== false) return $this->checkPublicAddress($host) ? $host : '';
+    # A refusal by the address policy is reported apart from a lookup that found nothing, because the two need opposite answers from whoever reads the log
+    private function getHostAddress(string $host): array {
+        if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            return $this->checkPublicAddress($host) ? ['addr' => $host, 'error' => ''] : $this->getAddressFail($host, $host);
+        }
         $name = $host;
         $seen = [];
         for ($i = 0; $i < self::CHAIN; $i++) {
             $key = strtolower(rtrim($name, '.'));
-            if ($key === '' || isset($seen[$key])) return '';
+            if ($key === '' || isset($seen[$key])) return ['addr' => '', 'error' => 'remote'];
             $seen[$key] = true;
             $list = [];
             $next = '';
@@ -452,20 +469,28 @@ class Upload {
             }
             $list = array_values(array_filter($list));
             if ($list === []) {
-                if ($next === '') return '';
+                if ($next === '') return ['addr' => '', 'error' => 'remote'];
                 $name = $next;
                 continue;
             }
             foreach ($list as $addr) {
-                if (!$this->checkPublicAddress($addr)) return '';
+                if (!$this->checkPublicAddress($addr)) return $this->getAddressFail($name, $addr);
             }
             sort($list);
-            return $list[0];
+            return ['addr' => $list[0], 'error' => ''];
         }
-        return '';
+        return ['addr' => '', 'error' => 'remote'];
     }
 
-    # Returns whether one address is publicly routable; a mapped or compatible form is judged as the address it embeds, so a v6 spelling cannot smuggle a v4 target in
+    # Records one address the policy refused with the host it came from, so an operator can tell a private target apart from a prefix this build does not know yet
+    # Without this line the two are one failure to everyone outside the class, and a list behind the registry looks exactly like a host that is down
+    private function getAddressFail(string $host, string $addr): array {
+        Logger::addFile('error', 'Remote address refused by the address policy', ['host' => $host, 'address' => $addr]);
+        return ['addr' => '', 'error' => 'address'];
+    }
+
+    # Returns whether one address is publicly routable: IPv4 against the blocked networks, IPv6 against the delegated prefixes and the one exception inside them
+    # A mapped or compatible form is judged as the address it embeds, so a v6 spelling cannot smuggle a v4 target in
     private function checkPublicAddress(string $addr): bool {
         $bin = inet_pton($addr);
         if ($bin === false) return false;
@@ -474,6 +499,13 @@ class Upload {
             $tail = substr($bin, 12);
             $flat = $head === str_repeat("\x00", 10)."\xff\xff" || ($head === str_repeat("\x00", 12) && $tail !== str_repeat("\x00", 4));
             if ($flat) return $this->checkPublicAddress((string)inet_ntop($tail));
+            foreach (self::BLOCKSIX as $net) {
+                if ($this->checkNetBlock($bin, $net)) return false;
+            }
+            foreach (self::ALLOWSIX as $net) {
+                if ($this->checkNetBlock($bin, $net)) return true;
+            }
+            return false;
         }
         foreach (self::BLOCKNET as $net) {
             if ($this->checkNetBlock($bin, $net)) return false;
