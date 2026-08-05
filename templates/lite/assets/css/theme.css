@@ -365,6 +365,34 @@ h1.sl-title {
   white-space: nowrap;
 }
 
+.sl-col-check {
+  width: 36px;
+  text-align: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.sl-table-head th.sl-col-check {
+  cursor: pointer;
+}
+
+.sl-col-check input {
+  display: block;
+  margin: 0 auto;
+}
+
+.sl-bulk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sl-space-md);
+  margin-top: var(--sl-space-md);
+  padding: var(--sl-space-md);
+  background-color: var(--sl-color-bg-soft);
+  border: 1px solid var(--sl-color-border);
+  border-radius: var(--sl-radius-control);
+}
+
 .sl-table-num-link {
   display: inline-block;
   height: 30px;

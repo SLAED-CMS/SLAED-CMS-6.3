@@ -17,6 +17,7 @@
         {% if cell.class %}{{ cell.class }}
         {% else %}
           sl-table-cell
+          {% if cell.is_col_check %} sl-col-check{% endif %}
           {% if cell.is_num %} sl-table-col-num{% endif %}
           {% if cell.is_forum_stat %} sl-fl-col-stat{% endif %}
           {% if cell.is_forum_user %} sl-fl-col-user{% endif %}

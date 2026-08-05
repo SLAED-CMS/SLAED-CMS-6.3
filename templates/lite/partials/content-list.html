@@ -8,6 +8,7 @@
 </table>
 </div>
 {{{ pager_html }}}
+{% if bulk_html %}{{{ bulk_html }}}{% endif %}
 {% else %}
 {% include 'fragments/alert.html' with empty_alert %}
 {% endif %}

@@ -795,31 +795,34 @@ function getAdminFavoriteList(int $obj = 0): string {
 }
 
 # Private messages list view
+# The rows come from the private-message subsystem, which owns that table alone, so this list restates no mailbox predicate and filters no state: an administrator sees the deleted copies too
+# The state of one row is the one the four columns add up to, and the page is read from the request itself so a list rebuilt by a POST action stays on the page it was asked from
 function getAdminPrivateList(int $obj = 0): string {
-    global $db, $conf, $tpl, $prs;
-    $newlistnum = intval($conf['privat']['anum']);
-    $cid = getVar('get', 'num', 'num', getVar('get', 'cid', 'num', 1));
-    $offset = intval(($cid - 1) * $newlistnum);
-    list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
-
-    $result = $db->getSqlQuery('SELECT p.id, p.title, p.body, p.time, p.status, i.name, o.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id) ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum));
-    if ($db->getSqlRowCount($result) > 0) {
+    global $afile, $conf, $tpl, $prs, $prv;
+    $cid = getVar('req', 'num', 'num', getVar('req', 'cid', 'num', 1));
+    $data = $prv->getAdminList($cid);
+    if ($data['rows']) {
         $rows = [];
-        while (list($id, $title, $body, $date, $status, $user_re, $user_se) = $db->getSqlRow($result)) {
-            $unre = ($user_re) ? user_info($user_re) : _ANONYM;
-            $unse = ($user_se) ? user_info($user_se) : _ANONYM;
-            $date = format_time($date, _TIMESTRING);
-            $info = $prs->filterContent($body, false, 'privat');
-            $title = getDecodedText($title);
-            $delattr = getTplPostVals(['name' => 'privat', 'op' => 'delete', 'id' => $id, 'num' => $cid], '#repadminPrivateList');
+        foreach ($data['rows'] as $one) {
+            $title = getDecodedText($one['title']);
+            $tone = match ($one['state']) {'delin', 'delout' => 'danger', 'saved' => 'accent', 'read' => 'success', default => 'warn'};
+            $note = match ($one['state']) {
+                'delin' => (string)_PRIVAT_DELIN,
+                'delout' => (string)_PRIVAT_DELOUT,
+                'saved' => (string)_PRMOVE,
+                'read' => (string)_PROLD,
+                default => (string)_PROUTNEW,
+            };
+            $info = $prs->filterContent($one['body'], false, 'privat');
+            $delattr = getTplPostVals(['name' => 'privat', 'op' => 'delete', 'id' => $one['id'], 'num' => $data['page']], '#repadminPrivateList');
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [
-                    ['content_html' => (string) $id],
+                    ['content_html' => (string)$one['id']],
                     ['content_html' => $tpl->getHtmlFrag('popover', ['content_html' => $info]).$tpl->getHtmlFrag('inline-badge', ['is_note' => true, 'label' => $title, 'title_text' => $title])],
-                    ['content_html' => $unse],
-                    ['content_html' => $unre],
-                    ['content_html' => $date],
-                    ['content_html' => ad_status('', $status, 1), 'is_col_status' => true],
+                    ['content_html' => ($one['nameout'] !== '') ? user_info($one['nameout']) : (string)_ANONYM],
+                    ['content_html' => ($one['namein'] !== '') ? user_info($one['namein']) : (string)_ANONYM],
+                    ['content_html' => format_time($one['time'], _TIMESTRING)],
+                    ['content_html' => $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $tone, 'label' => $note, 'title_text' => $note]), 'is_col_status' => true],
                     ['content_html' => $tpl->getHtmlFrag('dial', [
                         'dial_title' => _FUNCTIONS,
                         'dial' => [[
@@ -846,30 +849,17 @@ function getAdminPrivateList(int $obj = 0): string {
             'rows_html' => implode('', $rows),
             'is_wrapless' => true,
         ]);
-        $cont .= getTplPager([
-            'table' => '_privat',
-            'field' => 'id',
-            'limit' => $newlistnum,
-            'maxpg' => intval($conf['privat']['anump']),
-            'url' => 'name=privat&',
-            'n' => 'num',
+        $cont .= getTplPagerView($data['page'], $data['pages'], intval($conf['privat']['anump']), static fn(int $i): array => [
+            'query' => $afile.'.php?name=privat&num='.$i,
             'target_id' => 'repadminPrivateList',
-            'push_url' => true,
-        ]);
+            'push_url' => 'true',
+        ], ['count' => $data['total'], 'limit' => $data['limit'], 'page' => $data['limit']]);
     } else {
         $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
     return '';
-}
-
-# Private message delete
-function deleteAdminPrivate(): void {
- global $db;
-    $id = getVar('get', 'id', 'num', 0);
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
-    getAdminPrivateList(0);
 }
 
 # Show uploads files for admin

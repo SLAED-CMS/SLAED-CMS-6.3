@@ -4,7 +4,7 @@
 {% else %}
 {% if is_comments_section %}<section{% else %}<div{% endif %}
   {% if id %}id="{{ id }}"{% endif %}
-  {% if class or is_radio_group or is_form_submit or is_center or is_main_grid or is_section or is_hidden or is_search_line or is_search_meta or is_snippet or is_pull_right or is_post_vote or is_message_box or is_block_flags or is_block_modules or is_block_module_section %}
+  {% if class or is_radio_group or is_form_submit or is_center or is_main_grid or is_section or is_hidden or is_search_line or is_search_meta or is_snippet or is_pull_right or is_post_vote or is_message_box or is_block_flags or is_block_modules or is_block_module_section or is_bulk_bar %}
   class="
     {% if class %}{{ class }}{% endif %}
     {% if is_radio_group %}{% if class %} {% endif %}{% if switch %}sl-radio-switch {% endif %}sl-radio-group{% endif %}
@@ -22,6 +22,7 @@
     {% if is_block_flags %} sl-block-flags{% endif %}
     {% if is_block_modules %} sl-block-modules{% endif %}
     {% if is_block_module_section %} sl-block-mod-section{% endif %}
+    {% if is_bulk_bar %} sl-bulk-bar{% endif %}
   "
   {% endif %}
 >{{{ content }}}{% if is_comments_section %}</section>{% else %}</div>{% endif %}

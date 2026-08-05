@@ -421,6 +421,12 @@ define('_PRINMAX','Die maximal zulässige Anzahl eingehender %1$s in diesem Mome
 define('_PRINNO','Neue eingehende');
 define('_PRIORITY','Priorität');
 define('_PRIVAT','Privaten Nachrichten');
+define('_PRIVAT_DELIN','Vom Empfänger gelöscht');
+define('_PRIVAT_DELOUT','Vom Absender gelöscht');
+define('_PRIVAT_NEW','Als ungelesen markieren');
+define('_PRIVAT_NOSEL','Wählen Sie die Nachrichten aus, für die die Aktion gilt.');
+define('_PRIVAT_READ','Als gelesen markieren');
+define('_PRIVAT_UNSAVE','Aus den gespeicherten entfernen');
 define('_PRMOVE','Gespeicherte Nachricht');
 define('_PRNEW','Neue Nachricht');
 define('_PRNEWMAIL','Wird Sie darauf hinweisen, dass Sie kam eine neue private Nachricht von Benutzer %1$s.<br><br>zum Lesen der Beiträge gehen Sie unter: %2$s<br><br><br>Sie erhalten diese Benachrichtigung, so wie Sie in Ihrem Konto, in dem angegeben wird Ihre E-Mail-Box, aktiviert Service «Benachrichtigung über die neuen privaten Nachrichten».<br><br>nicht Zu bekommen ähnliche Ankündigung in der Zukunft, deaktivieren Sie diesen Service in den Einstellungen des Profils.');

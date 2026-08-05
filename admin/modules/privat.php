@@ -81,7 +81,7 @@ function save(): void {
 }
 
 function delete(): void {
-    global $afile, $db, $tpl;
+    global $afile, $tpl, $prv;
     $id = getVar('post', 'id', 'num', 0);
     $num = getVar('post', 'num', 'num', 1);
     $ishtmx = strtolower($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true';
@@ -93,14 +93,12 @@ function delete(): void {
         setRedirect($afile.'.php?name=privat&num='.$num, false, 302, _TOKENMISS, true);
         return;
     }
-    if ($id > 0) {
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
-    }
+    $done = ($id > 0) && $prv->deleteAdminMessage([$id]);
     if ($ishtmx) {
-        echo getAdminPrivateList(1);
+        echo ($done ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERROR])).getAdminPrivateList(1);
         return;
     }
-    setRedirect($afile.'.php?name=privat&num='.$num, false, 302, _SUCCDELETE);
+    setRedirect($afile.'.php?name=privat&num='.$num, false, 302, $done ? _SUCCDELETE : _ERROR, !$done);
 }
 
 function info(): void {

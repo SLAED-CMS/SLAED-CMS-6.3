@@ -421,6 +421,12 @@ define('_PRINMAX','Nombre maximal de messages entrants %1$s, en ce moment dans l
 define('_PRINNO','De nouveaux entrants');
 define('_PRIORITY','Priorité');
 define('_PRIVAT','Messages privés');
+define('_PRIVAT_DELIN','Supprimé par le destinataire');
+define('_PRIVAT_DELOUT','Supprimé par l\'expéditeur');
+define('_PRIVAT_NEW','Marquer comme non lu');
+define('_PRIVAT_NOSEL','Sélectionnez les messages auxquels l\'action s\'applique.');
+define('_PRIVAT_READ','Marquer comme lu');
+define('_PRIVAT_UNSAVE','Retirer des messages enregistrés');
 define('_PRMOVE','Messages stockés');
 define('_PRNEW','Nouveau message');
 define('_PRNEWMAIL',"Vous informer sur ce que Vous recevez un nouveau message privé de l'utilisateur %1\$s.<br><br>Pour la lecture de messages passez à l'adresse suivante: %2\$s<br><br><br>Vous avez reçu ce message de notification, de sorte que de votre compte spécifié boîte de Votre courrier électronique, activé le service «de Recevoir des notifications de nouveaux messages privés».<br><br>Pour ne plus recevoir ces notifications à l'avenir, vous devez désactiver ce service dans les paramètres de votre profil.");

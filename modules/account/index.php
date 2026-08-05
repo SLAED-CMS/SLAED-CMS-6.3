@@ -468,7 +468,7 @@ function view(): void {
 }
 
 function profil(): void {
-    global $db, $conf, $tpl;
+    global $db, $conf, $tpl, $prv;
     if (!is_user()) {
         account();
         return;
@@ -482,13 +482,10 @@ function profil(): void {
     $lvl = getUserLevelData((int)($inf['points'] ?? 0), (string)($grow['color'] ?? ''), (string)($grow['rank'] ?? ''));
     $pms = [];
     if ($conf['privat']['act']) {
-        $result = $db->getSqlQuery('SELECT p.title, p.time, u.name, u.avatar FROM '.PREFIX_DB.'_privat AS p'
-            .' LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id)'
-            .' WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT 6', ['uid' => $uid]);
-        while ($row = $db->getSqlRow($result)) {
+        foreach ($prv->getRecentList($uid, 6) as $row) {
             $pms[] = [
-                'avatar' => ($row['name']) ? getUserAvatarUrl(['avatar' => (string)$row['avatar']]) : getUserAvatarUrl(),
-                'name' => $row['name'] ?: _ANONYM,
+                'avatar' => ($row['name'] !== '') ? getUserAvatarUrl(['avatar' => $row['avatar']]) : getUserAvatarUrl(),
+                'name' => ($row['name'] !== '') ? $row['name'] : _ANONYM,
                 'title' => cutstr($row['title'], 45),
                 'date' => format_time($row['time']),
             ];
@@ -570,18 +567,19 @@ function privat(): void {
         setHead([
             'title' => _PRIVAT,
         ]);
-        $title = [
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmessin', 'request' => 'go=1&op=getPrivateMessageView&typ=1&token='.getSiteToken(), 'text' => _PRIN, 'is_htmx' => true]),
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmessou', 'request' => 'go=1&op=getPrivateMessageView&typ=2&token='.getSiteToken(), 'text' => _PROUT, 'is_htmx' => true]),
-            $tpl->getHtmlFrag('span', ['target_id' => 'prmesssa', 'request' => 'go=1&op=getPrivateMessageView&typ=3&token='.getSiteToken(), 'text' => _PRSAVE, 'is_htmx' => true]),
-            _SEND
-        ];
-        $text = [
-            $tpl->getHtmlFrag('block-content', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
-            $tpl->getHtmlFrag('block-content', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
-            $tpl->getHtmlFrag('block-content', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
-            $tpl->getHtmlFrag('block-content', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
-        ];
+        $tabs = [['prmessin', 1, _PRIN], ['prmessou', 2, _PROUT], ['prmesssa', 3, _PRSAVE], ['prmessfo', 4, _SEND]];
+        $title = [];
+        $text = [];
+        foreach ($tabs as $pos => $one) {
+            [$key, $typ, $lab] = $one;
+            $title[] = $tpl->getHtmlFrag('span', [
+                'target_id' => $key,
+                'request' => 'go=1&op=getPrivateMessageView&typ='.$typ,
+                'text' => $lab,
+                'is_htmx' => true,
+            ]);
+            $text[] = $tpl->getHtmlFrag('block-content', ['id' => 'rep'.$key, 'content' => $pos ? '' : getPrivateMessageView('', '', $typ)]);
+        }
         $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT, 'is_level_one' => true]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
@@ -731,7 +729,6 @@ function login(): void {
 function logout(): void {
     global $db, $user;
     $nick = (is_array($user) && isset($user[1])) ? htmlspecialchars(substr((string)$user[1], 0, 25)) : '';
-    deletePrivatCounts();
     setCookiesDelete('account');
     if ($nick !== '') $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
     unset($user);

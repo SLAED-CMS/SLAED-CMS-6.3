@@ -24,6 +24,8 @@
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
 DROP PROCEDURE IF EXISTS delcol;
+DROP PROCEDURE IF EXISTS modcol;
+DROP PROCEDURE IF EXISTS runifcol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
@@ -132,6 +134,104 @@ BEGIN
             EXECUTE stmt;
             DEALLOCATE PREPARE stmt;
         END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE modcol(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN pdef TEXT)
+BEGIN
+    DECLARE ctab INT DEFAULT 0;
+    DECLARE ccol INT DEFAULT 0;
+    DECLARE ctype TEXT DEFAULT '';
+    DECLARE cdata VARCHAR(64) DEFAULT '';
+    DECLARE cnull VARCHAR(3) DEFAULT '';
+    DECLARE cdflt TEXT DEFAULT NULL;
+    DECLARE cextr TEXT DEFAULT '';
+    DECLARE wtype VARCHAR(64) DEFAULT '';
+    DECLARE have TEXT DEFAULT '';
+    DECLARE want TEXT DEFAULT '';
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(*)
+          INTO ccol
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = pcol;
+    END IF;
+
+    IF ccol > 0 THEN
+        SELECT column_type, data_type, is_nullable, column_default, extra
+          INTO ctype, cdata, cnull, cdflt, cextr
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = pcol;
+
+        IF UPPER(cdata) IN ('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'INTEGER', 'BIGINT') AND LOCATE('(', ctype) > 0 THEN
+            SET ctype = CONCAT(SUBSTRING_INDEX(ctype, '(', 1), SUBSTRING(ctype, LOCATE(')', ctype) + 1));
+        END IF;
+
+        SET have = UPPER(CONCAT(
+            ctype,
+            IF(cnull = 'NO', ' NOT NULL', ' NULL'),
+            IF(cdflt IS NULL, '', CONCAT(' DEFAULT ', cdflt)),
+            IF(cextr IS NULL OR cextr = '', '', CONCAT(' ', cextr))
+        ));
+
+        SET want = UPPER(TRIM(pdef));
+
+        WHILE LOCATE('  ', want) > 0 DO
+            SET want = REPLACE(want, '  ', ' ');
+        END WHILE;
+
+        SET wtype = SUBSTRING_INDEX(SUBSTRING_INDEX(want, ' ', 1), '(', 1);
+
+        IF wtype IN ('TINYINT', 'SMALLINT', 'MEDIUMINT', 'INT', 'INTEGER', 'BIGINT') AND LOCATE('(', want) > 0 THEN
+            SET want = CONCAT(SUBSTRING_INDEX(want, '(', 1), SUBSTRING(want, LOCATE(')', want) + 1));
+        END IF;
+
+        IF LOCATE('NOT NULL', want) = 0 AND LOCATE(' NULL', want) = 0 THEN
+            IF LOCATE(' DEFAULT ', want) > 0 THEN
+                SET want = CONCAT(SUBSTRING_INDEX(want, ' DEFAULT ', 1), ' NULL DEFAULT ', SUBSTRING(want, LOCATE(' DEFAULT ', want) + 9));
+            ELSE
+                SET want = CONCAT(want, ' NULL');
+            END IF;
+        END IF;
+
+        IF have <> want THEN
+            SET @sql = CONCAT(
+                'ALTER TABLE `', ptab, '` ',
+                'MODIFY `', pcol, '` ', pdef
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE runifcol(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN psql TEXT)
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND column_name = pcol;
+
+    IF ccol > 0 THEN
+        SET @sql = psql;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
     END IF;
 END$$
 
@@ -757,14 +857,41 @@ CALL addidx('{prefix}_partners', 'email', '`email`(191)', 0);
 # =============================================================================
 # Batch K — _privat
 # =============================================================================
+#
+# The single status column becomes four independent states: viewed and saved belong to the recipient,
+# delin and delout to the two mailbox sides, so what one participant deletes or saves no longer rewrites
+# what the other one sees.
+# The order is load-bearing. The backfill has to read status before the rename consumes it, which is what
+# runifcol() executes it under: once the rename has happened the column is gone and the step can never run
+# a second time. rencol() keeps the BOOLEAN the old column was declared as, so modcol() forces viewed onto
+# the definition the fresh schema gives it and leaves the table alone when it already carries it.
+# The composites are added last and time keeps its place in front of them, which is the order
+# setup/sql/table.sql declares, so an upgraded table and a fresh one are the same table.
+# No index on status is created here any more: this file used to add one and now drops it, on a column
+# that does not survive the batch.
+# out_new and flood answer the two reads out_box cannot: the outgoing unread counter of the sidebar block,
+# which filters a column out_box does not carry, and the send interval, which filters no state at all and
+# orders by time - measured on real data, the first was a full table scan and the second a filesort.
 
 CALL rencol('{prefix}_privat', 'date', 'time');
 CALL rencol('{prefix}_privat', 'ip_sender', 'ip');
 CALL renidx('{prefix}_privat', 'date', 'time');
-CALL addidx('{prefix}_privat', 'uidin', '`uidin`', 0);
-CALL addidx('{prefix}_privat', 'uidout', '`uidout`', 0);
-CALL addidx('{prefix}_privat', 'status', '`status`', 0);
+CALL addcol('{prefix}_privat', 'saved', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_privat', 'delin', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_privat', 'delout', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+CALL runifcol('{prefix}_privat', 'status', 'UPDATE `{prefix}_privat` SET `saved` = 1 WHERE `status` = 2');
+CALL rencol('{prefix}_privat', 'status', 'viewed');
+CALL modcol('{prefix}_privat', 'viewed', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+CALL runifcol('{prefix}_privat', 'viewed', 'UPDATE `{prefix}_privat` SET `viewed` = 1 WHERE `viewed` > 1');
+CALL delidx('{prefix}_privat', 'uidin');
+CALL delidx('{prefix}_privat', 'uidout');
+CALL delidx('{prefix}_privat', 'status');
 CALL addidx('{prefix}_privat', 'time', '`time`', 0);
+CALL addidx('{prefix}_privat', 'in_box', '`uidin`, `delin`, `saved`, `time`', 0);
+CALL addidx('{prefix}_privat', 'in_new', '`uidin`, `delin`, `viewed`', 0);
+CALL addidx('{prefix}_privat', 'out_box', '`uidout`, `delout`, `time`', 0);
+CALL addidx('{prefix}_privat', 'out_new', '`uidout`, `delout`, `viewed`', 0);
+CALL addidx('{prefix}_privat', 'flood', '`uidout`, `time`', 0);
 
 # =============================================================================
 # Batch K — _products
@@ -1702,6 +1829,8 @@ CALL delcol('{prefix}_newsletter', 'mails');
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
 DROP PROCEDURE IF EXISTS delcol;
+DROP PROCEDURE IF EXISTS modcol;
+DROP PROCEDURE IF EXISTS runifcol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;

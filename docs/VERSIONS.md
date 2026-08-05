@@ -1,5 +1,72 @@
 # Versions
 
+## 2026-08-05
+
+### Private messages: four independent states instead of one shared column
+
+The private-message subsystem is now one class, `Privat`, and one message carries
+four state columns instead of the single `status` it shared between both
+participants. **The schema section and the runtime code of this release are
+deployed together.** An installation that applies the section while still running
+code that reads `status` answers an SQL error on every private-message page until
+the code follows it, and code deployed before the section does the same in the
+other direction.
+
+Which file an installation needs depends on where it comes from, and it is
+exactly one of the three:
+
+| Coming from | File | How |
+|---|---|---|
+| a new installation | `setup/sql/table.sql` | the installer, nothing to do |
+| 6.2 | `setup/sql/table_update6_3.sql` | the installer, per the section below |
+| already 6.3 | `setup/sql/update6_3_patch.sql` | **Administrator panel → Database → Inquiry**, section 5 |
+
+What the section does to `{prefix}_privat`: it adds `saved`, `delin` and `delout`,
+carries the saved messages over from `status` before that column is renamed to
+`viewed`, forces `viewed` onto `TINYINT UNSIGNED NOT NULL DEFAULT 0` — the old
+declaration was `BOOLEAN` while the code stored `2` — and replaces the three
+single-column keys `uidin`, `uidout` and `status` with the composites
+`in_box`, `in_new`, `out_box`, `out_new` and `flood`. It deletes no row and no
+message, and the row count it starts from is the row count it ends on. It is safe
+to run twice, and safe to run again after a crash: a re-run reads the shape the
+table is really in and finishes only what is missing. All three files end on the
+same table definition, byte for byte.
+
+Building five indexes rewrites the table, and InnoDB holds the rows while it
+does. On a large private-message table that is a maintenance window rather than a
+page reload — the same rule the comment upgrade below already carries.
+
+One documented consequence of the conversion: a message that was saved under the
+old model becomes `viewed = 1`, because `status = 2` carried no read bit of its
+own. Saving required opening the message, so read is the correct assumption.
+
+What changes for the people using the site:
+
+- A recipient deleting a message no longer removes it from the sender's outbox,
+  and the reverse. Until now one delete destroyed the single shared row.
+- A message the recipient saved stays visible in the sender's outbox, where it
+  used to vanish the moment it was saved.
+- A sender may delete an outgoing message the recipient has already read. It used
+  to stay in the outbox forever.
+- Saving no longer discards the read state, and a saved message no longer becomes
+  undeletable for the sender.
+- Read and unread are two actions now, not one transition, and inbox, saved and
+  outbox carry bulk read, unread, save and delete.
+- A send is refused when the saved folder of the recipient is full and not only
+  when their inbox is, so the mailbox a message cannot fit into is the whole
+  mailbox. Both quotas and the send interval are rechecked inside the write
+  transaction, under a lock on both accounts, so two simultaneous sends can no
+  longer both take the last free place.
+- The notification mail reads the `psmail` preference of the recipient, which is
+  the setting the account page has always offered and which had no effect until
+  now — the code read the forum preference `fsmail` instead. Its link carries the
+  id of the message that was really stored.
+- Deleting an account now cleans its mailboxes in the same transaction that
+  deletes the account, on both paths that delete a user row. The counterpart keeps
+  a readable copy with the gone account rendered as an anonymous sender.
+- The second administrator delete route, a GET carrying its token in the address,
+  is gone. One POST route remains, super-administrator only as before.
+
 ## 2026-07-29
 
 ### If the installation already runs 6.3

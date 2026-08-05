@@ -142,9 +142,11 @@ require_once BASE_DIR.'/core/classes/captcha.php';
 require_once BASE_DIR.'/core/classes/cache.php';
 require_once BASE_DIR.'/core/classes/oauth.php';
 require_once BASE_DIR.'/core/classes/comment.php';
+require_once BASE_DIR.'/core/classes/privat.php';
 $tpl = new Template($theme);
 $prs = new Parser();
 $com = new Comment($db, $prs, $conf);
+$prv = new Privat($db, $conf);
 
 # Helpers include
 require_once BASE_DIR.'/core/helpers.php';
@@ -4485,13 +4487,10 @@ function getActionMenu(array $items, bool $user = false): string {
 }
 
 # Admin status
-function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''): string {
+# The private-message variant is gone with the shared status column it rendered: a message now carries four independent states and its own labelled badge
+function ad_status(mixed $link, mixed $id, string $text = ''): string {
     global $tpl;
-    if ($typ) {
-        return ($id)
-            ? $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROLD, 'is_status_active' => true, 'label' => ''])
-            : $tpl->getHtmlFrag('inline-badge', ['title_text' => _PROUTNEW, 'is_status_inactive' => true, 'label' => '']);
-    } elseif ($link) {
+    if ($link) {
         $deact = ($text) ? _DEACTIVATE.': '.$text : _DEACTIVATE;
         $act = ($text) ? _ACTIVATE.': '.$text : _ACTIVATE;
         return ($id == 1)

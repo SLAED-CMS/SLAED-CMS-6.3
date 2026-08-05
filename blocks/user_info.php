@@ -9,22 +9,15 @@ if (!defined('BLOCK_FILE')) {
     exit;
 }
 
-global $db, $conf, $tpl;
+global $db, $conf, $tpl, $prv;
 if (is_user()) {
     $userinfo = getUserInfo();
     $uid = intval($userinfo['id']);
     $prin = 0;
     $prout = 0;
     if ($conf['privat']['act']) {
-        $cache = $_SESSION[$conf['user_c'].'-privat'] ?? null;
-        if (is_array($cache) && $cache['uid'] === $uid && (time() - $cache['time']) < 60) {
-            [$prin, $prout] = $cache['counts'];
-        } else {
-            [$prin, $prout] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(CASE WHEN uidin = :uin THEN 1 END), COUNT(CASE WHEN uidout = :uout THEN 1 END) FROM '.PREFIX_DB.'_privat WHERE status = 0 AND (uidin = :uinw OR uidout = :uoutw)', ['uin' => $uid, 'uout' => $uid, 'uinw' => $uid, 'uoutw' => $uid]));
-            $prin = intval($prin);
-            $prout = intval($prout);
-            $_SESSION[$conf['user_c'].'-privat'] = ['uid' => $uid, 'time' => time(), 'counts' => [$prin, $prout]];
-        }
+        $prin = $prv->getUnreadCount($uid);
+        $prout = $prv->getUnreadOutCount($uid);
     }
     $gname = '';
     $rank = '';

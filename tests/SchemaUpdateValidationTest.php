@@ -60,8 +60,26 @@ class SchemaUpdateValidationTest extends TestCase
     }
 
     /**
+     * The update channels this test reads, as relative path => absolute path. Both of them declare
+     * columns of the same tables, and an installation runs one or the other, never both.
+     */
+    private static function getUpdateFiles(): array
+    {
+        $out = [];
+        foreach (['setup/sql/table_update6_3.sql', 'setup/sql/update6_3_patch.sql'] as $name) {
+            if (file_exists(self::$basePath.'/'.$name)) {
+                $out[$name] = self::$basePath.'/'.$name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Every column definition the update file declares, as [table, column, definition, line].
-     * Both shapes count: the MODIFY of an ALTER and the definition handed to the addcol procedure.
+     * Three shapes count: the MODIFY of an ALTER, and the definition handed to the addcol or the
+     * modcol procedure. modcol is the conditional MODIFY, so what it forces a column onto is a
+     * declaration of that column exactly like the other two.
      */
     private static function getUpdateColumns(string $content): array
     {
@@ -79,7 +97,7 @@ class SchemaUpdateValidationTest extends TestCase
             }
         }
 
-        preg_match_all("/CALL\s+addcol\('\{prefix\}_([a-z0-9_]+)',\s*'([a-z0-9_]+)',\s*'(.*?)'\);/i", $content, $calls, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        preg_match_all("/CALL\s+(?:addcol|modcol)\('\{prefix\}_([a-z0-9_]+)',\s*'([a-z0-9_]+)',\s*'(.*?)'\);/i", $content, $calls, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
         foreach ($calls as $call) {
             $at = substr_count($content, "\n", 0, $call[0][1]) + 1;
@@ -136,35 +154,39 @@ class SchemaUpdateValidationTest extends TestCase
 
     public function testUpdateSqlColumnsMatchSchema(): void
     {
-        $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
-        if (!file_exists($updateFile) || empty(self::$columns)) {
-            $this->markTestSkipped('table.sql or table_update6_3.sql not available');
+        $files = self::getUpdateFiles();
+        if (empty($files) || empty(self::$columns)) {
+            $this->markTestSkipped('table.sql or no update channel available');
             return;
         }
 
         $errors = [];
-        foreach (self::getUpdateColumns(file_get_contents($updateFile)) as [$table, $column, $type, $line]) {
-            $want = self::$columns[$table][$column] ?? null;
+        foreach ($files as $name => $file) {
+            foreach (self::getUpdateColumns(file_get_contents($file)) as [$table, $column, $type, $line]) {
+                $want = self::$columns[$table][$column] ?? null;
 
-            if ($want === null) {
-                $errors[] = sprintf(
-                    'setup/sql/table_update6_3.sql:%d - %s.%s is declared here but not by table.sql',
-                    $line,
-                    $table,
-                    $column
-                );
-                continue;
-            }
+                if ($want === null) {
+                    $errors[] = sprintf(
+                        '%s:%d - %s.%s is declared here but not by table.sql',
+                        $name,
+                        $line,
+                        $table,
+                        $column
+                    );
+                    continue;
+                }
 
-            if ($want !== $type) {
-                $errors[] = sprintf(
-                    "setup/sql/table_update6_3.sql:%d - %s.%s disagrees with table.sql\n    fresh: %s\n    upgrade: %s",
-                    $line,
-                    $table,
-                    $column,
-                    $want,
-                    $type
-                );
+                if ($want !== $type) {
+                    $errors[] = sprintf(
+                        "%s:%d - %s.%s disagrees with table.sql\n    fresh: %s\n    upgrade: %s",
+                        $name,
+                        $line,
+                        $table,
+                        $column,
+                        $want,
+                        $type
+                    );
+                }
             }
         }
 
@@ -176,33 +198,36 @@ class SchemaUpdateValidationTest extends TestCase
 
     public function testUpdateSqlDeclaresEachColumnOnce(): void
     {
-        $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
-        if (!file_exists($updateFile)) {
-            $this->markTestSkipped('table_update6_3.sql not found');
+        $files = self::getUpdateFiles();
+        if (empty($files)) {
+            $this->markTestSkipped('no update channel found');
             return;
         }
 
-        $seen = [];
-        foreach (self::getUpdateColumns(file_get_contents($updateFile)) as [$table, $column, $type, $line]) {
-            $seen[$table.'.'.$column][] = [$type, $line];
-        }
-
         $errors = [];
-        foreach ($seen as $name => $list) {
-            if (count($list) < 2 || count(array_unique(array_column($list, 0))) < 2) {
-                continue;
+        foreach ($files as $name => $file) {
+            $seen = [];
+            foreach (self::getUpdateColumns(file_get_contents($file)) as [$table, $column, $type, $line]) {
+                $seen[$table.'.'.$column][] = [$type, $line];
             }
-            $errors[] = sprintf(
-                '%s is declared %d times and the definitions differ (lines %s) - the last one silently wins',
-                $name,
-                count($list),
-                implode(', ', array_column($list, 1))
-            );
+
+            foreach ($seen as $column => $list) {
+                if (count($list) < 2 || count(array_unique(array_column($list, 0))) < 2) {
+                    continue;
+                }
+                $errors[] = sprintf(
+                    '%s - %s is declared %d times and the definitions differ (lines %s) - the last one silently wins',
+                    $name,
+                    $column,
+                    count($list),
+                    implode(', ', array_column($list, 1))
+                );
+            }
         }
 
         $this->assertEmpty(
             $errors,
-            "The update file contradicts itself:\n".implode("\n", $errors)
+            "An update channel contradicts itself:\n".implode("\n", $errors)
         );
     }
 }

@@ -99,7 +99,7 @@ if (empty($go)) {
     }
 } elseif (is_numeric($go)) {
     # Reads that guard themselves: each answers nothing to a visitor who may not see it, so a token would only add one to an address
-    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows'], true))
+    $public = ($go == 1 && in_array($op, ['getUserSessionInfo', 'getUserSessionRows', 'getPrivateMessageView'], true))
         || (($go == 1 || $go == 5) && $op === 'getUserSessionAdminInfo');
     if ($go != 3 && !$public) {
         $fdsize = intval($_FILES['file']['size'] ?? 0);
@@ -109,7 +109,8 @@ if (empty($go)) {
     }
     if ($go == 1) {
         Cache::setHeaders(false);
-        if (in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+        if (in_array($op, ['addComment', 'updateCommentStatus', 'deleteComment', 'addPrivateMessage',
+            'setPrivateMessageRead', 'updatePrivatBox'], true) && ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             die($tpl->getHtmlFrag('alert', ['text' => _ERROR, 'is_warn' => true]));
         }
         switch($op) {
@@ -125,10 +126,10 @@ if (empty($go)) {
             case 'getCommentPage': getCommentPage(); break;
             case 'getCommentBranch': getCommentBranch(); break;
             case 'updatePost': updatePost(); break;
-            case 'getPrivateMessageView': getPrivateMessageView(); break;
+            case 'getPrivateMessageView': echo getPrivateMessageView(); break;
+            case 'setPrivateMessageRead': setPrivateMessageRead(); break;
             case 'addPrivateMessage': addPrivateMessage(); break;
-            case 'setPrivateMessageSaved': setPrivateMessageSaved(); break;
-            case 'deletePrivateMessage': deletePrivateMessage(); break;
+            case 'updatePrivatBox': updatePrivatBox(); break;
             case 'addFavorite': addFavorite(); break;
             case 'getFavoriteList': getFavoriteList(); break;
             case 'deleteFavorite': deleteFavorite(); break;
@@ -197,7 +198,6 @@ if (empty($go)) {
                 case 'updateAdminBlockOrder': updateAdminBlockOrder(); break;
                 case 'getAdminFavoriteList': getAdminFavoriteList(); break;
                 case 'getAdminPrivateList': getAdminPrivateList(); break;
-                case 'deleteAdminPrivate': deleteAdminPrivate(); break;
                 case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
                 case 'getAdminUploadFiles': getAdminUploadFiles(); break;
             }

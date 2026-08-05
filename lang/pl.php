@@ -421,6 +421,12 @@ define('_PRINMAX','Maksymalna liczba przychodzących wiadomości %1$s, w tej chw
 define('_PRINNO','Nowe przychodzące');
 define('_PRIORITY','Priorytet');
 define('_PRIVAT','Prywatne wiadomości');
+define('_PRIVAT_DELIN','Usunięte przez odbiorcę');
+define('_PRIVAT_DELOUT','Usunięte przez nadawcę');
+define('_PRIVAT_NEW','Oznacz jako nieprzeczytane');
+define('_PRIVAT_NOSEL','Wybierz wiadomości, których dotyczy akcja.');
+define('_PRIVAT_READ','Oznacz jako przeczytane');
+define('_PRIVAT_UNSAVE','Usuń z zapisanych');
 define('_PRMOVE','Zapisaną wiadomość');
 define('_PRNEW','Nowa wiadomość');
 define('_PRNEWMAIL','Prosimy pamiętać o tym, że nadeszła nowa prywatna wiadomość od użytkownika %1$s.<br><br>Dla przeczytaniu wiadomości, przejdź do adresu: %2$s<br><br><br>Masz to powiadomienie, tak jak w koncie, w którym podany Twój adres e-mail, aktywowana usługa «otrzymuj powiadomienia o nowych prywatnych wiadomościach».<br><br>Aby nie otrzymać takie uwagi w przyszłości, należy wyłączyć tę usługę w ustawieniach profilu.');

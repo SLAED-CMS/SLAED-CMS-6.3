@@ -16,11 +16,12 @@
   <tr>
     {% for head in headers %}
     <th
-      {% if head.class or head.is_num or head.is_forum_num or head.is_forum_stat or head.is_col_half %}
-      class="{% if head.class %}{{ head.class }}{% elseif head.is_forum_num %}sl-fl-col-num{% elseif head.is_forum_stat %}sl-fl-col-stat{% elseif head.is_col_half %}sl-col-half{% elseif head.is_num %}sl-table-col-num{% endif %}"
+      {% if head.class or head.is_num or head.is_forum_num or head.is_forum_stat or head.is_col_half or head.is_col_check %}
+      class="{% if head.class %}{{ head.class }}{% elseif head.is_forum_num %}sl-fl-col-num{% elseif head.is_forum_stat %}sl-fl-col-stat{% elseif head.is_col_half %}sl-col-half{% elseif head.is_col_check %}sl-col-check{% elseif head.is_num %}sl-table-col-num{% endif %}"
       {% endif %}
       {% if head.no_sort %}data-sort-method="none"{% endif %}
-    >{{ head.text }}</th>
+      {% if head.is_col_check %}data-sl-check-all{% endif %}
+    >{% if head.content_html %}{{{ head.content_html }}}{% else %}{{ head.text }}{% endif %}</th>
     {% endfor %}
   </tr>
 </thead>

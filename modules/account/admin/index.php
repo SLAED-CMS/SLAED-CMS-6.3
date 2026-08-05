@@ -910,18 +910,23 @@ function newdrop(): void {
 }
 
 function delete(): void {
-    global $db, $afile, $com;
+    global $db, $afile, $com, $prv;
     $iswarn = !checkSiteToken();
+    $done = true;
     if (!$iswarn) {
         $id = getVar('get', 'id', 'num');
         if ($id) {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]);
-            $com->deleteUser($id);
+            $done = $db->setSqlBegin()
+                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]) !== false
+                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]) !== false
+                && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_user_oauth WHERE uid = :id', ['id' => $id]) !== false
+                && $com->deleteUser($id)
+                && $prv->deleteUser($id)
+                && $db->setSqlCommit();
+            if (!$done) $db->setSqlRollback();
         }
     }
-    setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : _SUCCDELETE, $iswarn);
+    setRedirect($afile.'.php?name=account', false, 302, $iswarn ? _TOKENMISS : ($done ? _SUCCDELETE : _ERROR), $iswarn || !$done);
 }
 
 function oauthlist(): void {

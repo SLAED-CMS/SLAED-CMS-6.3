@@ -421,6 +421,12 @@ define('_PRINMAX','The maximum number of incoming messages %1$s, at this point i
 define('_PRINNO','New incoming');
 define('_PRIORITY','Priority');
 define('_PRIVAT','Private Messages');
+define('_PRIVAT_DELIN','Deleted by recipient');
+define('_PRIVAT_DELOUT','Deleted by sender');
+define('_PRIVAT_NEW','Mark as unread');
+define('_PRIVAT_NOSEL','Select the messages the action applies to.');
+define('_PRIVAT_READ','Mark as read');
+define('_PRIVAT_UNSAVE','Move out of saved');
 define('_PRMOVE','The saved message');
 define('_PRNEW','New message');
 define('_PRNEWMAIL','We inform You that You received a new private message from user %1$s.<br><br>To read the posts go to the address: %2$s<br><br><br>You have received this notification, as in an account, in which the specified Your e-mail box, activated the service «Receive notification of new private messages».<br><br>not To receive such notifications in the future, it is necessary to deactivate the service in the profile settings.');

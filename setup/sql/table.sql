@@ -587,12 +587,17 @@ CREATE TABLE `{prefix}_privat` (
   `body` TEXT NOT NULL,
   `time` DATETIME DEFAULT NULL,
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
-  `status` BOOLEAN NOT NULL DEFAULT 0,
+  `viewed` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `saved` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `delin` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `delout` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `uidin` (`uidin`),
-  KEY `uidout` (`uidout`),
-  KEY `status` (`status`),
-  KEY `time` (`time`)
+  KEY `time` (`time`),
+  KEY `in_box` (`uidin`, `delin`, `saved`, `time`),
+  KEY `in_new` (`uidin`, `delin`, `viewed`),
+  KEY `out_box` (`uidout`, `delout`, `time`),
+  KEY `out_new` (`uidout`, `delout`, `viewed`),
+  KEY `flood` (`uidout`, `time`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_products` (

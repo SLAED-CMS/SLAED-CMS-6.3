@@ -123,7 +123,7 @@ function getAdminPanel(): void {
 }
 
 function add_admin() {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $prv;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) {
         $aname     = filterText(trim(substr($_POST['aname'] ?? '', 0, 25)));
         $aurl      = filterWebUrl($_POST['aurl'] ?? '');
@@ -146,8 +146,15 @@ function add_admin() {
                 ['name' => $aname, 'url' => $aurl, 'email' => $aemail, 'pass' => $apwd, 'editor' => $aeditor, 'lang' => $alang, 'ip' => $aip]
             );
             if ($auser_new == 1) {
-                $user_exist = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $aname]));
-                if ($user_exist) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $aname]);
+                $urow = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $aname]));
+                $uid = ($urow) ? intval($urow['id']) : 0;
+                if ($uid) {
+                    $gone = $db->setSqlBegin()
+                        && $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]) !== false
+                        && $prv->deleteUser($uid)
+                        && $db->setSqlCommit();
+                    if (!$gone) $db->setSqlRollback();
+                }
                 $db->getSqlQuery(
                     'INSERT INTO '.PREFIX_DB.'_users (id, name, email, website, avatar, regdate, password, lang, ip, block, warnings, field) VALUES (NULL, :name, :email, :website, :avatar, now(), :pass, :lang, :ip, \'\', \'\', \'\')',
                     ['name' => $aname, 'email' => $aemail, 'website' => $aurl, 'avatar' => '', 'pass' => $apwd, 'lang' => $alang, 'ip' => $aip]
