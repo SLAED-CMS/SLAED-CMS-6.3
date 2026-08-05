@@ -4,10 +4,13 @@
 # License: MIT
 # Website: slaed.net
 
-# CLI probe for the private-message state-column migration of docs/PRIVAT-2026.md
-# Every scenario builds one of the four documented pre-migration shapes in a disposable schema, runs one update channel
-# against it, and reports whether the table converged on the fresh schema, whether the mailboxes still hold what they
-# held, and whether a second run of the same channel changes anything at all
+# CLI probe for the private-message schema migration of docs/PRIVAT-2026.md
+# Every scenario builds one documented pre-migration shape in a disposable schema, runs one update channel against it,
+# and reports whether the table converged on the fresh schema, whether the mailboxes still hold what they held, and
+# whether a second run of the same channel changes anything at all
+# States a to d are the four shapes the stage 1 state-column conversion has to converge from, and e is the shape stage 1
+# itself shipped: every state column and every key already there and only the stage 2 format column missing, which is
+# the installation the format section is written for and which no other state describes any more
 # The statements are read out of the shipped files through getSqlbatch(), the splitter the Inquiry tab and the installer
 # already run these files with, so what the probe executes is what an installation executes
 # Nothing touches the site database: the probe creates its own schema, works only in it, and drops it again
@@ -19,6 +22,9 @@ require_once BASE_DIR.'/core/admin.php';
 
 # The fixture mailbox as [recipient, sender, legacy status], with unread, read and saved messages in both directions
 const PROBEROWS = [[2, 3, 0], [2, 3, 1], [2, 3, 2], [3, 2, 0], [3, 2, 2], [2, 4, 1], [4, 2, 0]];
+
+# The states whose table already carries the four state columns, so their fixture is written in those columns and not in status
+const PROBENEW = ['c', 'd', 'e'];
 
 # The table an installation carries before the migration: one status column for both sides and four single-column keys
 const PROBEOLD = 'CREATE TABLE `{prefix}_privat` ('
@@ -129,13 +135,14 @@ function getProbeRows(PDO $pdo): array {
     return $stmt->fetchAll(PDO::FETCH_NUM);
 }
 
-# Build the pre-migration table for one of the four documented states, from the fresh schema for the two converted ones
+# Build the pre-migration table for one documented state, from the fresh schema for the three converted ones
 function addProbeTable(PDO $pdo, string $stat, string $make): void {
     $tab = '`'.$GLOBALS['ppre'].'_privat`';
     $pdo->exec('DROP TABLE IF EXISTS '.$tab);
-    if ($stat === 'c' || $stat === 'd') {
+    if (in_array($stat, PROBENEW, true)) {
         $pdo->exec($make);
         if ($stat === 'd') $pdo->exec('ALTER TABLE '.$tab.' MODIFY `viewed` TINYINT(1) NOT NULL DEFAULT 0');
+        if ($stat === 'e') $pdo->exec('ALTER TABLE '.$tab.' DROP COLUMN `format`');
         return;
     }
     $pdo->exec(getProbeFilled(PROBEOLD));
@@ -145,7 +152,7 @@ function addProbeTable(PDO $pdo, string $stat, string $make): void {
 # Fill the fixture mailbox, written in the legacy status for the two unconverted states and in the four states for the others
 function addProbeRows(PDO $pdo, string $stat): void {
     $tab = '`'.$GLOBALS['ppre'].'_privat`';
-    $new = ($stat === 'c' || $stat === 'd');
+    $new = in_array($stat, PROBENEW, true);
     $sql = $new
         ? 'INSERT INTO '.$tab.' (uidin, uidout, title, body, time, ip, viewed, saved) VALUES (:uin, :uout, :tit, :txt, :tim, :ip, :seen, :keep)'
         : 'INSERT INTO '.$tab.' (uidin, uidout, title, body, time, ip, status) VALUES (:uin, :uout, :tit, :txt, :tim, :ip, :stat)';
@@ -161,7 +168,7 @@ function addProbeRows(PDO $pdo, string $stat): void {
 
 # The legacy mailbox of every user, read before the migration, and empty for a state that no longer carries the status column
 function getProbeLegacy(PDO $pdo, string $stat): array {
-    if ($stat === 'c' || $stat === 'd') return [];
+    if (in_array($stat, PROBENEW, true)) return [];
     $out = ['inbox' => [], 'saved' => [], 'out' => [], 'rows' => 0, 'sav' => []];
     foreach (getProbeUsers() as $uid) {
         $out['inbox'][$uid] = getProbeNum($pdo, 'SELECT COUNT(id) FROM {t} WHERE uidin = :uid AND status <= 1', ['uid' => $uid]);
@@ -201,7 +208,7 @@ function getProbeCase(PDO $pdo, string $stat, array $step, string $make, string 
     addProbeRows($pdo, $stat);
     $head = getProbeDef($pdo);
     $old = getProbeLegacy($pdo, $stat);
-    $seed = ($stat === 'c' || $stat === 'd') ? getProbeRows($pdo) : [];
+    $seed = in_array($stat, PROBENEW, true) ? getProbeRows($pdo) : [];
     if ($stat === 'c') usleep(1100000);
     $born = getProbeBirth($pdo);
     setProbeSteps($pdo, $step);
@@ -211,7 +218,7 @@ function getProbeCase(PDO $pdo, string $stat, array $step, string $make, string 
         'def' => (getProbeDef($pdo) === $fresh),
         'kept' => ($seed === [] || $seed === $rows),
         'quiet' => ($stat !== 'c' || (getProbeDef($pdo) === $head && getProbeBirth($pdo) === $born)),
-        'moved' => ($stat !== 'd' || $head !== $fresh),
+        'moved' => ($stat === 'c' || $head !== $fresh),
         'parity' => getProbeParity($pdo, $old),
     ];
     setProbeSteps($pdo, $step);
@@ -233,7 +240,7 @@ try {
         'patch' => getProbeSteps(BASE_DIR.'/setup/sql/update6_3_patch.sql'),
     ];
     foreach ($chan as $name => $step) {
-        foreach (['a', 'b', 'c', 'd'] as $stat) {
+        foreach (['a', 'b', 'c', 'd', 'e'] as $stat) {
             $report['runs'][$name.':'.$stat] = getProbeCase($pdo, $stat, $step, $make, $fresh);
         }
     }

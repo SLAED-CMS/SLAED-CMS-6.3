@@ -591,6 +591,7 @@ CREATE TABLE `{prefix}_privat` (
   `saved` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `delin` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   `delout` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `format` VARCHAR(20) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `time` (`time`),
   KEY `in_box` (`uidin`, `delin`, `saved`, `time`),

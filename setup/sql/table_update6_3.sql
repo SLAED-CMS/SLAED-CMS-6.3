@@ -872,6 +872,13 @@ CALL addidx('{prefix}_partners', 'email', '`email`(191)', 0);
 # out_new and flood answer the two reads out_box cannot: the outgoing unread counter of the sidebar block,
 # which filters a column out_box does not carry, and the send interval, which filters no state at all and
 # orders by time - measured on real data, the first was a full table scan and the second a filesort.
+#
+# format names how a stored body is to be read, plain or markdown, and it is added empty on purpose: no
+# statement here can tell one from the other, because that verdict is computed per body and not per column.
+# tools/privat-migrate.php classify writes it and convert rewrites the bodies afterwards, both against a
+# closed site, and until they have run every row still carries the escaping of the old writer.
+# That tool is not optional. Private messages render as source from this release on, so a body left with an
+# empty format is a body nothing knows how to read.
 
 CALL rencol('{prefix}_privat', 'date', 'time');
 CALL rencol('{prefix}_privat', 'ip_sender', 'ip');
@@ -879,6 +886,7 @@ CALL renidx('{prefix}_privat', 'date', 'time');
 CALL addcol('{prefix}_privat', 'saved', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
 CALL addcol('{prefix}_privat', 'delin', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
 CALL addcol('{prefix}_privat', 'delout', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
+CALL addcol('{prefix}_privat', 'format', 'VARCHAR(20) NOT NULL DEFAULT \'\'');
 CALL runifcol('{prefix}_privat', 'status', 'UPDATE `{prefix}_privat` SET `saved` = 1 WHERE `status` = 2');
 CALL rencol('{prefix}_privat', 'status', 'viewed');
 CALL modcol('{prefix}_privat', 'viewed', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');

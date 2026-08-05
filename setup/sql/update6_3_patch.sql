@@ -35,11 +35,14 @@
 #      two mailbox sides. The saved messages are backfilled out of status before the column
 #      is renamed, and the three single-column keys give way to the composites the mailbox
 #      queries are read through.
+#   6. _privat gains format, the column that names how a stored body is to be read. It is
+#      added empty and stays empty until tools/privat-migrate.php has classified and
+#      converted the bodies; this file cannot compute that verdict and does not try.
 #
 # WHAT IT NEVER DOES
 #   No row is deleted, no comment is touched and no user point is recalculated. Sections 1
-#   to 4 add columns and indexes only when they are absent, and every counter statement
-#   writes only the rows that disagree. Section 5 is the one section that converts
+#   to 4 and section 6 add columns and indexes only when they are absent, and every counter
+#   statement writes only the rows that disagree. Section 5 is the one section that converts
 #   something: it renames a column, rewrites the private-message state it carried and drops
 #   the three keys the old column set was indexed under. It reads status only while status
 #   is still there, so it converges from whatever point an interrupted run stopped at and a
@@ -450,6 +453,20 @@ CALL addidx('{prefix}_privat', 'in_new', '`uidin`, `delin`, `viewed`', 0);
 CALL addidx('{prefix}_privat', 'out_box', '`uidout`, `delout`, `time`', 0);
 CALL addidx('{prefix}_privat', 'out_new', '`uidout`, `delout`, `viewed`', 0);
 CALL addidx('{prefix}_privat', 'flood', '`uidout`, `time`', 0);
+
+# =============================================================================
+# 6. Private message content format
+# =============================================================================
+#
+# A private message stores source from this release on, and format names how its body is to be read -
+# plain or markdown, and nothing else. The column is added empty on purpose: no statement here can tell
+# one body from the other, because that verdict is computed per body and not per column.
+# tools/privat-migrate.php classify writes the verdict and convert rewrites the bodies afterwards, both
+# against a closed site and against a dump taken first. Until they have run, every stored body still
+# carries the escaping of the old writer and a row left with an empty format is a row nothing knows how
+# to read. That tool is not optional and this section alone does not finish the change.
+
+CALL addcol('{prefix}_privat', 'format', 'VARCHAR(20) NOT NULL DEFAULT \'\'');
 
 DROP PROCEDURE IF EXISTS addcol;
 DROP PROCEDURE IF EXISTS rencol;
