@@ -24,7 +24,7 @@ The format names the syntax the stored source was written in. It is an input to 
 * **`'plain'`:** no Markdown construct is recognised — no headings, lists, tables, quotes, emphasis, code fences, inline code or `[t](u)` links. A blank line separates paragraphs and every other line ending becomes a `<br>`. The bracket layer (BBCode, smilies, attachments) still runs.
 * **anything else, including `''`:** Markdown, which is the behaviour every caller had before the parameter existed.
 
-Comments pass the `format` column of their row (`docs/COMMENTS-REDESIGN-2026.md`, stage 2). Every other caller omits the argument.
+Comments pass the `format` column of their row (`docs/COMMENTS-REDESIGN-2026.md`, stage 2) and private messages pass theirs (`docs/PRIVAT-2026.md`, stage 2), in the mailbox and in the admin list alike. Every other caller omits the argument.
 
 ## Security Context (`$safe`)
 

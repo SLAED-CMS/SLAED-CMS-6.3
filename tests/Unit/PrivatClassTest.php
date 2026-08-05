@@ -296,6 +296,60 @@ final class PrivatClassTest extends TestCase
         $this->assertSame($run['room'], $run['held'], 'The mailbox was left holding more messages than its quota allows');
     }
 
+    # Step 11: a send stores the source its author wrote, under the format the editor of that request names, and escapes nothing on the way in
+    #[Test]
+    public function aSendStoresTheSourceItWasGiven(): void
+    {
+        $run = $this->getRun('content');
+        foreach (['plain', 'markdown'] as $mode) {
+            $one = $run[$mode];
+            if ($one['mode'] !== $mode) $this->markTestSkipped('The '.$mode.' editor is not enabled on this installation');
+            $this->assertSame('ok', $one['error'], 'The '.$mode.' send was refused');
+            $this->assertSame($mode, $one['format'], 'The stored format is not the one the editor of the request names');
+            $this->assertSame([true, true], $one['kept'], 'The stored title or body is not byte for byte what the author submitted');
+        }
+    }
+
+    # Step 11: the renderer both adapters call turns that source into markup that carries no tag, no handler and no script the author wrote
+    #[Test]
+    public function storedSourceRendersSafely(): void
+    {
+        $run = $this->getRun('content');
+        foreach (['plain', 'markdown'] as $mode) {
+            $html = $run[$mode]['render'];
+            $this->assertStringNotContainsString('<script', $html, 'A script tag of the author survived the '.$mode.' rendering');
+            $this->assertStringNotContainsString('href="javascript:', $html, 'A javascript URL of the author reached an attribute of the '.$mode.' rendering');
+            $this->assertStringNotContainsString('<a href', $html, 'A link tag of the author survived the '.$mode.' rendering');
+            $this->assertStringContainsString('&lt;script&gt;', $html, 'The script tag of the author was not rendered as its own text');
+            $this->assertStringContainsString('<strong>bb</strong>', $html, 'The parser stopped rendering its own inline markup');
+        }
+        $this->assertStringContainsString('<br>', $run['plain']['render'], 'A plain body did not turn its line ending into a break');
+        $this->assertStringNotContainsString('<br>', $run['markdown']['render'], 'A markdown body was rendered with the breaks of a plain one');
+    }
+
+    # Step 11: the title is plain source and the template it is printed through is what escapes it, in the text and in the attribute alike
+    #[Test]
+    public function theTitleIsEscapedAtTheTemplateBoundary(): void
+    {
+        $run = $this->getRun('content');
+        foreach (['plain', 'markdown'] as $mode) {
+            $html = $run[$mode]['title'];
+            $this->assertStringNotContainsString('<img', $html, 'A tag of the title reached the page as markup');
+            $this->assertSame(2, substr_count($html, '&lt;img src=x onerror=alert(1)&gt;'), 'The title was not escaped in both the attribute and the text');
+            $this->assertStringNotContainsString('&amp;lt;', $html, 'The title was escaped twice, so it is still being encoded on the way in');
+        }
+    }
+
+    # Step 11: what the writer still does once the escape is gone - the tokens a visitor may not open, the autolinker on the body alone, and the censor list on both fields
+    #[Test]
+    public function theWriterStillFiltersWhatChangesTheText(): void
+    {
+        $run = $this->getRun('writer');
+        $this->assertSame('ok', $run['error'], 'The send of the normalization scenario was refused');
+        $this->assertSame('*** t http://slaed.net', $run['title'], 'The title was not censored, kept a trusted-html token, or was run through the autolinker');
+        $this->assertSame("<b>x</b> ***\nsee [url=http://slaed.net]http://slaed.net[/url] now", $run['body'], 'The body was not censored, kept a token, or was not autolinked');
+    }
+
     # A write that joins a transaction it did not open leaves the commit to whoever did open it
     #[Test]
     public function aJoinedTransactionIsNotCommitted(): void

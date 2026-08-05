@@ -94,9 +94,10 @@ function setProbeSeed(): void {
 }
 
 # Build the class over the disposable schema, with the module settings one scenario needs put in front of the shipped ones
+# The whole configuration is handed over and not only the module section, because the write normalization of stage 2 reads the censor list and the autolinker from the site settings
 function getProbeMail(array $sett = []): Privat {
     global $conf;
-    return new Privat($GLOBALS['pdb'], ['privat' => $sett + $conf['privat']]);
+    return new Privat($GLOBALS['pdb'], ['privat' => $sett + $conf['privat']] + $conf);
 }
 
 # The four state columns of one stored row, or an empty array when the row is gone
@@ -391,6 +392,66 @@ function getProbeRace(): array {
     return ['runs' => $runs, 'room' => $room, 'held' => $prv->getMessageCount(2, PrivatBox::Inbox)];
 }
 
+# The payload every content scenario writes: a title and a body that carry everything an escape used to hide and everything a safe renderer has to keep out of the page
+const PROBETEXT = [
+    'head' => '<img src=x onerror=alert(1)> "quoted" & <b>bold</b>',
+    'body' => "<script>alert('x')</script> [b]bb[/b] <a href=\"javascript:alert(1)\">link</a>\nsecond & \"line\"",
+];
+
+# Point the writer at the editor whose first format is the wanted one and answer the format it really resolved to, so a disabled editor is visible instead of another branch
+function setProbeMode(string $mode): string {
+    global $conf;
+    $conf['editor']['user'] = ($mode === 'markdown') ? 'toastui' : 'plain';
+    return getEditorMode();
+}
+
+# What one send really stores and what a reader of that row really sees, per editor format
+# The stored bytes have to be the source the author submitted, because a body that was escaped on the way in can no longer be told from one whose author typed the escape
+# The rendering is asked of the same call both adapters make, so what the probe reads is what the mailbox and the administrator panel put on the page
+function getProbeContent(): array {
+    global $conf, $prs, $tpl;
+    setProbeSeed();
+    $conf['censor'] = 0;
+    $conf['clickable'] = 0;
+    $out = [];
+    foreach (['plain', 'markdown'] as $mode) {
+        $seen = setProbeMode($mode);
+        $new = getProbeMail(['send' => 0])->addMessage(3, 'anna', PROBETEXT['head'], PROBETEXT['body'], '127.0.0.1');
+        $pdb = $GLOBALS['pdb'];
+        $row = $pdb->getSqlRow($pdb->getSqlQuery('SELECT title, body, format FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $new['id']]));
+        $body = (string)($row['body'] ?? '');
+        $out[$mode] = [
+            'mode' => $seen,
+            'error' => $new['error'],
+            'format' => (string)($row['format'] ?? ''),
+            'kept' => [(string)($row['title'] ?? '') === PROBETEXT['head'], $body === PROBETEXT['body']],
+            'render' => $prs->filterContent($body, true, 'privat', 2, (string)($row['format'] ?? '')),
+            'title' => $tpl->getHtmlFrag('inline-badge', ['label' => (string)($row['title'] ?? ''), 'title_text' => (string)($row['title'] ?? '')]),
+        ];
+    }
+    return $out;
+}
+
+# What the write normalization still does to a submitted field once the escape is gone: the tokens a visitor may not open, the autolinker and the censor list
+# The title is asked for the same run, because it never carried the autolinker and must not start carrying it now
+function getProbeWriter(): array {
+    global $conf;
+    setProbeSeed();
+    $conf['censor'] = 1;
+    $conf['censor_l'] = 'badword';
+    $conf['censor_r'] = '***';
+    $conf['clickable'] = 1;
+    setProbeMode('markdown');
+    $head = 'badword [usehtml]t[/usehtml] http://slaed.net';
+    $body = "[usehtml]<b>x</b>[/usehtml] badword\nsee http://slaed.net now";
+    $new = getProbeMail(['send' => 0])->addMessage(3, 'anna', $head, $body, '127.0.0.1');
+    $pdb = $GLOBALS['pdb'];
+    $row = $pdb->getSqlRow($pdb->getSqlQuery('SELECT title, body FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $new['id']]));
+    $conf['censor'] = 0;
+    $conf['clickable'] = 0;
+    return ['error' => $new['error'], 'title' => (string)($row['title'] ?? ''), 'body' => (string)($row['body'] ?? '')];
+}
+
 # A write that joins a transaction it did not open must leave the commit to whoever did open it
 function getProbeTrx(): array {
     setProbeSeed();
@@ -427,6 +488,8 @@ try {
         'lock' => getProbeLock(),
         'retry' => getProbeRetry(),
         'race' => getProbeRace(),
+        'content' => getProbeContent(),
+        'writer' => getProbeWriter(),
     ];
 } catch (Throwable $err) {
     $report['error'] = $err->getMessage();

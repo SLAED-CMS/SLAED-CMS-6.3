@@ -797,6 +797,7 @@ function getAdminFavoriteList(int $obj = 0): string {
 # Private messages list view
 # The rows come from the private-message subsystem, which owns that table alone, so this list restates no mailbox predicate and filters no state: an administrator sees the deleted copies too
 # The state of one row is the one the four columns add up to, and the page is read from the request itself so a list rebuilt by a POST action stays on the page it was asked from
+# An administrator reads a message through the renderer its recipient does: the body is source rendered safe in the format its own row names, the title escaped by its template
 function getAdminPrivateList(int $obj = 0): string {
     global $afile, $conf, $tpl, $prs, $prv;
     $cid = getVar('req', 'num', 'num', getVar('req', 'cid', 'num', 1));
@@ -804,7 +805,7 @@ function getAdminPrivateList(int $obj = 0): string {
     if ($data['rows']) {
         $rows = [];
         foreach ($data['rows'] as $one) {
-            $title = getDecodedText($one['title']);
+            $title = $one['title'];
             $tone = match ($one['state']) {'delin', 'delout' => 'danger', 'saved' => 'accent', 'read' => 'success', default => 'warn'};
             $note = match ($one['state']) {
                 'delin' => (string)_PRIVAT_DELIN,
@@ -813,7 +814,7 @@ function getAdminPrivateList(int $obj = 0): string {
                 'read' => (string)_PROLD,
                 default => (string)_PROUTNEW,
             };
-            $info = $prs->filterContent($one['body'], false, 'privat');
+            $info = $prs->filterContent($one['body'], true, 'privat', 0, $one['format']);
             $delattr = getTplPostVals(['name' => 'privat', 'op' => 'delete', 'id' => $one['id'], 'num' => $data['page']], '#repadminPrivateList');
             $rows[] = $tpl->getHtmlFrag('table-row', ['cells_html' => $tpl->getHtmlFrag('table-cells', [
                 'cells' => [

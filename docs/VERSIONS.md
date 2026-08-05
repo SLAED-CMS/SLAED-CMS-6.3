@@ -2,6 +2,92 @@
 
 ## 2026-08-05
 
+### Private messages store source, and both fields are rendered safe
+
+A private message is the source its author wrote from this release on. The body is
+rendered by the parser with `safe = true` in the format its own row names, the
+title is plain text escaped where a template prints it, and no stored value is
+trusted HTML any more. **This release follows the state-model release below it and
+must not be deployed before that one is live**, because it reads the columns that
+release adds.
+
+**`php tools/privat-migrate.php` is mandatory, not optional, and it needs a
+maintenance window with the site closed.** Until it has run, every stored body
+still carries the escaping of the writer this release removes and is displayed
+with it — `&lt;b&gt;` instead of a bold word — and every row still carries an empty
+`format`, which is the value that says the row has not been classified yet rather
+than a syntax the renderer can act on. A database dump and a
+rehearsed restore are a precondition, not a recommendation: this is the one
+conversion of the project that rewrites message bodies in place.
+
+Which file an installation needs for the column depends on where it comes from,
+and it is exactly one of the three:
+
+| Coming from | File | How |
+|---|---|---|
+| a new installation | `setup/sql/table.sql` | the installer, nothing to do |
+| 6.2 | `setup/sql/table_update6_3.sql` | the installer |
+| already 6.3 | `setup/sql/update6_3_patch.sql` | **Administrator panel → Database → Inquiry**, section 6 |
+
+The section adds one column to `{prefix}_privat` — `format VARCHAR(20) NOT NULL
+DEFAULT ''` — and adds it empty on purpose: no statement in a schema file can tell
+a `plain` body from a `markdown` one, because that verdict is computed per body by
+the tool and not per column. It deletes no row, rewrites no message and is safe to
+run twice. All three files end on the same table definition, byte for byte.
+
+Deployment sequence, in this order and with no step folded into another:
+
+1. Close the site. Classification and conversion are two passes, so a message
+   written between them would be converted under a verdict that was never computed
+   for it. A closed site is what makes both passes describe the same rows.
+2. Dump the database and rehearse the restore into a copy of its own. The tool
+   takes `--db=` and `--prefix=`, so run everything below against that copy first.
+3. Run the `format` section for this installation's channel.
+4. `php tools/privat-migrate.php classify` and read its report. It writes `format`
+   and a per-row ledger in `storage/migrate/privat-format.json` and rewrites no
+   message, so the verdict can be reviewed before anything is converted. It
+   refuses a ledger whose rows a later pass has already rewritten; `--force=1`
+   overrides that, and on a converted table it is the wrong answer.
+5. `php tools/privat-migrate.php convert`, then `php tools/privat-migrate.php
+   title`. Both are driven by the ledger, store the value they replaced, mark every
+   row they finish and rewrite nothing twice. `--size=` batches a large table so
+   the run is not one transaction.
+6. **The gate.**
+   `SELECT COUNT(*) FROM {prefix}_privat WHERE format NOT IN ('plain','markdown')`
+   must return `0`, the ledger must report no unfinished row, and the row count
+   must equal the one the run started from. Both passes print that readout
+   themselves. A non-zero result stops the deployment — restore, or finish the
+   conversion. Do not proceed.
+7. Deploy the runtime code of this release. There is no `legacy` format and no
+   unsafe fallback, so the code must not be live before the gate has passed.
+8. Reopen the site.
+
+`report` and `sample` read only and write nothing. `report` classifies the whole
+table and prints the counts, and needs no ledger, so it can be run before anything
+else. `sample` prints stored source before and after per class and reads the
+ledger, so it is what step 4 is reviewed with and what step 5 is checked against.
+
+What changes for the people using the site:
+
+- A message is stored as it was written and escaped when it is read. Markup a
+  sender types is text on the recipient's screen instead of live HTML, while
+  Markdown, the bracket tags and the smilies still render.
+- A new message carries the syntax its author's editor really writes, `plain` or
+  `markdown`. An HTML editor is not a trust grant: its markup is stored as
+  Markdown source and escaped like any other.
+- The subject line is plain text now. It carries no markup, it is stored decoded,
+  and the template escapes it where it prints it — in the mailbox list, in its
+  attribute and in the administrator panel alike. The panel used to decode it back
+  on read to compensate for a writer that no longer exists.
+- An administrator reads a message body through the same safe renderer its
+  recipient does. Access to private-message contents in the `privat` section is a
+  deliberate system policy, super-administrator only as before, and no raw stored
+  body reaches a template on that path.
+- One limitation neither the conversion nor the state model can repair: a message
+  either side deleted while both sides still shared one row is gone from the
+  database and cannot be reconstructed for the other participant. That is recorded
+  rather than papered over with a placeholder message.
+
 ### Private messages: four independent states instead of one shared column
 
 The private-message subsystem is now one class, `Privat`, and one message carries

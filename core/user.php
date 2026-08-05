@@ -617,6 +617,8 @@ function updatePost() {
 # Render the private-message inbox, outbox, saved or detail view
 # Every mailbox read runs through the private-message subsystem, so no state column is restated here and a list, its counter and its quota can never disagree
 # This function only reads: opening a message is what marks it read and that is a POST route of its own, which hands the row it has already loaded down instead of having it read twice
+# A stored message is source from stage 2 on: the body is rendered safe in the format its own row names, and the title is plain text the template escapes where it prints it
+# The compose form refills its two fields with what was really submitted or stored, because escaping source into an editor hands the author back an escape they never wrote
 function getPrivateMessageView(string|array $stop = '', string $info = '', int $typ = 0, array $view = []): string {
     global $db, $user, $conf, $tpl, $prs, $prv;
     if (!is_user() || !$conf['privat']['act']) return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -779,7 +781,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
                 'rank_html' => ($mate['rank'] ?? '') ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $mate['rank']]) : '',
                 'rank_link' => $rimg,
                 'user_rate' => getRatingAsync(0, intval($mate['id'] ?? 0), $conf['name'], intval($mate['votes'] ?? 0), intval($mate['tvotes'] ?? 0), '', '1'),
-                'text' => $prs->filterContent($view['body'], false, $conf['name'], 2),
+                'text' => $prs->filterContent($view['body'], true, $conf['name'], 2, $view['format']),
                 'sig' => $prs->filterContent($sig, false, $conf['name'], 2),
                 'btn_user' => getActionMenu($menu, true),
                 'btn_edit' => getActionMenu([[
@@ -793,8 +795,8 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
         if (!$info && (!$cid || $cid == 1)) {
             $post = (string)getVar('post', 'name', 'raw', '') ?: urldecode((string)getVar('req', 'uname', 'raw', ''));
             $post = filterText(mb_substr($post, 0, 25)) ?: $pname;
-            $head = filterText(trim((string)getVar('post', 'title', 'raw', ''))) ?: (($view) ? _PRREP.': '.$view['title'] : '');
-            $body = filterText(trim((string)getVar('post', 'text', 'raw', ''))) ?: (($view) ? '[quote]'.$view['body'].'[/quote]' : '');
+            $head = trim((string)getVar('post', 'title', 'raw', '')) ?: (($view) ? _PRREP.': '.$view['title'] : '');
+            $body = trim((string)getVar('post', 'text', 'raw', '')) ?: (($view) ? '[quote]'.$view['body'].'[/quote]' : '');
             $form = 'form'.$prm;
             $cont .= $tpl->getHtmlPart('form-add', [
                 'no_action' => true,
@@ -843,6 +845,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
 # The recipient of the notification is read back from the stored message rather than resolved from the name again, so the mail reaches the account the message went to
 # The preference the notification asks is psmail, the private-message one the profile form offers, and no longer the forum preference fsmail that this path used to read
 # Points and the queued mail are side effects of a send that was really stored: both run after the subsystem answered ok, and neither can take an accepted message back
+# Both fields travel to the subsystem as the author submitted them: from stage 2 on a message stores source, and the writer that used to escape it on the way in is gone
 function addPrivateMessage(): void {
     global $user, $conf, $tpl, $mailer, $db, $prv;
     $name = filterText(mb_substr((string)getVar('post', 'name', 'raw', ''), 0, 25));
@@ -854,8 +857,8 @@ function addPrivateMessage(): void {
     $new = $prv->addMessage(
         $uid,
         $name,
-        filterHtml(trim((string)getVar('post', 'title', 'raw', '')), 1),
-        filterHtml(trim((string)getVar('post', 'text', 'raw', ''))),
+        (string)getVar('post', 'title', 'raw', ''),
+        (string)getVar('post', 'text', 'raw', ''),
         getIp()
     );
     if ($new['error'] !== 'ok') {

@@ -17,22 +17,33 @@ enum PrivatBox: string {
 # Nothing outside this class reaches the table any more, and no caller restates a mailbox predicate: the four state columns are read here or nowhere
 # The recipient owns viewed, saved and delin, the sender owns delout, so what one participant does to their copy never rewrites what the other one sees
 # Every write wraps its own transaction; when a transaction is already open it joins it and leaves begin, commit and rollback to whoever owns it
-# The class answers data and never markup, holds no session, request, template or mail dependency, and leaves points and notifications to the adapter that called it
+# The class answers data and never markup, holds no template or mail dependency, and leaves points and notifications to the adapter that called it
 final class Privat {
 
     # The columns every read of one message row answers with, so a consumer never has to know which of them a given query needed
-    private const FIELDS = 'id, uidin, uidout, title, time, viewed, saved, delin, delout';
+    private const FIELDS = 'id, uidin, uidout, title, time, viewed, saved, delin, delout, format';
+
+    # The two syntaxes a private message body may be written in; html is a trust grant rather than a format and is never stored against a message
+    private const FORMATS = ['plain', 'markdown'];
 
     # How many messages one bulk action may carry, so a submitted selection cannot grow into an unbounded statement
     private const MAXBULK = 100;
 
     private Database $db;
     private array $conf;
+    private array $site;
 
     # Build the subsystem from the connection the request already carries and snapshot its own settings, so no method reaches for a global
+    # The site settings the write normalization reads are snapshotted beside them, because a stored message is source and only these three still change its text
     public function __construct(Database $db, array $conf) {
         $this->db = $db;
         $this->conf = is_array($conf['privat'] ?? null) ? $conf['privat'] : [];
+        $this->site = [
+            'click' => !empty($conf['clickable']),
+            'cens' => !empty($conf['censor']),
+            'from' => (string)($conf['censor_l'] ?? ''),
+            'to' => (string)($conf['censor_r'] ?? ''),
+        ];
     }
 
     # The predicate of one mailbox, as the predicate table of the plan states it, optionally through a table alias
@@ -78,6 +89,7 @@ final class Privat {
             'saved' => intval($row['saved']),
             'delin' => intval($row['delin']),
             'delout' => intval($row['delout']),
+            'format' => (string)$row['format'],
         ];
     }
 
@@ -150,6 +162,28 @@ final class Privat {
     # It is asked only right after a statement answered false, because the wrapper holds its last error until another statement replaces it
     private function checkDeadlock(): bool {
         return in_array(intval($this->db->getSqlError()['code']), [1205, 1213], true);
+    }
+
+    # Resolve the syntax a new message body is stored under; an html editor grants trust rather than naming a format, so it is refused here and the body is kept as markdown source
+    private function getBodyFormat(): string {
+        $fmt = getEditorMode();
+        return in_array($fmt, self::FORMATS, true) ? $fmt : 'markdown';
+    }
+
+    # Normalize one submitted field into the source the row stores: the old writer escaped it for a render model this module no longer uses, and that escape is what stage 2 drops
+    # What stays is what changes the text itself rather than its markup: the trusted-html tokens a visitor may not open, the clickable-link rewrite and the censor list
+    # Only the body is asked for the rewrite, because the title never carried it under the old writer either, and a title is plain text that names no link
+    private function filterMessageText(string $text, bool $link): string {
+        if ($text === '') return '';
+        if (!isAdmin()) $text = (string)preg_replace('#\[/?(?:usehtml|usephp)\]#si', '', $text);
+        if ($link && $this->site['click']) $text = filterClickable($text);
+        if (!isAdmin() && $this->site['cens']) {
+            foreach (explode(',', $this->site['from']) as $one) {
+                $one = trim($one);
+                if ($one !== '') $text = (string)preg_replace('#'.preg_quote($one, '#').'#i', $this->site['to'], $text);
+            }
+        }
+        return trim($text);
     }
 
     # The length of the longest word of a text in characters, which is what the letter limit of the module bounds
@@ -278,20 +312,24 @@ final class Privat {
     # A send the server broke off is attempted once more, because a deadlock and a lock that timed out say nothing about the message itself
     # Only a send that owns its transaction is retried: a caller that opened one owns everything a rollback would take with it
     # A transaction still open after the failure is never attempted again either, because a second attempt would join it and leave the message to a commit that never comes
+    # Both fields are normalized and the format is resolved once, before the first attempt: a second attempt writes the bytes the first one meant to write and rewrites nothing
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
+        $title = $this->filterMessageText($title, false);
+        $body = $this->filterMessageText($body, true);
+        $fmt = $this->getBodyFormat();
         $own = !$this->db->checkSqlActive();
-        $out = $this->addMessageRow($uid, $name, $title, $body, $ip);
-        if ($own && !empty($out['retry']) && !$this->db->checkSqlActive()) $out = $this->addMessageRow($uid, $name, $title, $body, $ip);
+        $out = $this->addMessageRow($uid, $name, $title, $body, $fmt, $ip);
+        if ($own && !empty($out['retry']) && !$this->db->checkSqlActive()) $out = $this->addMessageRow($uid, $name, $title, $body, $fmt, $ip);
         return ['id' => $out['id'], 'error' => $out['error']];
     }
 
     # One attempt at storing a private message, which is the whole protocol from its transaction to its commit
-    # Title and body are stored as the adapter hands them over; the editor normalization of stage 1 belongs to the request and stays outside this class
+    # Title and body are stored as source and the format names the syntax the body is source of, so a reader renders what the author wrote instead of what a writer had escaped
     # The send interval and both quotas are read behind the lock of both accounts, so what was true when the form was rendered decides nothing here
     # The name is resolved before the transaction opens on purpose: the first plain read of a transaction fixes the snapshot every later plain read answers from
     # With the lock as the first statement, the interval and the quotas behind it see the send that has just committed, so two of them cannot take one last place
     # The resolved id is not trusted either: the lock reports whether that account is still there, and a sender it no longer finds is gone
-    private function addMessageRow(int $uid, string $name, string $title, string $body, string $ip): array {
+    private function addMessageRow(int $uid, string $name, string $title, string $body, string $fmt, string $ip): array {
         $title = trim($title);
         $body = trim($body);
         if ($uid < 1) return ['id' => 0, 'error' => 'not_logged'];
@@ -311,8 +349,8 @@ final class Privat {
         if ($this->checkFlood($uid)) return $this->getFailure($own, 'flood');
         if ($this->checkQuota($to)) return $this->getFailure($own, 'quota');
         $done = $this->db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_privat (uidin, uidout, title, body, time, ip) VALUES (:uidin, :uidout, :title, :body, NOW(), :ip)',
-            ['uidin' => $to, 'uidout' => $uid, 'title' => $title, 'body' => $body, 'ip' => $ip]
+            'INSERT INTO '.PREFIX_DB.'_privat (uidin, uidout, title, body, format, time, ip) VALUES (:uidin, :uidout, :title, :body, :format, NOW(), :ip)',
+            ['uidin' => $to, 'uidout' => $uid, 'title' => $title, 'body' => $body, 'format' => $fmt, 'ip' => $ip]
         );
         if ($done === false) return $this->getFailure($own, 'sql', true);
         $new = intval($this->db->getSqlLastId());

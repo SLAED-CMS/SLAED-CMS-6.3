@@ -1605,10 +1605,10 @@ ALTER TABLE `{prefix}_partners`
   MODIFY `name` VARCHAR(255) NOT NULL,
   MODIFY `email` VARCHAR(255) NOT NULL;
 
-ALTER TABLE `{prefix}_privat`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body` TEXT NOT NULL;
+# The message table is reconciled column by column: a bare MODIFY rebuilds the table even when nothing changes, and an installation already on 6.3 must not be rewritten
+CALL modcol('{prefix}_privat', 'id',    'INT UNSIGNED NOT NULL AUTO_INCREMENT');
+CALL modcol('{prefix}_privat', 'title', 'VARCHAR(100) NOT NULL');
+CALL modcol('{prefix}_privat', 'body',  'TEXT NOT NULL');
 
 ALTER TABLE `{prefix}_products`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
