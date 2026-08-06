@@ -307,9 +307,9 @@ Comment storage, same date:
 - `_comment`, `_users`, `_news`, `_files`, `_voting` and `_newsletter` are all
   InnoDB.
 
-Remediation is planned separately in `docs/MAIL-2026.md` and
-`docs/COMMENTS-REDESIGN-2026.md`; the facts above stay here when those documents
-are removed.
+Remediation was planned separately in `docs/MAIL-2026.md` and in the comment contract
+that `docs/CONTENT-CONTRACT-2026.md` now carries; the facts above stay here whatever
+happens to those documents.
 
 ### PHP Environment
 

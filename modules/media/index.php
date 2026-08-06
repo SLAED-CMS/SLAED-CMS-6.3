@@ -373,13 +373,7 @@ function view(): void {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
                     $adate = ($conf['media']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $atext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, $conf['name']))), ENT_QUOTES, 'UTF-8'), 80);
-                    if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
-                        $img = 'uploads/'.$conf['name'].'/thumb/'.trim($match[1]);
-                    } else {
-                        preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
-                        $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
-                    }
-                    $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png')) : getThemeImagePath('logos/slaed_logo_60x60.png');
+                    $img = getImgText($hometext) ?: getThemeImagePath('logos/slaed_logo_60x60.png');
                     $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]);
                     $cont .= $tpl->getHtmlFrag('related-item', [
                         'href'       => $href,
@@ -417,11 +411,11 @@ function add(): void {
         $year        = getVar('post', 'year', 'num', $date['year']);
         $director    = getVar('post', 'director', 'text');
         $roles       = getVar('post', 'roles', 'text');
-        $description = getVar('post', 'description', 'raw');
+        $description = getVar('post', 'description', 'text');
         $createdby   = getVar('post', 'createdby', 'text');
         $duration    = getVar('post', 'duration', 'text');
         $lang        = getVar('post', 'lang', 'text');
-        $note        = getVar('post', 'note', 'raw');
+        $note        = getVar('post', 'note', 'text');
         $format      = getVar('post', 'format', 'text');
         $quality     = getVar('post', 'quality', 'text');
         $size        = getVar('post', 'size', 'text');

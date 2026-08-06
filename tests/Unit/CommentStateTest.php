@@ -69,19 +69,18 @@ final class CommentStateTest extends TestCase
         $data = $this->getState();
         $this->assertNotSame([], $data['rules']['empty'], 'An empty body was accepted');
         [$add, $edit] = $data['rules']['flood'];
-        if ($add === []) $this->markTestSkipped('The clocks of this stand disagree, so the flood window cannot fire');
+        $this->assertNotSame([], $add, 'A second submit from one address inside the window was accepted');
         $this->assertSame([], $edit, 'The flood window of the add path fired on an edit');
+        $this->assertSame([], $data['rules']['freed'], 'The window never reopens once the last comment of that address is old enough');
     }
 
-    # A stored comment carries the five columns stage 2 adds, filled by the write rather than left at their default
+    # A stored comment carries what the final contract keeps and nothing the request could have named: the key it was written under as raw bytes, and no mark of an edit or a removal
     #[Test]
     public function theStoredRowCarriesTheColumnsOfThisStage(): void
     {
         $data = $this->getState();
         $this->assertSame('', $data['stored']['error']);
-        $this->assertContains($data['stored']['format'], ['plain', 'markdown'], 'The row was stored under a format comments do not offer');
-        $this->assertMatchesRegularExpression('#^[0-9a-f]{32}$#', $data['stored']['reqkey']);
-        $this->assertSame(64, $data['stored']['iphash'], 'The flood fingerprint is not a hex sha256');
+        $this->assertSame('abcdef0123456789abcdef0123456789', $data['stored']['reqkey'], 'The submitted key is not the key the row was stored under');
         $this->assertNull($data['stored']['deleted']);
         $this->assertNull($data['stored']['edited']);
     }
@@ -167,7 +166,7 @@ final class CommentStateTest extends TestCase
     public function aStoredBodyRoundTripsThroughBothEditPaths(): void
     {
         $data = $this->getState();
-        if (!$data['round']) $this->markTestSkipped('No migrated row of either class on this installation');
+        if (!$data['round']) $this->markTestSkipped('No stored comment with a body on this installation');
         foreach ($data['round'] as $fmt => [$moder, $saved, $author, $part]) {
             $this->assertTrue($moder, 'The moderation save changed a '.$fmt.' body it was handed unchanged: '.$part);
             $this->assertTrue($saved, 'The author edit of a '.$fmt.' body was refused');

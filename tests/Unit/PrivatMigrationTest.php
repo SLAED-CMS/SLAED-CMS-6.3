@@ -6,14 +6,12 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Steps 1 and 9 of docs/PRIVAT-2026.md: the private-message table trades one status column for four independent
- * states and then gains the format column of the content contract, in all three update channels at once.
+ * The private-message table trades one status column for four independent states, in every update channel at once.
  * tests/Support/privat_probe.php builds each documented pre-migration shape in a disposable schema, runs the shipped
  * statements of one channel against it through the same splitter an installation runs them with, and reports what
  * the table and the mailboxes look like afterwards. States A and B still carry the legacy status column, C is
- * already converted, D carries the renamed column with the BOOLEAN definition a bare rename leaves behind, and E is
- * the table stage 1 shipped: every state column and every key in place and only format missing, which is the
- * installation the format section is written for. The site database is never touched.
+ * already converted and D carries the renamed column with the BOOLEAN definition a bare rename leaves behind. The
+ * site database is never touched.
  */
 final class PrivatMigrationTest extends TestCase
 {
@@ -37,7 +35,7 @@ final class PrivatMigrationTest extends TestCase
     public function everyChannelEndsOnTheFreshSchema(): void
     {
         $data = $this->getProbe();
-        $this->assertCount(10, $data['runs'], 'Two channels times five states is what the plan asks for');
+        $this->assertCount(8, $data['runs'], 'Two channels times four states is what the plan asks for');
         foreach ($data['runs'] as $name => $run) {
             $this->assertTrue($run['def'], $name." did not converge on the fresh schema:\n".$run['text']."\n\nfresh:\n".$data['fresh']);
         }

@@ -61,7 +61,7 @@ final class InputFilterTest extends TestCase
         $this->assertSame([['one', 'two-three'], []], $this->getProbe()['vararr']);
     }
 
-    # filterText() strips tags by default, escapes quotes, keeps escaped markup for type 2 and removes usephp blocks
+    # filterText() strips tags by default, escapes quotes, keeps escaped markup for type 2 and drops the trusted tokens an author without the super capability may not store
     #[Test]
     public function textFilterEscapesAndStripsMarkup(): void
     {
@@ -69,6 +69,7 @@ final class InputFilterTest extends TestCase
         $this->assertSame('bold', $text[0]);
         $this->assertStringContainsString('&quot;', $text[1]);
         $this->assertSame('&lt;b&gt;tag&lt;/b&gt;', $text[2]);
+        $this->assertStringNotContainsString('[usehtml]', $text[3]);
         $this->assertStringNotContainsString('[usephp]', $text[3]);
         $this->assertStringContainsString('normal text', $text[3]);
         $this->assertSame('hello', $text[4]);

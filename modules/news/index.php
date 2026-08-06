@@ -81,8 +81,6 @@ function news(): void {
         $columns = max(1, min(6, (int)$conf['news']['bascol']));
         $ismoder = is_moder($conf['name']);
         $token   = $ismoder ? getSiteToken() : getPageToken();
-        $pver = filemtime(BASE_DIR.'/core/classes/parser.php');
-        $pcfg = sha1(serialize([$conf['replace'][$conf['name']] ?? '', $conf['uploads'][$conf['name']] ?? '', $conf['uploads']['width'] ?? '', $conf['uploads']['height'] ?? '', $conf['filetype'] ?? [], $conf['homeurl']]));
         $cont .= $tpl->getHtmlFrag('grid', ['open' => true]);
         while ([$id, $cid, $uname, $stitle, $time, $hometext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $cordern, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl([
@@ -101,16 +99,7 @@ function news(): void {
             $rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
             $edit = $afile.'.php?name=news&op=add&id='.$id;
             $del = $afile.'.php?name=news&op=actions&typ=d&id='.$id.'&refer=2&token='.$token;
-            $ptext = '';
-            $pfile = '';
-            if (!preg_match('#\[(block=|hide|usephp|attach)#i', $hometext) && stripos($hometext, '<img') === false) {
-                $pfile = Cache::getPath('data', Cache::getHash(['parser', sha1($hometext), '0', $conf['name'], '2', getTheme(), _LOCALE, $pcfg, $pver]), 'html');
-                if (Cache::isFresh($pfile, 86400)) $ptext = Cache::getBody($pfile);
-            }
-            if ($ptext === '') {
-                $ptext = $prs->filterContent($hometext, false, $conf['name'], 2);
-                if ($pfile !== '') Cache::setBody($pfile, $ptext);
-            }
+            $ptext = $prs->filterContent($hometext, false, $conf['name'], 2);
             $cont .= $tpl->getHtmlFrag('card', [
                 'id' => $id,
                 'is_nested' => false,
@@ -407,8 +396,8 @@ function add(): void {
     if ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'catid', 'num');
-        $hometext = getVar('post', 'hometext', 'raw');
-        $bodytext = getVar('post', 'bodytext', 'raw');
+        $hometext = getVar('post', 'hometext', 'text');
+        $bodytext = getVar('post', 'bodytext', 'text');
         $fieldp = getVar('post', 'field[]', 'raw', []);
         $field = is_array($fieldp) ? implode('|', array_map('strval', $fieldp)) : '';
         $postname = getVar('post', 'postname', 'name');

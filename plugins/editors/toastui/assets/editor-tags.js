@@ -80,7 +80,7 @@
     }
 
     function addTags(id, ed, opt) {
-        var admin = !!(opt && opt.admin);
+        var issuper = !!(opt && opt.super);
         var txt = opt && opt.labels ? opt.labels : {};
         if (!ed || typeof ed.addCommand !== 'function' || typeof ed.insertToolbarItem !== 'function') return;
         addCmd(ed, 'slaedFullscreen', function() {
@@ -99,7 +99,7 @@
         addItem(ed, 0, 'slaedQuote', 'sl-editor-icon sl-editor-icon-quote', txt.quote || 'SLAED quote');
         addItem(ed, 1, 'slaedHide', 'sl-editor-icon sl-editor-icon-hide', txt.hide || 'SLAED hidden block');
         addItem(ed, 2, 'slaedTabs', 'sl-editor-icon sl-editor-icon-tabs', txt.tabs || 'SLAED tabs');
-        if (!admin) return;
+        if (!issuper) return;
         addCmd(ed, 'slaedHtml', function() {
             addWrap(ed, '[usehtml]', '[/usehtml]', '<p>HTML</p>');
         });

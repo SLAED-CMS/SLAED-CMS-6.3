@@ -20,7 +20,7 @@
 # than carried over from the report, so a comment written between the two cannot be lost.
 # The same work runs unattended as the `commentsync` scheduler job; this tool is the manual way in.
 #
-# There is no --db= here, unlike tools/comment-migrate.php: this tool boots the core so the module map,
+# There is no --db= here: this tool boots the core so the module map,
 # the visibility rules and the counter semantics have one home, and the core reads config/db.php. To
 # rehearse against a restored copy, point that file at the copy.
 

@@ -51,13 +51,7 @@ function main(): void {
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.intro, c.title, c.intro FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE s.time <= NOW() AND s.status != '0' ORDER BY s.time DESC LIMIT 3");
     while ([$id, $cid, $title, $time, $hometext, $ctitle, $cdesc] = $db->getSqlRow($result)) {
         $linkstrip = cutstr($title, 45);
-        if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
-            $img = 'uploads/news/thumb/'.trim($match[1]);
-        } else {
-            preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
-            $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
-        }
-        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png')) : getThemeImagePath('logos/slaed_logo_60x60.png');
+        $img = getImgText($hometext, '', true, 'news') ?: getThemeImagePath('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'news'))), ENT_QUOTES), 60);
         $href = 'index.php?name=news&op=view&id='.$id;
         $cat = 'index.php?name=news&cat='.$cid;
@@ -82,13 +76,7 @@ function main(): void {
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.intro, s.time, c.title, c.intro FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE s.time <= NOW() AND s.status != '0' ORDER BY s.time DESC LIMIT 3");
     while ([$id, $cid, $title, $hometext, $time, $ctitle, $cdesc] = $db->getSqlRow($result)) {
         $linkstrip = cutstr($title, 45);
-        if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
-            $img = 'uploads/files/thumb/'.trim($match[1]);
-        } else {
-            preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
-            $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
-        }
-        $img = ($img) ? (file_exists(BASE_DIR.'/'.ltrim(str_replace('\\', '/', $img), '/')) ? $img : getThemeImagePath('logos/slaed_logo_60x60.png')) : getThemeImagePath('logos/slaed_logo_60x60.png');
+        $img = getImgText($hometext, '', true, 'files') ?: getThemeImagePath('logos/slaed_logo_60x60.png');
         $ntext = cutstr(htmlspecialchars(trim(strip_tags($prs->filterContent($hometext, false, 'files'))), ENT_QUOTES), 60);
         $href = 'index.php?name=files&op=view&id='.$id;
         $cat = 'index.php?name=files&cat='.$cid;

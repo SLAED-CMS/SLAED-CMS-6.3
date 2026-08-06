@@ -156,7 +156,7 @@ function add(): void {
     if ($conf['jokes']['add'] == '1') {
         $title    = getVar('post', 'title', 'title');
         $cid      = getVar('post', 'cid', 'num');
-        $joke     = getVar('post', 'joke', 'raw');
+        $joke     = getVar('post', 'joke', 'text');
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
         $cont = getModuleNavi(['title' => _ADD] + JOKES_NAVI);

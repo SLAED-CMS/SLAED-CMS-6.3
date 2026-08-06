@@ -78,7 +78,9 @@ function getCommentView(array $val, int $numb, string $token): string {
     } elseif (is_user() && $auid > 0 && $auid === intval($user[0]) && time() < strtotime($when) + $conf['comments']['edit']) {
         $items[] = $form;
     }
-    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, $val['format'])]);
+    $text = $tpl->getHtmlFrag('block-content', ['id' => 'repcom'.$cmid, 'content' => $prs->filterContent($val['body'], true, $cmod, 2, 'breaks')]);
+    $sent = (string)($val['edited'] ?? '');
+    $mark = ($sent !== '') ? $tpl->getHtmlFrag('inline-badge', ['title_text' => (string)_COMMENTS_EDITED, 'label' => format_time($sent, _TIMESTRING), 'is_comment_edit' => true]) : '';
     return $tpl->getHtmlFrag('comment', [
         'id' => $cmid,
         'depth' => $deep,
@@ -87,6 +89,7 @@ function getCommentView(array $val, int $numb, string $token): string {
         'username_html' => $unam,
         'report' => $utip,
         'date' => $date,
+        'edited' => $mark,
         'ip' => $ip,
         'post_count' => $amess,
         'avatar' => $avatar,
@@ -781,7 +784,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
                 'rank_html' => ($mate['rank'] ?? '') ? $tpl->getHtmlFrag('span', ['is_bold' => true, 'text' => $mate['rank']]) : '',
                 'rank_link' => $rimg,
                 'user_rate' => getRatingAsync(0, intval($mate['id'] ?? 0), $conf['name'], intval($mate['votes'] ?? 0), intval($mate['tvotes'] ?? 0), '', '1'),
-                'text' => $prs->filterContent($view['body'], true, $conf['name'], 2, $view['format']),
+                'text' => $prs->filterContent($view['body'], true, $conf['name'], 2, 'breaks'),
                 'sig' => $prs->filterContent($sig, false, $conf['name'], 2),
                 'btn_user' => getActionMenu($menu, true),
                 'btn_edit' => getActionMenu([[
@@ -988,7 +991,7 @@ function getProfileLastView(int $uid): string {
     }
     foreach ($com->getUserList($uid, $limit) as $row) {
         $when = $row['time'];
-        $text = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($row['body'], true, $conf['name'], 0, $row['format']))), 70);
+        $text = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($row['body'], true, $conf['name'], 0, 'breaks'))), 70);
         $lists['comm'][] = [
             'datehtml' => $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($when)), 'title' => format_time($when, _TIMESTRING), 'text' => format_time($when)]),
             'href' => getSeoUrl(['name' => $row['modul'], 'op' => 'view', 'id' => $row['cid']]).'#'.$row['id'],

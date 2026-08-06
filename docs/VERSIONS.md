@@ -5,76 +5,35 @@
 ### Private messages store source, and both fields are rendered safe
 
 A private message is the source its author wrote from this release on. The body is
-rendered by the parser with `safe = true` in the format its own row names, the
-title is plain text escaped where a template prints it, and no stored value is
-trusted HTML any more. **This release follows the state-model release below it and
+rendered by the parser with `safe = true`, the title is plain text escaped where a
+template prints it, and no stored value is trusted HTML any more. **This release follows the state-model release below it and
 must not be deployed before that one is live**, because it reads the columns that
 release adds.
 
-**`php tools/privat-migrate.php` is mandatory, not optional, and it needs a
-maintenance window with the site closed.** Until it has run, every stored body
-still carries the escaping of the writer this release removes and is displayed
-with it — `&lt;b&gt;` instead of a bold word — and every row still carries an empty
-`format`, which is the value that says the row has not been classified yet rather
-than a syntax the renderer can act on. A database dump and a
-rehearsed restore are a precondition, not a recommendation: this is the one
-conversion of the project that rewrites message bodies in place.
+> **Superseded on 2026-08-06 by the content contract.** This entry originally
+> shipped a `format` column on `{prefix}_privat` and a mandatory
+> `tools/privat-migrate.php` run that rewrote stored bodies in place. Neither
+> exists any more: the column is gone from all three SQL channels, the tool is
+> deleted, and no text migration is part of any release. What survives is the part
+> below — a message is stored as source and rendered safe — and it needs no
+> conversion pass to be true.
 
-Which file an installation needs for the column depends on where it comes from,
-and it is exactly one of the three:
+A body is read through one contract. `plain` and the editors are input interfaces,
+not storage formats, and nothing in the rendering branches on the editor an author
+happened to type in. That is why no column names a syntax and why there is nothing
+to classify: the same stored bytes render the same way whichever editor wrote them.
 
-| Coming from | File | How |
-|---|---|---|
-| a new installation | `setup/sql/table.sql` | the installer, nothing to do |
-| 6.2 | `setup/sql/table_update6_3.sql` | the installer |
-| already 6.3 | `setup/sql/update6_3_patch.sql` | **Administrator panel → Database → Inquiry**, section 6 |
-
-The section adds one column to `{prefix}_privat` — `format VARCHAR(20) NOT NULL
-DEFAULT ''` — and adds it empty on purpose: no statement in a schema file can tell
-a `plain` body from a `markdown` one, because that verdict is computed per body by
-the tool and not per column. It deletes no row, rewrites no message and is safe to
-run twice. All three files end on the same table definition, byte for byte.
-
-Deployment sequence, in this order and with no step folded into another:
-
-1. Close the site. Classification and conversion are two passes, so a message
-   written between them would be converted under a verdict that was never computed
-   for it. A closed site is what makes both passes describe the same rows.
-2. Dump the database and rehearse the restore into a copy of its own. The tool
-   takes `--db=` and `--prefix=`, so run everything below against that copy first.
-3. Run the `format` section for this installation's channel.
-4. `php tools/privat-migrate.php classify` and read its report. It writes `format`
-   and a per-row ledger in `storage/migrate/privat-format.json` and rewrites no
-   message, so the verdict can be reviewed before anything is converted. It
-   refuses a ledger whose rows a later pass has already rewritten; `--force=1`
-   overrides that, and on a converted table it is the wrong answer.
-5. `php tools/privat-migrate.php convert`, then `php tools/privat-migrate.php
-   title`. Both are driven by the ledger, store the value they replaced, mark every
-   row they finish and rewrite nothing twice. `--size=` batches a large table so
-   the run is not one transaction.
-6. **The gate.**
-   `SELECT COUNT(*) FROM {prefix}_privat WHERE format NOT IN ('plain','markdown')`
-   must return `0`, the ledger must report no unfinished row, and the row count
-   must equal the one the run started from. Both passes print that readout
-   themselves. A non-zero result stops the deployment — restore, or finish the
-   conversion. Do not proceed.
-7. Deploy the runtime code of this release. There is no `legacy` format and no
-   unsafe fallback, so the code must not be live before the gate has passed.
-8. Reopen the site.
-
-`report` and `sample` read only and write nothing. `report` classifies the whole
-table and prints the counts, and needs no ledger, so it can be run before anything
-else. `sample` prints stored source before and after per class and reads the
-ledger, so it is what step 4 is reviewed with and what step 5 is checked against.
+No deployment step is needed for this beyond the runtime code itself. The schema
+work belongs to the state-model entry below, which stays exactly as it was.
 
 What changes for the people using the site:
 
 - A message is stored as it was written and escaped when it is read. Markup a
   sender types is text on the recipient's screen instead of live HTML, while
   Markdown, the bracket tags and the smilies still render.
-- A new message carries the syntax its author's editor really writes, `plain` or
-  `markdown`. An HTML editor is not a trust grant: its markup is stored as
-  Markdown source and escaped like any other.
+- The editor an author writes in is an input interface and nothing more. An HTML
+  editor is not a trust grant either: its markup is stored as source and escaped
+  like any other, and the reading side never asks which editor produced a message.
 - The subject line is plain text now. It carries no markup, it is stored decoded,
   and the template escapes it where it prints it — in the mailbox list, in its
   attribute and in the administrator panel alike. The panel used to decode it back
@@ -83,7 +42,7 @@ What changes for the people using the site:
   recipient does. Access to private-message contents in the `privat` section is a
   deliberate system policy, super-administrator only as before, and no raw stored
   body reaches a template on that path.
-- One limitation neither the conversion nor the state model can repair: a message
+- One limitation the state model cannot repair either: a message
   either side deleted while both sides still shared one row is gone from the
   database and cannot be reconstructed for the other participant. That is recorded
   rather than papered over with a placeholder message.
@@ -162,10 +121,15 @@ One file brings it up to date: **`setup/sql/update6_3_patch.sql`**, pasted into
 page substitutes `{prefix}` itself, so the same file serves any prefix, and its parse
 action shows the statements before anything executes.
 
-Four sections, in this order:
+Five sections, in this order:
 
-1. `pid` and `path` on `{prefix}_comment` with their two indexes, and the backfill that
-   makes every stored comment a root of its own — where the reply threads live.
+1. `{prefix}_comment` on its final shape: `pid` directly behind `id` for the reply
+   tree, `edited` and `deleted` for the moderation marks, `reqkey` as the binary
+   idempotency key under one unique index, `time` required, `ip` byte-compared for
+   the flood interval, and the index set the real list, count and thread predicates
+   are read through. Every stored comment stays a root; nothing is re-parented. Two
+   guards stop the run before it changes anything: a `reqkey` found as hex text and
+   a `NULL` in `time`.
 2. The `{prefix}_admins` column types the fresh schema declares. The upgrade file used
    to declare `editor` as `BOOLEAN`, which fails on any installation whose
    administrators carry an editor name, and because an `ALTER` is all or nothing the
@@ -175,17 +139,17 @@ Four sections, in this order:
 4. The `comments` column of the eight target tables, brought in line with the comments
    really published under them.
 
-It drops nothing, deletes no row, touches no comment and recalculates no user point.
-Columns and indexes are added only when absent and every counter statement writes only
-the rows that disagree, so a second run changes nothing.
+It deletes no row, touches no authored text and recalculates no user point. Columns
+and indexes are added only when absent, every counter statement writes only the rows
+that disagree, and the only drops are the columns and the keys the final contract
+removes, which are no-ops where an installation never carried them. A second run
+changes nothing.
 
 Nothing has to be scheduled afterwards: every comment write recomputes the counter of
 its own target, so section 4 is a one-off repair of what drifted before. What it cannot
 reach is a target nobody has commented on since — the comments section of the panel
 reports those on its first tab and repairs them on a click, and
 `tools/comment-recount.php report|fix` does the same from the shell.
-`php tools/comment-migrate.php` is still required if the body migration has never run
-here — see the comment subsystem notes below.
 
 ### Upgrade 6.2 → 6.3 must go through the installer, not through the SQL page
 
@@ -232,24 +196,25 @@ Read this before running `setup/sql/table_update6_3.sql` on an installation with
 large comment table. **Take a dump of `{prefix}_comment` first and rehearse the
 restore.**
 
-- The upgrade adds seven columns to `{prefix}_comment` (`format`, `edited`,
-  `deleted`, `reqkey`, `iphash`, `pid`, `path`), creates seven indexes, drops the
-  two the composites supersede (`cid`, `modul_status`) and backfills `reqkey` and
-  `path` for every existing row.
-- **This is not instant on a large table.** Every index build and every backfill
-  rewrites the table, and InnoDB holds the rows while it does. It took under a
-  second against 7357 rows; on a table with orders of magnitude more it is a
-  maintenance window, not a page reload. Close the site for it rather than letting
-  a visitor discover it during a lock.
-- **`php tools/comment-migrate.php` is mandatory, not optional.** From 6.3 a
-  comment body is the source its author wrote and the parser escapes it on read,
-  so until the migration has run every stored body still carries the escaping of
-  the old writer and is displayed with it — `&lt;b&gt;` instead of a bold word.
-  Run `classify`, read its report, then `convert`, then `iphash`. The tool keeps a
-  ledger in `storage/migrate/`, marks every row it finishes, stores the body it
-  replaced, and takes `--db=` so the whole run can be rehearsed against a restored
-  copy first.
-- The migration is idempotent: a second run converts nothing twice.
+- The upgrade adds four columns to `{prefix}_comment` (`pid`, `edited`, `deleted`,
+  `reqkey`), places `pid` directly behind `id`, makes `time` required, stores `ip`
+  under a binary ascii collation, creates the index set the real list, count and
+  thread predicates are read through, and drops the keys those supersede (`cid`,
+  `modul_status`). No column named `format`, `iphash` or `path` is created, no
+  comment rate table is built, and no idempotency key is minted for an existing
+  row: a comment written before this release was never replayed and needs none.
+- Two guards stop the run instead of guessing, and both stop it before anything
+  else has changed: a `reqkey` found as hex text, which means the table was carried
+  through a transitional release, and a `NULL` in `time`.
+- **This is not instant on a large table.** Every index build rewrites the table,
+  and InnoDB holds the rows while it does. It took under a second against 7358
+  rows; on a table with orders of magnitude more it is a maintenance window, not a
+  page reload. Close the site for it rather than letting a visitor discover it
+  during a lock.
+- **No text migration is needed and none is shipped.** A comment body is the
+  source its author wrote and is rendered through one contract; nothing branches on
+  an editor and no column names a storage format.
+- The upgrade is idempotent: a second run changes neither schema nor data.
 - Deleting a user no longer orphans their comments. The rows stay and lose only
   the reference to the account, so discussions and reply branches survive.
 - **Repair the comment counters after the upgrade.** The `comments` column of the

@@ -918,7 +918,7 @@ function save(): void {
             'script_c' => getVar('post', 'script_c', 'num'),
             'script_a' => getVar('post', 'script_a', 'num'),
             'script_b' => getVar('post', 'script_b', 'num'),
-            'mtemp' => getVar('post', 'mtemp', 'raw'),
+            'mtemp' => filterTrustedTags((string)getVar('post', 'mtemp', 'raw'), isAdmin(true)),
             'dev_mode' => getVar('post', 'dev_mode', 'num'),
         ];
         $mtrans = getVar('post', 'mailtrans', 'var', 'php');

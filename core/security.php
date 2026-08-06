@@ -920,15 +920,22 @@ function filterWord(string $var): string {
     return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var) ?? '';
 }
 
+# Drop the trusted tags [usehtml] and [usephp] from an authored text unless the writer holds the capability; the tag is the capability itself, so what an author may not store no render mode can hand back
+# $trust says the writer holds it and belongs to the super administrator alone; it defaults to off so a channel that must never carry the tags, such as comments and private messages, simply omits it
+# The replace repeats because a single pass over a nested token like [use[usehtml]html] would rebuild the very tag it removed
+function filterTrustedTags(string $text, bool $trust = false): string {
+    if ($text === '' || $trust) return $text;
+    while (preg_match('#\[/?use(?:html|php)\]#si', $text)) {
+        $text = (string)preg_replace('#\[/?use(?:html|php)\]#si', '', $text);
+    }
+    return $text;
+}
+
 # Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor
 function filterText(string|array $message, int $type = 0): string {
     global $conf;
     if (is_array($message)) $message = filterFields($message);
-    if (!isAdmin()) {
-        while (preg_match('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', $message)) {
-            $message = preg_replace('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', '', $message);
-        }
-    }
+    $message = filterTrustedTags($message, isAdmin(true));
     if ($type === 2) {
         $message = htmlspecialchars(trim($message), ENT_QUOTES);
     } else {
@@ -981,9 +988,11 @@ function filterClickable(string $text): string {
 }
 
 # Normalize submitted content for the active editor format; plain text keeps HTML breaks, Markdown keeps line endings and trusted HTML stays intact
+# The capability check runs before the branch, because an html editor stores its input almost verbatim and would otherwise carry the trusted tags past the write boundary
 function filterHtml(string $text, mixed $id = ''): string {
     global $conf;
     if ($text) {
+        $text = filterTrustedTags($text, isAdmin(true));
         $mode = getEditorMode();
         if ($mode !== 'html') {
             $text = ($conf['clickable'] && $id != 1) ? filterClickable($text) : $text;

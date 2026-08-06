@@ -209,8 +209,8 @@ function add(): void {
         $associated = getVar('post', 'associated[]', '', []);
         $associated = is_array($associated) ? $associated : [];
         $cat = getVar('post', 'cat', 'num', 0);
-        $hometext = getVar('post', 'hometext', 'raw', '');
-        $bodytext = getVar('post', 'bodytext', 'raw', '');
+        $hometext = getVar('post', 'hometext', 'text', '');
+        $bodytext = getVar('post', 'bodytext', 'text', '');
         $fieldp = getVar('post', 'field[]', 'raw', []);
         $field = is_array($fieldp) ? implode('|', array_map('strval', $fieldp)) : '';
         $vote = getVar('post', 'vote', 'num', 0);

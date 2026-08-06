@@ -359,8 +359,8 @@ function add(): void {
     if ((is_user() && $conf['links']['add'] == 1) || (!is_user() && $conf['links']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'cid', 'num');
-        $description = getVar('post', 'description', 'raw');
-        $bodytext = getVar('post', 'bodytext', 'raw');
+        $description = getVar('post', 'description', 'text');
+        $bodytext = getVar('post', 'bodytext', 'text');
         $postname = getVar('post', 'postname', 'name');
         if (is_user()) {
             $userinfo = getUserInfo();

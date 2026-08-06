@@ -24,6 +24,9 @@ namespace {
     if (!function_exists('getDecodedText')) {
         function getDecodedText(string $text): string { return html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'); }
     }
+    if (!function_exists('getUploadRuleData')) {
+        function getUploadRuleData(string $mod): array { return ['thumbwidth' => 250]; }
+    }
 }
 
 namespace Tests\Unit {
@@ -119,15 +122,55 @@ namespace Tests\Unit {
                 'unsafe div block'  => ["<div class=\"x\">\ntext\n</div>",    false, '', "<div class=\"x\">\ntext\n</div>"],
                 'usehtml tag'       => ['[usehtml]<b>html</b>[/usehtml]',     false, '', '<b>html</b>'],
 
+                # Code wins over the bracket layer, which is what lets a document write a tag as an example instead of executing it
+                'code span keeps bb pair'   => ['`[quote]x[/quote]`',   true,  '', '<code>[quote]x[/quote]</code>'],
+                'code span keeps lone tag'  => ['`[hr]` and `[li]`',    true,  '', '<p><code>[hr]</code> and <code>[li]</code></p>'],
+                'code span keeps smilie'    => ['`*01`',                true,  '', '<code>*01</code>'],
+                'code span keeps trusted'   => ['`[usehtml]x[/usehtml]`', false, '', '<code>[usehtml]x[/usehtml]</code>'],
+                'bare tag still runs'       => ['[hr]',                 true,  '', '<hr>'],
+
+                # A conversation channel breaks on the line ending its author typed; plain Markdown joins those lines and plain format recognizes no Markdown at all
+                'markdown joins soft lines' => ["one\ntwo",             true,  '', '<p>one'."\n".'two</p>'],
+                'breaks keep soft lines'    => ["one\ntwo",             true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
+                'breaks still read markdown'=> ["**bold**\nnext",       true,  '', '<p><strong>bold</strong><br>'."\n".'next</p>', 'breaks'],
+                'breaks keep the hard one'  => ["one\\\ntwo",           true,  '', '<p>one<br>'."\n".'two</p>', 'breaks'],
+
+                # The super administrator capability is a write-boundary rule, so the parser still runs the tag it was handed; safe mode leaves it as the literal text an author typed
+                'usephp trusted'    => ['[usephp]echo 6*7;[/usephp]',         false, '', '42'],
+                'usephp safe'       => ['[usephp]echo 6*7;[/usephp]',         true,  '', '<p>[usephp]echo 6*7;[/usephp]</p>'],
+
                 'unclosed backtick' => ['незакрытый `backtick', true, '', '<p>незакрытый `backtick</p>'],
             ];
         }
 
         #[Test]
         #[DataProvider('deterministicCases')]
-        public function filterDocMatchesExpected(string $src, bool $safe, string $mod, string $expected): void
+        public function filterDocMatchesExpected(string $src, bool $safe, string $mod, string $expected, string $fmt = ''): void
         {
-            $this->assertSame($expected, self::$p->filterDoc($src, $safe, $mod));
+            $this->assertSame($expected, self::$p->filterDoc($src, $safe, $mod, 0, $fmt));
+        }
+
+        # A rendering may only be stored when it answers for nobody in particular; a hidden block is the case that would leak, because a stored copy would show a visitor what only a member may read
+        public static function varyCases(): array
+        {
+            return [
+                'plain text is storable'     => ['just **text** and a [b]tag[/b]',      true,  false],
+                'code keeps it storable'     => ['`[hide]secret[/hide]`',               true,  false],
+                'hidden block varies'        => ['[hide]secret[/hide]',                 true,  true],
+                'executed php varies'        => ['[usephp]echo 1;[/usephp]',            false, true],
+                'markdown image varies'      => ['![alt](uploads/all/x.png)',           true,  true],
+                'bb image varies'            => ['[img]uploads/all/x.png[/img]',        true,  true],
+                'attachment varies'          => ['[attach=nosuchfile.pdf align=left title=t]', true, true],
+            ];
+        }
+
+        #[Test]
+        #[DataProvider('varyCases')]
+        public function onlyContextFreeRenderingsMayBeStored(string $src, bool $safe, bool $vary): void
+        {
+            self::$p->filterDoc($src, $safe, 'all');
+            $flag = new \ReflectionProperty(\Parser::class, 'vary');
+            $this->assertSame($vary, $flag->getValue(self::$p), 'The storable verdict of this document is wrong');
         }
 
         public static function runtimeCases(): array

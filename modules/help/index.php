@@ -361,7 +361,7 @@ function add(): void {
     if ((is_user() && $conf['help']['add'] == 1)) {
         $title    = getVar('post', 'title', 'title');
         $cid      = getVar('post', 'catid', 'num');
-        $hometext = getVar('post', 'hometext', 'raw');
+        $hometext = getVar('post', 'hometext', 'text');
         $field    = getVar('post', 'field', 'field');
         setHead(['title' => _ADD]);
         $cont = getModuleNavi(['title' => _ADD] + HELP_NAVI);

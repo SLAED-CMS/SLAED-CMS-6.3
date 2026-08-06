@@ -371,7 +371,7 @@ function add(): void {
     if ((is_user() && $conf['faq']['add'] == 1) || (!is_user() && $conf['faq']['addquest'] == 1)) {
         $title    = getVar('post', 'title', 'title');
         $cid      = getVar('post', 'catid', 'num');
-        $hometext = getVar('post', 'hometext', 'raw');
+        $hometext = getVar('post', 'hometext', 'text');
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
         $cont = getModuleNavi(['title' => _ADD, 'htitle' => _FAQ]);

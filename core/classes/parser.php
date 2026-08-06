@@ -8,6 +8,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class Parser {
     public const EMBEDMAX = 65536;
+    private const CACHETTL = 86400;
     public static bool $freeoff = false;
     private static array $pcache = [];
     private array $stash = [];
@@ -18,14 +19,21 @@ class Parser {
     private int $hoff = 0;
     private string $fmt = '';
     private array $hids = [];
+    private bool $vary = false;
 
     # Parse src through the pipeline; heading offset raises Markdown levels inside an already titled container and caps them at H6
-    # The format names the syntax the source was written in: plain recognizes no Markdown construct and turns line endings into breaks, anything else is Markdown
+    # The format names how the source is to be read, not who wrote it: plain recognizes no Markdown construct and turns every line ending into a break, breaks is Markdown that
+    # also breaks on a single line ending, and anything else is plain Markdown, where a lone line ending joins the lines around it
+    # breaks is what a conversation channel asks for: a reader of a comment or a message typed the line endings they meant, and every one of them renders the same way whoever wrote it
     public function filterDoc(string $src, bool $safe = true, string $mod = '', int $hoff = 0, string $fmt = ''): string {
         $hoff = max(0, min(5, $hoff));
-        $fmt = ($fmt === 'plain') ? 'plain' : '';
+        $fmt = in_array($fmt, ['plain', 'breaks'], true) ? $fmt : '';
         $key = md5($src.(int)$safe.$mod.$hoff.$fmt);
-        if (isset(self::$pcache[$key])) return self::$pcache[$key];
+        if (isset(self::$pcache[$key])) {
+            $this->vary = self::$pcache[$key][1];
+            return self::$pcache[$key][0];
+        }
+        $this->vary = false;
         $this->stash = [];
         $this->hids  = [];
         $this->salt  = bin2hex(random_bytes(8));
@@ -35,14 +43,15 @@ class Parser {
         $this->hoff  = $hoff;
         $this->fmt   = $fmt;
         $src = str_replace(["\r\n", "\r"], "\n", $src);
-        $src = $this->filterBbBlocks($src);
         if ($fmt !== 'plain') $src = $this->filterCode($src);
+        $src = $this->filterBbBlocks($src);
         $src = $this->filterFreeBlocks($src);
         $out = ($fmt === 'plain') ? $this->filterPlain($src) : $this->filterBlocks($src);
         $out = $this->filterSafe($out);
         $out = $this->filterStash($out);
         $out = trim($out);
-        return self::$pcache[$key] = $out;
+        self::$pcache[$key] = [$out, $this->vary];
+        return $out;
     }
 
     # Replace trusted [block=id] tags with rendered free (infly) block output; frontend only, skipped for unsafe content, block-content filtering, nested rendering and standalone test runs
@@ -55,15 +64,57 @@ class Parser {
             getBlocks('d', $m[1]);
             $out = ob_get_clean();
             $depth--;
+            $this->vary = true;
             return $out;
         }, $src) ?? $src;
     }
 
     # Standard rendering pipeline: filterDoc() plus replace rules and img repair; call filterDoc() directly when replacement rules must not apply (changelog, search)
+    # The stored rendering lives here and not in a caller, because the key is built from what this class itself reads and only this class knows whether a parse may be reused at all
     public function filterContent(string $src, bool $safe, string $mod, int $hoff = 0, string $fmt = ''): string {
-        return $this->normalizeHtmlImages(
+        $file = $this->getCachePath($src, $safe, $mod, $hoff, $fmt);
+        if ($file !== '' && Cache::isFresh($file, self::CACHETTL)) {
+            $out = Cache::getBody($file);
+            if ($out !== '') return $out;
+        }
+        $out = $this->normalizeHtmlImages(
             $this->replaceText($this->filterDoc($src, $safe, $mod, $hoff, $fmt), $mod)
         );
+        if ($file !== '' && $out !== '' && !$this->vary) Cache::setBody($file, $out);
+        return $out;
+    }
+
+    # Report whether a rendering may be stored at all: the cache has to be switched on and every helper the key is built from has to exist, which it does not in a standalone parse
+    private function checkCacheReady(): bool {
+        global $conf;
+        static $ready = null;
+        if ($ready !== null) return $ready;
+        return $ready = (!empty($conf['cache']) && class_exists('Cache') && defined('CACHE_DIR') && defined('_LOCALE') && function_exists('getTheme'));
+    }
+
+    # Fingerprint every configuration value this class reads, so a changed replace rule, upload setting or file type retires the stored renderings without anyone clearing a cache
+    private function getConfigHash(string $mod): string {
+        global $conf;
+        static $memo = [];
+        if (isset($memo[$mod])) return $memo[$mod];
+        return $memo[$mod] = sha1(serialize([
+            $conf['replace'][$mod] ?? '',
+            $conf['uploads'][$mod] ?? '',
+            $conf['uploads']['width'] ?? '',
+            $conf['uploads']['height'] ?? '',
+            $conf['filetype'] ?? [],
+            $conf['homeurl'] ?? '',
+        ]));
+    }
+
+    # The cache path of one rendering, or an empty string when nothing may be stored; the key carries every input the output depends on, the class version included
+    private function getCachePath(string $src, bool $safe, string $mod, int $hoff, string $fmt): string {
+        static $ver = '';
+        if ($src === '' || !$this->checkCacheReady()) return '';
+        if ($ver === '') $ver = (string)filemtime(__FILE__);
+        return Cache::getPath('data', Cache::getHash([
+            'parser', $ver, $this->getConfigHash($mod), sha1($src), (int)$safe, $mod, $hoff, $fmt, getTheme(), _LOCALE,
+        ]), 'html');
     }
 
     # Apply module regex replace rules from $conf['replace'][$mod]; tags are stashed once with salted tokens, the # delimiter is escaped and invalid patterns are skipped
@@ -111,8 +162,8 @@ class Parser {
 
     # Full re-parse of nested block content for [quote]/[hide]; reuses the live stash and salt and leaves filterStash()/trim() to the top level
     private function filterNest(string $src): string {
-        $src = $this->filterBbBlocks($src);
         $src = $this->filterCode($src);
+        $src = $this->filterBbBlocks($src);
         $src = $this->filterBlocks($src);
         $src = $this->filterSafe($src);
         return $src;
@@ -159,8 +210,10 @@ class Parser {
     }
 
     # Memoized wrapper so repeated image paths hit the filesystem only once per request; the key is hashed because an inline data URI would otherwise be kept twice in memory
+    # Resolving an image reads the filesystem, so the rendering it produces answers for a file that may appear or vanish later and is marked as one no stored copy may answer for
     private function normalizeImageSource(string $src): ?string {
         static $memo = [];
+        $this->vary = true;
         $key = md5($src);
         if (array_key_exists($key, $memo)) return $memo[$key];
         return $memo[$key] = $this->checkImageSource($src);
@@ -332,6 +385,7 @@ class Parser {
     }
 
     # Process BB block tags: bracket-free *NN smilies first, then behind the [ guard: [hr], [li], [usehtml], [usephp], [tabs], [code], [php], [quote]/[hide]/alignment, [attach=]
+    # Both trusted tags only act in trusted rendering mode; the right to author them belongs to the super administrator alone and is settled by filterTrustedTags() at every write
     private function filterBbBlocks(string $src): string {
         if (preg_match('/(?<!\*)\*(0[1-9]|1[0-8])(?!\d)/', $src)) {
             $src = preg_replace_callback(
@@ -373,6 +427,7 @@ class Parser {
                     ob_end_clean();
                     $out = '';
                 }
+                $this->vary = true;
                 return $this->addStash((string)$out);
             },
             $src
@@ -438,6 +493,7 @@ class Parser {
                 '/\[hide\](.*?)\[\/hide\]/si',
                 function(array $m): string {
                     $show = (defined('ADMIN_FILE') || is_user());
+                    $this->vary = true;
                     $txt = $show ? $this->filterNest($m[1]) : (string) _HIDETEXT;
                     $html = $this->getQuoteHtml(
                         ['is_hide' => true, 'content_html' => $txt, 'title_text' => _HIDE],
@@ -463,6 +519,7 @@ class Parser {
     }
 
     # Resolve [attach=file align=X title=Y ...] to image or file link HTML with per-request file probe memoization and atomic thumb regeneration
+    # An attachment is resolved against the upload directory, so like an image it renders what the filesystem holds right now and the result is never stored
     private function filterAttach(string $src): string {
         global $conf;
         $mod = $this->mod !== '' ? $this->mod : 'all';
@@ -474,6 +531,7 @@ class Parser {
             $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)\]/siu';
         }
         if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
+        $this->vary = true;
         static $fex = [];
         static $isz = [];
         $twd = getUploadRuleData($mod)['thumbwidth'] ?: ($conf['uploads']['width'] ?? '250');
@@ -529,6 +587,7 @@ class Parser {
     }
 
     # Protect code from parsing in order fenced → indented (safe mode only) → inline; unclosed fences and backticks stay as-is
+    # This runs before the bracket layer, so a BB tag written inside code stays the text the author typed instead of being executed as markup
     private function filterCode(string $src): string {
         $src = preg_replace_callback(
             '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
@@ -726,7 +785,10 @@ class Parser {
             $src = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $src);
             $src = preg_replace('/==(.+?)==/s', '<mark>$1</mark>', $src);
         }
-        if (str_contains($src, "\n")) $src = preg_replace(['/  \n/', '/\\\\\n/'], "<br>\n", $src);
+        if (str_contains($src, "\n")) {
+            $src = preg_replace(['/  \n/', '/\\\\\n/'], "<br>\n", $src);
+            if ($this->fmt === 'breaks') $src = preg_replace('/(?<!<br>)\n/', "<br>\n", $src) ?? $src;
+        }
 
         return $src;
     }

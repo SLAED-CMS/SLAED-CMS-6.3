@@ -209,7 +209,9 @@ final class CommentTransportTest extends TestCase
         $this->assertStringContainsString("\$seen = \$back.'&at='.\$row['id'].'#'.\$row['id']", $code, 'The other-page notice still links a bare anchor');
         $show = $this->getSource('core/user.php', 'setComShow');
         $this->assertStringContainsString("\$com->getRootPage(\$full ?: getVar('get', 'at', 'num', 0))", $show, 'The page of a named comment is not resolved');
-        $this->assertStringContainsString('AND pid = 0 AND (time, id) ', $this->getSource('core/classes/comment.php', 'getRootPage', '    '));
+        $root = $this->getSource('core/classes/comment.php', 'getRootPage', '    ');
+        $this->assertStringContainsString('WITH RECURSIVE up AS (', $root, 'The root of a comment is not resolved by walking its parent chain');
+        $this->assertStringContainsString('WHERE k.pid = 0', $root, 'The rank is not counted over the roots the page renders');
     }
 
     # The rest of a capped branch is appended by its own control, which also stays an ordinary link that expands the branch on the server

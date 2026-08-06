@@ -127,7 +127,7 @@ function add(): void {
         $site  = getVar('post', 'site', 'url', 'http://');
     }
     $name = getVar('post', 'name', 'title');
-    $desc = getVar('post', 'desc', 'raw');
+    $desc = getVar('post', 'desc', 'text');
     setHead(['title' => _ADD]);
     $cont = getModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'messages' => (array)$stop]);

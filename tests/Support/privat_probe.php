@@ -8,9 +8,8 @@
 # Every scenario builds one documented pre-migration shape in a disposable schema, runs one update channel against it,
 # and reports whether the table converged on the fresh schema, whether the mailboxes still hold what they held, and
 # whether a second run of the same channel changes anything at all
-# States a to d are the four shapes the stage 1 state-column conversion has to converge from, and e is the shape stage 1
-# itself shipped: every state column and every key already there and only the stage 2 format column missing, which is
-# the installation the format section is written for and which no other state describes any more
+# States a to d are the four shapes the state-column conversion has to converge from: two still carrying the legacy status
+# column, one already converted and one carrying the renamed column with the definition a bare rename leaves behind
 # The statements are read out of the shipped files through getSqlbatch(), the splitter the Inquiry tab and the installer
 # already run these files with, so what the probe executes is what an installation executes
 # Nothing touches the site database: the probe creates its own schema, works only in it, and drops it again
@@ -24,7 +23,7 @@ require_once BASE_DIR.'/core/admin.php';
 const PROBEROWS = [[2, 3, 0], [2, 3, 1], [2, 3, 2], [3, 2, 0], [3, 2, 2], [2, 4, 1], [4, 2, 0]];
 
 # The states whose table already carries the four state columns, so their fixture is written in those columns and not in status
-const PROBENEW = ['c', 'd', 'e'];
+const PROBENEW = ['c', 'd'];
 
 # The table an installation carries before the migration: one status column for both sides and four single-column keys
 const PROBEOLD = 'CREATE TABLE `{prefix}_privat` ('
@@ -142,7 +141,6 @@ function addProbeTable(PDO $pdo, string $stat, string $make): void {
     if (in_array($stat, PROBENEW, true)) {
         $pdo->exec($make);
         if ($stat === 'd') $pdo->exec('ALTER TABLE '.$tab.' MODIFY `viewed` TINYINT(1) NOT NULL DEFAULT 0');
-        if ($stat === 'e') $pdo->exec('ALTER TABLE '.$tab.' DROP COLUMN `format`');
         return;
     }
     $pdo->exec(getProbeFilled(PROBEOLD));
@@ -240,7 +238,7 @@ try {
         'patch' => getProbeSteps(BASE_DIR.'/setup/sql/update6_3_patch.sql'),
     ];
     foreach ($chan as $name => $step) {
-        foreach (['a', 'b', 'c', 'd', 'e'] as $stat) {
+        foreach (['a', 'b', 'c', 'd'] as $stat) {
             $report['runs'][$name.':'.$stat] = getProbeCase($pdo, $stat, $step, $make, $fresh);
         }
     }

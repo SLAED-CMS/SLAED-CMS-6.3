@@ -405,7 +405,7 @@ function setProbeMode(string $mode): string {
     return getEditorMode();
 }
 
-# What one send really stores and what a reader of that row really sees, per editor format
+# What one send really stores and what a reader of that row really sees, whatever editor the request was written with
 # The stored bytes have to be the source the author submitted, because a body that was escaped on the way in can no longer be told from one whose author typed the escape
 # The rendering is asked of the same call both adapters make, so what the probe reads is what the mailbox and the administrator panel put on the page
 function getProbeContent(): array {
@@ -418,14 +418,13 @@ function getProbeContent(): array {
         $seen = setProbeMode($mode);
         $new = getProbeMail(['send' => 0])->addMessage(3, 'anna', PROBETEXT['head'], PROBETEXT['body'], '127.0.0.1');
         $pdb = $GLOBALS['pdb'];
-        $row = $pdb->getSqlRow($pdb->getSqlQuery('SELECT title, body, format FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $new['id']]));
+        $row = $pdb->getSqlRow($pdb->getSqlQuery('SELECT title, body FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $new['id']]));
         $body = (string)($row['body'] ?? '');
         $out[$mode] = [
             'mode' => $seen,
             'error' => $new['error'],
-            'format' => (string)($row['format'] ?? ''),
             'kept' => [(string)($row['title'] ?? '') === PROBETEXT['head'], $body === PROBETEXT['body']],
-            'render' => $prs->filterContent($body, true, 'privat', 2, (string)($row['format'] ?? '')),
+            'render' => $prs->filterContent($body, true, 'privat', 2),
             'title' => $tpl->getHtmlFrag('inline-badge', ['label' => (string)($row['title'] ?? ''), 'title_text' => (string)($row['title'] ?? '')]),
         ];
     }

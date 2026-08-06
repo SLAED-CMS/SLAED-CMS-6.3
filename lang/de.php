@@ -94,6 +94,8 @@ define('_COMMENTS_REPS','Antworten unter einem Kommentar');
 define('_COMMENTS_MORE','Weitere Kommentare anzeigen');
 define('_COMMENTS_GONE','Dieser Kommentar wurde entfernt. Die Antworten darunter bleiben erhalten.');
 define('_COMMENTS_PARENT','Diese Antwort kann dem genannten Kommentar nicht zugeordnet werden.');
+define('_COMMENTS_REPLAY','Der Kommentar wurde bereits unter diesem Schlüssel gespeichert und weicht von dieser Anfrage ab.');
+define('_COMMENTS_EDITED','Bearbeitet');
 define('_COMMENTS_REPLY','Antworten');
 define('_COMPLAINT','Beschwerde');
 define('_CONTENT','Inhalt');

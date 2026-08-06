@@ -37,14 +37,11 @@ class Comment {
         'voting' => ['_voting', 43],
     ];
 
-    # The two syntaxes a comment body may be written in; html is a trust grant rather than a format and is never stored against a comment
-    private const FORMATS = ['plain', 'markdown'];
-
-    # How many segments one reply path may carry, so a thread cannot be driven past the width the column and the rendering were sized for
+    # How many levels one thread may carry, so a reply chain cannot be driven past the depth the rendering was sized for and no upward walk can spin on a crafted parent
     private const MAXDEPTH = 20;
 
     # The columns every read of one comment row answers with, so a consumer never has to know which of them a given query needed
-    private const FIELDS = 'id, cid, modul, time, edited, deleted, uid, name, ip, body, format, status, pid, path';
+    private const FIELDS = 'id, pid, cid, modul, time, uid, name, ip, body, status, edited, deleted';
 
     private Database $db;
     private Parser $prs;
@@ -108,22 +105,21 @@ class Comment {
 
     # Return one page of the discussion of a target: the page counts and paginates root comments, and every root on it arrives with its whole branch
     # The scope is resolved once and every query runs against it, so the count, the roots and their replies can never answer to different permissions
-    # Replies follow their root in path order, which is the order they were written in, so the rows come back ready to render top to bottom
+    # Replies follow their root in the order they were written, so the rows come back ready to render top to bottom
     # One root may be named through full, and then its branch is answered whole rather than capped, which is what a reader without HTMX follows the reply control to
     public function getList(string $mod, int $id, int $page, int $full = 0): array {
-        [$where, $pars] = $this->getScope($mod, $id, true);
-        $root = $where.' AND pid = 0';
-        $out = $this->getPager($this->getTotal(PREFIX_DB.'_comment '.$root, $pars), $page, intval($this->conf['num'] ?? 15));
+        [$cte, $pars] = $this->getKeepCte($mod, $id);
+        $out = $this->getPager($this->getTotal('keep WHERE pid = 0', $pars, $cte.' '), $page, intval($this->conf['num'] ?? 15));
         $out['rows'] = [];
         if ($out['total'] < 1) return $out;
         $dir = $out['isasc'] ? 'ASC' : 'DESC';
-        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment '.$root
-            .' ORDER BY time '.$dir.', id '.$dir.' LIMIT '.$out['offset'].', '.$out['limit'];
+        $sql = $cte.' SELECT c.'.str_replace(', ', ', c.', self::FIELDS).' FROM '.PREFIX_DB.'_comment AS c JOIN keep AS k ON k.id = c.id'
+            .' WHERE k.pid = 0 ORDER BY c.time '.$dir.', c.id '.$dir.' LIMIT '.$out['offset'].', '.$out['limit'];
         $tree = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
             $tree[] = $this->getRowData($row);
         }
-        $out['rows'] = $this->getAuthorRows($this->getTreeRows($tree, $where, $pars, $full));
+        $out['rows'] = $this->getAuthorRows($this->getTreeRows($tree, $mod, $id, $full));
         return $out;
     }
 
@@ -133,13 +129,15 @@ class Comment {
     public function getBranch(int $id, int $limit, int $skip = 0): array {
         $out = ['rows' => [], 'total' => 0, 'skip' => max(0, $skip), 'left' => 0];
         if ($id < 1 || $limit < 1) return $out;
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT modul, cid, path FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
-        if (!$row || (string)$row['path'] === '') return $out;
-        [$where, $pars] = $this->getScope((string)$row['modul'], intval($row['cid']), true);
-        $pars['base'] = (string)$row['path'].'/%';
-        $out['total'] = $this->getTotal(PREFIX_DB.'_comment '.$where.' AND path LIKE :base', $pars);
+        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT modul, cid FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+        if (!$row) return $out;
+        [$cte, $pars] = $this->getKeepCte((string)$row['modul'], intval($row['cid']));
+        $pars['b0'] = $id;
+        $full = $cte.', '.$this->getTreeCte([':b0']);
+        $out['total'] = $this->getTotal('sub', $pars, $full.' ');
         if ($out['total'] < 1) return $out;
-        $sql = 'SELECT '.self::FIELDS.' FROM '.PREFIX_DB.'_comment '.$where.' AND path LIKE :base ORDER BY path ASC LIMIT '.$out['skip'].', '.intval($limit);
+        $sql = $full.' SELECT c.'.str_replace(', ', ', c.', self::FIELDS).', s.lvl FROM '.PREFIX_DB.'_comment AS c JOIN sub AS s ON s.id = c.id'
+            .' ORDER BY s.sk ASC LIMIT '.$out['skip'].', '.intval($limit);
         $rows = [];
         foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $one) {
             $rows[] = $this->getRowData($one);
@@ -218,21 +216,20 @@ class Comment {
     # The comparison is a row value against the same index the list reads, so the count is a range on modul_cid_pid_time rather than a scan
     public function getRootPage(int $id): int {
         if ($id < 1) return 1;
-        $sql = 'SELECT modul, cid, path FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
-        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
-        if (!$row || (string)$row['path'] === '') return 1;
-        $top = $this->db->getSqlRow($this->db->getSqlQuery(
-            'SELECT time, id FROM '.PREFIX_DB.'_comment WHERE id = :id',
-            ['id' => intval(substr((string)$row['path'], 0, 10))]
-        ));
+        $tab = PREFIX_DB.'_comment';
+        $sql = 'WITH RECURSIVE up AS ('
+            .'SELECT id, pid, modul, cid, time, 1 AS lvl FROM '.$tab.' WHERE id = :id AND deleted IS NULL'
+            .' UNION ALL '
+            .'SELECT c.id, c.pid, c.modul, c.cid, c.time, u.lvl + 1 FROM '.$tab.' AS c JOIN up AS u ON c.id = u.pid WHERE u.lvl <= :max'
+            .') SELECT id, modul, cid, time FROM up WHERE pid = 0 LIMIT 1';
+        $top = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id, 'max' => self::MAXDEPTH]));
         if (!$top) return 1;
-        [$where, $pars] = $this->getScope((string)$row['modul'], intval($row['cid']), true);
+        [$cte, $pars] = $this->getKeepCte((string)$top['modul'], intval($top['cid']));
         $pars['rtim'] = (string)$top['time'];
         $pars['rrid'] = intval($top['id']);
-        $seen = $this->getTotal(
-            PREFIX_DB.'_comment '.$where.' AND pid = 0 AND (time, id) '.(!empty($this->conf['sort']) ? '<=' : '>=').' (:rtim, :rrid)',
-            $pars
-        );
+        $from = $tab.' AS c JOIN keep AS k ON k.id = c.id WHERE k.pid = 0'
+            .' AND (c.time, c.id) '.(!empty($this->conf['sort']) ? '<=' : '>=').' (:rtim, :rrid)';
+        $seen = $this->getTotal($from, $pars, $cte.' ');
         $size = intval($this->conf['num'] ?? 15);
         return ($seen > 0 && $size > 0) ? (int)ceil($seen / $size) : 1;
     }
@@ -247,12 +244,6 @@ class Comment {
         return $out;
     }
 
-    # Resolve the syntax a new comment body is stored under; an html editor grants trust rather than naming a format, so it is refused here and the body is kept as markdown source
-    private function getBodyFormat(): string {
-        $fmt = getEditorMode();
-        return in_array($fmt, self::FORMATS, true) ? $fmt : 'markdown';
-    }
-
     # Store one new comment against a target the resolver accepts and answer its id, the stored name, whether this call stored it and the refusal that stopped it
     # Mode, author, address and moderation state come from the server context; the request supplies the module key, the target id, the body, the guest name and its key
     # The new flag is what a caller with side effects of its own asks: a replay answers the first comment without storing a second, so no notification may be written for it either
@@ -261,12 +252,12 @@ class Comment {
         global $user;
         $mode = $this->getTargetMode($mod, $id);
         $ip = getIp();
-        $hash = $this->getIpHash($ip);
-        $stop = $this->checkRules($mod, $body, $name, $hash, true);
+        $stop = $this->checkRules($mod, $body, $name, $ip, true);
         $last = $stop ? (string)end($stop) : '';
         if ($last !== '' || $mode === CommentMode::Disabled) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => $last ?: _ERROR];
-        $base = $this->getParentPath($mod, $id, $pid);
-        if ($base === null) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_PARENT];
+        if ($this->getReplyDepth($mod, $id, $pid) === null) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_PARENT];
+        $key = $this->getRequestKey($key);
+        if ($key === false) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_REPLAY];
         $body = $this->filterCommentBody($body, $this->getLinkFlag($mod));
         if (is_user()) {
             $uid = intval($user[0]);
@@ -277,26 +268,20 @@ class Comment {
             $uid = 0;
             $stat = (!is_moder($mod) && ($mode === CommentMode::Moderated || $this->conf['anonpost'] == 1)) ? CommentStatus::Pending : CommentStatus::Published;
         }
-        $key = $this->getRequestKey($key);
         $own = !$this->db->checkSqlActive();
         if ($own && !$this->db->setSqlBegin()) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
-        $sql = 'INSERT INTO '.PREFIX_DB.'_comment (cid, modul, time, uid, name, ip, iphash, body, format, reqkey, status, pid)'
-            .' VALUES (:cid, :modul, NOW(), :uid, :name, :ip, :hash, :body, :format, :reqkey, :status, :pid)';
+        $sql = 'INSERT INTO '.PREFIX_DB.'_comment (pid, cid, modul, time, uid, name, ip, body, status, reqkey)'
+            .' VALUES (:pid, :cid, :modul, NOW(), :uid, :name, :ip, :body, :status, :reqkey)';
         $done = $this->db->getSqlQuery($sql, [
-            'cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip, 'hash' => $hash,
-            'body' => $body, 'format' => $this->getBodyFormat(), 'reqkey' => $key, 'status' => $stat->value, 'pid' => $base === '' ? 0 : $pid,
+            'pid' => max(0, $pid), 'cid' => $id, 'modul' => $mod, 'uid' => $uid, 'name' => $name, 'ip' => $ip,
+            'body' => $body, 'status' => $stat->value, 'reqkey' => $key,
         ]);
         if (!$done) {
             $fail = intval($this->db->getSqlError()['code']) === 1062;
             if ($own) $this->db->setSqlRollback();
-            return $fail ? $this->getKeyResult($key, $name) : ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+            return $fail ? $this->getKeyResult($key, $name, $mod, $id, $pid, $uid, $body) : ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
         }
         $new = intval($this->db->getSqlLastId());
-        $path = ($base !== '' ? $base.'/' : '').str_pad((string)$new, 10, '0', STR_PAD_LEFT);
-        if (!$this->db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET path = :path WHERE id = :id', ['path' => $path, 'id' => $new])) {
-            if ($own) $this->db->setSqlRollback();
-            return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
-        }
         if ($stat === CommentStatus::Published) $this->updateTargetPoints($mod, false, $uid);
         if ($own && !$this->db->setSqlCommit()) {
             $this->db->setSqlRollback();
@@ -311,11 +296,11 @@ class Comment {
     # The permission, the module and the edit window all come from the stored row, so a request can neither name the module nor extend its own window
     public function updateComment(int $id, string $body): array {
         global $user;
-        $sql = 'SELECT uid, time, body, format, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
+        $sql = 'SELECT uid, time, body, modul FROM '.PREFIX_DB.'_comment WHERE id = :id AND deleted IS NULL';
         $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $id]));
         $mod = (string)($row['modul'] ?? '');
         $uid = $row ? intval($row['uid']) : 0;
-        $out = ['allow' => false, 'mod' => $mod, 'body' => (string)($row['body'] ?? ''), 'format' => (string)($row['format'] ?? ''), 'saved' => false, 'error' => []];
+        $out = ['allow' => false, 'mod' => $mod, 'body' => (string)($row['body'] ?? ''), 'saved' => false, 'error' => []];
         $wait = strtotime((string)($row['time'] ?? '')) + intval($this->conf['edit']);
         if (!is_moder($mod) && !(is_user() && $uid == intval($user[0]) && time() < $wait)) return $out;
         $out['allow'] = true;
@@ -434,18 +419,20 @@ class Comment {
     }
 
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
+    # The trusted tags are the one exception: the moderation form reads its field raw, and a comment must not carry them whoever typed it
     public function updateBody(int $id, string $body): bool {
         if ($id < 1) return false;
+        $body = filterTrustedTags($body);
         $sql = 'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL';
         return (bool)$this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]);
     }
 
     # Apply the write rules of one comment and answer every refusal it collects, in the order the submit path applies them, so its caller can show the last one or the whole list
     # The rules a new comment adds are the ones an edit never had: a guest name, the flood window and the captcha; the length rule measures the longest word in characters for both
-    public function checkRules(string $mod, string $body, string $name, string $hash, bool $isnew): array {
+    public function checkRules(string $mod, string $body, string $name, string $addr, bool $isnew): array {
         $words = array_map(static fn(string $one): int => mb_strlen($one, 'UTF-8'), explode(' ', str_replace(["\n", "\r", "\t"], ' ', $body)));
         $long = $words ? max($words) : 0;
-        $last = $isnew ? $this->getLastTime($hash) : '';
+        $last = $isnew ? $this->getLastTime($addr) : '';
         $wait = ($last !== '' ? strtotime($last) : 0) + intval($this->conf['send']);
         $stop = [];
         if ($body === '') $stop[] = _CERROR1;
@@ -475,62 +462,73 @@ class Comment {
         });
     }
 
-    # Build the visibility scope of one target once, so a count and the page it belongs to can never disagree about what is visible
-    # A moderator of the module sees the pending comments as well, which is why the scope depends on the viewer and not on the caller
-    # A tree scope keeps a removed comment that still carries a visible reply, because dropping it would take the whole branch below it out of the page
-    # The state is bound twice under two names because a native prepared statement rejects one named placeholder used in two positions
-    private function getScope(string $mod, int $id, bool $tomb): array {
-        $pars = ['cid' => $id, 'mod' => $mod];
-        $where = 'WHERE cid = :cid AND modul = :mod';
-        $seen = '';
+    # Build the id set one target renders as a recursive term every tree query joins against, so a count and the page it belongs to can never disagree about what is visible
+    # A moderator of the module sees the pending comments as well, which is why the set depends on the viewer and not on the caller
+    # The walk goes upward from what is visible rather than downward from the roots: a removed comment is kept exactly when a visible reply still hangs under it, and it is the reply that finds it
+    # UNION rather than UNION ALL is what ends the walk, because a comment reached through two different replies is one row and not two
+    # Every placeholder is bound under its own name because a native prepared statement rejects one named placeholder used in two positions
+    private function getKeepCte(string $mod, int $id): array {
+        $tab = PREFIX_DB.'_comment';
+        $pars = ['cid' => $id, 'mod' => $mod, 'kcid' => $id, 'kmod' => $mod];
+        $seed = 'SELECT id, pid FROM '.$tab.' WHERE cid = :cid AND modul = :mod AND deleted IS NULL';
+        $step = 'SELECT c.id, c.pid FROM '.$tab.' AS c JOIN keep AS k ON c.id = k.pid WHERE c.cid = :kcid AND c.modul = :kmod';
         if (!is_moder($mod)) {
             $pars['stat'] = CommentStatus::Published->value;
-            $where .= ' AND status = :stat';
-            if ($tomb) {
-                $pars['rsta'] = CommentStatus::Published->value;
-                $seen = ' AND r.status = :rsta';
-            }
+            $pars['kstat'] = CommentStatus::Published->value;
+            $seed .= ' AND status = :stat';
+            $step .= ' AND c.status = :kstat';
         }
-        if (!$tomb) return [$where.' AND deleted IS NULL', $pars];
+        return ['WITH RECURSIVE keep AS ('.$seed.' UNION '.$step.')', $pars];
+    }
+
+    # Build the recursive term that walks one thread downward from the parents a caller names, restricted to the rendered set the keep term already resolved
+    # The sort key is built as the walk goes and is never stored: it is the ancestor chain padded per level, which is what orders a branch the way it was written instead of by id or time
+    # The level is carried for the rendering indent and bounds the walk, so a parent link that somehow closed a loop stops at the depth limit instead of spinning
+    # The seed casts the key to its full width on purpose: a recursive term takes the type of its seed row, and a key sized to the first level would be truncated at the second
+    private function getTreeCte(array $keys): string {
         $tab = PREFIX_DB.'_comment';
-        $live = 'SELECT 1 FROM '.$tab.' AS r WHERE r.modul = '.$tab.'.modul AND r.cid = '.$tab.'.cid AND r.deleted IS NULL'
-            .$seen.' AND r.path LIKE CONCAT('.$tab.'.path, \'/%\')';
-        return [$where.' AND (deleted IS NULL OR EXISTS ('.$live.'))', $pars];
+        return 'sub AS ('
+            .'SELECT c.id, c.pid, 1 AS lvl, CAST(CONCAT(LPAD(c.pid, 10, \'0\'), \'/\', LPAD(c.id, 10, \'0\')) AS CHAR(255)) AS sk, c.pid AS base'
+            .' FROM '.$tab.' AS c JOIN keep AS k ON k.id = c.id WHERE c.pid IN ('.implode(', ', $keys).')'
+            .' UNION ALL '
+            .'SELECT c.id, c.pid, s.lvl + 1, CONCAT(s.sk, \'/\', LPAD(c.id, 10, \'0\')), s.base'
+            .' FROM '.$tab.' AS c JOIN keep AS k ON k.id = c.id JOIN sub AS s ON c.pid = s.id WHERE s.lvl < '.self::MAXDEPTH
+            .')';
     }
 
     # Load the replies of the root comments of one page and put every branch behind the root it belongs to, in the order it was written
     # A root shows at most the configured number of replies and reports how many it has, so one long discussion cannot put an unbounded page in front of a reader
     # Two round trips answer the whole page rather than one per root: the counts decide what is left to fetch, and the rows are capped before they are read
     # The cap is a plain LIMIT rather than a window function, because no window function is used anywhere in this project and the distribution targets servers without them
-    private function getTreeRows(array $roots, string $where, array $pars, int $full = 0): array {
+    private function getTreeRows(array $roots, string $mod, int $cid, int $full = 0): array {
         if (!$roots) return [];
         $reps = max(1, intval($this->conf['reps'] ?? 5));
+        [$cte, $pars] = $this->getKeepCte($mod, $cid);
         $keys = [];
         foreach ($roots as $key => $one) {
-            $keys[] = 'path LIKE :b'.$key;
-            $pars['b'.$key] = $one['path'].'/%';
+            $keys[] = ':b'.$key;
+            $pars['b'.$key] = $one['id'];
         }
-        $from = PREFIX_DB.'_comment '.$where.' AND pid != 0 AND ('.implode(' OR ', $keys).')';
+        $from = $cte.', '.$this->getTreeCte($keys);
         $seen = [];
-        foreach ($this->db->getSqlRows($this->db->getSqlQuery('SELECT SUBSTRING(path, 1, 10) AS base, COUNT(*) AS num FROM '.$from.' GROUP BY base', $pars)) ?: [] as $row) {
-            $seen[(string)$row['base']] = intval($row['num']);
+        foreach ($this->db->getSqlRows($this->db->getSqlQuery($from.' SELECT s.base, COUNT(*) AS num FROM sub AS s GROUP BY s.base', $pars)) ?: [] as $row) {
+            $seen[intval($row['base'])] = intval($row['num']);
         }
         $kids = [];
         if ($seen) {
-            $sql = 'SELECT '.self::FIELDS.' FROM '.$from.' ORDER BY path ASC LIMIT 0, '.(count($roots) * $reps);
+            $sql = $from.' SELECT c.'.str_replace(', ', ', c.', self::FIELDS).', s.lvl, s.base FROM '.PREFIX_DB.'_comment AS c JOIN sub AS s ON s.id = c.id'
+                .' ORDER BY s.sk ASC LIMIT 0, '.(count($roots) * $reps);
             foreach ($this->db->getSqlRows($this->db->getSqlQuery($sql, $pars)) ?: [] as $row) {
-                $one = $this->getRowData($row);
-                $base = substr($one['path'], 0, 10);
+                $base = intval($row['base']);
                 if (count($kids[$base] ?? []) >= $reps) continue;
-                $kids[$base][] = $one;
+                $kids[$base][] = $this->getRowData($row);
             }
         }
-        $wide = ($full > 0) ? str_pad((string)$full, 10, '0', STR_PAD_LEFT) : '';
-        if ($wide !== '' && ($seen[$wide] ?? 0) > $reps) $kids[$wide] = $this->getBranch($full, $seen[$wide])['rows'];
+        if ($full > 0 && ($seen[$full] ?? 0) > $reps) $kids[$full] = $this->getBranch($full, $seen[$full])['rows'];
         $out = [];
         foreach ($roots as $one) {
-            $branch = $kids[$one['path']] ?? [];
-            $one['kids'] = $seen[$one['path']] ?? 0;
+            $branch = $kids[$one['id']] ?? [];
+            $one['kids'] = $seen[$one['id']] ?? 0;
             $one['shown'] = count($branch);
             $out[] = $one;
             foreach ($branch as $kid) $out[] = $kid;
@@ -577,10 +575,10 @@ class Comment {
     }
 
     # Normalize a submitted comment into the source the row stores: the shared writer escapes, breaks lines and hides quotes for a render model comments no longer use
-    # What stays is what changes the text itself rather than its markup: the trusted-html tokens a visitor may not open, the clickable-link rewrite and the censor list
+    # What stays is what changes the text itself rather than its markup: the trusted tags no comment may carry whoever wrote it, the clickable-link rewrite and the censor list
     private function filterCommentBody(string $body, int $flag): string {
         if ($body === '') return '';
-        if (!isAdmin()) $body = (string)preg_replace('#\[/?(?:usehtml|usephp)\]#si', '', $body);
+        $body = filterTrustedTags($body);
         if ($this->site['click'] && $flag != 1) $body = filterClickable($body);
         if (!isAdmin() && $this->site['cens']) {
             foreach (explode(',', $this->site['from']) as $one) {
@@ -591,15 +589,26 @@ class Comment {
         return trim($body);
     }
 
-    # Resolve the path a reply attaches to; an empty string means a root comment and null means the named parent may not be replied to at all
+    # Resolve the depth a reply would be stored at, or null when the named parent may not be replied to at all; zero is a root comment and needs no parent
     # A parent of another target, a removed one, one the writer cannot see and one already at the depth limit are refused alike, so a crafted pid can only fail
-    private function getParentPath(string $mod, int $cid, int $pid): ?string {
-        if ($pid < 1) return '';
-        $sql = 'SELECT path, status FROM '.PREFIX_DB.'_comment WHERE id = :id AND modul = :mod AND cid = :cid AND deleted IS NULL';
-        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $pid, 'mod' => $mod, 'cid' => $cid]));
-        if (!$row || (string)$row['path'] === '') return null;
+    # The depth is counted by walking the parent chain upward, and the walk is bounded by the same limit, so a parent link that somehow closed a loop stops instead of spinning
+    private function getReplyDepth(string $mod, int $cid, int $pid): ?int {
+        if ($pid < 1) return 0;
+        $tab = PREFIX_DB.'_comment';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery(
+            'SELECT status FROM '.$tab.' WHERE id = :id AND modul = :mod AND cid = :cid AND deleted IS NULL',
+            ['id' => $pid, 'mod' => $mod, 'cid' => $cid]
+        ));
+        if (!$row) return null;
         if (intval($row['status']) !== CommentStatus::Published->value && !is_moder($mod)) return null;
-        return (substr_count((string)$row['path'], '/') + 2 <= self::MAXDEPTH) ? (string)$row['path'] : null;
+        $sql = 'WITH RECURSIVE up AS ('
+            .'SELECT id, pid, 1 AS lvl FROM '.$tab.' WHERE id = :id'
+            .' UNION ALL '
+            .'SELECT c.id, c.pid, u.lvl + 1 FROM '.$tab.' AS c JOIN up AS u ON c.id = u.pid WHERE u.lvl <= :max'
+            .') SELECT MAX(lvl) AS lvl FROM up';
+        $walk = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['id' => $pid, 'max' => self::MAXDEPTH]));
+        $deep = $walk ? intval($walk['lvl']) : 0;
+        return ($deep > 0 && $deep + 1 <= self::MAXDEPTH) ? $deep : null;
     }
 
     # Build the link flag the body normalization takes: 1 keeps the bare links of this author as text, 0 lets the rewrite make them clickable
@@ -608,37 +617,40 @@ class Comment {
     }
 
     # Read the time of the most recent comment of one address, the value the flood window of a new submit is measured against
-    # The address is matched through its keyed hash rather than through the stored text, so the flood window needs no index on a value that identifies a visitor
-    private function getLastTime(string $hash): string {
-        if ($hash === '') return '';
-        $sql = 'SELECT time FROM '.PREFIX_DB.'_comment WHERE iphash = :hash ORDER BY time DESC, id DESC LIMIT 1';
-        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['hash' => $hash]));
+    # The stored address answers it directly under (ip, time, id), so the interval needs neither a second column to fingerprint the visitor nor a table to rate them
+    # The window is best effort by design: it reads a value the request supplies, so it slows a repeat submit down rather than making one impossible
+    private function getLastTime(string $ip): string {
+        if ($ip === '') return '';
+        $sql = 'SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY time DESC, id DESC LIMIT 1';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['ip' => $ip]));
         return (string)($row['time'] ?? '');
     }
 
-    # Derive the flood-control fingerprint of one address, keyed by a purpose secret so a stolen table cannot be walked back to the addresses it was built from
-    private function getIpHash(string $ip): string {
-        $ip = strtolower(trim($ip));
-        return $ip !== '' ? hash_hmac('sha256', $ip, getSecret('commentip')) : '';
-    }
-
-    # Accept the idempotency key of a submit only in the shape the unique index expects, and mint one when the request carries none, so no add can ever store an empty key
-    private function getRequestKey(string $key): string {
+    # Turn the idempotency key of a submit into the raw bytes the unique index stores; a request that carries none stays null and a malformed one is refused rather than replaced
+    # No key is ever minted here: a server-side key would be unique by construction and would make every replay a second comment, which is the opposite of what the key is for
+    private function getRequestKey(string $key): string|false|null {
         $key = strtolower(trim($key));
-        return preg_match('/^[0-9a-f]{32}$/', $key) ? $key : bin2hex(random_bytes(16));
+        if ($key === '') return null;
+        return preg_match('/^[0-9a-f]{32}$/', $key) ? hex2bin($key) : false;
     }
 
-    # Answer a replayed submit with the result of the row the first one stored, which is what makes a repeated POST return the same comment instead of a second one
-    # The answer is never new: this request stored nothing, so whatever the first one wrote beside the comment must not be written again
-    private function getKeyResult(string $key, string $name): array {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_comment WHERE reqkey = :key', ['key' => $key]));
+    # Answer a replayed submit with the comment the first one stored, but only when this submit really is that same submit
+    # Same author, same place in the same thread and the same text is what a replay is; anything else shares only the key and is refused, because answering it would hand one writer the comment of another
+    # The answer is never new either way: this request stored nothing, so whatever the first one wrote beside the comment must not be written again
+    private function getKeyResult(?string $key, string $name, string $mod, int $cid, int $pid, int $uid, string $body): array {
+        if ($key === null) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        $sql = 'SELECT id, name, modul, cid, pid, uid, body FROM '.PREFIX_DB.'_comment WHERE reqkey = :key';
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($sql, ['key' => $key]));
         if (!$row) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _ERROR];
+        $same = (string)$row['modul'] === $mod && intval($row['cid']) === $cid && intval($row['pid']) === max(0, $pid)
+            && intval($row['uid']) === $uid && trim((string)$row['body']) === trim($body);
+        if (!$same) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_REPLAY];
         return ['id' => intval($row['id']), 'name' => (string)$row['name'], 'new' => false, 'error' => ''];
     }
 
     # Count the rows of one already-built source, so the count of a list is always written against the very source the list itself reads
-    private function getTotal(string $from, array $pars): int {
-        $row = $this->db->getSqlRow($this->db->getSqlQuery('SELECT COUNT(*) AS num FROM '.$from, $pars));
+    private function getTotal(string $from, array $pars, string $cte = ''): int {
+        $row = $this->db->getSqlRow($this->db->getSqlQuery($cte.'SELECT COUNT(*) AS num FROM '.$from, $pars));
         return $row ? intval($row['num']) : 0;
     }
 
@@ -655,11 +667,9 @@ class Comment {
             'name' => (string)$row['name'],
             'ip' => (string)$row['ip'],
             'body' => (string)$row['body'],
-            'format' => (string)($row['format'] ?? ''),
             'status' => intval($row['status']),
             'pid' => intval($row['pid'] ?? 0),
-            'path' => (string)($row['path'] ?? ''),
-            'depth' => substr_count((string)($row['path'] ?? ''), '/'),
+            'depth' => intval($row['lvl'] ?? 0),
         ];
     }
 

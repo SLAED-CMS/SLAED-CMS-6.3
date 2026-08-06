@@ -56,6 +56,8 @@ class SchemaUpdateValidationTest extends TestCase
     private static function normalizeType(string $type): string
     {
         $type = strtoupper(trim(preg_replace('/\s+/', ' ', $type)));
+        # A placement clause says where the column goes, not what it is, and column order is asserted on its own
+        $type = trim(preg_replace('/\s+(?:AFTER\s+`?[A-Z0-9_]+`?|FIRST)$/', '', $type));
         return preg_replace('/\bBOOLEAN\b/', 'TINYINT(1)', $type);
     }
 
@@ -121,11 +123,18 @@ class SchemaUpdateValidationTest extends TestCase
         }
 
         $content = file_get_contents($updateFile);
+        # A table the upgrade only drops must be absent from the fresh schema, so its name is read out of the reference before the check runs
+        preg_match_all('/DROP\s+TABLE\s+IF\s+EXISTS\s+`\{prefix\}_([a-z0-9_]+)`/i', $content, $drops);
+        $content = preg_replace('/DROP\s+TABLE\s+IF\s+EXISTS\s+`\{prefix\}_[a-z0-9_]+`/i', 'DROP TABLE', $content);
         preg_match_all('/\{prefix\}_([a-z0-9_]+)/i', $content, $matches, PREG_OFFSET_CAPTURE);
 
         $skipTables = [
             'modules' => true,
         ];
+
+        foreach ($drops[1] as $one) {
+            $this->assertArrayNotHasKey(strtolower($one), self::$tables, 'The upgrade drops a table the fresh schema still creates: '.$one);
+        }
 
         $errors = [];
         foreach ($matches[1] as $match) {

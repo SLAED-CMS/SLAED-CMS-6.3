@@ -94,6 +94,8 @@ define('_COMMENTS_REPS','Ответов под одним комментарие
 define('_COMMENTS_MORE','Показать ещё комментарии');
 define('_COMMENTS_GONE','Этот комментарий удален. Ответы под ним сохранены.');
 define('_COMMENTS_PARENT','Этот ответ невозможно привязать к указанному комментарию.');
+define('_COMMENTS_REPLAY','Комментарий с таким ключом уже сохранён и отличается от этого запроса.');
+define('_COMMENTS_EDITED','Изменён');
 define('_COMMENTS_REPLY','Ответить');
 define('_COMPLAINT','Жалоба');
 define('_CONTENT','Содержание');

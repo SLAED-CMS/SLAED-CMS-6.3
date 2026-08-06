@@ -640,7 +640,7 @@ function add(): void {
         $subject = getVar('post', 'subject', 'title');
         $subject = $subject ?: $subold;
         $txtold = $hometext;
-        $hometext = getVar('post', 'hometext', 'raw');
+        $hometext = getVar('post', 'hometext', 'text');
         $hometext = $hometext ?: $txtold;
 
     } elseif ($conf['forum']['add'] && ($istopic || $isreply)) {
@@ -660,7 +660,7 @@ function add(): void {
 
         $subject = getVar('post', 'subject', 'title');
         $subject = $ftitle ?: $subject;
-        $hometext = getVar('post', 'hometext', 'raw');
+        $hometext = getVar('post', 'hometext', 'text');
         $hometext = ($qid && $ftext) ? '[quote]'.$ftext.'[/quote]' : $hometext;
         $field = getVar('post', 'field', 'field');
         $status = getVar('post', 'status', 'num', 3);

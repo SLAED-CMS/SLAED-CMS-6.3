@@ -23,6 +23,10 @@
 
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
+DROP PROCEDURE IF EXISTS poscol;
+DROP PROCEDURE IF EXISTS setcoll;
+DROP PROCEDURE IF EXISTS stopcol;
+DROP PROCEDURE IF EXISTS stopnull;
 DROP PROCEDURE IF EXISTS delcol;
 DROP PROCEDURE IF EXISTS modcol;
 DROP PROCEDURE IF EXISTS runifcol;
@@ -102,6 +106,112 @@ BEGIN
             PREPARE stmt FROM @sql;
             EXECUTE stmt;
             DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE poscol(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN pdef TEXT, IN pafter VARCHAR(128))
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+    DECLARE cpos INT DEFAULT 0;
+    DECLARE apos INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND column_name = pcol;
+
+    IF ccol > 0 THEN
+        SELECT ordinal_position
+          INTO cpos
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = pcol;
+
+        SELECT COUNT(ordinal_position), COALESCE(MAX(ordinal_position), 0)
+          INTO ccol, apos
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = pafter;
+
+        IF ccol > 0 AND cpos <> apos + 1 THEN
+            SET @sql = CONCAT(
+                'ALTER TABLE `', ptab, '` ',
+                'MODIFY `', pcol, '` ', pdef, ' AFTER `', pafter, '`'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE setcoll(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN pdef TEXT, IN pcoll VARCHAR(64))
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND column_name = pcol
+       AND collation_name <> pcoll;
+
+    IF ccol > 0 THEN
+        SET @sql = CONCAT(
+            'ALTER TABLE `', ptab, '` ',
+            'MODIFY `', pcol, '` ', pdef
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END$$
+
+CREATE PROCEDURE stopcol(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN ptype VARCHAR(64), IN pmsg VARCHAR(128))
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND column_name = pcol
+       AND UPPER(data_type) = UPPER(ptype);
+
+    IF ccol > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = pmsg;
+    END IF;
+END$$
+
+CREATE PROCEDURE stopnull(IN ptab VARCHAR(128), IN pcol VARCHAR(128), IN pmsg VARCHAR(128))
+BEGIN
+    DECLARE ccol INT DEFAULT 0;
+    DECLARE crow INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ccol
+      FROM information_schema.columns
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab
+       AND column_name = pcol
+       AND is_nullable = 'YES';
+
+    IF ccol > 0 THEN
+        SET @sql = CONCAT('SELECT COUNT(*) INTO @crow FROM `', ptab, '` WHERE `', pcol, '` IS NULL');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+        SET crow = @crow;
+
+        IF crow > 0 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = pmsg;
         END IF;
     END IF;
 END$$
@@ -873,20 +983,16 @@ CALL addidx('{prefix}_partners', 'email', '`email`(191)', 0);
 # which filters a column out_box does not carry, and the send interval, which filters no state at all and
 # orders by time - measured on real data, the first was a full table scan and the second a filesort.
 #
-# format names how a stored body is to be read, plain or markdown, and it is added empty on purpose: no
-# statement here can tell one from the other, because that verdict is computed per body and not per column.
-# tools/privat-migrate.php classify writes it and convert rewrites the bodies afterwards, both against a
-# closed site, and until they have run every row still carries the escaping of the old writer.
-# That tool is not optional. Private messages render as source from this release on, so a body left with an
-# empty format is a body nothing knows how to read.
+# A body is stored as the source its author wrote and is rendered through one contract, so no column names
+# a storage format: plain and the editors are input interfaces, and rendering never branches on them.
 
 CALL rencol('{prefix}_privat', 'date', 'time');
 CALL rencol('{prefix}_privat', 'ip_sender', 'ip');
 CALL renidx('{prefix}_privat', 'date', 'time');
+CALL delcol('{prefix}_privat', 'format');
 CALL addcol('{prefix}_privat', 'saved', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
 CALL addcol('{prefix}_privat', 'delin', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
 CALL addcol('{prefix}_privat', 'delout', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
-CALL addcol('{prefix}_privat', 'format', 'VARCHAR(20) NOT NULL DEFAULT \'\'');
 CALL runifcol('{prefix}_privat', 'status', 'UPDATE `{prefix}_privat` SET `saved` = 1 WHERE `status` = 2');
 CALL rencol('{prefix}_privat', 'status', 'viewed');
 CALL modcol('{prefix}_privat', 'viewed', 'TINYINT UNSIGNED NOT NULL DEFAULT 0');
@@ -900,6 +1006,8 @@ CALL addidx('{prefix}_privat', 'in_new', '`uidin`, `delin`, `viewed`', 0);
 CALL addidx('{prefix}_privat', 'out_box', '`uidout`, `delout`, `time`', 0);
 CALL addidx('{prefix}_privat', 'out_new', '`uidout`, `delout`, `viewed`', 0);
 CALL addidx('{prefix}_privat', 'flood', '`uidout`, `time`', 0);
+CALL stopnull('{prefix}_privat', 'time', 'privat.time holds NULL rows: repair them before this upgrade');
+CALL modcol('{prefix}_privat', 'time', 'DATETIME NOT NULL');
 
 # =============================================================================
 # Batch K — _products
@@ -1429,10 +1537,18 @@ ALTER TABLE `{prefix}_clients_down`
   MODIFY `pid`    INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
 
+# Every column widened to MEDIUMTEXT in this section is written through the rich editor, and the
+# editor can embed an image into the text instead of storing a file: EMBEDMAX caps a data URI at
+# 65536 bytes of binary, which is 87384 characters of base64 before the prefix and the markdown,
+# while TEXT holds 65535. With STRICT_TRANS_TABLES that is a lost post, not a lost image. The
+# summary columns (`intro`, and `users.block`) stay TEXT on purpose: a list query draws twenty of
+# them onto one page, and an image referenced by address or uploaded to the server still fits
+# there. users.sig widens only to TEXT, and for its own reason — 255 is already too small for the
+# signatures people write. The full argument is in setup/sql/update6_3_patch.sql, section 9.
 ALTER TABLE `{prefix}_comment`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(60) NOT NULL,
-  MODIFY `body` TEXT NOT NULL;
+  MODIFY `body` MEDIUMTEXT NOT NULL;
 
 ALTER TABLE `{prefix}_content`
   MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -1445,24 +1561,25 @@ ALTER TABLE `{prefix}_content`
   MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0;
 
 ALTER TABLE `{prefix}_favorites`
-  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `modul` VARCHAR(50) NOT NULL;
 
 ALTER TABLE `{prefix}_faq`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body` TEXT;
+  MODIFY `body` MEDIUMTEXT;
 
 ALTER TABLE `{prefix}_files`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body` TEXT NOT NULL,
+  MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `url` VARCHAR(100) NOT NULL;
 
 ALTER TABLE `{prefix}_forum`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name` VARCHAR(25) NOT NULL,
   MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body` TEXT,
+  MODIFY `body` MEDIUMTEXT,
   MODIFY `field` TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_groups`
@@ -1476,14 +1593,14 @@ ALTER TABLE `{prefix}_groups`
 
 ALTER TABLE `{prefix}_help`
   MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `body` TEXT,
+  MODIFY `body` MEDIUMTEXT,
   MODIFY `field` TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_jokes`
   MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `name`    VARCHAR(25) NOT NULL,
   MODIFY `title`   VARCHAR(100) NOT NULL,
-  MODIFY `body`    TEXT NOT NULL,
+  MODIFY `body`    MEDIUMTEXT NOT NULL,
   MODIFY `rating`  VARCHAR(100) NOT NULL DEFAULT '0',
   MODIFY `ratetot` VARCHAR(100) NOT NULL DEFAULT '0',
   MODIFY `ip`      VARCHAR(45) NOT NULL DEFAULT '',
@@ -1492,7 +1609,7 @@ ALTER TABLE `{prefix}_jokes`
 ALTER TABLE `{prefix}_links`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body` TEXT NOT NULL,
+  MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `url` VARCHAR(100) NOT NULL;
 
 UPDATE `{prefix}_media` SET `name`     = '' WHERE `name`     IS NULL;
@@ -1526,7 +1643,7 @@ ALTER TABLE `{prefix}_media`
   MODIFY `author`   VARCHAR(100) NOT NULL DEFAULT '',
   MODIFY `duration` VARCHAR(100) NOT NULL DEFAULT '',
   MODIFY `lang`     VARCHAR(100) NOT NULL DEFAULT '',
-  MODIFY `note`     TEXT NOT NULL,
+  MODIFY `note`     MEDIUMTEXT NOT NULL,
   MODIFY `format`   VARCHAR(100) NOT NULL DEFAULT '',
   MODIFY `quality`  VARCHAR(100) NOT NULL DEFAULT '',
   MODIFY `size`     VARCHAR(100) NOT NULL DEFAULT '',
@@ -1545,7 +1662,7 @@ ALTER TABLE `{prefix}_media`
 ALTER TABLE `{prefix}_message`
   MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title`  VARCHAR(100) NOT NULL,
-  MODIFY `body`   TEXT NOT NULL,
+  MODIFY `body`   MEDIUMTEXT NOT NULL,
   MODIFY `expire` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `status` BOOLEAN NOT NULL DEFAULT 1,
   MODIFY `view`   BOOLEAN NOT NULL DEFAULT 1,
@@ -1562,7 +1679,7 @@ ALTER TABLE `{prefix}_money`
   MODIFY `sum`    INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `email`  VARCHAR(255) NOT NULL,
   MODIFY `intro`  TEXT NOT NULL,
-  MODIFY `note`   TEXT NOT NULL,
+  MODIFY `note`   MEDIUMTEXT NOT NULL,
   MODIFY `ip`     VARCHAR(45) NOT NULL DEFAULT '',
   MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `time`   DATETIME DEFAULT NULL,
@@ -1572,14 +1689,14 @@ ALTER TABLE `{prefix}_news`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(100) NOT NULL,
   MODIFY `intro` TEXT,
-  MODIFY `body` TEXT NOT NULL,
+  MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `field` TEXT NOT NULL,
   MODIFY `assoc` TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(50) NOT NULL,
-  MODIFY `body` TEXT;
+  MODIFY `body` MEDIUMTEXT;
 
 UPDATE `{prefix}_order` SET `ip`    = '' WHERE `ip`    IS NULL;
 UPDATE `{prefix}_order` SET `agent` = '' WHERE `agent` IS NULL;
@@ -1588,7 +1705,7 @@ ALTER TABLE `{prefix}_order`
   MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `email`  VARCHAR(255) NOT NULL,
   MODIFY `info`   TEXT NOT NULL,
-  MODIFY `note`   TEXT NOT NULL,
+  MODIFY `note`   MEDIUMTEXT NOT NULL,
   MODIFY `ip`     VARCHAR(45) NOT NULL DEFAULT '',
   MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
   MODIFY `time`   DATETIME DEFAULT NULL,
@@ -1608,13 +1725,13 @@ ALTER TABLE `{prefix}_partners`
 # The message table is reconciled column by column: a bare MODIFY rebuilds the table even when nothing changes, and an installation already on 6.3 must not be rewritten
 CALL modcol('{prefix}_privat', 'id',    'INT UNSIGNED NOT NULL AUTO_INCREMENT');
 CALL modcol('{prefix}_privat', 'title', 'VARCHAR(100) NOT NULL');
-CALL modcol('{prefix}_privat', 'body',  'TEXT NOT NULL');
+CALL modcol('{prefix}_privat', 'body',  'MEDIUMTEXT NOT NULL');
 
 ALTER TABLE `{prefix}_products`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(100) NOT NULL,
   MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body` TEXT NOT NULL,
+  MODIFY `body` MEDIUMTEXT NOT NULL,
   MODIFY `assoc` TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_rating`
@@ -1658,7 +1775,7 @@ ALTER TABLE `{prefix}_users`
   MODIFY `occ`      VARCHAR(100) DEFAULT NULL,
   MODIFY `origin`   VARCHAR(100) DEFAULT NULL,
   MODIFY `interest` VARCHAR(150) NOT NULL DEFAULT '',
-  MODIFY `sig`      VARCHAR(255) DEFAULT NULL,
+  MODIFY `sig`      TEXT,
   MODIFY `viewmail` BOOLEAN DEFAULT NULL,
   MODIFY `blockon`  BOOLEAN NOT NULL DEFAULT 0,
   MODIFY `block`    TEXT NOT NULL,
@@ -1726,68 +1843,62 @@ CALL addidx('{prefix}_mail', 'lockid',                 '`lockid`',              
 CALL addidx('{prefix}_mail', 'locked',                 '`locked`',                                0);
 
 # =============================================================================
-# Batch Y — _comment, the storage format, the soft delete and the write keys
+# Batch Y — _comment, the reply tree, the soft delete and the write keys
 # =============================================================================
 #
-# Five columns and five indexes are added, two superseded indexes are dropped and
-# KEY time is kept, because the unfiltered moderation list orders by time alone.
-# The order matters: reqkey is filled for every row before its unique index is
-# created, otherwise the ALTER would fail halfway on the shared default. UUID()
-# is evaluated per row on MySQL and MariaDB alike and its hex form is exactly the
-# 32 characters the column and the server-side key check expect.
+# Four columns are added, two superseded indexes are dropped and KEY time is kept,
+# because the unfiltered moderation list orders by time alone.
 #
-# format and iphash are backfilled by tools/comment-migrate.php, which classifies
-# every stored body first and rewrites it afterwards; a hex HMAC cannot be built
-# in SQL because the purpose secret lives in the site configuration.
+# pid is the only stored parent relation. Every existing comment stays a root:
+# pid is 0 and nothing is ever re-parented from the old "[b]name[/b]," reply
+# convention - that text is a naming habit and not a structure, and guessing at
+# it would invent threads nobody wrote. Replies, branch paging and tombstones are
+# read with recursive CTEs over pid, so no materialised path is stored.
 #
-# That tool is not optional. Comments render as source from 6.3 on, so until
-# "php tools/comment-migrate.php classify" and "convert" have run, every stored
-# body still carries the escaping of the old writer and is shown with it -
-# &lt;b&gt; instead of a bold word. Take a dump of the table first.
+# reqkey is the idempotency key of a write and is stored as raw bytes, never as
+# hex text: BINARY(16) under one unique index, and absence is NULL rather than a
+# shared empty string, because a unique index counts every NULL as distinct. No
+# key is minted here for an existing row - a comment written before this release
+# was never replayed and needs no key.
 #
-# On a large comment table this is not instant: five index builds and a full
-# update of every row rewrite the table, and the site should be closed for it.
+# ip carries an address and nothing else, so it is compared and sorted byte by
+# byte; (ip, time, id) answers the best-effort flood interval on its own and
+# replaces the hash column and its rate table alike.
+#
+# The two stops are deliberate. A reqkey left as hex text means this table was
+# already carried through a transitional release, and converting it belongs to
+# the dev tooling, not to an upgrade run. A NULL time means a row nothing can
+# order; both are reported instead of guessed at.
 
-CALL addcol('{prefix}_comment', 'format',  'VARCHAR(20) NOT NULL DEFAULT \'\'');
+CALL delcol('{prefix}_comment', 'format');
+CALL delcol('{prefix}_comment', 'iphash');
+CALL delcol('{prefix}_comment', 'path');
+
+CALL addcol('{prefix}_comment', 'pid',     'INT UNSIGNED NOT NULL DEFAULT 0');
 CALL addcol('{prefix}_comment', 'edited',  'DATETIME DEFAULT NULL');
 CALL addcol('{prefix}_comment', 'deleted', 'DATETIME DEFAULT NULL');
-CALL addcol('{prefix}_comment', 'reqkey',  'CHAR(32) NOT NULL DEFAULT \'\'');
-CALL addcol('{prefix}_comment', 'iphash',  'CHAR(64) NOT NULL DEFAULT \'\'');
 
-UPDATE `{prefix}_comment` SET `reqkey` = REPLACE(UUID(), '-', '') WHERE `reqkey` = '';
+CALL stopcol('{prefix}_comment', 'reqkey', 'char', 'comment.reqkey is still hex text: convert it with the dev tooling before this upgrade');
+CALL addcol('{prefix}_comment', 'reqkey',  'BINARY(16) DEFAULT NULL');
+
+CALL stopnull('{prefix}_comment', 'time', 'comment.time holds NULL rows: repair them before this upgrade');
+CALL modcol('{prefix}_comment', 'time', 'DATETIME NOT NULL');
+CALL setcoll('{prefix}_comment', 'ip', 'VARCHAR(45) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT \'\'', 'ascii_bin');
+CALL poscol('{prefix}_comment', 'pid', 'INT UNSIGNED NOT NULL DEFAULT 0', 'id');
+
+CALL delidx('{prefix}_comment', 'cid');
+CALL delidx('{prefix}_comment', 'modul_status');
+CALL delidx('{prefix}_comment', 'iphash_time');
+CALL delidx('{prefix}_comment', 'modul_cid_path');
 
 CALL addidx('{prefix}_comment', 'reqkey',                   '`reqkey`',                                              1);
 CALL addidx('{prefix}_comment', 'modul_cid_status_deleted', '`modul`, `cid`, `status`, `deleted`, `time`, `id`',     0);
 CALL addidx('{prefix}_comment', 'modul_cid_deleted',        '`modul`, `cid`, `deleted`, `time`, `id`',               0);
 CALL addidx('{prefix}_comment', 'status_deleted_time',      '`status`, `deleted`, `time`, `id`',                     0);
-CALL addidx('{prefix}_comment', 'iphash_time',              '`iphash`, `time`, `id`',                                0);
-CALL delidx('{prefix}_comment', 'cid');
-CALL delidx('{prefix}_comment', 'modul_status');
+CALL addidx('{prefix}_comment', 'modul_cid_pid_time',       '`modul`, `cid`, `pid`, `time`, `id`',                   0);
+CALL addidx('{prefix}_comment', 'ip_time',                  '`ip`, `time`, `id`',                                    0);
 
-# =============================================================================
-# Batch Y2 — _comment, the reply tree
-# =============================================================================
-#
-# Every existing comment becomes a root of its own: pid stays 0 and path becomes
-# the id padded to ten digits, which is the one segment a root carries. Nothing
-# is ever re-parented from the old "[b]name[/b]," reply convention - that text is
-# a naming habit and not a structure, and guessing at it would invent threads
-# that nobody wrote.
-#
-# path is ascii with a binary collation on purpose: it is a sort key, and a
-# collated column would order it by collation rules rather than by bytes. The
-# fixed ten-digit padding is what keeps 10 after 9 instead of before it.
-#
-# The backfill runs before the index is created, so the index is built once over
-# final values instead of being maintained through a full table update.
-
-CALL addcol('{prefix}_comment', 'pid',  'INT UNSIGNED NOT NULL DEFAULT 0');
-CALL addcol('{prefix}_comment', 'path', 'VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT \'\'');
-
-UPDATE `{prefix}_comment` SET `path` = LPAD(`id`, 10, '0') WHERE `path` = '';
-
-CALL addidx('{prefix}_comment', 'modul_cid_pid_time',       '`modul`, `cid`, `pid`, `time`, `id`',                    0);
-CALL addidx('{prefix}_comment', 'modul_cid_path',           '`modul`, `cid`, `path`',                                 0);
+DROP TABLE IF EXISTS `{prefix}_comment_rate`;
 
 # =============================================================================
 # Batch Z — _maildead and the newsletter campaign state
@@ -1836,6 +1947,10 @@ CALL delcol('{prefix}_newsletter', 'mails');
 
 DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS addcol;
+DROP PROCEDURE IF EXISTS poscol;
+DROP PROCEDURE IF EXISTS setcoll;
+DROP PROCEDURE IF EXISTS stopcol;
+DROP PROCEDURE IF EXISTS stopnull;
 DROP PROCEDURE IF EXISTS delcol;
 DROP PROCEDURE IF EXISTS modcol;
 DROP PROCEDURE IF EXISTS runifcol;

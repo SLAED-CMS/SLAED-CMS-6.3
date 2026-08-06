@@ -3403,11 +3403,15 @@ function getProtocol(): string {
 }
 
 # Get the image from the text; inline data URIs are never returned because meta image tags must point to a real fetchable resource
-function getImgText(string $text, string $type = '', bool $check = true): string|false {
+# An attachment is resolved against the upload directory of its own module, and the module is named explicitly by a caller that renders the content of another one
+# Without that name the request module would decide the path, which is right for a module rendering itself and wrong for a page that lists the newest rows of several
+# The name becomes a path segment, so it passes the same filter the request boundary applies to it; anything else answers an empty name, and the path it builds simply resolves to no file
+function getImgText(string $text, string $type = '', bool $check = true, string $mod = ''): string|false {
  global $conf;
+    $mod = filterVar(($mod !== '') ? $mod : (string)($conf['name'] ?? ''));
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $fname = basename(trim($match[1]));
-        $img = (!$type) ? 'uploads/'.$conf['name'].'/thumb/'.$fname : 'uploads/'.$conf['name'].'/'.$fname;
+        $img = (!$type) ? 'uploads/'.$mod.'/thumb/'.$fname : 'uploads/'.$mod.'/'.$fname;
     } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
         $img = trim($match[1]);
     } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
@@ -5357,7 +5361,7 @@ function updateComment(): void {
         ]);
         return;
     }
-    echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, $edit['format']);
+    echo $prs->filterContent($edit['body'], true, $edit['mod'], 2, 'breaks');
 }
 
 # Publish or hide one comment as a moderator and answer the comment itself, so the reader keeps the slice and the scroll position the action was taken from

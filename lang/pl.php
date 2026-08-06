@@ -94,6 +94,8 @@ define('_COMMENTS_REPS','Odpowiedzi pod jednym komentarzem');
 define('_COMMENTS_MORE','Pokaż więcej komentarzy');
 define('_COMMENTS_GONE','Ten komentarz został usunięty. Odpowiedzi pod nim zostają zachowane.');
 define('_COMMENTS_PARENT','Tej odpowiedzi nie można przypisać do wskazanego komentarza.');
+define('_COMMENTS_REPLAY','Komentarz został już zapisany pod tym kluczem i różni się od tego żądania.');
+define('_COMMENTS_EDITED','Edytowano');
 define('_COMMENTS_REPLY','Odpowiedz');
 define('_COMPLAINT','Skarga');
 define('_CONTENT','Spis treści');

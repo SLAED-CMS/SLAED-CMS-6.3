@@ -46,24 +46,26 @@ class Database {
             uksort($norm, function($a, $b) { return strlen($b) <=> strlen($a); });
             foreach ($norm as $ph => $val) {
                 $pattern = '/'.preg_quote($ph, '/').'(?![a-zA-Z0-9_])/u';
-                $query = preg_replace($pattern, $this->filterSqlValue($val), $query, 1);
+                $query = preg_replace($pattern, $this->filterSqlValue($val), $query, 1) ?? $query;
             }
         }
         if (strpos($query, '?') !== false) {
             $vals = array_values($params);
             foreach ($vals as $v) {
                 if (strpos($query, '?') === false) break;
-                $query = preg_replace('/\?/', $this->filterSqlValue($v), $query, 1);
+                $query = preg_replace('/\?/', $this->filterSqlValue($v), $query, 1) ?? $query;
             }
         }
         return $query;
     }
 
     # Quote value for SQL output
+    # A binary value is rendered as a hex literal rather than quoted: it is not text, and a raw byte string would make the interpolation this feeds a subject no UTF-8 pattern can match
     private function filterSqlValue(mixed $value): string {
         if (is_null($value)) return 'NULL';
         if (is_bool($value)) return $value ? '1' : '0';
         if (is_int($value) || is_float($value)) return (string)$value;
+        if (is_string($value) && $value !== '' && !mb_check_encoding($value, 'UTF-8')) return '0x'.bin2hex($value);
         if ($this->sqlconnid instanceof PDO) {
             $q = $this->sqlconnid->quote((string)$value);
             return ($q !== false) ? $q : ('\''.str_replace('\'', '\'\'', (string)$value).'\'');

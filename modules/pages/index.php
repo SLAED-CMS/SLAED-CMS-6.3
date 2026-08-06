@@ -362,8 +362,8 @@ function add(): void {
     if ((is_user() && $conf['pages']['add'] == 1) || (!is_user() && $conf['pages']['addquest'] == 1)) {
         $title    = getVar('post', 'title', 'title');
         $cid      = getVar('post', 'catid', 'num');
-        $hometext = getVar('post', 'hometext', 'raw');
-        $bodytext = getVar('post', 'bodytext', 'raw');
+        $hometext = getVar('post', 'hometext', 'text');
+        $bodytext = getVar('post', 'bodytext', 'text');
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
         $cont = getModuleNavi(['title' => _ADD, 'htitle' => _PAGES]);

@@ -66,7 +66,7 @@ class EditorToastUi implements ContentDriver {
         $upl = $mod !== '' && checkEditorUploadAccess($mod, $rul);
         $panel = '';
         $opt = [
-            'admin' => isAdmin(),
+            'super' => isAdmin(true),
             'tpl' => 'js-slaed-editor-tpl',
             'labels' => [
                 'quote' => _EQUOTE,

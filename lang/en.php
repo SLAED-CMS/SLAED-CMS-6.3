@@ -94,6 +94,8 @@ define('_COMMENTS_REPS','Replies shown under one comment');
 define('_COMMENTS_MORE','Show more comments');
 define('_COMMENTS_GONE','This comment was removed. The replies below it are kept.');
 define('_COMMENTS_PARENT','This reply cannot be attached to the comment it names.');
+define('_COMMENTS_REPLAY','A comment was already stored under this key and it differs from this request.');
+define('_COMMENTS_EDITED','Edited');
 define('_COMMENTS_REPLY','Reply');
 define('_COMPLAINT','Complaint');
 define('_CONTENT','Content');

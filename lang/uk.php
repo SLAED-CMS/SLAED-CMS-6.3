@@ -94,6 +94,8 @@ define('_COMMENTS_REPS','Відповідей під одним коментар
 define('_COMMENTS_MORE','Показати ще коментарі');
 define('_COMMENTS_GONE','Цей коментар видалено. Відповіді під ним збережено.');
 define('_COMMENTS_PARENT','Цю відповідь неможливо додати до вказаного коментаря.');
+define('_COMMENTS_REPLAY','Коментар із таким ключем уже збережено і він відрізняється від цього запиту.');
+define('_COMMENTS_EDITED','Змінено');
 define('_COMMENTS_REPLY','Відповісти');
 define('_COMPLAINT','Скарга');
 define('_CONTENT','Зміст');

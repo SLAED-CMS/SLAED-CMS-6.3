@@ -93,7 +93,7 @@ final class CommentTrustBoundaryTest extends TestCase
         $route = $this->getSource('core/user.php', 'addComment');
         $this->assertStringNotContainsString('cid', $route);
         $this->assertStringContainsString('$com->addComment($mod, $id, $body, $name, $key, $pid)', $route);
-        $this->assertStringContainsString('$base = $this->getParentPath($mod, $id, $pid)', $code, 'The parent of a reply is not resolved against the stored tree');
+        $this->assertStringContainsString('$this->getReplyDepth($mod, $id, $pid) === null', $code, 'The parent of a reply is not resolved against the stored tree');
     }
 
     # The submit URL carries no moderation mode any more

@@ -24,13 +24,25 @@ The format names the syntax the stored source was written in. It is an input to 
 * **`'plain'`:** no Markdown construct is recognised — no headings, lists, tables, quotes, emphasis, code fences, inline code or `[t](u)` links. A blank line separates paragraphs and every other line ending becomes a `<br>`. The bracket layer (BBCode, smilies, attachments) still runs.
 * **anything else, including `''`:** Markdown, which is the behaviour every caller had before the parameter existed.
 
-Comments pass the `format` column of their row (`docs/COMMENTS-REDESIGN-2026.md`, stage 2) and private messages pass theirs (`docs/PRIVAT-2026.md`, stage 2), in the mailbox and in the admin list alike. Every other caller omits the argument.
+No stored content passes this argument. Comments and private messages used to carry a `format` column and hand it over here; `docs/CONTENT-CONTRACT-2026.md` removed both columns, because `plain` and the editors are input interfaces rather than storage formats and rendering must not branch on the editor an author typed in. Every caller of stored content therefore omits the argument, and the parameter survives for a caller that knows the syntax of a string it built itself.
 
 ## Security Context (`$safe`)
 
 The `$safe` boolean parameter is crucial:
-* **`true` (User Content):** The parser strictly escapes all HTML tags injected in the raw source using `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. Indented code blocks are allowed. Unsafe URL protocols are blocked. Raw `[usephp]` and `[usehtml]` BB tags are stripped or ignored. The parser's **own** output is not escaped: the inline BB pairs (`[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]`, `[size]`) render like `[url]` and `[img]` always did, so legacy content stays readable. What the author wrote as a tag stays text; what the parser produced stays markup.
+* **`true` (User Content):** The parser strictly escapes all HTML tags injected in the raw source using `htmlspecialchars(..., ENT_QUOTES | ENT_HTML5)`. Indented code blocks are allowed. Unsafe URL protocols are blocked. Raw `[usehtml]` and `[usephp]` BB tags are stripped or ignored. The parser's **own** output is not escaped: the inline BB pairs (`[b]`, `[i]`, `[u]`, `[s]`, `[color]`, `[family]`, `[size]`) render like `[url]` and `[img]` always did, so legacy content stays readable. What the author wrote as a tag stays text; what the parser produced stays markup.
 * **`false` (Admin Content):** The parser inherently trusts the source. It preserves manually injected HTML tags. It processes `[usehtml]` blocks literally and executes PHP code inside `[usephp]` blocks via `eval()`.
+
+## Trusted author capability
+
+`$safe` decides how a **stored** source is escaped. It never decides who was allowed to write the source, and passing `false` is not a grant of trust.
+
+`[usehtml]` and `[usephp]` are the two tags that turn stored text into raw markup and into executed code. The capability to author them belongs to the **super administrator alone** and is settled at the write boundary by `filterTrustedTags()` in `core/security.php`: anyone else loses the tokens as the text is stored, in any field, so no render mode can hand the capability back. Every write path reaches that check — typed input through `filterText()` and `filterHtml()` (before the editor branch, because an html editor stores its input almost verbatim), comments through `Comment::filterCommentBody()` and `Comment::updateBody()`, private messages through `Privat::filterMessageText()`.
+
+Comments and private messages never carry the tags at all, whoever writes them: those channels call `filterTrustedTags()` without the capability argument, and they additionally render with `$safe = true`, so the escape hatch is closed twice.
+
+Preview and publication must resolve the capability identically. A preview therefore renders the exact string the save handler would store, which means the add/reply form reads its body with `getVar(..., 'text')`, never `'raw'`. Reading a body raw for preview is what once let an anonymous request drive trusted rendering — and with `[usephp]` restored that defect is remote code execution, not merely stored XSS. It must not reappear.
+
+Because `[usephp]` output is produced per render, any cache that stores rendered content must exclude sources containing it; `modules/news/index.php` does so in its parser cache guard.
 
 ## Supported Markup
 
@@ -50,7 +62,7 @@ The `Parser` supports a hybrid composition of Markdown and SLAED BBCode.
 - **Code:** `[code]`, `[php]`, `[code=lang]`.
 - **Media & Assets:** `[url]`, `[mail]`, `[img=align]`.
 - **Local Attachments:** `[attach=file.png align=X width=Y]` - Resolves to local uploaded files, generates thumbs automatically via GD if needed.
-- **Admin/Macros:** `*NN` (Smilies), `[hr]`, `[li]`, `[usehtml]`, `[usephp]`.
+- **Admin/Macros:** `*NN` (Smilies), `[hr]`, `[li]`, `[usehtml]`, `[usephp]` (the last two are super administrator only).
 
 ## Authoring Guidelines
 

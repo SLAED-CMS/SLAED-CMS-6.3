@@ -120,8 +120,8 @@ php tools/comment-baseline.php capture
 php tools/comment-baseline.php verify
 ```
 
-Stage 1 of `docs/COMMENTS-REDESIGN-2026.md` requires the rendered comment list to
-survive the move into the `Comment` class unchanged. That claim is only checkable
+The comment contract required the rendered comment list to survive the move into the
+`Comment` class unchanged. That claim is only checkable
 against markup captured **before** the refactor, so `capture` must be run first
 and `verify` after every step of it.
 
@@ -134,9 +134,8 @@ the list never compares equal even to itself. On a difference the fresh capture
 is written next to the baseline as `<module>.actual.html` for diffing.
 
 All eight modules are meant to be covered: `faq`, `files`, `links`, `media`,
-`news`, `pages`, `shop`, `voting`. The stage 1 baseline of
-`docs/COMMENTS-REDESIGN-2026.md` was captured on 2026-07-28 with all eight
-present, after re-preparing the two fixtures below. A `capture` that reports
+`news`, `pages`, `shop`, `voting`. That baseline was captured on 2026-07-28 with all
+eight present, after re-preparing the two fixtures below. A `capture` that reports
 fewer than eight has lost one of them again — re-prepare it and capture once
 more, or the parity claim silently excludes a module.
 
@@ -297,16 +296,17 @@ From `docs/MAIL-2026.md`:
   per batch and a dangling `ref` fails the row instead of sending an empty
   message
 
-From `docs/COMMENTS-REDESIGN-2026.md`:
+From the comment contract, now carried by `docs/CONTENT-CONTRACT-2026.md`:
 
 - stage 0 — a request cannot choose its own moderation mode or module
 - stage 1 — each of the eight modules increments its own counter and points slot;
   markup parity through `tools/comment-baseline.php`
-- stage 2 — `checkRules()` measures the longest word in characters, not the last
-  in bytes; a repeated `setStatus()` leaves counters and points untouched; soft
-  delete is idempotent; a row renders through its stored `format` after the site
-  editor mode changes
-- stage 4 — two POSTs carrying one `reqkey` produce one row
+- `checkRules()` measures the longest word in characters, not the last in bytes; a
+  repeated `setStatus()` leaves counters and points untouched; soft delete is
+  idempotent; the same stored source renders the same way whichever editor wrote it,
+  because no column names a storage format and nothing branches on the editor
+- two POSTs carrying one `reqkey` produce one row, and a second POST that shares only
+  the key answers a conflict and stores nothing
 
 ## Notes
 - test names such as `ViewBridgeSmokeTest` are current repository filenames

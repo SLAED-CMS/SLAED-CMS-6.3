@@ -296,7 +296,7 @@ final class PrivatClassTest extends TestCase
         $this->assertSame($run['room'], $run['held'], 'The mailbox was left holding more messages than its quota allows');
     }
 
-    # Step 11: a send stores the source its author wrote, under the format the editor of that request names, and escapes nothing on the way in
+    # Step 11: a send stores the source its author wrote whatever editor named it, and escapes nothing on the way in
     #[Test]
     public function aSendStoresTheSourceItWasGiven(): void
     {
@@ -305,12 +305,12 @@ final class PrivatClassTest extends TestCase
             $one = $run[$mode];
             if ($one['mode'] !== $mode) $this->markTestSkipped('The '.$mode.' editor is not enabled on this installation');
             $this->assertSame('ok', $one['error'], 'The '.$mode.' send was refused');
-            $this->assertSame($mode, $one['format'], 'The stored format is not the one the editor of the request names');
             $this->assertSame([true, true], $one['kept'], 'The stored title or body is not byte for byte what the author submitted');
         }
     }
 
     # Step 11: the renderer both adapters call turns that source into markup that carries no tag, no handler and no script the author wrote
+    # One source contract means one rendering: the editor an author typed in is an input interface and the same bytes must come out the same way whichever it was
     #[Test]
     public function storedSourceRendersSafely(): void
     {
@@ -323,8 +323,11 @@ final class PrivatClassTest extends TestCase
             $this->assertStringContainsString('&lt;script&gt;', $html, 'The script tag of the author was not rendered as its own text');
             $this->assertStringContainsString('<strong>bb</strong>', $html, 'The parser stopped rendering its own inline markup');
         }
-        $this->assertStringContainsString('<br>', $run['plain']['render'], 'A plain body did not turn its line ending into a break');
-        $this->assertStringNotContainsString('<br>', $run['markdown']['render'], 'A markdown body was rendered with the breaks of a plain one');
+        $this->assertSame(
+            $run['markdown']['render'],
+            $run['plain']['render'],
+            'The same stored source rendered differently per editor: rendering still branches on the interface the author typed in'
+        );
     }
 
     # Step 11: the title is plain source and the template it is printed through is what escapes it, in the text and in the attribute alike

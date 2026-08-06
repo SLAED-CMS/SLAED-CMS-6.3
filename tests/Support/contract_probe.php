@@ -257,7 +257,8 @@ function getProbeCommentWrite(bool $guest): array {
             'off' => [$off ? $com->addComment('news', intval($off['id']), 'probe body', 'Probe')['error'] : _ERROR, _ERROR],
             'noname' => [$guest ? $com->addComment('news', $open, 'probe body', '')['error'] : _CERROR3, _CERROR3],
         ];
-        $com->addComment('news', $open, 'probe body for the flood window', 'Probe');
+        $mark = $com->addComment('news', $open, 'probe body for the flood window', 'Probe');
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :now WHERE id = :id', ['now' => date('Y-m-d H:i:s'), 'id' => intval($mark['id'])]);
         $out['refuse']['flood'] = [$com->addComment('news', $open, 'probe body again', 'Probe')['error'], sprintf(_CERROR5, $conf['comments']['send'])];
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $ip]);
         $word = trim(explode(',', (string)$conf['censor_l'])[0]);
@@ -297,8 +298,8 @@ function getProbeCommentStage2(): array {
     ];
     $all = getProbeCommentCount();
     $db->setSqlBegin();
-    $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE iphash = :hash', ['hash' => $hash]);
+    $addr = getIp();
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
     $tid = 0;
     foreach ($db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news ORDER BY id DESC LIMIT 25')) ?: [] as $row) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => intval($row['id'])]);
@@ -319,20 +320,25 @@ function getProbeCommentStage2(): array {
     $out['target'] = $tid;
     $new = $com->addComment('news', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
     $cid = intval($new['id']);
-    $row = $db->getSqlRow($db->getSqlQuery('SELECT format, reqkey, iphash, status, deleted, edited FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
+    $row = $db->getSqlRow($db->getSqlQuery('SELECT LOWER(HEX(reqkey)) AS rkey, status, deleted, edited FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $cid]));
     $out['stored'] = [
         'error' => $new['error'],
-        'format' => (string)($row['format'] ?? ''),
-        'reqkey' => (string)($row['reqkey'] ?? ''),
-        'iphash' => strlen((string)($row['iphash'] ?? '')),
+        'reqkey' => (string)($row['rkey'] ?? ''),
         'status' => intval($row['status'] ?? -1),
         'deleted' => $row['deleted'] ?? null,
         'edited' => $row['edited'] ?? null,
     ];
-    $out['rules']['flood'] = [$com->checkRules('news', 'body', 'Probe', $hash, true), $com->checkRules('news', 'body', 'Probe', $hash, false)];
+    # The window is measured against the stored time with the clock of PHP, so the marker is written from the clock of PHP too
+    # A stand whose database clock differs from its PHP clock would otherwise never let the window fire, and the rule would go untested rather than proven
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = :now WHERE id = :id', ['now' => date('Y-m-d H:i:s'), 'id' => $cid]);
+    $out['rules']['flood'] = [$com->checkRules('news', 'body', 'Probe', $addr, true), $com->checkRules('news', 'body', 'Probe', $addr, false)];
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
+    $out['rules']['freed'] = $com->checkRules('news', 'body', 'Probe', $addr, true);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE id = :id', ['id' => $cid]);
-    $again = $com->addComment('news', $tid, 'stage two probe replay', 'Probe', 'abcdef0123456789abcdef0123456789');
-    $out['replay'] = [$cid, intval($again['id']), $again['error'], getProbeCommentCount('reqkey = :key', ['key' => 'abcdef0123456789abcdef0123456789'])];
+    $again = $com->addComment('news', $tid, 'stage two probe body', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $out['replay'] = [$cid, intval($again['id']), $again['error'], getProbeCommentCount('reqkey = UNHEX(:key)', ['key' => 'abcdef0123456789abcdef0123456789'])];
+    $other = $com->addComment('news', $tid, 'stage two probe conflict', 'Probe', 'abcdef0123456789abcdef0123456789');
+    $out['conflict'] = [intval($other['id']), $other['error'], getProbeCommentCount('reqkey = UNHEX(:key)', ['key' => 'abcdef0123456789abcdef0123456789'])];
     $was = $read();
     $out['hide'] = [$com->setStatus($cid, false), $read()];
     $out['hideagain'] = [$com->setStatus($cid, false), $read()];
@@ -362,10 +368,10 @@ function getProbeCommentStage2(): array {
     $was = $read();
     $out['pending'] = [$com->deleteComment($pid), $was, $read()];
     $out['round'] = [];
-    foreach (['plain', 'markdown'] as $fmt) {
-        $pick = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE format = :fmt AND deleted IS NULL ORDER BY id DESC LIMIT 1', ['fmt' => $fmt]));
-        if (!$pick) continue;
+    $picks = $db->getSqlRows($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE deleted IS NULL AND body != \'\' ORDER BY id DESC LIMIT 2')) ?: [];
+    foreach ($picks as $key => $pick) {
         $one = intval($pick['id']);
+        $fmt = 'row'.$key;
         $was = $com->getComment($one)['body'] ?? '';
         $com->updateBody($one, $was);
         $now = $com->getComment($one)['body'] ?? '';
@@ -397,7 +403,7 @@ function getProbeCommentFormat(): array {
     ];
 }
 
-# Report what stage 5 promises: replies carry a parent and a sortable path, a crafted parent is refused, the page counts roots, and a removed parent with a live reply stays as a tombstone
+# Report what the thread promises: a reply carries its parent, a crafted parent is refused, the page counts roots, and a removed parent with a live reply stays as a tombstone
 # Every write runs inside one transaction that is rolled back at the end, so the tree is measured against the live table without a row of it surviving the run
 function getProbeCommentThread(): array {
     global $db, $com, $conf;
@@ -405,8 +411,8 @@ function getProbeCommentThread(): array {
     if (!$out['admin']) return $out;
     $all = getProbeCommentCount();
     $db->setSqlBegin();
-    $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
-    $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE iphash = :hash', ['hash' => $hash]);
+    $addr = getIp();
+    $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
     $row = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1'));
     $tid = $row ? intval($row['id']) : 0;
     $out['target'] = $tid;
@@ -415,9 +421,12 @@ function getProbeCommentThread(): array {
         return $out;
     }
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = 2 WHERE id = :id', ['id' => $tid]);
+    $orph = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment AS c WHERE c.pid != 0 AND NOT EXISTS'
+        .' (SELECT 1 FROM '.PREFIX_DB.'_comment AS p WHERE p.id = c.pid AND p.modul = c.modul AND p.cid = c.cid)';
+    $self = 'SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE pid = id';
     $out['legacy'] = [
-        intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE path = \'\''))['num']),
-        intval($db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) AS num FROM '.PREFIX_DB.'_comment WHERE pid != 0 AND path NOT LIKE \'%/%\''))['num']),
+        intval($db->getSqlRow($db->getSqlQuery($orph))['num']),
+        intval($db->getSqlRow($db->getSqlQuery($self))['num']),
     ];
     $free();
     $root = $com->addComment('news', $tid, 'thread probe root', 'Probe');
@@ -428,10 +437,12 @@ function getProbeCommentThread(): array {
     $rows = [];
     foreach ([$root, $kid, $sub] as $one) {
         $got = $com->getComment(intval($one['id']));
-        $rows[] = [intval($one['id']), $one['error'], intval($got['pid'] ?? -1), (string)($got['path'] ?? ''), intval($got['depth'] ?? -1)];
+        $rows[] = [intval($one['id']), $one['error'], intval($got['pid'] ?? -1)];
     }
     $out['chain'] = $rows;
-    $out['nested'] = ($rows[2][3] === $rows[0][3].'/'.str_pad((string)$rows[1][0], 10, '0', STR_PAD_LEFT).'/'.str_pad((string)$rows[2][0], 10, '0', STR_PAD_LEFT));
+    $seen = [];
+    foreach ($com->getBranch(intval($root['id']), 50)['rows'] as $one) $seen[intval($one['id'])] = intval($one['depth']);
+    $out['nested'] = [$seen[intval($kid['id'])] ?? -1, $seen[intval($sub['id'])] ?? -1];
     $free();
     $other = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_news WHERE id != :id AND time <= NOW() AND status != \'0\' ORDER BY id DESC LIMIT 1', ['id' => $tid]));
     $out['refuse'] = ['wrong' => '', 'zero' => '', 'foreign' => ''];
@@ -445,10 +456,15 @@ function getProbeCommentThread(): array {
     for ($i = 4; $i <= 21; $i++) {
         $free();
         $one = $com->addComment('news', $tid, 'thread probe depth '.$i, 'Probe', '', $deep);
-        $out['depth'][$i] = [$one['error'], intval($com->getComment(intval($one['id']))['depth'] ?? -1)];
+        $out['depth'][$i] = [$one['error'], intval($one['id'])];
         if ($one['error'] !== '') break;
         $deep = intval($one['id']);
         $made[] = $deep;
+    }
+    $seen = [];
+    foreach ($com->getBranch(intval($root['id']), 200)['rows'] as $one) $seen[intval($one['id'])] = intval($one['depth']);
+    foreach ($out['depth'] as $lvl => $pair) {
+        $out['depth'][$lvl][1] = $seen[$pair[1]] ?? -1;
     }
     $page = $com->getList('news', $tid, 1);
     $out['page'] = [
@@ -555,8 +571,8 @@ function getProbeCommentNotify(): array {
     foreach ($db->getSqlRows($db->getSqlQuery('SELECT super, modules FROM '.PREFIX_DB.'_admins WHERE smail = \'1\''.$scope, $langs)) ?: [] as $one) {
         if ($one['super'] || in_array('news', getAdminModuleNames((string)$one['modules']), true)) $out['subs']++;
     }
-    $hash = hash_hmac('sha256', strtolower(getIp()), getSecret('commentip'));
-    $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE iphash = :hash', ['hash' => $hash]);
+    $addr = getIp();
+    $free = static fn(): mixed => $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET time = DATE_SUB(NOW(), INTERVAL 1 DAY) WHERE ip = :ip', ['ip' => $addr]);
     $all = getProbeCommentCount();
     $sent = $mails();
     $db->setSqlBegin();
@@ -584,7 +600,7 @@ function getProbeCommentNotify(): array {
     $new = $post($tid, 'stage three probe body', $key);
     $out['msec'] = round((hrtime(true) - $time) / 1000000, 1);
     $cid = intval($new['id']);
-    $out['add'] = [$new['error'], $new['new'], getProbeCommentCount() - $was[0], $mails() - $was[1], getProbeCommentCount('reqkey = :key', ['key' => $key])];
+    $out['add'] = [$new['error'], $new['new'], getProbeCommentCount() - $was[0], $mails() - $was[1], getProbeCommentCount('reqkey = UNHEX(:key)', ['key' => $key])];
     $sql = 'SELECT kind, status, tries, prio, body, ref FROM '.PREFIX_DB.'_mail ORDER BY id DESC LIMIT '.max(1, $mails() - $was[1]);
     $out['queued'] = [];
     foreach ($db->getSqlRows($db->getSqlQuery($sql)) ?: [] as $one) {
@@ -593,7 +609,7 @@ function getProbeCommentNotify(): array {
     }
     $free();
     $was = [getProbeCommentCount(), $mails()];
-    $again = $post($tid, 'stage three probe replay', $key);
+    $again = $post($tid, 'stage three probe body', $key);
     $out['replay'] = [$again['error'], $again['new'], $cid === intval($again['id']), getProbeCommentCount() - $was[0], $mails() - $was[1]];
     $bad = $mailer->addQueue(['kind' => 'comment', 'email' => 'not an address', 'title' => 'probe', 'body' => 'probe', 'sender' => $conf['adminmail'], 'prio' => 1]);
     $out['fail'] = [$bad, $db->checkSqlActive(), getProbeCommentCount('id = :id', ['id' => $cid]), $mailer->getError()];
@@ -619,7 +635,7 @@ function getProbeFeedLegacy(int $uid): string {
         if ($mod != 'comm' && !is_active($mod)) continue;
         if ($mod == 'comm') {
             $from = PREFIX_DB.'_comment WHERE uid = :ucomm AND status != \'0\' AND deleted IS NULL';
-            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, format AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
+            $parts[] = "(SELECT 'comm' AS mkey, id, cid AS ref, modul AS sub, body AS title, time, 0 AS rc, 0 AS rt FROM ".$from.' ORDER BY id DESC LIMIT 0,'.$limit.')';
         } else {
             $ron = !empty(explode('|', (string)($conf['ratings'][$mod] ?? ''))[1]);
             $rsel = ($ron && $inf['rate']) ? $inf['rate'][0].' AS rc, '.$inf['rate'][1].' AS rt' : '0 AS rc, 0 AS rt';
@@ -633,7 +649,7 @@ function getProbeFeedLegacy(int $uid): string {
     $result = $db->getSqlQuery(implode(' UNION ALL ', $parts), $params);
     while ([$key, $id, $cid, $cmod, $label, $time, $cnt, $tot] = $db->getSqlRow($result)) {
         if ($key == 'comm') {
-            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, true, $conf['name'], 0, (string)$cnt))), 70);
+            $label = cutstr(str_replace([_QUOTE, _CODE], '', filterText($prs->filterContent($label, true, $conf['name'], 0))), 70);
             $cnt = 0;
             $href = getSeoUrl(['name' => $cmod, 'op' => 'view', 'id' => $cid]).'#'.$id;
         } elseif ($key == 'jokes') {
@@ -836,7 +852,7 @@ if ($mode === 'core') {
     $out['word'] = [filterWord('hello123'), filterWord('a%b&c/d'), filterWord('test<script>alert</script>'), filterWord('Привет'), filterWord('say "hi" \'now\''), filterWord('hello world')];
     $out['var'] = [filterVar('hello-world_123'), filterVar('hello world'), filterVar('test<script>'), filterVar('test\'injection')];
     $out['vararr'] = [filterVar(['one', 'two-three']), filterVar(['ok', 'bad value'])];
-    $out['text'] = [filterText('<b>bold</b>'), filterText('say "hi"'), filterText('<b>tag</b>', 2), filterText('[usephp]echo 1;[/usephp]normal text'), filterText('  hello  ')];
+    $out['text'] = [filterText('<b>bold</b>'), filterText('say "hi"'), filterText('<b>tag</b>', 2), filterText('[usehtml]raw[/usehtml][usephp]echo 1;[/usephp]normal text'), filterText('  hello  ')];
     $out['url'] = [filterWebUrl('example.com'), filterWebUrl('https://example.com'), filterWebUrl(''), filterWebUrl('http://')];
     $out['html'] = [filterHtml('cost $5'), filterHtml('back\\slash'), filterHtml('say "hi" and \'bye\''), filterHtml('')];
     $out['fields'] = [filterFields(['a' => ' one ', 'b' => 'two']), filterFields([]), filterFields('plain')];
