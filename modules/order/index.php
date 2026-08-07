@@ -38,6 +38,7 @@ function order(): void {
                 'name' => 'note',
                 'value' => $note,
                 'mod' => $conf['name'],
+                'store' => 'order.note',
                 'rows' => 5,
                 'placeholder' => _OR_3,
             ]),
@@ -64,6 +65,8 @@ function send(): void {
         $note = getVar('post', 'note', 'text');
         $stop = [];
         checkemail($mail);
+        if ($room = checkEditorTextRoom($field, 'order.info')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($note, 'order.note')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['order']['pr']) ? '0' : '1';

@@ -152,6 +152,7 @@ function add(): void {
             'name' => 'desc',
             'value' => $desc,
             'mod' => $conf['name'],
+            'store' => 'auto_links.intro',
             'rows' => '5',
             'placeholder' => _A_LINKS_TEXT,
             'required' => '1',
@@ -182,6 +183,7 @@ function send(): void {
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'auto_links')) $stop[] = _ERROR;
     if (!$name) $stop[] = _CERROR10;
     if (!$desc) $stop[] = _CERROR11;
+    if ($room = checkEditorTextRoom($desc, 'auto_links.intro')) $stop[] = $room;
     if (!$site) $stop[] = _CERROR4;
     checkemail($email);
     if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;

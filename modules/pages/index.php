@@ -393,6 +393,7 @@ function add(): void {
                 'name' => 'hometext',
                 'value' => $hometext,
                 'mod' => $conf['name'],
+                'store' => 'pages.intro',
                 'rows' => '5',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -406,6 +407,7 @@ function add(): void {
                 'name' => 'bodytext',
                 'value' => $bodytext,
                 'mod' => $conf['name'],
+                'store' => 'pages.body',
                 'rows' => '15',
                 'placeholder' => _ENDTEXT,
                 'required' => '0',
@@ -437,6 +439,8 @@ function send(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$hometext) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($hometext, 'pages.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($bodytext, 'pages.body')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (is_user()) ? (int)$user[0] : '';

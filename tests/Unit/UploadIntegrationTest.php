@@ -63,18 +63,28 @@ final class UploadIntegrationTest extends TestCase
         return substr($code, $from, $stop - $from);
     }
 
-    # Every module record of the shipped configuration survives resolve and serialize byte for byte, with all twelve named fields present
+    # Every module record of the shipped configuration survives resolve and serialize with every named field present
+    # A rule one field short normalises on the first write: the key order is completed, every value the rule carried is kept, and every write after that reproduces the string
     #[Test]
     public function everyShippedRecordRoundTripsThroughTheResolver(): void
     {
         $data = $this->getProbe('resolver');
         $this->assertNotEmpty($data['records'], 'The shipped configuration holds no module record at all');
         foreach ($data['records'] as $mod => $row) {
-            $this->assertSame([], $row['missing'], 'The resolved record '.$mod.' is missing named fields');
-            $this->assertSame(12, $row['fields'], 'The stored record '.$mod.' does not carry twelve fields');
-            $this->assertTrue($row['same'], 'setUploadRuleData(getUploadRuleData('.$mod.')) does not reproduce the stored string');
+            $this->assertSame(count($data['keys']), $row['fields'], 'The normalised record '.$mod.' does not carry one field per named key');
+            $this->assertTrue($row['kept'], 'Normalising the record '.$mod.' changed a value it already carried');
+            $this->assertTrue($row['stable'], 'setUploadRuleData(getUploadRuleData('.$mod.')) does not reproduce a normalised string');
             $this->assertTrue($row['ok'], 'The record '.$mod.' resolves to a directory that does not exist');
         }
+    }
+
+    # The appended key falls back to the user limit when its position is absent, because zero means no limit and would hand an unbounded list to the one role that never had one
+    #[Test]
+    public function aRuleWithoutTheAppendedKeyFallsBackToTheUserLimit(): void
+    {
+        $data = $this->getProbe('resolver');
+        $this->assertSame(9, $data['old']['userfiles'], 'A rule written before the release lost its user limit');
+        $this->assertSame($data['old']['userfiles'], $data['old']['guestfiles'], 'A rule without the guest limit did not fall back to the user limit');
     }
 
     # An unknown key fails closed and never quietly hands back the general record, which is what would turn any directory into an editor upload target
@@ -85,7 +95,7 @@ final class UploadIntegrationTest extends TestCase
         $this->assertFalse($data['unknown']['ok'], 'An unknown module resolved successfully');
         $this->assertSame('', $data['unknown']['ext'], 'An unknown module inherited an extension list');
         $this->assertNotSame($data['allext'], $data['unknown']['ext'], 'An unknown module was answered with the all record');
-        $this->assertSame(12, $data['unknown']['keys'], 'A failed resolution drops named fields, so a caller reading one limit would fatal');
+        $this->assertSame(count($data['keys']), $data['unknown']['keys'], 'A failed resolution drops named fields, so a caller reading one limit would fatal');
     }
 
     # A short or empty string is a configuration mistake, not a crash: the resolver answers the full key set with zeros
@@ -141,6 +151,42 @@ final class UploadIntegrationTest extends TestCase
             $this->assertNotFalse($gate, $name.'() has no token check at all');
             $this->assertNotFalse($call, $name.'() no longer publishes through the service');
             $this->assertLessThan($call, $gate, $name.'() reaches the upload service before it checks its token');
+        }
+    }
+
+    # Both editor routes take the owner from the one resolver, and the listing compares it as a string
+    # An integer cast is the trap the widening carries: it turns every token into zero, the value a guest carried before, so every guest would match every other guest
+    # The resolver hands a guest a token derived from the session and never the session id itself, because the segment ends up in a public file name
+    #[Test]
+    public function theOwnerTokenIsResolvedInOnePlaceAndComparedAsAString(): void
+    {
+        $code = $this->getFile('core/system.php');
+        $body = $this->getBody('core/system.php', 'getEditorFileOwner');
+        $this->assertStringContainsString('hash_hmac(', $body, 'The guest owner is not derived, so the stored name would carry the session itself');
+        $this->assertStringNotContainsString('return session_id()', $body, 'The guest owner is the session id, which a public file name must never carry');
+        $this->assertStringNotContainsString("'upload|'.session_id()", $body, 'An empty session id is derived instead of refused, so every guest would share one token');
+        $this->assertSame(1, substr_count($code, 'function getEditorFileOwner('), 'The owner resolver exists more than once');
+        foreach (['addEditorUpload', 'getEditorFileJson'] as $name) {
+            $this->assertStringContainsString('getEditorFileOwner(', $this->getBody('core/system.php', $name), $name.'() decides ownership on its own');
+        }
+        $list = $this->getBody('core/system.php', 'getEditorFileJson');
+        $this->assertMatchesRegularExpression('#\(\[a-zA-Z0-9\]\+\)#', $list, 'The ownership pattern still matches digits only, so a guest token never resolves');
+        $this->assertStringNotContainsString('(int)$mat', $list, 'The owner is compared as an integer, so every guest token collapses to zero and matches every other guest');
+    }
+
+    # The listing route carries no access rule of its own: a guest is answered by checkEditorUploadAccess() like every other visitor, and the owner token is what narrows the list
+    # One role question is left on it, which of the three limits applies, and each of the three is a setting rather than a number the route decides for a role
+    # The membership test is held to one appearance and to that one line, because a guard reintroduced in any other wording is the same defect this batch removed
+    #[Test]
+    public function theListingRouteLeavesAccessToTheOneGate(): void
+    {
+        $body = $this->getBody('core/system.php', 'getEditorFileJson');
+        $this->assertStringContainsString('checkEditorUploadAccess(', $body, 'The listing route no longer asks the one function that decides access');
+        $this->assertSame(1, substr_count($body, 'is_user('), 'The route tests membership beside the limit choice, which is a role rule beside the settings');
+        $this->assertMatchesRegularExpression('#\$lim = .*is_user\(\).*guestfiles#', $body, 'Membership no longer chooses which of the three limits applies');
+        $this->assertSame(1, substr_count($body, "getEditorJson(['ok' => true"), 'The route answers a list twice, so one of them is an early answer beside the settings');
+        foreach (['moderfiles', 'userfiles', 'guestfiles'] as $key) {
+            $this->assertStringContainsString("\$rul['".$key."']", $body, 'The listing limit never reads '.$key.', so one role is bounded by the limit of another');
         }
     }
 

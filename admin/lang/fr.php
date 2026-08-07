@@ -181,6 +181,7 @@ define('_DIR','Annuaire');
 define('_DIRDEF','Le répertoire par défaut');
 define('_DTHUMB',"Plus d'annuaire");
 define('_EDFILEA',"Le nombre total de fichiers pour l'administrateur");
+define('_EDFILEG',"Le nombre total de fichiers pour l'invité");
 define('_EDFILEU',"Le nombre total de fichiers pour l'utilisateur");
 define('_EDITBLOCK','Editer le bloc');
 define('_EDITORUSER','Éditeur utilisateur');

@@ -849,13 +849,20 @@ CALL mksessuniq('{prefix}_session');
 # few dozen characters. That is the difference this section rests on: it is not graphics that
 # are refused in a summary, it is one delivery method for them.
 #
-# users.sig widens for a different reason and only to TEXT. VARCHAR(255) is already too small
+# auto_links.intro and users.sig widen for a different reason and only to TEXT. Both are VARCHAR(255)
+# behind a rich editor, and a VARCHAR behind a rich editor is a defect rather than a shape to support:
+# in utf8mb4 those 255 bytes are about 127 Cyrillic characters, which is one sentence for a field that
+# asks a visitor to describe a whole site. auto_links.intro joins the summary class rather than the body
+# class, because a link description is drawn once per row of a link list.
+#
+# users.sig has a reason of its own. VARCHAR(255) is already too small
 # for what people write: of 828 stored signatures the longest is exactly 255 and 95 sit above
 # 240, so a tenth of them are pressed against the ceiling today, with no image involved. TEXT
 # gives a signature room for a line of text beside a linked image, and stops well short of an
 # embedded one, which is right because a signature is repeated under every post its author made
 # on the page.
 
+CALL modcol('{prefix}_auto_links', 'intro', 'TEXT NOT NULL');
 CALL modcol('{prefix}_faq',        'body', 'MEDIUMTEXT');
 CALL modcol('{prefix}_files',      'body', 'MEDIUMTEXT NOT NULL');
 CALL modcol('{prefix}_forum',      'body', 'MEDIUMTEXT');

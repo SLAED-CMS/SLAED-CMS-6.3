@@ -1,5 +1,131 @@
 # Versions
 
+## 2026-08-07
+
+### One window and one icon insert an image, and a denied upload no longer means an unbounded one
+
+The image dialog and the file catalogue are one window behind one toolbar icon. The
+vendor image popup is removed from the toolbar, and what replaces it is our own markup:
+the image address with its description, the file picker with its drag target, the three
+insert modes, the stored-file list and the limits block, all siblings in one window
+instead of two windows held together by measured geometry. Nothing in the editor reaches
+into a popup it does not own any more, and the link dialog and the emoji window are
+untouched.
+
+The icon is there for every visitor. Inserting an image by its address touches no file
+and no server, so it is available to everyone, always — and a visitor allowed nothing
+beyond that opens the same window and finds the address field in it, which is an honest
+answer where a missing icon would not be one.
+
+A visitor who may not upload no longer gets a *worse* path than one who may. Dragging an
+image onto the editor, pasting one from the clipboard and picking one in the window all
+go through one bounded path from this release on: at most `Parser::EMBEDMAX` and only a
+type the parser will draw. Until now the editor left that event to the vendor default
+whenever uploading was denied, and that default base64-encoded any picked file straight
+into the body — no extension check, no size check, no dimension check — so a
+three-megabyte photo became four megabytes of base64 in the row and then did not display
+at all.
+
+### Whether a field may hold an embedded image is a property of the field
+
+Every editor call site now names where its text is stored, and one table turns that name
+into the room the storage has. A field wide enough for a whole embedded image offers the
+embed mode; a summary, a signature or a link description does not, and offers the
+address field instead. That is not a restriction on graphics: a linked image is accepted
+in all of them, and it is the better delivery there anyway, because a list page draws the
+summary of twenty rows and the browser fetches a linked image once instead of re-sending
+a base64 copy twenty times.
+
+A call site that names no storage renders a working editor with the room of `TEXT` and no
+embed mode, so a forgotten one costs its author a button and never costs them a post.
+
+The five image types the parser will draw have one definition, `Parser::EMBEDIMG`. The
+render bound, the upload adapter and the editor read it from there, and a test fails if
+they disagree.
+
+### No stored text is longer than the column that holds it
+
+One guard measures a finished text against the room its field declares, before the query
+runs, and refuses with a message instead of letting the database answer `ERROR 1406` and
+the author lose the post. It measures bytes and not characters, because bytes are what a
+column bounds — in utf8mb4 a Cyrillic letter costs two of them, so a `TEXT` column runs
+out at about 32700 Russian characters rather than 65535. That holds for plain prose as
+much as for an embedded image: 70 KB of text in a news article was refused by the
+database before this release and is refused with a message now.
+
+The same guard measures what a text embeds, so the field rule is enforced and not merely
+offered. A field that may not hold a data URI refuses one at any size; a field that may
+refuses one over `Parser::EMBEDMAX` or of a type the parser will not draw. The editor
+still refuses first, so an author is told at the moment they act, and a request that
+never rendered an editor is told the same thing.
+
+The one writer into a guarded column that has no author to tell is the content module: an
+item with a feed address rewrites its body from whatever the far end served. A feed that
+does not fit leaves the stored body untouched and writes the reason to the site log, since
+a stale item is a better answer to a visitor than a lost one.
+
+### The editor file panel is answered by the settings, not by the role
+
+A guest allowed to upload now sees a file list. Until this release the editor listing
+route refused every visitor who was not logged in, whatever
+`admin.php?name=uploads&op=config` said, so a guest could upload a file under
+`guestupload` and never see it again — not even their own, not even once. That rule is
+gone: whether a list is answered at all is decided by the module upload settings and by
+the module moderator, which is the one role standing above them.
+
+A guest is shown the files of their own session and no other guest's, which rests on the
+owner token below. The next session is a new session, and the files of the old one are no
+longer listed.
+
+The listing limit is chosen from three values instead of two. A moderator is bounded by
+`moderfiles`, a member by `userfiles` and a guest by `guestfiles` — the field the release
+below adds, which this one gives something to bound. Which of the three applies is the
+only role question left on the route; what each of them is worth is a setting.
+
+### A stored file belongs to a token, so one guest is no longer every guest
+
+The owner segment of a stored upload name — the `-42` in `news-a1b2c3d4e5-42.png` — is an
+alphanumeric token instead of a number. A member still owns their files by their user id
+and a privileged upload still carries no owner segment at all, but a guest now owns theirs
+by a token derived from the session rather than by the shared `0` every guest carried. Two
+guests are therefore two owners, which is what a per-guest file list has to rest on.
+
+The token is derived from the session and is never the session id itself, because the
+segment ends up in a public file name and must authenticate nothing when it is read off a
+URL. It lasts as long as the session: the next session is a new one, and the files of the
+old one are no longer listed.
+
+Files stored under the old pattern keep resolving, because digits are still a valid token,
+and nothing already in `uploads/` is renamed or moved.
+
+The per-guest file list above rests on this token: without it every guest would carry the
+same owner and would see the uploads of every other guest.
+
+### A link description is no longer one sentence, and the guest file list gets its own limit
+
+`{prefix}_auto_links.intro` moves from `VARCHAR(255)` to `TEXT`. Those 255 bytes are
+about 127 Cyrillic characters in utf8mb4 — one sentence for a field the site asks a
+visitor to describe a whole site in. It joins the summary class rather than the body
+class and stays `TEXT`: a link description is drawn once per row of a link list, which
+is exactly the shape that must not carry an embedded image. It is the last column of
+the schema work below that had not moved yet, and with it every column a rich editor
+writes into is `TEXT` or `MEDIUMTEXT` and no `VARCHAR` sits behind an editor.
+
+**Deployment:** an installation already running 6.3 applies
+`setup/sql/update6_3_patch.sql`, which is idempotent and safe to re-run. A 6.2 upgrade
+and a fresh install carry the column already. No data is lost or rewritten — the column
+only gets wider, and no stored description changes.
+
+The upload rule of a module gains a thirteenth field, `guestfiles`, with its own input
+on `admin.php?name=uploads&op=config` beside the two upload switches. A rule stored
+before this release is one field short and keeps working untouched: the missing position
+answers the user limit rather than zero, because zero means *no limit* to the reader and
+would hand an unbounded list to the one role that never had one. The first save
+normalises the rule to the full field order without changing a value it already carried,
+and every save after that reproduces it.
+
+The limit bounds the guest file list described above.
+
 ## 2026-08-05
 
 ### Private messages store source, and both fields are rendered safe

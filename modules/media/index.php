@@ -579,6 +579,7 @@ function add(): void {
                 'name' => 'description',
                 'value' => $description,
                 'mod' => $conf['name'],
+                'store' => 'media.intro',
                 'rows' => '10',
                 'placeholder' => _DESCRIPTION,
                 'required' => '1',
@@ -592,6 +593,7 @@ function add(): void {
                 'name' => 'note',
                 'value' => $note,
                 'mod' => $conf['name'],
+                'store' => 'media.note',
                 'rows' => '5',
                 'placeholder' => _NOTE,
                 'required' => '0',
@@ -637,6 +639,8 @@ function send(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($description, 'media.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($note, 'media.note')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {

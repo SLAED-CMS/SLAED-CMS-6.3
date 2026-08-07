@@ -8,6 +8,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 class Parser {
     public const EMBEDMAX = 65536;
+    public const EMBEDIMG = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'];
     private const CACHETTL = 86400;
     public static bool $freeoff = false;
     private static array $pcache = [];
@@ -220,14 +221,16 @@ class Parser {
     }
 
     # Convert a local/absolute image source into a stable public path; data URIs survive only as whitelisted base64 raster images and are length-capped before any regex or decode allocates a copy
+    # The whitelist is EMBEDIMG and is matched as a subtype rather than spelled into the pattern, so the editor, the upload adapter and this render bound read one list and cannot disagree
     private function checkImageSource(string $src): ?string {
         global $conf;
         $raw = trim($this->filterDec($src));
         if ($raw === '' || str_starts_with($raw, '#')) return $raw;
         if (stripos($raw, 'data:') === 0) {
             if (strlen($raw) > intdiv(self::EMBEDMAX + 2, 3) * 4 + 32) return null;
-            if (!preg_match('#^data:image/(?:png|jpe?g|gif|webp|avif);base64,([A-Za-z0-9+/]+={0,2})$#i', $raw, $dm)) return null;
-            $bin = base64_decode($dm[1], true);
+            if (!preg_match('#^data:image/([a-z0-9.+\-]+);base64,([A-Za-z0-9+/]+={0,2})$#i', $raw, $dm)) return null;
+            if (!in_array(strtolower($dm[1]), self::EMBEDIMG, true)) return null;
+            $bin = base64_decode($dm[2], true);
             return ($bin !== false && strlen($bin) <= self::EMBEDMAX) ? $raw : null;
         }
 

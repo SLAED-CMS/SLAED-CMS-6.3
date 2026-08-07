@@ -126,13 +126,17 @@ final class UploadContractTest extends TestCase
     }
 
     # The stored name grammar: the owner suffix, the sanitized base and a base that sanitizes to nothing
+    # The owner is a token and not a number: a guest owns their uploads by a session token, and a digit string stays valid so a file stored before the widening keeps resolving
     #[Test]
     public function theStoredNameFollowsTheOwnerGrammar(): void
     {
         $data = $this->getProbe('naming');
         $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}\.png$#', (string)$data['none']['file'], 'A privileged upload must carry no owner suffix');
-        $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}-0\.png$#', (string)$data['guest']['file'], 'A guest upload must carry the zero owner suffix');
+        $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}-0\.png$#', (string)$data['guest']['file'], 'A zero owner must carry the zero owner suffix');
         $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}-42\.png$#', (string)$data['user']['file'], 'An owned upload must carry its user suffix');
+        $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}-a1b2c3d4e5f6a7b8\.png$#', (string)$data['token']['file'], 'A session token must survive whole');
+        $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}-abc9\.png$#', (string)$data['dirty']['file'], 'The owner was not reduced to the allowed character set');
+        $this->assertMatchesRegularExpression('#^files-[a-zA-Z0-9]{10}\.png$#', (string)$data['empty']['file'], 'An owner that reduces to nothing must carry no owner suffix');
         $this->assertMatchesRegularExpression('#^myfiles2-[a-zA-Z0-9]{10}-0\.png$#', (string)$data['clean']['file'], 'The base was not reduced to the allowed character set');
         $this->checkFailShape($data['nobase'], 'destination', 'A base that sanitizes to nothing');
     }

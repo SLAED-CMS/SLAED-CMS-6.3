@@ -372,7 +372,16 @@ function setTplAdminInfoPage(array $data = []): void {
             // store raw with LF line endings — filterHtml would mangle Markdown (nl2br,
             // htmlspecialchars, $/quote escaping), and HTML forms submit CRLF.
             $content = trim(str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'text', 'raw', '')));
-            if ($content !== '') {
+            $room = checkEditorTextRoom($content, 'config');
+            if ($room !== '') {
+                $text = $content;
+                $alert = $tpl->getHtmlFrag('alert', [
+                    'alert_attr' => 'data-sl-autohide="5000"',
+                    'is_flash' => true,
+                    'is_warn' => true,
+                    'text' => $room,
+                ]);
+            } elseif ($content !== '') {
                 $dir = dirname($path);
                 if (!is_dir($dir)) mkdir($dir, 0777, true);
                 $fp = fopen($path, 'wb');
@@ -408,7 +417,7 @@ function setTplAdminInfoPage(array $data = []): void {
     if (!empty($conf['adminfo'])) {
         $rows = [[
             'label_html' => '',
-            'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $text, 'mod' => $mod, 'rows' => '25']),
+            'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $text, 'mod' => $mod, 'rows' => '25', 'store' => 'config']),
             'is_full' => true,
             'field_unwrapped' => true,
         ]];
@@ -532,7 +541,50 @@ function getTplFieldsIn(array $data = []): string {
     return $out;
 }
 
+# Map one declared storage to the room it has, so the editor that renders a field and the write path that stores it read the same number and can never disagree about it
+# The table carries the column type and not a byte count: a type is compared line for line against setup/sql/table.sql by a test, while a map of numbers can only be checked by eye
+# config names a field written into a PHP file rather than a column; no ERROR 1406 waits for it, but it is loaded on every request that reads that config, so it takes the room of TEXT
+# A store the table does not carry is answered with the narrowest field there is, because a permissive default would make every one of the call sites have to be right the first time
+# Whether a field may embed is derived and never stored: the room has to hold a whole data URI of Parser::EMBEDMAX, which TEXT cannot, so a summary field refuses one at any size and not only a large one
+function getEditorRoomData(string $store): array {
+    $room = [
+        'comment.body' => 'mediumtext', 'content.body' => 'mediumtext', 'faq.body' => 'mediumtext', 'files.body' => 'mediumtext',
+        'forum.body' => 'mediumtext', 'help.body' => 'mediumtext', 'jokes.body' => 'mediumtext', 'links.body' => 'mediumtext',
+        'media.note' => 'mediumtext', 'message.body' => 'mediumtext', 'money.note' => 'mediumtext', 'news.body' => 'mediumtext',
+        'newsletter.body' => 'mediumtext', 'order.note' => 'mediumtext', 'pages.body' => 'mediumtext', 'privat.body' => 'mediumtext',
+        'products.body' => 'mediumtext',
+        'auto_links.intro' => 'text', 'files.intro' => 'text', 'links.intro' => 'text', 'media.intro' => 'text',
+        'money.intro' => 'text', 'news.intro' => 'text', 'order.info' => 'text', 'pages.intro' => 'text',
+        'products.intro' => 'text', 'users.block' => 'text', 'users.sig' => 'text',
+        'config' => 'config',
+    ];
+    $byte = ['text' => 65535, 'mediumtext' => 16777215, 'config' => 65535];
+    $kind = $room[$store] ?? 'text';
+    $size = $byte[$kind];
+    return ['kind' => $kind, 'bytes' => $size, 'embed' => $size >= intdiv(Parser::EMBEDMAX + 2, 3) * 4 + 32];
+}
+
+# Refuse a text the field cannot hold before the query runs, because a database that is handed one answers ERROR 1406 and the author loses the whole post instead of being told what was wrong
+# Length is measured with strlen() and never with mb_strlen(), because bytes are what a column bounds: in utf8mb4 a Cyrillic letter costs two of them and a character count fires at twice the real limit
+# Embedded weight is measured beside the length because a column alone cannot express the summary rule: a 60 KB data URI fits TEXT, satisfies the parser and is then drawn onto every row of a list page
+# The type is the other half of the contract: a data URI the parser refuses to draw is stored anyway, counted against the column and then silently missing, which is the same defect arriving through the type
+# It answers a ready message rather than a flag, so a form adds it to the refusals it already collects and a writer with no author to tell can put it in the log instead
+function checkEditorTextRoom(string $text, string $store): string {
+    $room = getEditorRoomData($store);
+    if (strlen($text) > $room['bytes']) return sprintf(_ETEXTLONG, filterSize($room['bytes']));
+    if (stripos($text, 'data:') === false) return '';
+    if (!preg_match_all('#data:([a-z0-9.+\-]+)/([a-z0-9.+\-]+);base64,([A-Za-z0-9+/]+={0,2})#i', $text, $mats, PREG_SET_ORDER)) return '';
+    if (!$room['embed']) return _ENOEMBED;
+    foreach ($mats as $mat) {
+        if (strtolower($mat[1]) !== 'image' || !in_array(strtolower($mat[2]), Parser::EMBEDIMG, true)) return _ERROR_FILE;
+        $bin = base64_decode($mat[3], true);
+        if ($bin === false || strlen($bin) > Parser::EMBEDMAX) return _ERROR_SIZE;
+    }
+    return '';
+}
+
 # Render a rich-text editor textarea with upload config and locale for the given module
+# The call site declares where the text is stored, because neither the form field name nor the upload directory identifies a column and several editors write into a config file instead
 function getTplTextarea(array $data = []): string {
     $id = (string)($data['id'] ?? '1');
     $name = (string)($data['name'] ?? '');
@@ -547,6 +599,7 @@ function getTplTextarea(array $data = []): string {
     $desc = $value ?: filterHtml(getVar('post', $name, 'raw', ''));
     if ($fmt !== 'html') $desc = getDecodedText(replace_break($desc));
     $rul = getUploadRuleData(strtolower($mod));
+    $store = (string)($data['store'] ?? '');
     return Editor::getContent([
         'editor' => $key,
         'format' => $fmt,
@@ -560,6 +613,8 @@ function getTplTextarea(array $data = []): string {
         'stloc' => $stloc,
         'mod' => $mod,
         'rule' => $rul,
+        'store' => $store,
+        'room' => getEditorRoomData($store),
     ]);
 }
 
@@ -572,6 +627,7 @@ function getTplEditorInsertAttr(string $command, string $value, string $editorId
 # Render an inline HTMX edit form with a textarea and save/back buttons
 # It is the same editor the text was written in, so an author never sees the source a toolbar produced, and the id carries the record because the page may hold an editor already
 # The stored value is passed raw: getTplTextarea() decodes it for the format the editor works in, and decoding twice would eat the markup
+# The storage is taken from the caller and never derived here, because this form sends name => text for several different targets and that name identifies no column
 function getTplAjaxTextarea(array $data = []): string {
     global $tpl;
     $obj  = (string)($data['obj']  ?? '');
@@ -583,6 +639,7 @@ function getTplAjaxTextarea(array $data = []): string {
     $mod  = (string)($data['mod']  ?? '');
     $text = (string)($data['text'] ?? '');
     $rows = (int)   ($data['rows'] ?? 5);
+    $store = (string)($data['store'] ?? '');
     $formId  = 'form'.$obj;
     $fieldId = $formId.'_text';
     $esc     = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -596,6 +653,7 @@ function getTplAjaxTextarea(array $data = []): string {
             'mod'         => $mod,
             'rows'        => $rows,
             'placeholder' => _TEXT,
+            'store'       => $store,
         ])
         .$tpl->getHtmlFrag('button', [
             'button_type'  => 'submit',

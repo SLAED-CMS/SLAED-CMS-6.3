@@ -294,6 +294,7 @@ function save(): void {
     if (!$iswarn) {
         if (!$name) $stop[] = _CERROR10;
         if (!$desc) $stop[] = _CERROR11;
+        if ($room = checkEditorTextRoom($desc, 'auto_links.intro')) $stop[] = $room;
         if (!$site) $stop[] = _CERROR4;
         if (!$stop) {
             if ($id) {

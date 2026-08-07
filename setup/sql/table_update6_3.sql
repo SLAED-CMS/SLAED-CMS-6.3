@@ -1477,7 +1477,7 @@ ALTER TABLE `{prefix}_admins`
 ALTER TABLE `{prefix}_auto_links`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `intro` TEXT NOT NULL,
   MODIFY `url` VARCHAR(100) NOT NULL,
   MODIFY `email` VARCHAR(100) NOT NULL,
   MODIFY `hits` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -1543,8 +1543,9 @@ ALTER TABLE `{prefix}_clients_down`
 # while TEXT holds 65535. With STRICT_TRANS_TABLES that is a lost post, not a lost image. The
 # summary columns (`intro`, and `users.block`) stay TEXT on purpose: a list query draws twenty of
 # them onto one page, and an image referenced by address or uploaded to the server still fits
-# there. users.sig widens only to TEXT, and for its own reason — 255 is already too small for the
-# signatures people write. The full argument is in setup/sql/update6_3_patch.sql, section 9.
+# there. auto_links.intro and users.sig widen only to TEXT and for a reason of their own: a
+# VARCHAR(255) behind a rich editor holds about 127 Cyrillic characters, which is one sentence. The
+# full argument is in setup/sql/update6_3_patch.sql, section 9.
 ALTER TABLE `{prefix}_comment`
   MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `modul` VARCHAR(60) NOT NULL,

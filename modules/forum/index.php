@@ -532,6 +532,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
                 'name' => 'hometext',
                 'value' => '',
                 'mod' => $conf['name'],
+                'store' => 'forum.body',
                 'rows' => '10',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -695,6 +696,7 @@ function add(): void {
                 'name' => 'hometext',
                 'value' => $hometext,
                 'mod' => $conf['name'],
+                'store' => 'forum.body',
                 'rows' => '15',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -790,6 +792,7 @@ function send(): void {
         if (!$hometext) $stop[] = _CERROR1;
         if ($size > $conf['forum']['letter']) $stop[] = _CERROR2;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($hometext, 'forum.body')) $stop[] = $room;
 
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';

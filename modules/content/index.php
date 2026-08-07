@@ -79,7 +79,12 @@ function view(): void {
             $past = time() - $refresh;
             if (strtotime($time) < $past) {
                 $rss = rss_read($url, 1);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET body = :body, time = NOW() WHERE id = :id', ['body' => $rss, 'id' => $id]);
+                $room = checkEditorTextRoom($rss, 'content.body');
+                if ($room === '') {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET body = :body, time = NOW() WHERE id = :id', ['body' => $rss, 'id' => $id]);
+                } else {
+                    Logger::addSite('warning', 'Feed refused for content.body: '.$room, ['id' => $id, 'url' => $url]);
+                }
             }
         }
         $fields = getTplViewFieldRows(['field' => $field, 'mod' => $conf['name']]);

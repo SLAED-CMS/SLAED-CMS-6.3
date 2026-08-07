@@ -163,12 +163,14 @@ final class UploadFormatTest extends TestCase
         $want = self::IMAGES;
         sort($want);
         $this->assertSame($want, $this->getList('core/system.php', 'if (!in_array($ext, ['), 'getImageBox() disagrees on the image set');
-        $this->assertSame($want, $this->getList('core/system.php', '$img = in_array($ext, ['), 'getEditorImageData() disagrees on the image set');
         $this->assertSame($want, $this->getList('core/classes/parser.php', '$img = ['), 'filterAttach() disagrees on the image set');
         $this->assertSame($want, $this->getList('core/admin.php', '$ftype = ['), 'The admin file listing disagrees on the image set');
+        $this->assertSame($want, $this->getList('core/classes/parser.php', 'public const EMBEDIMG = ['), 'Parser::EMBEDIMG disagrees on the image set');
+        $sys = $this->getFile('core/system.php');
+        $this->assertStringContainsString('$img = in_array($ext, Parser::EMBEDIMG, true);', $sys, 'getEditorImageData() no longer reads the one embeddable type list');
         $pars = $this->getFile('core/classes/parser.php');
-        $this->assertSame(1, preg_match('#data:image/\(\?:([a-z?|]+)\);base64#', $pars, $hit), 'The data-URI allowlist is no longer readable as one alternation');
-        $this->assertSame('png|jpe?g|gif|webp|avif', $hit[1], 'The data-URI allowlist disagrees on the image set');
+        $this->assertStringContainsString('if (!in_array(strtolower($dm[1]), self::EMBEDIMG, true)) return null;', $pars, 'The data-URI allowlist no longer reads the one embeddable type list');
+        $this->assertSame(0, preg_match('#data:image/\(\?:#', $pars), 'The data-URI allowlist restates the image set in its own pattern again');
         $pol = $this->getPolicy();
         $imgs = $pol['IMAGES'];
         sort($imgs);

@@ -130,6 +130,8 @@ function save(): void {
     $stop = [];
     if (!$iswarn) {
         checkemail($email);
+        if ($room = checkEditorTextRoom($field, 'order.info')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($note, 'order.note')) $stop[] = $room;
         if (!$stop && $posttype === 'save') {
             if ($mid) {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $field, 'note' => $note, 'time' => $date, 'mid' => $mid]);
@@ -199,9 +201,16 @@ function config(): void {
         ['label_html' => _OR_2, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['order']['an'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_3, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['order']['pr'] ?? 0), 'options' => $yesno])],
         ['label_html' => _OR_4, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['order']['ad'] ?? 0), 'options' => $yesno])],
-        ['label_html' => _OR_5, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => $conf['order']['text'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_5, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _OR_6, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => $conf['order']['info'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_6, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _OR_7, 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => $conf['order']['sendinfo'] ?? '', 'mod' => 'all', 'rows' => 5, 'placeholder' => _OR_7, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _OR_5, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'text', 'value' => $conf['order']['text'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_5, 'required' => '1',
+        ]), 'is_full' => true],
+        ['label_html' => _OR_6, 'field_html' => getTplTextarea([
+            'id' => '2', 'name' => 'info', 'value' => $conf['order']['info'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_6, 'required' => '1',
+        ]), 'is_full' => true],
+        ['label_html' => _OR_7, 'field_html' => getTplTextarea([
+            'id' => '3', 'name' => 'sendinfo', 'value' => $conf['order']['sendinfo'] ?? '', 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _OR_7,
+            'required' => '1',
+        ]), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=order&op=configsave',
@@ -216,6 +225,7 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $iswarn = !checkSiteToken();
+    $room = '';
     if (!$iswarn) {
         $cont = [
             'mail' => getVar('post', 'mail', 'text', ''),
@@ -228,9 +238,12 @@ function configsave(): void {
             'info' => getVar('post', 'info', 'text', ''),
             'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
         ];
-        setConfigFile('order.php', $cont);
+        foreach (['text', 'info', 'sendinfo'] as $key) {
+            if ($room === '') $room = checkEditorTextRoom((string)$cont[$key], 'config');
+        }
+        if ($room === '') setConfigFile('order.php', $cont);
     }
-    setRedirect($afile.'.php?name=order&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=order&op=config', false, 302, $iswarn ? _TOKENMISS : ($room ?: _SUCCSAVE), $iswarn || $room !== '');
 }
 
 function info(): void {

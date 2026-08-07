@@ -181,6 +181,7 @@ define('_DIR','Directory');
 define('_DIRDEF','Directory by default');
 define('_DTHUMB','Additional directory');
 define('_EDFILEA','The total number of files to the administrator of the');
+define('_EDFILEG','The total number of files for the guest');
 define('_EDFILEU','The total number of files for the user');
 define('_EDITBLOCK','Edit Block');
 define('_EDITORUSER','User editor');

@@ -87,6 +87,7 @@ function money(): void {
                 'name' => 'note',
                 'value' => $note,
                 'mod' => $conf['name'],
+                'store' => 'money.note',
                 'rows' => 5,
                 'placeholder' => _MO_9,
             ]),
@@ -127,6 +128,8 @@ function send(): void {
         $note = getVar('post', 'note', 'text');
         if (!$sum) $stop[] = _MO_SERROR;
         checkemail($email);
+        if ($room = checkEditorTextRoom($introText, 'money.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($note, 'money.note')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['money']['pr']) ? '0' : '1';

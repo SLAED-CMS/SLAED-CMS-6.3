@@ -401,6 +401,7 @@ function add(): void {
                 'name' => 'hometext',
                 'value' => $hometext,
                 'mod' => $conf['name'],
+                'store' => 'faq.body',
                 'rows' => '10',
                 'placeholder' => _ANSWER,
                 'required' => '1',
@@ -430,6 +431,7 @@ function send(): void {
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'faq')) $stop[] = _ERROR;
         if (!$hometext) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($hometext, 'faq.body')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (is_user()) ? (int)$user[0] : '';

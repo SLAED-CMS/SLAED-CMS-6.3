@@ -255,6 +255,7 @@ function setComShow(int $id = 0, int $acomm = 0): string {
                     'name' => 'text',
                     'value' => '',
                     'mod' => $conf['name'],
+                    'store' => 'comment.body',
                     'rows' => '5',
                     'placeholder' => _COMMENT,
                 ]),
@@ -581,7 +582,7 @@ function updatePost() {
                 $content = $typ
                     ? getTplAjaxTextarea([
                         'obj' => 'for'.$id, 'go' => '1', 'op' => 'updatePost', 'id' => $id,
-                        'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'text' => $hometext, 'rows' => 10,
+                        'cid' => $cid, 'typ' => '0', 'mod' => $mod, 'store' => 'forum.body', 'text' => $hometext, 'rows' => 10,
                     ])
                     : $prs->filterContent($hometext, false, $mod, 2);
                 echo $content;
@@ -594,11 +595,13 @@ function updatePost() {
                 foreach (preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
                     $long = max($long, mb_strlen($word));
                 }
+                $htext = filterHtml($text);
+                $room = checkEditorTextRoom($htext, 'forum.body');
                 $stop = [];
                 if ($text == '') $stop[] = _CERROR1;
                 if ($long > intval($conf['forum']['letter'])) $stop[] = _CERROR2;
+                if ($room !== '') $stop[] = $room;
                 if (!$stop) {
-                    $htext = filterHtml($text);
                     $db->getSqlQuery(
                         'UPDATE '.PREFIX_DB.'_forum SET body = :body, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id',
                         ['body' => $htext, 'euid' => $postid, 'eip' => $ip, 'id' => $id]
@@ -825,6 +828,7 @@ function getPrivateMessageView(string|array $stop = '', string $info = '', int $
                             'name' => 'text',
                             'value' => $body,
                             'mod' => $conf['name'],
+                            'store' => 'privat.body',
                             'rows' => '15',
                             'placeholder' => _MESSAGE,
                         ]),
@@ -875,6 +879,7 @@ function addPrivateMessage(): void {
             'not_logged' => (string)_CERROR3,
             'flood' => sprintf(_CERROR5, intval($conf['privat']['send'])),
             'quota' => sprintf(_PRSENDOVER, $name),
+            'no_room' => (string)($new['note'] ?? _ERROR),
             default => (string)_ERROR,
         };
         echo getPrivateMessageView([$note], '', 4);

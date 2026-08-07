@@ -272,7 +272,10 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _SIGNATURE, 'hint' => _SIGNATURE_TEXT]),
-        'field_html' => getTplTextarea(['id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '', 'autofocus' => true]),
+        'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'sig', 'value' => $sig, 'mod' => 'account', 'store' => 'users.sig', 'rows' => '5', 'placeholder' => _SIGNATURE, 'required' => '',
+            'autofocus' => true,
+        ]),
     ];
     $rows[] = [
         'label_html' => _ALLOWUSERS,
@@ -298,7 +301,9 @@ function add(): void {
     ];
     $rows[] = [
         'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MENUCONF, 'hint' => _MENUINFO]),
-        'field_html' => getTplTextarea(['id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'account', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '']),
+        'field_html' => getTplTextarea([
+            'id' => '2', 'name' => 'block', 'value' => $block, 'mod' => 'account', 'store' => 'users.block', 'rows' => '5', 'placeholder' => _MENUCONF, 'required' => '',
+        ]),
     ];
     if ($conf['users']['theme']) {
         $themeopts = '';
@@ -431,7 +436,11 @@ function add(): void {
             'is_collapsible' => true,
             'content_html' => $tpl->getHtmlPart('div', ['rows' => [[
                 'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_PASS_INFO]),
-                'field_html' => getTplTextarea(['id' => '3', 'name' => 'mailtext', 'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '']),
+                'field_html' => getTplTextarea([
+                    'id' => '3', 'name' => 'mailtext',
+                    'value' => replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'mod' => 'account',
+                    'store' => 'config', 'rows' => '10', 'placeholder' => _MAIL_TEXT, 'required' => '',
+                ]),
             ]]]),
         ]),
         'is_full' => true,
@@ -505,6 +514,8 @@ function addsave(): void {
         if (!analyze_name($uname)) $stop[] = _ERRORINVNICK;
         checkemail($email);
         if ($pass != $pass2) $stop[] = _ERROR_PASS;
+        if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
         if (!$stop) {
             $text = _SUCCSAVE;
             if ($uid) {

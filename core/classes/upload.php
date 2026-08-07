@@ -83,7 +83,7 @@ class Upload {
 
     # Publishes one submitted file; everything that can fail without touching the destination is checked before the transfer, so a rejected upload never reaches the upload tree
     # The source path stays as the SAPI reported it: PHP matches it literally, so a separator normalized to / makes move_uploaded_file() refuse it on Windows
-    public function addUploadedFile(array $file, array $rule, string $dir, string $base, ?int $uid = null): array {
+    public function addUploadedFile(array $file, array $rule, string $dir, string $base, ?string $owner = null): array {
         $code = $this->checkUploadInput($file, $rule);
         if ($code !== '') return $this->getFailResult($code);
         $tmp = (string)$file['tmp_name'];
@@ -104,22 +104,22 @@ class Upload {
         }
         $info['ext'] = $ext;
         $info['mime'] = $mime;
-        return $this->addPublishRun($part, $info, $rule, $rel, $base, $uid);
+        return $this->addPublishRun($part, $info, $rule, $rel, $base, $owner);
     }
 
     # Publishes a whole batch in submission order, mixed successes and failures included; a batch over maxfiles transfers nothing and reports one count failure
-    public function addUploadedFiles(array $files, array $rule, string $dir, string $base, ?int $uid = null): array {
+    public function addUploadedFiles(array $files, array $rule, string $dir, string $base, ?string $owner = null): array {
         $list = $this->getUploadList($files);
         if ($list === []) return [$this->getFailResult('missing')];
         $num = (int)($rule['maxfiles'] ?? 0);
         if ($num > 0 && count($list) > $num) return [$this->getFailResult('count')];
         $out = [];
-        foreach ($list as $one) $out[] = $this->addUploadedFile($one, $rule, $dir, $base, $uid);
+        foreach ($list as $one) $out[] = $this->addUploadedFile($one, $rule, $dir, $base, $owner);
         return $out;
     }
 
     # Publishes one file fetched from a remote URL; the address policy, the redirects and the byte limits run first, the partial then passes the checks a local upload passes
-    public function addRemoteFile(string $url, array $rule, string $dir, string $base, ?int $uid = null): array {
+    public function addRemoteFile(string $url, array $rule, string $dir, string $base, ?string $owner = null): array {
         if ($this->getRuleTypes($rule) === []) return $this->getFailResult('extension');
         if ($this->getTypeReader() === null || !function_exists('curl_init')) return $this->getFailResult('unsupported');
         $rel = $this->getSafeDir($dir);
@@ -137,7 +137,7 @@ class Upload {
         if ($info['error'] !== '') return $this->getAbortResult(false, $part, $rel, $info['error']);
         $info['ext'] = $ext;
         $info['mime'] = $mime;
-        return $this->addPublishRun($part, $info, $rule, $rel, $base, $uid);
+        return $this->addPublishRun($part, $info, $rule, $rel, $base, $owner);
     }
 
     # Deletes one file this class published, addressed by the root-relative path a result returned; anything that is not a canonical class-owned name below the root is refused
@@ -145,7 +145,7 @@ class Upload {
         $path = str_replace('\\', '/', $path);
         $file = basename($path);
         $rel = $this->getSafeDir(dirname($path));
-        if ($rel === '' || !preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{'.self::SALTLEN.'}(?:-[0-9]+)?\.[a-zA-Z0-9]+$#', $file)) return false;
+        if ($rel === '' || !preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{'.self::SALTLEN.'}(?:-[a-zA-Z0-9]+)?\.[a-zA-Z0-9]+$#', $file)) return false;
         $canon = $this->getDestPath($rel);
         if ($canon === '') return false;
         $full = $canon.'/'.$file;
@@ -559,9 +559,11 @@ class Upload {
     }
 
     # Publishes a transferred partial: under the destination lock it sweeps stale partials, rechecks quota, draws a free name and renames once
-    private function addPublishRun(string $part, array $info, array $rule, string $rel, string $base, ?int $uid): array {
+    # The owner segment carries the token the caller owns the file by, reduced to the characters the name grammar allows; null and a token reducing to nothing write no segment
+    private function addPublishRun(string $part, array $info, array $rule, string $rel, string $base, ?string $owner): array {
         $canon = dirname($part);
         $name = preg_replace('#[^a-zA-Z0-9_]#', '', $base);
+        $own = ($owner === null) ? '' : preg_replace('#[^a-zA-Z0-9]#', '', $owner);
         $size = (int)filesize($part);
         if ($name === '') return $this->getAbortResult(false, $part, $rel, 'destination');
         $lock = $this->getLockHandle($canon);
@@ -571,7 +573,7 @@ class Upload {
         if ($max > 0 && $this->getUsedBytes($canon) + $size > $max) return $this->getAbortResult($lock, $part, $rel, 'quota');
         $code = 'exists';
         for ($i = 0; $i < self::TRIES; $i++) {
-            $file = $name.'-'.$this->getNameSalt().($uid === null ? '' : '-'.max(0, $uid)).'.'.$info['ext'];
+            $file = $name.'-'.$this->getNameSalt().($own === '' ? '' : '-'.$own).'.'.$info['ext'];
             if (file_exists($canon.'/'.$file)) continue;
             if (!$this->addPublishFile($part, $canon.'/'.$file)) {
                 $code = 'write';

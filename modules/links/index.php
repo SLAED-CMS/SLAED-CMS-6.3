@@ -413,6 +413,7 @@ function add(): void {
                 'name' => 'description',
                 'value' => $description,
                 'mod' => $conf['name'],
+                'store' => 'links.intro',
                 'rows' => '5',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -426,6 +427,7 @@ function add(): void {
                 'name' => 'bodytext',
                 'value' => $bodytext,
                 'mod' => $conf['name'],
+                'store' => 'links.body',
                 'rows' => '15',
                 'placeholder' => _ENDTEXT,
                 'required' => '0',
@@ -470,6 +472,8 @@ function send(): void {
         if (!$title) $stop[] = _CERROR10;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($description, 'links.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($bodytext, 'links.body')) $stop[] = $room;
         if (!$site) $stop[] = _CERROR4;
         checkemail($mail);
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;

@@ -386,6 +386,9 @@
         panel.style.left = Math.max(8, left) + 'px';
         panel.style.top = (box.bottom + win.scrollY + 6) + 'px';
         panel.setAttribute('data-editor', id);
+        panel.querySelectorAll('[data-window="emoji"]').forEach(function(el) {
+            el.setAttribute('data-editor', id);
+        });
     }
 
     function toggle(id) {
@@ -413,9 +416,7 @@
 
     doc.addEventListener('click', function(ev) {
         var el = ev.target;
-        var head;
         if (!panel || panel.classList.contains('sl-none')) return;
-        head = el.closest ? el.closest('[data-window-head="emoji"]') : null;
         if (el.classList && el.classList.contains('sl-editor-emoji-tab')) {
             cat = el.getAttribute('data-cat') || 'smileys';
             panel.querySelector('.sl-editor-emoji-search').value = '';
@@ -428,7 +429,7 @@
             render(active);
             return;
         }
-        if (!panel.contains(el) && !head && !el.classList.contains('sl-editor-icon-emoji')) hide();
+        if (!panel.contains(el) && !el.classList.contains('sl-editor-icon-emoji')) hide();
     });
 
     doc.addEventListener('keydown', function(ev) {

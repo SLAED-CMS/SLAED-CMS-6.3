@@ -842,6 +842,7 @@ function edithome(): void {
                     'name' => 'sig',
                     'value' => $userinfo['sig'],
                     'mod' => $conf['name'],
+                    'store' => 'users.sig',
                     'rows' => '5',
                     'placeholder' => _SIGNATURE,
                     'required' => '0',
@@ -871,6 +872,7 @@ function edithome(): void {
                     'name' => 'block',
                     'value' => $userinfo['block'],
                     'mod' => $conf['name'],
+                    'store' => 'users.block',
                     'rows' => '10',
                     'placeholder' => _MENUCONF,
                     'required' => '0',
@@ -1012,7 +1014,11 @@ function savehome(): void {
     global $db, $user, $conf, $stop;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     $mail = getVar('post', 'mail', 'text');
+    $sig = getVar('post', 'sig', 'text');
+    $block = getVar('post', 'block', 'text');
     checkemail($mail);
+    if ($room = checkEditorTextRoom($sig, 'users.sig')) $stop[] = $room;
+    if ($room = checkEditorTextRoom($block, 'users.block')) $stop[] = $room;
     if (!$stop) {
         $uid = (int)$user[0];
         $checkn = htmlspecialchars(substr($user[1], 0, 25));
@@ -1023,11 +1029,9 @@ function savehome(): void {
             $occ = getVar('post', 'occ', 'text');
             $from = getVar('post', 'from', 'text');
             $inter = getVar('post', 'inter', 'text');
-            $sig = getVar('post', 'sig', 'text');
             $view = getVar('post', 'view', 'num');
             $story = getVar('post', 'story', 'num');
             $blockon = getVar('post', 'blockon', 'num');
-            $block = getVar('post', 'block', 'text');
             $theme = getVar('post', 'theme', 'text');
             if ($theme !== '' && !checkThemeAssets($theme)) $theme = '';
             $news = getVar('post', 'news', 'num');

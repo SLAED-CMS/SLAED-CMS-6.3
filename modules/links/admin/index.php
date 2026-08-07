@@ -143,8 +143,12 @@ function add(): void {
         ])],
         ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'links', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'links', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'links', 'store' => 'links.intro', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea([
+            'id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'links', 'store' => 'links.body', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => $link, 'field_html' => $tpl->getHtmlFrag('input', ['name_attr' => 'site', 'value_attr' => $site, 'placeholder_text' => _URL])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
@@ -189,6 +193,8 @@ function save(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($description, 'links.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($bodytext, 'links.body')) $stop[] = $room;
         if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_links WHERE title = :title', ['title' => $title])) > 0) $stop[] = _LINKEXIST;
         if (!$stop && $posttype === 'save') {
             $postid = is_user_id($postname) ?: 0;

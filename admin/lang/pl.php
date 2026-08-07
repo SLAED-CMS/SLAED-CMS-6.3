@@ -181,6 +181,7 @@ define('_DIR','Katalog');
 define('_DIRDEF','Katalog domyślny');
 define('_DTHUMB','Dodatkowe katalog');
 define('_EDFILEA','Całkowita liczba plików dla admina');
+define('_EDFILEG','Całkowita liczba plików dla gościa');
 define('_EDFILEU','Całkowita liczba plików dla użytkownika');
 define('_EDITBLOCK','Edytuj blok');
 define('_EDITORUSER','Edytor użytkownika');

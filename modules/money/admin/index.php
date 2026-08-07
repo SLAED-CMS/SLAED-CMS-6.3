@@ -249,6 +249,8 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     $iswarn = !checkSiteToken();
     checkemail($email);
+    if ($room = checkEditorTextRoom($list, 'money.intro')) $stop[] = $room;
+    if ($room = checkEditorTextRoom($note, 'money.note')) $stop[] = $room;
     if (!$iswarn) {
         if (!$stop && $posttype === 'save') {
             if ($mid) {
@@ -371,10 +373,22 @@ function config(): void {
         ['label_html' => _MA_8, 'field_html' => getTplRadioGroup(['name' => 'an', 'value' => (string)($conf['money']['an'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_9, 'field_html' => getTplRadioGroup(['name' => 'pr', 'value' => (string)($conf['money']['pr'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _MA_10, 'field_html' => getTplRadioGroup(['name' => 'ad', 'value' => (string)($conf['money']['ad'] ?? 0), 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _MA_11, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'text', 'value' => (string)($conf['money']['text'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_11, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _MA_12, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'info', 'value' => (string)($conf['money']['info'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_12, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _MA_13, 'field_html' => getTplTextarea(['id' => '3', 'name' => 'sendinfo', 'value' => (string)($conf['money']['sendinfo'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_13, 'required' => '1']), 'is_full' => true],
-        ['label_html' => _MA_14, 'field_html' => getTplTextarea(['id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'rows' => 5, 'placeholder' => _MA_14, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _MA_11, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'text', 'value' => (string)($conf['money']['text'] ?? ''), 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _MA_11,
+            'required' => '1',
+        ]), 'is_full' => true],
+        ['label_html' => _MA_12, 'field_html' => getTplTextarea([
+            'id' => '2', 'name' => 'info', 'value' => (string)($conf['money']['info'] ?? ''), 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _MA_12,
+            'required' => '1',
+        ]), 'is_full' => true],
+        ['label_html' => _MA_13, 'field_html' => getTplTextarea([
+            'id' => '3', 'name' => 'sendinfo', 'value' => (string)($conf['money']['sendinfo'] ?? ''), 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _MA_13,
+            'required' => '1',
+        ]), 'is_full' => true],
+        ['label_html' => _MA_14, 'field_html' => getTplTextarea([
+            'id' => '4', 'name' => 'autor', 'value' => (string)($conf['money']['autor'] ?? ''), 'mod' => 'all', 'store' => 'config', 'rows' => 5, 'placeholder' => _MA_14,
+            'required' => '1',
+        ]), 'is_full' => true],
     ];
     $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlPart('form', [
         'action_url' => $afile.'.php?name=money&op=configsave',
@@ -389,6 +403,7 @@ function config(): void {
 function configsave(): void {
     global $afile;
     $iswarn = !checkSiteToken();
+    $room = '';
     if (!$iswarn) {
         $xkurs = str_replace(',', '.', getVar('post', 'kurs', 'text', '0'));
         $xkurs2 = str_replace(',', '.', getVar('post', 'kurs2', 'text', '0'));
@@ -410,9 +425,12 @@ function configsave(): void {
             'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
             'autor' => getVar('post', 'autor', 'text', ''),
         ];
-        setConfigFile('money.php', $cont);
+        foreach (['text', 'info', 'sendinfo', 'autor'] as $key) {
+            if ($room === '') $room = checkEditorTextRoom((string)$cont[$key], 'config');
+        }
+        if ($room === '') setConfigFile('money.php', $cont);
     }
-    setRedirect($afile.'.php?name=money&op=config', false, 302, $iswarn ? _TOKENMISS : _SUCCSAVE, $iswarn);
+    setRedirect($afile.'.php?name=money&op=config', false, 302, $iswarn ? _TOKENMISS : ($room ?: _SUCCSAVE), $iswarn || $room !== '');
 }
 
 function info(): void {

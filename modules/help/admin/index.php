@@ -150,7 +150,9 @@ function addview(int $id): string {
                 'tip' => sprintf(_USERSEARCHTIP, (int)$conf['search']['slet']),
                 'value' => (string)($admin[1] ?? ''),
             ])],
-            ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+            ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+                'id' => '1', 'name' => 'hometext', 'value' => '', 'mod' => 'help', 'store' => 'help.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
+            ]), 'is_full' => true, 'field_unwrapped' => true],
             ['label_html' => _HELPGLOS, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)$status, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ['label_html' => _MAIL_SENDE, 'field_html' => getTplRadioGroup(['name' => 'umail', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ],
@@ -202,7 +204,9 @@ function add(): void {
         ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'subject', 'value_attr' => $subject, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cat', 'options_html' => $catopts])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'help', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'help', 'store' => 'help.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => '', 'field_html' => getTplFieldsIn(['field' => $field, 'mod' => 'help']), 'is_full' => true],
     ];
     $posttypeopts
@@ -244,6 +248,7 @@ function save(): void {
         if (!$subject && !$pid) $stop[] = _CERROR;
         if (!$hometext && !$pid) $stop[] = _CERROR1;
         if (!$postname && !$pid) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($hometext, 'help.body')) $stop[] = $room;
         if (!$stop && $posttype === 'save') {
             $postid = is_user_id($postname) ? is_user_id($postname) : 0;
             if ($id) {

@@ -342,6 +342,7 @@ function addview(int $id): string {
                     'name' => 'hometext',
                     'value' => '',
                     'mod' => $conf['name'],
+                    'store' => 'help.body',
                     'rows' => 10,
                     'placeholder' => _TEXT,
                     'required' => '1',
@@ -390,6 +391,7 @@ function add(): void {
                 'name' => 'hometext',
                 'value' => $hometext,
                 'mod' => $conf['name'],
+                'store' => 'help.body',
                 'rows' => '10',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -421,6 +423,7 @@ function send(): void {
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'help')) $stop[] = _ERROR;
         if (!$title && !$pid) $stop[] = _CERROR;
         if (!$hometext && !$pid) $stop[] = _CERROR1;
+        if ($room = checkEditorTextRoom($hometext, 'help.body')) $stop[] = $room;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (int)$user[0];
             $db->getSqlQuery(

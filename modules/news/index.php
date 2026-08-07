@@ -429,6 +429,7 @@ function add(): void {
                 'name' => 'hometext',
                 'value' => $hometext,
                 'mod' => $conf['name'],
+                'store' => 'news.intro',
                 'rows' => '5',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -442,6 +443,7 @@ function add(): void {
                 'name' => 'bodytext',
                 'value' => $bodytext,
                 'mod' => $conf['name'],
+                'store' => 'news.body',
                 'rows' => '15',
                 'placeholder' => _ENDTEXT,
                 'required' => '0',
@@ -477,6 +479,8 @@ function send(): void {
         if (!$cid) $stop[] = _ERROR_ALL;
         if (!$hometext) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($hometext, 'news.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($bodytext, 'news.body')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (is_user()) ? (int)$user[0] : '';

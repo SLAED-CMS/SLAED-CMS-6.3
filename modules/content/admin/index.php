@@ -125,7 +125,9 @@ function add(): void {
             'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _REFRESHTIME, 'hint' => _REFINFO]),
             'field_html' => getTplRefreshTimeSelect(['valu' => $refresh]),
         ],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'content', 'rows' => '25', 'placeholder' => _TEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'content', 'store' => 'content.body', 'rows' => '25', 'placeholder' => _TEXT, 'required' => '0',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
     ];
     $rows = array_merge($rows, getTplAddFieldRows(['field' => $field, 'mod' => 'content']));
@@ -175,6 +177,7 @@ function save(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$body && !$url) $stop[] = _CERROR1;
         if (!$body && $url) $stop[] = _RSSFAIL;
+        if ($room = checkEditorTextRoom($body, 'content.body')) $stop[] = $room;
         if (!$stop && $posttype == 'save') {
             $data = ['title' => $title, 'body' => $body, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh];
             if ($cid) {

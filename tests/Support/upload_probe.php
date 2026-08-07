@@ -286,8 +286,8 @@ function getProbeLog(): array {
 }
 
 # Publish one file with the default rule and report the result together with what the destination holds afterwards
-function addProbeRun(Upload $upl, array $file, array $rule, string $dir = 'files', string $base = 'files', ?int $uid = null): array {
-    $res = $upl->addUploadedFile($file, $rule, $dir, $base, $uid);
+function addProbeRun(Upload $upl, array $file, array $rule, string $dir = 'files', string $base = 'files', ?string $owner = null): array {
+    $res = $upl->addUploadedFile($file, $rule, $dir, $base, $owner);
     $res['left'] = getProbeList('files');
     $res['parts'] = getProbeParts('files');
     return $res;
@@ -374,11 +374,12 @@ function getProbeWriteRun(): array {
 }
 
 # The stored name grammar: the owner suffix, the sanitized base and the fixed random segment
+# The owner is a token rather than a number: a digit string is what a member and a file stored before the widening carry, and a session token is what a guest carries
 function getProbeNaming(): array {
     $out = [];
-    foreach (['none' => null, 'guest' => 0, 'user' => 42] as $key => $uid) {
+    foreach (['none' => null, 'guest' => '0', 'user' => '42', 'token' => 'a1b2c3d4e5f6a7b8', 'dirty' => 'a b/c-9', 'empty' => ''] as $key => $own) {
         addProbeRoot();
-        $out[$key] = addProbeRun(getProbeUpload(), addProbeFile('png'), getProbeRule(), 'files', 'files', $uid);
+        $out[$key] = addProbeRun(getProbeUpload(), addProbeFile('png'), getProbeRule(), 'files', 'files', $own);
     }
     addProbeRoot();
     $out['clean'] = addProbeRun(getProbeUpload(), addProbeFile('png'), getProbeRule(), 'files', 'my files/2!', 0);
@@ -807,32 +808,41 @@ function getProbeRemoteOpts(): array {
     return ['ok' => (bool)$res['ok'], 'error' => $res['error'], 'hits' => $res['hits']];
 }
 
-# The twelve named fields of one upload configuration string, in the order the resolver reads them and the serializer writes them back
+# The named fields of one upload configuration string, read off the shipped resolver instead of repeated here, so an appended key cannot drift out of this probe
 function getProbeRuleKeys(): array {
-    return ['extensions', 'maxquota', 'maxbytes', 'maxwidth', 'maxheight', 'maxfiles', 'thumbwidth', 'adminlist', 'moderfiles', 'userfiles', 'userupload', 'guestupload'];
+    return array_values(array_diff(array_keys(getUploadRuleData('nosuchmodule')), ['ok', 'error', 'dir', 'path']));
 }
 
 # The resolver and the serializer against the shipped configuration: no double can answer this, because the whole point is that the real records survive the round trip
+# A rule one field short normalises on the first write instead of round tripping: the key order is completed, no stored value changes, and every later write reproduces the string
 # config/uploads.php also holds the scalars typ, dir, width and height, which are not module records and are excluded by the pipe that every record carries
 function getProbeResolver(): array {
     global $conf;
     $out = ['records' => [], 'keys' => getProbeRuleKeys()];
+    $mods = [];
     foreach ($conf['uploads'] as $mod => $val) {
-        if (!is_string($val) || !str_contains($val, '|')) continue;
-        $rule = getUploadRuleData((string)$mod);
+        if (is_string($val) && str_contains($val, '|')) $mods[(string)$mod] = $val;
+    }
+    foreach ($mods as $mod => $val) {
+        $rule = getUploadRuleData($mod);
+        $norm = setUploadRuleData($rule);
+        $conf['uploads']['probenorm'] = $norm;
         $out['records'][$mod] = [
             'ok' => (bool)$rule['ok'],
-            'same' => setUploadRuleData($rule) === $val,
-            'missing' => array_values(array_diff(getProbeRuleKeys(), array_keys($rule))),
-            'fields' => count(explode('|', $val)),
+            'kept' => array_slice(explode('|', $norm), 0, count(explode('|', $val))) === explode('|', $val),
+            'stable' => setUploadRuleData(getUploadRuleData('probenorm')) === $norm,
+            'fields' => count(explode('|', $norm)),
         ];
     }
     $none = getUploadRuleData('nosuchmodule');
-    $out['unknown'] = ['ok' => (bool)$none['ok'], 'ext' => (string)$none['extensions'], 'keys' => count(array_intersect(getProbeRuleKeys(), array_keys($none)))];
+    $out['unknown'] = ['ok' => (bool)$none['ok'], 'ext' => (string)$none['extensions'], 'keys' => count(array_intersect($out['keys'], array_keys($none)))];
     $out['allext'] = (string)getUploadRuleData('all')['extensions'];
     $conf['uploads']['probeshort'] = 'gif';
     $short = getUploadRuleData('probeshort');
     $out['short'] = ['ok' => (bool)$short['ok'], 'ext' => (string)$short['extensions'], 'quota' => (int)$short['maxquota'], 'guest' => (int)$short['guestupload']];
+    $conf['uploads']['probeold'] = 'gif|1|2|3|4|5|6|7|8|9|1|0';
+    $old = getUploadRuleData('probeold');
+    $out['old'] = ['userfiles' => (int)$old['userfiles'], 'guestfiles' => (int)$old['guestfiles']];
     $conf['uploads']['probeempty'] = '';
     $out['empty'] = ['ok' => (bool)getUploadRuleData('probeempty')['ok']];
     return $out;

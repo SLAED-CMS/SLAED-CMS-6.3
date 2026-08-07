@@ -259,6 +259,8 @@ class Comment {
         $key = $this->getRequestKey($key);
         if ($key === false) return ['id' => 0, 'name' => $name, 'new' => false, 'error' => _COMMENTS_REPLAY];
         $body = $this->filterCommentBody($body, $this->getLinkFlag($mod));
+        $room = checkEditorTextRoom($body, 'comment.body');
+        if ($room !== '') return ['id' => 0, 'name' => $name, 'new' => false, 'error' => $room];
         if (is_user()) {
             $uid = intval($user[0]);
             $info = getUserInfo();
@@ -308,6 +310,11 @@ class Comment {
         $out['error'] = $this->checkRules($mod, $body, '', '', false);
         if ($out['error']) return $out;
         $text = $this->filterCommentBody($body, $this->getLinkFlag($mod));
+        $room = checkEditorTextRoom($text, 'comment.body');
+        if ($room !== '') {
+            $out['error'] = [$room];
+            return $out;
+        }
         $own = !$this->db->checkSqlActive();
         if ($own && !$this->db->setSqlBegin()) return $out;
         $done = $this->db->getSqlQuery(
@@ -420,11 +427,15 @@ class Comment {
 
     # Store the body a moderator typed in the moderation form, exactly as it arrived, because that form is not the author edit path and applies neither its rules nor its window
     # The trusted tags are the one exception: the moderation form reads its field raw, and a comment must not carry them whoever typed it
-    public function updateBody(int $id, string $body): bool {
-        if ($id < 1) return false;
+    # The room the column has is the other one, and it refuses rather than saves, because a moderator editing a body is no reason for the database to answer ERROR 1406
+    # It answers the refusal and not a flag, because a moderation form that reports success on a body it did not store is worse than one that reports nothing at all
+    public function updateBody(int $id, string $body): string {
+        if ($id < 1) return (string)_ERROR;
         $body = filterTrustedTags($body);
+        $room = checkEditorTextRoom($body, 'comment.body');
+        if ($room !== '') return $room;
         $sql = 'UPDATE '.PREFIX_DB.'_comment SET body = :body, edited = NOW() WHERE id = :id AND deleted IS NULL';
-        return (bool)$this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]);
+        return $this->db->getSqlQuery($sql, ['body' => $body, 'id' => $id]) ? '' : (string)_ERROR;
     }
 
     # Apply the write rules of one comment and answer every refusal it collects, in the order the submit path applies them, so its caller can show the last one or the whole list

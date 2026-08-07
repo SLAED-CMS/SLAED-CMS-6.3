@@ -172,8 +172,12 @@ function add(): void {
         ])],
         ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => $title, 'maxlength_num' => 255, 'is_required' => true])],
         ['label_html' => _CATEGORY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'cid', 'options_html' => $catopts])],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'files', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
-        ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'files', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'files', 'store' => 'files.intro', 'rows' => '5', 'placeholder' => _TEXT, 'required' => '1',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ENDTEXT, 'field_html' => getTplTextarea([
+            'id' => '2', 'name' => 'bodytext', 'value' => $bodytext, 'mod' => 'files', 'store' => 'files.body', 'rows' => '15', 'placeholder' => _ENDTEXT, 'required' => '0',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'date', 'time' => $date, 'with' => true, 'max' => 16])],
@@ -228,6 +232,8 @@ function save(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($description, 'files.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($bodytext, 'files.body')) $stop[] = $room;
         if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
         $sent = (int)($_FILES['filesite']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
         $rpath = '';

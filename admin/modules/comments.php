@@ -288,13 +288,13 @@ function editsave(): void {
     $search = getVar('post', 'search', 'num', 2);
     $search = ($search >= 1 && $search <= 5) ? $search : 2;
     $chng = (string)getVar('post', 'chng', 'raw', '');
-    if (!$warn) $com->updateBody($id, $text);
+    $room = $warn ? '' : $com->updateBody($id, $text);
     $back = 'name=comments';
     if ($status) $back .= '&status=1';
     if ($modul !== '') $back .= '&modul='.rawurlencode($modul);
     $back .= '&search='.$search;
     if ($chng !== '') $back .= '&chng='.rawurlencode($chng);
-    setRedirect($afile.'.php?'.$back, false, 302, $warn ? _TOKENMISS : _SUCCSAVE, $warn);
+    setRedirect($afile.'.php?'.$back, false, 302, $warn ? _TOKENMISS : ($room ?: _SUCCSAVE), $warn || $room !== '');
 }
 
 function actions(): void {

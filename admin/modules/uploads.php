@@ -298,6 +298,7 @@ function config(): void {
                 ['label_html' => _F_5, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'num[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['adminlist']])],
                 ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEA, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'asum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['moderfiles']])],
                 ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEU, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'usum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['userfiles']])],
+                ['label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _EDFILEG, 'hint' => _CONFINES]), 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'number', 'name_attr' => 'gsum[]', 'is_config' => true, 'is_required' => true, 'value_attr' => $rul['guestfiles']])],
                 ['label_html' => _F_8, 'field_html' => getTplRadioGroup(['name' => $i.'upload', 'value' => $rul['userupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
                 ['label_html' => _F_9, 'field_html' => getTplRadioGroup(['name' => $i.'upguest', 'value' => $rul['guestupload'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
             ];
@@ -379,6 +380,7 @@ function configsave(): void {
     $num = getVar('post', 'num[]');
     $asum = getVar('post', 'asum[]');
     $usum = getVar('post', 'usum[]');
+    $gsum = getVar('post', 'gsum[]');
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
@@ -392,6 +394,7 @@ function configsave(): void {
             $xnum = (!intval($num[$i] ?? 0)) ? 10 : intval($num[$i]);
             $xasum = (!intval($asum[$i] ?? 0)) ? 250 : intval($asum[$i]);
             $xusum = (!intval($usum[$i] ?? 0)) ? 100 : intval($usum[$i]);
+            $xgsum = (!intval($gsum[$i] ?? 0)) ? $xusum : intval($gsum[$i]);
             $upload = getVar('post', $i.'upload', 'num');
             $upguest = getVar('post', $i.'upguest', 'num');
             $cont[$val] = setUploadRuleData([
@@ -407,6 +410,7 @@ function configsave(): void {
                 'userfiles' => $xusum,
                 'userupload' => $upload,
                 'guestupload' => $upguest,
+                'guestfiles' => $xgsum,
             ]);
             $i++;
         }

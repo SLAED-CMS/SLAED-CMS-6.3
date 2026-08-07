@@ -28,7 +28,7 @@ CREATE TABLE `{prefix}_admins` (
 CREATE TABLE `{prefix}_auto_links` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(100) NOT NULL,
-  `intro` VARCHAR(255) NOT NULL DEFAULT '',
+  `intro` TEXT NOT NULL,
   `url` VARCHAR(100) NOT NULL,
   `email` VARCHAR(100) NOT NULL,
   `hits` INT UNSIGNED NOT NULL DEFAULT 0,

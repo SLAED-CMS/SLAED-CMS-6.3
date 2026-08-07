@@ -108,7 +108,9 @@ function add(): void {
     }
     $rows = [
         ['label_html' => _TITLE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'title', 'value_attr' => (string)$title, 'maxlength_num' => 100, 'placeholder_text' => _TITLE, 'is_required' => true])],
-        ['label_html' => _TEXT, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']), 'is_full' => true],
+        ['label_html' => _TEXT, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'body', 'value' => (string)$body, 'mod' => 'all', 'store' => 'message.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
+        ]), 'is_full' => true],
     ];
     if ($langsel) {
         $rows[] = ['label_html' => _LANGUAGE, 'field_html' => $langsel];
@@ -163,6 +165,7 @@ function save(): void {
     $expire = ($newexpire == 1 && $expire) ? time() + ($expire * 86400) : $expire;
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
+    if ($room = checkEditorTextRoom($body, 'message.body')) $stop[] = $room;
     if (!$warn && !$stop && $posttype == 'save') {
         if ($mid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, body = :body, expire = :expire, status = :active, view = :view, lang = :lang WHERE id = :mid', ['title' => $title, 'body' => $body, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang, 'mid' => $mid]);

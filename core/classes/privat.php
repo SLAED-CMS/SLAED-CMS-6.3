@@ -303,9 +303,12 @@ final class Privat {
     # Only a send that owns its transaction is retried: a caller that opened one owns everything a rollback would take with it
     # A transaction still open after the failure is never attempted again either, because a second attempt would join it and leave the message to a commit that never comes
     # Both fields are normalized once, before the first attempt: a second attempt writes the bytes the first one meant to write and rewrites nothing
+    # The room of the column is measured on the normalized body and nowhere else, because the rewrite of a link is what decides the last bytes, and no_room is the one code that carries a ready note with it
     public function addMessage(int $uid, string $name, string $title, string $body, string $ip): array {
         $title = $this->filterMessageText($title, false);
         $body = $this->filterMessageText($body, true);
+        $room = checkEditorTextRoom($body, 'privat.body');
+        if ($room !== '') return ['id' => 0, 'error' => 'no_room', 'note' => $room];
         $own = !$this->db->checkSqlActive();
         $out = $this->addMessageRow($uid, $name, $title, $body, $ip);
         if ($own && !empty($out['retry']) && !$this->db->checkSqlActive()) $out = $this->addMessageRow($uid, $name, $title, $body, $ip);

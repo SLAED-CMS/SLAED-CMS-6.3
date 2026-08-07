@@ -16,27 +16,9 @@
         return lab[key] || val;
     }
 
-    function setPanel(id, show) {
-        var opt = getOpt(id);
-        var el = opt.panel ? doc.getElementById(opt.panel) : null;
-        var box = doc.getElementById(String(id) + '_toast');
-        var root = box ? box.querySelector('.toastui-editor-defaultUI') : null;
-        if (!el) return;
-        if (root && el.parentNode !== root) root.appendChild(el);
-        el.classList.toggle('sl-none', !show);
-        el.setAttribute('aria-hidden', show ? 'false' : 'true');
-        if (show) {
-            getFiles(id);
-            setWindowFront(id, 'files');
-        }
-    }
-
     function getWindow(id, type) {
         var opt = getOpt(id);
-        var box = doc.getElementById(String(id) + '_toast');
         var emoji;
-        if (type === 'image') return box ? box.querySelector('.toastui-editor-popup-add-image') : null;
-        if (type === 'link') return box ? box.querySelector('.toastui-editor-popup-add-link') : null;
         if (type === 'emoji') {
             emoji = doc.querySelector('.sl-editor-emoji-panel');
             return emoji && emoji.getAttribute('data-editor') === String(id) ? emoji : null;
@@ -44,133 +26,25 @@
         return opt.panel ? doc.getElementById(opt.panel) : null;
     }
 
-    function getWindowHead(id, type) {
-        var opt = getOpt(id);
-        var key = type + 'head';
-        return opt[key] ? doc.getElementById(opt[key]) : null;
-    }
-
     function setWindowFront(id, type) {
-        var opt = getOpt(id);
         var el = getWindow(id, type);
-        var head = type === 'files' ? null : getWindowHead(id, type);
-        var extras = type === 'image' ? getExtras(id) : null;
-        var mode = type === 'image' && opt.object ? doc.getElementById(opt.object) : null;
         if (!el || el.classList.contains('sl-none') || win.getComputedStyle(el).display === 'none') return;
-        layer += 4;
+        layer += 2;
         el.style.zIndex = String(layer);
-        if (head) head.style.zIndex = String(layer + 1);
-        if (extras) extras.style.zIndex = String(layer + 2);
-        if (mode) mode.style.zIndex = String(layer + 3);
     }
 
-    function setPopupChrome(id, type, show) {
-        var box = doc.getElementById(String(id) + '_toast');
-        var popup = getWindow(id, type);
-        var head = getWindowHead(id, type);
-        var boxrect;
-        var poprect;
-        var active;
-        var fixed;
-        if (!box || !head) return popup;
-        if (head.parentNode !== box) box.appendChild(head);
-        if (!head.hasAttribute('data-slaed-bound')) {
-            head.addEventListener('mousedown', function(event) {
-                event.stopPropagation();
-            });
-            head.setAttribute('data-slaed-bound', '1');
-        }
-        if (popup && !popup.hasAttribute('data-slaed-watch')) {
-            popup.setAttribute('data-slaed-watch', '1');
-            new win.MutationObserver(function() {
-                if (win.getComputedStyle(popup).display !== 'none') return;
-                if (type === 'image') setImageChrome(id, false);
-                else setPopupChrome(id, type, false);
-            }).observe(popup, { attributes: true, attributeFilter: ['style'] });
-        }
-        active = !!show && !!popup && win.getComputedStyle(popup).display !== 'none';
-        head.classList.toggle('sl-none', !active);
-        if (!active) {
-            head.classList.remove('sl-toastui-window-expanded', 'sl-toastui-window-fixed');
-            return popup;
-        }
-        popup.classList.add('sl-toastui-window-popup', 'sl-toastui-' + type + '-popup');
-        popup.setAttribute('data-slaed-editor', String(id));
-        popup.setAttribute('data-slaed-window', type);
-        fixed = win.getComputedStyle(popup).position === 'fixed';
-        head.classList.toggle('sl-toastui-window-expanded', popup.classList.contains('sl-toastui-window-expanded'));
-        head.classList.toggle('sl-toastui-window-fixed', fixed);
-        boxrect = box.getBoundingClientRect();
-        poprect = popup.getBoundingClientRect();
-        head.style.left = (fixed ? poprect.left : poprect.left - boxrect.left) + 'px';
-        head.style.top = (fixed ? poprect.top : poprect.top - boxrect.top) + 'px';
-        head.style.width = poprect.width + 'px';
-        return popup;
-    }
-
-    function setImageChrome(id, show) {
+    function setPanel(id, show) {
         var opt = getOpt(id);
+        var el = opt.panel ? doc.getElementById(opt.panel) : null;
         var box = doc.getElementById(String(id) + '_toast');
-        var mode = opt.object ? doc.getElementById(opt.object) : null;
-        var popup = setPopupChrome(id, 'image', show);
-        var buttons = popup ? popup.querySelector('.toastui-editor-button-container') : null;
-        var file = popup ? popup.querySelector('#toastuiImageFileInput') : null;
-        var filebox = file ? file.parentElement : null;
-        var extras;
-        var boxrect;
-        var poprect;
-        var butrect;
-        var active;
-        var fixed;
-        var filemode;
-        var label;
-        if (!box) return popup;
-        active = !!show && !!popup && win.getComputedStyle(popup).display !== 'none';
-        filemode = active && !!filebox && win.getComputedStyle(filebox).display !== 'none';
-        if (filemode) {
-            filebox.classList.add('sl-toastui-file-row');
-            filebox.classList.add('js-slaed-image-drop');
-            filebox.setAttribute('data-editor', String(id));
-            filebox.setAttribute('data-slaed-drop', getLab(id, 'dropfiles', 'Drop file here or click the field'));
-            filebox.setAttribute('role', 'button');
-            filebox.setAttribute('tabindex', '0');
-            filebox.style.display = 'grid';
-            if (file) file.removeAttribute('accept');
-            if (file && !(file.files && file.files.length)) {
-                label = popup.querySelector('.toastui-editor-file-name');
-                label = label ? label.firstChild : null;
-                if (label && label.nodeType === 3) label.nodeValue = getLab(id, 'nofile', 'No file');
-            }
-        }
-        fixed = active && win.getComputedStyle(popup).position === 'fixed';
-        if (active) {
-            boxrect = box.getBoundingClientRect();
-            poprect = popup.getBoundingClientRect();
-        }
-        extras = getExtras(id);
-        if (extras) {
-            extras.classList.toggle('sl-none', !active || !extras.childElementCount);
-            if (active) {
-                extras.classList.toggle('sl-toastui-window-fixed', fixed);
-                extras.style.left = (fixed ? poprect.left : poprect.left - boxrect.left) + 'px';
-                extras.style.top = ((fixed ? poprect.top : poprect.top - boxrect.top) + 36) + 'px';
-                extras.style.width = poprect.width + 'px';
-                popup.style.paddingTop = (36 + (extras.classList.contains('sl-none') ? 0 : extras.offsetHeight)) + 'px';
-            }
-        }
-        if (!mode) return popup;
-        if (mode.parentNode !== box) box.appendChild(mode);
-        mode.classList.toggle('sl-none', !filemode);
-        if (!active) return popup;
-        mode.classList.toggle('sl-toastui-window-fixed', fixed);
-        if (filemode && buttons) {
-            butrect = buttons.getBoundingClientRect();
-            mode.style.left = (fixed ? poprect.left : poprect.left - boxrect.left) + 20 + 'px';
-            mode.style.top = (fixed ? butrect.top : butrect.top - boxrect.top) - mode.offsetHeight - 12 + 'px';
-            mode.style.width = Math.max(0, poprect.width - 40) + 'px';
-            buttons.style.marginTop = (mode.offsetHeight + 24) + 'px';
-        }
-        return popup;
+        var root = box ? box.querySelector('.toastui-editor-defaultUI') : null;
+        if (!el) return;
+        if (root && el.parentNode !== root && !el.classList.contains('sl-toastui-window-expanded')) root.appendChild(el);
+        el.classList.toggle('sl-none', !show);
+        el.setAttribute('aria-hidden', show ? 'false' : 'true');
+        if (!show) return;
+        if (opt.canlist) getFiles(id);
+        setWindowFront(id, 'files');
     }
 
     function setWindowExpand(id, type, button) {
@@ -190,7 +64,7 @@
             el.setAttribute('data-slaed-position', el.style.position || '');
             el.setAttribute('data-slaed-right', el.style.right || '');
             el.setAttribute('data-slaed-width', el.style.width || '');
-            if (type === 'files' && el.parentNode !== doc.body) doc.body.appendChild(el);
+            if (el.parentNode !== doc.body) doc.body.appendChild(el);
             el.classList.add('sl-toastui-window-expanded');
             el.style.bottom = '24px';
             el.style.height = 'auto';
@@ -219,28 +93,17 @@
             icon.classList.toggle('sl-toastui-head-icon-collapse', open);
         }
         setWindowFront(id, type);
-        if (type === 'image') setImageChrome(id, true);
-        else if (type !== 'files') setPopupChrome(id, type, true);
     }
 
     function setWindowClose(id, type) {
-        var popup = getWindow(id, type);
-        var head = type === 'files' ? popup : getWindowHead(id, type);
-        var expand = head ? head.querySelector('.js-slaed-window-expand') : null;
-        var close;
-        if (popup && popup.classList.contains('sl-toastui-window-expanded') && expand) setWindowExpand(id, type, expand);
-        if (type === 'files') {
-            setPanel(id, false);
+        var el = getWindow(id, type);
+        var expand = el ? el.querySelector('.js-slaed-window-expand') : null;
+        if (el && el.classList.contains('sl-toastui-window-expanded') && expand) setWindowExpand(id, type, expand);
+        if (type === 'emoji') {
+            if (el) el.classList.add('sl-none');
             return;
         }
-        if (type === 'emoji') {
-            if (popup) popup.classList.add('sl-none');
-        } else {
-            close = popup ? popup.querySelector('.toastui-editor-close-button') : null;
-            if (close) close.click();
-        }
-        if (type === 'image') setImageChrome(id, false);
-        else setPopupChrome(id, type, false);
+        setPanel(id, false);
     }
 
     function setWindowDrag(event) {
@@ -290,51 +153,11 @@
         top = Math.max(0, Math.min(maxtop, drag.top + event.clientY - drag.y));
         drag.el.style.left = left + 'px';
         drag.el.style.top = top + 'px';
-        if (drag.type === 'image') setImageChrome(drag.id, true);
-        else if (drag.type !== 'files') setPopupChrome(drag.id, drag.type, true);
         event.preventDefault();
     }
 
     function deleteWindowDrag() {
         drag = null;
-    }
-
-    function setImagePopup(id) {
-        var opt = getOpt(id);
-        var box = doc.getElementById(String(id) + '_toast');
-        var panel = opt.panel ? doc.getElementById(opt.panel) : null;
-        var popup = box ? box.querySelector('.toastui-editor-popup-add-image') : null;
-        var source;
-        var rows;
-        if (!popup) return null;
-        source = panel ? panel.querySelector('.js-slaed-upload-limits') : null;
-        popup.classList.add('sl-toastui-image-popup');
-        rows = getExtras(id);
-        if (source && rows && !rows.querySelector('.js-slaed-image-limits')) {
-            source = source.cloneNode(true);
-            source.classList.remove('js-slaed-upload-limits');
-            source.classList.add('js-slaed-image-limits');
-            rows.appendChild(source);
-        }
-        setImageChrome(id, true);
-        return popup;
-    }
-
-    function setImageMsg(id, text, warn) {
-        var popup = setImagePopup(id);
-        var extras = getExtras(id);
-        var node = extras ? extras.querySelector('.js-slaed-image-msg') : null;
-        if (!popup || !extras) return false;
-        if (node) node.remove();
-        if (text) {
-            node = getMsg(id, text, warn);
-            if (node) {
-                node.classList.add('js-slaed-image-msg');
-                extras.appendChild(node);
-            }
-        }
-        setImageChrome(id, true);
-        return true;
     }
 
     function getMsg(id, text, warn) {
@@ -345,11 +168,10 @@
         return el;
     }
 
-    function setMsg(id, text, warn, image) {
+    function setMsg(id, text, warn) {
         var opt = getOpt(id);
         var el = opt.msg ? doc.getElementById(opt.msg) : null;
         var node;
-        if (image && setImageMsg(id, text, warn)) return;
         if (!el) return;
         el.replaceChildren();
         if (text) {
@@ -369,71 +191,83 @@
         });
     }
 
-    function getExtras(id) {
-        var box = doc.getElementById(String(id) + '_toast');
-        var el = box ? box.querySelector('.sl-toastui-popup-extras') : null;
-        if (!el && box) {
-            el = api.getTpl(id, 'popup-extras');
-            if (el) box.appendChild(el);
-        }
-        return el;
-    }
-
     function getImageMode(id) {
         var opt = getOpt(id);
         var mode = opt.object ? doc.getElementById(opt.object) : null;
         var sel = mode ? mode.querySelector('input[type="radio"]:checked') : null;
-        return sel ? sel.value : 'upload';
+        if (sel) return sel.value;
+        return opt.canupload ? 'upload' : 'embed';
+    }
+
+    function addSource(id, url, text) {
+        var ed = api.getEditor ? api.getEditor(id) : null;
+        if (!ed || !url) return;
+        ed.focus();
+        ed.exec('addImage', { imageUrl: url, altText: text || 'image' });
+    }
+
+    function checkEmbedType(id, file) {
+        var list = getOpt(id).embedimg || [];
+        var name = String(file.name || '');
+        var type = String(file.type || '').toLowerCase();
+        var sub = type.indexOf('image/') === 0 ? type.slice(6) : '';
+        var ext = name.indexOf('.') > 0 ? name.split('.').pop().toLowerCase() : '';
+        if (type !== '') return sub !== '' && list.indexOf(sub) >= 0;
+        return ext !== '' && list.indexOf(ext) >= 0;
     }
 
     function addEmbed(id, file, done) {
-        var max = parseInt(getOpt(id).embedmax || 0, 10);
+        var opt = getOpt(id);
+        var max = parseInt(opt.embedmax || 0, 10);
         var rd = new FileReader();
+        if (!opt.canembed) {
+            setMsg(id, getLab(id, 'noembed', 'This field cannot hold an embedded image'), true);
+            return;
+        }
+        if (!checkEmbedType(id, file)) {
+            setMsg(id, getLab(id, 'badtype', 'Unsupported file type'), true);
+            return;
+        }
         if (max > 0 && file.size > max) {
-            setMsg(id, getLab(id, 'toobig', 'File is too big'), true, true);
+            setMsg(id, getLab(id, 'toobig', 'File is too big'), true);
             return;
         }
         rd.onload = function() {
             if (done) done(String(rd.result), file.name || 'image');
-            setTimeout(function() {
-                setImageChrome(id, false);
-            }, 0);
+            setPanel(id, false);
         };
         rd.readAsDataURL(file);
     }
 
-    function addImage(id, file, done, image) {
+    function addImage(id, file, done) {
         var opt = getOpt(id);
         var data = new FormData();
-        if (image && getImageMode(id) === 'embed') {
-            addEmbed(id, file, done);
+        var put = done || function(url, text) {
+            addSource(id, url, text);
+        };
+        if (getImageMode(id) === 'embed') {
+            addEmbed(id, file, put);
             return Promise.resolve();
         }
-        if (!opt.upload) return Promise.resolve();
+        if (!opt.canupload || !opt.upload) return Promise.resolve();
         data.append('token', opt.token || '');
         data.append('file[]', file);
         return getReq(opt.upload, data).then(function(json) {
             var row = json.files && json.files[0] ? json.files[0] : null;
-            var box = doc.getElementById(String(id) + '_toast');
-            var popup = box ? box.querySelector('.toastui-editor-popup-add-image') : null;
-            var close = popup ? popup.querySelector('.toastui-editor-close-button') : null;
             if (!json.ok || !row) {
-                setMsg(id, json.error || getLab(id, 'upload', 'Upload failed'), true, image);
+                setMsg(id, json.error || getLab(id, 'upload', 'Upload failed'), true);
                 return;
             }
-            if (image && getImageMode(id) === 'attach') {
+            if (getImageMode(id) === 'attach') {
                 addAttach(id, row.file);
-                if (close) close.click();
-                setImageChrome(id, false);
                 getFiles(id);
                 return;
             }
             setMsg(id, row.file || getLab(id, 'uploaded', 'Uploaded'), false);
-            if (done) done(row.url, row.file || 'image');
-            if (image) setImageChrome(id, false);
+            put(row.url, row.file || 'image');
             getFiles(id);
         }).catch(function() {
-            setMsg(id, getLab(id, 'upload', 'Upload failed'), true, image);
+            setMsg(id, getLab(id, 'upload', 'Upload failed'), true);
         });
     }
 
@@ -444,10 +278,19 @@
     }
 
     function addExisting(id, url, text) {
-        var ed = api.getEditor ? api.getEditor(id) : null;
-        if (!ed) return;
-        ed.focus();
-        ed.exec('addImage', { imageUrl: url, altText: text || 'image' });
+        addSource(id, url, text);
+        setPanel(id, false);
+    }
+
+    function addUrl(id) {
+        var opt = getOpt(id);
+        var url = opt.url ? doc.getElementById(opt.url) : null;
+        var alt = opt.alt ? doc.getElementById(opt.alt) : null;
+        var src = url ? String(url.value || '').trim() : '';
+        if (src === '') return;
+        addSource(id, src, alt ? String(alt.value || '').trim() : '');
+        if (url) url.value = '';
+        if (alt) alt.value = '';
         setPanel(id, false);
     }
 
@@ -525,7 +368,7 @@
         var max = parseInt(opt.maxfiles || 0, 10);
         if (!files.length) return;
         setFileName(id, files);
-        if (max > 0 && files.length > max) {
+        if (getImageMode(id) !== 'embed' && max > 0 && files.length > max) {
             setMsg(id, getLab(id, 'fileup', 'Files') + ': ' + max, true);
             if (input) input.value = '';
             setFileName(id, []);
@@ -536,7 +379,7 @@
                 return addImage(id, file);
             });
         }, Promise.resolve()).then(function() {
-            getFiles(id);
+            if (opt.canlist) getFiles(id);
             if (input) input.value = '';
             setFileName(id, []);
         });
@@ -550,81 +393,39 @@
     }
 
     function addHook(id, ed) {
-        var box = doc.getElementById(String(id) + '_toast');
-        if (!ed) return;
-        if (getOpt(id).upload && typeof ed.addHook === 'function') {
-            ed.addHook('addImageBlobHook', function(blob, done, type) {
-                addImage(id, blob, done, type === 'ui');
-                return false;
-            });
-        }
-        if (!box) return;
-        box.addEventListener('click', function(ev) {
-            var el = ev.target.closest
-                ? ev.target.closest('.toastui-editor-toolbar-icons.image, .toastui-editor-toolbar-icons.link, .toastui-editor-tabs .tab-item')
-                : null;
-            var popup;
-            var body;
-            var mode;
-            if (!el) return;
-            setTimeout(function() {
-                if (el.classList.contains('link')) {
-                    setPopupChrome(id, 'link', true);
-                    setWindowFront(id, 'link');
-                    return;
-                }
-                popup = setImagePopup(id);
-                setWindowFront(id, 'image');
-                body = popup ? popup.querySelector('.toastui-editor-popup-body') : null;
-                if (body && el.classList.contains('image')) {
-                    mode = popup.querySelector('.js-slaed-image-msg');
-                    if (mode) mode.remove();
-                    mode = getOpt(id).object ? doc.getElementById(getOpt(id).object) : null;
-                    mode = mode ? mode.querySelector('input[value="upload"]') : null;
-                    if (mode) mode.checked = true;
-                }
-            }, 0);
+        if (!ed || typeof ed.addHook !== 'function') return;
+        ed.addHook('addImageBlobHook', function(blob, done) {
+            addImage(id, blob, done);
+            return false;
         });
     }
 
     function addBtn(id, ed) {
         if (!ed || typeof ed.addCommand !== 'function' || typeof ed.insertToolbarItem !== 'function') return;
+        if (typeof ed.removeToolbarItem === 'function') ed.removeToolbarItem('image');
         ed.addCommand('markdown', 'slaedFiles', function() {
             addPanel(id);
         });
         ed.addCommand('wysiwyg', 'slaedFiles', function() {
             addPanel(id);
         });
-        ed.insertToolbarItem({ groupIndex: 6, itemIndex: 4 }, {
+        ed.insertToolbarItem({ groupIndex: 3, itemIndex: 1 }, {
             name: 'slaedFiles',
             text: '',
             className: 'toastui-editor-toolbar-icons sl-editor-icon sl-editor-icon-files',
-            tooltip: getLab(id, 'files', 'SLAED files'),
+            tooltip: getLab(id, 'insert', 'Insert image'),
             command: 'slaedFiles'
         });
     }
 
     doc.addEventListener('change', function(ev) {
         var el = ev.target;
-        var id;
-        var box;
-        var popup;
-        var ok;
-        if (el.id === 'toastuiImageFileInput') {
-            box = el.closest ? el.closest('[id$="_toast"]') : null;
-            id = box ? box.id.replace(/_toast$/, '') : '';
-            popup = el.closest('.toastui-editor-popup-add-image');
-            ok = popup ? popup.querySelector('.toastui-editor-ok-button') : null;
-            if (ok && el.files && el.files.length && getOpt(id).upload) ok.click();
-            return;
-        }
         if (!el.classList || !el.classList.contains('js-slaed-upload-file')) return;
-        id = el.getAttribute('data-editor');
-        addFileList(id, el.files, el);
+        addFileList(el.getAttribute('data-editor'), el.files, el);
     });
 
     doc.addEventListener('dragover', function(ev) {
-        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop, .js-slaed-image-drop') : null;
+        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
         if (!zone) return;
         ev.preventDefault();
         if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'copy';
@@ -632,44 +433,25 @@
     });
 
     doc.addEventListener('dragleave', function(ev) {
-        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop, .js-slaed-image-drop') : null;
+        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
         if (!zone || (ev.relatedTarget && zone.contains(ev.relatedTarget))) return;
         zone.classList.remove('sl-drag-over');
     });
 
     doc.addEventListener('drop', function(ev) {
-        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop, .js-slaed-image-drop') : null;
-        var id;
-        var file;
-        var send;
-        var rows;
+        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
         if (!zone) return;
         ev.preventDefault();
         zone.classList.remove('sl-drag-over');
-        id = zone.getAttribute('data-editor');
-        if (zone.classList.contains('js-slaed-image-drop')) {
-            file = zone.querySelector('#toastuiImageFileInput');
-            rows = Array.prototype.slice.call(ev.dataTransfer ? ev.dataTransfer.files : [], 0, 1);
-            if (!file || !rows.length) return;
-            try {
-                send = new DataTransfer();
-                send.items.add(rows[0]);
-                file.files = send.files;
-                file.dispatchEvent(new Event('change', { bubbles: true }));
-            } catch (err) {
-                setMsg(id, getLab(id, 'upload', 'Upload failed'), true, true);
-            }
-            return;
-        }
-        addFileList(id, ev.dataTransfer ? ev.dataTransfer.files : []);
+        addFileList(zone.getAttribute('data-editor'), ev.dataTransfer ? ev.dataTransfer.files : []);
     });
 
     doc.addEventListener('keydown', function(ev) {
-        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop, .js-slaed-image-drop') : null;
+        var zone = ev.target.closest ? ev.target.closest('.js-slaed-upload-drop') : null;
         var file;
         if (!zone || (ev.key !== 'Enter' && ev.key !== ' ')) return;
         ev.preventDefault();
-        file = zone.querySelector('.js-slaed-upload-file, #toastuiImageFileInput');
+        file = zone.querySelector('.js-slaed-upload-file');
         if (file) file.click();
     });
 
@@ -679,16 +461,10 @@
     doc.addEventListener('pointercancel', deleteWindowDrag);
 
     doc.addEventListener('pointerdown', function(ev) {
-        var el = ev.target.closest ? ev.target.closest('[data-slaed-window], .sl-toastui-upload, [data-window-head]') : null;
-        var ctr;
-        var id;
-        var type;
+        var el = ev.target.closest ? ev.target.closest('.sl-toastui-upload, .sl-editor-emoji-panel') : null;
         if (!el) return;
-        ctr = el.matches('[data-window-head]') ? el.querySelector('[data-editor][data-window]') : el;
-        if (!ctr) return;
-        id = ctr.getAttribute('data-slaed-editor') || ctr.getAttribute('data-editor-id') || ctr.getAttribute('data-editor');
-        type = ctr.getAttribute('data-slaed-window') || ctr.getAttribute('data-window') || 'files';
-        if (id) setWindowFront(id, type);
+        if (el.classList.contains('sl-editor-emoji-panel')) setWindowFront(el.getAttribute('data-editor'), 'emoji');
+        else setWindowFront(el.getAttribute('data-editor-id'), 'files');
     }, true);
 
     doc.addEventListener('click', function(ev) {
@@ -709,18 +485,12 @@
         }
         if (!button || !button.classList) return;
         id = button.getAttribute('data-editor');
+        if (button.classList.contains('js-slaed-image-insert')) addUrl(id);
         if (button.classList.contains('js-slaed-file-image')) addExisting(id, button.getAttribute('data-url'), button.getAttribute('data-file'));
         if (button.classList.contains('js-slaed-file-attach')) addAttach(id, button.getAttribute('data-file'));
         if (button.classList.contains('js-slaed-file-refresh')) getFiles(id);
         if (button.classList.contains('js-slaed-window-expand')) setWindowExpand(id, button.getAttribute('data-window'), button);
         if (button.classList.contains('js-slaed-window-close')) setWindowClose(id, button.getAttribute('data-window'));
-        setTimeout(function() {
-            Object.keys(api.options).forEach(function(key) {
-                setImageChrome(key, true);
-                setPopupChrome(key, 'link', true);
-                setPopupChrome(key, 'emoji', true);
-            });
-        }, 0);
     });
 
     api.options = api.options || {};
@@ -731,15 +501,14 @@
         return tpl && tpl.content && tpl.content.firstElementChild ? tpl.content.firstElementChild.cloneNode(true) : null;
     };
     api.syncWindow = function(id, type) {
-        var popup = type === 'image' ? setImageChrome(id, true) : setPopupChrome(id, type, true);
         setWindowFront(id, type);
-        return popup;
+        return getWindow(id, type);
     };
     api.addUpload = function(id, ed, opt) {
         if (!opt) return;
         api.options[String(id)] = opt;
         addHook(id, ed);
-        if (opt.upload) addBtn(id, ed);
+        addBtn(id, ed);
     };
     win.SlaedToastUi = api;
 })(window, document);

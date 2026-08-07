@@ -8,19 +8,20 @@
 # The unit suite proves the class; this proves the adapters, which only exist as request handlers and cannot be reached by a double
 # Every scenario compares the upload tree and the database before and after itself and removes what it created, so a run leaves the stand as it found it
 #
-# Usage: php tools/upload-route-check.php <base-url> [read|write|comp|captcha|all]
+# Usage: php tools/upload-route-check.php <base-url> [read|write|comp|editor|captcha|all]
 # Credentials come from the environment and never from the command line, because an argument list is readable by every process on the host:
 #   SLAED_ADMIN_NAME, SLAED_ADMIN_PASS, SLAED_USER_NAME, SLAED_USER_PASS
 # Optional: SLAED_REMOTE_URL names a public file for the positive remote row; without it that row reports as not run rather than as passed
 # Optional: SLAED_ROUTE_INSECURE=1 disables TLS verification, for a stand with a self signed certificate only
 #
-# The comp and captcha modes fail one write on purpose and edit config/security.php; run them against a stand, never against production data
+# The comp and captcha modes fail one write on purpose and edit config/security.php; the editor mode rewrites the two upload switches of the news record in config/uploads.php
+# All three restore what they changed byte for byte, but they change it while they run; run them against a stand, never against production data
 
 if (PHP_SAPI !== 'cli') die('Illegal file access');
 
 $argn = $argv ?? [];
 if (count($argn) < 2) {
-    fwrite(STDERR, "Usage: php tools/upload-route-check.php <base-url> [read|write|comp|captcha|all]\n");
+    fwrite(STDERR, "Usage: php tools/upload-route-check.php <base-url> [read|write|comp|editor|captcha|all]\n");
     fwrite(STDERR, "Credentials are read from SLAED_ADMIN_NAME, SLAED_ADMIN_PASS, SLAED_USER_NAME and SLAED_USER_PASS\n");
     exit(1);
 }
@@ -29,12 +30,16 @@ define('ROOTDIR', str_replace('\\', '/', dirname(__DIR__)));
 define('SITEURL', rtrim((string)$argn[1], '/'));
 define('WORKDIR', str_replace('\\', '/', sys_get_temp_dir()).'/slaed_route_check');
 define('NOVERIFY', (string)getenv('SLAED_ROUTE_INSECURE') === '1');
+# The embed cap is read off the one constant that defines it rather than repeated here, because a number copied into a walk drifts away from the guard it is walking
+if (!defined('FUNC_FILE')) define('FUNC_FILE', true);
+require_once ROOTDIR.'/core/classes/parser.php';
 if (!is_dir(WORKDIR) && !mkdir(WORKDIR, 0777, true)) die("cannot create the scratch directory\n");
 
 $GLOBALS['fails'] = 0;
 $GLOBALS['skips'] = 0;
 $GLOBALS['made'] = [];
 $GLOBALS['rows'] = [];
+$GLOBALS['news'] = [];
 
 # Derive one scoped CSRF token exactly as core/security.php derives it, from the session the cookie jar holds
 function getScopeToken(string $jar, string $scope): string {
@@ -518,6 +523,152 @@ function checkCaptchaRow(string $gjar): void {
     getHttpReply($gjar, '/index.php?name=account');
 }
 
+# Rewrite the two upload switches of the news record and drop the merged configuration cache, so the next request reads the record this row is about
+# The record is a pipe separated string in a fixed key order; only the two positions of the switches are touched and every other value the record carries is kept
+function setUploadSwitch(int $user, int $guest): bool {
+    $file = ROOTDIR.'/config/uploads.php';
+    $code = (string)file_get_contents($file);
+    if (!preg_match("#'news' => '([^']*)',#", $code, $hit)) return false;
+    $rule = explode('|', $hit[1]);
+    if (count($rule) < 13) return false;
+    $rule[10] = (string)$user;
+    $rule[11] = (string)$guest;
+    $done = file_put_contents($file, str_replace($hit[0], "'news' => '".implode('|', $rule)."',", $code)) !== false;
+    if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
+    clearstatcache();
+    return $done;
+}
+
+# Publish one editor file as the given visitor and report whether the route accepted it and what the destination gained
+function addEditorFile(string $jar, string $png): array {
+    $base = ROOTDIR.'/uploads/news';
+    $was = getDirTree($base);
+    $send = ['token' => getScopeToken($jar, 'upload')];
+    $out = json_decode(getHttpReply($jar, '/index.php?go=4&op=editorUpload&mod=news', $send, ['file' => $png])['body'], true);
+    return ['ok' => (bool)($out['ok'] ?? false), 'new' => getTreeDelta($base, $was)];
+}
+
+# List the editor files of the given visitor and report whether a list was answered at all and which names it carried
+function getEditorFiles(string $jar): array {
+    $url = '/index.php?go=4&op=editorFiles&mod=news&token='.getScopeToken($jar, 'ajax');
+    $out = json_decode(getHttpReply($jar, $url)['body'], true);
+    $rows = is_array($out['files'] ?? null) ? array_column($out['files'], 'file') : null;
+    return ['ok' => $rows !== null, 'files' => $rows ?? []];
+}
+
+# The access matrix: three visitors against both upload switches, driven as real requests and read back from the upload tree rather than from the answer alone
+# A moderator passes with both switches off, which asserts the role rule rather than tolerating it: the role decides who may act, the settings decide how much and what
+function checkEditorMatrixRows(string $ajar, string $ujar, string $gjar): void {
+    echo "Editor access matrix\n";
+    $png = addTestFixture('mx.png', 'png', 60, 40);
+    $who = ['moderator' => $ajar, 'member' => $ujar, 'guest' => $gjar];
+    foreach ([[0, 0], [1, 0], [0, 1], [1, 1]] as [$user, $guest]) {
+        if (!setUploadSwitch($user, $guest)) {
+            setSkipRow('the access matrix', 'the news record of config/uploads.php could not be rewritten');
+            return;
+        }
+        $name = 'userupload='.$user.' guestupload='.$guest;
+        foreach ($who as $role => $jar) {
+            $want = ($role === 'moderator') || ($role === 'member' && $user === 1) || ($role === 'guest' && $guest === 1);
+            $res = addEditorFile($jar, $png);
+            $done = $res['ok'] === $want && (count($res['new']) === ($want ? 1 : 0));
+            checkMatrixRow($name.': a '.$role.' may '.($want ? '' : 'not ').'publish', $done, implode(', ', $res['new']));
+            $list = getEditorFiles($jar);
+            checkMatrixRow($name.': a '.$role.' is '.($want ? '' : 'not ').'answered a list', $list['ok'] === $want, count($list['files']).' files');
+        }
+    }
+}
+
+# A guest sees the files of the own session and no others: the owner token in the stored name is what narrows the list, and it is derived from the session rather than shared
+function checkEditorGuestRows(string $gjar): void {
+    echo "Editor guest isolation\n";
+    if (!setUploadSwitch(1, 1)) {
+        setSkipRow('the guest isolation rows', 'the news record of config/uploads.php could not be rewritten');
+        return;
+    }
+    $png = addTestFixture('gx.png', 'png', 60, 40);
+    $second = WORKDIR.'/jar-guest-two.txt';
+    if (is_file($second)) unlink($second);
+    getHttpReply($second, '/index.php?name=account');
+    if (getSessionId($second) === '' || getSessionId($second) === getSessionId($gjar)) {
+        setSkipRow('the guest isolation rows', 'the second guest opened no session of its own');
+        return;
+    }
+    $one = addEditorFile($gjar, $png);
+    $two = addEditorFile($second, $png);
+    checkMatrixRow('both guests published one file each', count($one['new']) === 1 && count($two['new']) === 1);
+    $mine = basename($one['new'][0] ?? 'a');
+    $other = basename($two['new'][0] ?? 'b');
+    $list = getEditorFiles($gjar);
+    $done = in_array($mine, $list['files'], true) && !in_array($other, $list['files'], true);
+    checkMatrixRow('the first guest sees the own file and not the other one', $done, implode(', ', $list['files']));
+    $list = getEditorFiles($second);
+    $done = in_array($other, $list['files'], true) && !in_array($mine, $list['files'], true);
+    checkMatrixRow('the second guest sees the own file and not the other one', $done, implode(', ', $list['files']));
+}
+
+# The first news category of the stand: catmids() filters an article filed under none out of the article page, so the render row would never run on a stand that has categories
+function getNewsCategory(): int {
+    $rows = getDbRows("SELECT id FROM {p}_categories WHERE modul = 'news' ORDER BY id LIMIT 1");
+    return (int)($rows[0]['id'] ?? 0);
+}
+
+# One news submission body, which every write guard row reuses with a different summary and a different body
+function getNewsPost(string $jar, string $mark, string $intro, string $body): array {
+    return [
+        'op' => 'save', 'posttype' => 'save', 'token' => getScopeToken($jar, 'ajax'), 'id' => 0, 'cat' => getNewsCategory(),
+        'subject' => $mark, 'postname' => 'route check', 'hometext' => $intro, 'bodytext' => $body,
+        'time' => date('Y-m-d H:i'), 'vote' => 0, 'ihome' => 1, 'acomm' => 0, 'fix' => 0,
+    ];
+}
+
+# One embedded image of exactly the requested binary weight under the requested media type, written the way the editor writes it so the parser can draw what survives the round trip
+function getEmbedText(string $type, int $size): string {
+    return '![photo](data:'.$type.';base64,'.base64_encode(str_repeat("\x01", $size)).')';
+}
+
+# The write guard over real HTTP: what the editor refuses first has to be refused again when the client is bypassed and the body is posted directly
+# Every row is read back from the stored row and not from the rendered answer, because the claim is that nothing reached the database and not that a message was shown
+function checkEditorGuardRows(string $ajar): void {
+    echo "Write guard rows\n";
+    $cap = Parser::EMBEDMAX;
+    $mark = 'routeguard-'.bin2hex(random_bytes(4));
+    $link = '![photo](https://files.example.net/photo.png)';
+    $rows = [
+        'an embed at the cap is stored' => ['intro' => 'route check', 'body' => getEmbedText('image/png', $cap), 'want' => true],
+        'an embed one byte past the cap is refused' => ['intro' => 'route check', 'body' => getEmbedText('image/png', $cap + 1), 'want' => false],
+        'a document data URI is refused' => ['intro' => 'route check', 'body' => getEmbedText('application/pdf', 512), 'want' => false],
+        'an SVG data URI is refused' => ['intro' => 'route check', 'body' => getEmbedText('image/svg+xml', 512), 'want' => false],
+        'a small embed into a summary field is refused' => ['intro' => getEmbedText('image/png', 512), 'body' => 'route check', 'want' => false],
+        'a linked image into the same field is stored' => ['intro' => $link, 'body' => 'route check', 'want' => true],
+        'plain prose one byte past the column is refused' => ['intro' => str_repeat('a', 65536), 'body' => 'route check', 'want' => false],
+        'a Cyrillic summary past the column is refused' => ['intro' => str_repeat('я', 32768), 'body' => 'route check', 'want' => false],
+    ];
+    $i = 0;
+    foreach ($rows as $name => $one) {
+        $title = $mark.'-'.$i++;
+        getHttpReply($ajar, '/admin.php?name=news&op=save', getNewsPost($ajar, $title, $one['intro'], $one['body']));
+        $row = getDbRows('SELECT id, intro, body FROM {p}_news WHERE title = :t', ['t' => $title]);
+        foreach ($row as $has) $GLOBALS['news'][] = (int)$has['id'];
+        checkMatrixRow($name, (count($row) === 1) === $one['want'], count($row).' row(s)');
+        if ($one['want'] && $row !== [] && str_contains($one['body'], 'data:')) checkEditorRenderRow($row[0], $one['body']);
+    }
+}
+
+# The stored embed has to survive the round trip whole and then reach the page through the parser, which is the pair the widening of the seventeen columns exists for
+# A stand that answers no article page at all reports the render row as not run rather than as passed, because a missing page proves nothing about what the parser would have drawn
+function checkEditorRenderRow(array $row, string $want): void {
+    $has = (string)($row['body'] ?? '');
+    checkMatrixRow('the stored embed carries every byte it was given', $has === $want, strlen($has).' of '.strlen($want));
+    $page = getHttpReply(WORKDIR.'/jar-render.txt', '/index.php?name=news&op=view&id='.(int)($row['id'] ?? 0));
+    if (!str_contains($page['body'], '<img')) {
+        setSkipRow('the stored embed reaches the page through the parser', 'the article page carried no image at all, which a draft or a moderated stand also produces');
+        return;
+    }
+    $src = substr($want, strlen('![photo]('), 200);
+    checkMatrixRow('the stored embed reaches the page through the parser', str_contains($page['body'], $src));
+}
+
 # Remove every file and row the walk created, and report anything that survived
 function deleteWalkTraces(): void {
     echo "Cleanup\n";
@@ -527,9 +678,12 @@ function deleteWalkTraces(): void {
         if (is_file($path) && !unlink($path)) $left[] = $one;
     }
     foreach (array_unique($GLOBALS['rows']) as $id) getDbRows('DELETE FROM {p}_files WHERE id = :i', ['i' => $id]);
+    foreach (array_unique($GLOBALS['news']) as $id) getDbRows('DELETE FROM {p}_news WHERE id = :i', ['i' => $id]);
     checkMatrixRow('every published file was removed', $left === [], implode(', ', $left));
     $rest = getDbRows("SELECT id FROM {p}_files WHERE title LIKE 'routecheck-%' OR title LIKE 'routecomp-%'");
     checkMatrixRow('every seeded row was removed', $rest === []);
+    $rest = getDbRows("SELECT id FROM {p}_news WHERE title LIKE 'routeguard-%'");
+    checkMatrixRow('every seeded article was removed', $rest === []);
 }
 
 $mode = (string)($argn[2] ?? 'all');
@@ -559,6 +713,18 @@ if ($mode === 'read' || $mode === 'all') checkReadRows($ajar, $ujar, $gjar);
 if ($mode === 'write' || $mode === 'all') checkWriteRows($ajar, $ujar);
 if ($mode === 'write' || $mode === 'all') checkAvatarRows($ujar, $gjar);
 if ($mode === 'comp' || $mode === 'all') checkCompRows($ajar, $ujar);
+# The editor rows rewrite the two upload switches of the news record between themselves, so the file is kept and restored byte for byte around the whole block
+if ($mode === 'editor' || $mode === 'all') {
+    $path = ROOTDIR.'/config/uploads.php';
+    $befo = (string)file_get_contents($path);
+    checkEditorMatrixRows($ajar, $ujar, $gjar);
+    checkEditorGuestRows($gjar);
+    checkEditorGuardRows($ajar);
+    file_put_contents($path, $befo);
+    if (is_file(ROOTDIR.'/config/local.php')) unlink(ROOTDIR.'/config/local.php');
+    clearstatcache();
+    checkMatrixRow('config/uploads.php was restored byte for byte', (string)file_get_contents($path) === $befo);
+}
 if ($mode === 'captcha' || $mode === 'all') checkCaptchaRow($gjar);
 deleteWalkTraces();
 echo ($GLOBALS['fails'] === 0 ? 'all rows passed' : $GLOBALS['fails'].' row(s) failed');

@@ -142,7 +142,9 @@ function add(): void {
         ['label_html' => _PUBHOME, 'field_html' => getTplRadioGroup(['name' => 'ihome', 'value' => (string)$ihome, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _COMMENTS, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'acomm', 'options_html' => $commopts])],
         ['label_html' => _CHNGSTORY, 'field_html' => getTplAddDateTime(['name' => 'time', 'time' => $time, 'with' => true, 'max' => 16])],
-        ['label_html' => _ANSWER, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'faq', 'rows' => '10', 'placeholder' => _ANSWER, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _ANSWER, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'hometext', 'value' => $hometext, 'mod' => 'faq', 'store' => 'faq.body', 'rows' => '10', 'placeholder' => _ANSWER, 'required' => '1',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
     ];
     $posttypeopts
         = $tpl->getHtmlFrag('select-option', ['value_attr' => 'preview', 'label_text' => _PREVIEW])
@@ -179,6 +181,7 @@ function save(): void {
         if (!$subject) $stop[] = _CERROR;
         if (!$hometext) $stop[] = _CERROR1;
         if (!$postname) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($hometext, 'faq.body')) $stop[] = $room;
         if (!$stop && $posttype == 'save') {
             $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
             $postname = (!is_user_id($postname)) ? filterText(substr($postname, 0, 25)) : '';

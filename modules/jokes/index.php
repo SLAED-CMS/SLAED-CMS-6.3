@@ -186,6 +186,7 @@ function add(): void {
                 'name' => 'joke',
                 'value' => $joke,
                 'mod' => $conf['name'],
+                'store' => 'jokes.body',
                 'rows' => '10',
                 'placeholder' => _JOKE,
                 'required' => '1',
@@ -216,6 +217,7 @@ function send(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$joke) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($joke, 'jokes.body')) $stop[] = $room;
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {

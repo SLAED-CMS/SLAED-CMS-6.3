@@ -4246,7 +4246,8 @@ function getEditorJson(array $dat): void {
     exit;
 }
 
-# Split the pipe-separated upload configuration of one directory into named rule keys; all twelve are returned even when ok is false, so a caller needing one limit can read it
+# Split the pipe-separated upload configuration of one directory into named rule keys; all thirteen are returned even when ok is false, so a caller needing one limit can read it
+# guestfiles is appended, so a rule stored before it existed keeps working; its absent position falls back to userfiles and not to zero, which the listing limit reads as no limit
 function getUploadRuleData(string $mod): array {
     global $conf;
     $con = isset($conf['uploads'][$mod]) ? explode('|', (string)$conf['uploads'][$mod]) : [];
@@ -4271,12 +4272,16 @@ function getUploadRuleData(string $mod): array {
         'userfiles' => (int)($con[9] ?? 0),
         'userupload' => (int)($con[10] ?? 0),
         'guestupload' => (int)($con[11] ?? 0),
+        'guestfiles' => (int)($con[12] ?? $con[9] ?? 0),
     ];
 }
 
 # Assemble the pipe-separated upload configuration of one directory from named rule keys, in the field order getUploadRuleData() reads
 function setUploadRuleData(array $rule): string {
-    $keys = ['extensions', 'maxquota', 'maxbytes', 'maxwidth', 'maxheight', 'maxfiles', 'thumbwidth', 'adminlist', 'moderfiles', 'userfiles', 'userupload', 'guestupload'];
+    $keys = [
+        'extensions', 'maxquota', 'maxbytes', 'maxwidth', 'maxheight', 'maxfiles', 'thumbwidth',
+        'adminlist', 'moderfiles', 'userfiles', 'userupload', 'guestupload', 'guestfiles',
+    ];
     return implode('|', array_map(static fn($v) => (string)($rule[$v] ?? ''), $keys));
 }
 
@@ -4298,10 +4303,23 @@ function checkEditorUploadAccess(string $mod, array $rule): bool {
     return !is_user() && (int)($rule['guestupload'] ?? 0) === 1;
 }
 
+# Resolve the owner token the stored file name of the current visitor carries: the site user id for a member, none for a moderator, and a per-session token for a guest
+# A moderator is answered null because is_moder() reads the admin session: an administrator need not be a site user, so there is no id to own the file with and no segment
+# The guest token is derived from the session and is never the session id, because the segment ends up in a public file name and must authenticate nothing when it is read off a URL
+# A guest without a session is answered null and not a token derived from an empty id, because that one derivation is the same for every guest and is the defect this token removes
+function getEditorFileOwner(string $mod): ?string {
+    global $user;
+    if (is_user()) return (string)(int)($user[0] ?? 0);
+    if (is_moder($mod)) return null;
+    $sid = (string)session_id();
+    return ($sid === '') ? null : substr(hash_hmac('sha256', 'upload|'.$sid, getSecret('upload')), 0, 16);
+}
+
 # Return image metadata for an uploaded or stored editor file
 # A stored file that no longer decodes is a listing entry, not a defect, so its warning is swallowed by a handler rather than suppressed with @ or left to reach the log
+# Which extensions count as an image is Parser::EMBEDIMG, the one list the render bound and the editor read too, so a type accepted here can never be a type the parser refuses to draw
 function getEditorImageData(string $file, string $ext, int $wid, int $hei): array {
-    $img = in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'], true);
+    $img = in_array($ext, Parser::EMBEDIMG, true);
     if (!$img) return ['ok' => true, 'image' => false, 'width' => 0, 'height' => 0, 'error' => ''];
     set_error_handler(static fn(): bool => true);
     try {
@@ -4339,19 +4357,18 @@ function getEditorFileData(string $dir, string $file): array {
 }
 
 # Publish one editor submission through the upload service and answer with the editor JSON; rules, naming and quota belong to the service, the adapter only maps its codes
-# The owner is the site user id for a logged in visitor, null for a privileged moderator without one, and the shared guest value otherwise
+# Who the stored file belongs to is answered by getEditorFileOwner() alone, so the upload route and the listing route can never disagree about the segment the name carries
 function addEditorUpload(): void {
-    global $user;
     $mod = strtolower(getVar('get', 'mod', 'var', ''));
     $rul = getUploadRuleData($mod);
     if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
     $dir = $rul['path'];
     if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
-    $uid = is_user() ? (int)($user[0] ?? 0) : (is_moder($mod) ? null : 0);
+    $own = getEditorFileOwner($mod);
     $out = [];
     $bad = [];
-    foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, $mod, $mod, $uid) as $res) {
+    foreach (getUploadService()->addUploadedFiles($_FILES['file'] ?? [], $rul, $mod, $mod, $own) as $res) {
         if ($res['ok']) {
             $out[] = getEditorFileData($dir, (string)$res['file']);
             continue;
@@ -4370,25 +4387,25 @@ function addEditorUpload(): void {
     getEditorJson(['ok' => $out !== [], 'files' => $out, 'errors' => $bad, 'error' => $out ? '' : ($bad[0] ?? _ERROR_DOWN)]);
 }
 
-# Return stored files for the Toast UI editor file panel; a moderator lists the whole directory and an authenticated visitor only the files carrying the own owner suffix
-# A guest receives no historical files at all, because the shared guest suffix would otherwise expose every other guest upload of the same directory
+# Return stored files for the Toast UI editor file panel; a moderator lists the whole directory and every other visitor only the files carrying the own owner token
+# Whether a list is answered at all is decided by checkEditorUploadAccess() and by nothing else, so a guest the settings allow sees the own uploads of the own session
+# Which of the three limits applies is the one role question left on this route, and what each of them is worth is a setting: moderfiles, userfiles and guestfiles
+# The owner segment is alphanumeric and not numeric, so the comparison is a string one: an integer cast turns every guest token into zero and matches one guest against another
 # The ten character salt in the ownership pattern is Upload::SALTLEN; the class is not loaded on this route, so the length is repeated rather than read
 function getEditorFileJson(): void {
-    global $user;
     $mod = strtolower(getVar('get', 'mod', 'var', ''));
     $rul = getUploadRuleData($mod);
     if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
     $dir = $rul['path'];
     if (!checkEditorUploadAccess($mod, $rul)) getEditorJson(['ok' => false, 'error' => 'Access denied']);
     if (!checkSiteToken(getVar('req', 'token', 'raw', ''), 'upload')) getEditorJson(['ok' => false, 'error' => _TOKENMISS]);
-    $uid = is_user() ? (int)($user[0] ?? 0) : 0;
     $all = is_moder($mod);
-    if (!$all && $uid < 1) getEditorJson(['ok' => true, 'files' => []]);
-    $lim = $all ? $rul['moderfiles'] : $rul['userfiles'];
+    $tok = getEditorFileOwner($mod);
+    $lim = $all ? $rul['moderfiles'] : (is_user() ? $rul['userfiles'] : $rul['guestfiles']);
     $row = [];
     foreach (scandir($dir) ?: [] as $file) {
         if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
-        $own = preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{10}-([0-9]+)\\.[a-zA-Z0-9]+$#', $file, $mat) && (int)$mat[1] === $uid;
+        $own = $tok !== null && preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{10}-([a-zA-Z0-9]+)\\.[a-zA-Z0-9]+$#', $file, $mat) && $mat[1] === $tok;
         if (!$all && !$own) continue;
         $row[] = getEditorFileData($dir, $file);
     }
@@ -5350,14 +5367,14 @@ function updateComment(): void {
         return;
     }
     if ($edit['error']) {
-        echo $tpl->getHtmlFrag('alert', ['text' => $edit['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
+        echo $tpl->getHtmlFrag('alert', ['messages' => $edit['error'], 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         return;
     }
     if (!$id || $edit['mod'] === '') return;
     if (!$text && $typ) {
         echo getTplAjaxTextarea([
             'obj' => 'com'.$id, 'go' => '1', 'op' => 'updateComment', 'id' => $id,
-            'cid' => '0', 'typ' => '0', 'mod' => $edit['mod'], 'text' => $edit['body'], 'rows' => 10,
+            'cid' => '0', 'typ' => '0', 'mod' => $edit['mod'], 'store' => 'comment.body', 'text' => $edit['body'], 'rows' => 10,
         ]);
         return;
     }

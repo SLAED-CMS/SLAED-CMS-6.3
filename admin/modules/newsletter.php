@@ -235,7 +235,9 @@ function add(): void {
             ],
             [
                 'label_html' => _TEXT,
-                'field_html' => getTplTextarea(['id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'all', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1']),
+                'field_html' => getTplTextarea([
+                    'id' => '1', 'name' => 'body', 'value' => $body, 'mod' => 'all', 'store' => 'newsletter.body', 'rows' => '10', 'placeholder' => _TEXT, 'required' => '1',
+                ]),
                 'is_full' => true,
                 'field_unwrapped' => true,
             ],
@@ -262,6 +264,7 @@ function save(): void {
     $warn = !checkAdminPost('newsletter');
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
+    if ($room = checkEditorTextRoom($body, 'newsletter.body')) $stop[] = $room;
     if (!getMailAudience($audit, $apar)) $stop[] = _NLNOAUDIT;
     if (!$warn && !$stop && getVar('post', 'posttype') == 'save') {
         $pars = ['title' => $title, 'body' => $body, 'audit' => $audit, 'apar' => $apar, 'num' => getMailAudienceNum($audit, $apar)];

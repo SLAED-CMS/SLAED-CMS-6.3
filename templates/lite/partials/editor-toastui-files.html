@@ -7,34 +7,52 @@
       <button type="button" class="sl-toastui-window-action js-slaed-window-close" data-editor="{{ editor_id }}" data-window="files" title="{{ close_label }}" aria-label="{{ close_label }}"><span class="sl-toastui-head-icon sl-toastui-head-icon-close" aria-hidden="true"></span></button>
     </div>
   </div>
-  <div class="sl-alert sl-alert-info js-slaed-upload-limits">
-    <div class="sl-alert-body">
-      <ul class="sl-alert-list">
-        <li>{{ type_label }}: {{ types_text }}</li>
-        <li>{{ allsize_label }}: {{ allsize_text }}</li>
-        <li>{{ filesize_label }}: {{ filesize_text }}</li>
-        <li>{{ width_label }}: {{ width_text }}</li>
-        <li>{{ height_label }}: {{ height_text }}</li>
-        <li>{{ count_label }}: {{ count_text }}</li>
-      </ul>
+  <div class="sl-toastui-upload-body">
+    <div class="sl-toastui-upload-link">
+      <label for="{{ url_id }}">{{ url_label }}</label>
+      <input type="text" id="{{ url_id }}" class="js-slaed-image-url" data-editor="{{ editor_id }}" placeholder="{{ url_label }}">
+      <label for="{{ alt_id }}">{{ alt_label }}</label>
+      <input type="text" id="{{ alt_id }}" class="js-slaed-image-alt" data-editor="{{ editor_id }}" placeholder="{{ alt_label }}">
+      <input type="button" value="{{ insert_label }}" class="js-slaed-image-insert" data-editor="{{ editor_id }}">
     </div>
-  </div>
-  <div class="sl-toastui-upload-picker">
-    <label for="{{ file_id }}">{{ select_label }}</label>
-    <div class="sl-toastui-upload-file-row js-slaed-upload-drop" data-editor="{{ editor_id }}" role="button" tabindex="0" aria-label="{{ drop_label }}">
-      <span class="toastui-editor-file-name js-slaed-upload-name">{{ nofile_label }}</span>
-      <input type="file" id="{{ file_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" multiple="multiple">
+    {% if can_upload %}
+    <div class="sl-alert sl-alert-info js-slaed-upload-limits">
+      <div class="sl-alert-body">
+        <ul class="sl-alert-list">
+          <li>{{ type_label }}: {{ types_text }}</li>
+          <li>{{ allsize_label }}: {{ allsize_text }}</li>
+          <li>{{ filesize_label }}: {{ filesize_text }}</li>
+          <li>{{ width_label }}: {{ width_text }}</li>
+          <li>{{ height_label }}: {{ height_text }}</li>
+          <li>{{ count_label }}: {{ count_text }}</li>
+        </ul>
+      </div>
     </div>
-    <small>{{ drop_label }}</small>
+    <div id="{{ object_id }}" class="sl-toastui-image-mode">
+      <label><input type="radio" name="{{ object_id }}m" value="upload" checked><span><strong>{{ upload_label }}</strong><small>{{ upload_info }}</small></span></label>
+      <label><input type="radio" name="{{ object_id }}m" value="attach"><span><strong>{{ object_label }}</strong><small>{{ object_info }}</small></span></label>
+      {% if can_embed %}
+      <label><input type="radio" name="{{ object_id }}m" value="embed"><span><strong>{{ embed_label }}</strong><small>{{ embed_info }}</small></span></label>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% if can_upload or can_embed %}
+    <div class="sl-toastui-upload-picker">
+      <label for="{{ file_id }}">{{ select_label }}</label>
+      <div class="sl-toastui-upload-file-row js-slaed-upload-drop" data-editor="{{ editor_id }}" role="button" tabindex="0" aria-label="{{ drop_label }}">
+        <span class="toastui-editor-file-name js-slaed-upload-name">{{ nofile_label }}</span>
+        <input type="file" id="{{ file_id }}" class="sl-toastui-file-input js-slaed-upload-file" data-editor="{{ editor_id }}" accept="{{ accept_attr }}" multiple="multiple">
+      </div>
+      <small>{{ drop_label }}</small>
+    </div>
+    {% endif %}
+    <div id="{{ msg_id }}"></div>
+    {% if can_list %}
+    <div class="sl-toastui-upload-files-head">
+      <strong>{{ files_label }}</strong>
+      <input type="button" value="{{ refresh_label }}" class="js-slaed-file-refresh" data-editor="{{ editor_id }}">
+    </div>
+    <div id="{{ list_id }}" class="sl-editor-upload-files"></div>
+    {% endif %}
   </div>
-  <div class="sl-toastui-upload-refresh">
-    <input type="button" value="{{ refresh_label }}" class="js-slaed-file-refresh" data-editor="{{ editor_id }}">
-  </div>
-  <div id="{{ msg_id }}"></div>
-  <div id="{{ object_id }}" class="sl-toastui-image-mode sl-none">
-    <label><input type="radio" name="{{ object_id }}m" value="upload" checked><span><strong>{{ upload_label }}</strong><small>{{ upload_info }}</small></span></label>
-    <label><input type="radio" name="{{ object_id }}m" value="attach"><span><strong>{{ object_label }}</strong><small>{{ object_info }}</small></span></label>
-    <label><input type="radio" name="{{ object_id }}m" value="embed"><span><strong>{{ embed_label }}</strong><small>{{ embed_info }}</small></span></label>
-  </div>
-  <div id="{{ list_id }}" class="sl-editor-upload-files"></div>
 </div>

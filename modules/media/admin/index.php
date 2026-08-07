@@ -215,11 +215,16 @@ function add(): void {
         ['label_html' => _MYEAR, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'year', 'options_html' => $yearopts])],
         ['label_html' => _MDIRECTOR, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'director', 'value_attr' => $director])],
         ['label_html' => _MROLES, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'roles', 'value_attr' => $roles])],
-        ['label_html' => _DESCRIPTION, 'field_html' => getTplTextarea(['id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'media', 'rows' => '10', 'placeholder' => _DESCRIPTION, 'required' => '1']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _DESCRIPTION, 'field_html' => getTplTextarea([
+            'id' => '1', 'name' => 'description', 'value' => $description, 'mod' => 'media', 'store' => 'media.intro', 'rows' => '10', 'placeholder' => _DESCRIPTION,
+            'required' => '1',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _MCREATEDBY, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'createdby', 'value_attr' => $createdby])],
         ['label_html' => _MDURATION, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'duration', 'value_attr' => $duration])],
         ['label_html' => _LANGUAGE, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'lang', 'options_html' => $langopts])],
-        ['label_html' => _NOTE, 'field_html' => getTplTextarea(['id' => '2', 'name' => 'note', 'value' => $note, 'mod' => 'media', 'rows' => '10', 'placeholder' => _NOTE, 'required' => '0']), 'is_full' => true, 'field_unwrapped' => true],
+        ['label_html' => _NOTE, 'field_html' => getTplTextarea([
+            'id' => '2', 'name' => 'note', 'value' => $note, 'mod' => 'media', 'store' => 'media.note', 'rows' => '10', 'placeholder' => _NOTE, 'required' => '0',
+        ]), 'is_full' => true, 'field_unwrapped' => true],
         ['label_html' => _MFORMAT, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'format', 'options_html' => $formatopts])],
         ['label_html' => _MQUALITY, 'field_html' => $tpl->getHtmlFrag('select', ['name_attr' => 'quality', 'options_html' => $qualityopts])],
         ['label_html' => _MSIZE, 'field_html' => $tpl->getHtmlFrag('input', ['itype' => 'text', 'name_attr' => 'size', 'value_attr' => $size])],
@@ -278,6 +283,8 @@ function save(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($description, 'media.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($note, 'media.note')) $stop[] = $room;
         if (!$mid && $db->getSqlRowCount($db->getSqlQuery('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
         if (!$stop && $posttype === 'save') {
             $postid = is_user_id($postname) ?: 0;

@@ -308,80 +308,43 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     content: "\f659";
 }
 
-.toastui-editor-popup-add-image.sl-toastui-window-popup,
-.toastui-editor-popup-add-link.sl-toastui-window-popup {
-    box-shadow: var(--sl-shadow-panel);
-    box-sizing: border-box;
-    font-size: 12px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    padding-top: 36px;
-    width: min(720px, calc(100% - 10px));
-}
-
-.sl-toastui-popup-head {
-    border: 1px solid var(--sl-color-border-strong);
-    border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0;
-    position: absolute;
-    z-index: 10021;
-}
-
-/* Alerts inside the image popup share one horizontal inset with the file-manager panel */
-.sl-toastui-image-popup .js-slaed-image-limits,
-.sl-toastui-image-popup .js-slaed-image-msg {
-    margin: var(--sl-space-lg) var(--sl-space-lg) 0;
-}
-
-.sl-toastui-image-popup .toastui-editor-button-container {
-    margin-top: var(--sl-space-lg);
-}
-
-.sl-toastui-image-popup button,
-.sl-toastui-image-popup input,
-.sl-toastui-link-popup button,
-.sl-toastui-link-popup input,
 .sl-toastui-upload button,
 .sl-toastui-upload input {
     font-family: inherit;
     font-size: 12px;
 }
 
-.sl-toastui-window-popup input[type="text"] {
-    background: var(--sl-color-bg);
-    border: 1px solid var(--sl-color-border);
+.sl-toastui-upload-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sl-space-lg);
+}
+
+/* Inserting an image by its address is open to every visitor, so this field group is the one part of the window that is always rendered */
+.sl-toastui-upload-link {
+    align-items: center;
+    column-gap: var(--sl-space-md);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: var(--sl-space-sm);
+}
+
+.sl-toastui-upload-link input[type="text"] {
+    background: var(--sl-field-bg);
+    border: 1px solid var(--sl-field-border);
     border-radius: var(--sl-field-radius);
     box-sizing: border-box;
+    color: var(--sl-color-text);
     height: 32px;
+    padding: 0 var(--sl-space-md);
     width: 100%;
 }
 
-.sl-toastui-file-row {
-    column-gap: var(--sl-space-sm);
-    grid-template-columns: minmax(0, 1fr) minmax(120px, 33%);
+.sl-toastui-upload-link input[type="button"] {
+    grid-column: 2;
+    justify-self: end;
 }
 
-.sl-toastui-file-row > label {
-    grid-column: 1 / -1;
-}
-
-.sl-toastui-file-row .toastui-editor-file-name,
-.sl-toastui-file-row .toastui-editor-file-select-button {
-    box-sizing: border-box;
-    margin-left: 0;
-    width: 100%;
-}
-
-.sl-toastui-file-row .toastui-editor-file-select-button {
-    display: none;
-}
-
-.sl-toastui-file-row::after {
-    content: attr(data-slaed-drop);
-    grid-column: 1 / -1;
-}
-
-/* One drop hint style under both file fields; the file-manager panel is the reference */
-.sl-toastui-file-row::after,
 .sl-toastui-upload-picker > small {
     color: var(--sl-color-text-muted);
     display: block;
@@ -389,24 +352,12 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     margin-top: var(--sl-space-xs);
 }
 
-/* Insert-mode choice and the extras strip live OUTSIDE the vendor popup DOM (its virtual DOM rejects foreign nodes) and are positioned over it by the plugin JS */
 .sl-toastui-image-mode {
     color: var(--sl-color-text);
     display: flex;
     flex-direction: column;
     font-size: 12px;
     gap: var(--sl-space-sm);
-    position: absolute;
-    z-index: 33;
-}
-
-.sl-toastui-popup-extras {
-    position: absolute;
-    z-index: 10022;
-}
-
-.sl-toastui-popup-extras .sl-alert {
-    margin: var(--sl-space-md) var(--sl-space-lg) 0;
 }
 
 .sl-toastui-image-mode label {
@@ -437,14 +388,12 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     margin-top: var(--sl-space-xs);
 }
 
-.sl-toastui-image-mode.sl-none,
-.sl-toastui-popup-head.sl-none,
-.sl-toastui-popup-extras.sl-none,
 .sl-toastui-upload.sl-none {
     display: none;
 }
 
-.sl-toastui-upload.sl-toastui-window-expanded {
+.sl-toastui-upload.sl-toastui-window-expanded,
+.sl-editor-emoji-panel.sl-toastui-window-expanded {
     bottom: 24px;
     display: flex;
     flex-direction: column;
@@ -457,35 +406,6 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     height: auto !important;
     width: auto !important;
     z-index: 10050;
-}
-
-.sl-toastui-window-popup.sl-toastui-window-expanded {
-    bottom: 24px !important;
-    height: auto !important;
-    left: 24px !important;
-    max-height: none;
-    position: fixed;
-    top: 24px !important;
-    width: calc(100% - 48px) !important;
-    z-index: 10050;
-}
-
-.sl-toastui-popup-head.sl-toastui-window-expanded {
-    left: 24px !important;
-    position: fixed;
-    top: 24px !important;
-    width: calc(100% - 48px) !important;
-    z-index: 10051;
-}
-
-.sl-toastui-popup-head.sl-toastui-window-fixed,
-.sl-toastui-popup-extras.sl-toastui-window-fixed,
-.sl-toastui-image-mode.sl-toastui-window-fixed {
-    position: fixed;
-}
-
-.sl-toastui-upload-picker {
-    margin-bottom: var(--sl-space-md);
 }
 
 .sl-toastui-file-input {
@@ -511,51 +431,42 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     outline-color: var(--sl-color-primary);
 }
 
-.sl-toastui-upload-file-row.sl-drag-over,
-.sl-toastui-file-row.sl-drag-over {
+.sl-toastui-upload-file-row.sl-drag-over {
     background: color-mix(in srgb, var(--sl-color-primary) 8%, transparent);
     outline-color: var(--sl-color-primary);
 }
 
-.sl-toastui-upload-file-row .toastui-editor-file-name,
-.sl-toastui-upload-file-row .toastui-editor-file-select-button {
-    box-sizing: border-box;
-    height: 32px;
-    margin: 0;
-    min-width: 0;
-    width: 100%;
-}
-
-/* One clickable file field for both windows; the file-manager panel is the reference */
-.sl-toastui-file-row .toastui-editor-file-name,
 .sl-toastui-upload-file-row .toastui-editor-file-name {
     background: var(--sl-field-bg);
     border: 1px solid var(--sl-field-border);
     border-radius: var(--sl-field-radius);
+    box-sizing: border-box;
     color: var(--sl-color-text);
     cursor: pointer;
     grid-column: 1 / -1;
     height: 32px;
     line-height: 30px;
+    margin: 0;
+    min-width: 0;
     overflow: hidden;
     padding: 0 var(--sl-space-md);
     text-overflow: ellipsis;
     white-space: nowrap;
+    width: 100%;
 }
 
-.sl-toastui-upload-refresh {
+.sl-toastui-upload-files-head {
+    align-items: center;
     display: flex;
-    justify-content: flex-end;
-    margin-bottom: var(--sl-space-md);
+    gap: var(--sl-space-md);
+    justify-content: space-between;
 }
 
-.sl-toastui-upload-refresh input {
+.sl-toastui-upload-files-head input {
     min-width: 120px;
 }
 
-.sl-toastui-upload input[type="button"],
-.sl-toastui-window-popup .toastui-editor-close-button,
-.sl-toastui-window-popup .toastui-editor-file-select-button {
+.sl-toastui-upload input[type="button"] {
     background: var(--sl-color-bg-soft);
     border: 1px solid var(--sl-color-border);
     border-radius: var(--sl-radius-control);
@@ -565,9 +476,7 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     padding: 0 var(--sl-space-lg);
 }
 
-.sl-toastui-upload input[type="button"]:hover,
-.sl-toastui-window-popup .toastui-editor-close-button:hover,
-.sl-toastui-window-popup .toastui-editor-file-select-button:hover {
+.sl-toastui-upload input[type="button"]:hover {
     background: var(--sl-color-border);
 }
 
@@ -620,6 +529,11 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     white-space: nowrap;
 }
 
+.sl-toastui-upload.sl-toastui-window-expanded .sl-toastui-upload-body {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
 .sl-toastui-upload.sl-toastui-window-expanded .sl-editor-upload-files {
     flex: 1 1 auto;
     max-height: none;
@@ -657,8 +571,9 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
     z-index: 10020;
 }
 
-.sl-editor-emoji-panel.sl-toastui-window-popup {
-    padding-top: 44px;
+.sl-editor-emoji-panel > .sl-toastui-window-head {
+    border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0;
+    margin: -8px -8px 8px;
 }
 
 .sl-editor-emoji-panel.sl-none {
@@ -918,38 +833,6 @@ div[id$="_toast"].sl-toastui-editor-fullscreen .toastui-editor-defaultUI {
 
 .toastui-editor-defaultUI .toastui-editor-close-button:hover {
     border-color: var(--sl-color-border-strong);
-}
-
-.toastui-editor-popup-add-image .toastui-editor-file-select-button {
-    background-color: var(--sl-color-bg-soft);
-    border: 1px solid var(--sl-color-border);
-    border-radius: var(--sl-radius-control);
-    color: var(--sl-color-text);
-}
-
-.toastui-editor-popup-add-image .toastui-editor-file-select-button:hover {
-    border-color: var(--sl-color-border-strong);
-}
-
-/* !important pins the popup to the right edge against the inline left the engine re-applies on every tab switch; dragging sets data-slaed-moved and releases the pin */
-.sl-toastui-image-popup:not(.sl-toastui-window-expanded):not([data-slaed-moved]) {
-    left: auto !important;
-    right: 5px;
-}
-
-.toastui-editor-popup-add-image .toastui-editor-tabs .tab-item {
-    border-bottom: 1px solid var(--sl-color-border);
-    color: var(--sl-color-text);
-    font-size: 12px;
-}
-
-.toastui-editor-popup-add-image .toastui-editor-tabs .tab-item:hover {
-    border-bottom-color: var(--sl-color-border-strong);
-}
-
-.toastui-editor-popup-add-image .toastui-editor-tabs .tab-item.active {
-    border-bottom: 2px solid var(--sl-color-primary);
-    color: var(--sl-color-primary);
 }
 
 .toastui-editor-popup-add-table .toastui-editor-table-cell {

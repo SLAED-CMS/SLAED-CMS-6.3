@@ -467,6 +467,7 @@ function add(): void {
                 'name' => 'description',
                 'value' => $description,
                 'mod' => $conf['name'],
+                'store' => 'files.intro',
                 'rows' => '5',
                 'placeholder' => _TEXT,
                 'required' => '1',
@@ -480,6 +481,7 @@ function add(): void {
                 'name' => 'bodytext',
                 'value' => $bodytext,
                 'mod' => $conf['name'],
+                'store' => 'files.body',
                 'rows' => '15',
                 'placeholder' => _ENDTEXT,
                 'required' => '0',
@@ -528,6 +530,8 @@ function send(): void {
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
+        if ($room = checkEditorTextRoom($description, 'files.intro')) $stop[] = $room;
+        if ($room = checkEditorTextRoom($bodytext, 'files.body')) $stop[] = $room;
         checkemail($mail);
         if (checkCaptcha('comment')) $stop[] = _SECCODEINCOR;
         if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
