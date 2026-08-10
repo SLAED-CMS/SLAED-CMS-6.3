@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Файловый менеджер, вариант 8: Компакт</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---------- каркас демо-страницы (не часть системы, неймспейс dx-) ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); }
+.dx-head { padding: 24px clamp(14px, 4vw, 44px) 16px; background: var(--sl-color-bg); border-bottom: 1px solid var(--sl-color-border); }
+.dx-head h1 { margin: 0 0 6px; font: normal clamp(21px, 3vw, 30px)/1.15 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.dx-head p { margin: 0 0 14px; max-width: 980px; color: var(--sl-color-text-muted); font-size: 14px; line-height: 1.55; }
+.dx-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dx-nav a { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font-size: 13px; text-decoration: none; }
+.dx-nav a:hover { background: color-mix(in srgb, var(--sl-color-primary) 18%, transparent); }
+.dx-nav a[aria-current="page"] { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.dx-wrap { max-width: 1180px; margin: 0 auto; padding: 26px clamp(14px, 4vw, 44px) 0; }
+.dx-note { margin: 0 0 18px; padding: 12px 14px; border-left: 3px solid var(--sl-color-primary); border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font-size: 13px; line-height: 1.55; }
+.dx-note b { color: var(--sl-color-text-heading); }
+.dx-stage { position: relative; min-height: 620px; padding: 20px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+
+/* сцена: редактор с панелью, окно висит под кнопкой «Вставить изображение» */
+.dx-editor { position: relative; max-width: 820px; margin: 0 auto; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); overflow: visible; }
+.dx-toolbar { display: flex; align-items: center; gap: 2px; padding: 6px 8px; background: var(--sl-color-bg-soft); border-bottom: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card) var(--sl-radius-card) 0 0; }
+.dx-toolbar i { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--sl-radius-control); color: var(--sl-color-text-muted); font-size: 17px; }
+.dx-toolbar i.dx-on { background: var(--sl-color-bg); border: 1px solid var(--sl-color-border); color: var(--sl-color-primary); }
+.dx-paper { padding: 18px; }
+.dx-paper p { margin: 0 0 12px; height: 9px; border-radius: 5px; background: var(--sl-color-bg-soft-alt); }
+.dx-paper p:nth-child(2) { width: 86%; }
+.dx-paper p:nth-child(3) { width: 72%; }
+.dx-paper p:nth-child(4) { width: 91%; }
+.dx-paper p:nth-child(5) { width: 58%; }
+
+/* ---------- кандидат в theme.css: окно, вариант «Компакт» ---------- */
+.sl-fm { position: absolute; top: 46px; left: 197px; width: 392px; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border-strong); border-radius: 10px; box-shadow: var(--sl-shadow-panel); font-size: 12px; z-index: 5; }
+.sl-fm::before { content: ""; position: absolute; top: -6px; left: 26px; width: 10px; height: 10px; background: var(--sl-color-bg-soft); border-left: 1px solid var(--sl-color-border-strong); border-top: 1px solid var(--sl-color-border-strong); transform: rotate(45deg); }
+.sl-fm-head { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 6px 0 8px; background: var(--sl-color-bg-soft); border-bottom: 1px solid var(--sl-color-border); border-radius: 10px 10px 0 0; }
+.sl-fm-head-title { flex: 1 1 auto; display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; color: var(--sl-color-text-heading); }
+.sl-fm-head-title .bi { color: var(--sl-color-primary); font-size: var(--sl-size-icon-xs); }
+.sl-fm-act { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--sl-color-text-muted); font-size: 12px; cursor: pointer; }
+.sl-fm-act:hover { background: var(--sl-color-border); color: var(--sl-color-text); }
+.sl-fm-act-drag { cursor: move; }
+
+/* три способа — микро-сегменты с иконкой и коротким словом */
+.sl-fm-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 8px 8px 0; padding: 2px; border-radius: 8px; background: var(--sl-color-bg-soft-alt); }
+.sl-fm-seg-item { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--sl-color-text-muted); font: inherit; font-size: 12px; cursor: pointer; transition: background-color 0.14s ease, color 0.14s ease; }
+.sl-fm-seg-item .bi { font-size: var(--sl-size-icon-xs); }
+.sl-fm-seg-item:hover { color: var(--sl-color-text); }
+.sl-fm-seg-item[aria-selected="true"] { background: var(--sl-color-bg); color: var(--sl-color-primary); box-shadow: var(--sl-shadow-soft); }
+
+.sl-fm-body { padding: 8px; }
+.sl-fm-pane { display: none; flex-direction: column; gap: 8px; }
+.sl-fm-pane.sl-is-open { display: flex; }
+.sl-fm-hint { margin: 0; font-size: 11px; line-height: 1.45; color: var(--sl-color-text-muted); }
+
+.sl-fm-drop { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px dashed var(--sl-color-border-strong); border-radius: 8px; background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); cursor: pointer; }
+.sl-fm-drop:hover { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent); }
+.sl-fm-drop .bi { font-size: 18px; color: var(--sl-color-primary); }
+.sl-fm-drop b { display: block; font-weight: 400; font-size: 12px; color: var(--sl-color-text-heading); }
+.sl-fm-drop small { font-size: 11px; }
+
+.sl-fm-field { width: 100%; height: 28px; padding: 0 9px; border: 1px solid var(--sl-field-border); border-radius: var(--sl-field-radius); background: var(--sl-field-bg); box-shadow: var(--sl-shadow-input); font: inherit; font-size: 12px; color: var(--sl-color-text); }
+.sl-fm-field:focus { outline: 0; border-color: var(--sl-field-focus); box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring); }
+.sl-fm-two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+/* «вставить как» ужато до пары переключателей-иконок */
+.sl-fm-as { display: flex; align-items: center; gap: 6px; }
+.sl-fm-as > span { font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-as label { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border: 1px solid var(--sl-color-border); border-radius: 999px; background: var(--sl-color-bg); font-size: 11px; cursor: pointer; }
+.sl-fm-as input { position: absolute; opacity: 0; pointer-events: none; }
+.sl-fm-as label:has(input:checked) { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent); color: var(--sl-color-brand-strong); }
+
+/* хранилище: одна строка на файл, действия иконками */
+.sl-fm-files { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; border-top: 1px solid var(--sl-color-border); font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-list { display: flex; flex-direction: column; }
+.sl-fm-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 4px 2px; border-radius: 6px; }
+.sl-fm-row:hover { background: var(--sl-color-bg-soft); }
+.sl-fm-thumb { display: flex; align-items: center; justify-content: center; width: 26px; height: 20px; border-radius: 4px; background: linear-gradient(135deg, #cfe6fb, #a9d3f6); color: var(--sl-color-brand-strong); font-size: 10px; }
+.sl-fm-row:nth-child(2) .sl-fm-thumb { background: linear-gradient(135deg, #dff0d0, #b6dd94); color: var(--sl-color-success); }
+.sl-fm-row:nth-child(3) .sl-fm-thumb { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); }
+.sl-fm-row b { overflow: hidden; font-weight: 400; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; color: var(--sl-color-text-heading); }
+.sl-fm-row small { font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-ico { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--sl-color-text-muted); font-size: 13px; cursor: pointer; }
+.sl-fm-ico:hover { border-color: var(--sl-color-border); background: var(--sl-color-bg); color: var(--sl-color-primary); }
+
+.sl-fm-foot { display: flex; align-items: center; gap: 6px; padding: 7px 8px; background: var(--sl-color-bg-soft); border-top: 1px solid var(--sl-color-border); border-radius: 0 0 10px 10px; }
+.sl-fm-foot-info { flex: 1 1 auto; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; color: var(--sl-color-text-muted); }
+.sl-fm-kbd { display: inline-flex; gap: 3px; }
+.sl-fm-kbd kbd { padding: 0 5px; border: 1px solid var(--sl-color-border-strong); border-bottom-width: 2px; border-radius: 4px; background: var(--sl-color-bg); font: inherit; font-size: 10px; line-height: 16px; color: var(--sl-color-text-muted); }
+.sl-fm-btn { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 12px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg); color: var(--sl-color-text-heading); font: inherit; font-size: 12px; cursor: pointer; }
+.sl-fm-btn:hover { border-color: var(--sl-color-border-strong); }
+.sl-fm-btn-main { border-color: var(--sl-color-primary); background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-fm-btn-main:hover { background: var(--sl-color-primary-hover); border-color: var(--sl-color-primary-hover); }
+
+@media (max-width: 560px) { .sl-fm { position: static; width: auto; } .sl-fm::before { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="dx-head">
+  <h1>Файловый менеджер — вариант 8: «Компакт»</h1>
+  <p>Плотный вариант для тех, кто вставляет картинки десятками. Окно висит прямо под кнопкой панели, занимает 392 px, помещается целиком без прокрутки и закрывается по <kbd>Esc</kbd>. Способ переключается микро-сегментами, «вставить как» ужато до двух чипсов, хранилище — три последних файла с действиями-иконками.</p>
+  <ul class="dx-nav">
+    <li><a href="filemanager-v1-tabs.html">1. Сегменты</a></li>
+    <li><a href="filemanager-v2-rail.html">2. Боковой рельс</a></li>
+    <li><a href="filemanager-v3-chooser.html">3. Карточки выбора</a></li>
+    <li><a href="filemanager-v4-smart.html">4. Умная зона</a></li>
+    <li><a href="filemanager-v5-library.html">5. Библиотека</a></li>
+    <li><a href="filemanager-v6-accordion.html">6. Аккордеон</a></li>
+    <li><a href="filemanager-v7-spotlight.html">7. Затемнение</a></li>
+    <li><a href="filemanager-v8-compact.html" aria-current="page">8. Компакт</a></li>
+  </ul>
+</header>
+
+<div class="dx-wrap">
+  <p class="dx-note"><b>Ставка варианта:</b> скорость. Полный список лимитов сюда не влезает и не должен — он живёт в подсказке по значку <i class="bi bi-info-circle"></i>, а в окне остаётся то, что меняет решение прямо сейчас: формат, предельный размер и остаток квоты. Полноразмерное хранилище открывается ссылкой «Все файлы» — тем же окном в развёрнутом виде.</p>
+
+  <div class="dx-stage">
+    <div class="dx-editor">
+      <div class="dx-toolbar">
+        <i class="bi bi-type-h1"></i><i class="bi bi-type-bold"></i><i class="bi bi-type-italic"></i><i class="bi bi-quote"></i><i class="bi bi-list-ul"></i><i class="bi bi-table"></i><i class="bi bi-folder2-open dx-on"></i><i class="bi bi-emoji-smile"></i><i class="bi bi-code-slash"></i>
+      </div>
+      <div class="dx-paper"><p></p><p></p><p></p><p></p></div>
+
+      <div class="sl-fm" role="dialog" aria-label="Файловый менеджер">
+        <div class="sl-fm-head">
+          <button type="button" class="sl-fm-act sl-fm-act-drag" title="Переместить окно" aria-label="Переместить окно"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
+          <span class="sl-fm-head-title"><i class="bi bi-folder2-open" aria-hidden="true"></i>Файловый менеджер</span>
+          <button type="button" class="sl-fm-act" title="Допустимые форматы: gif, jpg, jpeg, png, webp, avif, zip, rar · до 1 MB · 500 × 500 px · до 10 файлов за раз · занято 12 из 100 MB" aria-label="Ограничения"><i class="bi bi-info-circle" aria-hidden="true"></i></button>
+          <button type="button" class="sl-fm-act" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+          <button type="button" class="sl-fm-act" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="sl-fm-seg" role="tablist" aria-label="Способ вставки">
+          <button type="button" class="sl-fm-seg-item" role="tab" aria-selected="true" data-pane="p-up" title="Загрузить на сервер"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>На сервер</button>
+          <button type="button" class="sl-fm-seg-item" role="tab" aria-selected="false" data-pane="p-url" title="Ссылка на изображение"><i class="bi bi-link-45deg" aria-hidden="true"></i>Ссылка</button>
+          <button type="button" class="sl-fm-seg-item" role="tab" aria-selected="false" data-pane="p-emb" title="Встроить в текст"><i class="bi bi-file-earmark-code" aria-hidden="true"></i>В текст</button>
+        </div>
+
+        <div class="sl-fm-body">
+
+          <section class="sl-fm-pane sl-is-open" data-pane="p-up" role="tabpanel">
+            <div class="sl-fm-drop" tabindex="0" role="button">
+              <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+              <span><b>Перетащите файлы сюда или нажмите на поле</b><small>Файл не выбран · до 1 MB · 12 / 100 MB</small></span>
+            </div>
+            <div class="sl-fm-as">
+              <span>Вставить как</span>
+              <label><input type="radio" name="as" value="image" checked><i class="bi bi-image" aria-hidden="true"></i>Изображение</label>
+              <label><input type="radio" name="as" value="attach"><i class="bi bi-paperclip" aria-hidden="true"></i>Миниатюру или файл</label>
+            </div>
+            <input type="text" class="sl-fm-field" placeholder="Описание">
+
+            <div class="sl-fm-files"><span>Последние файлы</span><span><a href="#" onclick="return false">Все файлы</a> · <a href="#" onclick="return false">Обновить</a></span></div>
+            <div class="sl-fm-list">
+              <div class="sl-fm-row">
+                <span class="sl-fm-thumb"><i class="bi bi-image" aria-hidden="true"></i></span>
+                <b>screenshot-2026-08-10.png</b><small>248 KB</small>
+                <span><button type="button" class="sl-fm-ico" title="Вставить изображением" aria-label="Вставить изображением"><i class="bi bi-image" aria-hidden="true"></i></button><button type="button" class="sl-fm-ico" title="Вставить вложением" aria-label="Вставить вложением"><i class="bi bi-paperclip" aria-hidden="true"></i></button></span>
+              </div>
+              <div class="sl-fm-row">
+                <span class="sl-fm-thumb"><i class="bi bi-image" aria-hidden="true"></i></span>
+                <b>logo-slaed.webp</b><small>34 KB</small>
+                <span><button type="button" class="sl-fm-ico" title="Вставить изображением" aria-label="Вставить изображением"><i class="bi bi-image" aria-hidden="true"></i></button><button type="button" class="sl-fm-ico" title="Вставить вложением" aria-label="Вставить вложением"><i class="bi bi-paperclip" aria-hidden="true"></i></button></span>
+              </div>
+              <div class="sl-fm-row">
+                <span class="sl-fm-thumb"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i></span>
+                <b>module-pack.zip</b><small>860 KB</small>
+                <span><button type="button" class="sl-fm-ico" title="Вставить вложением" aria-label="Вставить вложением"><i class="bi bi-paperclip" aria-hidden="true"></i></button></span>
+              </div>
+            </div>
+          </section>
+
+          <section class="sl-fm-pane" data-pane="p-url" role="tabpanel">
+            <input type="text" class="sl-fm-field" placeholder="Адрес изображения">
+            <input type="text" class="sl-fm-field" placeholder="Описание">
+            <p class="sl-fm-hint">Картинка останется на чужом сервере: место в модуле не тратится, но и сохранность не гарантируется.</p>
+          </section>
+
+          <section class="sl-fm-pane" data-pane="p-emb" role="tabpanel">
+            <div class="sl-fm-drop" tabindex="0" role="button">
+              <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+              <span><b>Перетащите файлы сюда или нажмите на поле</b><small>Файл не выбран · 8 / 64 KB занято</small></span>
+            </div>
+            <input type="text" class="sl-fm-field" placeholder="Описание">
+            <p class="sl-fm-hint">Изображение кодируется в base64 и сохраняется прямо в тексте. Только для небольших изображений.</p>
+          </section>
+
+        </div>
+
+        <div class="sl-fm-foot">
+          <span class="sl-fm-foot-info" data-slot="info">На сервер · изображением</span>
+          <span class="sl-fm-kbd"><kbd>Esc</kbd><kbd>Enter</kbd></span>
+          <button type="button" class="sl-fm-btn">Отмена</button>
+          <button type="button" class="sl-fm-btn sl-fm-btn-main">Вставить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+    var info = { 'p-up': 'На сервер · изображением', 'p-url': 'Ссылка · внешний адрес', 'p-emb': 'В текст · base64' };
+    document.querySelectorAll('.sl-fm-seg-item').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var name = tab.getAttribute('data-pane');
+            document.querySelectorAll('.sl-fm-seg-item').forEach(function(el) { el.setAttribute('aria-selected', String(el === tab)); });
+            document.querySelectorAll('.sl-fm-pane').forEach(function(el) { el.classList.toggle('sl-is-open', el.getAttribute('data-pane') === name); });
+            document.querySelector('[data-slot="info"]').textContent = info[name];
+        });
+    });
+    document.querySelectorAll('.sl-fm-as input').forEach(function(el) {
+        el.addEventListener('change', function() {
+            document.querySelector('[data-slot="info"]').textContent = 'На сервер · ' + (el.value === 'image' ? 'изображением' : 'миниатюрой или файлом');
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

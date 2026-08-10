@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Файловый менеджер в админке (FULL MODE)</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/admin/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/base.css">
+<link rel="stylesheet" href="../templates/admin/assets/css/theme.css">
+<style>
+/* ---------- каркас демо-страницы (не часть системы, неймспейс dx-) ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-muted); color: var(--sl-color-text); }
+.dx-head { padding: 24px clamp(14px, 4vw, 44px) 16px; background: var(--sl-color-bg); border-bottom: 1px solid var(--sl-color-border); }
+.dx-head h1 { margin: 0 0 6px; font: normal clamp(21px, 3vw, 30px)/1.15 Arial, sans-serif; color: var(--sl-color-text-heading); }
+.dx-head p { margin: 0 0 14px; max-width: 1000px; color: var(--sl-color-text-muted); font-size: 14px; line-height: 1.55; }
+.dx-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dx-nav a { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-bg-subtle); color: var(--sl-color-text-soft); font-size: 13px; text-decoration: none; }
+.dx-nav a:hover { background: var(--sl-color-primary-tint); color: var(--sl-color-primary); }
+.dx-nav a[aria-current="page"] { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.dx-wrap { max-width: 1420px; margin: 0 auto; padding: 26px clamp(14px, 4vw, 44px) 0; }
+.dx-note { margin: 0 0 16px; padding: 12px 14px; border-left: 3px solid var(--sl-color-primary); border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font-size: 13px; line-height: 1.55; }
+.dx-note b { color: var(--sl-color-text-heading); }
+.dx-note code { padding: 1px 5px; border-radius: 3px; background: var(--sl-color-bg-subtle); font-size: 12px; }
+.dx-stage { padding: 18px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); }
+
+/*
+  Кандидат в theme.css админки: файловый браузер, полный режим.
+  Всё, что уже есть в теме, взято как есть и здесь не переопределяется:
+  sl-tabs-nav / sl-tabs-item / sl-tabs-link  — вкладки разделов
+  sl-searchbox                               — плашка панели инструментов
+  sl-but / sl-but-blue / sl-but-red          — кнопки действий
+  sl-but-mini                                — круглые мини-кнопки и переключатели вида
+  sl-dial / sl-dial-toggle / sl-dial-item    — веер действий в строке таблицы
+  sl-table-shell / sl-table-list-sort        — таблица списка
+  sl-col-actions                             — колонка действий (якорь веера)
+  sl-tree-pad                                — отступ уровня в дереве
+  sl-chip / sl-chip-success / -warn / -danger / -neutral / -accent — строка возможностей
+  sl-pager / sl-pager-main / sl-pager-pages / sl-pnum / sl-pnum-cur / sl-pnum-nav — страницы
+  sl-alert / sl-alert-body / sl-alert-warn   — пояснения
+  input / select                             — поля берут вид из base.css
+  Ниже описано только то, чего в теме нет: раскладка трёх колонок, дерево,
+  плитки, панель свойств и заглушка редактора исходников.
+*/
+.sl-fm-page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sl-fm-page-head h2 { flex: 1 1 auto; display: flex; align-items: center; gap: 9px; margin: 0; font: normal 21px/1.2 Arial, sans-serif; color: var(--sl-color-primary); }
+.sl-fm-page-head h2 .bi { font-size: 24px; }
+.sl-fm-picker { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--sl-color-text-muted); }
+
+.sl-fm-shell { border: 1px solid var(--sl-color-border-strong); border-top: 0; border-radius: 0 0 var(--sl-radius-card) var(--sl-radius-card); background: var(--sl-color-bg); overflow: hidden; font-size: 13px; }
+
+/* панель инструментов: плашка системная, своя только раскладка */
+.sl-fm-bar { display: flex; align-items: center; gap: 8px; border-radius: 0; }
+.sl-fm-bar input[type="text"] { width: 220px; height: var(--sl-size-chip); padding: 0 8px; }
+.sl-fm-crumbs { flex: 1 1 auto; display: flex; align-items: center; gap: 4px; min-width: 0; overflow: hidden; }
+.sl-fm-crumbs a { text-decoration: none; }
+.sl-fm-crumbs span { color: var(--sl-color-text-muted); }
+.sl-fm-crumbs b { font-weight: normal; color: var(--sl-color-text); }
+.sl-fm-bar .sl-but-mini[aria-pressed="true"] { background-color: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+/* Разделитель групп круглых кнопок панели */
+.sl-fm-sep { width: 1px; height: 18px; background: var(--sl-color-border-strong); }
+.sl-but-mini.sl-fm-main { background-color: var(--sl-color-primary); }
+.sl-but-mini.sl-fm-danger { background-color: transparent; color: var(--sl-color-text-muted); }
+.sl-but-mini.sl-fm-danger:hover, .sl-but-mini.sl-fm-danger:focus-visible { background-color: var(--sl-color-danger); color: var(--sl-color-on-dark); }
+
+/* три колонки: дерево, список, свойства */
+.sl-fm-split { display: grid; grid-template-columns: 236px minmax(0, 1fr) 282px; min-height: 470px; border-top: 1px solid var(--sl-color-border); }
+.sl-fm-tree { padding: 10px 8px; border-right: 1px solid var(--sl-color-border); background: var(--sl-color-bg-soft); overflow: auto; }
+.sl-fm-cap { display: block; padding: 2px 8px 8px; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--sl-color-text-muted); }
+.sl-fm-node { display: flex; align-items: center; gap: 6px; width: 100%; padding: 5px 8px; border: 0; border-radius: var(--sl-radius-control); background: transparent; color: var(--sl-color-text-soft); text-align: left; font: inherit; font-size: 13px; cursor: pointer; }
+.sl-fm-node .bi { flex: 0 0 auto; color: var(--sl-color-primary-soft); font-size: var(--sl-size-icon-xs); }
+.sl-fm-node > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-fm-node .sl-tree-pad { margin: 0; }
+.sl-fm-node:hover { background: var(--sl-color-bg); }
+.sl-fm-node[aria-current="true"] { background: var(--sl-color-primary-tint); color: var(--sl-color-primary); }
+.sl-fm-node[aria-current="true"] .bi { color: var(--sl-color-primary); }
+.sl-fm-node-lazy { color: var(--sl-color-text-muted); font-style: italic; }
+
+.sl-fm-scroll { padding: 8px; max-height: 452px; overflow: auto; }
+/* Пояснение в узкой колонке читается хуже при выключке по ширине */
+.sl-fm-side .sl-alert-body { text-align: left; }
+.sl-fm-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sl-fm-name > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-fm-thumb { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 30px; height: 24px; border-radius: var(--sl-radius-control); font-size: var(--sl-size-icon-xs); }
+.sl-fm-thumb-img { background: var(--sl-color-primary-tint); color: var(--sl-color-primary); }
+.sl-fm-thumb-dir { background: var(--sl-color-bg-subtle); color: var(--sl-color-primary-hover); }
+.sl-fm-thumb-doc { background: var(--sl-color-bg-subtle); color: var(--sl-color-text-muted); }
+.sl-fm-thumb-code { background: var(--sl-color-warning-soft); color: var(--sl-color-warning-strong); }
+.sl-fm-thumb-zip { background: var(--sl-color-success-soft); color: var(--sl-color-success-strong); }
+
+.sl-fm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px; }
+.sl-fm-tile { position: relative; padding: 0; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-soft); background: var(--sl-color-bg); overflow: hidden; text-align: left; font: inherit; cursor: pointer; }
+.sl-fm-tile:hover { border-color: var(--sl-color-border-strong); }
+.sl-fm-tile[aria-selected="true"] { border-color: var(--sl-color-primary); box-shadow: var(--sl-shadow-hover-soft); }
+.sl-fm-tile-img { display: flex; align-items: center; justify-content: center; height: 74px; background: var(--sl-color-primary-tint); color: var(--sl-color-primary); font-size: 24px; }
+.sl-fm-tile-cap { display: block; padding: 6px 8px; padding-right: 40px; border-top: 1px solid var(--sl-color-border); }
+.sl-fm-tile-cap b { display: block; overflow: hidden; font-weight: normal; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; color: var(--sl-color-text); }
+.sl-fm-tile-cap small { font-size: 11px; color: var(--sl-color-text-muted); }
+
+.sl-fm-side { border-left: 1px solid var(--sl-color-border); background: var(--sl-color-bg-soft); overflow: auto; }
+.sl-fm-side-in { padding: 12px; }
+.sl-fm-preview { display: flex; align-items: center; justify-content: center; height: 132px; margin-bottom: 10px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-soft); background: var(--sl-color-primary-tint); color: var(--sl-color-primary); font-size: 34px; }
+.sl-fm-props { margin: 0; }
+.sl-fm-props div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--sl-color-border); font-size: 12px; }
+.sl-fm-props div:last-child { border-bottom: 0; }
+.sl-fm-props dt { flex: 0 0 auto; color: var(--sl-color-text-muted); }
+.sl-fm-props dd { margin: 0; min-width: 0; overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; color: var(--sl-color-text); }
+.sl-fm-acts { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+
+.sl-fm-caps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 9px 12px; border-top: 1px solid var(--sl-color-border); background: var(--sl-color-bg-soft); }
+.sl-fm-caps > b { margin-right: 2px; font-weight: normal; font-size: 11px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--sl-color-text-muted); }
+.sl-fm-foot { display: flex; align-items: center; gap: 12px; padding: 4px 12px 8px; border-top: 1px solid var(--sl-color-border); }
+.sl-fm-foot > span { flex: 1 1 auto; font-size: 12px; color: var(--sl-color-text-muted); }
+
+/* редактор исходника занимает место списка, дерево остаётся */
+.sl-fm-edit { display: flex; flex-direction: column; min-width: 0; }
+.sl-fm-edit-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--sl-color-border); background: var(--sl-color-bg-soft); }
+.sl-fm-edit-head b { flex: 1 1 auto; font-weight: normal; font-size: 13px; color: var(--sl-color-text); }
+.sl-fm-code { flex: 1 1 auto; margin: 0; padding: 10px 0; background: #1f2430; color: #d7dde8; font: 12px/1.55 "Cascadia Mono", Consolas, monospace; overflow: auto; max-height: 400px; }
+.sl-fm-code-line { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 0 12px 0 0; white-space: pre; }
+.sl-fm-code-line > i { color: #5b6577; font-style: normal; text-align: right; }
+.sl-fm-code-key { color: #86b8ff; }
+.sl-fm-code-str { color: #9ad18f; }
+.sl-fm-code-com { color: #6f7b8f; }
+.sl-fm-code-var { color: #e7c07b; }
+
+.sl-fm-modal-grid { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 16px; align-items: start; }
+.sl-fm-modal-stage { position: relative; display: flex; align-items: center; justify-content: center; }
+.sl-fm-modal-img { display: flex; align-items: center; justify-content: center; width: 100%; height: min(58vh, 440px); border-radius: var(--sl-radius-soft); background: var(--sl-color-primary-tint); color: var(--sl-color-primary); font-size: 64px; }
+.sl-fm-modal-nav { position: absolute; top: 50%; transform: translateY(-50%); }
+.sl-fm-modal-prev { left: 10px; }
+.sl-fm-modal-next { right: 10px; }
+.sl-fm-modal-count { display: inline-flex; align-items: center; height: 20px; padding: 0 9px; border-radius: 9999px; background: var(--sl-color-bg-subtle); color: var(--sl-color-text-muted); font-size: 11px; margin-right: auto; }
+/* Наложение с лупой поверх миниатюры: единая точка входа в предпросмотр из таблицы и из плиток */
+.sl-fm-zoom { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--sl-color-on-dark); font-size: var(--sl-size-icon-xs); text-decoration: none; opacity: 0; background: color-mix(in srgb, var(--sl-color-text) 40%, transparent); transition: opacity 0.16s ease; }
+.sl-fm-zoom:hover, .sl-fm-zoom:focus-visible { opacity: 1; }
+.sl-fm-thumb, .sl-fm-tile-img { position: relative; }
+.sl-fm-cell { position: relative; }
+.sl-fm-cell > .sl-dial { position: absolute; right: 6px; bottom: 9px; }
+/* Отметка объекта на плитке: тот же чекбокс, что в колонке sl-col-check таблицы */
+.sl-fm-pick { position: absolute; top: 6px; left: 6px; z-index: 2; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 255, 255, 0.88); cursor: pointer; }
+.sl-fm-pick input { margin: 0; }
+.sl-fm-cell:has(.sl-fm-pick input:checked) .sl-fm-tile { border-color: var(--sl-color-primary); box-shadow: var(--sl-shadow-hover-soft); }
+/* Текущий объект — тот, чьи свойства показаны справа; отметка для массовых действий показывается отдельно */
+.sl-fm-cell.sl-is-current .sl-fm-tile { border-color: var(--sl-color-border-strong); }
+.sl-fm-tile-kind { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; height: 17px; padding: 0 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.88); color: var(--sl-color-text-muted); font-size: 10px; letter-spacing: 0.3px; }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 1100px) { .sl-fm-split { grid-template-columns: 200px minmax(0, 1fr); } .sl-fm-side { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--sl-color-border); } }
+@media (max-width: 720px) { .sl-fm-split { grid-template-columns: 1fr; } .sl-fm-tree { border-right: 0; border-bottom: 1px solid var(--sl-color-border); } .sl-fm-bar input[type="text"] { width: 130px; } }
+</style>
+</head>
+<body>
+
+<header class="dx-head">
+  <h1>Файловый менеджер в админке — полный режим</h1>
+  <p>Тот же файловый слой, что и в окне редактора, но без редактора: <code>admin.php?name=uploads</code>. Администратор здесь полноправен — все директории, все файлы, все операции. Оформление продолжает язык окна «Боковой рельс»: слева навигация, в центре работа, справа свойства, внизу постоянная строка состояния.</p>
+  <ul class="dx-nav">
+    <li><a href="filemanager-v2-rail.html">← Окно редактора (вариант 2)</a></li>
+    <li><a href="filemanager-admin-2026.html" aria-current="page">Админка: полный режим</a></li>
+  </ul>
+</header>
+
+<div class="dx-wrap">
+  <p class="dx-note"><b>Собрано на существующих компонентах темы.</b> Вкладки — <code>sl-tabs-nav</code>, панель инструментов — <code>sl-searchbox</code>, кнопки — <code>sl-but</code> и <code>sl-but-mini</code>, действия строки — системный веер <code>sl-dial</code>, таблица — <code>sl-table-list-sort</code> в <code>sl-table-shell</code>, отступы дерева — <code>sl-tree-pad</code>, строка возможностей — <code>sl-chip</code> с тонами, страницы — <code>sl-pager</code> с <code>sl-pnum</code>, пояснения — <code>sl-alert</code>, поля берут вид из <code>base.css</code>. Своего осталось только то, чего в теме нет: раскладка трёх колонок, дерево, плитки, панель свойств и заглушка редактора.</p>
+
+  <p class="dx-note"><b>Предпросмотр — та же галерея, что в окне редактора.</b> Наведите на миниатюру в списке или на плитку и нажмите на лупу: откроется системная модалка со снимком, свойствами, стрелками <i class="bi bi-chevron-left"></i> <i class="bi bi-chevron-right"></i>, клавишами ← → и счётчиком. Перебираются только просматриваемые объекты — директории, архивы и документы в галерею не попадают. Действия в подвале те же, что в веере строки. Разница с окном редактора одна: набор действий администраторский, механизм и разметка общие.</p>
+
+  <p class="dx-note"><b>Права администратора.</b> Ограничений на операции нет: доступны все директории <code>uploads/*</code> и всё дерево сайта, включая переименование, перемещение, удаление и правку. Полный путь на сервере показан в свойствах — администратору его скрывать незачем. Предупреждение о ссылках осталось, но оно информирует, а не запрещает: переименование файла не обновляет ссылки в уже опубликованных материалах.</p>
+
+  <p class="dx-note"><b>Массовые действия.</b> Первая колонка списка и уголок плитки — отметки; в шапке таблицы отметка «все», с промежуточным состоянием при частичном выборе. Отметки общие для списка и плиток: отмеченное в одном виде остаётся отмеченным в другом. Как только отмечен хотя бы один объект, снизу появляется панель массовых действий, а при смене вкладки отметки сбрасываются — иначе действие ушло бы не в ту директорию.</p>
+
+  <div class="dx-stage">
+    <div class="sl-fm-page">
+
+      <div class="sl-fm-page-head">
+        <h2><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>Загрузки</h2>
+        <span class="sl-fm-picker" data-slot="picker">Директория:
+          <select>
+            <option>uploads/all</option>
+            <option selected>uploads/files</option>
+            <option>uploads/news</option>
+            <option>uploads/forum</option>
+          </select>
+        </span>
+      </div>
+
+      <ul class="sl-tabs-nav" role="tablist" aria-label="Разделы модуля загрузок">
+        <li class="sl-tabs-item"><a class="sl-tabs-link sl-is-active" role="tab" href="#" data-ctx="uploads"><i class="bi bi-folder2-open" aria-hidden="true"></i>&nbsp;Каталог файлов</a></li>
+        <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="system"><i class="bi bi-hdd-stack" aria-hidden="true"></i>&nbsp;Системные файлы</a></li>
+        <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="tpl"><i class="bi bi-code-square" aria-hidden="true"></i>&nbsp;Шаблоны</a></li>
+        <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="cfg"><i class="bi bi-sliders" aria-hidden="true"></i>&nbsp;Конфигурации</a></li>
+        <li class="sl-tabs-item"><a class="sl-tabs-link" role="tab" href="#" data-ctx="doc"><i class="bi bi-question-circle" aria-hidden="true"></i>&nbsp;Справка</a></li>
+      </ul>
+
+      <div class="sl-fm-shell">
+
+        <div class="sl-searchbox sl-fm-bar">
+          <button type="button" class="sl-but-mini sl-is-muted" title="Назад" aria-label="Назад"><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+          <button type="button" class="sl-but-mini sl-is-muted" title="На уровень вверх" aria-label="На уровень вверх"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+          <button type="button" class="sl-but-mini sl-is-muted" title="Обновить" aria-label="Обновить"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+          <span class="sl-fm-sep"></span>
+          <button type="button" class="sl-but-mini sl-is-muted" data-slot="mkdir" title="Создать папку" aria-label="Создать папку"><i class="bi bi-folder-plus" aria-hidden="true"></i></button>
+          <button type="button" class="sl-but-mini sl-fm-main" data-slot="upload" title="Загрузить файл" aria-label="Загрузить файл"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></button>
+          <span class="sl-fm-crumbs" data-slot="crumbs"></span>
+          <input type="text" placeholder="Фильтр в этой директории">
+          <button type="button" class="sl-but-mini sl-is-muted" data-mode="list" aria-pressed="true" title="Списком" aria-label="Списком"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+          <button type="button" class="sl-but-mini sl-is-muted" data-mode="grid" aria-pressed="false" title="Плитками" aria-label="Плитками"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="sl-fm-split">
+
+          <nav class="sl-fm-tree">
+            <span class="sl-fm-cap" data-slot="tree-cap">Директории загрузок</span>
+            <div data-slot="tree-uploads">
+              <button type="button" class="sl-fm-node"><i class="bi bi-folder2-open" aria-hidden="true"></i><span>uploads</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>all</span></button>
+              <button type="button" class="sl-fm-node" aria-current="true"><span class="sl-tree-pad"></span><i class="bi bi-folder2-open" aria-hidden="true"></i><span>files</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>thumb</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>news</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>forum</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>shop</span></button>
+              <button type="button" class="sl-fm-node sl-fm-node-lazy"><span class="sl-tree-pad"></span><i class="bi bi-three-dots" aria-hidden="true"></i><span>ещё 11 директорий</span></button>
+            </div>
+            <div data-slot="tree-system" hidden>
+              <button type="button" class="sl-fm-node"><i class="bi bi-hdd-stack" aria-hidden="true"></i><span>SLAED</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>admin</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>blocks</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>config</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>core</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>modules</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>plugins</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>uploads</span></button>
+              <button type="button" class="sl-fm-node" aria-current="true"><span class="sl-tree-pad"></span><i class="bi bi-folder2-open" aria-hidden="true"></i><span>templates</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder2" aria-hidden="true"></i><span>admin</span></button>
+              <button type="button" class="sl-fm-node"><span class="sl-tree-pad"></span><span class="sl-tree-pad"></span><i class="bi bi-folder2-open" aria-hidden="true"></i><span>lite</span></button>
+            </div>
+          </nav>
+
+          <div data-slot="list">
+            <div class="sl-fm-scroll">
+              <div class="sl-table-shell" data-mode-view="list">
+                <table class="sl-table-list-sort" data-slot="rows-uploads">
+                  <thead><tr><th class="sl-col-check"><input type="checkbox" data-slot="pick-all"></th><th>Имя</th><th>Тип</th><th>Размер</th><th>Изменён</th><th class="sl-col-actions">Действия</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+
+                <table class="sl-table-list-sort" data-slot="rows-system" hidden>
+                  <thead><tr><th class="sl-col-check"><input type="checkbox" data-slot="pick-all"></th><th>Имя</th><th>Тип</th><th>Размер</th><th>Изменён</th><th class="sl-col-actions">Действия</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+
+              <div class="sl-fm-grid" data-mode-view="grid" data-slot="tiles" hidden></div>
+            </div>
+          </div>
+
+          <div class="sl-fm-edit" data-slot="editor" hidden>
+            <div class="sl-fm-edit-head">
+              <button type="button" class="sl-but" data-slot="back"><i class="bi bi-arrow-left" aria-hidden="true"></i>&nbsp;К списку</button>
+              <b>templates / lite / assets / css / theme.css</b>
+              <span class="sl-chip sl-chip-neutral" title="Версия выдана при открытии; при сохранении сервер сверяет её и отклоняет запись, если файл изменил кто-то другой">версия 8f3ac1</span>
+              <button type="button" class="sl-but-blue"><i class="bi bi-save" aria-hidden="true"></i>&nbsp;Сохранить</button>
+            </div>
+            <pre class="sl-fm-code"><span class="sl-fm-code-line"><i>1</i><span><span class="sl-fm-code-com">/* Root variables: color palette, control radius */</span></span></span><span class="sl-fm-code-line"><i>2</i><span><span class="sl-fm-code-key">:root</span> {</span></span><span class="sl-fm-code-line"><i>3</i><span>  <span class="sl-fm-code-var">--sl-color-bg</span>: <span class="sl-fm-code-str">#ffffff</span>;</span></span><span class="sl-fm-code-line"><i>4</i><span>  <span class="sl-fm-code-var">--sl-color-primary</span>: <span class="sl-fm-code-str">#30a2f6</span>;</span></span><span class="sl-fm-code-line"><i>5</i><span>  <span class="sl-fm-code-var">--sl-radius-card</span>: <span class="sl-fm-code-str">10px</span>;</span></span><span class="sl-fm-code-line"><i>6</i><span>}</span></span><span class="sl-fm-code-line"><i>7</i><span> </span></span><span class="sl-fm-code-line"><i>8</i><span><span class="sl-fm-code-com">/* Attachments: parser thumbnails and alignment */</span></span></span><span class="sl-fm-code-line"><i>9</i><span><span class="sl-fm-code-key">.sl-attach</span> {</span></span><span class="sl-fm-code-line"><i>10</i><span>  display: <span class="sl-fm-code-str">inline-block</span>;</span></span><span class="sl-fm-code-line"><i>11</i><span>  max-width: <span class="sl-fm-code-str">100%</span>;</span></span><span class="sl-fm-code-line"><i>12</i><span>}</span></span></pre>
+          </div>
+
+          <aside class="sl-fm-side" data-slot="side">
+            <div class="sl-fm-side-in" data-slot="props-uploads">
+              <span class="sl-fm-cap">Свойства</span>
+              <span class="sl-fm-preview"><i class="bi bi-image" aria-hidden="true"></i></span>
+              <dl class="sl-fm-props">
+                <div><dt>Имя</dt><dd>screenshot-2026-08-10.png</dd></div>
+                <div><dt>Тип</dt><dd>image · png</dd></div>
+                <div><dt>Размер</dt><dd>248 KB</dd></div>
+                <div><dt>Разрешение</dt><dd>1280 × 720</dd></div>
+                <div><dt>Изменён</dt><dd>10.08.2026 14:20</dd></div>
+                <div><dt>Адрес</dt><dd title="uploads/files/screenshot-2026-08-10.png">uploads/files/screensh…</dd></div>
+                <div><dt>Полный путь</dt><dd title="C:/OSPanel/home/slaed.loc/public/uploads/files/screenshot-2026-08-10.png">C:/OSPanel/home/slaed…</dd></div>
+                <div><dt>Владелец</dt><dd>SLAED CMS</dd></div>
+              </dl>
+              <div class="sl-fm-acts">
+                <button type="button" class="sl-but-mini sl-is-muted" title="Скачать" aria-label="Скачать"><i class="bi bi-download" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-is-muted" title="Переименовать" aria-label="Переименовать"><i class="bi bi-input-cursor-text" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-is-muted" title="Переместить" aria-label="Переместить"><i class="bi bi-folder-symlink" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-is-muted" title="Сжать в ZIP" aria-label="Сжать в ZIP"><i class="bi bi-file-zip" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-fm-danger" title="Удалить" aria-label="Удалить"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+              </div>
+              <div class="sl-alert sl-alert-warn">
+                <div class="sl-alert-body">Переименование и перенос не обновляют ссылки в уже опубликованных материалах: старый адрес перестанет открываться. Операция разрешена, решение за администратором.</div>
+              </div>
+            </div>
+
+            <div class="sl-fm-side-in" data-slot="props-system" hidden>
+              <span class="sl-fm-cap">Свойства</span>
+              <span class="sl-fm-preview"><i class="bi bi-filetype-css" aria-hidden="true"></i></span>
+              <dl class="sl-fm-props">
+                <div><dt>Имя</dt><dd>theme.css</dd></div>
+                <div><dt>Тип</dt><dd>text · css</dd></div>
+                <div><dt>Размер</dt><dd>198 KB</dd></div>
+                <div><dt>Строк</dt><dd>5 753</dd></div>
+                <div><dt>Изменён</dt><dd>10.08.2026 11:04</dd></div>
+                <div><dt>Путь</dt><dd title="templates/lite/assets/css/theme.css">templates/lite/assets/…</dd></div>
+                <div><dt>Полный путь</dt><dd title="C:/OSPanel/home/slaed.loc/public/templates/lite/assets/css/theme.css">C:/OSPanel/home/slaed…</dd></div>
+                <div><dt>Версия</dt><dd>8f3ac1</dd></div>
+              </dl>
+              <div class="sl-fm-acts">
+                <button type="button" class="sl-but-mini sl-fm-main" data-act="edit" title="Редактировать" aria-label="Редактировать"><i class="bi bi-pencil-square" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-is-muted" title="Скачать" aria-label="Скачать"><i class="bi bi-download" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-is-muted" title="Переименовать" aria-label="Переименовать"><i class="bi bi-input-cursor-text" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-is-muted" title="Переместить" aria-label="Переместить"><i class="bi bi-folder-symlink" aria-hidden="true"></i></button>
+                <button type="button" class="sl-but-mini sl-fm-danger" title="Удалить" aria-label="Удалить"><i class="bi bi-trash3" aria-hidden="true"></i></button>
+              </div>
+              <div class="sl-alert sl-alert-warn">
+                <div class="sl-alert-body">Файл участвует в работе сайта. При сохранении сервер сверяет версию и отклоняет запись, если файл успел изменить кто-то другой.</div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+
+        <!-- Панель массовых действий: появляется, когда отмечен хотя бы один объект -->
+        <div class="sl-bulk-bar" data-slot="bulk" hidden>
+          <span class="sl-bulk-count" data-slot="bulk-count"></span>
+          <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-bulk="down"><i class="bi bi-download" aria-hidden="true"></i>&nbsp;Скачать архивом</button>
+          <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-bulk="move"><i class="bi bi-folder-symlink" aria-hidden="true"></i>&nbsp;Переместить</button>
+          <button type="button" class="sl-chip sl-chip-warn sl-live-act" data-bulk="zip"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;Сжать в ZIP</button>
+          <button type="button" class="sl-chip sl-chip-danger sl-live-act" data-bulk="delete"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;Удалить</button>
+          <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-bulk="clear"><i class="bi bi-x-lg" aria-hidden="true"></i>&nbsp;Снять отметки</button>
+        </div>
+
+        <div class="sl-fm-caps" data-slot="caps"></div>
+
+        <div class="sl-fm-foot">
+          <span data-slot="info"></span>
+          <div class="sl-pager">
+            <div class="sl-pager-main">
+              <div class="sl-pager-pages" data-slot="pages"></div>
+              <div class="sl-pager-nextprev">
+                <b class="sl-pager-prev" data-slot="prev"></b>
+                <b class="sl-pager-next" data-slot="next"></b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Системная модалка темы: dialog.sl-modal, шапка sl-modal-title, крестик sl-but-mini.sl-modal-close, подвал sl-modal-foot с чипсами -->
+<dialog class="sl-modal sl-modal-wide" data-slot="modal" aria-label="Предпросмотр файла">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-image" aria-hidden="true"></i> <span data-slot="m-title"></span></div>
+    <button type="button" class="sl-but-mini sl-modal-close" data-slot="m-close" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <div class="sl-fm-modal-grid">
+      <div class="sl-fm-modal-stage">
+        <button type="button" class="sl-but-mini sl-fm-modal-nav sl-fm-modal-prev" data-slot="m-prev" title="Предыдущий" aria-label="Предыдущий"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+        <span class="sl-fm-modal-img" data-slot="m-img"><i class="bi bi-image" aria-hidden="true"></i></span>
+        <button type="button" class="sl-but-mini sl-fm-modal-nav sl-fm-modal-next" data-slot="m-next" title="Следующий" aria-label="Следующий"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <aside>
+        <span class="sl-fm-cap">Свойства</span>
+        <dl class="sl-fm-props" data-slot="m-props"></dl>
+      </aside>
+    </div>
+    <div class="sl-modal-foot">
+      <span class="sl-fm-modal-count" data-slot="m-count"></span>
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-act="down"><i class="bi bi-download" aria-hidden="true"></i>&nbsp;Скачать</button>
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-act="rename"><i class="bi bi-input-cursor-text" aria-hidden="true"></i>&nbsp;Переименовать</button>
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-act="move"><i class="bi bi-folder-symlink" aria-hidden="true"></i>&nbsp;Переместить</button>
+      <button type="button" class="sl-chip sl-chip-warn sl-live-act" data-act="zip"><i class="bi bi-file-zip" aria-hidden="true"></i>&nbsp;В архив</button>
+      <button type="button" class="sl-chip sl-chip-danger sl-live-act" data-act="delete"><i class="bi bi-trash3" aria-hidden="true"></i>&nbsp;Удалить</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function() {
+    var ctxs = {
+        uploads: {
+            cap: 'Директории загрузок', crumbs: ['uploads', 'files'], picker: true, tools: true,
+            info: '7 объектов · 3.0 MB · выбран screenshot-2026-08-10.png',
+            caps: [['просмотр', ''], ['предпросмотр', ''], ['скачивание', ''], ['загрузка', 'accent'], ['удаление', 'accent'], ['архивирование', 'accent'], ['переименование', 'accent'], ['перемещение', 'accent'], ['создание директории', 'accent']]
+        },
+        system: {
+            cap: 'Дерево сайта', crumbs: ['SLAED', 'templates', 'lite', 'assets', 'css'], picker: false, tools: false,
+            info: '6 объектов · выбран theme.css · полный доступ супер-администратора',
+            caps: [['просмотр', ''], ['предпросмотр', ''], ['скачивание', ''], ['правка текста', 'accent'], ['сохранение с проверкой версии', 'accent'], ['удаление', 'accent'], ['переименование', 'accent'], ['перемещение', 'accent']]
+        }
+    };
+    var keys = { '': 'sl-chip-success', accent: 'sl-chip-accent' };
+    /* Один список объектов на контекст: из него рисуются и таблица, и плитки, и галерея предпросмотра */
+    var sets = {
+        uploads: [
+            { name: 'thumb', kind: 'директория', mime: 'directory', size: '—', date: '10.08.2026', full: '10.08.2026 09:12', dim: '—', tone: 'dir', icon: 'folder2', dir: true },
+            { name: 'screenshot-2026-08-10.png', kind: 'PNG', mime: 'image · png', size: '248 KB', date: 'сегодня', full: '10.08.2026 14:20', dim: '1280 × 720', tone: 'img', icon: 'image', img: true },
+            { name: 'logo-slaed.webp', kind: 'WEBP', mime: 'image · webp', size: '34 KB', date: 'вчера', full: '09.08.2026 18:02', dim: '512 × 512', tone: 'img', icon: 'image', img: true },
+            { name: 'banner-autumn.jpg', kind: 'JPG', mime: 'image · jpeg', size: '512 KB', date: '05.08.2026', full: '05.08.2026 09:41', dim: '1920 × 480', tone: 'img', icon: 'image', img: true },
+            { name: 'hero-cover.avif', kind: 'AVIF', mime: 'image · avif', size: '96 KB', date: '02.08.2026', full: '02.08.2026 12:15', dim: '1600 × 900', tone: 'img', icon: 'image', img: true },
+            { name: 'manual-6-3.pdf', kind: 'PDF', mime: 'document · pdf', size: '1.2 MB', date: '28.07.2026', full: '28.07.2026 08:44', dim: '—', tone: 'doc', icon: 'file-earmark-pdf' },
+            { name: 'module-pack.zip', kind: 'ZIP', mime: 'archive · zip', size: '860 KB', date: '21.07.2026', full: '21.07.2026 16:58', dim: '—', tone: 'zip', icon: 'file-earmark-zip' }
+        ],
+        system: [
+            { name: 'assets', kind: 'директория', mime: 'directory', size: '—', date: '09.08.2026', full: '09.08.2026 20:10', dim: '—', tone: 'dir', icon: 'folder2', dir: true },
+            { name: 'fragments', kind: 'директория', mime: 'directory', size: '—', date: '10.08.2026', full: '10.08.2026 07:55', dim: '—', tone: 'dir', icon: 'folder2', dir: true },
+            { name: 'theme.css', kind: 'CSS', mime: 'text · css', size: '198 KB', date: 'сегодня', full: '10.08.2026 11:04', dim: '5 753 строки', tone: 'code', icon: 'filetype-css', edit: true },
+            { name: 'base.css', kind: 'CSS', mime: 'text · css', size: '14 KB', date: '08.08.2026', full: '08.08.2026 13:20', dim: '580 строк', tone: 'code', icon: 'filetype-css', edit: true },
+            { name: 'index.php', kind: 'PHP', mime: 'text · php', size: '19 KB', date: '04.08.2026', full: '04.08.2026 22:31', dim: '612 строк', tone: 'code', icon: 'filetype-php', edit: true },
+            { name: 'favicon.svg', kind: 'SVG', mime: 'image · svg', size: '2 KB', date: '12.06.2026', full: '12.06.2026 10:00', dim: '64 × 64', tone: 'img', icon: 'filetype-svg', img: true }
+        ]
+    };
+    var ctxnow = 'uploads';
+
+    /* Веер действий строки — системный sl-dial; администратору доступно всё, поэтому список не режется правами */
+    function getDial(item, num) {
+        var box = document.createElement('span');
+        var acts = [];
+        var html = '<button type="button" class="sl-dial-toggle sl-but-mini" title="Действия" aria-label="Действия"><i class="bi bi-three-dots" aria-hidden="true"></i></button>';
+        box.className = 'sl-dial';
+        if (item.dir) acts.push(['open', 'box-arrow-in-right', 'Открыть']);
+        if (item.edit) acts.push(['edit', 'pencil-square', 'Открыть в редакторе']);
+        if (item.img) acts.push(['zoom', 'arrows-fullscreen', 'Предпросмотр']);
+        if (!item.dir) acts.push(['down', 'download', 'Скачать']);
+        acts.push(['rename', 'input-cursor-text', 'Переименовать (POST)']);
+        acts.push(['move', 'folder-symlink', 'Переместить (POST)']);
+        if (!item.dir) acts.push(['zip', 'file-zip', 'Сжать в ZIP (POST)']);
+        acts.push(['delete', 'trash3', 'Удалить (POST)']);
+        acts.forEach(function(act) {
+            html += '<a class="sl-dial-item sl-but-mini" href="#" data-act="' + act[0] + '" data-num="' + num + '"'
+                + (act[0] === 'delete' ? ' data-sl-confirm="Удалить ' + item.name + '?"' : '')
+                + ' title="' + act[2] + '" aria-label="' + act[2] + '"><i class="bi bi-' + act[1] + '" aria-hidden="true"></i></a>';
+        });
+        box.innerHTML = html;
+        return box;
+    }
+    function getZoom(num) {
+        var el = document.createElement('a');
+        el.className = 'sl-fm-zoom';
+        el.href = '#';
+        el.title = 'Открыть предпросмотр';
+        el.setAttribute('data-zoom', String(num));
+        el.innerHTML = '<i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>';
+        return el;
+    }
+    function getRow(item, num) {
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-num', String(num));
+        tr.innerHTML = '<td class="sl-col-check"><input type="checkbox" data-pick="' + num + '"></td>'
+            + '<td><span class="sl-fm-name"><span class="sl-fm-thumb sl-fm-thumb-' + item.tone + '"><i class="bi bi-' + item.icon + '" aria-hidden="true"></i></span><span>' + item.name + '</span></span></td>'
+            + '<td>' + item.kind + '</td><td>' + item.size + '</td><td>' + item.date + '</td>'
+            + '<td class="sl-col-actions"></td>';
+        if (item.edit) tr.setAttribute('data-open', 'editor');
+        if (item.img) tr.querySelector('.sl-fm-thumb').appendChild(getZoom(num));
+        tr.querySelector('.sl-col-actions').appendChild(getDial(item, num));
+        return tr;
+    }
+    function getTile(item, num) {
+        var cell = document.createElement('div');
+        cell.className = 'sl-fm-cell';
+        cell.setAttribute('data-num', String(num));
+        cell.innerHTML = '<div class="sl-fm-tile"><span class="sl-fm-tile-img sl-fm-thumb-' + item.tone + '"><i class="bi bi-' + item.icon + '" aria-hidden="true"></i></span>'
+            + (item.dir ? '' : '<span class="sl-fm-tile-kind">' + item.kind + '</span>')
+            + '<span class="sl-fm-tile-cap"><b>' + item.name + '</b><small>' + item.size + ' · ' + item.date + '</small></span></div>';
+        if (item.img) cell.querySelector('.sl-fm-tile-img').appendChild(getZoom(num));
+        cell.appendChild(getPick(item, num));
+        cell.appendChild(getDial(item, num));
+        return cell;
+    }
+    /* Отметка объекта: один набор номеров на таблицу и плитки, поэтому оба вида показывают одно состояние */
+    function getPick(item, num) {
+        var el = document.createElement('label');
+        el.className = 'sl-fm-pick';
+        el.title = 'Отметить ' + item.name;
+        el.innerHTML = '<input type="checkbox" data-pick="' + num + '">';
+        return el;
+    }
+    /* Текущий объект: его свойства показаны справа и его имя стоит в строке состояния */
+    var cur = 0;
+    function setCurrent(num) {
+        var item = sets[ctxnow][num];
+        var side = document.querySelector('[data-slot="props-' + ctxnow + '"]');
+        var img = side.querySelector('.sl-fm-preview');
+        var list = side.querySelector('.sl-fm-props');
+        var base = ctxnow === 'uploads' ? 'uploads/files/' : 'templates/lite/assets/css/';
+        var rows = [['Имя', item.name], ['Тип', item.mime], ['Размер', item.size]];
+        var edit = side.querySelector('[data-act="edit"]');
+        var note = side.querySelector('.sl-alert');
+        cur = num;
+        if (item.dim !== '—') rows.push([item.edit ? 'Объём' : 'Разрешение', item.dim]);
+        rows.push(['Изменён', item.full]);
+        rows.push(['Путь', base + item.name]);
+        rows.push(['Полный путь', 'C:/OSPanel/home/slaed.loc/public/' + base + item.name]);
+        /* Владелец и версия есть у файла, а не у директории */
+        if (!item.dir && ctxnow === 'uploads') rows.push(['Владелец', 'SLAED CMS']);
+        if (item.edit) rows.push(['Версия', '8f3ac1']);
+        if (edit) edit.disabled = !item.edit;
+        if (note) note.hidden = !!item.dir;
+        img.className = 'sl-fm-preview sl-fm-thumb-' + item.tone;
+        img.innerHTML = '<i class="bi bi-' + item.icon + '" aria-hidden="true"></i>';
+        list.replaceChildren();
+        rows.forEach(function(row) {
+            var line = document.createElement('div');
+            var dt = document.createElement('dt');
+            var dd = document.createElement('dd');
+            dt.textContent = row[0];
+            dd.textContent = row[1];
+            dd.title = row[1];
+            line.appendChild(dt);
+            line.appendChild(dd);
+            list.appendChild(line);
+        });
+        document.querySelectorAll('.sl-fm-cell').forEach(function(el) {
+            el.classList.toggle('sl-is-current', el.getAttribute('data-num') === String(num));
+        });
+        setInfo();
+    }
+    function setInfo() {
+        var total = sets[ctxnow].length;
+        var name = sets[ctxnow][cur] ? sets[ctxnow][cur].name : '';
+        var tail = ctxnow === 'system' ? ' · полный доступ супер-администратора' : ' · 3.0 MB';
+        document.querySelector('[data-slot="info"]').textContent = total + ' объектов' + tail + ' · открыт ' + name;
+    }
+    var picks = new Set();
+    function setPicks() {
+        var bulk = document.querySelector('[data-slot="bulk"]');
+        var all = document.querySelector('[data-slot="rows-' + ctxnow + '"] [data-slot="pick-all"]');
+        var num = picks.size;
+        var total = sets[ctxnow].length;
+        document.querySelectorAll('[data-pick]').forEach(function(el) {
+            el.checked = picks.has(parseInt(el.getAttribute('data-pick'), 10));
+        });
+        bulk.hidden = num === 0;
+        document.querySelector('[data-slot="bulk-count"]').textContent = 'Отмечено объектов: ' + num + ' из ' + total;
+        if (all) {
+            all.checked = num > 0 && num === total;
+            all.indeterminate = num > 0 && num < total;
+        }
+    }
+    function setLists() {
+        var rows = document.querySelector('[data-slot="rows-' + ctxnow + '"] tbody');
+        var tiles = document.querySelector('[data-slot="tiles"]');
+        rows.replaceChildren();
+        tiles.replaceChildren();
+        sets[ctxnow].forEach(function(item, i) {
+            rows.appendChild(getRow(item, i));
+            tiles.appendChild(getTile(item, i));
+        });
+        rows.querySelectorAll('tr').forEach(function(row) {
+            row.addEventListener('click', function() {
+                rows.querySelectorAll('tr').forEach(function(el) { el.removeAttribute('aria-selected'); });
+                row.setAttribute('aria-selected', 'true');
+                setCurrent(parseInt(row.getAttribute('data-num'), 10));
+            });
+            row.addEventListener('dblclick', function() { if (row.getAttribute('data-open') === 'editor') setEditor(true); });
+        });
+        if (rows.firstElementChild) rows.firstElementChild.setAttribute('aria-selected', 'true');
+        picks.clear();
+        setPicks();
+        setCurrent(0);
+    }
+
+    function setCtx(name) {
+        var cs = ctxs[name];
+        document.querySelectorAll('.sl-tabs-link').forEach(function(el) { el.classList.toggle('sl-is-active', el.getAttribute('data-ctx') === name); });
+        if (!cs) return;
+        document.querySelector('[data-slot="tree-cap"]').textContent = cs.cap;
+        document.querySelector('[data-slot="tree-uploads"]').hidden = name !== 'uploads';
+        document.querySelector('[data-slot="tree-system"]').hidden = name !== 'system';
+        document.querySelector('[data-slot="rows-uploads"]').hidden = name !== 'uploads';
+        document.querySelector('[data-slot="rows-system"]').hidden = name !== 'system';
+        document.querySelector('[data-slot="props-uploads"]').hidden = name !== 'uploads';
+        document.querySelector('[data-slot="props-system"]').hidden = name !== 'system';
+        document.querySelector('[data-slot="picker"]').hidden = !cs.picker;
+        document.querySelector('[data-slot="upload"]').hidden = !cs.tools;
+        document.querySelector('[data-slot="mkdir"]').hidden = !cs.tools;
+        ctxnow = name;
+        setLists();
+        setEditor(false);
+        setCrumbs(cs.crumbs);
+        setCaps(cs.caps);
+    }
+    function setCrumbs(parts) {
+        var box = document.querySelector('[data-slot="crumbs"]');
+        box.replaceChildren();
+        parts.forEach(function(part, i) {
+            var last = i === parts.length - 1;
+            var el;
+            if (i) {
+                el = document.createElement('span');
+                el.textContent = '/';
+                box.appendChild(el);
+            }
+            el = document.createElement(last ? 'b' : 'a');
+            if (!last) el.href = '#';
+            el.textContent = part;
+            box.appendChild(el);
+        });
+    }
+    function setCaps(rows) {
+        var box = document.querySelector('[data-slot="caps"]');
+        var lab = document.createElement('b');
+        box.replaceChildren();
+        lab.textContent = 'Доступно:';
+        box.appendChild(lab);
+        rows.forEach(function(row) {
+            var el = document.createElement('span');
+            el.className = 'sl-chip ' + keys[row[1]];
+            el.textContent = row[0];
+            box.appendChild(el);
+        });
+    }
+    function setEditor(on) {
+        document.querySelector('[data-slot="list"]').hidden = on;
+        document.querySelector('[data-slot="editor"]').hidden = !on;
+        document.querySelector('[data-slot="side"]').hidden = on;
+        document.querySelector('.sl-fm-split').style.gridTemplateColumns = on ? '236px minmax(0, 1fr)' : '';
+    }
+    /* Системный пагинатор админки: sl-pnum для номеров, sl-pnum-nav для стрелок, стрелка рисуется темой */
+    function getPageLink(num, cur) {
+        var el = document.createElement(cur ? 'span' : 'a');
+        el.className = 'sl-pnum' + (cur ? ' sl-pnum-cur' : '');
+        el.title = String(num);
+        el.textContent = String(num);
+        if (!cur) {
+            el.href = '#';
+            el.addEventListener('click', function(ev) { ev.preventDefault(); setPage(num); });
+        }
+        return el;
+    }
+    function getNavLink(label, num, on) {
+        var el = document.createElement(on ? 'a' : 'span');
+        el.className = 'sl-pnum sl-pnum-nav';
+        el.title = label;
+        el.textContent = label;
+        if (on) {
+            el.href = '#';
+            el.addEventListener('click', function(ev) { ev.preventDefault(); setPage(num); });
+        }
+        return el;
+    }
+    function setPage(num) {
+        var pages = 2;
+        var box = document.querySelector('[data-slot="pages"]');
+        var i;
+        box.replaceChildren();
+        for (i = 1; i <= pages; i++) box.appendChild(getPageLink(i, i === num));
+        document.querySelector('[data-slot="prev"]').replaceChildren(getNavLink('Назад', num - 1, num > 1));
+        document.querySelector('[data-slot="next"]').replaceChildren(getNavLink('Вперед', num + 1, num < pages));
+    }
+
+    document.querySelectorAll('.sl-tabs-link').forEach(function(tab) {
+        tab.addEventListener('click', function(ev) { ev.preventDefault(); setCtx(tab.getAttribute('data-ctx')); });
+    });
+    document.querySelectorAll('.sl-fm-bar [data-mode]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var mode = btn.getAttribute('data-mode');
+            var open = document.querySelector('.sl-tabs-link.sl-is-active').getAttribute('data-ctx');
+            document.querySelectorAll('.sl-fm-bar [data-mode]').forEach(function(el) { el.setAttribute('aria-pressed', String(el === btn)); });
+            document.querySelector('[data-mode-view="list"]').hidden = mode !== 'list';
+            document.querySelector('[data-mode-view="grid"]').hidden = mode !== 'grid';
+            document.querySelector('[data-slot="rows-uploads"]').hidden = open !== 'uploads';
+            document.querySelector('[data-slot="rows-system"]').hidden = open !== 'system';
+        });
+    });
+    document.querySelector('[data-slot="back"]').addEventListener('click', function() { setEditor(false); });
+    document.querySelectorAll('.sl-fm-node').forEach(function(node) {
+        node.addEventListener('click', function() {
+            node.parentNode.querySelectorAll('.sl-fm-node').forEach(function(el) { el.removeAttribute('aria-current'); });
+            node.setAttribute('aria-current', 'true');
+        });
+    });
+
+    /* Галерея на системной рамке sl-modal-wide: своя только раскладка содержимого. Предпросмотр — галерея на системной рамке: снимок, свойства, стрелки и клавиши влево-вправо; перебираются только просматриваемые объекты */
+    var modal = document.querySelector('[data-slot="modal"]');
+    var cur = 0;
+    function getShots() {
+        return sets[ctxnow].map(function(item, i) { return item.img ? i : -1; }).filter(function(i) { return i >= 0; });
+    }
+    function setModal(num) {
+        var item = sets[ctxnow][num];
+        var props = document.querySelector('[data-slot="m-props"]');
+        var shots = getShots();
+        cur = num;
+        document.querySelector('[data-slot="m-title"]').textContent = item.name;
+        document.querySelector('[data-slot="m-img"]').className = 'sl-fm-modal-img sl-fm-thumb-' + item.tone;
+        document.querySelector('[data-slot="m-img"]').innerHTML = '<i class="bi bi-' + item.icon + '" aria-hidden="true"></i>';
+        document.querySelector('[data-slot="m-count"]').textContent = (shots.indexOf(num) + 1) + ' из ' + shots.length;
+        props.replaceChildren();
+        [['Имя', item.name], ['Тип', item.mime], ['Размер', item.size], ['Разрешение', item.dim], ['Изменён', item.full],
+            ['Путь', (ctxnow === 'uploads' ? 'uploads/files/' : 'templates/lite/assets/css/') + item.name]].forEach(function(row) {
+            var box = document.createElement('div');
+            var dt = document.createElement('dt');
+            var dd = document.createElement('dd');
+            dt.textContent = row[0];
+            dd.textContent = row[1];
+            dd.title = row[1];
+            box.appendChild(dt);
+            box.appendChild(dd);
+            props.appendChild(box);
+        });
+        if (!modal.open) modal.showModal();
+    }
+    function setStep(way) {
+        var shots = getShots();
+        var at = shots.indexOf(cur);
+        setModal(shots[(at + way + shots.length) % shots.length]);
+    }
+    document.addEventListener('click', function(ev) {
+        var zoom = ev.target.closest ? ev.target.closest('[data-zoom]') : null;
+        var act = ev.target.closest ? ev.target.closest('[data-act]') : null;
+        var num;
+        var ask;
+        if (zoom) {
+            ev.preventDefault();
+            setModal(parseInt(zoom.getAttribute('data-zoom'), 10));
+            return;
+        }
+        if (!act) return;
+        ev.preventDefault();
+        num = act.hasAttribute('data-num') ? parseInt(act.getAttribute('data-num'), 10) : cur;
+        if (act.getAttribute('data-act') === 'zoom') { setModal(num); return; }
+        if (act.getAttribute('data-act') === 'edit') { setEditor(true); return; }
+        ask = act.getAttribute('data-sl-confirm');
+        if (ask && !window.confirm(ask)) return;
+        if (modal.open) modal.close();
+        document.querySelector('[data-slot="info"]').textContent = act.getAttribute('title') || act.textContent.trim();
+        document.querySelector('[data-slot="info"]').textContent += ' · ' + sets[ctxnow][num].name;
+    });
+    document.querySelector('[data-slot="m-close"]').addEventListener('click', function() { modal.close(); });
+    document.querySelector('[data-slot="m-prev"]').addEventListener('click', function() { setStep(-1); });
+    document.querySelector('[data-slot="m-next"]').addEventListener('click', function() { setStep(1); });
+    modal.addEventListener('keydown', function(ev) {
+        if (ev.key === 'ArrowLeft') setStep(-1);
+        if (ev.key === 'ArrowRight') setStep(1);
+    });
+    document.addEventListener('change', function(ev) {
+        var pick = ev.target.closest ? ev.target.closest('[data-pick]') : null;
+        var all = ev.target.closest ? ev.target.closest('[data-slot="pick-all"]') : null;
+        var num;
+        if (pick) {
+            num = parseInt(pick.getAttribute('data-pick'), 10);
+            if (pick.checked) picks.add(num);
+            else picks.delete(num);
+            setPicks();
+        }
+        if (all) {
+            picks.clear();
+            if (all.checked) sets[ctxnow].forEach(function(item, i) { picks.add(i); });
+            setPicks();
+        }
+    });
+    document.querySelectorAll('[data-bulk]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var way = btn.getAttribute('data-bulk');
+            var num = picks.size;
+            if (way === 'delete' && !window.confirm('Удалить отмеченные объекты: ' + num + '?')) return;
+            if (way !== 'clear') document.querySelector('[data-slot="info"]').textContent = btn.textContent.trim() + ' · ' + num + ' объектов';
+            picks.clear();
+            setPicks();
+        });
+    });
+    /* Веер закрывается по нажатию на переключатель — как в боевом slaed.js */
+    document.addEventListener('click', function(ev) {
+        var toggle = ev.target.closest ? ev.target.closest('.sl-dial-toggle') : null;
+        document.querySelectorAll('.sl-dial.sl-open').forEach(function(dial) {
+            if (!toggle || dial !== toggle.parentNode) dial.classList.remove('sl-open');
+        });
+        if (toggle) toggle.parentNode.classList.toggle('sl-open');
+    });
+
+    document.addEventListener('click', function(ev) {
+        var cell = ev.target.closest ? ev.target.closest('.sl-fm-cell[data-num]') : null;
+        if (!cell || ev.target.closest('[data-zoom], [data-act], .sl-fm-pick')) return;
+        setCurrent(parseInt(cell.getAttribute('data-num'), 10));
+    });
+    setCtx('uploads');
+    setPage(1);
+})();
+</script>
+
+</body>
+</html>

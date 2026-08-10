@@ -1,12 +1,20 @@
 # Editor uploads 2026 — access belongs to the settings, not to the editor
 
-Status: decisions closed on 2026-08-06. Most of the schema part of section 3 landed in commit
-`4b5b679f`; batch 1 of section 4 carried the last column of it, and batches 2, 3, 4, 5 and 6 are
-done, all of them in the tree and not yet committed. The proof of batch 6 is in two places, and
-one of them has to be run by hand: `tests/Unit/EditorRoomTest.php` with `tests/Support/editor_probe.php`
-runs in the suite, and the `editor` mode of `tools/upload-route-check.php` needs a running stand and
-the four credentials in the environment. The access matrix, the guest isolation and the write guard
-over real HTTP are that mode and report as not run until somebody runs it.
+Status: closed on 2026-08-10. Decisions were closed on 2026-08-06; most of the schema part of
+section 3 landed in commit `4b5b679f` and the batches of section 4 landed in `91552eae`.
+
+Both proofs of batch 6 have now been run. `tests/Unit/EditorRoomTest.php` with
+`tests/Support/editor_probe.php` runs in the suite, and the `editor` mode of
+`tools/upload-route-check.php` was walked against a live stand on 2026-08-10 with every row
+passing: the four settings combinations against moderator, member and guest, the guest isolation
+of two sessions, and the write guard over real HTTP. `config/uploads.php` was restored byte for
+byte, the upload tree was left as it was found, and the three error logs gained nothing.
+
+One nuance the header of that tool understates: the walk needs two accounts, not four separate
+people. `is_moder()` reads the admin session only, so the same account answers as a moderator in
+the admin cookie jar and as a plain member in the front-end one.
+
+Nothing in this plan is open. What builds on it now is `docs/FILE-MANAGER-CONCEPT-2026.md`.
 
 The content editor decides for itself what a visitor may do with files. It must not. The
 module upload settings at `admin.php?name=uploads&op=config` are the only place that

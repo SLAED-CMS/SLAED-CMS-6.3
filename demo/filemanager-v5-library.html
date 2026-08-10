@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Файловый менеджер, вариант 5: Библиотека</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---------- каркас демо-страницы (не часть системы, неймспейс dx-) ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); }
+.dx-head { padding: 24px clamp(14px, 4vw, 44px) 16px; background: var(--sl-color-bg); border-bottom: 1px solid var(--sl-color-border); }
+.dx-head h1 { margin: 0 0 6px; font: normal clamp(21px, 3vw, 30px)/1.15 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.dx-head p { margin: 0 0 14px; max-width: 980px; color: var(--sl-color-text-muted); font-size: 14px; line-height: 1.55; }
+.dx-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dx-nav a { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font-size: 13px; text-decoration: none; }
+.dx-nav a:hover { background: color-mix(in srgb, var(--sl-color-primary) 18%, transparent); }
+.dx-nav a[aria-current="page"] { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.dx-wrap { max-width: 1280px; margin: 0 auto; padding: 26px clamp(14px, 4vw, 44px) 0; }
+.dx-note { margin: 0 0 18px; padding: 12px 14px; border-left: 3px solid var(--sl-color-primary); border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font-size: 13px; line-height: 1.55; }
+.dx-note b { color: var(--sl-color-text-heading); }
+.dx-stage { position: relative; padding: 30px 18px 46px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); overflow: hidden; }
+.dx-stage::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(var(--sl-color-border) 1px, transparent 1px); background-size: 18px 18px; opacity: 0.7; }
+.dx-stage > * { position: relative; }
+
+/* ---------- кандидат в theme.css: окно, вариант «Библиотека» ---------- */
+.sl-fm { width: min(1020px, 100%); margin: 0 auto; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border-strong); border-radius: 12px; box-shadow: var(--sl-shadow-panel); font-size: 13px; overflow: hidden; }
+.sl-fm-head { display: flex; align-items: center; gap: var(--sl-space-sm); height: 42px; padding: 0 var(--sl-space-md); background: var(--sl-color-bg-soft); border-bottom: 1px solid var(--sl-color-border); }
+.sl-fm-head-title { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; color: var(--sl-color-text-heading); }
+.sl-fm-head-title .bi { color: var(--sl-color-primary); font-size: var(--sl-size-icon-sm); }
+.sl-fm-act { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--sl-radius-control); background: transparent; color: var(--sl-color-text-muted); cursor: pointer; }
+.sl-fm-act:hover { background: var(--sl-color-border); color: var(--sl-color-text); }
+.sl-fm-act-drag { cursor: move; }
+
+.sl-fm-split { display: grid; grid-template-columns: minmax(0, 1fr) 288px; min-height: 460px; }
+
+/* левая колонка: панель инструментов и сетка файлов */
+.sl-fm-lib { display: flex; flex-direction: column; min-width: 0; }
+.sl-fm-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--sl-color-border); }
+.sl-fm-search { position: relative; flex: 1 1 auto; min-width: 0; }
+.sl-fm-search .bi { position: absolute; top: 50%; left: 11px; transform: translateY(-50%); color: var(--sl-color-text-subtle); font-size: var(--sl-size-icon-xs); pointer-events: none; }
+.sl-fm-search input { width: 100%; height: 32px; padding: 0 12px 0 32px; border: 1px solid var(--sl-field-border); border-radius: 999px; background: var(--sl-field-bg); box-shadow: var(--sl-shadow-input); font: inherit; color: var(--sl-color-text); }
+.sl-fm-search input:focus { outline: 0; border-color: var(--sl-field-focus); box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring); }
+.sl-fm-filters { display: flex; gap: 4px; }
+.sl-fm-filter { height: 28px; padding: 0 11px; border: 1px solid var(--sl-color-border); border-radius: 999px; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font: inherit; font-size: 12px; cursor: pointer; }
+.sl-fm-filter:hover { border-color: var(--sl-color-border-strong); color: var(--sl-color-text); }
+.sl-fm-filter[aria-pressed="true"] { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent); color: var(--sl-color-brand-strong); }
+
+/* зона загрузки как первая плитка сетки */
+.sl-fm-grid { flex: 1 1 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; padding: 14px; max-height: 52vh; overflow: auto; align-content: start; }
+.sl-fm-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 128px; border: 1px dashed var(--sl-color-border-strong); border-radius: 10px; background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); font: inherit; font-size: 12px; text-align: center; cursor: pointer; }
+.sl-fm-add:hover { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent); color: var(--sl-color-primary); }
+.sl-fm-add .bi { font-size: 26px; color: var(--sl-color-primary); }
+.sl-fm-add b { font-weight: 400; color: var(--sl-color-text-heading); }
+
+.sl-fm-tile { position: relative; display: flex; flex-direction: column; padding: 0; border: 1px solid var(--sl-color-border); border-radius: 10px; background: var(--sl-color-bg); overflow: hidden; text-align: left; font: inherit; cursor: pointer; transition: border-color 0.16s ease, box-shadow 0.16s ease; }
+.sl-fm-tile-img { display: flex; align-items: center; justify-content: center; height: 94px; background: linear-gradient(135deg, #cfe6fb, #a9d3f6); color: var(--sl-color-brand-strong); font-size: 26px; }
+.sl-fm-tile:nth-child(3) .sl-fm-tile-img { background: linear-gradient(135deg, #dff0d0, #b6dd94); color: var(--sl-color-success); }
+.sl-fm-tile:nth-child(4) .sl-fm-tile-img { background: linear-gradient(135deg, #fde6cd, #f8c58a); color: var(--sl-color-warning); }
+.sl-fm-tile:nth-child(5) .sl-fm-tile-img { background: linear-gradient(135deg, #e6dcf5, #cbb6ea); color: var(--sl-color-accent); }
+.sl-fm-tile:nth-child(6) .sl-fm-tile-img { background: linear-gradient(135deg, #fbd5d5, #f5a9a9); color: var(--sl-color-danger); }
+.sl-fm-tile:nth-child(7) .sl-fm-tile-img { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); }
+.sl-fm-tile:nth-child(8) .sl-fm-tile-img { background: linear-gradient(135deg, #d5e8e2, #a8d3c7); color: var(--sl-color-success); }
+.sl-fm-tile-cap { padding: 7px 9px; border-top: 1px solid var(--sl-color-border); }
+.sl-fm-tile-cap b { display: block; overflow: hidden; font-weight: 400; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; color: var(--sl-color-text-heading); }
+.sl-fm-tile-cap small { font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-tile:hover { border-color: var(--sl-color-border-strong); }
+.sl-fm-tile[aria-pressed="true"] { border-color: var(--sl-color-primary); box-shadow: 0 0 0 3px var(--sl-field-focus-ring); }
+.sl-fm-tile-mark { position: absolute; top: 7px; right: 7px; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--sl-color-primary); color: var(--sl-color-on-dark); font-size: 11px; opacity: 0; transform: scale(0.7); transition: opacity 0.16s ease, transform 0.16s ease; }
+.sl-fm-tile[aria-pressed="true"] .sl-fm-tile-mark { opacity: 1; transform: scale(1); }
+.sl-fm-tile-kind { position: absolute; top: 7px; left: 7px; display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.86); color: var(--sl-color-text-muted); font-size: 10px; }
+
+/* правая колонка: способ вставки и свойства выбранного файла */
+.sl-fm-side { display: flex; flex-direction: column; border-left: 1px solid var(--sl-color-border); background: var(--sl-color-bg-soft); }
+.sl-fm-side-cap { padding: 12px 14px 8px; font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--sl-color-text-subtle); }
+.sl-fm-ways { display: flex; flex-direction: column; gap: 4px; padding: 0 10px; }
+.sl-fm-way { display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--sl-color-text-heading); text-align: left; font: inherit; font-size: 12px; cursor: pointer; }
+.sl-fm-way .bi { color: var(--sl-color-text-muted); font-size: var(--sl-size-icon-sm); }
+.sl-fm-way:hover { background: var(--sl-color-bg); }
+.sl-fm-way[aria-pressed="true"] { background: var(--sl-color-bg); border-color: var(--sl-color-primary); color: var(--sl-color-primary); }
+.sl-fm-way[aria-pressed="true"] .bi { color: var(--sl-color-primary); }
+.sl-fm-way small { display: block; margin-top: 2px; font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-way b { font-weight: 400; }
+
+.sl-fm-side-body { flex: 1 1 auto; padding: 12px 14px; overflow: auto; }
+.sl-fm-pane { display: none; flex-direction: column; gap: 12px; }
+.sl-fm-pane.sl-is-open { display: flex; }
+.sl-fm-label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--sl-color-text-heading); }
+.sl-fm-field { width: 100%; height: 32px; padding: 0 11px; border: 1px solid var(--sl-field-border); border-radius: var(--sl-field-radius); background: var(--sl-color-bg); box-shadow: var(--sl-shadow-input); font: inherit; color: var(--sl-color-text); }
+.sl-fm-field:focus { outline: 0; border-color: var(--sl-field-focus); box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring); }
+.sl-fm-props { margin: 0; }
+.sl-fm-props div { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--sl-color-border); font-size: 12px; }
+.sl-fm-props dt { color: var(--sl-color-text-subtle); }
+.sl-fm-props dd { margin: 0; color: var(--sl-color-text-heading); text-align: right; }
+.sl-fm-as { display: flex; flex-wrap: wrap; gap: 6px; }
+.sl-fm-as label { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border: 1px solid var(--sl-color-border); border-radius: 999px; background: var(--sl-color-bg); font-size: 12px; cursor: pointer; }
+.sl-fm-as input { position: absolute; opacity: 0; pointer-events: none; }
+.sl-fm-as label:has(input:checked) { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 10%, transparent); color: var(--sl-color-brand-strong); }
+.sl-fm-quota { font-size: 11px; color: var(--sl-color-text-muted); }
+.sl-fm-quota-track { display: block; height: 5px; margin-top: 5px; border-radius: 3px; background: var(--sl-color-bg-soft-soft); overflow: hidden; }
+.sl-fm-quota-fill { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--sl-color-primary), var(--sl-color-brand-strong)); }
+
+.sl-fm-foot { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--sl-color-bg-soft); border-top: 1px solid var(--sl-color-border); }
+.sl-fm-foot-info { flex: 1 1 auto; font-size: 12px; color: var(--sl-color-text-muted); }
+.sl-fm-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 16px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg); color: var(--sl-color-text-heading); font: inherit; font-size: 13px; cursor: pointer; }
+.sl-fm-btn:hover { border-color: var(--sl-color-border-strong); }
+.sl-fm-btn-main { border-color: var(--sl-color-primary); background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-fm-btn-main:hover { background: var(--sl-color-primary-hover); border-color: var(--sl-color-primary-hover); }
+
+@media (max-width: 860px) { .sl-fm-split { grid-template-columns: 1fr; } .sl-fm-side { border-left: 0; border-top: 1px solid var(--sl-color-border); } }
+</style>
+</head>
+<body>
+
+<header class="dx-head">
+  <h1>Файловый менеджер — вариант 5: «Библиотека»</h1>
+  <p>Главный экран — хранилище модуля, а не форма. Файлы показаны плитками, загрузка встроена первой плиткой сетки, а три способа вставки живут в правой колонке и переключают её содержимое. Это единственный вариант, где окно оправдывает своё новое имя буквально: сначала библиотека, потом действие.</p>
+  <ul class="dx-nav">
+    <li><a href="filemanager-v1-tabs.html">1. Сегменты</a></li>
+    <li><a href="filemanager-v2-rail.html">2. Боковой рельс</a></li>
+    <li><a href="filemanager-v3-chooser.html">3. Карточки выбора</a></li>
+    <li><a href="filemanager-v4-smart.html">4. Умная зона</a></li>
+    <li><a href="filemanager-v5-library.html" aria-current="page">5. Библиотека</a></li>
+    <li><a href="filemanager-v6-accordion.html">6. Аккордеон</a></li>
+    <li><a href="filemanager-v7-spotlight.html">7. Затемнение</a></li>
+    <li><a href="filemanager-v8-compact.html">8. Компакт</a></li>
+  </ul>
+</header>
+
+<div class="dx-wrap">
+  <p class="dx-note"><b>Что решает:</b> сегодня список загруженных файлов — самая нижняя и самая незаметная часть окна, хотя повторная вставка уже загруженной картинки случается чаще, чем новая загрузка. Здесь он занимает главное место, получает поиск и фильтр по типу, а плитки показывают, что именно лежит в модуле. Способы «Ссылка» и «Встроить в текст» библиотеку не используют — при их выборе левая колонка гаснет и работа идёт в правой.</p>
+
+  <div class="dx-stage">
+
+    <div class="sl-fm" role="dialog" aria-label="Файловый менеджер">
+      <div class="sl-fm-head">
+        <button type="button" class="sl-fm-act sl-fm-act-drag" title="Переместить окно" aria-label="Переместить окно"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
+        <span class="sl-fm-head-title"><i class="bi bi-folder2-open" aria-hidden="true"></i>Файловый менеджер</span>
+        <button type="button" class="sl-fm-act" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+        <button type="button" class="sl-fm-act" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="sl-fm-split">
+
+        <div class="sl-fm-lib" data-slot="lib">
+          <div class="sl-fm-bar">
+            <span class="sl-fm-search"><i class="bi bi-search" aria-hidden="true"></i><input type="text" placeholder="Поиск по имени файла"></span>
+            <span class="sl-fm-filters">
+              <button type="button" class="sl-fm-filter" aria-pressed="true">Все</button>
+              <button type="button" class="sl-fm-filter" aria-pressed="false">Картинки</button>
+              <button type="button" class="sl-fm-filter" aria-pressed="false">Файлы</button>
+            </span>
+          </div>
+
+          <div class="sl-fm-grid">
+            <button type="button" class="sl-fm-add"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><b>Загрузить</b><span>или перетащите сюда</span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="true"><span class="sl-fm-tile-img"><i class="bi bi-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">PNG</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>screenshot-2026-08-10.png</b><small>248 KB · 1280×720</small></span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="false"><span class="sl-fm-tile-img"><i class="bi bi-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">WEBP</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>logo-slaed.webp</b><small>34 KB · 512×512</small></span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="false"><span class="sl-fm-tile-img"><i class="bi bi-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">JPG</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>banner-autumn.jpg</b><small>512 KB · 1920×480</small></span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="false"><span class="sl-fm-tile-img"><i class="bi bi-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">AVIF</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>hero-cover.avif</b><small>96 KB · 1600×900</small></span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="false"><span class="sl-fm-tile-img"><i class="bi bi-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">GIF</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>loader.gif</b><small>12 KB · 64×64</small></span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="false"><span class="sl-fm-tile-img"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">ZIP</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>module-pack.zip</b><small>860 KB</small></span></button>
+            <button type="button" class="sl-fm-tile" aria-pressed="false"><span class="sl-fm-tile-img"><i class="bi bi-image" aria-hidden="true"></i></span><span class="sl-fm-tile-kind">PNG</span><span class="sl-fm-tile-mark"><i class="bi bi-check-lg" aria-hidden="true"></i></span><span class="sl-fm-tile-cap"><b>avatar-round.png</b><small>18 KB · 200×200</small></span></button>
+          </div>
+        </div>
+
+        <aside class="sl-fm-side">
+          <span class="sl-fm-side-cap">Способ вставки</span>
+          <div class="sl-fm-ways">
+            <button type="button" class="sl-fm-way" data-pane="p-up" aria-pressed="true"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span><b>Загрузить на сервер</b><small>из библиотеки или новым файлом</small></span></button>
+            <button type="button" class="sl-fm-way" data-pane="p-url" aria-pressed="false"><i class="bi bi-link-45deg" aria-hidden="true"></i><span><b>Ссылка на изображение</b><small>внешний адрес</small></span></button>
+            <button type="button" class="sl-fm-way" data-pane="p-emb" aria-pressed="false"><i class="bi bi-file-earmark-code" aria-hidden="true"></i><span><b>Встроить в текст</b><small>base64 в записи</small></span></button>
+          </div>
+
+          <div class="sl-fm-side-body">
+            <section class="sl-fm-pane sl-is-open" data-pane="p-up">
+              <div>
+                <span class="sl-fm-label">Вставить как</span>
+                <div class="sl-fm-as">
+                  <label><input type="radio" name="as" value="image" checked>Изображение</label>
+                  <label><input type="radio" name="as" value="attach">Миниатюру или файл</label>
+                </div>
+              </div>
+              <div>
+                <label class="sl-fm-label" for="v5-alt">Описание</label>
+                <input type="text" id="v5-alt" class="sl-fm-field" placeholder="Что изображено на картинке">
+              </div>
+              <dl class="sl-fm-props">
+                <div><dt>Файл</dt><dd>screenshot-2026-08-10.png</dd></div>
+                <div><dt>Размер</dt><dd>248 KB</dd></div>
+                <div><dt>Разрешение</dt><dd>1280 × 720</dd></div>
+                <div><dt>Загружен</dt><dd>10.08.2026</dd></div>
+              </dl>
+              <p class="sl-fm-quota">Занято 12 MB из 100 MB<span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" style="width: 12%"></span></span></p>
+            </section>
+
+            <section class="sl-fm-pane" data-pane="p-url">
+              <div>
+                <label class="sl-fm-label" for="v5-url">Адрес изображения</label>
+                <input type="text" id="v5-url" class="sl-fm-field" placeholder="https://example.org/picture.png">
+              </div>
+              <div>
+                <label class="sl-fm-label" for="v5-url-alt">Описание</label>
+                <input type="text" id="v5-url-alt" class="sl-fm-field" placeholder="Что изображено на картинке">
+              </div>
+              <div class="sl-alert sl-alert-info"><div class="sl-alert-body">Файл остаётся на чужом сервере и в библиотеку модуля не попадает.</div></div>
+            </section>
+
+            <section class="sl-fm-pane" data-pane="p-emb">
+              <div class="sl-alert sl-alert-warn"><div class="sl-alert-body">Изображение кодируется в base64 и сохраняется прямо в тексте. Только для небольших изображений.</div></div>
+              <div>
+                <label class="sl-fm-label" for="v5-emb-alt">Описание</label>
+                <input type="text" id="v5-emb-alt" class="sl-fm-field" placeholder="Что изображено на картинке">
+              </div>
+              <p class="sl-fm-quota">Место в записи: 8 KB из 64 KB<span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" style="width: 13%"></span></span></p>
+            </section>
+          </div>
+        </aside>
+
+      </div>
+
+      <div class="sl-fm-foot">
+        <span class="sl-fm-foot-info" data-slot="info">Выбран 1 файл · screenshot-2026-08-10.png</span>
+        <button type="button" class="sl-fm-btn"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Обновить</button>
+        <button type="button" class="sl-fm-btn">Отмена</button>
+        <button type="button" class="sl-fm-btn sl-fm-btn-main"><i class="bi bi-check-lg" aria-hidden="true"></i>Вставить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+    var lib = document.querySelector('[data-slot="lib"]');
+    var info = document.querySelector('[data-slot="info"]');
+    document.querySelectorAll('.sl-fm-way').forEach(function(way) {
+        way.addEventListener('click', function() {
+            var name = way.getAttribute('data-pane');
+            document.querySelectorAll('.sl-fm-way').forEach(function(el) { el.setAttribute('aria-pressed', String(el === way)); });
+            document.querySelectorAll('.sl-fm-pane').forEach(function(el) { el.classList.toggle('sl-is-open', el.getAttribute('data-pane') === name); });
+            lib.style.opacity = name === 'p-up' ? '' : '0.4';
+            lib.style.pointerEvents = name === 'p-up' ? '' : 'none';
+            info.textContent = name === 'p-up' ? 'Выбран 1 файл · screenshot-2026-08-10.png' : (name === 'p-url' ? 'Внешний адрес — библиотека не используется' : 'base64 в тексте — библиотека не используется');
+        });
+    });
+    document.querySelectorAll('.sl-fm-tile').forEach(function(tile) {
+        tile.addEventListener('click', function() {
+            document.querySelectorAll('.sl-fm-tile').forEach(function(el) { el.setAttribute('aria-pressed', String(el === tile)); });
+            info.textContent = 'Выбран 1 файл · ' + tile.querySelector('b').textContent;
+        });
+    });
+    document.querySelectorAll('.sl-fm-filter').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.sl-fm-filter').forEach(function(el) { el.setAttribute('aria-pressed', String(el === btn)); });
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

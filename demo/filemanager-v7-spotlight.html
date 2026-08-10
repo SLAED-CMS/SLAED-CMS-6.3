@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Файловый менеджер, вариант 7: Затемнение</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---------- каркас демо-страницы (не часть системы, неймспейс dx-) ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); }
+.dx-head { padding: 24px clamp(14px, 4vw, 44px) 16px; background: var(--sl-color-bg); border-bottom: 1px solid var(--sl-color-border); }
+.dx-head h1 { margin: 0 0 6px; font: normal clamp(21px, 3vw, 30px)/1.15 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.dx-head p { margin: 0 0 14px; max-width: 980px; color: var(--sl-color-text-muted); font-size: 14px; line-height: 1.55; }
+.dx-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dx-nav a { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font-size: 13px; text-decoration: none; }
+.dx-nav a:hover { background: color-mix(in srgb, var(--sl-color-primary) 18%, transparent); }
+.dx-nav a[aria-current="page"] { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.dx-wrap { max-width: 1280px; margin: 0 auto; padding: 26px clamp(14px, 4vw, 44px) 0; }
+.dx-note { margin: 0 0 18px; padding: 12px 14px; border-left: 3px solid var(--sl-color-primary); border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font-size: 13px; line-height: 1.55; }
+.dx-note b { color: var(--sl-color-text-heading); }
+
+/* сцена изображает страницу редактора под затемнением */
+.dx-stage { position: relative; min-height: 640px; padding: 20px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); overflow: hidden; }
+.dx-fake { padding: 16px; border: 1px solid var(--sl-color-border); border-radius: 8px; }
+.dx-fake-bar { display: flex; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--sl-color-border); color: var(--sl-color-text-subtle); font-size: 17px; }
+.dx-fake p { margin: 14px 0 0; height: 9px; border-radius: 5px; background: var(--sl-color-bg-soft-alt); }
+.dx-fake p:nth-child(3) { width: 88%; }
+.dx-fake p:nth-child(4) { width: 74%; }
+.dx-fake p:nth-child(5) { width: 92%; }
+.dx-fake p:nth-child(6) { width: 61%; }
+
+/* ---------- кандидат в theme.css: окно, вариант «Затемнение» ---------- */
+.sl-fm-veil { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: color-mix(in srgb, #10141b 72%, transparent); backdrop-filter: blur(3px); }
+.sl-fm {
+  --fm-bg: var(--sl-color-bg-soft-dark);
+  --fm-bg-soft: var(--sl-color-bg-soft-darker);
+  --fm-line: var(--sl-color-bg-soft-divider);
+  --fm-text: #eef2f7;
+  --fm-muted: #9aa6b5;
+  width: min(760px, 100%); background: var(--fm-bg); border: 1px solid var(--fm-line); border-radius: 16px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); color: var(--fm-text); font-size: 13px; overflow: hidden;
+}
+.sl-fm-head { display: flex; align-items: center; gap: var(--sl-space-sm); height: 46px; padding: 0 14px; border-bottom: 1px solid var(--fm-line); }
+.sl-fm-head-title { flex: 1 1 auto; display: flex; align-items: center; gap: 9px; min-width: 0; font-size: 14px; }
+.sl-fm-head-title .bi { color: var(--sl-color-brand); font-size: var(--sl-size-icon-sm); }
+.sl-fm-act { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--fm-muted); cursor: pointer; }
+.sl-fm-act:hover { background: rgba(255, 255, 255, 0.08); color: var(--fm-text); }
+.sl-fm-act-drag { cursor: move; }
+
+/* верхний ряд: три способа как крупные переключатели-доки */
+.sl-fm-dock { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 14px; }
+.sl-fm-dock-item { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--fm-line); border-radius: 12px; background: var(--fm-bg-soft); color: var(--fm-text); text-align: left; font: inherit; cursor: pointer; overflow: hidden; transition: border-color 0.18s ease, background-color 0.18s ease; }
+.sl-fm-dock-item::after { content: ""; position: absolute; inset: 0; background: linear-gradient(140deg, rgba(255, 255, 255, 0.09), transparent 60%); pointer-events: none; }
+.sl-fm-dock-ico { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px; background: rgba(255, 255, 255, 0.07); color: var(--sl-color-brand); font-size: var(--sl-size-icon-sm); }
+.sl-fm-dock-item b { display: block; font-weight: 400; font-size: 13px; }
+.sl-fm-dock-item small { display: block; margin-top: 2px; font-size: 11px; color: var(--fm-muted); }
+.sl-fm-dock-item:hover { border-color: rgba(255, 255, 255, 0.24); }
+.sl-fm-dock-item[aria-pressed="true"] { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 18%, var(--fm-bg-soft)); }
+.sl-fm-dock-item[aria-pressed="true"] .sl-fm-dock-ico { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+
+/* центральная сцена */
+.sl-fm-body { padding: 0 14px 14px; }
+.sl-fm-pane { display: none; flex-direction: column; gap: 14px; }
+.sl-fm-pane.sl-is-open { display: flex; }
+.sl-fm-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 210px; padding: 26px; border: 2px dashed var(--fm-line); border-radius: 14px; background: radial-gradient(120% 120% at 50% 0%, rgba(48, 162, 246, 0.14), transparent 62%), var(--fm-bg-soft); text-align: center; cursor: pointer; transition: border-color 0.18s ease; }
+.sl-fm-stage:hover { border-color: var(--sl-color-primary); }
+.sl-fm-stage-ico { display: inline-flex; align-items: center; justify-content: center; width: 62px; height: 62px; border-radius: 20px; background: rgba(48, 162, 246, 0.16); color: var(--sl-color-brand); font-size: 30px; }
+.sl-fm-stage h2 { margin: 0; font: normal 19px/1.25 "Magistral", Arial, sans-serif; color: var(--fm-text); }
+.sl-fm-stage p { margin: 0; font-size: 12px; color: var(--fm-muted); }
+.sl-fm-kbd { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--fm-muted); }
+.sl-fm-kbd kbd { padding: 1px 6px; border: 1px solid var(--fm-line); border-radius: 4px; background: rgba(255, 255, 255, 0.06); font: inherit; font-size: 11px; }
+
+.sl-fm-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; }
+.sl-fm-row label { font-size: 12px; color: var(--fm-muted); }
+.sl-fm-field { width: 100%; height: 38px; padding: 0 14px; border: 1px solid var(--fm-line); border-radius: 10px; background: var(--fm-bg-soft); font: inherit; font-size: 13px; color: var(--fm-text); }
+.sl-fm-field::placeholder { color: #6d7a8a; }
+.sl-fm-field:focus { outline: 0; border-color: var(--sl-color-primary); box-shadow: 0 0 0 3px rgba(48, 162, 246, 0.25); }
+.sl-fm-as { display: flex; flex-wrap: wrap; gap: 6px; }
+.sl-fm-as label { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 13px; border: 1px solid var(--fm-line); border-radius: 999px; background: var(--fm-bg-soft); color: var(--fm-text); font-size: 12px; cursor: pointer; }
+.sl-fm-as input { position: absolute; opacity: 0; pointer-events: none; }
+.sl-fm-as label:has(input:checked) { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 22%, var(--fm-bg-soft)); }
+.sl-fm-limits { display: flex; flex-wrap: wrap; gap: 6px; }
+.sl-fm-limits span { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: var(--fm-muted); font-size: 11px; }
+
+/* лента хранилища */
+.sl-fm-strip { display: flex; align-items: center; gap: 8px; }
+.sl-fm-strip > span { flex: 0 0 auto; font-size: 11px; color: var(--fm-muted); }
+.sl-fm-strip-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.sl-fm-tile { position: relative; flex: 0 0 auto; width: 78px; height: 56px; border: 1px solid var(--fm-line); border-radius: 10px; background: linear-gradient(140deg, #3d6a8f, #274b68); cursor: pointer; }
+.sl-fm-tile:nth-child(2) { background: linear-gradient(140deg, #4a7a4a, #2f5433); }
+.sl-fm-tile:nth-child(3) { background: linear-gradient(140deg, #8a6640, #5d442b); }
+.sl-fm-tile:nth-child(4) { background: linear-gradient(140deg, #6b4a86, #46305a); }
+.sl-fm-tile:nth-child(5) { background: linear-gradient(140deg, #3f4753, #2b323b); }
+.sl-fm-tile:hover { border-color: var(--sl-color-primary); box-shadow: 0 0 0 3px rgba(48, 162, 246, 0.25); }
+
+.sl-fm-foot { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--fm-line); background: var(--fm-bg-soft); }
+.sl-fm-foot-info { flex: 1 1 auto; font-size: 12px; color: var(--fm-muted); }
+.sl-fm-btn { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 18px; border: 1px solid var(--fm-line); border-radius: 10px; background: transparent; color: var(--fm-text); font: inherit; font-size: 13px; cursor: pointer; }
+.sl-fm-btn:hover { border-color: rgba(255, 255, 255, 0.3); }
+.sl-fm-btn-main { border-color: var(--sl-color-primary); background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-fm-btn-main:hover { background: var(--sl-color-primary-hover); border-color: var(--sl-color-primary-hover); }
+
+@media (max-width: 640px) { .sl-fm-dock { grid-template-columns: 1fr; } .sl-fm-dock-item small { display: none; } }
+</style>
+</head>
+<body>
+
+<header class="dx-head">
+  <h1>Файловый менеджер — вариант 7: «Затемнение»</h1>
+  <p>Окно перестаёт быть плавающей панелькой внутри редактора и становится модальным слоем: страница затемняется, панель тёмная, всё внимание на приёмнике файла. Способ выбирается тремя крупными доками сверху — их видно с расстояния, попасть мышью легко, подписи не сокращены.</p>
+  <ul class="dx-nav">
+    <li><a href="filemanager-v1-tabs.html">1. Сегменты</a></li>
+    <li><a href="filemanager-v2-rail.html">2. Боковой рельс</a></li>
+    <li><a href="filemanager-v3-chooser.html">3. Карточки выбора</a></li>
+    <li><a href="filemanager-v4-smart.html">4. Умная зона</a></li>
+    <li><a href="filemanager-v5-library.html">5. Библиотека</a></li>
+    <li><a href="filemanager-v6-accordion.html">6. Аккордеон</a></li>
+    <li><a href="filemanager-v7-spotlight.html" aria-current="page">7. Затемнение</a></li>
+    <li><a href="filemanager-v8-compact.html">8. Компакт</a></li>
+  </ul>
+</header>
+
+<div class="dx-wrap">
+  <p class="dx-note"><b>Компромисс честно:</b> тёмный модальный слой отбирает у окна главное сегодняшнее свойство — его можно двигать и оставлять открытым рядом с текстом. Взамен он даёт максимальную читаемость приёмника и снимает вопрос «под каким слоем сейчас окно». Тёмная палитра здесь локальная (переменные `--fm-*` внутри окна), тему сайта она не трогает.</p>
+
+  <div class="dx-stage">
+
+    <div class="dx-fake">
+      <div class="dx-fake-bar"><i class="bi bi-type-h1"></i><i class="bi bi-type-bold"></i><i class="bi bi-type-italic"></i><i class="bi bi-quote"></i><i class="bi bi-list-ul"></i><i class="bi bi-table"></i><i class="bi bi-images"></i><i class="bi bi-emoji-smile"></i></div>
+      <p></p><p></p><p></p><p></p>
+    </div>
+
+    <div class="sl-fm-veil">
+      <div class="sl-fm" role="dialog" aria-label="Файловый менеджер">
+        <div class="sl-fm-head">
+          <button type="button" class="sl-fm-act sl-fm-act-drag" title="Переместить окно" aria-label="Переместить окно"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
+          <span class="sl-fm-head-title"><i class="bi bi-folder2-open" aria-hidden="true"></i>Файловый менеджер</span>
+          <button type="button" class="sl-fm-act" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+          <button type="button" class="sl-fm-act" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+        </div>
+
+        <div class="sl-fm-dock" role="tablist" aria-label="Способ вставки">
+          <button type="button" class="sl-fm-dock-item" data-pane="p-up" aria-pressed="true"><span class="sl-fm-dock-ico"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></span><span><b>Загрузить на сервер</b><small>основной способ</small></span></button>
+          <button type="button" class="sl-fm-dock-item" data-pane="p-url" aria-pressed="false"><span class="sl-fm-dock-ico"><i class="bi bi-link-45deg" aria-hidden="true"></i></span><span><b>Ссылка на изображение</b><small>внешний адрес</small></span></button>
+          <button type="button" class="sl-fm-dock-item" data-pane="p-emb" aria-pressed="false"><span class="sl-fm-dock-ico"><i class="bi bi-file-earmark-code" aria-hidden="true"></i></span><span><b>Встроить в текст</b><small>base64, до 64 KB</small></span></button>
+        </div>
+
+        <div class="sl-fm-body">
+
+          <section class="sl-fm-pane sl-is-open" data-pane="p-up">
+            <div class="sl-fm-stage" tabindex="0" role="button">
+              <span class="sl-fm-stage-ico"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></span>
+              <h2>Перетащите файлы сюда или нажмите на поле</h2>
+              <p>Файл не выбран</p>
+              <span class="sl-fm-kbd"><kbd>Ctrl</kbd><kbd>V</kbd> вставит картинку из буфера обмена</span>
+            </div>
+            <div class="sl-fm-as">
+              <label><input type="radio" name="as" value="image" checked>Вставить изображением</label>
+              <label><input type="radio" name="as" value="attach">Вставить миниатюрой или файлом</label>
+            </div>
+            <div class="sl-fm-row"><label for="v7-alt">Описание</label><input type="text" id="v7-alt" class="sl-fm-field" placeholder="Что изображено на картинке"></div>
+            <div class="sl-fm-limits">
+              <span><i class="bi bi-filetype-png" aria-hidden="true"></i>gif, jpg, png, webp, avif, zip, rar</span>
+              <span><i class="bi bi-hdd" aria-hidden="true"></i>до 1 MB · занято 12 из 100 MB</span>
+              <span><i class="bi bi-aspect-ratio" aria-hidden="true"></i>500 × 500 px</span>
+              <span><i class="bi bi-files" aria-hidden="true"></i>до 10 файлов</span>
+            </div>
+            <div class="sl-fm-strip">
+              <span>Недавние</span>
+              <div class="sl-fm-strip-scroll">
+                <button type="button" class="sl-fm-tile" title="screenshot.png" aria-label="screenshot.png"></button>
+                <button type="button" class="sl-fm-tile" title="logo-slaed.webp" aria-label="logo-slaed.webp"></button>
+                <button type="button" class="sl-fm-tile" title="banner.jpg" aria-label="banner.jpg"></button>
+                <button type="button" class="sl-fm-tile" title="avatar.png" aria-label="avatar.png"></button>
+                <button type="button" class="sl-fm-tile" title="module-pack.zip" aria-label="module-pack.zip"></button>
+              </div>
+            </div>
+          </section>
+
+          <section class="sl-fm-pane" data-pane="p-url">
+            <div class="sl-fm-stage" style="min-height: 150px; cursor: default;">
+              <span class="sl-fm-stage-ico"><i class="bi bi-link-45deg" aria-hidden="true"></i></span>
+              <h2>Картинка подключается по адресу</h2>
+              <p>На сервер ничего не загружается, место в модуле не тратится</p>
+            </div>
+            <div class="sl-fm-row"><label for="v7-url">Адрес</label><input type="text" id="v7-url" class="sl-fm-field" placeholder="https://example.org/picture.png"></div>
+            <div class="sl-fm-row"><label for="v7-url-alt">Описание</label><input type="text" id="v7-url-alt" class="sl-fm-field" placeholder="Что изображено на картинке"></div>
+          </section>
+
+          <section class="sl-fm-pane" data-pane="p-emb">
+            <div class="sl-fm-stage" tabindex="0" role="button">
+              <span class="sl-fm-stage-ico"><i class="bi bi-file-earmark-code" aria-hidden="true"></i></span>
+              <h2>Перетащите файлы сюда или нажмите на поле</h2>
+              <p>Изображение кодируется в base64 и сохраняется прямо в тексте</p>
+              <span class="sl-fm-kbd">Только для небольших изображений: 8 KB из 64 KB занято</span>
+            </div>
+            <div class="sl-fm-row"><label for="v7-emb-alt">Описание</label><input type="text" id="v7-emb-alt" class="sl-fm-field" placeholder="Что изображено на картинке"></div>
+          </section>
+
+        </div>
+
+        <div class="sl-fm-foot">
+          <span class="sl-fm-foot-info" data-slot="info">Загрузить на сервер · файл не выбран</span>
+          <button type="button" class="sl-fm-btn">Отмена</button>
+          <button type="button" class="sl-fm-btn sl-fm-btn-main"><i class="bi bi-check-lg" aria-hidden="true"></i>Вставить</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+    var info = { 'p-up': 'Загрузить на сервер · файл не выбран', 'p-url': 'Ссылка на изображение · адрес не введён', 'p-emb': 'Встроить в текст · файл не выбран' };
+    document.querySelectorAll('.sl-fm-dock-item').forEach(function(dock) {
+        dock.addEventListener('click', function() {
+            var name = dock.getAttribute('data-pane');
+            document.querySelectorAll('.sl-fm-dock-item').forEach(function(el) { el.setAttribute('aria-pressed', String(el === dock)); });
+            document.querySelectorAll('.sl-fm-pane').forEach(function(el) { el.classList.toggle('sl-is-open', el.getAttribute('data-pane') === name); });
+            document.querySelector('[data-slot="info"]').textContent = info[name];
+        });
+    });
+})();
+</script>
+
+</body>
+</html>

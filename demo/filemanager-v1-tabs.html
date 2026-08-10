@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLAED — Файловый менеджер, вариант 1: Сегменты</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../templates/lite/assets/vendor/bootstrap-icons/css/bootstrap-icons.min.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/base.css">
+<link rel="stylesheet" href="../templates/lite/assets/css/theme.css">
+<style>
+/* ---------- каркас демо-страницы (не часть системы, неймспейс dx-) ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color: var(--sl-color-text); }
+.dx-head { padding: 24px clamp(14px, 4vw, 44px) 16px; background: var(--sl-color-bg); border-bottom: 1px solid var(--sl-color-border); }
+.dx-head h1 { margin: 0 0 6px; font: normal clamp(21px, 3vw, 30px)/1.15 "Magistral", Arial, sans-serif; color: var(--sl-color-text-heading); }
+.dx-head p { margin: 0 0 14px; max-width: 980px; color: var(--sl-color-text-muted); font-size: 14px; line-height: 1.55; }
+.dx-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dx-nav a { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-heading); font-size: 13px; text-decoration: none; }
+.dx-nav a:hover { background: color-mix(in srgb, var(--sl-color-primary) 18%, transparent); }
+.dx-nav a[aria-current="page"] { background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.dx-wrap { max-width: 1180px; margin: 0 auto; padding: 26px clamp(14px, 4vw, 44px) 0; }
+.dx-note { margin: 0 0 18px; padding: 12px 14px; border-left: 3px solid var(--sl-color-primary); border-radius: 0 var(--sl-radius-control) var(--sl-radius-control) 0; background: var(--sl-color-bg); color: var(--sl-color-text-muted); font-size: 13px; line-height: 1.55; }
+.dx-note b { color: var(--sl-color-text-heading); }
+.dx-stage { position: relative; padding: 34px 22px 90px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-card); background: var(--sl-color-bg); overflow: hidden; }
+.dx-stage::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(var(--sl-color-border) 1px, transparent 1px); background-size: 18px 18px; opacity: 0.7; }
+.dx-stage > * { position: relative; }
+
+/* ---------- кандидат в theme.css: окно файлового менеджера, вариант «Сегменты» ---------- */
+.sl-fm { width: min(760px, 100%); margin: 0 auto; background: var(--sl-color-bg); border: 1px solid var(--sl-color-border-strong); border-radius: var(--sl-radius-card); box-shadow: var(--sl-shadow-panel); font-size: 13px; overflow: hidden; }
+
+/* шапка окна: перетаскивание, заголовок, счётчик, действия — как сейчас в sl-toastui-window-head */
+.sl-fm-head { display: flex; align-items: center; gap: var(--sl-space-sm); height: 42px; padding: 0 var(--sl-space-md); background: var(--sl-color-bg-soft); border-bottom: 1px solid var(--sl-color-border); }
+.sl-fm-head-title { flex: 1 1 auto; display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 14px; color: var(--sl-color-text-heading); }
+.sl-fm-head-title .bi { color: var(--sl-color-primary); font-size: var(--sl-size-icon-sm); }
+.sl-fm-act { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: var(--sl-radius-control); background: transparent; color: var(--sl-color-text-muted); cursor: pointer; }
+.sl-fm-act:hover { background: var(--sl-color-border); color: var(--sl-color-text); }
+.sl-fm-act-drag { cursor: move; }
+
+/* сегментированный переключатель трёх способов вставки */
+.sl-fm-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 10px var(--sl-space-lg); background: var(--sl-color-bg-soft); border-bottom: 1px solid var(--sl-color-border); }
+.sl-fm-seg-item { position: relative; display: flex; align-items: center; gap: 9px; padding: 9px 11px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--sl-color-text-muted); text-align: left; font: inherit; cursor: pointer; transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
+.sl-fm-seg-item .bi { font-size: var(--sl-size-icon-md); line-height: 1; }
+.sl-fm-seg-item b { display: block; font-weight: 400; font-size: 13px; color: var(--sl-color-text-heading); }
+.sl-fm-seg-item small { display: block; margin-top: 2px; font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-seg-item:hover { background: var(--sl-color-bg); border-color: var(--sl-color-border); }
+.sl-fm-seg-item[aria-selected="true"] { background: var(--sl-color-bg); border-color: var(--sl-color-primary); color: var(--sl-color-primary); box-shadow: 0 0 0 3px var(--sl-field-focus-ring); }
+.sl-fm-seg-item[aria-selected="true"] b { color: var(--sl-color-primary); }
+.sl-fm-seg-item[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+/* тело: одна секция на способ */
+.sl-fm-body { padding: var(--sl-space-lg) var(--sl-space-lg) 16px; max-height: 60vh; overflow: auto; }
+.sl-fm-pane { display: none; flex-direction: column; gap: var(--sl-space-lg); }
+.sl-fm-pane.sl-is-open { display: flex; }
+.sl-fm-label { display: block; margin-bottom: var(--sl-space-sm); font-size: 12px; color: var(--sl-color-text-heading); }
+
+/* зона приёма файла */
+.sl-fm-drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 128px; padding: 18px; border: 1px dashed var(--sl-color-border-strong); border-radius: 10px; background: var(--sl-color-bg-soft); color: var(--sl-color-text-muted); text-align: center; cursor: pointer; transition: border-color 0.16s ease, background-color 0.16s ease; }
+.sl-fm-drop:hover, .sl-fm-drop.sl-drag-over { border-color: var(--sl-color-primary); background: color-mix(in srgb, var(--sl-color-primary) 7%, transparent); }
+.sl-fm-drop .bi { font-size: 30px; color: var(--sl-color-primary); }
+.sl-fm-drop b { font-weight: 400; color: var(--sl-color-text-heading); }
+.sl-fm-drop small { font-size: 12px; }
+
+/* выбор представления внутри загрузки */
+.sl-fm-as { display: flex; flex-wrap: wrap; gap: 6px; }
+.sl-fm-as label { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border: 1px solid var(--sl-color-border); border-radius: 999px; background: var(--sl-color-bg-soft); color: var(--sl-color-text-heading); font-size: 12px; cursor: pointer; }
+.sl-fm-as label:hover { border-color: var(--sl-color-border-strong); }
+.sl-fm-as input { position: absolute; opacity: 0; pointer-events: none; }
+.sl-fm-as label:has(input:checked) { background: color-mix(in srgb, var(--sl-color-primary) 12%, transparent); border-color: var(--sl-color-primary); color: var(--sl-color-brand-strong); }
+.sl-fm-as .bi { font-size: var(--sl-size-icon-xs); }
+
+/* лимиты как компактная сетка вместо длинного списка */
+.sl-fm-limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; border: 1px solid var(--sl-color-border); border-radius: 8px; background: var(--sl-color-border); overflow: hidden; }
+.sl-fm-limit { padding: 8px 10px; background: var(--sl-color-bg); }
+.sl-fm-limit dt { font-size: 11px; color: var(--sl-color-text-subtle); }
+.sl-fm-limit dd { margin: 2px 0 0; font-size: 13px; color: var(--sl-color-text-heading); }
+
+/* полоса занятой квоты */
+.sl-fm-quota { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--sl-color-text-muted); }
+.sl-fm-quota-track { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--sl-color-bg-soft-soft); overflow: hidden; }
+.sl-fm-quota-fill { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--sl-color-primary), var(--sl-color-brand-strong)); }
+
+/* список уже загруженных файлов */
+.sl-fm-files-head { display: flex; align-items: center; gap: 10px; }
+.sl-fm-files-head b { flex: 1 1 auto; font-weight: 400; color: var(--sl-color-text-heading); }
+.sl-fm-list { display: flex; flex-direction: column; gap: 4px; }
+.sl-fm-row { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px; border: 1px solid transparent; border-radius: 8px; }
+.sl-fm-row:hover { border-color: var(--sl-color-border); background: var(--sl-color-bg-soft); }
+.sl-fm-thumb { display: flex; align-items: center; justify-content: center; width: 46px; height: 36px; border-radius: 6px; background: linear-gradient(135deg, #cfe6fb, #a9d3f6); color: var(--sl-color-brand-strong); font-size: var(--sl-size-icon-sm); overflow: hidden; }
+.sl-fm-row:nth-child(2) .sl-fm-thumb { background: linear-gradient(135deg, #dff0d0, #b6dd94); color: var(--sl-color-success); }
+.sl-fm-row:nth-child(3) .sl-fm-thumb { background: linear-gradient(135deg, #fde6cd, #f8c58a); color: var(--sl-color-warning); }
+.sl-fm-row:nth-child(4) .sl-fm-thumb { background: var(--sl-color-bg-soft-alt); color: var(--sl-color-text-muted); }
+.sl-fm-name { min-width: 0; }
+.sl-fm-name b { display: block; overflow: hidden; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; color: var(--sl-color-text-heading); }
+.sl-fm-name small { color: var(--sl-color-text-subtle); font-size: 11px; }
+.sl-fm-row-act { display: flex; gap: 4px; opacity: 0; transition: opacity 0.16s ease; }
+.sl-fm-row:hover .sl-fm-row-act, .sl-fm-row:focus-within .sl-fm-row-act { opacity: 1; }
+
+/* мелкая кнопка строки и ссылки-действия */
+.sl-fm-mini { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border: 1px solid var(--sl-color-border); border-radius: 999px; background: var(--sl-color-bg); color: var(--sl-color-text-heading); font: inherit; font-size: 12px; cursor: pointer; }
+.sl-fm-mini:hover { border-color: var(--sl-color-primary); color: var(--sl-color-primary); }
+
+/* поля адреса и описания */
+.sl-fm-field { display: block; width: 100%; height: 34px; padding: 0 12px; border: 1px solid var(--sl-field-border); border-radius: var(--sl-field-radius); background: var(--sl-field-bg); box-shadow: var(--sl-shadow-input); font: inherit; color: var(--sl-color-text); }
+.sl-fm-field:focus { outline: 0; border-color: var(--sl-field-focus); box-shadow: var(--sl-shadow-input), 0 0 0 3px var(--sl-field-focus-ring); }
+
+/* предпросмотр вставляемого изображения */
+.sl-fm-preview { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--sl-color-border); border-radius: 8px; background: var(--sl-color-bg-soft); }
+.sl-fm-preview-box { display: flex; align-items: center; justify-content: center; width: 84px; height: 60px; border-radius: 6px; background: linear-gradient(135deg, #cfe6fb, #a9d3f6); color: var(--sl-color-brand-strong); font-size: var(--sl-size-icon-md); }
+.sl-fm-preview p { margin: 0; font-size: 12px; color: var(--sl-color-text-muted); line-height: 1.5; }
+.sl-fm-preview p b { display: block; font-weight: 400; color: var(--sl-color-text-heading); }
+
+/* подвал окна с постоянной парой кнопок */
+.sl-fm-foot { display: flex; align-items: center; gap: 10px; padding: 10px var(--sl-space-lg); background: var(--sl-color-bg-soft); border-top: 1px solid var(--sl-color-border); }
+.sl-fm-foot-info { flex: 1 1 auto; font-size: 12px; color: var(--sl-color-text-muted); }
+.sl-fm-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 16px; border: 1px solid var(--sl-color-border); border-radius: var(--sl-radius-control); background: var(--sl-color-bg); color: var(--sl-color-text-heading); font: inherit; font-size: 13px; cursor: pointer; }
+.sl-fm-btn:hover { border-color: var(--sl-color-border-strong); }
+.sl-fm-btn-main { border-color: var(--sl-color-primary); background: var(--sl-color-primary); color: var(--sl-color-on-dark); }
+.sl-fm-btn-main:hover { background: var(--sl-color-primary-hover); border-color: var(--sl-color-primary-hover); }
+
+@media (max-width: 640px) {
+  .sl-fm-seg { grid-template-columns: 1fr; }
+  .sl-fm-seg-item small { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="dx-head">
+  <h1>Файловый менеджер — вариант 1: «Сегменты»</h1>
+  <p>Три способа вставки разведены по сегментам верхней панели. Ближе всего к присланному примеру, но вместо двух вкладок — три равноправных сегмента с иконкой, названием и подсказкой. Панель кнопок постоянна: <b>Отмена</b> и <b>Вставить</b> всегда на одном месте, независимо от выбранного способа.</p>
+  <ul class="dx-nav">
+    <li><a href="filemanager-v1-tabs.html" aria-current="page">1. Сегменты</a></li>
+    <li><a href="filemanager-v2-rail.html">2. Боковой рельс</a></li>
+    <li><a href="filemanager-v3-chooser.html">3. Карточки выбора</a></li>
+    <li><a href="filemanager-v4-smart.html">4. Умная зона</a></li>
+    <li><a href="filemanager-v5-library.html">5. Библиотека</a></li>
+    <li><a href="filemanager-v6-accordion.html">6. Аккордеон</a></li>
+    <li><a href="filemanager-v7-spotlight.html">7. Затемнение</a></li>
+    <li><a href="filemanager-v8-compact.html">8. Компакт</a></li>
+  </ul>
+</header>
+
+<div class="dx-wrap">
+  <p class="dx-note"><b>Что изменилось против текущего окна:</b> поля «Адрес изображения» и «Описание» больше не висят над всем содержимым — они ушли в свой сегмент «Ссылка». Радио «Загрузить на сервер / Вставить миниатюру или файл / Встроить в текст» разобрано: «миниатюра или файл» — это не отдельный способ, а форма вставки внутри загрузки, поэтому она стала парой чипсов. Список уже загруженных файлов остался в сегменте «На сервер», где он и нужен.</p>
+
+  <div class="dx-stage">
+
+    <div class="sl-fm" role="dialog" aria-label="Файловый менеджер">
+      <div class="sl-fm-head">
+        <button type="button" class="sl-fm-act sl-fm-act-drag" title="Переместить окно" aria-label="Переместить окно"><i class="bi bi-arrows-move" aria-hidden="true"></i></button>
+        <span class="sl-fm-head-title"><i class="bi bi-folder2-open" aria-hidden="true"></i>Файловый менеджер</span>
+        <button type="button" class="sl-fm-act" title="Развернуть" aria-label="Развернуть"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i></button>
+        <button type="button" class="sl-fm-act" title="Закрыть" aria-label="Закрыть"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="sl-fm-seg" role="tablist" aria-label="Способ вставки">
+        <button type="button" class="sl-fm-seg-item" role="tab" aria-selected="true" aria-controls="p-up" data-pane="p-up"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i><span><b>Загрузить на сервер</b><small>Файл останется в модуле</small></span></button>
+        <button type="button" class="sl-fm-seg-item" role="tab" aria-selected="false" aria-controls="p-url" data-pane="p-url"><i class="bi bi-link-45deg" aria-hidden="true"></i><span><b>Ссылка на изображение</b><small>Внешний адрес</small></span></button>
+        <button type="button" class="sl-fm-seg-item" role="tab" aria-selected="false" aria-controls="p-emb" data-pane="p-emb"><i class="bi bi-file-earmark-code" aria-hidden="true"></i><span><b>Встроить в текст</b><small>base64 внутри записи</small></span></button>
+      </div>
+
+      <div class="sl-fm-body">
+
+        <section class="sl-fm-pane sl-is-open" id="p-up" role="tabpanel">
+          <div>
+            <span class="sl-fm-label">Выбрать файл</span>
+            <div class="sl-fm-drop" tabindex="0" role="button">
+              <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+              <b>Перетащите файлы сюда или нажмите на поле</b>
+              <small>gif, jpg, jpeg, png, webp, avif, zip, rar — до 1 MB, не более 10 за раз</small>
+            </div>
+          </div>
+
+          <div>
+            <span class="sl-fm-label">Вставить как</span>
+            <div class="sl-fm-as">
+              <label><input type="radio" name="as" value="image" checked><i class="bi bi-image" aria-hidden="true"></i>Изображение</label>
+              <label><input type="radio" name="as" value="attach"><i class="bi bi-paperclip" aria-hidden="true"></i>Миниатюру или файл</label>
+            </div>
+          </div>
+
+          <dl class="sl-fm-limits">
+            <div class="sl-fm-limit"><dt>Форматы</dt><dd>gif, jpg, png, webp, avif, zip, rar</dd></div>
+            <div class="sl-fm-limit"><dt>Размер файла</dt><dd>1 MB</dd></div>
+            <div class="sl-fm-limit"><dt>Ширина</dt><dd>500 px</dd></div>
+            <div class="sl-fm-limit"><dt>Высота</dt><dd>500 px</dd></div>
+          </dl>
+
+          <div class="sl-fm-quota">
+            <span>Занято 12 MB из 100 MB</span>
+            <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" style="width: 12%"></span></span>
+          </div>
+
+          <div class="sl-fm-files-head">
+            <b>Загруженные файлы</b>
+            <button type="button" class="sl-fm-mini"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Обновить</button>
+          </div>
+
+          <div class="sl-fm-list">
+            <div class="sl-fm-row">
+              <span class="sl-fm-thumb"><i class="bi bi-image" aria-hidden="true"></i></span>
+              <span class="sl-fm-name"><b>screenshot-2026-08-10.png</b><small>248 KB · 1280×720</small></span>
+              <span class="sl-fm-row-act"><button type="button" class="sl-fm-mini">Изображение</button><button type="button" class="sl-fm-mini">Вложение</button></span>
+            </div>
+            <div class="sl-fm-row">
+              <span class="sl-fm-thumb"><i class="bi bi-image" aria-hidden="true"></i></span>
+              <span class="sl-fm-name"><b>logo-slaed.webp</b><small>34 KB · 512×512</small></span>
+              <span class="sl-fm-row-act"><button type="button" class="sl-fm-mini">Изображение</button><button type="button" class="sl-fm-mini">Вложение</button></span>
+            </div>
+            <div class="sl-fm-row">
+              <span class="sl-fm-thumb"><i class="bi bi-image" aria-hidden="true"></i></span>
+              <span class="sl-fm-name"><b>banner-autumn.jpg</b><small>512 KB · 1920×480</small></span>
+              <span class="sl-fm-row-act"><button type="button" class="sl-fm-mini">Изображение</button><button type="button" class="sl-fm-mini">Вложение</button></span>
+            </div>
+            <div class="sl-fm-row">
+              <span class="sl-fm-thumb"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i></span>
+              <span class="sl-fm-name"><b>module-pack.zip</b><small>860 KB</small></span>
+              <span class="sl-fm-row-act"><button type="button" class="sl-fm-mini">Вложение</button></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="sl-fm-pane" id="p-url" role="tabpanel">
+          <div>
+            <label class="sl-fm-label" for="v1-url">Адрес изображения</label>
+            <input type="text" id="v1-url" class="sl-fm-field" placeholder="https://example.org/picture.png">
+          </div>
+          <div>
+            <label class="sl-fm-label" for="v1-alt">Описание</label>
+            <input type="text" id="v1-alt" class="sl-fm-field" placeholder="Что изображено на картинке">
+          </div>
+          <div class="sl-fm-preview">
+            <span class="sl-fm-preview-box"><i class="bi bi-image" aria-hidden="true"></i></span>
+            <p><b>Предпросмотр</b>Картинка останется на чужом сервере: если её удалят, в записи будет битая ссылка.</p>
+          </div>
+        </section>
+
+        <section class="sl-fm-pane" id="p-emb" role="tabpanel">
+          <div class="sl-alert sl-alert-warn">
+            <div class="sl-alert-body">Изображение кодируется в base64 и сохраняется прямо в тексте. Только для небольших изображений: размер записи ограничен 64 KB.</div>
+          </div>
+          <div>
+            <span class="sl-fm-label">Выбрать файл</span>
+            <div class="sl-fm-drop" tabindex="0" role="button">
+              <i class="bi bi-file-earmark-code" aria-hidden="true"></i>
+              <b>Перетащите файлы сюда или нажмите на поле</b>
+              <small>gif, jpg, jpeg, png — файл не попадёт на сервер</small>
+            </div>
+          </div>
+          <div class="sl-fm-quota">
+            <span>Место в записи: 8 KB из 64 KB</span>
+            <span class="sl-fm-quota-track"><span class="sl-fm-quota-fill" style="width: 13%"></span></span>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="sl-fm-foot">
+        <span class="sl-fm-foot-info">Загрузка на сервер · вставить как изображение</span>
+        <button type="button" class="sl-fm-btn">Отмена</button>
+        <button type="button" class="sl-fm-btn sl-fm-btn-main"><i class="bi bi-check-lg" aria-hidden="true"></i>Вставить</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+    var info = { 'p-up': 'Загрузка на сервер · вставить как изображение', 'p-url': 'Ссылка на изображение · внешний адрес', 'p-emb': 'Встроить в текст · base64 внутри записи' };
+    document.querySelectorAll('.sl-fm-seg-item').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var name = tab.getAttribute('data-pane');
+            document.querySelectorAll('.sl-fm-seg-item').forEach(function(el) { el.setAttribute('aria-selected', String(el === tab)); });
+            document.querySelectorAll('.sl-fm-pane').forEach(function(el) { el.classList.toggle('sl-is-open', el.id === name); });
+            document.querySelector('.sl-fm-foot-info').textContent = info[name];
+        });
+    });
+    document.querySelectorAll('.sl-fm-as input').forEach(function(el) {
+        el.addEventListener('change', function() {
+            var open = document.querySelector('.sl-fm-pane.sl-is-open');
+            if (!open || open.id !== 'p-up') return;
+            document.querySelector('.sl-fm-foot-info').textContent = 'Загрузка на сервер · вставить как ' + (el.value === 'image' ? 'изображение' : 'миниатюру или файл');
+        });
+    });
+})();
+</script>
+
+</body>
+</html>
