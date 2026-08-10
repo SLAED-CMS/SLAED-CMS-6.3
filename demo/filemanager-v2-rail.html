@@ -186,11 +186,39 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
 .sl-fm-view .sl-pager { padding: 10px 0 0; }
 .sl-fm-view .sl-pager-info { font-size: 12px; }
 
-/* пустой каталог: причина, а не «Нет информации» */
+/* пустой каталог: причина, а не «Нет информации»; тот же блок несёт пустой фильтр и неудавшуюся загрузку списка */
 .sl-fm-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 34px 20px; border: 1px dashed var(--sl-color-border-strong); border-radius: 10px; background: var(--sl-color-bg-soft); text-align: center; }
 .sl-fm-empty .bi { font-size: 30px; color: var(--sl-color-text-subtle); }
 .sl-fm-empty b { font-weight: 400; color: var(--sl-color-text-heading); }
 .sl-fm-empty p { margin: 0; max-width: 420px; font-size: 12px; line-height: 1.5; color: var(--sl-color-text-muted); }
+.sl-fm-empty.sl-is-fail .bi { color: var(--sl-color-danger); }
+
+/* Скелетон каталога: место плиток занято, пока список не пришёл — не пустой экран и не слово «загрузка» */
+.sl-skel { animation: sl-skel-pulse 1.2s ease-in-out infinite; }
+.sl-skel-tile { border: 1px solid var(--sl-color-border); border-radius: 10px; background: var(--sl-color-bg); overflow: hidden; }
+.sl-skel-cell { display: block; border-radius: var(--sl-radius-control); background: var(--sl-color-bg-soft-alt); }
+.sl-skel-tile .sl-skel-cell { height: 78px; border-radius: 0; }
+.sl-skel-line { display: block; height: 9px; margin: 8px; border-radius: 4px; background: var(--sl-color-bg-soft-alt); }
+.sl-skel-line-half { width: 52%; }
+@keyframes sl-skel-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@media (prefers-reduced-motion: reduce) { .sl-skel { animation: none; } }
+
+/* Очередь загрузки: файлы идут по одному, полоса выполнения — системный sl-progress-line, причина отказа приходит с сервера */
+.sl-fm-queue { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--sl-color-border); border-radius: 10px; background: var(--sl-color-bg-soft); }
+.sl-fm-queue-cap { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--sl-color-text-muted); }
+.sl-fm-queue-cap b { flex: 1 1 auto; font-weight: 400; color: var(--sl-color-text-heading); }
+.sl-fm-job { display: grid; grid-template-columns: 22px minmax(0, 1fr) 28px; align-items: center; gap: 10px; }
+.sl-fm-job > .bi { font-size: var(--sl-size-icon-sm); color: var(--sl-color-text-muted); }
+.sl-fm-job-name { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 5px; font-size: 12px; color: var(--sl-color-text-heading); }
+.sl-fm-job-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sl-fm-job-name small { flex: 0 0 auto; color: var(--sl-color-text-subtle); }
+.sl-fm-job-why { font-size: 12px; line-height: 1.4; color: var(--sl-color-danger); }
+.sl-fm-job.sl-is-done > .bi { color: var(--sl-color-success); }
+.sl-fm-job.sl-is-fail > .bi { color: var(--sl-color-danger); }
+
+/* Действие на файле идёт своим ходом: пока сервер не ответил, объект занят и показывает системный sl-loading */
+.sl-fm-busy { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: color-mix(in srgb, var(--sl-color-bg) 74%, transparent); }
+.sl-fm-row { position: relative; }
 
 .sl-fm-quota { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--sl-color-text-muted); }
 .sl-fm-quota-track { flex: 1 1 auto; height: 6px; border-radius: 3px; background: var(--sl-color-bg-soft-soft); overflow: hidden; }
@@ -244,6 +272,8 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
 
   <p class="dx-note"><b>Действия живут на файле, а не под списком.</b> Вместо пары переключателей внизу у каждого файла свой веер — системный <code>sl-dial</code>, тот же, что в списках админки. «Вставить изображением» и «Вставить вложением» видны всем, у кого есть доступ к каталогу; «Сжать в ZIP» и «Удалить» появляются только у администратора (сценарий <i>Администратор</i> выше). Так способ вставки перестаёт быть отдельным состоянием окна: он выбирается вместе с файлом, одним движением.</p>
 
+  <p class="dx-note"><b>Состояния и отказы — §31.</b> Загрузка идёт очередью: у каждого файла своя полоса выполнения (системный <code>sl-progress-line</code>) и своя отмена, отказавший файл называет причину и не останавливает остальных. Причины взяты те, которыми отвечает <code>Upload</code> — <code>_ERROR_BIG</code>, <code>_ERROR_FILE</code>, <code>_ERROR_SIZE</code>, <code>_FSIZEALL</code>, <code>_FILEUP</code>, <code>_ERROR_EXIST</code>, <code>_ERROR_UP</code>, <code>_ERROR_DOWN</code>; на клиенте не сочиняется ничего. Пока каталог грузится, его место занимает скелетон; пустой каталог, пустой результат фильтра и несостоявшийся список — три разных текста, а не один. Удаление спрашивает системную модалку <code>#sl-confirm</code>, а не <code>window.confirm</code>, и строка не исчезает, пока сервер не ответил.</p>
+
   <p class="dx-note"><b>Предпросмотр — галерея.</b> Нажатие на картинку файла открывает системную модалку <code>dialog.sl-modal.sl-modal-wide</code>: снимок во весь размер, свойства из дескриптора §7 справа, стрелки <i class="bi bi-chevron-left"></i> <i class="bi bi-chevron-right"></i> и клавиши ← → для перехода по каталогу, счётчик позиции и те же действия, что в веере. Список закольцован, так что за последним файлом идёт первый.</p>
 
   <div class="dx-cases">
@@ -254,6 +284,18 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
       <button type="button" data-case="guest" aria-pressed="false">Гость · загрузка разрешена</button>
       <button type="button" data-case="locked" aria-pressed="false">Гость · без права загрузки</button>
       <button type="button" data-case="admin" aria-pressed="false">Администратор</button>
+    </div>
+  </div>
+
+  <div class="dx-cases">
+    <span class="dx-cases-cap">Состояния процесса и отказов (§31) — установившийся вид это только одно из них:</span>
+    <div class="dx-cases-row">
+      <button type="button" data-state="ready" aria-pressed="true">Каталог загружен</button>
+      <button type="button" data-state="skel" aria-pressed="false">Каталог грузится</button>
+      <button type="button" data-state="empty" aria-pressed="false">Каталог пуст</button>
+      <button type="button" data-state="filter" aria-pressed="false">Фильтр ничего не нашёл</button>
+      <button type="button" data-state="fail" aria-pressed="false">Список не загрузился</button>
+      <button type="button" data-state="queue" aria-pressed="false">Очередь загрузки</button>
     </div>
   </div>
 
@@ -307,7 +349,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
           <div class="sl-fm-body">
 
             <section class="sl-fm-pane sl-is-open" data-pane="p-up" role="tabpanel">
-              <div class="sl-fm-drop" tabindex="0" role="button">
+              <div class="sl-fm-drop" tabindex="0" role="button" data-slot="drop">
                 <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
                 <b>Перетащите файлы сюда или нажмите на поле</b>
                 <small>gif, jpg, jpeg, png, webp, avif, zip, rar · до 1 MB · 500 × 500 px · не более 10 за раз</small>
@@ -322,6 +364,14 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
               <div>
                 <label class="sl-fm-label" for="v2-alt">Описание</label>
                 <input type="text" id="v2-alt" class="sl-fm-field" placeholder="Что изображено на картинке">
+              </div>
+              <!-- §31 Загрузка: очередь, полоса выполнения на файл, отмена и причина отказа с сервера -->
+              <div class="sl-fm-queue" data-slot="queue" hidden>
+                <span class="sl-fm-queue-cap">
+                  <b data-slot="queue-cap">Загружается файл 1 из 3</b>
+                  <button type="button" class="sl-but-mini sl-is-muted" data-slot="queue-stop" title="Отменить загрузку" aria-label="Отменить загрузку"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                </span>
+                <div data-slot="jobs"></div>
               </div>
               <div class="sl-fm-quota">
                 <span>Занято в модуле</span>
@@ -421,16 +471,30 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
                 <button type="button" class="sl-chip sl-chip-info sl-live-act" data-bulk="image"><i class="bi bi-image" aria-hidden="true"></i>Вставить изображениями</button>
                 <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-bulk="attach"><i class="bi bi-paperclip" aria-hidden="true"></i>Вставить вложениями</button>
                 <button type="button" class="sl-chip sl-chip-warn sl-live-act sl-fm-adm" data-bulk="zip"><i class="bi bi-file-zip" aria-hidden="true"></i>В архив</button>
-                <button type="button" class="sl-chip sl-chip-danger sl-live-act sl-fm-adm" data-bulk="delete"><i class="bi bi-trash3" aria-hidden="true"></i>Удалить</button>
+                <button type="button" class="sl-chip sl-chip-danger sl-live-act sl-fm-adm" data-bulk="delete" data-sl-confirm="Удалить отмеченные файлы?"><i class="bi bi-trash3" aria-hidden="true"></i>Удалить</button>
                 <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-bulk="clear"><i class="bi bi-x-lg" aria-hidden="true"></i>Снять отметки</button>
               </div>
 
-              <!-- каталог недоступен: причина вместо «Нет информации» -->
+              <!-- §31 Каталог грузится: скелетон на месте плиток -->
+              <div class="sl-fm-view" data-view="skel" hidden>
+                <div class="sl-fm-grid sl-skel" aria-hidden="true">
+                  <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+                  <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+                  <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+                  <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+                  <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+                  <div class="sl-skel-tile"><span class="sl-skel-cell"></span><span class="sl-skel-line"></span><span class="sl-skel-line sl-skel-line-half"></span></div>
+                </div>
+                <p class="sl-fm-more">Каталог загружается.</p>
+              </div>
+
+              <!-- §31 Пустой каталог, пустой результат фильтра и несостоявшийся список — три разных текста в одном блоке -->
               <div class="sl-fm-view" data-view="empty" hidden>
-                <div class="sl-fm-empty">
-                  <i class="bi bi-folder2" aria-hidden="true"></i>
+                <div class="sl-fm-empty" data-slot="empty-box">
+                  <i class="bi bi-folder2" data-slot="empty-icon" aria-hidden="true"></i>
                   <b data-slot="empty-title">Каталог пока пуст</b>
                   <p data-slot="empty-text">Загруженные файлы появятся здесь сразу после первой загрузки.</p>
+                  <button type="button" class="sl-fm-btn" data-slot="empty-act" hidden></button>
                 </div>
               </div>
 
@@ -439,7 +503,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
           </div>
 
           <div class="sl-fm-foot">
-            <span class="sl-fm-foot-info" data-slot="info">Файл не выбран</span>
+            <span class="sl-fm-foot-info" data-slot="info" aria-live="polite">Файл не выбран</span>
             <button type="button" class="sl-fm-btn" data-slot="refresh"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Обновить</button>
             <button type="button" class="sl-fm-btn"><i class="bi bi-x-lg" aria-hidden="true"></i>Отмена</button>
             <button type="button" class="sl-fm-btn sl-fm-btn-main" data-slot="ok"><i class="bi bi-check-lg" aria-hidden="true"></i>Вставить</button>
@@ -472,6 +536,19 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
       <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-act="attach"><i class="bi bi-paperclip" aria-hidden="true"></i>Вставить вложением</button>
       <button type="button" class="sl-chip sl-chip-warn sl-live-act sl-fm-adm" data-act="zip"><i class="bi bi-file-zip" aria-hidden="true"></i>В архив</button>
       <button type="button" class="sl-chip sl-chip-danger sl-live-act sl-fm-adm" data-act="delete"><i class="bi bi-trash3" aria-hidden="true"></i>Удалить</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Системная модалка подтверждения — копия templates/lite/fragments/confirm-modal.html: удаление проходит через неё, а не через window.confirm -->
+<dialog class="sl-modal" id="sl-confirm" aria-label="Подтверждение">
+  <div class="sl-modal-body">
+    <div class="sl-modal-title"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> Подтверждение</div>
+    <button type="button" class="sl-but-mini sl-modal-close" title="Закрыть" aria-label="Закрыть" data-sl-close><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <p data-sl-confirm-text></p>
+    <div class="sl-modal-foot">
+      <button type="button" class="sl-chip sl-chip-neutral sl-live-act" data-sl-close>Нет</button>
+      <button type="button" class="sl-chip sl-chip-danger sl-live-act" data-sl-confirm-ok>Да</button>
     </div>
   </div>
 </dialog>
@@ -622,6 +699,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
         });
         bulk.hidden = num === 0;
         document.querySelector('[data-slot="bulk-count"]').textContent = 'Отмечено файлов: ' + num;
+        document.querySelector('[data-bulk="delete"]').setAttribute('data-sl-confirm', 'Удалить отмеченные файлы: ' + num + '?');
         /* При одной отметке действие говорит в единственном числе, иначе «Вставить изображениями» про один файл читается ошибкой */
         document.querySelector('[data-bulk="image"]').lastChild.textContent = num === 1 ? 'Вставить изображением' : 'Вставить изображениями';
         document.querySelector('[data-bulk="attach"]').lastChild.textContent = num === 1 ? 'Вставить вложением' : 'Вставить вложениями';
@@ -645,7 +723,8 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
             full.appendChild(getTile(item, i));
         });
         setPicks();
-        setCurrent(Math.min(cur, view.length - 1));
+        /* Свойства показывает только непустой список: удалили последний файл — показывать нечего */
+        if (view.length) setCurrent(Math.min(cur, view.length - 1));
         /* Гость видит только файлы своей сессии, поэтому счётчики и страницы считаются от видимого списка, а не от всего модуля */
         document.querySelector('[data-slot="more"]').textContent = view.length > 6
             ? 'Показаны 6 последних файлов из ' + view.length + '. Отметьте несколько файлов, чтобы вставить их одним действием.'
@@ -663,6 +742,85 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
         });
     }
 
+    /* §31 Загрузка: очередь идёт по одному файлу, у каждого своя полоса и своя отмена, отказавший файл называет причину и очередь продолжается */
+    /* Причины — те, которыми отвечает Upload через addEditorUpload(): _ERROR_BIG, _ERROR_FILE, _ERROR_SIZE, _FSIZEALL, _FILEUP, _ERROR_EXIST, _ERROR_UP, _ERROR_DOWN */
+    var admnow = false;
+    var jobs = [
+        { name: 'photo-report.png', size: '248 KB', icon: 'file-earmark-image',
+            file: { name: 'photo-report.png', kind: 'PNG', mime: 'image · png', size: '248 KB', date: 'только что', full: '10.08.2026 15:02', dim: '1280 × 720', tone: 'a', icon: 'image', img: true } },
+        { name: 'banner-huge.jpg', size: '4.2 MB', icon: 'file-earmark-image', why: 'Загружаемый файл слишком большой!' },
+        { name: 'preset-pack.zip', size: '860 KB', icon: 'file-earmark-zip',
+            file: { name: 'preset-pack.zip', kind: 'ZIP', mime: 'archive · zip', size: '860 KB', date: 'только что', full: '10.08.2026 15:02', dim: '—', tone: 'f', icon: 'file-earmark-zip', img: false } }
+    ];
+    var qstep = 0;
+    var qtimer = 0;
+    function getJob(item, num) {
+        var box = document.createElement('div');
+        box.className = 'sl-fm-job';
+        box.setAttribute('data-job', String(num));
+        box.innerHTML = '<i class="bi bi-' + item.icon + '" aria-hidden="true"></i>'
+            + '<div><span class="sl-fm-job-name"><span>' + item.name + '</span><small>' + item.size + '</small></span>'
+            + '<div class="sl-progress-line sl-progress-2" data-slot="job-line"><div style="width: 0%;">0%</div></div></div>'
+            + '<button type="button" class="sl-but-mini sl-is-muted" data-slot="job-stop" title="Отменить файл" aria-label="Отменить файл"><i class="bi bi-x-lg" aria-hidden="true"></i></button>';
+        return box;
+    }
+    function setJobDone(box, item) {
+        var stop = box.querySelector('[data-slot="job-stop"]');
+        var line = box.querySelector('[data-slot="job-line"]');
+        var why = document.createElement('p');
+        if (stop) stop.remove();
+        box.classList.add(item.why ? 'sl-is-fail' : 'sl-is-done');
+        box.querySelector('.bi').className = 'bi bi-' + (item.why ? 'exclamation-octagon-fill' : 'check-circle-fill');
+        if (!item.why) return;
+        why.className = 'sl-fm-job-why';
+        why.textContent = item.why;
+        line.replaceWith(why);
+    }
+    /* Полоса растёт у того файла, который грузится сейчас: очередь видна и словами, и порядком строк */
+    function setQueueStep() {
+        var box = document.querySelector('[data-job="' + qstep + '"]');
+        var line = box ? box.querySelector('[data-slot="job-line"] div') : null;
+        var at;
+        if (!box) {
+            window.clearInterval(qtimer);
+            qtimer = 0;
+            document.querySelector('[data-slot="queue-cap"]').textContent = 'Загружено файлов: ' + jobs.filter(function(item) { return !item.why; }).length + ' из ' + jobs.length + ', остальные отклонены сервером';
+            document.querySelector('[data-slot="queue-stop"]').hidden = true;
+            return;
+        }
+        at = parseInt(line.style.width, 10) + 20;
+        line.style.width = at + '%';
+        line.textContent = at + '%';
+        if (at < 100) return;
+        setJobDone(box, jobs[qstep]);
+        if (jobs[qstep].file) addFile(jobs[qstep].file);
+        qstep++;
+        if (qstep < jobs.length) document.querySelector('[data-slot="queue-cap"]').textContent = 'Загружается файл ' + (qstep + 1) + ' из ' + jobs.length;
+    }
+    function setQueue(on) {
+        var box = document.querySelector('[data-slot="jobs"]');
+        window.clearInterval(qtimer);
+        qtimer = 0;
+        qstep = 0;
+        box.replaceChildren();
+        document.querySelector('[data-slot="queue"]').hidden = !on;
+        document.querySelector('[data-slot="queue-stop"]').hidden = !on;
+        if (!on) return;
+        jobs.forEach(function(item, i) { box.appendChild(getJob(item, i)); });
+        document.querySelector('[data-slot="queue-cap"]').textContent = 'Загружается файл 1 из ' + jobs.length;
+        qtimer = window.setInterval(setQueueStep, 260);
+    }
+    /* Удавшаяся загрузка добавляет один объект, а не перезагружает каталог целиком */
+    function addFile(item) {
+        var num = view.length;
+        view.push(item);
+        document.querySelector('[data-slot="tiles"]').appendChild(getTile(item, num));
+        document.querySelector('[data-slot="rows"]').appendChild(getRow(item, num));
+        document.querySelector('[data-slot="fulltiles"]').appendChild(getTile(item, num));
+        setDials(admnow);
+        setPicks();
+    }
+
     function openpane() {
         var el = document.querySelector('.sl-fm-pane.sl-is-open');
         return el ? el.getAttribute('data-pane') : '';
@@ -676,12 +834,42 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
         document.querySelector('[data-slot="refresh"]').disabled = name !== 'p-lib';
         document.querySelector('[data-slot="ok"]').disabled = name === 'p-lib' && picks.size === 0;
     }
+    /* §31: у каталога пять состояний, и установившийся вид — только одно из них. Пустой каталог и пустой результат фильтра говорят разными словами */
+    var states = {
+        ready: [],
+        skel: [],
+        empty: ['folder2', 'Каталог пока пуст', 'Загруженные файлы появятся здесь сразу после первой загрузки.', ''],
+        filter: ['search', 'Ничего не найдено', 'В этой директории нет файлов, подходящих под фильтр.', 'Сбросить фильтр'],
+        fail: ['exclamation-triangle', 'Список не загрузился', 'Сервер не ответил на запрос каталога. Файлы на месте, получить список не удалось.', 'Повторить']
+    };
+    var statenow = 'ready';
+    function setState(name) {
+        var row = states[name];
+        statenow = name;
+        document.querySelectorAll('.dx-cases button[data-state]').forEach(function(el) { el.setAttribute('aria-pressed', String(el.getAttribute('data-state') === name)); });
+        if (row.length) {
+            document.querySelector('[data-slot="empty-icon"]').className = 'bi bi-' + row[0];
+            document.querySelector('[data-slot="empty-title"]').textContent = row[1];
+            document.querySelector('[data-slot="empty-text"]').textContent = row[2];
+            document.querySelector('[data-slot="empty-act"]').textContent = row[3];
+            document.querySelector('[data-slot="empty-act"]').hidden = row[3] === '';
+            document.querySelector('[data-slot="empty-box"]').classList.toggle('sl-is-fail', name === 'fail');
+        }
+        /* Строка состояния не должна обещать файлы, которых на экране нет */
+        if (openpane() === 'p-lib') document.querySelector('[data-slot="info"]').textContent = name === 'ready' ? meta['p-lib'][2] : (name === 'skel' ? 'Каталог загружается' : row[1]);
+        setView(win.classList.contains('sl-is-wide'));
+    }
     function setView(full) {
         var lib = document.querySelector('.sl-fm-pane[data-pane="p-lib"]');
-        var empty = lib.querySelector('[data-view="empty"]').getAttribute('data-on') === '1';
-        lib.querySelector('[data-view="compact"]').hidden = empty || full;
-        lib.querySelector('[data-view="full"]').hidden = empty || !full;
-        lib.querySelector('[data-view="empty"]').hidden = !empty;
+        var ready = statenow === 'ready';
+        lib.querySelector('[data-view="compact"]').hidden = !ready || full;
+        lib.querySelector('[data-view="full"]').hidden = !ready || !full;
+        lib.querySelector('[data-view="skel"]').hidden = statenow !== 'skel';
+        lib.querySelector('[data-view="empty"]').hidden = ready || statenow === 'skel';
+        if (!ready) {
+            picks.clear();
+            setPicks();
+        }
         win.classList.toggle('sl-is-wide', full);
         expand.title = full ? 'Свернуть' : 'Развернуть';
         expand.setAttribute('aria-label', expand.title);
@@ -703,24 +891,20 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
             if (ok && !open) open = pane;
         });
         document.querySelector('[data-slot="rail-quota"]').textContent = cs.quota;
-        var empty = document.querySelector('[data-view="empty"]');
-        empty.setAttribute('data-on', cs.empty ? '1' : '0');
-        if (cs.empty) {
-            document.querySelector('[data-slot="empty-title"]').textContent = cs.emptyTitle || 'Каталог пока пуст';
-            document.querySelector('[data-slot="empty-text"]').textContent = cs.emptyText || 'Загруженные файлы появятся здесь сразу после первой загрузки.';
-        }
-        view = cs.guest ? files.slice(0, 2) : files;
+        /* Список копируется, а не берётся ссылкой: удавшаяся загрузка добавляет файл в каталог сценария, а не в общий образец */
+        view = cs.guest ? files.slice(0, 2) : files.slice();
         picks.clear();
         cur = 0;
+        admnow = !!cs.adm;
         setLists();
-        setDials(!!cs.adm);
+        setDials(admnow);
         setPane(open || 'p-url');
-        setView(win.classList.contains('sl-is-wide'));
+        setQueue(false);
+        setState(cs.empty ? 'empty' : 'ready');
     }
 
     /* Предпросмотр — галерея на системной рамке dialog.sl-modal: снимок, свойства, стрелки и клавиши влево-вправо */
     var modal = document.querySelector('[data-slot="modal"]');
-    var cur = 0;
     function setModal(num) {
         var item = view[num];
         var props = document.querySelector('[data-slot="m-props"]');
@@ -729,6 +913,7 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
         document.querySelector('[data-slot="m-img"]').className = 'sl-fm-modal-img sl-fm-tile-img-' + item.tone;
         document.querySelector('[data-slot="m-img"]').innerHTML = '<i class="bi bi-' + item.icon + '" aria-hidden="true"></i>';
         document.querySelector('[data-slot="m-count"]').textContent = (num + 1) + ' из ' + view.length;
+        modal.querySelector('[data-act="delete"]').setAttribute('data-sl-confirm', 'Удалить файл ' + item.name + '?');
         props.replaceChildren();
         [['Имя', item.name], ['Тип', item.mime], ['Размер', item.size], ['Разрешение', item.dim], ['Изменён', item.full], ['Адрес', 'uploads/files/' + item.name]].forEach(function(row) {
             var box = document.createElement('div');
@@ -746,11 +931,55 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
     function setStep(way) {
         setModal((cur + way + view.length) % view.length);
     }
+    /* Подтверждение идёт через системную модалку #sl-confirm — тот же протокол data-sl-confirm, что в plugins/system/slaed.js; window.confirm в интерфейсе не остаётся */
+    var conf = document.getElementById('sl-confirm');
+    function setAsk(node) {
+        conf.querySelector('[data-sl-confirm-text]').textContent = node.getAttribute('data-sl-confirm');
+        conf.slask = node;
+        conf.showModal();
+    }
+    /* Ни одно изменяющее действие не выполняется без ответа сервера: объект занят, пока запрос не подтверждён */
+    function setBusy(num, way, label) {
+        var name = view[num].name;
+        document.querySelectorAll('[data-num="' + num + '"]').forEach(function(el) {
+            var box = document.createElement('span');
+            box.className = 'sl-fm-busy';
+            box.innerHTML = '<span class="sl-loading"></span>';
+            el.appendChild(box);
+        });
+        window.setTimeout(function() {
+            document.querySelectorAll('.sl-fm-busy').forEach(function(el) { el.remove(); });
+            if (way === 'delete') {
+                view.splice(num, 1);
+                picks.clear();
+                cur = 0;
+                setLists();
+                setDials(admnow);
+            }
+            document.querySelector('[data-slot="info"]').textContent = label + ' · ' + name;
+            if (!view.length) setState('empty');
+        }, 1100);
+    }
+    function setAct(act) {
+        var num = act.hasAttribute('data-num') ? parseInt(act.getAttribute('data-num'), 10) : cur;
+        var way = act.getAttribute('data-act');
+        if (modal.open) modal.close();
+        if (way === 'zip' || way === 'delete') {
+            setBusy(num, way, act.getAttribute('title'));
+            return;
+        }
+        document.querySelector('[data-slot="info"]').textContent = act.getAttribute('title') + ' · ' + view[num].name;
+    }
+    function setBulk(btn) {
+        var way = btn.getAttribute('data-bulk');
+        if (way !== 'clear') document.querySelector('[data-slot="info"]').textContent = btn.textContent.trim() + ' · файлов: ' + picks.size;
+        picks.clear();
+        setPicks();
+    }
     document.addEventListener('click', function(ev) {
         var zoom = ev.target.closest ? ev.target.closest('[data-zoom]') : null;
         var act = ev.target.closest ? ev.target.closest('[data-act]') : null;
         var item = ev.target.closest ? ev.target.closest('[data-num]') : null;
-        var ask;
         if (item && !zoom && !act && !ev.target.closest('.sl-fm-pick')) setCurrent(parseInt(item.getAttribute('data-num'), 10));
         if (zoom) {
             ev.preventDefault();
@@ -759,10 +988,25 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
         }
         if (!act) return;
         ev.preventDefault();
-        ask = act.getAttribute('data-sl-confirm');
-        if (ask && !window.confirm(ask)) return;
-        if (modal.open) modal.close();
-        document.querySelector('[data-slot="info"]').textContent = act.getAttribute('title') + ' · ' + view[act.hasAttribute('data-num') ? parseInt(act.getAttribute('data-num'), 10) : cur].name;
+        if (act.getAttribute('data-sl-confirm')) {
+            setAsk(act);
+            return;
+        }
+        setAct(act);
+    });
+    conf.addEventListener('click', function(ev) {
+        var okay = ev.target.closest ? ev.target.closest('[data-sl-confirm-ok]') : null;
+        var stop = ev.target.closest ? ev.target.closest('[data-sl-close]') : null;
+        var node = conf.slask;
+        if (stop) {
+            conf.close();
+            return;
+        }
+        if (!okay) return;
+        conf.close();
+        if (!node) return;
+        if (node.hasAttribute('data-bulk')) setBulk(node);
+        else setAct(node);
     });
     document.querySelector('[data-slot="m-close"]').addEventListener('click', function() { modal.close(); });
     document.querySelector('[data-slot="m-prev"]').addEventListener('click', function() { setStep(-1); });
@@ -813,14 +1057,32 @@ body { margin: 0; padding: 0 0 70px; background: var(--sl-color-bg-soft); color:
     });
     document.querySelectorAll('[data-bulk]').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            var way = btn.getAttribute('data-bulk');
-            var num = picks.size;
-            if (way !== 'clear' && way === 'delete' && !window.confirm('Удалить отмеченные файлы: ' + num + '?')) return;
-            if (way !== 'clear') document.querySelector('[data-slot="info"]').textContent = btn.textContent.trim() + ' · ' + num + ' файлов';
-            picks.clear();
-            setPicks();
+            if (btn.hasAttribute('data-sl-confirm')) {
+                setAsk(btn);
+                return;
+            }
+            setBulk(btn);
         });
     });
+    /* Состояния §31 переключаются отдельно от прав: сценарий без каталога сначала уступает место сценарию с ним */
+    document.querySelectorAll('.dx-cases button[data-state]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var name = btn.getAttribute('data-state');
+            if (document.querySelector('.sl-fm-rail-item[data-pane="p-lib"]').disabled) setCase('author');
+            if (name === 'queue') {
+                setState('ready');
+                setPane('p-up');
+                setQueue(true);
+                return;
+            }
+            setQueue(false);
+            setPane('p-lib');
+            setState(name);
+        });
+    });
+    document.querySelector('[data-slot="drop"]').addEventListener('click', function() { setQueue(true); });
+    document.querySelector('[data-slot="queue-stop"]').addEventListener('click', function() { setQueue(false); });
+    document.querySelector('[data-slot="empty-act"]').addEventListener('click', function() { setState('ready'); });
     /* Веер закрывается по нажатию на переключатель — как в боевом slaed.js */
     document.addEventListener('click', function(ev) {
         var toggle = ev.target.closest ? ev.target.closest('.sl-dial-toggle') : null;

@@ -244,4 +244,61 @@
     } else {
         setGroupStates(document);
     }
+    /* File browser: the view, the current object and the way back are local state of the screen, and where back, up and refresh lead is read off the body the server just sent */
+    var fmback = [];
+    function setFileView(mode) {
+        document.querySelectorAll('[data-sl-fm-view]').forEach(function (node) {
+            var own = node.getAttribute('data-sl-fm-view');
+            if (node.tagName === 'BUTTON') node.setAttribute('aria-pressed', own === mode ? 'true' : 'false');
+            else node.hidden = own !== mode;
+        });
+    }
+    function setFilePick(node) {
+        document.querySelectorAll('[data-sl-fm-pick]').forEach(function (item) {
+            var row = item.closest('tr') || item.closest('.sl-fm-cell');
+            if (row) row.removeAttribute('aria-selected');
+        });
+        var own = node.closest('tr') || node.closest('.sl-fm-cell');
+        if (own) own.setAttribute('aria-selected', 'true');
+    }
+    function getFileUrl(step) {
+        var split = document.querySelector('[data-sl-fm-url]');
+        if (!split) return '';
+        if (step === 'up') return split.getAttribute('data-sl-fm-up');
+        if (step === 'self') return split.getAttribute('data-sl-fm-url');
+        if (fmback.length < 2) return '';
+        fmback.pop();
+        return fmback.pop();
+    }
+    function addFileStep() {
+        var split = document.querySelector('[data-sl-fm-url]');
+        var back = document.querySelector('[data-sl-fm-go="back"]');
+        var mode = document.querySelector('button[data-sl-fm-view][aria-pressed="true"]');
+        var find = document.querySelector('.sl-fm-bar input[name="find"]');
+        if (split) {
+            var url = split.getAttribute('data-sl-fm-url');
+            if (fmback[fmback.length - 1] !== url) fmback.push(url);
+            if (fmback.length > 30) fmback.shift();
+            /* The filter belongs to the directory the answer is about, and the field is left alone while it is the one being typed in */
+            if (find && document.activeElement !== find && find.value !== split.getAttribute('data-sl-fm-find')) find.value = split.getAttribute('data-sl-fm-find');
+        }
+        if (back) back.disabled = fmback.length < 2;
+        if (mode) setFileView(mode.getAttribute('data-sl-fm-view'));
+    }
+    document.addEventListener('click', function (event) {
+        var node = event.target && event.target.closest ? event.target.closest('[data-sl-fm-view],[data-sl-fm-pick],[data-sl-fm-go]') : null;
+        if (!node) return;
+        if (node.hasAttribute('data-sl-fm-pick')) return setFilePick(node);
+        if (node.hasAttribute('data-sl-fm-view')) return setFileView(node.getAttribute('data-sl-fm-view'));
+        var url = window.htmx ? getFileUrl(node.getAttribute('data-sl-fm-go')) : '';
+        if (url) window.htmx.ajax('GET', url, { target: '#slfmbody', swap: 'innerHTML' });
+    });
+    document.addEventListener('htmx:afterSwap', function (event) {
+        if (event.target && event.target.id === 'slfmbody') addFileStep();
+    });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addFileStep);
+    } else {
+        addFileStep();
+    }
 })();

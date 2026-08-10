@@ -1183,3 +1183,277 @@ function checkSqlTable(string $name): bool {
     ));
     return (int)($row['num'] ?? 0) > 0;
 }
+
+# Return the one system file context of the administration; core/classes carries no runtime autoload, so the file layer is required on first use and the root is named here alone
+# The root is BASE_DIR and the client never names it: every route below passes a path relative to this context and the file layer decides what that path is allowed to mean
+function getAdminFileManager(): FileManager {
+    static $man = null;
+    if ($man === null) {
+        require_once BASE_DIR.'/core/classes/filemanager.php';
+        $man = new FileManager('system', BASE_DIR);
+    }
+    return $man;
+}
+
+# Return one relative path of the request unfiltered, because what a path means is decided by the canonicalization of the file layer and never by a filter of the input side
+function getAdminFilePath(string $key): string {
+    $path = getVar('get', $key, 'raw', '');
+    return is_string($path) ? mb_substr(trim($path), 0, 512) : '';
+}
+
+# Return the address of one browser route with the values it carries and the ajax token every numeric go route is asked for before it answers anything
+function getAdminFileLink(string $op, array $args = []): string {
+    static $tok = '';
+    if ($tok === '') $tok = getSiteToken();
+    $out = 'index.php?go=5&op='.$op;
+    foreach ($args as $key => $val) {
+        if ((string)$val === '') continue;
+        $out .= '&'.$key.'='.rawurlencode((string)$val);
+    }
+    return $out.'&token='.$tok;
+}
+
+# Return the icon and the tone one object is drawn with, chosen by the kind of the descriptor, so the type resolver of the file layer stays the only one in the project
+function getAdminFileIcon(string $kind): array {
+    return match ($kind) {
+        'dir' => ['folder2', 'dir'],
+        'image' => ['image', 'img'],
+        'audio' => ['file-earmark-music', 'doc'],
+        'video' => ['file-earmark-play', 'doc'],
+        'archive' => ['file-earmark-zip', 'zip'],
+        'document' => ['file-earmark-pdf', 'doc'],
+        'text' => ['file-earmark-text', 'code'],
+        'code' => ['file-earmark-code', 'code'],
+        default => ['file-earmark', 'doc'],
+    };
+}
+
+# Render the tree of the system area along the open path alone: the root level and the children of every ancestor of the current directory, and never a walk of the whole site
+# Each level is spliced in under the node it belongs to, so the depth of the request equals the depth of the path and a closed directory never contributes a node
+function getAdminFileNodes(string $dir): string {
+    global $tpl;
+    $man = getAdminFileManager();
+    $open = ($dir === '') ? [] : explode('/', $dir);
+    $out = [];
+    $cur = '';
+    $at = 0;
+    $step = 0;
+    while (true) {
+        $kids = [];
+        foreach ($man->getFileList($cur) as $row) {
+            if ($row['kind'] !== 'dir') continue;
+            $kids[] = [
+                'name' => $row['name'],
+                'hint' => $row['path'],
+                'path' => $row['path'],
+                'url' => getAdminFileLink('getAdminFileList', ['dir' => $row['path']]),
+                'pads' => array_fill(0, $step + 1, true),
+                'icon' => ($row['path'] === $dir) ? 'folder2-open' : 'folder2',
+                'is_cur' => $row['path'] === $dir,
+            ];
+        }
+        array_splice($out, $at, 0, $kids);
+        if ($step >= count($open)) break;
+        $next = ($cur === '') ? $open[$step] : $cur.'/'.$open[$step];
+        $pos = -1;
+        foreach ($out as $i => $row) {
+            if ($row['path'] === $next) $pos = $i;
+        }
+        if ($pos < 0) break;
+        $at = $pos + 1;
+        $cur = $next;
+        $step++;
+    }
+    array_unshift($out, [
+        'name' => _UPLOADS_ROOT,
+        'hint' => _UPLOADS_ROOT,
+        'path' => '',
+        'url' => getAdminFileLink('getAdminFileList'),
+        'pads' => [],
+        'icon' => 'hdd-stack',
+        'is_cur' => $dir === '',
+    ]);
+    return $tpl->getHtmlPart('file-browser-tree', ['cap_text' => _UPLOADS_TREE, 'nodes' => $out]);
+}
+
+# Render the capability row of the context: what the interface prints is the answer of the file layer, so no screen derives a permission from a role of its own
+# A capability this stage does not route yet is still shown, because the row states what the context allows and not which button happens to exist
+function getAdminFileGrants(): string {
+    global $tpl;
+    $names = [
+        'browse' => _UPLOADS_BROWSE, 'preview' => _UPLOADS_PREVIEW, 'upload' => _UPLOADS_UPLOAD, 'download' => _UPLOADS_DOWNLOAD,
+        'edit' => _UPLOADS_EDIT, 'create' => _UPLOADS_CREATE, 'mkdir' => _UPLOADS_MKDIR, 'rename' => _UPLOADS_RENAME,
+        'copy' => _UPLOADS_COPY, 'move' => _UPLOADS_MOVE, 'delete' => _UPLOADS_DELETE, 'compress' => _UPLOADS_COMPRESS,
+    ];
+    $out = '';
+    foreach (getAdminFileManager()->getCapabilities() as $key => $val) {
+        if (!isset($names[$key])) continue;
+        $out .= $tpl->getHtmlFrag('inline-badge', ['chip_tone' => $val ? 'success' : 'neutral', 'label' => $names[$key]]);
+    }
+    return $out;
+}
+
+# Render the properties of one object from its descriptor: the absolute path is shown because an administrator is full-handed, and a critical path says so next to its own name
+# An object that does not exist or that the path policy closes answers the empty panel, so a closed path is refused here exactly as it is refused on every other route
+function getAdminFileProps(string $path): string {
+    global $tpl;
+    $man = getAdminFileManager();
+    $one = ($path === '') ? [] : $man->getFileData($path);
+    if ($one === []) return $tpl->getHtmlFrag('file-browser-props', ['cap_text' => _UPLOADS_PROPS, 'hint_text' => _NO_INFO]);
+    [$icon, $tone] = getAdminFileIcon($one['kind']);
+    $rows = [
+        ['label' => _NAME, 'value' => $one['name']],
+        ['label' => _TYPE, 'value' => ($one['extension'] === '') ? $one['kind'] : $one['kind'].' · '.$one['extension']],
+    ];
+    if ($one['kind'] !== 'dir') $rows[] = ['label' => _SIZE, 'value' => filterSize($one['size'])];
+    if ($one['width']) $rows[] = ['label' => _UPLOADS_DIMS, 'value' => $one['width'].' × '.$one['height']];
+    $rows[] = ['label' => _DATE, 'value' => date(_TIMESTRING, $one['mtime'])];
+    $rows[] = ['label' => _UPLOADS_PATH, 'value' => ($one['path'] === '') ? '/' : $one['path']];
+    $rows[] = ['label' => _UPLOADS_FULL, 'value' => $one['realpath'] ?? ''];
+    $acts = [];
+    if (!empty($one['capabilities']['download'])) {
+        $acts[] = ['url' => getAdminFileLink('getAdminFileDownload', ['file' => $one['path']]), 'icon' => 'download', 'title' => _DOWNLOAD];
+    }
+    return $tpl->getHtmlFrag('file-browser-props', [
+        'cap_text' => _UPLOADS_PROPS,
+        'name' => $one['name'],
+        'icon' => $icon,
+        'tone' => $tone,
+        'image_url' => ($one['kind'] === 'image' && !empty($one['capabilities']['preview'])) ? getAdminFileLink('getAdminFilePreview', ['file' => $one['path']]) : '',
+        'rows' => $rows,
+        'acts' => $acts,
+        'note_html' => empty($one['critical']) ? '' : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _UPLOADS_CRIT]),
+    ]);
+}
+
+# Render the system file browser of one directory: the tree along the open path, the list, the properties, the capability row and the counter of the current directory
+# The same body answers the first page and every navigation of it; the toolbar is drawn once and the crumbs travel back out of band, because they live inside it
+function getAdminFileShell(bool $full = false): string {
+    global $tpl;
+    $man = getAdminFileManager();
+    $dir = getAdminFilePath('dir');
+    $find = mb_substr(getAdminFilePath('find'), 0, 60);
+    $one = $man->getFileData($dir);
+    if (($one['kind'] ?? '') !== 'dir') $dir = '';
+    $all = $man->getFileList($dir);
+    if ($find !== '') $all = array_values(array_filter($all, static fn(array $row): bool => mb_stripos($row['name'], $find) !== false));
+    $sum = 0;
+    foreach ($all as $row) $sum += $row['size'];
+    $lim = max(10, (int)getUploadRuleData('all')['adminlist']);
+    $pages = (int)ceil(count($all) / $lim);
+    $num = max(1, min((int)getVar('get', 'num', 'num', 1), max(1, $pages)));
+    $rows = '';
+    $tiles = '';
+    foreach (array_slice($all, ($num - 1) * $lim, $lim) as $row) {
+        [$icon, $tone] = getAdminFileIcon($row['kind']);
+        $isdir = $row['kind'] === 'dir';
+        $data = [
+            'name' => $row['name'],
+            'path' => $row['path'],
+            'url' => $isdir ? getAdminFileLink('getAdminFileList', ['dir' => $row['path']]) : getAdminFileLink('getAdminFileData', ['file' => $row['path']]),
+            'image_url' => ($row['kind'] === 'image' && !empty($row['capabilities']['preview'])) ? getAdminFileLink('getAdminFilePreview', ['file' => $row['path']]) : '',
+            'icon' => $icon,
+            'tone' => $tone,
+            'is_dir' => $isdir,
+            'kind_text' => $isdir ? _DIR : strtoupper($row['extension']),
+            'size_text' => $isdir ? '' : filterSize($row['size']),
+            'date_text' => date(_TIMESTRING, $row['mtime']),
+        ];
+        $rows .= $tpl->getHtmlFrag('file-browser-row', $data);
+        $tiles .= $tpl->getHtmlFrag('file-browser-tile', $data);
+    }
+    $crumbs = [['name' => _UPLOADS_ROOT, 'url' => ($dir === '') ? '' : getAdminFileLink('getAdminFileList')]];
+    $walk = '';
+    foreach (($dir === '') ? [] : explode('/', $dir) as $part) {
+        $walk = ($walk === '') ? $part : $walk.'/'.$part;
+        $crumbs[] = ['name' => $part, 'url' => ($walk === $dir) ? '' : getAdminFileLink('getAdminFileList', ['dir' => $walk])];
+    }
+    return $tpl->getHtmlPart('file-browser', [
+        'is_full' => $full,
+        'is_swap' => !$full,
+        'dir' => $dir,
+        'crumbs' => $crumbs,
+        'self_url' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'num' => ($num > 1) ? $num : '']),
+        'up_url' => getAdminFileLink('getAdminFileList', ['dir' => str_contains($dir, '/') ? substr($dir, 0, (int)strrpos($dir, '/')) : '']),
+        'find_url' => getAdminFileLink('getAdminFileList'),
+        'find_text' => $find,
+        'back_text' => _BACK,
+        'up_text' => _UPLOADS_UP,
+        'reload_text' => _UPDATE,
+        'filter_text' => _UPLOADS_FILTER,
+        'list_text' => _LIST,
+        'tiles_text' => _UPLOADS_TILES,
+        'caps_label' => _UPLOADS_GRANTS,
+        'caps_html' => getAdminFileGrants(),
+        'info_text' => _OVERALL.': '.count($all).' · '.filterSize($sum),
+        'tree_html' => getAdminFileNodes($dir),
+        'props_html' => getAdminFileProps(''),
+        'pager_html' => getTplPagerView($num, $pages, 8, static fn(int $i): array => [
+            'query' => getAdminFileLink('getAdminFileList', ['dir' => $dir, 'find' => $find, 'num' => $i]),
+            'target_id' => 'slfmbody',
+        ]),
+        'list_html' => $tpl->getHtmlPart('file-browser-list', [
+            'is_empty' => $rows === '',
+            'empty_icon' => ($find === '') ? 'folder2' : 'search',
+            'empty_title' => ($find === '') ? _UPLOADS_EMPTY : _UPLOADS_NOFIND,
+            'empty_text' => ($find === '') ? _UPLOADS_EMPTYTXT : _UPLOADS_NOFINDTXT,
+            'reset_url' => ($find === '') ? '' : getAdminFileLink('getAdminFileList', ['dir' => $dir]),
+            'reset_text' => _FRESET,
+            'name_text' => _NAME,
+            'type_text' => _TYPE,
+            'size_text' => _SIZE,
+            'date_text' => _DATE,
+            'rows_html' => $rows,
+            'tiles_html' => $tiles,
+        ]),
+    ]);
+}
+
+# Answer one directory of the system area for an HTMX swap: the body of the browser and, out of band, the crumbs that live in the toolbar it does not replace
+function getAdminFileList(): void {
+    echo getAdminFileShell();
+}
+
+# Answer the properties panel of one object; the panel is what follows the selection, and an object the policy closes answers the empty panel instead of a descriptor
+function getAdminFileData(): void {
+    echo getAdminFileProps(getAdminFilePath('file'));
+}
+
+# Answer one image of the system area for the preview panel; the type comes from a fixed table and never from the file, and the answer is sandboxed and never sniffed
+# A vector carries scripts, so it is served under a policy that forbids every source: shown through <img> it draws, opened by its own address it can no longer run (§20)
+function getAdminFilePreview(): void {
+    $types = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp', 'avif' => 'image/avif', 'svg' => 'image/svg+xml'];
+    $man = getAdminFileManager();
+    $path = getAdminFilePath('file');
+    $one = $man->getFileData($path);
+    if (!isAdmin(true) || $one === [] || !isset($types[$one['extension']]) || !$man->checkFileAccess($path, 'read')) {
+        http_response_code(403);
+        exit;
+    }
+    while (ob_get_level() > 0) ob_end_clean();
+    Cache::setHeaders(false, 0, $types[$one['extension']]);
+    header('Content-Security-Policy: default-src \'none\'; sandbox');
+    header('Content-Disposition: inline; filename="'.rawurlencode($one['name']).'"');
+    header('Content-Length: '.$one['size']);
+    readfile($one['realpath']);
+    exit;
+}
+
+# Answer one file of the system area as a download; a direct link is no use here, because the web server would execute index.php instead of handing it over (§17)
+# The type is always the opaque one and never guessed from the extension: an active type answered from the administrative origin would run inside it instead of being saved
+function getAdminFileDownload(): void {
+    $man = getAdminFileManager();
+    $path = getAdminFilePath('file');
+    $one = $man->getFileData($path);
+    if (!isAdmin(true) || $one === [] || $one['kind'] === 'dir' || !$man->checkFileAccess($path, 'download')) {
+        http_response_code(403);
+        exit;
+    }
+    $name = rawurlencode($one['name']);
+    while (ob_get_level() > 0) ob_end_clean();
+    Cache::setHeaders(false, 0, 'application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.$name.'"; filename*=UTF-8\'\''.$name);
+    header('Content-Length: '.$one['size']);
+    readfile($one['realpath']);
+    exit;
+}

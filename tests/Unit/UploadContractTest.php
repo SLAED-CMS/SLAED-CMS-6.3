@@ -284,9 +284,10 @@ final class UploadContractTest extends TestCase
     public function thePublicationNeitherReservesTheFinalNameNorLinks(): void
     {
         $code = $this->getFile('core/classes/upload.php');
-        $this->assertSame(2, substr_count($code, 'fopen('), 'The class opens a file somewhere other than the destination lock and the remote partial');
-        $this->assertStringContainsString('fopen($this->lockdir', $code, 'One fopen() of the class must be the destination lock');
-        $this->assertStringContainsString("fopen(\$part, 'ab')", $code, 'The other fopen() must be the remote partial, never a final name');
+        $this->assertSame(1, substr_count($code, 'fopen('), 'The class opens a file somewhere other than the remote partial');
+        $this->assertStringContainsString("fopen(\$part, 'ab')", $code, 'The one fopen() of the class must be the remote partial, never a final name');
+        $this->assertStringContainsString('FileManager::getPathLock($canon)', $code, 'The publication no longer runs under the shared destination lock');
+        $this->assertStringNotContainsString('function getLockHandle', $code, 'The class kept a lock protocol of its own, so its writers stand in two queues');
         $this->assertDoesNotMatchRegularExpression('#(?<![a-zA-Z_])link\(#', $code, 'The class publishes through link(), which the plan rejects');
         $this->assertStringContainsString('return rename($from, $dest);', $code, 'The publication primitive is no longer a single rename()');
     }
@@ -481,8 +482,7 @@ final class UploadContractTest extends TestCase
     {
         $code = $this->getFile('core/system.php');
         $this->assertStringContainsString('function getUploadService(): Upload {', $code, 'core/system.php has no upload service accessor');
-        $note = 'The accessor does not build the class over the upload root and the lock directory';
-        $this->assertStringContainsString("new Upload(UPLOADS_DIR, LOGS_DIR.'/uploads')", $code, $note);
+        $this->assertStringContainsString('new Upload(UPLOADS_DIR)', $code, 'The accessor does not build the class over the upload root');
         $this->assertSame(1, substr_count($code, "require_once BASE_DIR.'/core/classes/upload.php'"), 'The class file must be required exactly once, inside the accessor');
         $this->assertStringNotContainsString('new Upload(', $this->getFile('core/classes/parser.php'), 'A consumer builds the class itself instead of using the accessor');
     }

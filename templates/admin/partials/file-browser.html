@@ -1,0 +1,30 @@
+{% if is_full %}
+<div class="sl-fm-shell">
+  <div class="sl-searchbox sl-fm-bar">
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="back" title="{{ back_text }}" aria-label="{{ back_text }}" disabled><i class="bi bi-arrow-left" aria-hidden="true"></i></button>
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="up" title="{{ up_text }}" aria-label="{{ up_text }}"><i class="bi bi-arrow-up" aria-hidden="true"></i></button>
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-go="self" title="{{ reload_text }}" aria-label="{{ reload_text }}"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+    <span class="sl-fm-sep"></span>
+    <span class="sl-fm-crumbs" id="slfmcrumbs">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>
+    <input type="text" name="find" value="{{ find_text }}" placeholder="{{ filter_text }}" aria-label="{{ filter_text }}" hx-get="{{ find_url }}" hx-include="#slfmbody [name='dir']" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false" hx-trigger="input changed delay:400ms, search">
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="list" aria-pressed="true" title="{{ list_text }}" aria-label="{{ list_text }}"><i class="bi bi-list-ul" aria-hidden="true"></i></button>
+    <button type="button" class="sl-but-mini sl-is-muted" data-sl-fm-view="grid" aria-pressed="false" title="{{ tiles_text }}" aria-label="{{ tiles_text }}"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i></button>
+  </div>
+  <div id="slfmbody">
+{% endif %}
+    <input type="hidden" name="dir" value="{{ dir }}">
+    <div class="sl-fm-split" data-sl-fm-url="{{ self_url }}" data-sl-fm-up="{{ up_url }}" data-sl-fm-find="{{ find_text }}">
+      {{{ tree_html }}}
+      <div class="sl-fm-work">{{{ list_html }}}</div>
+      <aside class="sl-fm-side" id="slfmside">{{{ props_html }}}</aside>
+    </div>
+    {% if caps_html %}<div class="sl-fm-caps"><b>{{ caps_label }}</b>{{{ caps_html }}}</div>{% endif %}
+    <div class="sl-fm-foot">
+      <span aria-live="polite">{{ info_text }}</span>
+      {{{ pager_html }}}
+    </div>
+{% if is_full %}
+  </div>
+</div>
+{% endif %}
+{% if is_swap %}<span class="sl-fm-crumbs" id="slfmcrumbs" hx-swap-oob="true">{% for crumb in crumbs %}{% if crumb.url %}<a href="{{ crumb.url }}" hx-get="{{ crumb.url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ crumb.name }}</a><span>/</span>{% else %}<b>{{ crumb.name }}</b>{% endif %}{% endfor %}</span>{% endif %}

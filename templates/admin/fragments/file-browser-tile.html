@@ -1,0 +1,9 @@
+<div class="sl-fm-cell">
+  <a class="sl-fm-tile" href="{{ url }}" hx-get="{{ url }}" hx-target="{% if is_dir %}#slfmbody{% else %}#slfmside{% endif %}" hx-swap="innerHTML" hx-push-url="false" title="{{ path }}" data-sl-fm-pick>
+    <span class="sl-fm-tile-img sl-fm-thumb-{{ tone }}">
+      {% if image_url %}<img src="{{ image_url }}" alt="{{ name }}" loading="lazy">{% else %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
+    </span>
+    <span class="sl-fm-tile-kind">{{ kind_text }}</span>
+    <span class="sl-fm-tile-cap"><b>{{ name }}</b><small>{{ size_text }}</small></span>
+  </a>
+</div>

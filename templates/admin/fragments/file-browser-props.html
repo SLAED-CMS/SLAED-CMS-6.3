@@ -1,0 +1,19 @@
+<div class="sl-fm-side-in">
+  <span class="sl-fm-cap">{{ cap_text }}</span>
+  {% if hint_text %}
+  <p class="sl-fm-hint">{{ hint_text }}</p>
+  {% else %}
+  <span class="sl-fm-preview sl-fm-thumb-{{ tone }}">
+    {% if image_url %}<img src="{{ image_url }}" alt="{{ name }}">{% else %}<i class="bi bi-{{ icon }}" aria-hidden="true"></i>{% endif %}
+  </span>
+  <dl class="sl-fm-props">
+    {% for row in rows %}<div><dt>{{ row.label }}</dt><dd title="{{ row.value }}">{{ row.value }}</dd></div>{% endfor %}
+  </dl>
+  {% if acts %}
+  <div class="sl-fm-acts">
+    {% for act in acts %}<a class="sl-but-mini sl-is-muted" href="{{ act.url }}" title="{{ act.title }}" aria-label="{{ act.title }}"><i class="bi bi-{{ act.icon }}" aria-hidden="true"></i></a>{% endfor %}
+  </div>
+  {% endif %}
+  {% if note_html %}{{{ note_html }}}{% endif %}
+  {% endif %}
+</div>

@@ -12,10 +12,9 @@ require_once __DIR__.'/probe_boot.php';
 require_once BASE_DIR.'/core/system.php';
 require_once BASE_DIR.'/core/classes/upload.php';
 
-# The disposable upload root, its lock directory and the directory the source files of one run are built in
+# The disposable upload root and the directory the source files of one run are built in; the lock directory belongs to FileManager and follows the redirected LOGS_DIR
 $GLOBALS['pwork'] = $probework;
 $GLOBALS['proot'] = $probework.'/root';
-$GLOBALS['plock'] = $probework.'/locks';
 $GLOBALS['ptmp'] = $probework.'/src';
 
 # The test-only subclass named in the plan: it replaces the clock, the two upload primitives no unit test can forge and the three seams a failure branch needs
@@ -101,7 +100,7 @@ class ProbeUpload extends Upload {
 
 # Start every scenario from an empty scratch tree with one prepared destination directory below the disposable upload root
 function addProbeRoot(): void {
-    foreach ([$GLOBALS['proot'], $GLOBALS['plock'], $GLOBALS['ptmp']] as $dir) {
+    foreach ([$GLOBALS['proot'], $GLOBALS['ptmp']] as $dir) {
         if (is_dir($dir)) deleteDir($dir);
         mkdir($dir, 0777, true);
     }
@@ -110,7 +109,7 @@ function addProbeRoot(): void {
 
 # Build one service over the disposable root
 function getProbeUpload(): ProbeUpload {
-    return new ProbeUpload($GLOBALS['proot'], $GLOBALS['plock']);
+    return new ProbeUpload($GLOBALS['proot']);
 }
 
 # The default rule of a scenario: everything the type policy knows is allowed and no limit is set, so a scenario only states the limit it is about
@@ -345,7 +344,7 @@ function getProbeCodes(): array {
 
 # The unmodified class, which is what proves that a source the SAPI never received is refused
 function getProbeReal(): Upload {
-    return new Upload($GLOBALS['proot'], $GLOBALS['plock']);
+    return new Upload($GLOBALS['proot']);
 }
 
 # One quota rejection: the stored file plus the incoming one exceed the limit
@@ -571,6 +570,53 @@ function getProbeRace(): array {
         proc_close($one);
     }
     return ['size' => $size, 'max' => $max, 'runs' => $runs, 'left' => getProbeList('files'), 'parts' => getProbeParts('files'), 'bytes' => getProbeBytes('files')];
+}
+
+# The lock files that exist at this moment, read out of the one directory FileManager names, which is how two writers are proven to open one file rather than two
+function getProbeLockList(): array {
+    $dir = LOGS_DIR.'/uploads';
+    $out = is_dir($dir) ? array_values(array_diff(scandir($dir) ?: [], ['.', '..'])) : [];
+    sort($out);
+    return $out;
+}
+
+# One child of the queue scenario: it publishes into the destination whose lock the parent holds, and reports when it entered the publication and when it finally got through
+function getProbeHold(): array {
+    $file = addProbeFile('png');
+    if ($file === []) return ['ok' => false, 'from' => 0.0, 'done' => 0.0, 'error' => 'nofixture'];
+    touch($GLOBALS['pwork'].'/hold.flag');
+    $from = microtime(true);
+    $res = getProbeUpload()->addUploadedFile($file, getProbeRule(), 'files', 'files', 0);
+    return ['ok' => (bool)$res['ok'], 'from' => $from, 'done' => microtime(true), 'error' => $res['error']];
+}
+
+# One queue for the whole project: the file layer holds the lock of a destination, and an upload of another process into the same directory waits instead of publishing beside it
+# The upload service takes its lock through FileManager as well, so the two open one lock file; a protocol of its own would leave a second name and serialize nothing
+function getProbeQueue(): array {
+    addProbeRoot();
+    $canon = str_replace('\\', '/', (string)realpath($GLOBALS['proot'].'/files'));
+    $flag = $GLOBALS['pwork'].'/hold.flag';
+    if (is_file($flag)) unlink($flag);
+    $lock = FileManager::getPathLock($canon);
+    $cmd = escapeshellarg(PHP_BINARY).' '.escapeshellarg(__FILE__).' hold '.escapeshellarg($GLOBALS['pwork']);
+    $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipe);
+    for ($i = 0; $i < 100; $i++) {
+        clearstatcache(true, $flag);
+        if (is_file($flag)) break;
+        usleep(50000);
+    }
+    usleep(300000);
+    $during = getProbeList('files');
+    $free = microtime(true);
+    FileManager::deletePathLock($lock);
+    $child = [];
+    if (is_resource($proc)) {
+        $child = json_decode(trim((string)stream_get_contents($pipe[1])), true);
+        foreach ($pipe as $hand) fclose($hand);
+        proc_close($proc);
+    }
+    $out = ['held' => $lock !== false, 'child' => is_array($child) ? $child : [], 'during' => $during, 'after' => getProbeList('files')];
+    return $out + ['free' => $free, 'dir' => LOGS_DIR.'/uploads', 'want' => substr(sha1($canon), 0, 16).'.lock', 'locks' => getProbeLockList()];
 }
 
 # Assemble the multi-file shape a browser sends for one file input that accepts several files
@@ -848,14 +894,16 @@ function getProbeResolver(): array {
     return $out;
 }
 
-# The accessor is the only place that names the upload root and the lock directory, so both are read back off the instance it builds
+# The accessor is the only place that names the upload root, so it is read back off the instance it builds; the lock directory is no property of this class any more
 # The decoder list travels with it, because the fail closed branch of getDecodeError() is only unreachable while this build has every one of them
 function getProbeService(): array {
     $one = getUploadService();
     $two = getUploadService();
     $ref = new ReflectionClass(Upload::class);
     $root = $ref->getProperty('root');
-    $lock = $ref->getProperty('lockdir');
+    $lock = FileManager::getPathLock($GLOBALS['pwork']);
+    $held = getProbeLockList();
+    FileManager::deletePathLock($lock);
     $gone = [];
     foreach (['imagecreatefromgif', 'imagecreatefromjpeg', 'imagecreatefrompng', 'imagecreatefromwebp', 'imagecreatefromavif'] as $call) {
         if (!function_exists($call)) $gone[] = $call;
@@ -864,9 +912,10 @@ function getProbeService(): array {
         'nodecoder' => $gone,
         'same' => $one === $two,
         'root' => (string)$root->getValue($one),
-        'lockdir' => (string)$lock->getValue($one),
+        'fields' => array_map(static fn(ReflectionProperty $one): string => $one->getName(), $ref->getProperties()),
+        'held' => $held,
         'wantroot' => rtrim(str_replace('\\', '/', UPLOADS_DIR), '/'),
-        'wantlock' => rtrim(str_replace('\\', '/', LOGS_DIR.'/uploads'), '/'),
+        'wantlock' => [substr(sha1($GLOBALS['pwork']), 0, 16).'.lock'],
         'types' => Upload::getSupportedTypes(),
     ];
 }
@@ -879,6 +928,8 @@ try {
         'service' => getProbeService(),
         'child' => getProbeChild((int)($argv[3] ?? 0)),
         'race' => getProbeRace(),
+        'hold' => getProbeHold(),
+        'queue' => getProbeQueue(),
         'types' => getProbeTypes(),
         'codes' => getProbeCodes(),
         'naming' => getProbeNaming(),

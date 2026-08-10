@@ -109,14 +109,15 @@ final class UploadIntegrationTest extends TestCase
         $this->assertFalse($data['empty']['ok'], 'An empty record resolved successfully');
     }
 
-    # The accessor builds one instance over the upload root and the lock directory under LOGS_DIR, and it is the only place that names either
+    # The accessor builds one instance over the upload root and is the only place that names it; the lock directory belongs to the protocol and is named by FileManager alone
     #[Test]
     public function theServiceIsBuiltOnceOverTheDocumentedPaths(): void
     {
         $data = $this->getProbe('service');
         $this->assertTrue($data['same'], 'getUploadService() built a second instance');
         $this->assertSame($data['wantroot'], $data['root'], 'The service was not built on UPLOADS_DIR');
-        $this->assertSame($data['wantlock'], $data['lockdir'], 'The lock directory is not the uploads directory below LOGS_DIR');
+        $this->assertNotContains('lockdir', $data['fields'], 'The upload service holds a lock directory of its own again');
+        $this->assertSame($data['wantlock'], $data['held'], 'The lock of the file layer is not one file named after the directory it guards');
         $this->assertCount(21, $data['types'], 'The type policy no longer holds the canonical 21 formats');
     }
 
@@ -170,8 +171,13 @@ final class UploadIntegrationTest extends TestCase
             $this->assertStringContainsString('getEditorFileOwner(', $this->getBody('core/system.php', $name), $name.'() decides ownership on its own');
         }
         $list = $this->getBody('core/system.php', 'getEditorFileJson');
-        $this->assertMatchesRegularExpression('#\(\[a-zA-Z0-9\]\+\)#', $list, 'The ownership pattern still matches digits only, so a guest token never resolves');
-        $this->assertStringNotContainsString('(int)$mat', $list, 'The owner is compared as an integer, so every guest token collapses to zero and matches every other guest');
+        $read = 'The route no longer reads the owner off the file layer and takes the stored name apart again';
+        $this->assertStringContainsString('FileManager::getFileOwner($file) === $tok', $list, $read);
+        $this->assertStringNotContainsString('preg_match(', $list, 'The route carries a pattern of its own beside the one of the file layer');
+        $cast = 'The owner is compared as an integer, so every guest token collapses to zero and matches every other guest';
+        $this->assertDoesNotMatchRegularExpression('#\(int\) *(?:\$tok|FileManager::getFileOwner)#', $list, $cast);
+        $note = 'The ownership pattern matches digits only again, so a guest token never resolves';
+        $this->assertMatchesRegularExpression('#\(\[a-zA-Z0-9\]\+\)#', $this->getFile('core/classes/filemanager.php'), $note);
     }
 
     # The listing route carries no access rule of its own: a guest is answered by checkEditorUploadAccess() like every other visitor, and the owner token is what narrows the list

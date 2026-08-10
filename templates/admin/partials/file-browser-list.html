@@ -1,0 +1,25 @@
+<div class="sl-fm-scroll">
+  {% if is_empty %}
+  <div class="sl-fm-empty">
+    <i class="bi bi-{{ empty_icon }}" aria-hidden="true"></i>
+    <b>{{ empty_title }}</b>
+    <p>{{ empty_text }}</p>
+    {% if reset_url %}<a class="sl-but" href="{{ reset_url }}" hx-get="{{ reset_url }}" hx-target="#slfmbody" hx-swap="innerHTML" hx-push-url="false">{{ reset_text }}</a>{% endif %}
+  </div>
+  {% else %}
+  <div class="sl-table-shell" data-sl-fm-view="list">
+    <table class="sl-table-list-sort">
+      <thead>
+        <tr>
+          <th>{{ name_text }}</th>
+          <th>{{ type_text }}</th>
+          <th>{{ size_text }}</th>
+          <th class="sl-col-date">{{ date_text }}</th>
+        </tr>
+      </thead>
+      <tbody>{{{ rows_html }}}</tbody>
+    </table>
+  </div>
+  <div class="sl-fm-grid" data-sl-fm-view="grid" hidden>{{{ tiles_html }}}</div>
+  {% endif %}
+</div>

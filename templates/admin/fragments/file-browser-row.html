@@ -1,0 +1,11 @@
+<tr>
+  <td>
+    <span class="sl-fm-name">
+      <span class="sl-fm-thumb sl-fm-thumb-{{ tone }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i></span>
+      <a href="{{ url }}" hx-get="{{ url }}" hx-target="{% if is_dir %}#slfmbody{% else %}#slfmside{% endif %}" hx-swap="innerHTML" hx-push-url="false" title="{{ path }}" data-sl-fm-pick>{{ name }}</a>
+    </span>
+  </td>
+  <td>{{ kind_text }}</td>
+  <td>{{ size_text }}</td>
+  <td class="sl-col-date">{{ date_text }}</td>
+</tr>

@@ -4286,12 +4286,12 @@ function setUploadRuleData(array $rule): string {
 }
 
 # Return the single upload service; core/classes has no runtime autoload, so the class file is required on first use instead of on every request
-# The upload root and the lock directory are named here and nowhere else, which is why no adapter ever calls new Upload()
+# The upload root is named here and nowhere else, which is why no adapter ever calls new Upload(); where the destination locks live is decided by FileManager alone
 function getUploadService(): Upload {
     static $upl = null;
     if ($upl === null) {
         require_once BASE_DIR.'/core/classes/upload.php';
-        $upl = new Upload(UPLOADS_DIR, LOGS_DIR.'/uploads');
+        $upl = new Upload(UPLOADS_DIR);
     }
     return $upl;
 }
@@ -4391,8 +4391,9 @@ function addEditorUpload(): void {
 # Whether a list is answered at all is decided by checkEditorUploadAccess() and by nothing else, so a guest the settings allow sees the own uploads of the own session
 # Which of the three limits applies is the one role question left on this route, and what each of them is worth is a setting: moderfiles, userfiles and guestfiles
 # The owner segment is alphanumeric and not numeric, so the comparison is a string one: an integer cast turns every guest token into zero and matches one guest against another
-# The ten character salt in the ownership pattern is Upload::SALTLEN; the class is not loaded on this route, so the length is repeated rather than read
+# Who a stored name belongs to is read by FileManager::getFileOwner(), the one place that knows the format, so this route carries no pattern and no salt length of its own
 function getEditorFileJson(): void {
+    require_once BASE_DIR.'/core/classes/filemanager.php';
     $mod = strtolower(getVar('get', 'mod', 'var', ''));
     $rul = getUploadRuleData($mod);
     if (!$rul['ok']) getEditorJson(['ok' => false, 'error' => $rul['error']]);
@@ -4405,7 +4406,7 @@ function getEditorFileJson(): void {
     $row = [];
     foreach (scandir($dir) ?: [] as $file) {
         if ($file === '.' || $file === '..' || $file === 'index.html' || !is_file($dir.'/'.$file)) continue;
-        $own = $tok !== null && preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{10}-([a-zA-Z0-9]+)\\.[a-zA-Z0-9]+$#', $file, $mat) && $mat[1] === $tok;
+        $own = $tok !== null && FileManager::getFileOwner($file) === $tok;
         if (!$all && !$own) continue;
         $row[] = getEditorFileData($dir, $file);
     }

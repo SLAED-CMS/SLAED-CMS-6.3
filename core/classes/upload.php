@@ -6,13 +6,15 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
+# The project has no runtime autoload and this file is required directly by the service accessor and by the probes, so it brings the file layer it depends on with it
+if (!class_exists('FileManager')) require_once __DIR__.'/filemanager.php';
+
 # Publishes uploaded files below one upload root: extension, type, image and quota validation, collision-free naming and lock-guarded atomic publication (docs/UPLOAD-2026.md)
 # Every result is the same eight-key shape; a failure carries only its machine-readable code and leaves neither a final file nor a partial behind
 # The clock, the transfer, the random name segment and the two filesystem primitives sit behind protected seams, so the tests reach every branch without an HTTP request
 # Production code never subclasses this class and always reaches it through getUploadService()
 class Upload {
     private const TRIES = 5;
-    private const SALTLEN = 10;
     private const PARTAGE = 3600;
     private const REDIRS = 3;
     private const CHAIN = 5;
@@ -62,13 +64,11 @@ class Upload {
     ];
 
     private string $root;
-    private string $lockdir;
     private ?finfo $reader = null;
 
-    # Builds the service over the upload root and the directory the destination locks live in; both arguments come from getUploadService(), so no adapter repeats them
-    public function __construct(string $root, string $locks) {
+    # Builds the service over the upload root, which comes from getUploadService(), so no adapter repeats it; where the destination locks live is decided by FileManager alone
+    public function __construct(string $root) {
         $this->root = rtrim(str_replace('\\', '/', $root), '/');
-        $this->lockdir = rtrim(str_replace('\\', '/', $locks), '/');
     }
 
     # Every extension the type policy knows, which is what the admin settings validate a configured list against, so the policy exists in exactly one place
@@ -141,19 +141,20 @@ class Upload {
     }
 
     # Deletes one file this class published, addressed by the root-relative path a result returned; anything that is not a canonical class-owned name below the root is refused
+    # Which names are canonical is answered by FileManager::checkFileName(), the one place in the project that knows the format, so this class carries no pattern of its own
     public function deleteStoredFile(string $path): bool {
         $path = str_replace('\\', '/', $path);
         $file = basename($path);
         $rel = $this->getSafeDir(dirname($path));
-        if ($rel === '' || !preg_match('#^[a-zA-Z0-9_]+-[a-zA-Z0-9]{'.self::SALTLEN.'}(?:-[a-zA-Z0-9]+)?\.[a-zA-Z0-9]+$#', $file)) return false;
+        if ($rel === '' || !FileManager::checkFileName($file)) return false;
         $canon = $this->getDestPath($rel);
         if ($canon === '') return false;
         $full = $canon.'/'.$file;
         if (is_link($full) || !is_file($full)) return false;
-        $lock = $this->getLockHandle($canon);
+        $lock = FileManager::getPathLock($canon);
         if ($lock === false) return false;
         $done = $this->deleteFilePath($full);
-        $this->deleteLockHandle($lock);
+        FileManager::deletePathLock($lock);
         return $done;
     }
 
@@ -174,7 +175,7 @@ class Upload {
 
     # Returns the random segment of a stored name; seam, so the collision and publication tests can drive a known name instead of guessing one
     protected function getNameSalt(): string {
-        return getRandomString(self::SALTLEN);
+        return getRandomString(FileManager::SALTLEN);
     }
 
     # Publishes the partial under its final name; seam, so a publication failure can be tested on a filesystem that would happily rename
@@ -566,7 +567,7 @@ class Upload {
         $own = ($owner === null) ? '' : preg_replace('#[^a-zA-Z0-9]#', '', $owner);
         $size = (int)filesize($part);
         if ($name === '') return $this->getAbortResult(false, $part, $rel, 'destination');
-        $lock = $this->getLockHandle($canon);
+        $lock = FileManager::getPathLock($canon);
         if ($lock === false) return $this->getAbortResult(false, $part, $rel, 'destination');
         $this->deleteOldParts($canon, $part, $rel);
         $max = (int)($rule['maxquota'] ?? 0);
@@ -579,7 +580,7 @@ class Upload {
                 $code = 'write';
                 break;
             }
-            $this->deleteLockHandle($lock);
+            FileManager::deletePathLock($lock);
             return [
                 'ok' => true,
                 'file' => $file,
@@ -597,7 +598,7 @@ class Upload {
     # Ends a failed publication: the partial goes, the lock is released and the caller gets the code; a stranded partial is logged rather than assumed away
     private function getAbortResult(mixed $lock, string $part, string $rel, string $code): array {
         $this->deleteUploadPart($part, $rel);
-        if ($lock !== false) $this->deleteLockHandle($lock);
+        if ($lock !== false) FileManager::deletePathLock($lock);
         return $this->getFailResult($code);
     }
 
@@ -633,25 +634,6 @@ class Upload {
             $sum += max(0, (int)filesize($path));
         }
         return $sum;
-    }
-
-    # Takes the exclusive lock of one destination and returns the open handle; every writer serializes on it, which is what makes the existence check and the rename one step
-    private function getLockHandle(string $canon): mixed {
-        if (!is_dir($this->lockdir) && !mkdir($this->lockdir, 0750, true) && !is_dir($this->lockdir)) return false;
-        $lock = fopen($this->lockdir.'/'.substr(sha1($canon), 0, 16).'.lock', 'cb');
-        if ($lock === false) return false;
-        if (!flock($lock, LOCK_EX)) {
-            fclose($lock);
-            return false;
-        }
-        return $lock;
-    }
-
-    # Releases the destination lock; the lock file itself is never deleted, because deleting it would break the lock for a process still holding it
-    private function deleteLockHandle(mixed $lock): void {
-        if (!is_resource($lock)) return;
-        flock($lock, LOCK_UN);
-        fclose($lock);
     }
 
     # Returns the failure shape of one result code; a failure never carries a file, a path or dimensions

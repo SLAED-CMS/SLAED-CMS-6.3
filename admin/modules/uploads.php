@@ -45,8 +45,8 @@ function uploads(): void {
     $token = '&token='.getSiteToken();
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'subtitle_html' => getUploadsSearch(),
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
@@ -190,13 +190,23 @@ function uploadsave(): void {
     }
 }
 
+function sysfiles(): void {
+    setHead();
+    echo getTplAdminTabs([
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tab' => 1,
+    ]).getAdminFileShell(true);
+    setFoot();
+}
+
 function tplconfig(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
-        'tab' => 1,
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tab' => 2,
         'subtitle_html' => getUploadsSearch(),
     ]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TPINFO]);
@@ -252,9 +262,9 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $cont = getTplAdminTabs([
-        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
-        'tab' => 2,
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
+        'tab' => 3,
         'subtitle_html' => getUploadsSearch(),
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
@@ -423,14 +433,15 @@ function configsave(): void {
 
 function info(): void {
     setTplAdminInfoPage([
-        'ops' => ['name=uploads', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
-        'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _DOCS],
+        'ops' => ['name=uploads', 'name=uploads&op=sysfiles', 'name=uploads&op=tplconfig', 'name=uploads&op=config', 'name=uploads&op=info'],
+        'tabs' => [_FILES, _UPLOADS_SYSTEM, _TEMPLATES, _PREFERENCES, _DOCS],
         'subtitle_html' => getUploadsSearch(),
     ]);
 }
 
 switch ($op) {
     default: uploads(); break;
+    case 'sysfiles': sysfiles(); break;
     case 'uploadsave': uploadsave(); break;
     case 'tplconfig': tplconfig(); break;
     case 'tplsave': tplsave(); break;
